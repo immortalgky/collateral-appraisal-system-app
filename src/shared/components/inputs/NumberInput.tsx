@@ -2,7 +2,7 @@ import { type InputHTMLAttributes } from 'react';
 import Input from '../Input';
 
 interface NumberInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   readonly?: boolean;
   error?: string;
 }

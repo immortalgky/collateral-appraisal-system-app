@@ -1,23 +1,19 @@
 import ProfileCard from '@/shared/components/ProfileCard';
 import SectionHeader from '../../../shared/components/sections/SectionHeader';
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
+import Tabs from '@/shared/components/sections/Tabs';
 
 interface RequestRightMenuProps {}
 
 const RequestRightMenu = ({}: RequestRightMenuProps) => {
   return (
     <div>
-      <TabGroup className="flex flex-col gap-4">
-        <TabList className="flex gap-4">
-          <Tab className="data-selected:text-neutral-700 data-selected:font-bold data-selected:border-b">
-            Overview
-          </Tab>
-          <Tab className="data-selected:text-neutral-700 data-selected:font-bold data-selected:border-b">
-            Comments
-          </Tab>
-        </TabList>
-        <TabPanels>
-          <TabPanel className="flex flex-col gap-4">
+      <Tabs>
+        <Tabs.List>
+          <Tabs.Tab>Overview</Tabs.Tab>
+          <Tabs.Tab>Comments</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panels>
+          <Tabs.Panel className="flex flex-col gap-4">
             <SectionHeader title="Requestor" />
             <ProfileCard
               avatar={
@@ -42,10 +38,10 @@ const RequestRightMenu = ({}: RequestRightMenuProps) => {
               label={'ME'}
               description={'Reacher Doe'}
             />
-          </TabPanel>
-          <TabPanel>Comment</TabPanel>
-        </TabPanels>
-      </TabGroup>
+          </Tabs.Panel>
+          <Tabs.Panel>Comment</Tabs.Panel>
+        </Tabs.Panels>
+      </Tabs>
     </div>
   );
 };

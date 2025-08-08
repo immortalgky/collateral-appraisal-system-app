@@ -45,3 +45,18 @@ export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
 }
+
+export interface Parameter {
+  parId: number;
+  group: string;
+  country: string;
+  language: string;
+  code: string;
+  description: string;
+  active: string;
+  seqNo: string;
+}
+
+export type ParameterParams = Partial<Parameter>;
+
+export type ParametersResponse = Parameter[];

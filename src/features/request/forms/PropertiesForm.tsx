@@ -1,37 +1,34 @@
 import Input from '@/shared/components/Input';
 import FormTable from '../components/tables/FormTable';
-import { useController, useFormContext } from 'react-hook-form';
-import { useEffect, useState } from 'react';
+import { useController, useFormContext, useWatch } from 'react-hook-form';
 import type { RequestPropertyDtoType } from '@/shared/forms/v1';
+import SectionHeader from '@/shared/components/sections/SectionHeader';
 
 const PropertiesForm = () => {
-  const { control, watch } = useFormContext();
+  const { control } = useFormContext();
   const {
     field,
     fieldState: { error },
   } = useController({ name: 'loanDetail.totalSellingPrice', control });
 
-  const [totalSellingPrice, setTotalSellingPrice] = useState(0);
-
-  useEffect(() => {
-    watch(value => {
-      const properties: RequestPropertyDtoType[] = value.properties;
-      setTotalSellingPrice(calcTotalPrice(properties));
-    });
-  }, [watch]);
+  const properties = useWatch({ name: 'properties' });
+  const totalSellingPrice = calcTotalPrice(properties);
 
   return (
-    <div>
-      <FormTable headers={propertiesTableHeader} name={'properties'} />
-      <Input
-        type="number"
-        {...field}
-        label="Total Selling Price"
-        value={totalSellingPrice}
-        error={error?.message}
-        readOnly
-      />
-    </div>
+    <>
+      <SectionHeader title="Properties" />
+      <div>
+        <FormTable headers={propertiesTableHeader} name={'properties'} />
+        <Input
+          type="number"
+          {...field}
+          label="Total Selling Price"
+          value={totalSellingPrice}
+          error={error?.message}
+          readOnly
+        />
+      </div>
+    </>
   );
 };
 

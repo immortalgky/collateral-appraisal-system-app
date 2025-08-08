@@ -1,5 +1,6 @@
 import { createContext, useContext, type HTMLAttributes, type ReactNode } from 'react';
 import Icon from './Icon';
+import clsx from 'clsx';
 
 interface ResizableSidebarProps extends HTMLAttributes<HTMLDivElement> {
   isOpen: boolean;
@@ -37,14 +38,28 @@ const ResizableSidebar = ({
 };
 
 const Main = ({ children }: { children: ReactNode }) => {
-  return <div className="p-6 border-gray-200">{children}</div>;
+  return <div className="flex-auto p-6 border-gray-200">{children}</div>;
 };
 
 const Sidebar = ({ children }: { children: ReactNode }) => {
-  // TODO: Change any to actual type
-  const { isOpen, onToggle, openedWidth, closedWidth } = useContext<any>(SidebarContext);
+  const context = useContext(SidebarContext);
+  if (!context) {
+    throw new Error('Sidebar must be used within ResizableSidebar');
+  }
+  const { isOpen, onToggle, openedWidth, closedWidth } = context;
+
   return (
-    <div className={`m-6 flex flex-col gap-8 ${isOpen ? openedWidth : closedWidth}`}>
+    <div
+      className={clsx(
+        'm-6',
+        'flex',
+        'flex-col',
+        'flex-none',
+        'gap-8',
+        isOpen ? openedWidth : closedWidth,
+        'transition-all',
+      )}
+    >
       <div>
         <ResizeButton onClick={onToggle} />
       </div>

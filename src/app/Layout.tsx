@@ -4,6 +4,9 @@ import Navbar from '@shared/components/Navbar';
 import Sidebar, { MobileSidebar } from '@shared/components/Sidebar';
 import Logo from '@assets/logo-lh-bank.svg';
 import Icon from '@shared/components/Icon';
+import { useAllParameters } from '@/shared/api/parameters';
+import { useEffect } from 'react';
+import { useParameterStore } from '@/shared/store';
 
 const navigation = [
   {
@@ -50,6 +53,14 @@ const userNavigation = [
 ];
 
 function Layout() {
+  const { data, isSuccess } = useAllParameters();
+  const { setParameters } = useParameterStore();
+  useEffect(() => {
+    if (isSuccess && data !== undefined) {
+      setParameters(data);
+    }
+  }, [data, isSuccess, setParameters]);
+
   return (
     <>
       <div>

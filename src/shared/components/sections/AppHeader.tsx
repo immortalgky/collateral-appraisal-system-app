@@ -12,8 +12,8 @@ const AppHeader = ({ iconVariant, title, details }: AppHeaderProps) => {
   let icon;
   if (iconVariant === 'folder') {
     icon = (
-      <div className="size-8 bg-lime-300 rounded-md flex items-center justify-center">
-        <Icon style="regular" name="folder" />
+      <div className="size-8 bg-primary rounded-md flex items-center justify-center">
+        <Icon style="solid" name="folder-open" className="text-neutral-2" />
       </div>
     );
   }

@@ -298,6 +298,7 @@ const mutation = useMutation(updateUser, {
 - ✅ Use IDE extensions like Tailwind IntelliSense for autocomplete and linting
 - ✅ Prefer `clsx()` or `classnames()` for conditional classes.
 - ✅ Global config is in `tailwind.config.ts`.
+- ✅ Use `index.css` and `styles/theme.css` for theme. (If you use a new color, that might be used more than once, add the color in theme).
 
 ```tsx
 <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
@@ -340,6 +341,29 @@ export const router = createBrowserRouter([
     },
 ]);
 ```
+
+---
+
+### Form (React Hook Form & Zod)
+
+#### How to make a form
+
+- Define schema (for Zod validation) in `shared/forms/v1.ts` (either write it yourself or generate it from OpenAPI)
+- Define default values (for React Hook Form) for each schema field in `shared/forms/defaults.ts`.
+- Then use them at your form...
+
+```tsx
+const methods = useForm<YourSchemaType>({
+    defaultValues: yourDefaults,
+    resolver: zodResolver(yourSchema),
+});
+```
+
+- Add your inputs to form
+    - Integrate your input components with RHF.
+    - Or use `FormSection` to map your config to components. This way you don't have to integrate RHF to your input components yourself.
+    - If you use `useFormContext()` or components that use it (e.g. components that start with "Form" such as `FormSection`), don't forget to wrap your form with RHF's `FormProvider`.
+    - Make sure the field name you provide to RHF or `FormSection` match the position of field in your Zod schema (using dot notation).
 
 ---
 

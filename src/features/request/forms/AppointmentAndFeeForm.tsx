@@ -1,12 +1,16 @@
-import FormSection, { type FormField } from "@/shared/components/sections/FormSection";
+import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import SectionHeader from '@/shared/components/sections/SectionHeader';
 
 const AppointmentAndFeeForm = () => {
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <FormSection fields={appointmentAndFeeFields} namePrefix={'address'} />
-    </div>
+    <>
+      <SectionHeader title="Appointment and Fee" />
+      <div className="grid grid-cols-2 gap-3">
+        <FormSection fields={appointmentAndFeeFields} />
+      </div>
+    </>
   );
-}
+};
 
 export const appointmentAndFeeFields: FormField[] = [
   {
@@ -24,6 +28,7 @@ export const appointmentAndFeeFields: FormField[] = [
       },
     ],
     wrapperClassName: 'col-span-1',
+    required: true,
   },
   {
     type: 'text-input',
@@ -42,13 +47,15 @@ export const appointmentAndFeeFields: FormField[] = [
     label: 'Appointment Date/Time',
     name: '???4', // TODO
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'textarea',
     label: 'Location Detail',
     name: '???5', // TODO
     wrapperClassName: 'col-span-2',
+    required: true,
   },
-]
+];
 
 export default AppointmentAndFeeForm;

@@ -36,6 +36,7 @@ interface TableCellProps {
   control: Control<FieldValues, any, FieldValues>;
 }
 
+// TODO: Find and add unique key
 const FormTable = ({ name, headers }: FormTableProps) => {
   const { getValues, control } = useFormContext();
   const { append, remove } = useFieldArray({
@@ -62,22 +63,23 @@ const FormTable = ({ name, headers }: FormTableProps) => {
   return (
     <div>
       <table className="table">
-        <thead className="bg-lime-400">
+        <thead className="bg-primary">
           <tr>
-            {headers.map(header => (
-              <th>{header.label}</th>
+            {headers.map((header, index) => (
+              <th key={index} className="text-neutral-2">
+                {header.label}
+              </th>
             ))}
             <th></th>
           </tr>
         </thead>
         <tbody>
           {values.map((field: Record<string, any>, index: number) => (
-            // TODO: Find and add unique key
-            <tr>
-              {headers.map(header => {
+            <tr key={index}>
+              {headers.map((header, inner_index) => {
                 if ('name' in header) {
                   return (
-                    <td>
+                    <td key={inner_index}>
                       <TableCell
                         name={name}
                         index={index}
@@ -89,21 +91,21 @@ const FormTable = ({ name, headers }: FormTableProps) => {
                     </td>
                   );
                 } else {
-                  return <td>{index + 1}</td>;
+                  return <td key={inner_index}>{index + 1}</td>;
                 }
               })}
               <td className="flex gap-2 justify-end">
                 {editIndex === index ? (
                   <button type="button" onClick={() => setEditIndex(undefined)}>
-                    <Icon style="solid" name="check" className="text-cyan-600" />
+                    <Icon style="solid" name="check" className="text-secondary" />
                   </button>
                 ) : (
                   <button type="button" onClick={() => setEditIndex(index)}>
-                    <Icon style="solid" name="pen" className="text-cyan-600" />
+                    <Icon style="solid" name="pen" className="text-secondary" />
                   </button>
                 )}
                 <button type="button" onClick={() => handleDeleteRow(index)}>
-                  <Icon style="solid" name="trash" className="text-red-500" />
+                  <Icon style="solid" name="trash" className="text-danger" />
                 </button>
               </td>
             </tr>
@@ -113,10 +115,10 @@ const FormTable = ({ name, headers }: FormTableProps) => {
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="w-full flex items-center justify-center m-0 px-0 py-1 bg-neutral-100"
+                className="w-full flex items-center justify-center m-0 px-0 py-1 bg-neutral-2"
               >
-                <div className="bg-teal-600 size-6 rounded-full">
-                  <Icon style="solid" name="plus" className="text-neutral-100" />
+                <div className="bg-success size-6 rounded-full flex items-center justify-center">
+                  <Icon style="solid" name="plus" className="text-neutral-2" />
                 </div>
               </button>
             </td>
@@ -136,7 +138,7 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
   return (
     <div>
       {editIndex === index ? <Input type={header.inputType} {...field} /> : <div>{value}</div>}
-      {error && <div className="mt-1 text-sm text-red-600">{error?.message}</div>}
+      {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
   );
 };

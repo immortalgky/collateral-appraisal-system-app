@@ -1,17 +1,21 @@
 import Dropdown, { type ListBoxItem } from '../inputs/Dropdown';
-import Toggle from '../inputs/Toggle';
 import NumberInput from '../inputs/NumberInput';
 import { useController, useFormContext, type Control, type FieldValues } from 'react-hook-form';
 import TextInput from '../inputs/TextInput';
 import DateInput from '../inputs/DateInput';
 import clsx from 'clsx';
 import Textarea from '../inputs/Textarea';
-import DateTimeInput from '../inputs/DatetimeInput';
+import DateTimeInput from '../inputs/DateTimeInput';
 import SelectInput from '../inputs/SelectInput';
+import FormStringToggle, { type FormStringToggleOption } from '../inputs/FormStringToggle';
+import FormBooleanToggle from '../inputs/FormBooleanToggle';
+import type { AtLeastOne } from '@/shared/types';
+import type { ParameterParams } from '@/shared/types/api';
 
 interface FormSectionProps {
   fields: FormField[];
   namePrefix?: string;
+  index?: number;
 }
 
 export type FormField =
@@ -21,7 +25,8 @@ export type FormField =
   | DateTimeInputField
   | SelectInputField
   | DropdownField
-  | ToggleField
+  | BooleanToggleField
+  | StringToggleField
   | TextareaField;
 
 interface TextInputField extends BaseFormField {
@@ -50,17 +55,24 @@ interface SelectInputField extends BaseFormField {
   options: ListBoxItem[];
 }
 
-interface DropdownField extends BaseFormField {
+type DropdownField = BaseDropdownField &
+  AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
+
+interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';
   label: string;
-  options: ListBoxItem[];
 }
 
-interface ToggleField extends BaseFormField {
-  type: 'toggle';
+interface BooleanToggleField extends BaseFormField {
+  type: 'boolean-toggle';
   label: string;
-  options: string[];
-  valueType?: 'string' | 'boolean';
+  options: [string, string];
+}
+
+interface StringToggleField extends BaseFormField {
+  type: 'string-toggle';
+  label: string;
+  options: [FormStringToggleOption, FormStringToggleOption];
 }
 
 interface TextareaField extends BaseFormField {
@@ -73,29 +85,35 @@ interface BaseFormField {
   key?: string;
   className?: string;
   wrapperClassName?: string;
+  disabled?: boolean;
+  required?: boolean;
 }
 
 interface FieldProps {
   control: Control<FieldValues, any, FieldValues>;
   value: FormField;
   namePrefix?: string;
+  index?: number;
 }
 
-const FormSection = ({ fields, namePrefix = '' }: FormSectionProps) => {
+const FormSection = ({ fields, namePrefix = '', index }: FormSectionProps) => {
   const { control } = useFormContext();
   return (
     <>
       {fields.map(value => (
         <div className={clsx(value.wrapperClassName)} key={value.name}>
-          <Field control={control} value={value} namePrefix={namePrefix} />
+          <Field control={control} value={value} namePrefix={namePrefix} index={index} />
         </div>
       ))}
     </>
   );
 };
 
-const Field = ({ control, value, namePrefix }: FieldProps) => {
+const Field = ({ control, value, namePrefix, index }: FieldProps) => {
   let name = value.name;
+  if (index !== undefined) {
+    name = `${index}.${name}`;
+  }
   if (namePrefix !== undefined && namePrefix.trim() !== '') {
     name = `${namePrefix}.${name}`;
   }
@@ -104,6 +122,10 @@ const Field = ({ control, value, namePrefix }: FieldProps) => {
     field,
     fieldState: { error },
   } = useController({ name, control });
+
+  // Exclude wrapperClassName from being passed to the components
+  const { wrapperClassName: _, ...passedValue } = value;
+  value = passedValue;
 
   switch (value.type) {
     case 'text-input':
@@ -118,20 +140,26 @@ const Field = ({ control, value, namePrefix }: FieldProps) => {
       return <SelectInput {...field} {...value} error={error?.message} />;
     case 'dropdown':
       return <Dropdown {...field} {...value} error={error?.message} />;
-    case 'toggle':
+    case 'boolean-toggle':
       return (
-        <Toggle
+        <FormBooleanToggle
           label={value.label}
-          choices={value.options}
+          options={value.options}
           name={name}
-          valueType={value.valueType}
+          className={value.className}
+        />
+      );
+    case 'string-toggle':
+      return (
+        <FormStringToggle
+          label={value.label}
+          options={value.options}
+          name={name}
           className={value.className}
         />
       );
     case 'textarea':
-      return (
-        <Textarea {...field} {...value} error={error?.message} />
-      )
+      return <Textarea {...field} {...value} error={error?.message} />;
   }
 };
 

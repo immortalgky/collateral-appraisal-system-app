@@ -2,7 +2,7 @@ import { type InputHTMLAttributes } from 'react';
 import Input from '../Input';
 
 interface DateInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   error?: string;
   className?: string;
 }

@@ -1,10 +1,14 @@
+import SectionHeader from '@/shared/components/sections/SectionHeader';
 import FormTable from '../components/tables/FormTable';
 
 const CustomersForm = () => {
   return (
-    <div>
-      <FormTable headers={customersTableHeader} name={'customers'} />
-    </div>
+    <>
+      <SectionHeader title="Customers" />
+      <div>
+        <FormTable headers={customersTableHeader} name={'customers'} />
+      </div>
+    </>
   );
 };
 

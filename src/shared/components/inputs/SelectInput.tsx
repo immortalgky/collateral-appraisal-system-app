@@ -3,9 +3,9 @@ import Dropdown, { type ListBoxItem } from './Dropdown';
 
 interface SelectInputProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: ListBoxItem[];
-  label: string;
+  label?: string;
   placeholder?: string;
-  onChange: (value: any) => void;
+  onChange?: (value: any) => void;
   error?: string;
 }
 

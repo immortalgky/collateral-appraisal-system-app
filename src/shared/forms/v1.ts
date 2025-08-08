@@ -1,18 +1,17 @@
 import { z } from 'zod';
-import { coercedNumber } from './schemaTransform';
 
 export const ReferenceDto = z
   .object({
     prevAppraisalNo: z.string().nullable(),
-    prevAppraisalValue: z.number().nullable(),
+    prevAppraisalValue: z.coerce.number().nullable(),
     prevAppraisalDate: z.string().datetime({ offset: true }).nullable(),
   })
   .passthrough();
 export const LoanDetailDto = z
   .object({
     loanApplicationNo: z.string().nullable(),
-    limitAmt: coercedNumber(z.number().nullable()),
-    totalSellingPrice: z.number().nullable(),
+    limitAmt: z.coerce.number().nullable(),
+    totalSellingPrice: z.coerce.number().nullable(),
   })
   .passthrough();
 export const AddressDto = z
@@ -58,7 +57,11 @@ export const RequestCustomerDto = z
   .object({ name: z.string().min(1), contactNumber: z.string() })
   .passthrough();
 export const RequestPropertyDto = z
-  .object({ propertyType: z.string(), buildingType: z.string(), sellingPrice: coercedNumber(z.number()) })
+  .object({
+    propertyType: z.string(),
+    buildingType: z.string(),
+    sellingPrice: z.coerce.number(),
+  })
   .passthrough();
 export const RequestCommentDto = z.object({ comment: z.string() }).passthrough();
 export const UpdateRequestRequest = z
@@ -68,7 +71,7 @@ export const UpdateRequestRequest = z
     priority: z.string(),
     reference: ReferenceDto,
     channel: z.string(),
-    occurConstInspec: coercedNumber(z.number().int().nullable()),
+    occurConstInspec: z.coerce.number().int().nullable(),
     loanDetail: LoanDetailDto,
     address: AddressDto,
     contact: ContactDto,
@@ -87,7 +90,7 @@ export const RequestDetailDto = z
     priority: z.string(),
     reference: ReferenceDto,
     channel: z.string(),
-    occurConstInspec: z.number().int().nullable(),
+    occurConstInspec: z.coerce.number().int().nullable(),
     loanDetail: LoanDetailDto,
     address: AddressDto,
     contact: ContactDto,
@@ -97,7 +100,7 @@ export const RequestDetailDto = z
   .passthrough();
 export const GetRequestByIdResponse = z
   .object({
-    id: z.number().int(),
+    id: z.coerce.number().int(),
     appraisalNo: z.string(),
     status: z.string(),
     detail: RequestDetailDto,
@@ -107,13 +110,120 @@ export const DeleteRequestResponse = z.object({ isSuccess: z.boolean() }).passth
 export const UpdateRequestCommentRequest = z.object({ comment: z.string() }).passthrough();
 export const RequestDto = z
   .object({
-    id: z.number().int(),
+    id: z.coerce.number().int(),
     appraisalNo: z.string(),
     status: z.string(),
     detail: RequestDetailDto,
   })
   .passthrough();
 export const GetRequestResult = z.object({ requests: z.array(RequestDto) }).passthrough();
+export const TitleDocument = z
+  .object({
+    docType: z.string().nullable(),
+    fileName: z.string().nullable(),
+    uploadDate: z.string().datetime({ offset: true }),
+    prefix: z.string().nullable(),
+    set: z.coerce.number().int(),
+    comment: z.string().nullable(),
+    filePath: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const Collateral = z
+  .object({
+    collateralType: z.string(),
+    collateralStatus: z.string().nullable(),
+    titleNo: z.string().nullable(),
+    owner: z.string().nullable(),
+    noOfBuilding: z.coerce.number().int().nullable(),
+    titleDetail: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const Area = z
+  .object({
+    rai: z.coerce.number().nullable(),
+    ngan: z.coerce.number().nullable(),
+    wa: z.coerce.number().nullable(),
+    usageArea: z.coerce.number().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const Condo = z
+  .object({
+    condoName: z.string().nullable(),
+    condoBuildingNo: z.string().nullable(),
+    condoRoomNo: z.string().nullable(),
+    condoFloorNo: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const TitleAddress = z
+  .object({
+    houseNo: z.string().nullable(),
+    roomNo: z.string().nullable(),
+    floorNo: z.string().nullable(),
+    buildingNo: z.string().nullable(),
+    moo: z.string().nullable(),
+    soi: z.string().nullable(),
+    road: z.string().nullable(),
+    subDistrict: z.string(),
+    district: z.string(),
+    province: z.string(),
+    postcode: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const DopaAddress = z
+  .object({
+    dopaHouseNo: z.string().nullable(),
+    dopaRoomNo: z.string().nullable(),
+    dopaFloorNo: z.string().nullable(),
+    dopaBuildingNo: z.string().nullable(),
+    dopaMoo: z.string().nullable(),
+    dopaSoi: z.string().nullable(),
+    dopaRoad: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
+    dopaPostcode: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const Building = z.object({ buildingType: z.string().nullable() }).passthrough();
+export const Vehicle = z
+  .object({
+    vehicleType: z.string().nullable(),
+    vehicleRegistrationNo: z.string().nullable(),
+    vehAppointmentLocation: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const Machine = z
+  .object({
+    machineStatus: z.string().nullable(),
+    machineType: z.string().nullable(),
+    machineRegistrationStatus: z.string().nullable(),
+    machineRegistrationNo: z.string().nullable(),
+    machineInvoiceNo: z.string().nullable(),
+    noOfMachine: z.coerce.number().nullable(),
+  })
+  .partial()
+  .passthrough();
+export const RequestTitleDto = z
+  .object({
+    titleDocuments: z.array(TitleDocument).nullable(),
+    collateral: Collateral,
+    area: Area.nullable(),
+    condo: Condo.nullable(),
+    titleAddress: TitleAddress.nullable(),
+    dopaAddress: DopaAddress.nullable(),
+    building: Building.nullable(),
+    vehicle: Vehicle.nullable(),
+    machine: Machine.nullable(),
+  })
+  .partial()
+  .passthrough();
 export const CreateRequestRequest = z
   .object({
     purpose: z.string(),
@@ -121,7 +231,7 @@ export const CreateRequestRequest = z
     priority: z.string(),
     reference: ReferenceDto,
     channel: z.string(),
-    occurConstInspec: z.number().int().nullable(),
+    occurConstInspec: z.coerce.number().int().nullable(),
     loanDetail: LoanDetailDto,
     address: AddressDto,
     contact: ContactDto,
@@ -130,9 +240,10 @@ export const CreateRequestRequest = z
     customers: z.array(RequestCustomerDto),
     properties: z.array(RequestPropertyDto),
     comments: z.array(RequestCommentDto),
+    titles: z.array(RequestTitleDto),
   })
   .passthrough();
-export const CreateRequestResponse = z.object({ id: z.number().int() }).passthrough();
+export const CreateRequestResponse = z.object({ id: z.coerce.number().int() }).passthrough();
 export const AddCommentToRequestRequest = z.object({ comment: z.string() }).passthrough();
 export const TokenRequest = z
   .object({
@@ -142,6 +253,10 @@ export const TokenRequest = z
     codeVerifier: z.string(),
     redirectUri: z.string(),
   })
+  .passthrough();
+export const DecisionRequest = z
+  .object({ correlationId: z.string(), activityName: z.string(), actionTaken: z.string() })
+  .partial()
   .passthrough();
 
 export const schemas = {
@@ -162,12 +277,26 @@ export const schemas = {
   UpdateRequestCommentRequest,
   RequestDto,
   GetRequestResult,
+  TitleDocument,
+  Collateral,
+  Area,
+  Condo,
+  TitleAddress,
+  DopaAddress,
+  Building,
+  Vehicle,
+  Machine,
+  RequestTitleDto,
   CreateRequestRequest,
   CreateRequestResponse,
   AddCommentToRequestRequest,
   TokenRequest,
+  DecisionRequest,
 };
 
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
-export type AddressDtoType = z.infer<typeof AddressDto>;RequestPropertyDto
+export type CreateRequestResponseType = z.infer<typeof CreateRequestResponse>;
+export type AddressDtoType = z.infer<typeof AddressDto>;
+export type TitleAddressType = z.infer<typeof TitleAddress>;
 export type RequestPropertyDtoType = z.infer<typeof RequestPropertyDto>;
+export type RequestTitleDtoType = z.infer<typeof RequestTitleDto>;
