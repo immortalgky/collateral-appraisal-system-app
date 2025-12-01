@@ -41,6 +41,7 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off', // Not needed with React 17+
+      'react/prop-types': 'off', // Not needed with TypeScript
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'prettier/prettier': 'error', // show Prettier issues in ESLint
     },

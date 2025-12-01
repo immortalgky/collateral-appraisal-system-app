@@ -1,29 +1,36 @@
 @theme {
-  --color-primary: #68b7be;
-  --color-primary-50: #f1f9fa;
-  --color-primary-100: #dcf1f1;
-  --color-primary-200: #bce3e5;
-  --color-primary-300: #8ecdd2;
-  --color-primary-400: #68b7be;
-  --color-primary-500: #3d949d;
-  --color-primary-600: #367984;
-  --color-primary-700: #31636d;
-  --color-primary-800: #2f535b;
-  --color-primary-900: #2b474e;
-  --color-primary-950: #182d34;
-  --color-secondary: #377EB9;
-  --color-accent: #FFB703;
-  --color-success: #2A9D8F;
-  --color-danger: #E63946;
-  --color-neutral-1: #FAFAFA;
-  --color-neutral-2: #F7F7F7;
-  --color-neutral-3: #F1F1F1;
-  --color-neutral-4: #676769;
-  --color-neutral-5: #383838;
-  --color-neutral-6: #1F1F21;
-  --color-neutral-7: #5D5D5F;
-  --color-misc-1: #D2D2D2;
-  --color-misc-2: #C6C6C6;
-  --color-misc-3: #BFC5CE;
-  --color-misc-4: #E3EAF3;
+    --color-base-100: oklch(100% 0 0);
+    --color-base-200: oklch(98% 0 0);
+    --color-base-300: oklch(95% 0 0);
+    --color-base-content: oklch(21% 0.006 285.885);
+    --color-primary: #68B7BE;
+    --color-primary-content: oklch(98% 0.014 180.72);
+    --color-secondary: #377EB9;
+    --color-secondary-content: oklch(93% 0.032 255.585);
+    --color-accent: oklch(82% 0.189 84.429);
+    --color-accent-content: oklch(47% 0.137 46.201);
+    --color-info: oklch(74% 0.16 232.661);
+    --color-info-content: oklch(29% 0.066 243.157);
+    --color-success: oklch(76% 0.177 163.223);
+    --color-success-content: oklch(37% 0.077 168.94);
+    --color-warning: oklch(82% 0.189 84.429);
+    --color-warning-content: oklch(47% 0.137 46.201);
+    --color-error: oklch(71% 0.194 13.428);
+    --color-error-content: oklch(27% 0.105 12.094);
+    --color-neutral: oklch(14% 0.005 285.823);
+    --color-neutral-content: oklch(92% 0.004 286.32);
+
+    /* border radius */
+    --radius-selector: 0.5rem;
+    --radius-field: 0.25rem;
+    --radius-box: 0.5rem;
+
+    /* base sizes */
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+
+    /* effects */
+    --depth: 1;
+    --noise: 0;
 }
