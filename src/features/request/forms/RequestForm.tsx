@@ -1,14 +1,13 @@
 import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
-import SectionHeader from '@/shared/components/sections/SectionHeader';
+import FormCard from '@/shared/components/sections/FormCard';
 
 const RequestForm = () => {
   return (
-    <>
-      <SectionHeader title="Request" />
-      <div className="grid grid-cols-3 gap-3">
+    <FormCard title="Request">
+      <div className="grid grid-cols-3 gap-4">
         <FormSection fields={requestFields} />
       </div>
-    </>
+    </FormCard>
   );
 };
 

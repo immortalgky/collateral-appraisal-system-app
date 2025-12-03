@@ -40,7 +40,7 @@ function CreateRequestPage() {
 
   return (
     <div>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 mb-6">
         <AppHeader iconVariant="folder" title={'New request'} />
         <NavAnchors
           anchors={[
@@ -50,9 +50,9 @@ function CreateRequestPage() {
           ]}
         />
       </div>
-      <div className="flex flex-col gap-4 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
+      <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -60,18 +60,18 @@ function CreateRequestPage() {
               closedWidth="w-1/50"
             >
               <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-4 ">
-                  <Section id="request-information" anchor className="flex flex-col gap-4">
+                <div className="flex-auto flex flex-col gap-6">
+                  <Section id="request-information" anchor className="flex flex-col gap-6">
                     <CustomersForm />
                     <RequestForm />
                     <PropertiesForm />
                     <AddressForm />
                     <AppointmentAndFeeForm />
                   </Section>
-                  <Section id="title-document-info" anchor className="flex flex-col gap-4">
+                  <Section id="title-document-info" anchor className="flex flex-col gap-6">
                     <TitleInformationForm />
                   </Section>
-                  <Section id="attach-document" anchor className="flex flex-col gap-4">
+                  <Section id="attach-document" anchor className="flex flex-col gap-6">
                     <AttachDocumentForm />
                   </Section>
                 </div>
@@ -80,22 +80,24 @@ function CreateRequestPage() {
                 <RequestRightMenu />
               </ResizableSidebar.Sidebar>
             </ResizableSidebar>
-            <hr className="border-gray-200" />
-            <div className="flex justify-between">
-              <div className="flex divide-x gap-4">
-                <div className="border-gray-200">
+
+            {/* Action buttons */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
                   <CancelButton />
+                  <div className="h-6 w-px bg-gray-200" />
+                  <div className="flex gap-3">
+                    <DeleteButton />
+                    <DuplicateButton />
+                  </div>
                 </div>
-                <div className="flex gap-4">
-                  <DeleteButton />
-                  <DuplicateButton />
+                <div className="flex gap-3">
+                  <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                    Save draft
+                  </Button>
+                  <Button type="submit">Save</Button>
                 </div>
-              </div>
-              <div className="flex gap-4">
-                <Button variant="outline" type="button" onClick={handleSaveDraft}>
-                  Save draft
-                </Button>
-                <Button type="submit">Save</Button>
               </div>
             </div>
           </form>

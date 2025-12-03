@@ -74,9 +74,9 @@ const Dropdown = ({
   return (
     <div className={clsx('w-full', props.className)}>
       {label && (
-        <div className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="block text-sm font-medium text-gray-700 mb-1.5">
           {label}
-          {required && <span className="text-danger"> *</span>}
+          {required && <span className="text-danger ml-0.5">*</span>}
         </div>
       )}
       <ListBox
@@ -92,7 +92,7 @@ const Dropdown = ({
           </ListBoxOption>
         ))}
       </ListBox>
-      {error && <div className="mt-1 text-sm text-danger">{error}</div>}
+      {error && <div className="mt-1.5 text-sm text-danger">{error}</div>}
     </div>
   );
 };
@@ -102,24 +102,27 @@ const ListBox = ({ placeholder, children, disabled, error, ...props }: ListBoxPr
     <HeadlessListBox disabled={disabled} {...props}>
       <HeadlessListboxButton
         className={clsx(
-          'relative w-full rounded-lg border text-left focus:not-data-focus:outline-none pr-10',
-          disabled ? 'bg-neutral-100 hover:border-neutral-300' : 'bg-white',
+          'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-10',
+          'focus:outline-none focus:ring-2',
+          disabled
+            ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
+            : 'bg-white hover:border-gray-400',
           error
-            ? 'border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 hover:!border-red-500'
-            : 'border-neutral-300',
+            ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
+            : 'border-gray-300 focus:ring-primary-500/20 focus:border-primary-500',
         )}
       >
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-          <Icon style="regular" name="chevron-down" />
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-gray-400">
+          <Icon style="regular" name="chevron-down" className="size-4" />
         </div>
         <HeadlessListboxSelectedOption
-          placeholder={<div className="px-4 py-2 text-gray-400">{placeholder}</div>}
+          placeholder={<div className="px-4 py-2.5 text-gray-400">{placeholder}</div>}
           options={children}
         />
       </HeadlessListboxButton>
       <HeadlessListboxOptions
         anchor="bottom"
-        className="w-(--button-width) bg-white rounded-lg border border-neutral-300"
+        className="w-(--button-width) bg-white rounded-lg border border-gray-200 shadow-lg mt-1 py-1 z-50"
       >
         {children}
       </HeadlessListboxOptions>
@@ -131,10 +134,19 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
   return (
     <HeadlessListboxOption
       value={value}
-      className="group flex gap-2 data-focus:bg-primary-100 px-4 py-2 rounded-lg"
+      className={clsx(
+        'group flex gap-2 px-4 py-2.5 text-sm cursor-pointer transition-colors',
+        'data-focus:bg-primary-50 data-focus:text-primary-700',
+        'data-selected:bg-primary-100 data-selected:text-primary-800 data-selected:font-medium',
+      )}
       {...props}
     >
-      {({ selected }) => (selected ? <>{children}</> : <div>{children}</div>)}
+      {({ selected }) => (
+        <div className="flex items-center gap-2 w-full">
+          {selected && <Icon style="solid" name="check" className="size-4 text-primary-600" />}
+          <span className={selected ? '' : 'ml-6'}>{children}</span>
+        </div>
+      )}
     </HeadlessListboxOption>
   );
 };

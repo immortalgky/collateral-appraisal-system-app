@@ -15,3 +15,17 @@ export type ParameterStore = {
 export type StoredParameters = Record<string, Parameter[]>;
 
 export type AtLeastOne<T> = { [K in keyof T]: Pick<T, K> }[keyof T] & Partial<T>;
+
+export type BreadcrumbItem = {
+  label: string;
+  href: string;
+  icon?: string; // Icon name for the breadcrumb item
+};
+
+export type BreadcrumbStore = {
+  items: BreadcrumbItem[];
+  setItems: (items: BreadcrumbItem[]) => void;
+  push: (item: BreadcrumbItem) => void;
+  pop: () => void;
+  reset: () => void;
+};

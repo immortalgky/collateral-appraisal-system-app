@@ -1,0 +1,12 @@
+export { default as TaskSummaryWidget } from './TaskSummaryWidget';
+export { default as RecentTaskWidget } from './RecentTaskWidget';
+export { default as CalendarWidget } from './CalendarWidget';
+export { default as ReminderWidget } from './ReminderWidget';
+export { default as NotesWidget } from './NotesWidget';
+export { default as TotalAppraisalsWidget } from './TotalAppraisalsWidget';
+export { default as ProgressSummaryWidget } from './ProgressSummaryWidget';
+export { default as TeamWorkloadWidget } from './TeamWorkloadWidget';
+export { default as ExternalTaskSummaryWidget } from './ExternalTaskSummaryWidget';
+export { default as WidgetWrapper } from './WidgetWrapper';
+export { default as AddWidgetModal } from './AddWidgetModal';
+export { default as DraggableWidget } from './DraggableWidget';

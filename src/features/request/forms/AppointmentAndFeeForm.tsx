@@ -1,14 +1,13 @@
 import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
-import SectionHeader from '@/shared/components/sections/SectionHeader';
+import FormCard from '@/shared/components/sections/FormCard';
 
 const AppointmentAndFeeForm = () => {
   return (
-    <>
-      <SectionHeader title="Appointment and Fee" />
-      <div className="grid grid-cols-2 gap-3">
+    <FormCard title="Appointment and Fee">
+      <div className="grid grid-cols-2 gap-4">
         <FormSection fields={appointmentAndFeeFields} />
       </div>
-    </>
+    </FormCard>
   );
 };
 

@@ -7,7 +7,7 @@ import TitleBuildingForm from './TitleBuildingForm';
 import TitleCondoForm from './TitleCondoForm';
 import TitleVehicleForm from './TitleVehicleForm';
 import TitleMachineForm from './TitleMachineForm';
-import SectionHeader from '@/shared/components/sections/SectionHeader';
+import FormCard from '@/shared/components/sections/FormCard';
 import Icon from '@/shared/components/Icon';
 import TitleInformationTable from '../components/tables/TitleInformationTable';
 import TitleDocumentAdressForm from './TitleDocumentAddressForm';
@@ -36,17 +36,20 @@ const TitleInformationForm = () => {
   }
 
   return (
-    <>
-      <SectionHeader
-        title="Title Information"
-        rightIcon={
-          editIndex !== undefined && (
-            <button type="button" onClick={() => setEditIndex(undefined)}>
-              <Icon style="light" name="square-list" />
-            </button>
-          )
-        }
-      />
+    <FormCard
+      title="Title Information"
+      rightIcon={
+        editIndex !== undefined && (
+          <button
+            type="button"
+            onClick={() => setEditIndex(undefined)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          >
+            <Icon style="light" name="square-list" className="size-5" />
+          </button>
+        )
+      }
+    >
       <div className="flex gap-6">
         <div className="w-1/5">
           <TitleItemCardPanel name="titles" setEditIndex={setEditIndex} />
@@ -59,7 +62,7 @@ const TitleInformationForm = () => {
           />
         </div>
       </div>
-    </>
+    </FormCard>
   );
 };
 

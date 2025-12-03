@@ -35,15 +35,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={clsx(fullWidth && 'w-full')}>
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1.5">
             {label}
-            {required && <span className="text-danger"> *</span>}
+            {required && <span className="text-danger ml-0.5">*</span>}
           </label>
         )}
 
         <div className={clsx('relative', fullWidth && 'w-full')}>
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
               {leftIcon}
             </div>
           )}
@@ -52,11 +52,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={clsx(
-              'block px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
+              'block px-4 py-2.5 border rounded-lg text-sm transition-colors duration-200',
+              'placeholder:text-gray-400',
               error
-                ? 'border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500'
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500',
-              disabled ? 'bg-neutral-2' : 'bg-white',
+                ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
+                : 'border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+              disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-400',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               fullWidth && 'w-full',
@@ -72,7 +73,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-gray-400">
               {rightIcon}
             </div>
           )}
@@ -80,7 +81,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {(helperText || error) && (
           <p
-            className={clsx('mt-1 text-sm', error ? 'text-red-600' : 'text-gray-500')}
+            className={clsx('mt-1.5 text-sm', error ? 'text-danger' : 'text-gray-500')}
             id={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
           >
             {error || helperText}

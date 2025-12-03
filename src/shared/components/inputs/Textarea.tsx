@@ -16,30 +16,34 @@ const Textarea = ({
   fullWidth = true,
   required,
   disabled,
+  className,
   ...props
 }: TextareaProps) => {
   return (
     <Field className={clsx(fullWidth && 'w-full', 'flex', 'flex-col')}>
       {label && (
-        <Label className="block text-sm font-medium text-gray-700 mb-1">
+        <Label className="block text-sm font-medium text-gray-700 mb-1.5">
           {label}
-          {required && <span className="text-red-500"> *</span>}
+          {required && <span className="text-danger ml-0.5">*</span>}
         </Label>
       )}
       <HeadlessTextarea
         className={clsx(
-          'block px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
+          'block px-4 py-2.5 border rounded-lg text-sm transition-colors duration-200',
+          'placeholder:text-gray-400 resize-none',
           error
-            ? 'border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500'
-            : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500',
-          disabled ? 'bg-neutral-100' : 'bg-white',
+            ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
+            : 'border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+          disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-400',
+          fullWidth && 'w-full',
+          className,
         )}
         required={required}
         disabled={disabled}
         {...props}
       />
       {(helperText || error) && (
-        <p className={clsx('mt-1 text-sm', error ? 'text-danger' : 'text-gray-500')}>
+        <p className={clsx('mt-1.5 text-sm', error ? 'text-danger' : 'text-gray-500')}>
           {error || helperText}
         </p>
       )}

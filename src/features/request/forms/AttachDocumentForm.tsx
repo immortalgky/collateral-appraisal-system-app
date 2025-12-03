@@ -1,12 +1,11 @@
-import SectionHeader from '@/shared/components/sections/SectionHeader';
+import FormCard from '@/shared/components/sections/FormCard';
 import CreateRequestFileInput from '../components/CreateRequestFileInput';
 
 const AttachDocumentForm = () => {
   return (
-    <>
-      <SectionHeader title="Attach document" />
+    <FormCard title="Attach Document">
       <CreateRequestFileInput />
-    </>
+    </FormCard>
   );
 };
 
