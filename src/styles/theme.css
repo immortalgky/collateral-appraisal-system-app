@@ -1,36 +1,83 @@
 @theme {
-    --color-base-100: oklch(100% 0 0);
-    --color-base-200: oklch(98% 0 0);
-    --color-base-300: oklch(95% 0 0);
-    --color-base-content: oklch(21% 0.006 285.885);
-    --color-primary: #68B7BE;
-    --color-primary-content: oklch(98% 0.014 180.72);
-    --color-secondary: #377EB9;
-    --color-secondary-content: oklch(93% 0.032 255.585);
-    --color-accent: oklch(82% 0.189 84.429);
-    --color-accent-content: oklch(47% 0.137 46.201);
-    --color-info: oklch(74% 0.16 232.661);
-    --color-info-content: oklch(29% 0.066 243.157);
-    --color-success: oklch(76% 0.177 163.223);
-    --color-success-content: oklch(37% 0.077 168.94);
-    --color-warning: oklch(82% 0.189 84.429);
-    --color-warning-content: oklch(47% 0.137 46.201);
-    --color-error: oklch(71% 0.194 13.428);
-    --color-error-content: oklch(27% 0.105 12.094);
-    --color-neutral: oklch(14% 0.005 285.823);
-    --color-neutral-content: oklch(92% 0.004 286.32);
+    /* LH Bank Brand Colors - Based on logo color bars */
+    /* Primary: Blue - professional, trustworthy */
+    --color-primary: #0369A1;
+    --color-primary-50: #f0f9ff;
+    --color-primary-100: #e0f2fe;
+    --color-primary-200: #bae6fd;
+    --color-primary-300: #7dd3fc;
+    --color-primary-400: #38bdf8;
+    --color-primary-500: #0ea5e9;
+    --color-primary-600: #0284c7;
+    --color-primary-700: #0369a1;
+    --color-primary-800: #075985;
+    --color-primary-900: #0c4a6e;
+    --color-primary-950: #082f49;
 
-    /* border radius */
-    --radius-selector: 0.5rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.5rem;
+    /* Secondary: Purple/Magenta from logo */
+    --color-secondary: #7C3AED;
+    --color-secondary-50: #f5f3ff;
+    --color-secondary-100: #ede9fe;
+    --color-secondary-200: #ddd6fe;
+    --color-secondary-300: #c4b5fd;
+    --color-secondary-400: #a78bfa;
+    --color-secondary-500: #8b5cf6;
+    --color-secondary-600: #7c3aed;
+    --color-secondary-700: #6d28d9;
+    --color-secondary-800: #5b21b6;
+    --color-secondary-900: #4c1d95;
 
-    /* base sizes */
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 1px;
+    /* Accent: Yellow/Gold from logo */
+    --color-accent: #F59E0B;
+    --color-accent-50: #fffbeb;
+    --color-accent-100: #fef3c7;
+    --color-accent-200: #fde68a;
+    --color-accent-300: #fcd34d;
+    --color-accent-400: #fbbf24;
+    --color-accent-500: #f59e0b;
+    --color-accent-600: #d97706;
+    --color-accent-700: #b45309;
+    --color-accent-800: #92400e;
+    --color-accent-900: #78350f;
 
-    /* effects */
-    --depth: 1;
-    --noise: 0;
+    /* Success: Green from logo */
+    --color-success: #22C55E;
+    --color-success-50: #f0fdf4;
+    --color-success-100: #dcfce7;
+    --color-success-200: #bbf7d0;
+    --color-success-300: #86efac;
+    --color-success-400: #4ade80;
+    --color-success-500: #22c55e;
+    --color-success-600: #16a34a;
+    --color-success-700: #15803d;
+    --color-success-800: #166534;
+    --color-success-900: #14532d;
+
+    /* Danger/Error */
+    --color-danger: #EF4444;
+    --color-danger-50: #fef2f2;
+    --color-danger-100: #fee2e2;
+    --color-danger-200: #fecaca;
+    --color-danger-300: #fca5a5;
+    --color-danger-400: #f87171;
+    --color-danger-500: #ef4444;
+    --color-danger-600: #dc2626;
+    --color-danger-700: #b91c1c;
+    --color-danger-800: #991b1b;
+    --color-danger-900: #7f1d1d;
+
+    /* Neutrals */
+    --color-neutral-1: #FAFAFA;
+    --color-neutral-2: #F7F7F7;
+    --color-neutral-3: #F1F1F1;
+    --color-neutral-4: #676769;
+    --color-neutral-5: #383838;
+    --color-neutral-6: #1F1F21;
+    --color-neutral-7: #5D5D5F;
+
+    /* Misc/Border colors */
+    --color-misc-1: #D2D2D2;
+    --color-misc-2: #C6C6C6;
+    --color-misc-3: #BFC5CE;
+    --color-misc-4: #E3EAF3;
 }
