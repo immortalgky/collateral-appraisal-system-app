@@ -56,9 +56,7 @@ const RadioGroup = ({
 
   return (
     <Field className={clsx('flex flex-col', className)}>
-      {label && (
-        <Label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>
-      )}
+      {label && <Label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
 
       <HeadlessRadioGroup
         value={value}
@@ -71,7 +69,7 @@ const RadioGroup = ({
           orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
         )}
       >
-        {options.map((option) => (
+        {options.map(option => (
           <HeadlessRadio
             key={option.value}
             value={option.value}
@@ -107,9 +105,7 @@ const RadioGroup = ({
                 {option.label}
               </Label>
               {option.description && (
-                <Description className="text-sm text-neutral-4">
-                  {option.description}
-                </Description>
+                <Description className="text-sm text-neutral-4">{option.description}</Description>
               )}
             </div>
           </HeadlessRadio>

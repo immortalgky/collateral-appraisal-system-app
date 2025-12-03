@@ -110,6 +110,13 @@ export const mainNavigation: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Create Colalteral Condo',
+        href: '/dev/colCondo',
+        icon: 'apartment',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];
