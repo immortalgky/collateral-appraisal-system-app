@@ -1,16 +1,15 @@
-import SectionHeader from '@/shared/components/sections/SectionHeader';
+import FormCard from '@/shared/components/sections/FormCard';
 import type { FormField } from '../../../shared/components/sections/FormSection';
 import FormSection from '../../../shared/components/sections/FormSection';
 
 const AddressForm = () => {
   return (
-    <>
-      <SectionHeader title="Location" />
-      <div className="grid grid-cols-6 gap-3">
+    <FormCard title="Location">
+      <div className="grid grid-cols-6 gap-4">
         <FormSection fields={addressFields} namePrefix={'address'} />
         <FormSection fields={contactFields} namePrefix={'contact'} />
       </div>
-    </>
+    </FormCard>
   );
 };
 

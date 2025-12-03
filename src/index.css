@@ -65,6 +65,12 @@ button:focus-visible {
     display: inline-block;
 }
 
+/* Smooth transition for menu items */
+.menu li > a,
+.menu li > button {
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 @media (prefers-color-scheme: light) {
     :root {
         color: #213547;

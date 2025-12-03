@@ -2,7 +2,7 @@ import Input from '@/shared/components/Input';
 import FormTable from '../components/tables/FormTable';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 import type { RequestPropertyDtoType } from '@/shared/forms/v1';
-import SectionHeader from '@/shared/components/sections/SectionHeader';
+import FormCard from '@/shared/components/sections/FormCard';
 
 const PropertiesForm = () => {
   const { control } = useFormContext();
@@ -15,20 +15,21 @@ const PropertiesForm = () => {
   const totalSellingPrice = calcTotalPrice(properties);
 
   return (
-    <>
-      <SectionHeader title="Properties" />
+    <FormCard title="Properties" noPadding>
       <div>
         <FormTable headers={propertiesTableHeader} name={'properties'} />
-        <Input
-          type="number"
-          {...field}
-          label="Total Selling Price"
-          value={totalSellingPrice}
-          error={error?.message}
-          readOnly
-        />
+        <div className="px-6 pb-6">
+          <Input
+            type="number"
+            {...field}
+            label="Total Selling Price"
+            value={totalSellingPrice}
+            error={error?.message}
+            readOnly
+          />
+        </div>
       </div>
-    </>
+    </FormCard>
   );
 };
 

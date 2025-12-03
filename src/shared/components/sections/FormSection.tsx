@@ -9,6 +9,10 @@ import DateTimeInput from '../inputs/DateTimeInput';
 import SelectInput from '../inputs/SelectInput';
 import FormStringToggle, { type FormStringToggleOption } from '../inputs/FormStringToggle';
 import FormBooleanToggle from '../inputs/FormBooleanToggle';
+import FormCheckbox from '../inputs/FormCheckbox';
+import FormRadioGroup from '../inputs/FormRadioGroup';
+import FormSwitch from '../inputs/FormSwitch';
+import type { RadioOption } from '../inputs/RadioGroup';
 import type { AtLeastOne } from '@/shared/types';
 import type { ParameterParams } from '@/shared/types/api';
 
@@ -27,7 +31,10 @@ export type FormField =
   | DropdownField
   | BooleanToggleField
   | StringToggleField
-  | TextareaField;
+  | TextareaField
+  | CheckboxField
+  | RadioGroupField
+  | SwitchField;
 
 interface TextInputField extends BaseFormField {
   type: 'text-input';
@@ -78,6 +85,29 @@ interface StringToggleField extends BaseFormField {
 interface TextareaField extends BaseFormField {
   type: 'textarea';
   label: string;
+}
+
+interface CheckboxField extends BaseFormField {
+  type: 'checkbox';
+  label?: string;
+  description?: string;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+interface RadioGroupField extends BaseFormField {
+  type: 'radio-group';
+  label?: string;
+  options: RadioOption[];
+  size?: 'sm' | 'md' | 'lg';
+  orientation?: 'horizontal' | 'vertical';
+}
+
+interface SwitchField extends BaseFormField {
+  type: 'switch';
+  label?: string;
+  description?: string;
+  size?: 'sm' | 'md' | 'lg';
+  labelPosition?: 'left' | 'right';
 }
 
 interface BaseFormField {
@@ -160,6 +190,41 @@ const Field = ({ control, value, namePrefix, index }: FieldProps) => {
       );
     case 'textarea':
       return <Textarea {...field} {...value} error={error?.message} />;
+    case 'checkbox':
+      return (
+        <FormCheckbox
+          name={name}
+          label={value.label}
+          description={value.description}
+          disabled={value.disabled}
+          className={value.className}
+          size={value.size}
+        />
+      );
+    case 'radio-group':
+      return (
+        <FormRadioGroup
+          name={name}
+          label={value.label}
+          options={value.options}
+          disabled={value.disabled}
+          className={value.className}
+          size={value.size}
+          orientation={value.orientation}
+        />
+      );
+    case 'switch':
+      return (
+        <FormSwitch
+          name={name}
+          label={value.label}
+          description={value.description}
+          disabled={value.disabled}
+          className={value.className}
+          size={value.size}
+          labelPosition={value.labelPosition}
+        />
+      );
   }
 };
 

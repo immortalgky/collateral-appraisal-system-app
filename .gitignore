@@ -27,3 +27,6 @@ dist-ssr
 .env.local
 .env
 *.env
+
+# TypeScript build info
+*.tsbuildinfo
