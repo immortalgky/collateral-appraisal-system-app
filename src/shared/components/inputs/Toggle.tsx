@@ -35,7 +35,7 @@ const Toggle = ({ label, options, error, required, className, ...props }: Toggle
                   className={clsx(
                     'py-2 px-4 rounded-full transition-all duration-200 cursor-pointer select-none',
                     isActive
-                      ? 'bg-primary-600 text-white shadow-sm font-medium'
+                      ? 'bg-primary text-white shadow-sm font-medium'
                       : 'text-gray-600 hover:text-gray-800',
                   )}
                 >

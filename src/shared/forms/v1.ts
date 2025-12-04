@@ -210,20 +210,145 @@ export const Machine = z
   })
   .partial()
   .passthrough();
-export const RequestTitleDto = z
-  .object({
-    titleDocuments: z.array(TitleDocument).nullable(),
-    collateral: Collateral,
-    area: Area.nullable(),
-    condo: Condo.nullable(),
-    titleAddress: TitleAddress.nullable(),
-    dopaAddress: DopaAddress.nullable(),
-    building: Building.nullable(),
-    vehicle: Vehicle.nullable(),
-    machine: Machine.nullable(),
-  })
-  .partial()
-  .passthrough();
+// Base fields shared by all title types
+const BaseTitleFields = {
+  titleDocuments: z.array(TitleDocument).nullable().optional(),
+  collateralStatus: z.string().nullable().optional(),
+  owner: z.string().nullable().optional(),
+  noOfBuilding: z.coerce.number().int().nullable().optional(),
+  titleDetail: z.string().nullable().optional(),
+  area: Area.nullable().optional(),
+  titleAddress: TitleAddress.nullable().optional(),
+  dopaAddress: DopaAddress.nullable().optional(),
+};
+
+// Land title schema
+const LandTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('land'),
+  titleNo: z.string().min(1, 'Title number is required'),
+  condo: Condo.nullable().optional(),
+  building: Building.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Building title schema
+const BuildingTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('building'),
+  titleNo: z.string().min(1, 'Title number is required'),
+  building: z.object({ buildingType: z.string().min(1, 'Building type is required') }),
+  condo: Condo.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Land and Building title schema
+const LandAndBuildingTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('landAndBuilding'),
+  titleNo: z.string().min(1, 'Title number is required'),
+  building: z.object({ buildingType: z.string().min(1, 'Building type is required') }),
+  condo: Condo.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Condominium title schema
+const CondominiumTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('condominium'),
+  titleNo: z.string().nullable().optional(),
+  condo: z.object({
+    condoName: z.string().min(1, 'Condo name is required'),
+    condoRoomNo: z.string().min(1, 'Room number is required'),
+    condoBuildingNo: z.string().nullable().optional(),
+    condoFloorNo: z.string().nullable().optional(),
+  }),
+  building: Building.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Vehicle title schema
+const VehicleTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('vehicle'),
+  titleNo: z.string().nullable().optional(),
+  vehicle: z.object({
+    vehicleType: z.string().min(1, 'Vehicle type is required'),
+    vehicleRegistrationNo: z.string().min(1, 'Registration number is required'),
+    vehAppointmentLocation: z.string().nullable().optional(),
+  }),
+  condo: Condo.nullable().optional(),
+  building: Building.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Machine title schema
+const MachineTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('machine'),
+  titleNo: z.string().nullable().optional(),
+  machine: z.object({
+    machineType: z.string().min(1, 'Machine type is required'),
+    machineRegistrationNo: z.string().min(1, 'Registration number is required'),
+    machineStatus: z.string().nullable().optional(),
+    machineRegistrationStatus: z.string().nullable().optional(),
+    machineInvoiceNo: z.string().nullable().optional(),
+    noOfMachine: z.coerce.number().nullable().optional(),
+  }),
+  condo: Condo.nullable().optional(),
+  building: Building.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+});
+
+// Lease Agreement Land
+const LeaseAgreementLandTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('leaseAgreementLand'),
+  titleNo: z.string().min(1, 'Title number is required'),
+  condo: Condo.nullable().optional(),
+  building: Building.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Lease Agreement Building
+const LeaseAgreementBuildingTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('leaseAgreementBuilding'),
+  titleNo: z.string().min(1, 'Title number is required'),
+  building: z.object({ buildingType: z.string().min(1, 'Building type is required') }),
+  condo: Condo.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Lease Agreement Land and Building
+const LeaseAgreementLandAndBuildingTitleDto = z.object({
+  ...BaseTitleFields,
+  collateralType: z.literal('leaseAgreementLandAndBuilding'),
+  titleNo: z.string().min(1, 'Title number is required'),
+  building: z.object({ buildingType: z.string().min(1, 'Building type is required') }),
+  condo: Condo.nullable().optional(),
+  vehicle: Vehicle.nullable().optional(),
+  machine: Machine.nullable().optional(),
+});
+
+// Combined discriminated union
+export const RequestTitleDto = z.discriminatedUnion('collateralType', [
+  LandTitleDto,
+  BuildingTitleDto,
+  LandAndBuildingTitleDto,
+  CondominiumTitleDto,
+  VehicleTitleDto,
+  MachineTitleDto,
+  LeaseAgreementLandTitleDto,
+  LeaseAgreementBuildingTitleDto,
+  LeaseAgreementLandAndBuildingTitleDto,
+]);
 export const CreateRequestRequest = z
   .object({
     purpose: z.string(),

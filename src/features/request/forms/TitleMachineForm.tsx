@@ -80,6 +80,7 @@ const machineFields: FormField[] = [
     name: 'machine.noOfMachine',
     wrapperClassName: 'col-span-3',
     required: true,
+    decimalPlaces: 0,
   },
 ];
 

@@ -44,6 +44,8 @@ interface TextInputField extends BaseFormField {
 interface NumberInputField extends BaseFormField {
   type: 'number-input';
   label: string;
+  decimalPlaces?: number;
+  allowNegative?: boolean;
 }
 
 interface DateInputField extends BaseFormField {

@@ -3,7 +3,7 @@ import CreateRequestFileInput from '../components/CreateRequestFileInput';
 
 const AttachDocumentForm = () => {
   return (
-    <FormCard title="Attach Document">
+    <FormCard title="Attach Document" icon="paperclip" iconColor="teal">
       <CreateRequestFileInput />
     </FormCard>
   );

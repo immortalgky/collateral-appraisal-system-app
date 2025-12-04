@@ -1,19 +1,22 @@
-import FormCard from '@/shared/components/sections/FormCard';
-import type { FormField } from '../../../shared/components/sections/FormSection';
-import FormSection from '../../../shared/components/sections/FormSection';
+import type { FormField } from '@shared/components/sections/FormSection';
+import FormSection from '@shared/components/sections/FormSection';
+import { SectionHeader } from '@shared/components';
 
 const AddressForm = () => {
   return (
-    <FormCard title="Location">
+    <div>
+      {/*<FormCard title="Location">*/}
+      <SectionHeader title="Location" />
       <div className="grid grid-cols-6 gap-4">
         <FormSection fields={addressFields} namePrefix={'address'} />
         <FormSection fields={contactFields} namePrefix={'contact'} />
       </div>
-    </FormCard>
+      {/*</FormCard>*/}
+    </div>
   );
 };
 
-export const addressFields: FormField[] = [
+const addressFields: FormField[] = [
   {
     type: 'text-input',
     label: 'House No',
@@ -87,7 +90,8 @@ export const addressFields: FormField[] = [
     disabled: true,
   },
 ];
-export const contactFields: FormField[] = [
+
+const contactFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Contact Person Name',

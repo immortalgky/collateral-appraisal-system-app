@@ -38,7 +38,7 @@ const buildingFields: FormField[] = [
   {
     type: 'number-input',
     label: 'Number of Building',
-    name: 'collateral.noOfBuilding',
+    name: 'noOfBuilding',
     wrapperClassName: 'col-span-3',
     required: true,
   },

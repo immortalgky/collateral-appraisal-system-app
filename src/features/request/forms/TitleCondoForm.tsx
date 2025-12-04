@@ -43,18 +43,19 @@ const condoFields: FormField[] = [
     name: 'area.usageArea',
     wrapperClassName: 'col-span-2',
     required: true,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
     label: 'Owner',
-    name: 'collateral.owner',
+    name: 'owner',
     wrapperClassName: 'col-span-6',
     required: true,
   },
   {
     type: 'textarea',
     label: 'Title Detail',
-    name: 'collateral.titleDetail',
+    name: 'titleDetail',
     wrapperClassName: 'col-span-6',
   },
 ];

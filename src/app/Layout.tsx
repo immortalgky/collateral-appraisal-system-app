@@ -22,15 +22,15 @@ function Layout() {
   }, [data, isSuccess, setParameters]);
 
   return (
-    <div>
+    <div className="h-screen flex flex-col">
       <MobileSidebar navigation={mainNavigation} logo={Logo} />
       <Sidebar navigation={mainNavigation} logo={Logo} />
 
-      <div className="lg:pl-72">
+      <div className="lg:pl-72 flex-1 flex flex-col min-h-0">
         <Navbar userNavigation={userNavigation} />
 
-        <main className="py-4">
-          <div className="px-4 sm:px-6 lg:px-8">
+        <main className="py-4 flex-1 flex flex-col min-h-0">
+          <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
             <Breadcrumb items={breadcrumbItems} className="mb-4" />
             <ErrorBoundary>
               <Outlet />

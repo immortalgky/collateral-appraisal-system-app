@@ -1,17 +1,20 @@
 import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
-import FormCard from '@/shared/components/sections/FormCard';
+import { SectionHeader } from '@shared/components';
 
 const AppointmentAndFeeForm = () => {
   return (
-    <FormCard title="Appointment and Fee">
+    <div>
+      <SectionHeader title="Appointment and Fee" />
+      {/*<FormCard title="Appointment and Fee">*/}
       <div className="grid grid-cols-2 gap-4">
         <FormSection fields={appointmentAndFeeFields} />
       </div>
-    </FormCard>
+      {/*</FormCard>*/}
+    </div>
   );
 };
 
-export const appointmentAndFeeFields: FormField[] = [
+const appointmentAndFeeFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fee Type',

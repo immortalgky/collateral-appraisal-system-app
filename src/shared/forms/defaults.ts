@@ -1,4 +1,4 @@
-import { type CreateRequestRequestType, type RequestTitleDtoType } from './v1';
+import { type CreateRequestRequestType } from './v1';
 
 export const createRequestRequestDefaults: CreateRequestRequestType = {
   purpose: '',
@@ -56,16 +56,16 @@ export const createRequestRequestDefaults: CreateRequestRequestType = {
   titles: [],
 };
 
-export const requestTitleDtoDefaults: RequestTitleDtoType = {
+export const requestTitleDtoDefaults = {
+  // Discriminator field - now at top level
+  collateralType: '' as string,
+  // Common fields - moved from collateral object
+  titleNo: '',
+  collateralStatus: '',
+  owner: '',
+  noOfBuilding: '' as unknown as number,
+  titleDetail: '',
   titleDocuments: [],
-  collateral: {
-    collateralType: 'land',
-    collateralStatus: '',
-    titleNo: '',
-    owner: '',
-    noOfBuilding: '' as unknown as number,
-    titleDetail: '',
-  },
   area: {
     rai: '' as unknown as number,
     ngan: '' as unknown as number,
@@ -73,12 +73,10 @@ export const requestTitleDtoDefaults: RequestTitleDtoType = {
     usageArea: '' as unknown as number,
   },
   condo: {
-    collateralType: '',
-    collateralStatus: '',
-    titleNo: '',
-    owner: '',
-    noOfBuilding: '',
-    titleDetail: '',
+    condoName: '',
+    condoBuildingNo: '',
+    condoRoomNo: '',
+    condoFloorNo: '',
   },
   titleAddress: {
     houseNo: '',
@@ -94,17 +92,17 @@ export const requestTitleDtoDefaults: RequestTitleDtoType = {
     postcode: '',
   },
   dopaAddress: {
-    houseNo: '',
-    roomNo: '',
-    floorNo: '',
-    buildingNo: '',
-    moo: '',
-    soi: '',
-    road: '',
-    subDistrict: '',
-    district: '',
-    province: '',
-    postcode: '',
+    dopaHouseNo: '',
+    dopaRoomNo: '',
+    dopaFloorNo: '',
+    dopaBuildingNo: '',
+    dopaMoo: '',
+    dopaSoi: '',
+    dopaRoad: '',
+    dopaSubDistrict: '',
+    dopaDistrict: '',
+    dopaProvince: '',
+    dopaPostcode: '',
   },
   building: {
     buildingType: '',
