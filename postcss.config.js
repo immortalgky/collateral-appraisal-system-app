@@ -1,6 +1,6 @@
 export default {
   plugins: {
-    "@tailwindcss/postcss": {
+    '@tailwindcss/postcss': {
       // Enable additional features
       form: true, // For form styling
       typography: true, // For typography features

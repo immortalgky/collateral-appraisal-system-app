@@ -39,11 +39,13 @@ interface TableCellProps {
 // TODO: Find and add unique key
 const FormTable = ({ name, headers }: FormTableProps) => {
   const { getValues, control } = useFormContext();
+  console.log(getValues());
   const { append, remove } = useFieldArray({
     control,
     name: name,
   });
   const values = getValues(name);
+  console.log(values);
   const [editIndex, setEditIndex] = useState<number | undefined>();
   const handleDeleteRow = (index: number) => {
     setEditIndex(undefined);
@@ -68,11 +70,16 @@ const FormTable = ({ name, headers }: FormTableProps) => {
         <thead>
           <tr className="bg-primary-700">
             {headers.map((header, index) => (
-              <th key={index} className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg">
+              <th
+                key={index}
+                className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg"
+              >
                 {header.label}
               </th>
             ))}
-            <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">Actions</th>
+            <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">

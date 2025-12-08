@@ -1,4 +1,3 @@
-import FormCard from '@/shared/components/sections/FormCard';
 import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
 
 interface CondoLocationFormProps {
@@ -7,7 +6,7 @@ interface CondoLocationFormProps {
 
 const CondoLocation = ({ index }: CondoLocationFormProps) => {
   return (
-    <div className="grid grid-cols-4 gap-4 border-b border-gray-100 pb-6">
+    <div className="grid grid-cols-4 gap-6">
       <div className="font-medium col-span-1">
         <p className="col-span-1">Condominium Location</p>
       </div>
@@ -81,6 +80,20 @@ const condoLocationFields: FormField[] = [
       { value: '1', label: 'Correct' },
       { value: '0', label: 'Incorrect' },
     ],
+  },
+  {
+    type: 'checkbox',
+    label: 'Permanent Electricity',
+    name: 'condo.permanentElectricity',
+    wrapperClassName: 'col-span-2',
+    required: true,
+  },
+  {
+    type: 'checkbox',
+    label: 'Tap water / ground water',
+    name: 'condo.waterSupply',
+    wrapperClassName: 'col-span-2',
+    required: true,
   },
 ];
 

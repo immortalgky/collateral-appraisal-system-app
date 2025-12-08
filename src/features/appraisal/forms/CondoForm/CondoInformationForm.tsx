@@ -6,7 +6,7 @@ interface CollateralCondoFormProps {
 
 const CondoInformationForm = ({ index }: CollateralCondoFormProps) => {
   return (
-    <div className="grid grid-cols-4 gap-4 border-b border-gray-100 pb-6">
+    <div className="grid grid-cols-4 gap-6 p-b">
       <div className="font-medium col-span-1">
         <p className="col-span-1">Condominum Information</p>
       </div>
@@ -21,7 +21,7 @@ const condoFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Property Name',
-    name: 'condo.condoPropertyName',
+    name: 'condo.propertyName',
     wrapperClassName: 'col-span-12',
     required: true,
   },
