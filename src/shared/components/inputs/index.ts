@@ -1,5 +1,7 @@
 // Input components
 export { default as Checkbox } from './Checkbox';
+export { default as CheckboxGroup } from './CheckboxGroup';
+export type { CheckboxOption } from './CheckboxGroup';
 export { default as DateInput } from './DateInput';
 export { default as DateTimeInput } from './DateTimeInput';
 export { default as Dropdown } from './Dropdown';
@@ -17,6 +19,7 @@ export { default as Toggle } from './Toggle';
 // Form-integrated components (React Hook Form)
 export { default as FormBooleanToggle } from './FormBooleanToggle';
 export { default as FormCheckbox } from './FormCheckbox';
+export { default as FormCheckboxGroup } from './FormCheckboxGroup';
 export { default as FormRadioGroup } from './FormRadioGroup';
 export { default as FormStringToggle } from './FormStringToggle';
 export type { FormStringToggleOption } from './FormStringToggle';

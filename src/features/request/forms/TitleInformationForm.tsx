@@ -34,7 +34,6 @@ const TitleInformationForm = () => {
   if (editIndex !== undefined && titles.length > editIndex) {
     currentFormType = titles[editIndex].collateral.collateralType;
   }
-
   return (
     <FormCard
       title="Title Information"

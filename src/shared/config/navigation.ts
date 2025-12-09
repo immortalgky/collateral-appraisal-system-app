@@ -110,6 +110,13 @@ export const mainNavigation: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Land Detail',
+        href: '/land-detail',
+        icon: 'earth-asia',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];
