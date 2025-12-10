@@ -27,17 +27,9 @@ function SectionDivider({
 
   return (
     <div className="flex w-full">
-      <div
-        className={clsx(
-          'divider',
-          `divider-${color}`,
-          labelAlignmentStyle[labelAlignment],
-          orientationStyle[orientation],
-          className,
-        )}
-      >
-        {label}
-      </div>
+      <div className={clsx('flex border-b border-gray-100 p-1')}></div>
+      {label}
+      <div className={clsx('flex border-b border-gray-100 p-1')}></div>
     </div>
   );
 }

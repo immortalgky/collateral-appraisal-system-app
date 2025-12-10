@@ -1,4 +1,177 @@
+import AreaDetailForm from './AreaDetailForm';
+import { FormCard, FormSection } from '../../../../shared/components';
+import SectionDivider from '../../../../shared/components/sections/SectionDivider';
 import type { FormField } from '@/shared/components';
+
+function AppraisalCondoForm() {
+  return (
+    <FormCard title="Appraisal Information">
+      {/* Condominum Information */}
+      <div className="grid grid-cols-4 gap-6 p-b">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Condominum Information</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={condoFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} color={'secondary'} />
+
+      {/* Condominium Location */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Condominium Location</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={condoLocationFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Decoration */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Decoration</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={condoDecorationFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Age/ Height Condominium */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Age/ Height of the Condominium Building</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={ageHeightCondoFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Construction Materials */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Construction Materials</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={constructionMaterialsFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Room Layout */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Room Layout</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={condoRoomLayoutFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Location View */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Location View</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={locationViewFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Floor */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Floor</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={floorFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Roof */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Roof</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={roofFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Area Details */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Area Details</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <AreaDetailForm />
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Expropriation */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Expropriation</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={expropriationFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Condominuim Facility */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Condominuim Facility</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={condoFacilityFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* Environment */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Environment</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={enviromentFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} />
+
+      {/* In Forest Boundary */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">In Forrest Boundary</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={inForestBoundaryFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+      <SectionDivider label={''} orientation={'vertical'} color={'neutral'} className="h-20" />
+
+      {/* Remarks */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="font-medium col-span-1">
+          <p className="col-span-1">Remarks</p>
+        </div>
+        <div className="grid grid-cols-12 gap-4 col-span-3">
+          <FormSection fields={remarkFormFields} namePrefix={''}></FormSection>
+        </div>
+      </div>
+    </FormCard>
+  );
+}
 
 export const condoFields: FormField[] = [
   {
@@ -104,7 +277,7 @@ export const condoFields: FormField[] = [
     label: 'Land Office',
     name: 'landOffice',
     wrapperClassName: 'col-span-4',
-    required: false,
+    required: true,
     options: [
       { value: '0', label: 'Office 01' },
       { value: '1', label: 'Office 02' },
@@ -569,3 +742,5 @@ export const remarkFormFields: FormField[] = [
     required: false,
   },
 ];
+
+export default AppraisalCondoForm;
