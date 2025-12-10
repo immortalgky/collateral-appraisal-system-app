@@ -39,13 +39,11 @@ interface TableCellProps {
 // TODO: Find and add unique key
 const FormTable = ({ name, headers }: FormTableProps) => {
   const { getValues, control } = useFormContext();
-  console.log(getValues());
   const { append, remove } = useFieldArray({
     control,
     name: name,
   });
   const values = getValues(name);
-  console.log(values);
   const [editIndex, setEditIndex] = useState<number | undefined>();
   const handleDeleteRow = (index: number) => {
     setEditIndex(undefined);

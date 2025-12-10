@@ -1,6 +1,5 @@
 import FormTable from '@/features/request/components/tables/FormTable';
 import Input from '@/shared/components/Input';
-import FormCard from '@/shared/components/sections/FormCard';
 import type { AreaDetailDtoType } from '@/shared/forms/typeCondo';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 
@@ -9,7 +8,7 @@ function AreaDetailForm() {
   const {
     field,
     fieldState: { error },
-  } = useController({ name: 'totalArea', control });
+  } = useController({ name: '', control });
 
   const properties = useWatch({ name: 'areaDetails' });
   const totalArea = calcTotalArea(properties);
@@ -25,6 +24,7 @@ function AreaDetailForm() {
           value={totalArea}
           error={error?.message}
           readOnly
+          disabled
         />
       </div>
     </div>
@@ -37,9 +37,7 @@ const propertiesTableHeader = [
 ];
 
 function calcTotalArea(properties: AreaDetailDtoType[]): number {
-  console.log(properties);
   return properties.reduce((acc, property) => acc + convertToNumber(property.area, 0), 0);
-  return 0;
 }
 
 function convertToNumber(n: any, fallback: number): number {
