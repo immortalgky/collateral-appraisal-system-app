@@ -46,7 +46,7 @@ const LandDetailPage = () => {
               closedWidth="w-1/50"
             >
               <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6">
+                <div className="flex-auto flex flex-col gap-6 ">
                   <Section id="land-title" anchor className="flex flex-col gap-6">
                     <TitleDeedForm />
                   </Section>

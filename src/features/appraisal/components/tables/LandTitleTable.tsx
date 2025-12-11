@@ -1,6 +1,5 @@
 import Icon from '@/shared/components/Icon';
-import Input from '@/shared/components/Input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   useController,
   useFieldArray,
@@ -9,7 +8,8 @@ import {
   type Control,
   type FieldValues,
 } from 'react-hook-form';
-import LandTitleModal from '../LandTitleModal';
+import LandTitleSelectModal from '../LandTitleSelectModal';
+import LandTitleInputModal from '../LandTitleInputModal';
 
 interface LandTitleTableProps {
   name: string;
@@ -22,6 +22,7 @@ interface LandTitleTableRegularHeader {
   name: string;
   label: string;
   inputType?: string;
+  disabledOnEdit?: boolean;
 }
 
 interface LandTitleTableRowNumberHeader {
@@ -38,44 +39,55 @@ interface TableCellProps {
   control: Control<FieldValues, any, FieldValues>;
 }
 
+const LandMock = [
+  { id: 1, titleDeedNo: '12345', bookNo: '10', pageNo: '1', ,docValidate: 'yes' },
+  { id: 2, titleDeedNo: '1234', bookNo: '11', pageNo: '2' },
+  { id: 3, titleDeedNo: '123', bookNo: '12', pageNo: '3' },
+];
+
+const FieldInfo = ['titleDeedNo', 'bookNo', 'pageNo', 'landNo', 'surveyNo'];
+
 // TODO: Find and add unique key
 const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const popupForm = useForm();
+  const { control, getValues, setValue } = useFormContext();
 
-  const handleConfirmPopup = () => {
-    const data = popupForm.getValues();
+  const { append, remove, update } = useFieldArray({ control, name });
+  const values = getValues(name) || [];
 
-    const newData: Record<string, any> = {};
-    headers.forEach(h => {
-      if ('name' in h) {
-        newData[h.name] = data[h.name] ?? '';
-      }
-    });
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
-    if (editIndex !== undefined) {
-      update(editIndex, newData);
-      setEditIndex(undefined);
+  const editForm = useForm();
+  //initial
+  useEffect(() => {
+    setValue(name, LandMock);
+  }, []);
+
+  // Select
+  useEffect(() => {
+    if (isEditOpen && editIndex !== null) {
+      editForm.reset(values[editIndex]);
     } else {
-      append(newData);
+      editForm.reset({});
     }
+  }, [isEditOpen, editIndex]);
 
-    popupForm.reset({});
-    setIsModalOpen(false);
+  const getSelectableRecords = () => {
+    const selectedIds = values.map(v => v.id);
+    return LandMock.filter(d => !selectedIds.includes(d.id));
   };
 
-  const { getValues, control } = useFormContext();
-  const { append, remove, update } = useFieldArray({
-    control,
-    name: name,
-  });
-  const values = getValues(name);
+  const handleAddSelect = item => {
+    append(item);
+    setIsAddOpen(false);
+  };
 
-  const [editIndex, setEditIndex] = useState<number | undefined>();
-
-  const handleDeleteRow = (index: number) => {
-    setEditIndex(undefined);
-    remove(index);
+  const handleEditSave = () => {
+    const data = editForm.getValues();
+    update(editIndex!, data);
+    setEditIndex(null);
+    setIsEditOpen(false);
   };
 
   const isEmpty = values.length === 0;
@@ -111,10 +123,10 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
                         <TableCell
                           name={name}
                           index={index}
-                          editIndex={editIndex}
                           value={field[header.name]}
                           header={header}
                           control={control}
+                          editIndex={undefined}
                         />
                       </td>
                     );
@@ -134,8 +146,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
                       type="button"
                       onClick={() => {
                         setEditIndex(index);
-                        popupForm.reset(values[index]);
-                        setIsModalOpen(true);
+                        setIsEditOpen(true);
                       }}
                       className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
                       title="Edit"
@@ -144,7 +155,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteRow(index)}
+                      onClick={() => remove(index)}
                       className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                       title="Delete"
                     >
@@ -160,11 +171,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
       <div className="border-t border-gray-100">
         <button
           type="button"
-          onClick={() => {
-            setEditIndex(undefined);
-            popupForm.reset({});
-            setIsModalOpen(true);
-          }}
+          onClick={() => setIsAddOpen(true)}
           className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
         >
           <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center">
@@ -173,12 +180,21 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
           Add item
         </button>
       </div>
-      {isModalOpen && (
-        <LandTitleModal
+      {isAddOpen && (
+        <LandTitleSelectModal
+          items={getSelectableRecords()}
+          fieldsInfo={FieldInfo}
+          onSelect={handleAddSelect}
+          onCancel={() => setIsAddOpen(false)}
+        />
+      )}
+      {isEditOpen && (
+        <LandTitleInputModal
           headers={headers}
-          popupForm={popupForm}
-          onCancel={() => setIsModalOpen(false)}
-          onConfirm={handleConfirmPopup}
+          popupForm={editForm}
+          onCancel={() => setIsEditOpen(false)}
+          onConfirm={handleEditSave}
+          isEdit={true}
         />
       )}
     </div>

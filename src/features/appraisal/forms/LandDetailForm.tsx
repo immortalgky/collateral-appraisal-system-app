@@ -165,18 +165,21 @@ const landInfoField: FormField[] = [
     label: 'Latitude',
     name: 'latitude',
     wrapperClassName: 'col-span-6',
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Longitude',
     name: 'longitude',
     wrapperClassName: 'col-span-6',
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Sub-District',
     name: 'subDistrict',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'text-input',
@@ -184,6 +187,7 @@ const landInfoField: FormField[] = [
     name: 'district',
     disabled: true,
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'text-input',
@@ -191,6 +195,7 @@ const landInfoField: FormField[] = [
     name: 'province',
     disabled: true,
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'dropdown',
@@ -201,18 +206,21 @@ const landInfoField: FormField[] = [
       { label: 'No', value: 'false' },
     ],
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'textarea',
     label: 'Land Description',
     name: 'landDescription',
     wrapperClassName: 'col-span-12',
+    required: true,
   },
   {
     type: 'radio-group',
     label: 'Check Owner',
     name: 'landDetail.varifiableOwner',
     orientation: 'horizontal',
+    required: true,
     options: [
       { value: '1', label: 'Can' },
       { value: '0', label: 'Can not' },
@@ -224,6 +232,7 @@ const landInfoField: FormField[] = [
     label: 'Owner',
     name: 'landDetail.owner',
     wrapperClassName: 'col-span-9',
+    required: true,
   },
   {
     type: 'radio-group',
@@ -278,6 +287,7 @@ const landLocationField: FormField[] = [
     label: 'Street',
     name: 'landDetail.street',
     wrapperClassName: 'col-span-6',
+    required: true,
   },
   {
     type: 'text-input',
@@ -310,16 +320,16 @@ const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-6',
     options: [
       {
-        value: 'a',
+        value: 'A shape with soil, space is appropriate for development made a very beneficial',
         label: 'A shape with soil, space is appropriate for development made a very beneficial',
       },
       {
-        value: 'b',
+        value: 'A shape with soil, space is appropriate for development benefit and medium',
         label: 'A shape with soil, space is appropriate for development benefit and medium',
       },
       {
-        value: 'c',
-        label: 'A shape with soil, space, there are no appropriate development benefits ',
+        value: 'A shape with soil, space, there are no appropriate development benefits',
+        label: 'A shape with soil, space, there are no appropriate development benefits',
       },
     ],
   },
@@ -330,11 +340,11 @@ const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-6',
     options: [
       {
-        value: 'a',
+        value: 'Commerce or commercial district',
         label: 'Commerce or commercial district',
       },
       {
-        value: 'b',
+        value: 'A very dense residential area',
         label: 'A very dense residential area',
       },
     ],
