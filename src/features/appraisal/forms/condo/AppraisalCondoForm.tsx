@@ -15,7 +15,7 @@ function AppraisalCondoForm() {
           <FormSection fields={condoFields} namePrefix={''}></FormSection>
         </div>
       </div>
-      <SectionDivider label={''} color={'secondary'} />
+      <SectionDivider label={''} lineClassName="border-gray-100" />
 
       {/* Condominium Location */}
       <div className="grid grid-cols-4 gap-6">
@@ -158,7 +158,7 @@ function AppraisalCondoForm() {
           <FormSection fields={inForestBoundaryFormFields} namePrefix={''}></FormSection>
         </div>
       </div>
-      <SectionDivider label={''} orientation={'vertical'} color={'neutral'} className="h-20" />
+      <SectionDivider label={''} />
 
       {/* Remarks */}
       <div className="grid grid-cols-4 gap-6">
@@ -173,7 +173,7 @@ function AppraisalCondoForm() {
   );
 }
 
-export const condoFields: FormField[] = [
+const condoFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Property Name',
@@ -313,23 +313,18 @@ export const condoFields: FormField[] = [
     orientation: 'horizontal',
   },
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: 'Is Obligation',
     name: 'isObligation',
     wrapperClassName: 'col-span-12',
     required: false,
     options: [
       { value: '0', label: 'No obligations' },
-      { value: '1', label: 'Mortgage as security' },
+      { value: '1', label: 'Mortgage as security', isInput: true },
     ],
     orientation: 'horizontal',
-  },
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligation',
-    wrapperClassName: 'col-span-12',
-    required: true,
+    inputName: 'obligation',
+    inputLabel: 'Obligation',
   },
   {
     type: 'radio-group',
@@ -345,7 +340,7 @@ export const condoFields: FormField[] = [
   },
 ];
 
-export const condoLocationFields: FormField[] = [
+const condoLocationFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
@@ -421,11 +416,11 @@ export const condoLocationFields: FormField[] = [
   },
 ];
 
-export const condoDecorationFields: FormField[] = [
+const condoDecorationFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: '',
-    name: 'decoration.type',
+    name: 'decoration',
     wrapperClassName: 'col-span-12',
     required: true,
     orientation: 'horizontal',
@@ -433,19 +428,14 @@ export const condoDecorationFields: FormField[] = [
       { value: '0', label: 'Ready to move in' },
       { value: '1', label: 'Partially' },
       { value: '2', label: 'None' },
-      { value: '3', label: 'Other' },
+      { value: '3', label: 'Other', isInput: true },
     ],
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'decoration.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
 ];
 
-export const ageHeightCondoFields: FormField[] = [
+const ageHeightCondoFields: FormField[] = [
   {
     type: 'number-input',
     label: 'Building Age (Years)',
@@ -462,7 +452,7 @@ export const ageHeightCondoFields: FormField[] = [
   },
 ];
 
-export const constructionMaterialsFormFields: FormField[] = [
+const constructionMaterialsFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
@@ -478,35 +468,30 @@ export const constructionMaterialsFormFields: FormField[] = [
   },
 ];
 
-export const condoRoomOptions = [
+const condoRoomOptions = [
   { value: '0', label: 'Studio' },
   { value: '1', label: '1 Bedroom' },
   { value: '2', label: '2 Bedroom' },
   { value: '3', label: 'Duplex' },
   { value: '4', label: 'Penhouse' },
-  { value: '5', label: 'Other' },
+  { value: '5', label: 'Other', isInput: true },
 ];
 
-export const condoRoomLayoutFormFields: FormField[] = [
+const condoRoomLayoutFormFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: '',
-    name: 'roomLayout.type',
+    name: 'roomLayout',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: condoRoomOptions,
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'roomLayout.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
 ];
 
-export const locationViewOptions = [
+const locationViewOptions = [
   { value: '0', label: 'Pool View' },
   { value: '1', label: 'River View' },
   { value: '2', label: 'Clubhouse View' },
@@ -520,7 +505,7 @@ export const locationViewOptions = [
   { value: '10', label: 'Central Floor (or Central Area)' },
 ];
 
-export const locationViewFormFields: FormField[] = [
+const locationViewFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
@@ -532,7 +517,7 @@ export const locationViewFormFields: FormField[] = [
   },
 ];
 
-export const groundFlooringMaterialsOptions = [
+const groundFlooringMaterialsOptions = [
   { value: '0', label: 'Polished concrete' },
   { value: '1', label: 'Glazed tiles' },
   { value: '2', label: 'Parquet' },
@@ -540,10 +525,10 @@ export const groundFlooringMaterialsOptions = [
   { value: '4', label: 'Granite' },
   { value: '5', label: 'Laminate' },
   { value: '6', label: 'Rubber tiles' },
-  { value: '7', label: 'Other' },
+  { value: '7', label: 'Other', isInput: true },
 ];
 
-export const upperFlooringMaterialsOptions = [
+const upperFlooringMaterialsOptions = [
   { value: '0', label: 'Polished concrete' },
   { value: '1', label: 'Glazed tiles' },
   { value: '2', label: 'Parquet' },
@@ -551,68 +536,53 @@ export const upperFlooringMaterialsOptions = [
   { value: '4', label: 'Granite' },
   { value: '5', label: 'Laminate' },
   { value: '6', label: 'Rubber tiles' },
-  { value: '7', label: 'Other' },
+  { value: '7', label: 'Other', isInput: true },
 ];
 
-export const bathroomFlooringMaterialsOptions = [
+const bathroomFlooringMaterialsOptions = [
   { value: '0', label: 'Polished concrete' },
   { value: '1', label: 'Glazed tiles' },
   { value: '2', label: 'Marble' },
-  { value: '3', label: 'Other' },
+  { value: '3', label: 'Other', isInput: true },
 ];
 
-export const floorFormFields: FormField[] = [
+const floorFormFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: 'Ground Flooring Materials',
-    name: 'groundFlooringMaterials.type',
+    name: 'groundFlooringMaterials',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: groundFlooringMaterialsOptions,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
   {
-    type: 'text-input',
-    label: 'Other',
-    name: 'groundFlooringMaterials.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
-  },
-  {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: 'Upper Flooring Materials',
-    name: 'upperFlooringMaterials.type',
+    name: 'upperFlooringMaterials',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: upperFlooringMaterialsOptions,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
   {
-    type: 'text-input',
-    label: 'Other',
-    name: 'upperFlooringMaterials.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
-  },
-  {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: 'Bathroom Flooring Materials',
-    name: 'bathroomFlooringMaterials.type',
+    name: 'bathroomFlooringMaterials',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: bathroomFlooringMaterialsOptions,
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'bathroomFlooringMaterials.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
 ];
 
-export const roofOptions = [
+const roofOptions = [
   { value: '0', label: 'Reinforced Concrete' },
   { value: '1', label: 'Tiles' },
   { value: '2', label: 'Corrugated Tiles' },
@@ -622,34 +592,29 @@ export const roofOptions = [
   { value: '6', label: 'Terracotta Tiles' },
   { value: '7', label: 'Zinc' },
   { value: '8', label: 'Unable to verify' },
-  { value: '9', label: 'Other' },
+  { value: '9', label: 'Other', isInput: true },
 ];
 
-export const roofFormFields: FormField[] = [
+const roofFormFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: '',
-    name: 'roof.type',
+    name: 'roof',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: roofOptions,
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'roof.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
 ];
 
-export const expropriationOptions = [
+const expropriationOptions = [
   { value: '0', label: 'Is Expropriated' },
   { value: '1', label: 'In Line Expropriated' },
 ];
 
-export const expropriationFields: FormField[] = [
+const expropriationFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
@@ -668,36 +633,53 @@ export const expropriationFields: FormField[] = [
   },
 ];
 
-export const condoFacilityOptions = [
+const condoFacilityOptions = [
   { value: '0', label: 'Passenger Elevator' },
   { value: '1', label: 'Hallway' },
+  { value: '2', label: 'Parking' },
+  { value: '3', label: 'File Escape' },
+  { value: '4', label: 'Fire Extinguishing System' },
+  { value: '5', label: 'Swimming Pool' },
+  { value: '6', label: 'Fitness Room' },
+  { value: '7', label: 'Garden' },
+  { value: '8', label: 'Outdoor' },
+  { value: '9', label: 'Club' },
+  { value: '10', label: 'Steam Room' },
+  { value: '11', label: 'Security System' },
+  { value: '12', label: 'Key card System' },
+  { value: '13', label: 'Legal Entity' },
+  { value: '14', label: 'Garbage Disposal Point' },
+  { value: '15', label: 'Waste Disposal and System' },
+  { value: '16', label: 'Kindergarten' },
+  { value: '17', label: 'Other', isInput: true },
 ];
 
-export const condoFacilityFields: FormField[] = [
+const condoFacilityFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: '',
-    name: 'condoFacility.type',
+    name: 'condoFacility',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: condoFacilityOptions,
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'condoFacility.other',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    inputName: 'other',
+    inputLabel: 'Other',
   },
 ];
 
-export const environmentOptions = [
+const environmentOptions = [
   { value: '0', label: 'Highly Densely Populated Residential Area' },
   { value: '1', label: 'Moderately Densely Populated Residential Area' },
+  { value: '2', label: 'Low-Density Residential Area' },
+  { value: '3', label: 'Sparsely Populated Residential Area, Rural' },
+  { value: '4', label: 'Vacant Land, Far from Community' },
+  { value: '5', label: 'Commercial Area' },
+  { value: '6', label: 'Industrial Area' },
+  { value: '7', label: 'Agricultural Area' },
 ];
 
-export const enviromentFields: FormField[] = [
+const enviromentFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
@@ -709,31 +691,26 @@ export const enviromentFields: FormField[] = [
   },
 ];
 
-export const InForestBoundaryOptions = [
+const InForestBoundaryOptions = [
   { value: '0', label: 'Not in Forest Boundary' },
-  { value: '1', label: 'In Forest Boundary' },
+  { value: '1', label: 'In Forest Boundary', isInput: true },
 ];
 
-export const inForestBoundaryFormFields: FormField[] = [
+const inForestBoundaryFormFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'radio-group-input',
     label: '',
     name: 'inForestBoundary.type',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: InForestBoundaryOptions,
-  },
-  {
-    type: 'text-input',
-    label: 'remarks',
-    name: 'inForestBoundary.remarks',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    inputName: 'remarks',
+    inputLabel: 'Remarks',
   },
 ];
 
-export const remarkFormFields: FormField[] = [
+const remarkFormFields: FormField[] = [
   {
     type: 'textarea',
     label: '',

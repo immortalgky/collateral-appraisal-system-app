@@ -67,7 +67,6 @@ const Dropdown = ({
         : [];
   const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
   const selectedOnChange = (opt: ListBoxItem) => {
-    console.log(selectedOption);
     onChange?.(opt.value);
   };
 

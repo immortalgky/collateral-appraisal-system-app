@@ -72,6 +72,20 @@ const checkOwerDto = z
       });
   });
 
+const isObligationDto = z
+  .object({
+    type: ZeroOne,
+    obligation: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.type === '1' && (val.obligation == '' || val.obligation == undefined))
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Obligation is required',
+        path: ['obligation'],
+      });
+  });
+
 // ---------- Main request schema ----------
 
 export const CreateCollateralCondoRequest = z
@@ -101,9 +115,7 @@ export const CreateCollateralCondoRequest = z
 
     condoConditions: z.string().optional(),
 
-    // kept as "0" | "1" (map to boolean in backend if needed)
-    isObligation: ZeroOne.optional(),
-    obligation: z.string(),
+    isObligation: isObligationDto,
 
     documentValidation: ZeroOne.optional(), // 0: Matched, 1: Not consistent
 
@@ -183,7 +195,6 @@ export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
 
 export const CreateCollateralCondoRequestDefaults = {
   areaDetails: [],
-  decoration: { type: '', other: '' },
   roomLayout: { type: '', other: '' },
   groundFlooringMaterials: { type: '', other: '' },
   upperFlooringMaterials: { type: '', other: '' },

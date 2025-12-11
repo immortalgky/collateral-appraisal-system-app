@@ -115,6 +115,7 @@ interface RadioGroupWithInputField extends BaseFormField {
   isInput?: boolean;
   inputName: string;
   inputLabel?: string;
+  inputClassName?: string;
 }
 
 interface SwitchField extends BaseFormField {
@@ -251,6 +252,7 @@ const Field = ({ control, value, namePrefix, index }: FieldProps) => {
           orientation={value.orientation}
           inputName={value.inputName}
           inputLabel={value.inputLabel}
+          inputClassName={value.inputClassName}
         />
       );
   }

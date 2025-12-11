@@ -9,7 +9,7 @@ import {
   type FormField,
 } from '@/shared/components';
 import SectionDivider from '@/shared/components/sections/SectionDivider';
-import AreaDetailForm from '../forms/CondoForm/AreaDetailForm';
+import AreaDetailForm from '../forms/condo/AreaDetailForm';
 import {
   CreateCollateralCondoRequest,
   CreateCollateralCondoRequestDefaults,
@@ -31,9 +31,9 @@ import {
   locationViewFormFields,
   remarkFormFields,
   roofFormFields,
-} from '../forms/CondoForm/CondoFields';
+} from '../forms/condo/CondoFields';
 import FormRadioGroupOther from '../../../shared/components/inputs/FormRadioGroupWithInput';
-import AppraisalCondoForm from '../forms/CondoForm/AppraisalCondoForm';
+import AppraisalCondoForm from '../forms/condo/AppraisalCondoForm';
 
 function CreateCollateralCondo() {
   const methods = useForm<CreateCollateralCondoRequestType>({
