@@ -24,7 +24,6 @@ export const LandTitleDto = z
     pricePerSquareWa: z.coerce.number(),
     governmentPrice: z.coerce.number(),
   })
-  .partial()
   .passthrough();
 
 export const LandDetailPageDto = z

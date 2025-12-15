@@ -37,7 +37,7 @@ interface ListBoxOptionProps {
 }
 
 export type ListBoxItem = {
-  value: string;
+  value: string | undefined;
   label: string;
   id?: string | number;
 };
@@ -57,18 +57,17 @@ const Dropdown = ({
   const { data: fetchedOptions } = useParameters(queryParameters);
   const dropdownOptions =
     options !== undefined
-      ? options
+      ? required
+        ? options
+        : [{ value: undefined, label: `${placeholder}` }, ...options]
       : Array.isArray(fetchedOptions)
         ? fetchedOptions.map(p => {
             return { value: p.code, label: p.description, id: p.code };
           })
         : [];
-  const isControlled = onChange !== undefined && value !== undefined;
   const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
   const selectedOnChange = (opt: ListBoxItem) => {
-    if (isControlled) {
-      onChange(opt.value);
-    }
+    onChange?.(opt.value);
   };
 
   return (
@@ -79,6 +78,7 @@ const Dropdown = ({
           {required && <span className="text-danger ml-0.5">*</span>}
         </div>
       )}
+
       <ListBox
         value={value === undefined ? undefined : selectedOption}
         onChange={onChange === undefined ? undefined : selectedOnChange}
@@ -102,7 +102,7 @@ const ListBox = ({ placeholder, children, disabled, error, ...props }: ListBoxPr
     <HeadlessListBox disabled={disabled} {...props}>
       <HeadlessListboxButton
         className={clsx(
-          'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-10',
+          'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-10 overflow-clip',
           'focus:outline-none focus:ring-2',
           disabled
             ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
