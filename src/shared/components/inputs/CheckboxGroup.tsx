@@ -10,9 +10,9 @@ export interface CheckboxOption {
 }
 
 interface CheckboxGroupProps {
-  value?: string[];
-  defaultValue?: string[];
-  onChange?: (values: string[]) => void;
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
   options: CheckboxOption[];
   label?: string;
   error?: string;
@@ -24,8 +24,8 @@ interface CheckboxGroupProps {
 }
 
 const CheckboxGroup = ({
-  value = [],
-  defaultValue = [],
+  value,
+  defaultValue,
   onChange,
   options,
   label,
@@ -48,7 +48,21 @@ const CheckboxGroup = ({
     lg: 'h-4 w-4',
   };
 
-  const checkedValues = value.length > 0 ? value : defaultValue;
+  const parse = (v?: string): string[] => {
+    if (typeof v !== 'string') {
+      if (v !== undefined) {
+        console.warn('[CheckboxGroup] Expected string value, got:', v);
+      }
+      return [];
+    }
+
+    return v
+      .split('|')
+      .map(s => s.trim())
+      .filter(Boolean);
+  };
+
+  const checkedValues = value !== undefined && value !== null ? parse(value) : parse(defaultValue);
 
   const handleChange = (optionValue: string, checked: boolean) => {
     if (!onChange) return;
@@ -59,7 +73,7 @@ const CheckboxGroup = ({
     } else {
       newValues = checkedValues.filter(v => v !== optionValue);
     }
-    onChange(newValues);
+    onChange(newValues.join(' | '));
   };
 
   return (

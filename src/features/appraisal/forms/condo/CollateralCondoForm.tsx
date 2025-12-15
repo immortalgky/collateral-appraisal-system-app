@@ -12,7 +12,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Condominum Information</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoFields} namePrefix={''}></FormSection>
+          <FormSection fields={condoFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} lineClassName="border-gray-100" />
@@ -23,7 +23,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Condominium Location</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoLocationFields} namePrefix={''}></FormSection>
+          <FormSection fields={condoLocationFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -34,7 +34,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Decoration</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoDecorationFields} namePrefix={''}></FormSection>
+          <FormSection fields={condoDecorationFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -45,7 +45,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Age/ Height of the Condominium Building</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={ageHeightCondoFields} namePrefix={''}></FormSection>
+          <FormSection fields={ageHeightCondoFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -56,7 +56,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Construction Materials</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={constructionMaterialsFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={constructionMaterialsFormFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -67,7 +67,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Room Layout</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoRoomLayoutFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={condoRoomLayoutFormFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -78,7 +78,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Location View</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={locationViewFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={locationViewFormFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -89,7 +89,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Floor</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={floorFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={floorFormFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -100,7 +100,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Roof</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={roofFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={roofFormFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -122,7 +122,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Expropriation</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={expropriationFields} namePrefix={''}></FormSection>
+          <FormSection fields={expropriationFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -133,7 +133,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Condominuim Facility</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoFacilityFields} namePrefix={''}></FormSection>
+          <FormSection fields={condoFacilityFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -144,7 +144,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Environment</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={enviromentFields} namePrefix={''}></FormSection>
+          <FormSection fields={enviromentFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -155,7 +155,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">In Forrest Boundary</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={inForestBoundaryFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={inForestBoundaryFormFields}></FormSection>
         </div>
       </div>
       <SectionDivider label={''} />
@@ -166,7 +166,7 @@ function AppraisalCondoForm() {
           <p className="col-span-1">Remarks</p>
         </div>
         <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={remarkFormFields} namePrefix={''}></FormSection>
+          <FormSection fields={remarkFormFields}></FormSection>
         </div>
       </div>
     </FormCard>
@@ -284,18 +284,23 @@ const condoFields: FormField[] = [
     ],
   },
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: 'Check Owner',
-    name: 'checkOwner',
+    name: 'verifiableOwner',
     wrapperClassName: 'col-span-12',
     required: true,
     options: [
-      { value: '1', label: 'Can', isInput: true },
+      { value: '1', label: 'Can' },
       { value: '0', label: 'Cannot' },
     ],
     orientation: 'horizontal',
-    inputName: 'ownerName',
-    inputLabel: 'Owner Name',
+  },
+  {
+    type: 'text-input',
+    label: 'Owner',
+    name: 'owner',
+    wrapperClassName: 'col-span-12',
+    required: false,
   },
   {
     type: 'radio-group',
@@ -313,18 +318,23 @@ const condoFields: FormField[] = [
     orientation: 'horizontal',
   },
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'isObligation',
     wrapperClassName: 'col-span-12',
     required: false,
     options: [
       { value: '0', label: 'No obligations' },
-      { value: '1', label: 'Mortgage as security', isInput: true },
+      { value: '1', label: 'Mortgage as security' },
     ],
     orientation: 'horizontal',
-    inputName: 'obligation',
-    inputLabel: 'Obligation',
+  },
+  {
+    type: 'text-input',
+    label: 'Obligation',
+    name: 'obligation',
+    wrapperClassName: 'col-span-12',
+    required: false,
   },
   {
     type: 'radio-group',
@@ -401,24 +411,32 @@ const condoLocationFields: FormField[] = [
     ],
   },
   {
-    type: 'checkbox',
-    label: 'Permanent Electricity',
-    name: 'permanentElectricity',
-    wrapperClassName: 'col-span-2',
+    type: 'checkbox-group',
+    label: 'Public Utility',
+    name: 'publicUtility',
+    wrapperClassName: 'col-span-12',
     required: false,
+    orientation: 'horizontal',
+    options: [
+      { value: '0', label: 'Permanent Electricity' },
+      { value: '1', label: 'Tap water / ground water' },
+      { value: '2', label: 'Street Electricity' },
+      { value: '3', label: 'Manhole / Drainage pipe' },
+      { value: '99', label: 'Other' },
+    ],
   },
   {
-    type: 'checkbox',
-    label: 'Tap water / ground water',
-    name: 'waterSupply',
-    wrapperClassName: 'col-span-2',
+    type: 'text-input',
+    label: 'Other',
+    name: 'publicUtilityOther',
+    wrapperClassName: 'col-span-12',
     required: false,
   },
 ];
 
 const condoDecorationFields: FormField[] = [
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: '',
     name: 'decoration',
     wrapperClassName: 'col-span-12',
@@ -428,10 +446,15 @@ const condoDecorationFields: FormField[] = [
       { value: '0', label: 'Ready to move in' },
       { value: '1', label: 'Partially' },
       { value: '2', label: 'None' },
-      { value: '3', label: 'Other', isInput: true },
+      { value: '99', label: 'Other' },
     ],
-    inputName: 'other',
-    inputLabel: 'Other',
+  },
+  {
+    type: 'text-input',
+    label: 'Other',
+    name: 'decorationOther',
+    wrapperClassName: 'col-span-12',
+    required: false,
   },
 ];
 
@@ -474,20 +497,25 @@ const condoRoomOptions = [
   { value: '2', label: '2 Bedroom' },
   { value: '3', label: 'Duplex' },
   { value: '4', label: 'Penhouse' },
-  { value: '5', label: 'Other', isInput: true },
+  { value: '99', label: 'Other' },
 ];
 
 const condoRoomLayoutFormFields: FormField[] = [
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: '',
     name: 'roomLayout',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: condoRoomOptions,
-    inputName: 'other',
-    inputLabel: 'Other',
+  },
+  {
+    type: 'text-input',
+    label: 'Other',
+    name: 'roomLayoutOther',
+    wrapperClassName: 'col-span-12',
+    required: false,
   },
 ];
 
@@ -507,7 +535,7 @@ const locationViewOptions = [
 
 const locationViewFormFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'checkbox-group',
     label: '',
     name: 'locationView',
     wrapperClassName: 'col-span-12',
@@ -525,7 +553,7 @@ const groundFlooringMaterialsOptions = [
   { value: '4', label: 'Granite' },
   { value: '5', label: 'Laminate' },
   { value: '6', label: 'Rubber tiles' },
-  { value: '7', label: 'Other', isInput: true },
+  { value: '99', label: 'Other' },
 ];
 
 const upperFlooringMaterialsOptions = [
@@ -536,49 +564,61 @@ const upperFlooringMaterialsOptions = [
   { value: '4', label: 'Granite' },
   { value: '5', label: 'Laminate' },
   { value: '6', label: 'Rubber tiles' },
-  { value: '7', label: 'Other', isInput: true },
+  { value: '99', label: 'Other' },
 ];
 
 const bathroomFlooringMaterialsOptions = [
   { value: '0', label: 'Polished concrete' },
   { value: '1', label: 'Glazed tiles' },
   { value: '2', label: 'Marble' },
-  { value: '3', label: 'Other', isInput: true },
+  { value: '99', label: 'Other' },
 ];
 
 const floorFormFields: FormField[] = [
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: 'Ground Flooring Materials',
-    name: 'groundFlooringMaterials',
+    name: 'groundFlooringMaterial',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: groundFlooringMaterialsOptions,
-    inputName: 'other',
-    inputLabel: 'Other',
   },
   {
-    type: 'radio-group-input',
+    type: 'text-input',
+    label: 'Other',
+    name: 'groundFlooringMaterialOther',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'radio-group',
     label: 'Upper Flooring Materials',
-    name: 'upperFlooringMaterials',
+    name: 'upperFlooringMaterial',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: upperFlooringMaterialsOptions,
-    inputName: 'other',
-    inputLabel: 'Other',
   },
   {
-    type: 'radio-group-input',
+    type: 'text-input',
+    label: 'Other',
+    name: 'upperFlooringMaterialOther',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'radio-group',
     label: 'Bathroom Flooring Materials',
-    name: 'bathroomFlooringMaterials',
+    name: 'bathroomFlooringMaterial',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: bathroomFlooringMaterialsOptions,
-    inputName: 'other',
-    inputLabel: 'Other',
+  },
+  {
+    type: 'text-input',
+    label: 'Other',
+    name: 'bathroomFlooringMaterialOther',
+    wrapperClassName: 'col-span-12',
   },
 ];
 
@@ -592,20 +632,24 @@ const roofOptions = [
   { value: '6', label: 'Terracotta Tiles' },
   { value: '7', label: 'Zinc' },
   { value: '8', label: 'Unable to verify' },
-  { value: '9', label: 'Other', isInput: true },
+  { value: '99', label: 'Other' },
 ];
 
 const roofFormFields: FormField[] = [
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: '',
     name: 'roof',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: roofOptions,
-    inputName: 'other',
-    inputLabel: 'Other',
+  },
+  {
+    type: 'text-input',
+    label: 'Other',
+    name: 'roofOther',
+    wrapperClassName: 'col-span-12',
   },
 ];
 
@@ -651,20 +695,24 @@ const condoFacilityOptions = [
   { value: '14', label: 'Garbage Disposal Point' },
   { value: '15', label: 'Waste Disposal and System' },
   { value: '16', label: 'Kindergarten' },
-  { value: '17', label: 'Other', isInput: true },
+  { value: '99', label: 'Other' },
 ];
 
 const condoFacilityFields: FormField[] = [
   {
-    type: 'radio-group-input',
+    type: 'checkbox-group',
     label: '',
     name: 'condoFacility',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: condoFacilityOptions,
-    inputName: 'other',
-    inputLabel: 'Other',
+  },
+  {
+    type: 'text-input',
+    label: 'Other',
+    name: 'condoFacilityOther',
+    wrapperClassName: 'col-span-12',
   },
 ];
 
@@ -681,7 +729,7 @@ const environmentOptions = [
 
 const enviromentFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'checkbox-group',
     label: '',
     name: 'condoEnvironment',
     wrapperClassName: 'col-span-12',
@@ -698,15 +746,19 @@ const InForestBoundaryOptions = [
 
 const inForestBoundaryFormFields: FormField[] = [
   {
-    type: 'radio-group-input',
+    type: 'radio-group',
     label: '',
-    name: 'inForestBoundary.type',
+    name: 'inForestBoundary',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: InForestBoundaryOptions,
-    inputName: 'remarks',
-    inputLabel: 'Remarks',
+  },
+  {
+    type: 'text-input',
+    label: 'Remark',
+    name: 'inForestBoundaryRemark',
+    wrapperClassName: 'col-span-12',
   },
 ];
 

@@ -7,91 +7,20 @@ export const AreaDetailDto = z
   })
   .passthrough();
 
+export const BuildingDetailDto = z.object({
+  detail: z.string().optional(),
+  isBuilding: z.string().optional(),
+  area: z.string().optional(),
+});
+
 const ZeroOne = z.enum(['0', '1']);
-
-const CondoDecorationDto = z
-  .object({
-    type: z.string().optional(),
-    other: z.string().optional(),
-  })
-  .passthrough();
-
-const RoomLayoutDto = z
-  .object({
-    type: z.string().optional(),
-    other: z.string().optional(),
-  })
-  .passthrough();
-
-const FlooringMaterialsDto = z
-  .object({
-    type: z.string().optional(),
-    other: z.string().optional(),
-  })
-  .passthrough();
-
-const BathroomFlooringMaterialsDto = z
-  .object({
-    type: z.string().optional(),
-    other: z.string().optional(),
-  })
-  .passthrough();
-
-const RoofDto = z
-  .object({
-    type: z.string().optional(),
-    other: z.string().optional(),
-  })
-  .passthrough();
-
-const CondoFacilityDto = z
-  .object({
-    type: z.string().optional(),
-    other: z.string().optional(),
-  })
-  .passthrough();
-
-const InForestBoundaryDto = z
-  .object({
-    type: ZeroOne.optional(),
-    remarks: z.string().optional(),
-  })
-  .passthrough();
-
-const checkOwerDto = z
-  .object({
-    type: ZeroOne,
-    ownerName: z.string().optional(),
-  })
-  .superRefine((val, ctx) => {
-    if (val.type === '1' && (val.ownerName == '' || val.ownerName == undefined))
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Owner is required',
-        path: ['ownerName'],
-      });
-  });
-
-const isObligationDto = z
-  .object({
-    type: ZeroOne,
-    obligation: z.string().optional(),
-  })
-  .superRefine((val, ctx) => {
-    if (val.type === '1' && (val.obligation == '' || val.obligation == undefined))
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Obligation is required',
-        path: ['obligation'],
-      });
-  });
 
 // ---------- Main request schema ----------
 
 export const CreateCollateralCondoRequest = z
   .object({
     // --- Condo basic information (condoFields) ---
-    propertyName: z.string(),
+    propertyName: z.string().max(10),
     condoName: z.string(),
     roomNo: z.string(),
     floorNo: z.string(),
@@ -111,28 +40,33 @@ export const CreateCollateralCondoRequest = z
 
     landOffice: z.string(),
 
-    checkOwner: checkOwerDto,
+    verifiableOwner: z.string(),
+    owner: z.string(),
 
     condoConditions: z.string().optional(),
 
-    isObligation: isObligationDto,
+    isObligation: z.string(),
+    obligation: z.string(),
 
-    documentValidation: ZeroOne.optional(), // 0: Matched, 1: Not consistent
+    documentValidation: ZeroOne.optional(),
 
     // --- Location (condoLocationFields) ---
-    isCondoLocationCorrect: ZeroOne.optional(), // 1: Correct, 0: Incorrect
+    isCondoLocationCorrect: ZeroOne.optional(),
     street: z.string().optional(),
     soi: z.string().optional(),
     distance: z.coerce.number().optional(),
     width: z.coerce.number().optional(),
     rightOfWay: z.coerce.number().optional(),
-    roadSurface: ZeroOne.optional(), // 1: Correct, 0: Incorrect
+    roadSurface: ZeroOne.optional(),
+    publicUtility: z.string().optional(),
+    publicUtilityOther: z.string().optional(),
 
     permanentElectricity: z.boolean().optional(),
     waterSupply: z.boolean().optional(),
 
     // --- Decoration (condoDecorationFields) ---
-    decoration: CondoDecorationDto,
+    decoration: z.string(),
+    decorationOther: z.string(),
 
     // --- Age / Height (ageHeightCondoFields) ---
     buildingYear: z.coerce.number().optional(),
@@ -142,51 +76,44 @@ export const CreateCollateralCondoRequest = z
     constructionMaterials: z.string().optional(),
 
     // --- Room Layout (condoRoomLayoutFormFields) ---
-    roomLayout: RoomLayoutDto,
+    roomLayout: z.string().optional(),
+    roomLayoutOther: z.string().optional(),
 
     // --- Location View (locationViewFormFields) ---
-    locationView: z
-      .enum([
-        '0', // Pool View
-        '1', // River View
-        '2', // Clubhouse View
-        '3', // Near Elevator
-        '4', // Near Trash
-        '5', // Corner
-        '6', // Garden
-        '7', // City
-        '8', // Sea
-        '9', // Mountain
-        '10', // Central
-      ])
-      .optional(),
+    locationView: z.string().optional(),
 
     // --- Floor (floorFormFields) ---
-    groundFlooringMaterials: FlooringMaterialsDto.optional(),
-    upperFlooringMaterials: FlooringMaterialsDto.optional(),
-    bathroomFlooringMaterials: BathroomFlooringMaterialsDto.optional(),
+    groundFlooringMaterial: z.string().optional(),
+    groundFlooringMaterialOther: z.string().optional(),
+    upperFlooringMaterial: z.string().optional(),
+    bathroomFlooringMaterials: z.string().optional(),
 
     // --- Roof (roofFormFields) ---
-    roof: RoofDto.optional(),
+    roof: z.string().optional(),
+    roofOther: z.string().optional(),
 
     // --- Expropriation (expropriationFields) ---
     expropriation: ZeroOne.optional(),
     royalDecree: z.string().optional(),
 
     // --- Condo Facility (condoFacilityFields) ---
-    condoFacility: CondoFacilityDto.optional(),
+    condoFacility: z.string().optional(),
+    condoFacilityOther: z.string().optional(),
 
     // --- Environment (enviromentFields) ---
-    condoEnvironment: ZeroOne.optional(),
+    condoEnvironment: z.string().optional(),
 
     // --- In Forest Boundary (inForestBoundaryFormFields) ---
-    inForestBoundary: InForestBoundaryDto.optional(),
+    inForestBoundary: z.string().optional(),
+    inForestBoundaryRemark: z.string().optional(),
 
     // --- Area details (AreaDetailForm) ---
     areaDetails: z.array(AreaDetailDto).optional(),
 
     // --- Remarks ---
     remarks: z.string().optional(),
+
+    isBuilding: z.array(BuildingDetailDto).optional(),
   })
   .passthrough();
 
@@ -195,10 +122,6 @@ export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
 
 export const CreateCollateralCondoRequestDefaults = {
   areaDetails: [],
-  roomLayout: { type: '', other: '' },
-  groundFlooringMaterials: { type: '', other: '' },
-  upperFlooringMaterials: { type: '', other: '' },
-  bathroomFlooringMaterials: { type: '', other: '' },
-  roof: { type: '', other: '' },
-  condoFacility: { type: '', other: '' },
+  isBuilding: [],
+  verifiableOwner: '',
 };

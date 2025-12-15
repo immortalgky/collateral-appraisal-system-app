@@ -32,3 +32,21 @@ export const useUploadDocument = () => {
     },
   });
 };
+
+// pending
+export const useCreateCollateral = () => {
+  return useMutation({
+    mutationFn: async (collateral: any): Promise<any> => {
+      const { data } = await axios.postForm('https://localhost:7111/collaterals', { collateral });
+      return data;
+    },
+
+    onSuccess: data => {
+      console.log(data);
+    },
+
+    onError: (error: Error) => {
+      console.log(error);
+    },
+  });
+};

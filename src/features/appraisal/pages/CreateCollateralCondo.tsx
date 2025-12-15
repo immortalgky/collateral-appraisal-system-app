@@ -1,39 +1,15 @@
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import Button from '@/shared/components/Button';
 import CancelButton from '@/shared/components/buttons/CancelButton';
-import {
-  DeleteButton,
-  DuplicateButton,
-  FormCard,
-  FormSection,
-  type FormField,
-} from '@/shared/components';
-import SectionDivider from '@/shared/components/sections/SectionDivider';
-import AreaDetailForm from '../forms/condo/AreaDetailForm';
+import { DeleteButton, DuplicateButton } from '@/shared/components';
 import {
   CreateCollateralCondoRequest,
   CreateCollateralCondoRequestDefaults,
   type CreateCollateralCondoRequestType,
 } from '@/shared/forms/typeCondo';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  ageHeightCondoFields,
-  condoDecorationFields,
-  condoFacilityFields,
-  condoFields,
-  condoLocationFields,
-  condoRoomLayoutFormFields,
-  constructionMaterialsFormFields,
-  enviromentFields,
-  expropriationFields,
-  floorFormFields,
-  inForestBoundaryFormFields,
-  locationViewFormFields,
-  remarkFormFields,
-  roofFormFields,
-} from '../forms/condo/CondoFields';
-import FormRadioGroupOther from '../../../shared/components/inputs/FormRadioGroupWithInput';
-import AppraisalCondoForm from '../forms/condo/AppraisalCondoForm';
+import AppraisalCondoForm from '../forms/condo/CollateralCondoForm';
+import BuildingDetailTable from '../forms/building/BuildingDetailTable';
 
 function CreateCollateralCondo() {
   const methods = useForm<CreateCollateralCondoRequestType>({
@@ -63,7 +39,6 @@ function CreateCollateralCondo() {
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <AppraisalCondoForm />
-
           {/* action */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex justify-between items-center">

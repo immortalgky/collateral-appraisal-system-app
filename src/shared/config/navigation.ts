@@ -117,6 +117,13 @@ export const mainNavigation: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Create Colalteral Buildling',
+        href: '/dev/colBuilding',
+        icon: 'apartment',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];

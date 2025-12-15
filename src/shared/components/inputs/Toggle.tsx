@@ -27,8 +27,7 @@ const Toggle = ({ label, options, error, required, className, ...props }: Toggle
           <Switch className="flex flex-row relative" {...props}>
             <span className="sr-only">{`Toggle between ${options.join(' and ')}`}</span>
             {options.map((option, index) => {
-              const isActive =
-                (props.checked && index === 0) || (!props.checked && index === 1);
+              const isActive = (props.checked && index === 0) || (!props.checked && index === 1);
               return (
                 <div
                   key={index}

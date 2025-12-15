@@ -15,9 +15,8 @@ import FormSwitch from '../inputs/FormSwitch';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { AtLeastOne } from '@/shared/types';
 import type { ParameterParams } from '@/shared/types/api';
-import FormRadioGroupWithInput, {
-  type RadioGroupWithInputOption,
-} from '../inputs/FormRadioGroupWithInput';
+import type { CheckboxOption } from '../inputs/CheckboxGroup';
+import FormCheckboxGroup from '../inputs/FormCheckboxGroup';
 
 interface FormSectionProps {
   fields: FormField[];
@@ -36,9 +35,9 @@ export type FormField =
   | StringToggleField
   | TextareaField
   | CheckboxField
+  | CheckboxGroupField
   | RadioGroupField
-  | SwitchField
-  | RadioGroupWithInputField;
+  | SwitchField;
 
 interface TextInputField extends BaseFormField {
   type: 'text-input';
@@ -98,24 +97,20 @@ interface CheckboxField extends BaseFormField {
   size?: 'sm' | 'md' | 'lg';
 }
 
+interface CheckboxGroupField extends BaseFormField {
+  type: 'checkbox-group';
+  label?: string;
+  options: CheckboxOption[];
+  size?: 'sm' | 'md' | 'lg';
+  orientation?: 'horizontal' | 'vertical';
+}
+
 interface RadioGroupField extends BaseFormField {
   type: 'radio-group';
   label?: string;
   options: RadioOption[];
   size?: 'sm' | 'md' | 'lg';
   orientation?: 'horizontal' | 'vertical';
-}
-
-interface RadioGroupWithInputField extends BaseFormField {
-  type: 'radio-group-input';
-  label?: string;
-  options: RadioGroupWithInputOption[];
-  size?: 'sm' | 'md' | 'lg';
-  orientation?: 'horizontal' | 'vertical';
-  isInput?: boolean;
-  inputName: string;
-  inputLabel?: string;
-  inputClassName?: string;
 }
 
 interface SwitchField extends BaseFormField {
@@ -217,6 +212,18 @@ const Field = ({ control, value, namePrefix, index }: FieldProps) => {
           size={value.size}
         />
       );
+    case 'checkbox-group':
+      return (
+        <FormCheckboxGroup
+          name={name}
+          label={value.label}
+          disabled={value.disabled}
+          className={value.className}
+          size={value.size}
+          options={value.options}
+          orientation={value.orientation}
+        />
+      );
     case 'radio-group':
       return (
         <FormRadioGroup
@@ -239,20 +246,6 @@ const Field = ({ control, value, namePrefix, index }: FieldProps) => {
           className={value.className}
           size={value.size}
           labelPosition={value.labelPosition}
-        />
-      );
-    case 'radio-group-input':
-      return (
-        <FormRadioGroupWithInput
-          name={name}
-          label={value.label}
-          options={value.options}
-          disabled={value.disabled}
-          size={value.size}
-          orientation={value.orientation}
-          inputName={value.inputName}
-          inputLabel={value.inputLabel}
-          inputClassName={value.inputClassName}
         />
       );
   }

@@ -8,6 +8,7 @@ import CreateRequestPage from '@/features/request/pages/CreateRequestPage';
 import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import CreateCollateralCondo from '../features/appraisal/pages/CreateCollateralCondo';
+import CreateCollateralBuilding from '@/features/appraisal/pages/CreateCollateralBuilding';
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: 'dev/colCondo',
         element: <CreateCollateralCondo />,
+      },
+      {
+        path: 'dev/colBuilding',
+        element: <CreateCollateralBuilding />,
       },
       // Catch-all route for 404 pages
       {
