@@ -21,8 +21,8 @@ type LandTitleTableHeader = LandTitleTableRegularHeader | LandTitleTableRowNumbe
 interface LandTitleTableRegularHeader {
   name: string;
   label: string;
-  inputType?: string;
-  disabledOnEdit?: boolean;
+  type?: string;
+  disabled?: boolean;
 }
 
 interface LandTitleTableRowNumberHeader {
@@ -40,12 +40,124 @@ interface TableCellProps {
 }
 
 const LandMock = [
-  { id: 1, titleDeedNo: '12345', bookNo: '10', pageNo: '1', ,docValidate: 'yes' },
-  { id: 2, titleDeedNo: '1234', bookNo: '11', pageNo: '2' },
-  { id: 3, titleDeedNo: '123', bookNo: '12', pageNo: '3' },
+  {
+    id: 1,
+    titleDeedNo: '12345',
+    bookNo: '10',
+    pageNo: '1',
+    landNo: '11',
+    surveyNo: '123',
+    sheetNo: '123',
+    rai: 1,
+    ngan: 1,
+    wa: 12,
+    totalSqWa: 123,
+    documentType: 'title',
+    rawang: '123123',
+    boundaryMarker: null,
+    boundartMakerOther: null,
+    docValidate: 'yes',
+    isMissesOutSurvey: true,
+    pricePerSquareWa: null,
+    governmentPrice: null,
+  },
+  {
+    id: 2,
+    titleDeedNo: '1234',
+    bookNo: '11',
+    pageNo: '2',
+    landNo: '11',
+    surveyNo: '123',
+    sheetNo: '123',
+    rai: 1,
+    ngan: 1,
+    wa: 12,
+    totalSqWa: 123,
+    documentType: 'title',
+    rawang: '123123',
+    boundaryMarker: null,
+    boundartMakerOther: null,
+    docValidate: 'yes',
+    isMissesOutSurvey: true,
+    pricePerSquareWa: null,
+    governmentPrice: null,
+  },
+  {
+    id: 3,
+    titleDeedNo: '123',
+    bookNo: '12',
+    pageNo: '3',
+    landNo: '11',
+    surveyNo: '123',
+    sheetNo: '123',
+    rai: 1,
+    ngan: 1,
+    wa: 12,
+    totalSqWa: 123,
+    documentType: 'title',
+    rawang: '123123',
+    boundaryMarker: null,
+    boundartMakerOther: null,
+    docValidate: 'yes',
+    isMissesOutSurvey: true,
+    pricePerSquareWa: null,
+    governmentPrice: null,
+  },
+  // {
+  //   id: 4,
+  //   titleDeedNo: '123',
+  //   bookNo: '12',
+  //   pageNo: '3',
+  //   landNo: '11',
+  //   surveyNo: '123',
+  //   sheetNo: '123',
+  //   rai: 1,
+  //   ngan: 1,
+  //   wa: 12,
+  //   totalSqWa: 123,
+  //   documentType: 'title',
+  //   rawang: '123123',
+  //   boundaryMarker: null,
+  //   boundartMakerOther: null,
+  //   docValidate: 'yes',
+  //   isMissesOutSurvey: true,
+  //   pricePerSquareWa: null,
+  //   governmentPrice: null,
+  // },
+  // {
+  //   id: 5,
+  //   titleDeedNo: '123',
+  //   bookNo: '12',
+  //   pageNo: '3',
+  //   landNo: '11',
+  //   surveyNo: '123',
+  //   sheetNo: '123',
+  //   rai: 1,
+  //   ngan: 1,
+  //   wa: 12,
+  //   totalSqWa: 123,
+  //   documentType: 'title',
+  //   rawang: '123123',
+  //   boundaryMarker: null,
+  //   boundartMakerOther: null,
+  //   docValidate: 'yes',
+  //   isMissesOutSurvey: true,
+  //   pricePerSquareWa: null,
+  //   governmentPrice: null,
+  // },
 ];
 
-const FieldInfo = ['titleDeedNo', 'bookNo', 'pageNo', 'landNo', 'surveyNo'];
+const FieldInfo = [
+  'titleDeedNo',
+  'bookNo',
+  'pageNo',
+  'landNo',
+  'surveyNo',
+  'rai',
+  'ngan',
+  'wa',
+  'totalSqWa',
+];
 
 // TODO: Find and add unique key
 const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
@@ -93,82 +205,88 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
   const isEmpty = values.length === 0;
 
   return (
-    <div className="overflow-hidden">
-      <table className="table w-full">
-        <thead>
-          <tr className="bg-primary-700">
-            {headers.map((header, index) => (
+    <div className="w-full overflow-x-auto">
+      <div className="max-h-60 overflow-y-auto">
+        <table className="table min-w-max">
+          <thead className="sticky top-0 bg-primary-700">
+            <tr className="bg-primary-700">
+              {headers.map((header, index) => (
+                <th
+                  key={index}
+                  className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg"
+                >
+                  {header.label}
+                </th>
+              ))}
               <th
-                key={index}
-                className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg"
+                className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0
+    bg-primary-700 w-24"
               >
-                {header.label}
+                Actions
               </th>
-            ))}
-            <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {isEmpty ? (
-            <div></div>
-          ) : (
-            values.map((field: Record<string, any>, index: number) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                {headers.map((header, inner_index) => {
-                  if ('name' in header) {
-                    return (
-                      <td key={inner_index} className="py-3 px-4">
-                        <TableCell
-                          name={name}
-                          index={index}
-                          value={field[header.name]}
-                          header={header}
-                          control={control}
-                          editIndex={undefined}
-                        />
-                      </td>
-                    );
-                  } else {
-                    return (
-                      <td key={inner_index} className="py-3 px-4">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-                          {index + 1}
-                        </span>
-                      </td>
-                    );
-                  }
-                })}
-                <td className="py-3 px-4">
-                  <div className="flex gap-1 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditIndex(index);
-                        setIsEditOpen(true);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                      title="Edit"
-                    >
-                      <Icon style="solid" name="pen" className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                      title="Delete"
-                    >
-                      <Icon style="solid" name="trash" className="size-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-      <div className="border-t border-gray-100">
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {isEmpty ? (
+              <div></div>
+            ) : (
+              values.map((field: Record<string, any>, index: number) => (
+                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                  {headers.map((header, inner_index) => {
+                    if ('name' in header) {
+                      return (
+                        <td key={inner_index} className="py-3 px-4">
+                          <TableCell
+                            name={name}
+                            index={index}
+                            value={field[header.name]}
+                            header={header}
+                            control={control}
+                            editIndex={undefined}
+                          />
+                        </td>
+                      );
+                    } else {
+                      return (
+                        <td key={inner_index} className="py-3 px-4">
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+                            {index + 1}
+                          </span>
+                        </td>
+                      );
+                    }
+                  })}
+                  <td className="py-3 px-4 sticky right-0 z-10 bg-white">
+                    <div className="flex gap-1 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditIndex(index);
+                          setIsEditOpen(true);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                        title="Edit"
+                      >
+                        <Icon style="solid" name="pen" className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                        title="Delete"
+                      >
+                        <Icon style="solid" name="trash" className="size-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="border-t border-gray-100 ">
         <button
           type="button"
           onClick={() => setIsAddOpen(true)}
@@ -207,9 +325,11 @@ const TableCell = ({ name, index, value, header, control }: TableCellProps) => {
     fieldState: { error },
   } = useController({ name: cellName, control });
 
+  const label = header?.options?.find(opt => opt.value === value)?.label ?? value;
+
   return (
     <div>
-      <div>{value}</div>
+      <div>{label}</div>
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
   );

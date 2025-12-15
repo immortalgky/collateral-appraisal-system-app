@@ -19,7 +19,7 @@ const LandTitleModal = ({ items, fieldsInfo, onSelect, onCancel }: LandTitleModa
             <button
               key={idx}
               onClick={() => onSelect(item)}
-              className="w-full text-left p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex gap-4 w-full text-left p-4 border rounded-lg hover:bg-gray-50 transition-colors"
             >
               {fieldsInfo.map(f => (
                 <div key={f} className="text-sm">

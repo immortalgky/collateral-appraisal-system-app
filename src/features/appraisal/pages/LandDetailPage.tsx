@@ -47,6 +47,10 @@ const LandDetailPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 ">
+                  <div>
+                    <h2 className="text-lg font-semibol mb-2">Appraisal Information</h2>
+                    <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
+                  </div>
                   <Section id="land-title" anchor className="flex flex-col gap-6">
                     <TitleDeedForm />
                   </Section>

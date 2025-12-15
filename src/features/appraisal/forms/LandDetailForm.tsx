@@ -108,7 +108,9 @@ const LandDetailForm = () => {
         </div>
         <div className="col-span-4">
           <div className="grid grid-cols-12 gap-4">
-            <FormSection fields={limitationField} />
+            <FormSection fields={expropriateField} />
+            <FormSection fields={encroachedField} />
+            <FormSection fields={LimitationOther} />
           </div>
         </div>
         <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
@@ -127,6 +129,15 @@ const LandDetailForm = () => {
         <div className="col-span-4">
           <div className="grid grid-cols-12 gap-4">
             <FormSection fields={allocationField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Size and Boundary of Land</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={sizeAndBoundary} />
           </div>
         </div>
         <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
@@ -216,15 +227,11 @@ const landInfoField: FormField[] = [
     required: true,
   },
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
     label: 'Check Owner',
     name: 'landDetail.varifiableOwner',
-    orientation: 'horizontal',
     required: true,
-    options: [
-      { value: '1', label: 'Can' },
-      { value: '0', label: 'Can not' },
-    ],
+    options: ['Can', 'Can not'],
     wrapperClassName: 'col-span-3',
   },
   {
@@ -241,7 +248,7 @@ const landInfoField: FormField[] = [
     orientation: 'horizontal',
     options: [
       { value: '1', label: 'No Obligation' },
-      { value: '0', label: 'Mortgage as Security' },
+      { value: '2', label: 'Mortgage as Security' },
     ],
     wrapperClassName: 'col-span-6',
   },
@@ -255,13 +262,10 @@ const landInfoField: FormField[] = [
 
 const landLocationField: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
+    label: '',
     name: 'landDetail.landLocationVerification',
-    orientation: 'horizontal',
-    options: [
-      { value: '1', label: 'Correct' },
-      { value: '0', label: 'In Correct' },
-    ],
+    options: ['Correct', 'In Correct'],
     wrapperClassName: 'col-span-12',
   },
   {
@@ -561,7 +565,7 @@ const landEntranceField: FormField[] = [
 const transpotationField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.transpotation',
+    name: 'landDetail.transportation',
     orientation: 'horizontal',
     options: [
       { value: 'Car', label: 'Car' },
@@ -575,7 +579,7 @@ const transpotationField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.transpotationOther',
+    name: 'landDetail.transportationOther',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -583,7 +587,7 @@ const transpotationField: FormField[] = [
 const anticipationProsperityField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.anticipationProsperity',
+    name: 'landDetail.anticipationOfProp',
     orientation: 'horizontal',
     options: [
       { value: 'VeryProsperous', label: 'Very Prosperous' },
@@ -596,21 +600,102 @@ const anticipationProsperityField: FormField[] = [
 ];
 
 // Expropriate need to change
-const limitationField: FormField[] = [
+
+const expropriateField: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'checkbox',
     name: 'landDetail.isExpropriate',
-    orientation: 'horizontal',
-    options: [
-      { value: 'IsExpropriate', label: 'Is Expropriate' },
-      { value: 'InLineExpropriate', label: 'In Line Expropriate' },
-    ],
-    wrapperClassName: 'col-span-12',
+    label: 'Is Expropriate',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'checkbox',
+    name: 'landDetail.isLineExpropriate',
+    label: 'In Line Expropriate',
+    wrapperClassName: 'col-span-7',
   },
   {
     type: 'text-input',
-    label: 'Is Expropriate Other',
-    name: 'landDetail.limitationDetails',
+    label: 'Royal Decree',
+    name: 'landDetail.royalDecree',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'textarea',
+    label: 'Is Expropriate',
+    name: 'landDetail.isExpropriateRemark',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Is Expropriate',
+    name: 'landDetail.inLineExpropriateRemark',
+    wrapperClassName: 'col-span-12',
+  },
+];
+
+const encroachedField: FormField[] = [
+  {
+    type: 'checkbox',
+    name: 'landDetail.isEncroached',
+    label: 'Is Encroached',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Area Sq.wa',
+    name: 'landDetail.royalDecree',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'textarea',
+    label: 'Is Encroached',
+    name: 'landDetail.isEncroachedRemark',
+    wrapperClassName: 'col-span-12',
+  },
+];
+const LimitationOther: FormField[] = [
+  {
+    type: 'checkbox',
+    name: 'landDetail.electricity',
+    label: 'Electricity',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Distance',
+    name: 'landDetail.electricityDistance',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'checkbox',
+    label: 'Is Landlocked',
+    name: 'landDetail.isLandlocked',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'checkbox',
+    label: 'Is Forest Boundary',
+    name: 'landDetail.isForestBoundary',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'textarea',
+    label: 'Is Landlocked Other',
+    name: 'landDetail.isLandlockedRemark',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Is Forest Boundary Other',
+    name: 'landDetail.isForestBoundaryRemark',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'landDetail.limitationOther',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -646,6 +731,57 @@ const allocationField: FormField[] = [
       { value: 'NotAllocate', label: 'Not Allocate' },
     ],
     wrapperClassName: 'col-span-12',
+  },
+];
+
+const sizeAndBoundary: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'North Consecutive Area',
+    name: 'landDetail.n_ConsecutiveArea',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'North Estimate Length',
+    name: 'landDetail.n_EstimateLength',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'South Consecutive Area',
+    name: 'landDetail.s_ConsecutiveArea',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'South Estimate Length',
+    name: 'landDetail.s_EstimateLength',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'East Consecutive Area',
+    name: 'landDetail.e_ConsecutiveArea',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'East Estimate Length',
+    name: 'landDetail.e_EstimateLength',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'West Consecutive Area',
+    name: 'landDetail.w_ConsecutiveArea',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'West Estimate Length',
+    name: 'landDetail.w_EstimateLength',
+    wrapperClassName: 'col-span-6',
   },
 ];
 

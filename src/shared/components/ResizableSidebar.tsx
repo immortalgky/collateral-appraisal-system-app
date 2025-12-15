@@ -38,7 +38,7 @@ const ResizableSidebar = ({
 };
 
 const Main = ({ children }: { children: ReactNode }) => {
-  return <div className="flex-auto p-6 border-gray-200">{children}</div>;
+  return <div className="flex-auto p-6 border-gray-200 min-w-0">{children}</div>;
 };
 
 const Sidebar = ({ children }: { children: ReactNode }) => {

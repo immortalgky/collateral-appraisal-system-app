@@ -1,13 +1,15 @@
 import Button from '@/shared/components/Button';
 import FormSection from '@/shared/components/sections/FormSection';
+import type { watch } from 'fs';
+import { useEffect } from 'react';
 import { FormProvider, type UseFormReturn } from 'react-hook-form';
 
 interface HeaderField {
   name?: string;
   label: string;
-  inputType?: string;
+  type?: string;
   colSpan: number;
-  disabledOnEdit?: boolean;
+  disabled?: boolean;
   options?: [];
   required?: boolean;
   orientation?: string;
@@ -28,19 +30,29 @@ const LandTitleModal = ({
   onCancel,
   onConfirm,
 }: LandTitleModalProps) => {
+  const { watch, setValue } = popupForm;
+  const pricePerSqWa = watch('pricePerSquareWa');
+  const totalSqWa = watch('totalSqWa');
+
+  useEffect(() => {
+    const price = Number(pricePerSqWa) || 0;
+    const sqwa = Number(totalSqWa) || 0;
+    setValue('governmentPrice', price * sqwa);
+  }, [pricePerSqWa, totalSqWa, setValue]);
+
   const fields = headers.map(h => {
-    if (h.inputType === 'dropdown') {
+    if (h.type === 'dropdown') {
       return {
         type: 'dropdown',
         label: h.label,
         name: h.name,
         options: h.options ?? [],
         wrapperClassName: `col-span-${h.colSpan ?? 4}`,
-        disabled: isEdit && h.disabledOnEdit === true,
+        disabled: isEdit && h.disabled === true,
         required: h.required,
       };
     }
-    if (h.inputType === 'radio-group') {
+    if (h.type === 'radio-group') {
       return {
         type: 'radio-group',
         label: h.label,
@@ -48,16 +60,16 @@ const LandTitleModal = ({
         options: h.options ?? [],
         wrapperClassName: `col-span-${h.colSpan ?? 4}`,
         orientation: h.orientation,
-        disabled: isEdit && h.disabledOnEdit === true,
+        disabled: isEdit && h.disabled === true,
       };
     }
 
     return {
-      type: h.inputType ?? 'text-input',
+      type: h.type ?? 'text-input',
       label: h.label,
       name: h.name,
       wrapperClassName: `col-span-${h.colSpan ?? 4}`,
-      disabled: isEdit && h.disabledOnEdit === true,
+      disabled: isEdit && h.disabled === true,
     };
   });
 
