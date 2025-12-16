@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { pl } from 'zod/v4/locales';
 
 export const LandTitleDto = z
   .object({
@@ -116,13 +115,8 @@ export const CreateLandRequest = z
     landDetail: LandDetailPageDto,
   })
   .passthrough();
-export const CreateLandResponse = z.object({ id: z.coerce.number().int() }).passthrough();
 
-export const schemas = {
-  CreateLandRequest,
-  LandTitleDto,
-  LandDetailPageDto,
-};
+export const CreateLandResponse = z.object({ id: z.coerce.number().int() }).passthrough();
 
 export type CreateLandRequestType = z.infer<typeof CreateLandRequest>;
 export type CreateLandResponseType = z.infer<typeof CreateLandResponse>;

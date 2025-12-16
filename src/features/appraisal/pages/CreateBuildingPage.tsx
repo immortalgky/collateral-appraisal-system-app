@@ -3,25 +3,24 @@ import AppHeader from '@/shared/components/sections/AppHeader';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { FormProvider, useForm, useFormContext, type SubmitHandler } from 'react-hook-form';
-import TitleDeedForm from '../forms/TitleDeedForm';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
-import { CreateLandRequest, type CreateLandRequestType } from '@/shared/forms/v2';
-import { useCreateLandRequest } from '../api';
+import BuildingDetailForm from '../forms/building/BuildingDetailForm';
+import { CreateBuidlingRequest, type CreateBuildingRequestType } from '@/shared/forms/typeBuilding';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createLandRequestDefaults } from '@/shared/forms/defaults';
-import LandDetailForm from '../forms/LandDetailForm';
+import { useCreateBuildingRequest } from '../api';
+import { createBuildingRequestDefault } from '@/shared/forms/defaults';
 
-const LandDetailPage = () => {
-  const methods = useForm<CreateLandRequestType>({
-    defaultValues: createLandRequestDefaults,
-    resolver: zodResolver(CreateLandRequest),
+const CreateBuildingPage = () => {
+  const methods = useForm<CreateBuildingRequestType>({
+    defaultValues: createBuildingRequestDefault,
+    resolver: zodResolver(CreateBuidlingRequest),
   });
   const { handleSubmit, getValues } = methods;
 
-  const { mutate } = useCreateLandRequest();
-  const onSubmit: SubmitHandler<CreateLandRequestType> = data => {
+  const { mutate } = useCreateBuildingRequest();
+  const onSubmit: SubmitHandler<CreateBuildingRequestType> = data => {
     mutate(data);
   };
   const { isOpen, onToggle } = useDisclosure();
@@ -29,7 +28,6 @@ const LandDetailPage = () => {
     const data = getValues();
     mutate(data);
   };
-
   return (
     <div>
       <div className="flex flex-col gap-4 mb-6">
@@ -52,10 +50,7 @@ const LandDetailPage = () => {
                     <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
                   </div>
                   <Section id="land-title" anchor className="flex flex-col gap-6">
-                    <TitleDeedForm />
-                  </Section>
-                  <Section id="land-info" anchor className="flex flex-col gap-6">
-                    <LandDetailForm />
+                    <BuildingDetailForm />
                   </Section>
                 </div>
               </ResizableSidebar.Main>
@@ -80,4 +75,4 @@ const LandDetailPage = () => {
   );
 };
 
-export default LandDetailPage;
+export default CreateBuildingPage;
