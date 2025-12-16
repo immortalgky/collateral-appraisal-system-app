@@ -4,10 +4,14 @@ import { z } from 'zod';
 import { Resolver } from 'dns';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Description } from '@headlessui/react';
+import CalculationTable from '../forms/building/CalculationTable';
 
 const rowSchema = z.object({
-  description: z.string().min(1, 'Required'),
-  amount: z.number().min(0, 'Must be ≥ 0'),
+  atYear: z.number().min(0, 'Must be ≥ 0'),
+  toYear: z.number().min(0, 'Must be ≥ 0'),
+  deprePerYear: z.number().min(0, 'Must be ≥ 0').max(100, 'Must be <= 100'),
+  totalDepre: z.number(),
+  price: z.number(),
 });
 
 const formSchema = z.object({
@@ -21,7 +25,7 @@ function CreateCollateralBuilding() {
   const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      rows: [{ description: '', amount: 0 }],
+      rows: [{ atYear: 1, toYear: 2, deprePerYear: 2, totalDepre: 2, price: 0 }],
     },
     mode: 'onChange',
   });
@@ -35,11 +39,30 @@ function CreateCollateralBuilding() {
   return (
     <div>
       <FormProvider {...methods}>
-        <BuildingDetailTable
+        <CalculationTable
           name={'rows'}
           headers={[
             { rowNumberColumn: true, label: 'Sq.' },
-            { name: 'area', label: 'Area', inputType: 'text', className: 'w-[1200px]' },
+            { name: 'atYear', label: 'At Year', inputType: 'number', className: 'w-[120px]' },
+            { name: 'toYear', label: 'To Year', inputType: 'number', className: 'w-[120px]' },
+            {
+              name: 'deprePerYear',
+              label: 'Depreciation per Year',
+              inputType: 'number',
+              className: 'w-[120px]',
+            },
+            {
+              name: 'totalDepre',
+              label: 'Total Depreciation Percentage',
+              inputType: 'number',
+              className: 'w-[120px]',
+            },
+            {
+              name: 'price',
+              label: 'Price Depreciation',
+              inputType: 'number',
+              className: 'w-[200px]',
+            },
           ]}
         />
       </FormProvider>
