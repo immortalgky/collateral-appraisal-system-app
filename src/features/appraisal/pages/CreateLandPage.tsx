@@ -3,7 +3,7 @@ import AppHeader from '@/shared/components/sections/AppHeader';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { FormProvider, useForm, useFormContext, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
@@ -13,7 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createLandRequestDefaults } from '@/shared/forms/defaults';
 import LandDetailForm from '../forms/LandDetailForm';
 
-const LandDetailPage = () => {
+const CreateLandPage = () => {
   const methods = useForm<CreateLandRequestType>({
     defaultValues: createLandRequestDefaults,
     resolver: zodResolver(CreateLandRequest),
@@ -80,4 +80,4 @@ const LandDetailPage = () => {
   );
 };
 
-export default LandDetailPage;
+export default CreateLandPage;

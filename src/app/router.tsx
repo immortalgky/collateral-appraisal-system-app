@@ -7,7 +7,7 @@ import CallbackPage from '@features/auth/pages/CallbackPage.tsx';
 import CreateRequestPage from '@/features/request/pages/CreateRequestPage';
 import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
-import LandDetailPage from '@/features/appraisal/pages/LandDetailPage';
+import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 
 export const router = createBrowserRouter([
   {
@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'land-detail',
-        element: <LandDetailPage />,
+        element: <CreateLandPage />,
       },
       // Catch-all route for 404 pages
       {
