@@ -256,6 +256,7 @@ export const createBuildingRequestDefault: CreateBuildingRequestType = {
     interiorWallOther: '',
     exteriorWall: [],
     exteriorWallOther: '',
+    surface: [],
     fence: [],
     fenceOther: '',
     constType: '',

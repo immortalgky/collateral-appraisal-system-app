@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+export const SurfaceDto = z.object({
+  fromFloorNumber: z.coerce.number(),
+  toFloorNumber: z.coerce.number(),
+  floorType: z.string(),
+  floorStructure: z.string(),
+  floorSurface: z.string(),
+});
+
 export const BuildingDetailDto = z
   .object({
     verifiableOwner: z.boolean(),
@@ -39,6 +47,7 @@ export const BuildingDetailDto = z
     interiorWallOther: z.string(),
     exteriorWall: z.array(z.string()),
     exteriorWallOther: z.string(),
+    surface: SurfaceDto.nullable(),
     fence: z.array(z.string()),
     fenceOther: z.string(),
     constType: z.string(),

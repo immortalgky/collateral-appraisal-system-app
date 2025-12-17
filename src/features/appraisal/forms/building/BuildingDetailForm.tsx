@@ -1,4 +1,6 @@
 import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import SurfaceTable from '../../components/tables/SurfaceTable';
+import { Label } from '@headlessui/react';
 
 const BuildingDetailForm = () => {
   return (
@@ -118,6 +120,15 @@ const BuildingDetailForm = () => {
         <div className="col-span-4">
           <div className="grid grid-cols-12 gap-4">
             <FormSection fields={wallField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Surface</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <SurfaceTable headers={surfaceTableHeader} name={'buildingDetail.surface'} />
           </div>
         </div>
         <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
@@ -567,6 +578,45 @@ const wallField: FormField[] = [
     label: 'Other',
     name: 'buildingDetail.exteriorWallOther',
     wrapperClassName: 'col-span-12',
+  },
+];
+
+const surfaceTableHeader = [
+  {
+    name: 'fromFloorNumber',
+    label: 'From Floor No.',
+    inputType: 'number',
+  },
+  { name: 'toFloorNumber', label: 'To Floor No.', inputType: 'number' },
+  {
+    name: 'floorType',
+    label: 'Floor Type',
+    inputType: 'dropdown',
+    options: [
+      { value: 'CB', label: 'Cement Block' },
+      { value: 'WOOD', label: 'Wood' },
+      { value: 'IRON', label: 'Iron' },
+    ],
+  },
+  {
+    name: 'floorStructure',
+    label: 'Floor Structure',
+    inputType: 'dropdown',
+    options: [
+      { value: 'CB', label: 'Cement Block' },
+      { value: 'WOOD', label: 'Wood' },
+      { value: 'IRON', label: 'Iron' },
+    ],
+  },
+  {
+    name: 'floorSurface',
+    label: 'Floor Surface',
+    inputType: 'dropdown',
+    options: [
+      { value: 'CB', label: 'Cement Block' },
+      { value: 'WOOD', label: 'Wood' },
+      { value: 'IRON', label: 'Iron' },
+    ],
   },
 ];
 

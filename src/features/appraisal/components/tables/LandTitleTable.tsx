@@ -129,6 +129,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const editForm = useForm();
+
   //initial
   useEffect(() => {
     setValue(name, LandMock);
@@ -166,7 +167,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
     <div className="w-full overflow-x-auto">
       <div className="max-h-60 overflow-y-auto">
         <table className="table min-w-max">
-          <thead className="sticky top-0 bg-primary-700">
+          <thead>
             <tr className="bg-primary-700">
               {headers.map((header, index) => (
                 <th

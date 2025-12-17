@@ -13,7 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createLandRequestDefaults } from '@/shared/forms/defaults';
 import LandDetailForm from '../forms/LandDetailForm';
 
-const CreateLandDetailPage = () => {
+const CreateLandPage = () => {
   const methods = useForm<CreateLandRequestType>({
     defaultValues: createLandRequestDefaults,
     resolver: zodResolver(CreateLandRequest),
@@ -80,4 +80,4 @@ const CreateLandDetailPage = () => {
   );
 };
 
-export default CreateLandDetailPage;
+export default CreateLandPage;
