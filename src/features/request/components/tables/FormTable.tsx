@@ -60,6 +60,7 @@ const FormTable = ({ name, headers }: FormTableProps) => {
     setEditIndex(getValues(name).length - 1);
   };
 
+  console.log('Test');
   const isEmpty = values.length === 0;
 
   return (

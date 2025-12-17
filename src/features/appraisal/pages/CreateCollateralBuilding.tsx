@@ -1,70 +1,52 @@
-import { FormProvider, useForm, useFormContext } from 'react-hook-form';
+import { FormProvider, useController, useForm, type SubmitHandler } from 'react-hook-form';
 import BuildingDetailTable from '../forms/building/BuildingDetailTable';
-import { z } from 'zod';
-import { Resolver } from 'dns';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Description } from '@headlessui/react';
-import CalculationTable from '../forms/building/CalculationTable';
-
-const rowSchema = z.object({
-  atYear: z.number().min(0, 'Must be ≥ 0'),
-  toYear: z.number().min(0, 'Must be ≥ 0'),
-  deprePerYear: z.number().min(0, 'Must be ≥ 0').max(100, 'Must be <= 100'),
-  totalDepre: z.number(),
-  price: z.number(),
-});
-
-const formSchema = z.object({
-  rows: z.array(rowSchema).min(1, 'At least one row'),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-type RowValues = z.infer<typeof rowSchema>;
+import { Button } from '@headlessui/react';
+import { buildingDetailSchema, type BuildingDetailFormValue } from '../forms/building/bType';
+import { BuildingDetail } from '../forms/building/BuildlingDetail';
 
 function CreateCollateralBuilding() {
-  const methods = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const methods = useForm<BuildingDetailFormValue>({
+    resolver: zodResolver(buildingDetailSchema),
     defaultValues: {
-      rows: [{ atYear: 1, toYear: 2, deprePerYear: 2, totalDepre: 2, price: 0 }],
+      buildings: [
+        {
+          seq: 1,
+          detail: 'Test',
+          isBuilding: false,
+          area: 200,
+          pricePerSqMeterBeforeDepreciation: 100,
+          totalPriceBeforeDepreciation: 1000,
+          year: 1,
+          depreciationPercentPerYear: 3,
+          totalDepreciationPercent: 3,
+          method: 'Period',
+          pricePerSqMeterAfterDepreciation: 700,
+          totalPriceAfterDepreciation: 1000,
+          buildingDepreciations: [],
+        },
+      ],
     },
-    mode: 'onChange',
+    mode: 'onSubmit',
   });
 
-  const {
-    handleSubmit,
-    getValues,
-    formState: { errors },
-  } = methods;
+  const { handleSubmit, control, getValues } = methods;
+
+  const onSubmit: SubmitHandler<BuildingDetailFormValue> = data => {
+    console.log(data);
+  };
+
+  const onDraft = () => {
+    console.log(getValues());
+  };
 
   return (
     <div>
       <FormProvider {...methods}>
-        <CalculationTable
-          name={'rows'}
-          headers={[
-            { rowNumberColumn: true, label: 'Sq.' },
-            { name: 'atYear', label: 'At Year', inputType: 'number', className: 'w-[120px]' },
-            { name: 'toYear', label: 'To Year', inputType: 'number', className: 'w-[120px]' },
-            {
-              name: 'deprePerYear',
-              label: 'Depreciation per Year',
-              inputType: 'number',
-              className: 'w-[120px]',
-            },
-            {
-              name: 'totalDepre',
-              label: 'Total Depreciation Percentage',
-              inputType: 'number',
-              className: 'w-[120px]',
-            },
-            {
-              name: 'price',
-              label: 'Price Depreciation',
-              inputType: 'number',
-              className: 'w-[200px]',
-            },
-          ]}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <BuildingDetail name={'buildings'} />
+          <Button onClick={() => onDraft()}>Save Draft</Button>
+        </form>
       </FormProvider>
     </div>
   );

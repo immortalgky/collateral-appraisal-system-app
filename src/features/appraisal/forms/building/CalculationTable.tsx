@@ -5,16 +5,18 @@ import {
   useController,
   useFieldArray,
   useFormContext,
+  useWatch,
   type Control,
   type FieldValues,
 } from 'react-hook-form';
+import { evalExpr, type Env, type Expr, type LookupRow } from './evalExpr';
 
 interface CalculationTableProps {
   name: string;
   headers: FormTableHeader[];
 }
 
-type FormTableHeader = FormTableRegularHeader | FormTableRowNumberHeader;
+type FormTableHeader = FormTableRegularHeader | FormTableRowNumberHeader | FormTableExprHeader;
 
 interface FormTableRegularHeader {
   name: string;
@@ -29,13 +31,26 @@ interface FormTableRowNumberHeader {
   className?: string;
 }
 
+interface FormTableExprHeader {
+  name: string;
+  label: string;
+  inputType: 'number';
+  className?: string;
+  expr?: Expr;
+}
+
+type RowValue = Record<string, any>;
+
 interface TableCellProps {
   name: string;
   index: number;
   editIndex: number | undefined;
   value: string;
-  header: FormTableRegularHeader;
+  header: FormTableRegularHeader | FormTableExprHeader;
   control: Control<FieldValues, any, FieldValues>;
+
+  row: RowValue;
+  rows: RowValue[];
 }
 
 const CalculationTable = ({ name, headers }: CalculationTableProps) => {
@@ -44,12 +59,14 @@ const CalculationTable = ({ name, headers }: CalculationTableProps) => {
     control,
     name: name,
   });
-  const values = getValues(name);
+  const values = useWatch({ control, name }) ?? [];
   const [editIndex, setEditIndex] = useState<number | undefined>();
+
   const handleDeleteRow = (index: number) => {
     setEditIndex(undefined);
     remove(index);
   };
+
   const handleAddRow = () => {
     const newRow: Record<string, any> = {};
     for (const header of headers) {
@@ -100,6 +117,8 @@ const CalculationTable = ({ name, headers }: CalculationTableProps) => {
                             value={field[header.name]}
                             header={header}
                             control={control}
+                            row={field}
+                            rows={values}
                           />
                         </td>
                       );
@@ -182,16 +201,46 @@ const CalculationTable = ({ name, headers }: CalculationTableProps) => {
   );
 };
 
-const TableCell = ({ name, index, editIndex, value, header, control }: TableCellProps) => {
+const TableCell = ({ name, index, editIndex, header, control, row, rows }: TableCellProps) => {
   const cellName = `${name}.${index}.${header.name}`;
+
   const {
     field,
     fieldState: { error },
   } = useController({ name: cellName, control });
+
+  const lookupRow: LookupRow = (rowIndex, fieldName) => {
+    const v = rows?.[rowIndex]?.[fieldName];
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const env: Env = Object.fromEntries(
+    Object.entries(row ?? {}).map(([k, v]) => [k, typeof v === 'number' ? v : Number(v) || 0]),
+  );
+
+  const computed =
+    'expr' in header && header.expr ? evalExpr(header.expr, env, lookupRow) : undefined;
+
+  console.log(computed);
+
   return (
     <div>
-      {editIndex === index ? <Input type={header.inputType} {...field} /> : <div>{value}</div>}
-      {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
+      {editIndex === index ? (
+        <Input
+          type={header.inputType}
+          {...field}
+          onChange={(e: any) => {
+            const raw = e?.target?.value;
+            field.onChange(
+              header.inputType === 'number' ? (raw === '' ? undefined : Number(raw)) : raw,
+            );
+          }}
+        />
+      ) : (
+        <div>{computed ?? field.value}</div>
+      )}
+      {error && <div className="mt-1 text-sm text-danger">{error.message}</div>}
     </div>
   );
 };
