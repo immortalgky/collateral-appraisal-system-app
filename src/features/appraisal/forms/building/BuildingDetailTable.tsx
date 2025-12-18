@@ -17,9 +17,14 @@ interface BuildingDetailProps {
   name: string;
   headers: FormTableHeader[];
   handlePopupModal?: (index: number | undefined) => void;
+  defaultValue?: object;
 }
 
-type FormTableHeader = FormTableRegularHeader | FormTableRowNumberHeader;
+type FormTableHeader =
+  | FormTableRegularHeader
+  | FormTableRowNumberHeader
+  | FormTableRowNumberHeader
+  | FormTableRowTextHeader;
 
 type Align = 'left' | 'right' | 'center';
 
@@ -30,6 +35,7 @@ function alignClass(align?: 'left' | 'right' | 'center') {
 }
 
 interface FormTableRegularHeader {
+  type: 'general';
   name: string;
   label: string;
   inputType?: string;
@@ -48,7 +54,39 @@ interface FormTableRegularHeader {
   footerSum?: boolean; // if true, sum Number(value)
 }
 
+interface FormTableRowTextHeader {
+  type: 'text';
+  name?: string;
+  label: string;
+  className?: string;
+  align?: Align;
+  isStickyRight?: boolean;
+
+  body?: (ctx: { value?: string }) => string;
+
+  footer?: (ctx: { value?: string }) => React.ReactNode;
+}
+
 interface FormTableRowNumberHeader {
+  type: 'number';
+  name: string;
+  label: string;
+  className?: string;
+  align?: Align;
+  isStickyRight?: boolean;
+
+  // value extraction for display (optional; default is row[id])
+  accessor?: (row: any, rowIndex: number) => any;
+
+  // customize view rendering (optional)
+  render?: (ctx: { value: any; row: any; rowIndex: number }) => React.ReactNode;
+
+  // footer aggregation / rendering
+  footer?: (ctx: { values: number[] }) => React.ReactNode;
+}
+
+interface FormTableRowNumberHeader {
+  type: 'row-number';
   rowNumberColumn: true;
   label: string;
   className?: string;
@@ -68,7 +106,12 @@ function toNumber(v: any) {
   return Number.isFinite(n) ? n : 0;
 }
 
-const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetailProps) => {
+const BuildingDetailTable = ({
+  name,
+  headers,
+  handlePopupModal,
+  defaultValue,
+}: BuildingDetailProps) => {
   const { getValues, control } = useFormContext();
   const { append, remove } = useFieldArray({
     control,
@@ -82,49 +125,37 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
   };
 
   const handleAddRow = () => {
-    const newRow: Record<string, any> = {};
-    for (const header of headers) {
-      if ('name' in header) {
-        newRow[header.name] = ''; // TODO: Get default value from zod
+    let newRow: Record<string, any> = {};
+
+    if (defaultValue != undefined) {
+      newRow = defaultValue;
+    } else {
+      for (const header of headers) {
+        if ('name' in header) {
+          newRow[header.name] = ''; // TODO: Get default value from zod
+        }
       }
     }
 
-    newRow['buildingDepreciations'] = [];
     append(newRow);
-    setEditIndex(getValues(name).length - 1);
+    // setEditIndex(getValues(name).length - 1);
+    handleEdit(getValues(name).length - 1);
   };
 
   const handleEdit = (index: number | undefined) => {
-    console.log(index);
     setEditIndex(index);
     handlePopupModal(index);
   };
-
-  const rows = (useWatch({ control, name }) as []) ?? [];
-
-  const totals = useMemo(() => {
-    console.log('test');
-    const map: Record<string, number> = {};
-    for (const header of headers) {
-      if (!header.footerSum) continue;
-      map[header.name] = rows.reduce((acc, r, idx) => {
-        // const raw = col.accessor ? col.accessor(r, idx) : r[col.id];
-        return acc + toNumber(r[header.name]);
-      }, 0);
-    }
-    console.log(map);
-    return map;
-  }, [rows]);
 
   const isEmpty = values.length === 0;
 
   return (
     <div className="w-full rounded-lg overflow-hidden border border-neutral-3">
-      <div className="w-full overflow-x-auto">
-        <table className="table-fixed w-full">
+      <div className="w-full h-full overflow-auto">
+        <table className="table-fixed w-full h-full">
           <colgroup>
-            {headers.map((h, i) => (
-              <col key={i} className={h.className /* e.g. w-[200px] */} />
+            {headers.map((header, index) => (
+              <col key={index} className={clsx(header.className)} />
             ))}
             <col className="w-24" /> {/* Actions column */}
           </colgroup>
@@ -139,7 +170,7 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
                       header.className,
                       alignClass(header.align),
                     )}
-                    title={header.label ?? ''}
+                    scope="col"
                   >
                     {header.label}
                   </th>
@@ -159,15 +190,12 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
                 >
                   {headers.map((header, inner_index) => {
                     if ('name' in header) {
-                      if ('inputType' in header) {
-                        console.log('pass');
+                      if (header.type === 'number') {
                         return (
                           <td
                             key={inner_index}
-                            className={clsx(
-                              'py-3 px-4 whitespace-nowrap truncate text-right',
-                              alignClass(header.align),
-                            )}
+                            className={clsx('py-3 px-4 truncate', alignClass(header.align))}
+                            title={field[header.name] ?? ''}
                           >
                             <TableCell
                               name={name}
@@ -179,7 +207,8 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
                             />
                           </td>
                         );
-                      } else {
+                      }
+                      if (header.type === 'text') {
                         return (
                           <td
                             key={inner_index}
@@ -188,8 +217,15 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
                               alignClass(header.align),
                             )}
                           >
-                            <span className="inline-flex items-center justify-center text-sm font-medium text-gray-600">
-                              {field[header.name]}
+                            <span
+                              className="items-center justify-center text-sm font-medium truncate text-gray-600 w-full"
+                              title={
+                                header.body
+                                  ? header.body(field[header.name])
+                                  : (field[header.name] ?? '')
+                              }
+                            >
+                              {header.body ? header.body(field[header.name]) : field[header.name]}
                             </span>
                           </td>
                         );
@@ -241,21 +277,15 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
           {isEmpty ? (
             <tfoot>
               <tr>
-                <td colSpan={headers.length + 1} className="p-0">
-                  <div className="sticky left-0 right-0 border-t border-gray-100 bg-white">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                      <Icon style="regular" name="inbox" className="size-6 text-gray-400" />
-                    </div>
-                    <p className="text-sm text-gray-500">No data yet</p>
-                    <button
-                      type="button"
-                      onClick={handleAddRow}
-                      className=" flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors"
-                    >
-                      <Icon style="solid" name="plus" className="size-3.5" />
-                      Add first item
-                    </button>
-                  </div>
+                <td colSpan={headers.length + 1} className="p-2">
+                  <button
+                    type="button"
+                    onClick={handleAddRow}
+                    className="sticky left-3 p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors rounded-lg"
+                  >
+                    <Icon style="solid" name="plus" className="size-3.5 text-primary-600" />
+                    Add first item
+                  </button>
                 </td>
               </tr>
             </tfoot>
@@ -266,16 +296,14 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
                   <button
                     type="button"
                     onClick={handleAddRow}
-                    className="sticky left-3 p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors rounded-xl"
+                    className="sticky left-3 p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors rounded-lg"
                   >
-                    <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center">
-                      <Icon style="solid" name="plus" className="size-3 text-white" />
-                    </div>
+                    <Icon style="solid" name="plus" className="size-3 text-primary-600" />
                     New record
                   </button>
                 </td>
               </tr>
-              <tr>
+              <tr className="border-t-1 border-neutral-3">
                 {!isEmpty ? (
                   headers.map((header, inner_index) => {
                     return (
@@ -283,8 +311,16 @@ const BuildingDetailTable = ({ name, headers, handlePopupModal }: BuildingDetail
                         key={inner_index}
                         className={clsx('py-3 px-4', header.className, alignClass(header.align))}
                       >
-                        <span className="inline-flex items-center justify-center text-sm font-medium text-gray-600">
-                          {header.footerSum ? `Total: ${totals[header.name]}` : ''}
+                        <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+                          {header.type === 'number'
+                            ? header.footer
+                              ? header.footer(values.map((v: any) => toNumber(v[header.name])))
+                              : ''
+                            : header.type === 'text'
+                              ? header.footer
+                                ? header.footer(values.map((v: any) => v[header.name]))
+                                : ''
+                              : ''}
                         </span>
                       </td>
                     );

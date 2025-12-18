@@ -19,6 +19,7 @@ export const buildingDetailDto = z.object({
   depreciationPercentPerYear: z.number(),
   totalDepreciationPercent: z.number(),
   method: z.string(),
+  totalDepreciation: z.number(),
   pricePerSqMeterAfterDepreciation: z.number(),
   totalPriceAfterDepreciation: z.number(),
   buildingDepreciations: z.array(buildingDepreciation).optional(),

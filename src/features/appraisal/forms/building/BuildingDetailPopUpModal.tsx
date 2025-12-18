@@ -5,7 +5,7 @@ import { useController, useFieldArray, useFormContext, useWatch } from 'react-ho
 import BuildingDetailTable from './BuildingDetailTable';
 
 function BuildingDetailPopUpModal({ name, index, open }) {
-  const { register } = useFormContext();
+  const { register, control } = useFormContext();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
@@ -15,12 +15,12 @@ function BuildingDetailPopUpModal({ name, index, open }) {
 
   return (
     <dialog ref={dialogRef} className="modal">
-      <div className="modal-box w-11/12 max-w-5xl bg-white rounded-xl max-h-[600px]">
-        <div className="inline-flex">
-          <div>
+      <div className="modal-box w-11/12 max-w-5xl bg-white rounded-xl h-3/4">
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-3">
             <TextInput {...register(`${name}.${index}.detail`)} label="Detail"></TextInput>
           </div>
-          <div className="">
+          <div className="col-span-3">
             <NumberInput
               {...register(`${name}.${index}.year`, {
                 valueAsNumber: true,
@@ -28,7 +28,7 @@ function BuildingDetailPopUpModal({ name, index, open }) {
               label="Year"
             ></NumberInput>
           </div>
-          <div className="">
+          <div className="col-span-3">
             <NumberInput
               {...register(`${name}.${index}.area`, {
                 valueAsNumber: true,
@@ -36,7 +36,7 @@ function BuildingDetailPopUpModal({ name, index, open }) {
               label="Area"
             ></NumberInput>
           </div>
-          <div className="">
+          <div className="col-span-3">
             <NumberInput
               {...register(`${name}.${index}.pricePerSqMeterBeforeDepreciation`, {
                 valueAsNumber: true,
@@ -45,10 +45,12 @@ function BuildingDetailPopUpModal({ name, index, open }) {
             ></NumberInput>
           </div>
         </div>
-        <BuildingDetailTable
-          headers={propertiesTableHeader}
-          name={`${name}.${index}.buildingDepreciations`}
-        />
+        <div className="h-[300px]">
+          <BuildingDetailTable
+            headers={propertiesTableHeader}
+            name={`${name}.${index}.buildingDepreciations`}
+          />
+        </div>
         <form method="dialog">
           {/* if there is a button in form, it will close the modal */}
           <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
@@ -59,20 +61,52 @@ function BuildingDetailPopUpModal({ name, index, open }) {
 }
 
 const propertiesTableHeader = [
-  { name: 'atYear', label: 'From Year', inputType: 'number' },
-  { name: 'toYear', label: 'To Year', inputType: 'number' },
-  { name: 'depreciationPerYear', label: 'Depreciation Per Year', inputType: 'number' },
   {
-    name: 'totalDepreciationPerYear',
-    label: 'Total Depreciation Per Year',
+    type: 'number',
+    name: 'atYear',
+    label: 'From Year',
+    className: 'w-[100px]',
+    render: (value, row, rowIndex) => <div>Test</div>,
+  },
+  { name: 'toYear', label: 'To Year', type: 'number', className: 'w-[100px]' },
+  {
+    type: 'number',
+    name: 'depreciationPerYear',
+    label: 'Depreciation Per Year (%)',
     align: 'right',
-    footerSum: true,
+    footer: (values: number[]) => values.reduce((prev, curr) => prev + curr, 0),
   },
   {
+    type: 'text',
+    name: 'totalDepreciationPerYear',
+    label: 'Total Depreciation Per Year (%)',
+    align: 'right',
+    footer: (values: any) => {
+      console.log(values);
+      return (
+        <span>
+          Total:{' '}
+          {Number(values.reduce((prev: number, curr: number) => prev + curr, 0)).toLocaleString()}
+        </span>
+      );
+    },
+  },
+  {
+    type: 'text',
     name: 'priceAfterDepreciation',
     label: 'Price After Depreciation',
     align: 'right',
-    footerSum: true,
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    footer: (values: any) => {
+      console.log(values);
+      return (
+        <span>
+          Total:{' '}
+          {Number(values.reduce((prev: number, curr: number) => prev + curr, 0)).toLocaleString()}
+        </span>
+      );
+    },
+    // footerSum: true,
   },
 ];
 

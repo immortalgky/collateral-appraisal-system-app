@@ -21,12 +21,12 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
 
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const handlePopupModal = (index: number | undefined) => {
-    if (isOpen) {
-      setEditingIndex(undefined);
-      onClose();
-    } else {
+    if (index != undefined) {
       setEditingIndex(index);
       onOpen();
+    } else {
+      setEditingIndex(undefined);
+      onClose();
     }
   };
 
@@ -39,9 +39,13 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
   useEffect(() => {
     if (editingIndex == null) return;
 
+    if (building == undefined) return;
+
     const baseTotal = toNum(area) * toNum(pricePerSqm);
 
     let sum = 0;
+    let totalDeprePercent = 0;
+    let totalDeprePerBuildling = 0;
 
     building.buildingDepreciations.forEach((row: any, rowIndex: number) => {
       const depre = toNum(row.depreciationPerYear);
@@ -53,6 +57,8 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
       const current = toNum(getValues(pricePath));
 
       sum += computedPriceAfter;
+      totalDeprePercent += totalDepre;
+      totalDeprePerBuildling += computedPriceAfter;
 
       // guard: only write when changed (prevents loops/spam)
       if (current !== computedPriceAfter) {
@@ -71,11 +77,36 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
       }
     });
 
+    const totalPriceBeforeDepreciation = getValues(
+      `${name}.${editingIndex}.totalPriceBeforeDepreciation`,
+    );
+    if (totalPriceBeforeDepreciation != baseTotal) {
+      setValue(`${name}.${editingIndex}.totalPriceBeforeDepreciation`, baseTotal, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+    }
+
     const totalPriceAfterDepreciation = getValues(
       `${name}.${editingIndex}.totalPriceAfterDepreciation`,
     );
-    if (totalPriceAfterDepreciation != sum)
-      setValue(`${name}.${editingIndex}.totalPriceAfterDepreciation`, sum);
+
+    if (totalPriceAfterDepreciation !== totalPriceBeforeDepreciation - sum) {
+      setValue(
+        `${name}.${editingIndex}.totalPriceAfterDepreciation`,
+        toNum(totalPriceBeforeDepreciation) - sum,
+      );
+
+      setValue(`${name}.${editingIndex}.totalDepreciationPercent`, totalDeprePercent, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+
+      setValue(`${name}.${editingIndex}.totalDepreciation`, totalDeprePerBuildling, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+    }
   }, [building, getValues, setValue]);
 
   return (
@@ -84,32 +115,83 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
         name="buildings"
         headers={propertiesTableHeader}
         handlePopupModal={handlePopupModal}
-      ></BuildingDetailTable>
+        defaultValue={{
+          seq: 1,
+          detail: '',
+          isBuilding: false,
+          area: 0,
+          pricePerSqMeterBeforeDepreciation: 0,
+          totalPriceBeforeDepreciation: 0,
+          year: 0,
+          depreciationPercentPerYear: 0,
+          totalDepreciationPercent: 0,
+          method: 'Period',
+          totalDepreciation: 0,
+          pricePerSqMeterAfterDepreciation: 0,
+          totalPriceAfterDepreciation: 0,
+          buildingDepreciations: [],
+        }}
+      />
       {isOpen ? <BuildingDetailPopUpModal name={name} index={editingIndex} open={onOpen} /> : <></>}
     </div>
   );
 }
 
 const propertiesTableHeader = [
-  { name: 'seq', label: 'Seq', className: 'w-[200px]' },
-  { name: 'detail', label: 'Detail', className: 'w-[200px]' },
-  { name: 'isBuilding', label: 'IsBuilding', className: 'w-[200px]' },
-  { name: 'area', label: 'Area', className: 'w-[200px]' },
-  { name: 'pricePerSqMeterBeforeDepreciation', label: 'Price per sq.M', className: 'w-[200px]' },
-  { name: 'totalPriceBeforeDepreciation', label: 'Total Price', className: 'w-[200px]' },
-  { name: 'year', label: 'Age(Year)', className: 'w-[200px]' },
-  { name: 'depreciationPercentPerYear', label: 'Depreciation (%/year)', className: 'w-[200px]' },
-  { name: 'totalDepreciationPercent', label: 'Total Depreciation (%)', className: 'w-[200px]' },
-  { name: 'method', label: 'Method', className: 'w-[200px]' },
+  { type: 'text', name: 'seq', label: 'Seq', className: 'w-[60px]' },
+  { type: 'text', name: 'detail', label: 'Detail', className: 'w-[200px]' },
+  { type: 'text', name: 'isBuilding', label: 'IsBuilding', className: 'w-[100px]' },
+  { type: 'text', name: 'area', label: 'Area', className: 'w-[200px]', align: 'right' },
   {
+    type: 'text',
+    name: 'pricePerSqMeterBeforeDepreciation',
+    label: 'Price per sq.M',
+    className: 'w-[200px]',
+    align: 'right',
+  },
+  {
+    type: 'text',
+    name: 'totalPriceBeforeDepreciation',
+    label: 'Total Price',
+    className: 'w-[200px]',
+    align: 'right',
+  },
+  { type: 'text', name: 'year', label: 'Age(Year)', className: 'w-[200px]', align: 'right' },
+  {
+    type: 'text',
+    name: 'depreciationPercentPerYear',
+    label: 'Depreciation (%/year)',
+    className: 'w-[200px]',
+    align: 'right',
+  },
+  {
+    type: 'text',
+    name: 'totalDepreciationPercent',
+    label: 'Total Depreciation (%)',
+    className: 'w-[200px]',
+    align: 'right',
+  },
+  { type: 'text', name: 'method', label: 'Method', className: 'w-[200px]' },
+  {
+    type: 'text',
+    name: 'totalDepreciation',
+    label: 'Total Depreciation (Bath)',
+    className: 'w-[200px]',
+    align: 'right',
+  },
+  {
+    type: 'text',
     name: 'pricePerSqMeterAfterDepreciation',
     label: 'Price per sq.M after depreciation',
     className: 'w-[200px]',
+    align: 'right',
   },
   {
+    type: 'text',
     name: 'totalPriceAfterDepreciation',
     label: 'Total Price After Depreciation',
     className: 'w-[200px]',
     footerSum: true,
+    align: 'right',
   },
 ];
