@@ -50,7 +50,7 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
     building.buildingDepreciations.forEach((row: any, rowIndex: number) => {
       const depre = toNum(row.depreciationPerYear);
       const year = toNum(row.toYear) - toNum(row.atYear);
-      const totalDepre = depre * year;
+      const totalDepre = (depre * year) / 100;
       const computedPriceAfter = baseTotal * totalDepre;
 
       const pricePath = `${name}.${editingIndex}.buildingDepreciations.${rowIndex}.priceAfterDepreciation`;
@@ -64,7 +64,7 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
       if (current !== computedPriceAfter) {
         setValue(
           `${name}.${editingIndex}.buildingDepreciations.${rowIndex}.totalDepreciationPerYear`,
-          totalDepre,
+          totalDepre * 100,
           {
             shouldDirty: true,
             shouldValidate: false,
@@ -158,7 +158,15 @@ const propertiesTableHeader = [
   },
   { type: 'text', name: 'year', label: 'Age(Year)', className: 'w-[200px]', align: 'right' },
   {
+    type: 'group',
+    groupName: 'depreciation',
+    label: 'Depreciation',
+    className: 'w-[200px]',
+    align: 'center',
+  },
+  {
     type: 'text',
+    groupName: 'depreciation',
     name: 'depreciationPercentPerYear',
     label: 'Depreciation (%/year)',
     className: 'w-[200px]',
@@ -166,14 +174,22 @@ const propertiesTableHeader = [
   },
   {
     type: 'text',
+    groupName: 'depreciation',
     name: 'totalDepreciationPercent',
     label: 'Total Depreciation (%)',
     className: 'w-[200px]',
     align: 'right',
   },
-  { type: 'text', name: 'method', label: 'Method', className: 'w-[200px]' },
   {
     type: 'text',
+    groupName: 'depreciation',
+    name: 'method',
+    label: 'Method',
+    className: 'w-[200px]',
+  },
+  {
+    type: 'text',
+    groupName: 'depreciation',
     name: 'totalDepreciation',
     label: 'Total Depreciation (Bath)',
     className: 'w-[200px]',
@@ -181,6 +197,7 @@ const propertiesTableHeader = [
   },
   {
     type: 'text',
+    groupName: 'depreciation',
     name: 'pricePerSqMeterAfterDepreciation',
     label: 'Price per sq.M after depreciation',
     className: 'w-[200px]',
@@ -193,5 +210,16 @@ const propertiesTableHeader = [
     className: 'w-[200px]',
     footerSum: true,
     align: 'right',
+
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    footer: (values: any) => {
+      console.log(values);
+      return (
+        <span>
+          Total:{' '}
+          {Number(values.reduce((prev: number, curr: number) => prev + curr, 0)).toLocaleString()}
+        </span>
+      );
+    },
   },
 ];

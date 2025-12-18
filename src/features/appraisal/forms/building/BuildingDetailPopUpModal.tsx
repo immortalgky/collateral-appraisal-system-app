@@ -74,7 +74,6 @@ const propertiesTableHeader = [
     name: 'depreciationPerYear',
     label: 'Depreciation Per Year (%)',
     align: 'right',
-    footer: (values: number[]) => values.reduce((prev, curr) => prev + curr, 0),
   },
   {
     type: 'text',

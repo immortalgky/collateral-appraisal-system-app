@@ -23,8 +23,8 @@ interface BuildingDetailProps {
 type FormTableHeader =
   | FormTableRegularHeader
   | FormTableRowNumberHeader
-  | FormTableRowNumberHeader
-  | FormTableRowTextHeader;
+  | FormTableRowTextHeader
+  | FormTableRowGroupHeader;
 
 type Align = 'left' | 'right' | 'center';
 
@@ -56,6 +56,7 @@ interface FormTableRegularHeader {
 
 interface FormTableRowTextHeader {
   type: 'text';
+  groupName: string;
   name?: string;
   label: string;
   className?: string;
@@ -65,6 +66,14 @@ interface FormTableRowTextHeader {
   body?: (ctx: { value?: string }) => string;
 
   footer?: (ctx: { value?: string }) => React.ReactNode;
+}
+
+interface FormTableRowGroupHeader {
+  type: 'group';
+  groupName: string;
+  label: string;
+  className?: string;
+  align?: Align;
 }
 
 interface FormTableRowNumberHeader {
@@ -117,6 +126,7 @@ const BuildingDetailTable = ({
     control,
     name: name,
   });
+
   const values = getValues(name);
   const [editIndex, setEditIndex] = useState<number | undefined>();
   const handleDeleteRow = (index: number) => {
@@ -154,32 +164,78 @@ const BuildingDetailTable = ({
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-full h-full">
           <colgroup>
-            {headers.map((header, index) => (
-              <col key={index} className={clsx(header.className)} />
-            ))}
-            <col className="w-24" /> {/* Actions column */}
+            {headers
+              .filter(h => h.type !== 'group')
+              .map((h, i) => (
+                <col key={i} className={'className' in h ? clsx(h.className) : undefined} />
+              ))}
+            <col className="w-24" />
           </colgroup>
           <thead>
             <tr className="bg-primary-700">
               {headers.map((header, index) => {
-                return (
-                  <th
-                    key={index}
-                    className={clsx(
-                      'text-white text-sm font-medium py-3 px-4 text-left truncate',
-                      header.className,
-                      alignClass(header.align),
-                    )}
-                    scope="col"
-                  >
-                    {header.label}
-                  </th>
-                );
+                if (header.type === 'group') {
+                  return (
+                    <th
+                      key={index}
+                      className={clsx(
+                        'text-white text-sm font-medium py-3 px-4 truncate',
+                        header.className,
+                        alignClass(header.align),
+                      )}
+                      colSpan={
+                        headers.filter(
+                          h =>
+                            'groupName' in h &&
+                            h.type !== 'group' &&
+                            h.groupName === header.groupName,
+                        ).length
+                      }
+                    >
+                      {header.label}
+                    </th>
+                  );
+                } else if (!('groupName' in header)) {
+                  return (
+                    <th
+                      key={index}
+                      className={clsx(
+                        'text-white text-sm font-medium py-3 px-4 truncate',
+                        header.className,
+                        alignClass(header.align),
+                      )}
+                      rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
+                    >
+                      {header.label}
+                    </th>
+                  );
+                }
               })}
-              <th className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0 w-24 bg-primary">
+              <th
+                className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0 w-24 bg-primary"
+                rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
+              >
                 Actions
               </th>
             </tr>
+            {headers.find(h => 'groupName' in h && h.type === 'group') ? (
+              <tr className="bg-primary-700">
+                {headers
+                  .filter(h => 'groupName' in h && h.type !== 'group')
+                  .map((header, index) => (
+                    <th
+                      key={index}
+                      className={clsx(
+                        'text-white text-sm font-medium py-3 px-4 text-left truncate',
+                        header.className,
+                        alignClass(header.align),
+                      )}
+                    >
+                      {header.label}
+                    </th>
+                  ))}
+              </tr>
+            ) : null}
           </thead>
           <tbody className="divide-y divide-gray-100">
             {!isEmpty &&
@@ -230,6 +286,8 @@ const BuildingDetailTable = ({
                           </td>
                         );
                       }
+                    } else if (header.type === 'group') {
+                      return null;
                     } else {
                       return (
                         <td key={inner_index} className="py-3 px-4 whitespace-nowrap truncate">
@@ -304,30 +362,30 @@ const BuildingDetailTable = ({
                 </td>
               </tr>
               <tr className="border-t-1 border-neutral-3">
-                {!isEmpty ? (
-                  headers.map((header, inner_index) => {
-                    return (
-                      <td
-                        key={inner_index}
-                        className={clsx('py-3 px-4', header.className, alignClass(header.align))}
-                      >
-                        <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-                          {header.type === 'number'
-                            ? header.footer
-                              ? header.footer(values.map((v: any) => toNumber(v[header.name])))
-                              : ''
-                            : header.type === 'text'
-                              ? header.footer
-                                ? header.footer(values.map((v: any) => v[header.name]))
-                                : ''
-                              : ''}
-                        </span>
-                      </td>
-                    );
-                  })
-                ) : (
-                  <></>
-                )}
+                {!isEmpty
+                  ? headers
+                      .filter(h => h.type !== 'group')
+                      .map((header, inner_index) => {
+                        return (
+                          <td
+                            key={inner_index}
+                            className={clsx('py-3 px-4', alignClass(header.align))}
+                          >
+                            <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+                              {header.type === 'number'
+                                ? header.footer
+                                  ? header.footer(values.map((v: any) => toNumber(v[header.name])))
+                                  : ''
+                                : header.type === 'text'
+                                  ? header.footer
+                                    ? header.footer(values.map((v: any) => v[header.name]))
+                                    : ''
+                                  : ''}
+                            </span>
+                          </td>
+                        );
+                      })
+                  : null}
               </tr>
             </tfoot>
           )}
