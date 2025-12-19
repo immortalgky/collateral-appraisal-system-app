@@ -213,16 +213,16 @@ export const createLandRequestDefaults: CreateLandRequestType = {
 };
 
 export const createBuildingRequestDefault: CreateBuildingRequestType = {
-  propertyName: '',
-  buildingNumber: '',
-  modelName: '',
-  houseNumber: '',
-  builtOnTitleNumber: '',
+  propertyName: null,
+  buildingNumber: null,
+  modelName: null,
+  houseNumber: null,
+  builtOnTitleNumber: null,
   buildingDetail: {
     verifiableOwner: false,
-    owner: '',
-    noHouseNumber: '',
-    buildingCondition: '',
+    owner: null,
+    noHouseNumber: null,
+    buildingCondition: null,
     underConst: 'NO',
     constCompletionPct: 100,
     licenseExpirationDate: '2023-01-01T14:30:00Z',

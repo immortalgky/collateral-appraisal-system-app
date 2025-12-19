@@ -6,7 +6,7 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
-import BuildingDetailForm from '../forms/building/BuildingDetailForm';
+import BuildingDetailForm from '../forms/BuildingDetailForm';
 import { CreateBuidlingRequest, type CreateBuildingRequestType } from '@/shared/forms/typeBuilding';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBuildingRequest } from '../api';

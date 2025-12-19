@@ -2,162 +2,164 @@ import FormSection, { type FormField } from '@/shared/components/sections/FormSe
 
 const LandDetailForm = () => {
   return (
-    <div className="grid grid-cols-5 gap-6">
-      <div className="col-span-1">
-        <p>Land Information</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={landInfoField} />
+    <div>
+      <div className="grid grid-cols-5 gap-6">
+        <div className="col-span-1">
+          <p>Land Information</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Land Location</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={landLocationField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={landInfoField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Plot Location</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={plotLocationField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Land Location</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Landfill</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={landFillField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={landLocationField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Road</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={roadField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Plot Location</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Road Surface</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={roadSurfaceField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={plotLocationField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Public Utility</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={publicUtilityField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Landfill</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Land Use</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={landUseField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={landFillField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Land Entrance-Exit</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={landEntranceField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Road</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Transpotation</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={transpotationField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={roadField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Anticipation of Prosperity</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={anticipationProsperityField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Road Surface</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Limitation</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={expropriateField} />
-          <FormSection fields={encroachedField} />
-          <FormSection fields={LimitationOther} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={roadSurfaceField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Eviction</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={evictionField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Public Utility</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Allocation</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={allocationField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={publicUtilityField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Size and Boundary of Land</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={sizeAndBoundary} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Land Use</p>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Other Information</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={otherInformationField} />
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={landUseField} />
+          </div>
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Remark</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={remarkLandField} />
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Land Entrance-Exit</p>
         </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={landEntranceField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Transpotation</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={transpotationField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Anticipation of Prosperity</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={anticipationProsperityField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Limitation</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={expropriateField} />
+            <FormSection fields={encroachedField} />
+            <FormSection fields={LimitationOther} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Eviction</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={evictionField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Allocation</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={allocationField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Size and Boundary of Land</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={sizeAndBoundary} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Other Information</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={otherInformationField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+        <div className="col-span-1">
+          <p>Remark</p>
+        </div>
+        <div className="col-span-4">
+          <div className="grid grid-cols-12 gap-4">
+            <FormSection fields={remarkLandField} />
+          </div>
+        </div>
+        <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
       </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
     </div>
   );
 };
