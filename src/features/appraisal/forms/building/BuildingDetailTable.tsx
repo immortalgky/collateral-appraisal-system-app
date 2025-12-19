@@ -10,21 +10,20 @@ import {
   type Control,
   type FieldValues,
 } from 'react-hook-form';
-import BuildingDetailPopUpModal from './BuildingDetailPopUpModal';
-import { title } from 'process';
 
 interface BuildingDetailProps {
   name: string;
   headers: FormTableHeader[];
-  handlePopupModal?: (index: number | undefined) => void;
   defaultValue?: object;
+  getEditingStatus?: (index: number | undefined) => void;
 }
 
 type FormTableHeader =
   | FormTableRegularHeader
   | FormTableRowNumberHeader
   | FormTableRowTextHeader
-  | FormTableRowGroupHeader;
+  | FormTableRowGroupHeader
+  | FormTableRowRunNumberHeader;
 
 type Align = 'left' | 'right' | 'center';
 
@@ -78,23 +77,21 @@ interface FormTableRowGroupHeader {
 
 interface FormTableRowNumberHeader {
   type: 'number';
+  groupName: string;
   name: string;
   label: string;
   className?: string;
   align?: Align;
   isStickyRight?: boolean;
 
-  // value extraction for display (optional; default is row[id])
-  accessor?: (row: any, rowIndex: number) => any;
+  accessor?: (tableValue: any, rowIndex: number, fieldName: string) => any;
 
-  // customize view rendering (optional)
   render?: (ctx: { value: any; row: any; rowIndex: number }) => React.ReactNode;
 
-  // footer aggregation / rendering
   footer?: (ctx: { values: number[] }) => React.ReactNode;
 }
 
-interface FormTableRowNumberHeader {
+interface FormTableRowRunNumberHeader {
   type: 'row-number';
   rowNumberColumn: true;
   label: string;
@@ -118,7 +115,7 @@ function toNumber(v: any) {
 const BuildingDetailTable = ({
   name,
   headers,
-  handlePopupModal,
+  getEditingStatus,
   defaultValue,
 }: BuildingDetailProps) => {
   const { getValues, control } = useFormContext();
@@ -129,7 +126,9 @@ const BuildingDetailTable = ({
 
   const values = getValues(name);
   const [editIndex, setEditIndex] = useState<number | undefined>();
+
   const handleDeleteRow = (index: number) => {
+    console.log(index);
     setEditIndex(undefined);
     remove(index);
   };
@@ -149,28 +148,32 @@ const BuildingDetailTable = ({
 
     append(newRow);
     // setEditIndex(getValues(name).length - 1);
+    handleSave(undefined);
     handleEdit(getValues(name).length - 1);
+    if (getEditingStatus != undefined) getEditingStatus(index);
   };
 
   const handleEdit = (index: number | undefined) => {
     setEditIndex(index);
-    handlePopupModal(index);
+
+    if (getEditingStatus != undefined) getEditingStatus(index);
   };
 
+  const handleSave = (field: any) => {
+    // trigger();
+    // console.log(errors);
+    // if (errors == undefined) return;
+    setEditIndex(undefined);
+    if (getEditingStatus != undefined) getEditingStatus(undefined);
+  };
+
+  console.log(getValues(name));
   const isEmpty = values.length === 0;
 
   return (
-    <div className="w-full rounded-lg overflow-hidden border border-neutral-3">
+    <div className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip">
       <div className="w-full h-full overflow-auto">
-        <table className="table-fixed w-full h-full">
-          <colgroup>
-            {headers
-              .filter(h => h.type !== 'group')
-              .map((h, i) => (
-                <col key={i} className={'className' in h ? clsx(h.className) : undefined} />
-              ))}
-            <col className="w-24" />
-          </colgroup>
+        <table className="table-fixed w-full h-full border-separate border-spacing-0 ">
           <thead>
             <tr className="bg-primary-700">
               {headers.map((header, index) => {
@@ -179,7 +182,7 @@ const BuildingDetailTable = ({
                     <th
                       key={index}
                       className={clsx(
-                        'text-white text-sm font-medium py-3 px-4 truncate',
+                        'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 bg-primary z-20',
                         header.className,
                         alignClass(header.align),
                       )}
@@ -200,7 +203,7 @@ const BuildingDetailTable = ({
                     <th
                       key={index}
                       className={clsx(
-                        'text-white text-sm font-medium py-3 px-4 truncate',
+                        'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 bg-primary  z-20',
                         header.className,
                         alignClass(header.align),
                       )}
@@ -212,7 +215,7 @@ const BuildingDetailTable = ({
                 }
               })}
               <th
-                className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0 w-24 bg-primary"
+                className="text-white text-sm font-medium py-3 px-4 text-right w-24 bg-primary sticky top-0 right-0 z-30"
                 rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
               >
                 Actions
@@ -226,7 +229,7 @@ const BuildingDetailTable = ({
                     <th
                       key={index}
                       className={clsx(
-                        'text-white text-sm font-medium py-3 px-4 text-left truncate',
+                        'text-white text-sm font-medium py-3 px-4 text-left truncate bg-primary sticky top-0 z-20',
                         header.className,
                         alignClass(header.align),
                       )}
@@ -245,65 +248,23 @@ const BuildingDetailTable = ({
                   className="hover:bg-gray-50 transition-colors border-b-1 border-neutral-3"
                 >
                   {headers.map((header, inner_index) => {
-                    if ('name' in header) {
-                      if (header.type === 'number') {
-                        return (
-                          <td
-                            key={inner_index}
-                            className={clsx('py-3 px-4 truncate', alignClass(header.align))}
-                            title={field[header.name] ?? ''}
-                          >
-                            <TableCell
-                              name={name}
-                              index={index}
-                              editIndex={editIndex}
-                              value={field[header.name]}
-                              header={header}
-                              control={control}
-                            />
-                          </td>
-                        );
-                      }
-                      if (header.type === 'text') {
-                        return (
-                          <td
-                            key={inner_index}
-                            className={clsx(
-                              'py-3 px-4 whitespace-nowrap truncate',
-                              alignClass(header.align),
-                            )}
-                          >
-                            <span
-                              className="items-center justify-center text-sm font-medium truncate text-gray-600 w-full"
-                              title={
-                                header.body
-                                  ? header.body(field[header.name])
-                                  : (field[header.name] ?? '')
-                              }
-                            >
-                              {header.body ? header.body(field[header.name]) : field[header.name]}
-                            </span>
-                          </td>
-                        );
-                      }
-                    } else if (header.type === 'group') {
-                      return null;
-                    } else {
-                      return (
-                        <td key={inner_index} className="py-3 px-4 whitespace-nowrap truncate">
-                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-                            {index + 1}
-                          </span>
-                        </td>
-                      );
-                    }
+                    return TableBody({
+                      type: header.type,
+                      header,
+                      tableValue: values,
+                      index,
+                      inner_index,
+                      fieldName: name,
+                      editIndex,
+                      control,
+                    });
                   })}
-                  <td className="py-3 px-4 sticky right-0 bg-white">
+                  <td className="py-3 px-4 sticky right-0 bg-white border-b-1 border-neutral-3">
                     <div className="flex gap-1 justify-end">
                       {editIndex === index ? (
                         <button
                           type="button"
-                          onClick={() => handleEdit(undefined)}
+                          onClick={() => handleSave(field)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
                           title="Save"
                         >
@@ -332,66 +293,53 @@ const BuildingDetailTable = ({
                 </tr>
               ))}
           </tbody>
-          {isEmpty ? (
+          {
             <tfoot>
-              <tr>
-                <td colSpan={headers.length + 1} className="p-2">
+              {/* <tr>
+                <td colSpan={headers.length + 1} className="sticky bottom-12 left-0 z-40 p-4">
                   <button
                     type="button"
                     onClick={handleAddRow}
-                    className="sticky left-3 p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors rounded-lg"
-                  >
-                    <Icon style="solid" name="plus" className="size-3.5 text-primary-600" />
-                    Add first item
-                  </button>
-                </td>
-              </tr>
-            </tfoot>
-          ) : (
-            <tfoot>
-              <tr>
-                <td colSpan={headers.length + 1} className="p-2">
-                  <button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="sticky left-3 p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors rounded-lg"
+                    className="p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium bg-white border-1 border-neutral-3 text-primary-600 hover:bg-primary-50 transition-colors rounded-lg"
                   >
                     <Icon style="solid" name="plus" className="size-3 text-primary-600" />
-                    New record
+                    {isEmpty ? 'Add first item' : 'New record'}
                   </button>
                 </td>
-              </tr>
+              </tr> */}
               <tr className="border-t-1 border-neutral-3">
                 {!isEmpty
                   ? headers
                       .filter(h => h.type !== 'group')
                       .map((header, inner_index) => {
-                        return (
-                          <td
-                            key={inner_index}
-                            className={clsx('py-3 px-4', alignClass(header.align))}
-                          >
-                            <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-                              {header.type === 'number'
-                                ? header.footer
-                                  ? header.footer(values.map((v: any) => toNumber(v[header.name])))
-                                  : ''
-                                : header.type === 'text'
-                                  ? header.footer
-                                    ? header.footer(values.map((v: any) => v[header.name]))
-                                    : ''
-                                  : ''}
-                            </span>
-                          </td>
-                        );
+                        {
+                          return TableFooter({
+                            type: header.type,
+                            inner_index,
+                            header: header,
+                            values: values,
+                          });
+                        }
                       })
                   : null}
+                <td className={clsx('py-3 px-4 sticky right-0 bottom-0 bg-white')}>
+                  <span></span>
+                </td>
               </tr>
             </tfoot>
-          )}
+          }
         </table>
       </div>
-      <div></div>
+      <div className="p-4">
+        <button
+          type="button"
+          onClick={handleAddRow}
+          className="p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium bg-white text-primary-600 hover:bg-primary-50 transition-colors rounded-md"
+        >
+          <Icon style="solid" name="plus" className="size-3 text-primary-600" />
+          {isEmpty ? 'Add first item' : 'New record'}
+        </button>
+      </div>
       <div></div>
     </div>
   );
@@ -405,10 +353,152 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
   } = useController({ name: cellName, control });
   return (
     <div>
-      {editIndex === index ? <Input type={header.inputType} {...field} /> : <div>{value}</div>}
+      {editIndex === index ? <Input type={'number'} {...field} /> : <div>{value}</div>}
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
   );
+};
+
+interface TableFooterProps {
+  type: string;
+  inner_index: number;
+  header: any;
+  values: Record<string, any>;
+}
+
+const TableFooter = ({ type, inner_index, header, values }: TableFooterProps) => {
+  switch (type) {
+    case 'text':
+      return (
+        <td
+          key={inner_index}
+          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
+        >
+          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+            {header.footer ? header.footer(values.map((v: any) => v[header.name])) : ''}
+          </span>
+        </td>
+      );
+    case 'number':
+      return (
+        <td
+          key={inner_index}
+          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
+        >
+          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+            {header.footer ? header.footer(values.map((v: any) => toNumber(v[header.name]))) : ''}
+          </span>
+        </td>
+      );
+    case 'group':
+      return null;
+    default:
+      console.log('pass');
+      return (
+        <td key={inner_index} className={clsx('py-3 px-4 sticky bottom-0 right-0 bg-white')}></td>
+      );
+  }
+};
+
+interface TableBodyProps {
+  type: string;
+  header: any;
+  tableValue: any;
+  index: number;
+  inner_index: number;
+  fieldName: string;
+  editIndex: number | undefined;
+  control: any;
+}
+
+const TableBody = ({
+  type,
+  header,
+  tableValue,
+  index,
+  inner_index,
+  fieldName,
+  editIndex,
+  control,
+}: TableBodyProps) => {
+  switch (type) {
+    case 'text': {
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 border-b border-neutral-3 whitespace-nowrap truncate',
+            alignClass(header.align),
+            header.className,
+          )}
+        >
+          <span
+            className="items-center justify-center text-sm font-medium truncate text-gray-600 w-full"
+            title={
+              header.body
+                ? header.body(tableValue[index][header.name])
+                : (tableValue[index][header.name] ?? '')
+            }
+          >
+            {header.body
+              ? header.body(tableValue[index][header.name])
+              : tableValue[index][header.name]}
+          </span>
+        </td>
+      );
+    }
+    case 'number': {
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 truncate border-b border-neutral-3 ',
+            alignClass(header.align),
+            header.className,
+          )}
+          title={tableValue[index][header.name] ?? ''}
+        >
+          <TableCell
+            name={fieldName}
+            index={index}
+            editIndex={editIndex}
+            value={tableValue[index][header.name]}
+            header={header}
+            control={control}
+          />
+        </td>
+      );
+    }
+    case 'group':
+      return null;
+    case 'row-number':
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 whitespace-nowrap truncate border-b border-neutral-3 ',
+            header.className,
+          )}
+        >
+          <span className="inline-flex items-center w-7 h-7 justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+            {index + 1}
+          </span>
+        </td>
+      );
+    default:
+      return null;
+  }
+};
+
+const TableHeader = (type: string) => {
+  switch (type) {
+    case 'text':
+      return <div></div>;
+    case 'number':
+      return <div></div>;
+    case 'group':
+      return <div></div>;
+  }
 };
 
 export default BuildingDetailTable;

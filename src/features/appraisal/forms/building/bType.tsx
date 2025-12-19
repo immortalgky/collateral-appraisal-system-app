@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 export const buildingDepreciation = z.object({
-  atYear: z.number(),
-  toYear: z.number(),
-  depreciationPerYear: z.number(),
-  totalDepreciationPerYear: z.number(),
-  priceAfterDepreciation: z.number(),
+  atYear: z.coerce.number(),
+  toYear: z.coerce.number(),
+  depreciationPerYear: z.coerce.number(),
+  totalDepreciationPerYear: z.coerce.number().nullable(),
+  priceAfterDepreciation: z.coerce.number().nullable(),
 });
 
 export const buildingDetailDto = z.object({
