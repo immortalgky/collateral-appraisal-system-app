@@ -124,11 +124,15 @@ const BuildingDetailTable = ({
     name: name,
   });
 
-  const values = getValues(name);
   const [editIndex, setEditIndex] = useState<number | undefined>();
+  const [sorting, setSorting] = useState({ fieldName: 'detail', direction: 'asc' });
+
+  const values = getValues(name).sort((a, b) => {
+    console.log(a, b);
+    return sorting ? a[sorting.fieldName].localeCompare(b[sorting.fieldName]) : a;
+  });
 
   const handleDeleteRow = (index: number) => {
-    console.log(index);
     setEditIndex(undefined);
     remove(index);
   };
@@ -167,7 +171,6 @@ const BuildingDetailTable = ({
     if (getEditingStatus != undefined) getEditingStatus(undefined);
   };
 
-  console.log(getValues(name));
   const isEmpty = values.length === 0;
 
   return (
@@ -177,42 +180,7 @@ const BuildingDetailTable = ({
           <thead>
             <tr className="bg-primary-700">
               {headers.map((header, index) => {
-                if (header.type === 'group') {
-                  return (
-                    <th
-                      key={index}
-                      className={clsx(
-                        'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 bg-primary z-20',
-                        header.className,
-                        alignClass(header.align),
-                      )}
-                      colSpan={
-                        headers.filter(
-                          h =>
-                            'groupName' in h &&
-                            h.type !== 'group' &&
-                            h.groupName === header.groupName,
-                        ).length
-                      }
-                    >
-                      {header.label}
-                    </th>
-                  );
-                } else if (!('groupName' in header)) {
-                  return (
-                    <th
-                      key={index}
-                      className={clsx(
-                        'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 bg-primary  z-20',
-                        header.className,
-                        alignClass(header.align),
-                      )}
-                      rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
-                    >
-                      {header.label}
-                    </th>
-                  );
-                }
+                return TableHeader({ type: header.type, headers, header, index });
               })}
               <th
                 className="text-white text-sm font-medium py-3 px-4 text-right w-24 bg-primary sticky top-0 right-0 z-30"
@@ -322,25 +290,26 @@ const BuildingDetailTable = ({
                         }
                       })
                   : null}
-                <td className={clsx('py-3 px-4 sticky right-0 bottom-0 bg-white')}>
-                  <span></span>
-                </td>
+                {!isEmpty ? (
+                  <td className={clsx('py-3 px-4 sticky right-0 bottom-0 bg-white')}>
+                    <span></span>
+                  </td>
+                ) : null}
               </tr>
             </tfoot>
           }
         </table>
       </div>
-      <div className="p-4">
+      <div className="p-4 flex items-center justify-center">
         <button
           type="button"
           onClick={handleAddRow}
-          className="p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium bg-white text-primary-600 hover:bg-primary-50 transition-colors rounded-md"
+          className="p-4 items-center justify-center gap-2 py-3 text-sm font-medium bg-white text-primary-600 hover:bg-primary-50 transition-colors rounded-md"
         >
           <Icon style="solid" name="plus" className="size-3 text-primary-600" />
           {isEmpty ? 'Add first item' : 'New record'}
         </button>
       </div>
-      <div></div>
     </div>
   );
 };
@@ -393,7 +362,6 @@ const TableFooter = ({ type, inner_index, header, values }: TableFooterProps) =>
     case 'group':
       return null;
     default:
-      console.log('pass');
       return (
         <td key={inner_index} className={clsx('py-3 px-4 sticky bottom-0 right-0 bg-white')}></td>
       );
@@ -490,14 +458,66 @@ const TableBody = ({
   }
 };
 
-const TableHeader = (type: string) => {
+interface TableHeaderProps {
+  type: string;
+  headers: any;
+  header: any;
+  tableValue?: any;
+  index: number;
+  inner_index?: number;
+  fieldName?: string;
+  editIndex?: number | undefined;
+  control?: any;
+}
+const TableHeader = ({
+  type,
+  headers,
+  header,
+  tableValue,
+  index,
+  inner_index,
+  fieldName,
+  editIndex,
+  control,
+}: TableHeaderProps) => {
   switch (type) {
-    case 'text':
-      return <div></div>;
-    case 'number':
-      return <div></div>;
-    case 'group':
-      return <div></div>;
+    case 'group': {
+      return (
+        <th
+          key={index}
+          className={clsx(
+            'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 bg-primary z-20',
+            header.className,
+            alignClass(header.align),
+          )}
+          colSpan={
+            headers.filter(
+              h => 'groupName' in h && h.type !== 'group' && h.groupName === header.groupName,
+            ).length
+          }
+        >
+          {header.label}
+        </th>
+      );
+    }
+    default: {
+      if ('groupName' in header) {
+        return null;
+      }
+      return (
+        <th
+          key={index}
+          className={clsx(
+            'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 bg-primary  z-20',
+            header.className,
+            alignClass(header.align),
+          )}
+          rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
+        >
+          {header.label}
+        </th>
+      );
+    }
   }
 };
 
