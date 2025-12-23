@@ -1,38 +1,21 @@
-import FormTable from '@/features/request/components/tables/FormTable';
-import {
-  Button,
-  CancelButton,
-  FormBooleanToggle,
-  FormStringToggle,
-  NumberInput,
-  TextInput,
-  Toggle,
-} from '@/shared/components';
-import { useEffect, useRef } from 'react';
-import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { Button, FormBooleanToggle, NumberInput, TextInput } from '@/shared/components';
+import { useFormContext } from 'react-hook-form';
 import BuildingDetailTable from './BuildingDetailTable';
 
-function BuildingDetailPopUpModal({ name, index, onClose }) {
-  const { register, control } = useFormContext();
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
-
-  // useEffect(() => {
-  //   if (!dialogRef.current) return;
-  //   open ? dialogRef.current.showModal() : dialogRef.current.close();
-  // }, [open]);
+function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
+  const { register, control, getValues } = useFormContext();
 
   const handleOnClose = () => {
     onClose(undefined);
   };
 
   const handleOnCancel = () => {
-    // clear data
     onClose(undefined);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="flex flex-col gap-4 w-3/4 bg-white rounded-xl h-3/4  p-7 overflow-clip">
+      <div className="grid flex-col gap-4 w-3/4 bg-white rounded-xl h-3/4  p-7 overflow-clip">
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-3">
             <TextInput {...register(`${name}.${index}.detail`)} label="Detail"></TextInput>
@@ -76,10 +59,11 @@ function BuildingDetailPopUpModal({ name, index, onClose }) {
             />
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="">
           <BuildingDetailTable
             headers={propertiesTableHeader}
             name={`${name}.${index}.buildingDepreciations`}
+            outScopeFields={outScopeFields}
           />
         </div>
         <div className="bg-white p-4">
@@ -120,6 +104,24 @@ const propertiesTableHeader = [
     name: 'totalDepreciationPerYear',
     label: 'Total Depreciation Per Year (%)',
     align: 'right',
+
+    compute: ({ rows, row, rowIndex }) => {
+      // const atYear = row['atYear'];
+      // const toYear = row['toYear'];
+      // const depre = row['depreciationPerYear'];
+      // return (toYear - atYear) * depre;
+      if (rowIndex - 1 >= 0) {
+        const prevDepre = rows[rowIndex - 1]['depreciationPerYear'];
+        const currAtYear = row['atYear'];
+        const currToYear = row['toYear'];
+        return (currToYear - currAtYear) * prevDepre;
+      } else {
+        const currAtYear = row['atYear'];
+        const currToYear = row['toYear'];
+        return (currToYear - currAtYear) * row['depreciationPerYear'];
+      }
+    },
+
     footer: (values: any) => {
       return (
         <span>
@@ -134,7 +136,17 @@ const propertiesTableHeader = [
     name: 'priceAfterDepreciation',
     label: 'Price After Depreciation',
     align: 'right',
+
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ rows, row, rowIndex, getValues, outScopeFields }) => {
+      const area = outScopeFields['area'];
+      const pricePerSqm = outScopeFields['pricePerSqm'];
+      const depre = row['depreciationPerYear'];
+      const priceAfterDepre = area * pricePerSqm * depre;
+
+      return priceAfterDepre;
+    },
+
     footer: (values: any) => {
       return (
         <span>
@@ -143,7 +155,6 @@ const propertiesTableHeader = [
         </span>
       );
     },
-    // footerSum: true,
   },
 ];
 

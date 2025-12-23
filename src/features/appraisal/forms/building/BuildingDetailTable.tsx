@@ -1,7 +1,6 @@
 import { Icon, Input } from '@/shared/components';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import clsx from 'clsx';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useController,
   useFieldArray,
@@ -10,12 +9,24 @@ import {
   type Control,
   type FieldValues,
 } from 'react-hook-form';
+import { useDerivedFieldArray, type DerivedRule } from './useDerivedFieldArray';
+
+type Align = 'left' | 'right' | 'center';
+
+const alignClass = (align?: Align) => {
+  if (align === 'right') return 'text-right';
+  if (align === 'center') return 'text-center';
+  return 'text-left';
+};
 
 interface BuildingDetailProps {
   name: string;
   headers: FormTableHeader[];
   defaultValue?: object;
   getEditingStatus?: (index: number | undefined) => void;
+  outScopeFields?: Record<string, any>;
+  disableSaveBtn?: boolean;
+  disableEditBtn?: boolean;
 }
 
 type FormTableHeader =
@@ -24,14 +35,6 @@ type FormTableHeader =
   | FormTableRowTextHeader
   | FormTableRowGroupHeader
   | FormTableRowRunNumberHeader;
-
-type Align = 'left' | 'right' | 'center';
-
-function alignClass(align?: 'left' | 'right' | 'center') {
-  if (align === 'right') return 'text-right';
-  if (align === 'center') return 'text-center';
-  return 'text-left';
-}
 
 interface FormTableRegularHeader {
   type: 'general';
@@ -54,6 +57,7 @@ interface FormTableRegularHeader {
 }
 
 interface FormTableRowTextHeader {
+  // header
   type: 'text';
   groupName: string;
   name?: string;
@@ -62,8 +66,12 @@ interface FormTableRowTextHeader {
   align?: Align;
   isStickyRight?: boolean;
 
+  // body
   body?: (ctx: { value?: string }) => string;
+  compute: (ctx: ComputeCtx) => any;
+  normalize?: (v: any) => any;
 
+  // footer
   footer?: (ctx: { value?: string }) => React.ReactNode;
 }
 
@@ -117,6 +125,9 @@ const BuildingDetailTable = ({
   headers,
   getEditingStatus,
   defaultValue,
+  outScopeFields,
+  disableSaveBtn = false,
+  disableEditBtn = false,
 }: BuildingDetailProps) => {
   const { getValues, control } = useFormContext();
   const { append, remove } = useFieldArray({
@@ -124,13 +135,21 @@ const BuildingDetailTable = ({
     name: name,
   });
 
-  const [editIndex, setEditIndex] = useState<number | undefined>();
-  const [sorting, setSorting] = useState({ fieldName: 'detail', direction: 'asc' });
+  // reset state of table
 
-  const values = getValues(name).sort((a, b) => {
-    console.log(a, b);
-    return sorting ? a[sorting.fieldName].localeCompare(b[sorting.fieldName]) : a;
-  });
+  const [editIndex, setEditIndex] = useState<number | undefined>();
+
+  const values = getValues(name);
+
+  const rules: DerivedRule[] = useMemo(() => {
+    return headers
+      .filter(h => 'compute' in h && h.type === 'text' && h.name != undefined)
+      .map((h): DerivedRule => {
+        return { targetKey: h.name, compute: h.compute, normalize: h.normalize };
+      });
+  }, [headers]);
+
+  useDerivedFieldArray({ arrayName: name, rules, outScopeFields });
 
   const handleDeleteRow = (index: number) => {
     setEditIndex(undefined);
@@ -151,22 +170,17 @@ const BuildingDetailTable = ({
     }
 
     append(newRow);
-    // setEditIndex(getValues(name).length - 1);
     handleSave(undefined);
     handleEdit(getValues(name).length - 1);
-    if (getEditingStatus != undefined) getEditingStatus(index);
   };
 
   const handleEdit = (index: number | undefined) => {
     setEditIndex(index);
-
+    console.log(index);
     if (getEditingStatus != undefined) getEditingStatus(index);
   };
 
-  const handleSave = (field: any) => {
-    // trigger();
-    // console.log(errors);
-    // if (errors == undefined) return;
+  const handleSave = () => {
     setEditIndex(undefined);
     if (getEditingStatus != undefined) getEditingStatus(undefined);
   };
@@ -229,16 +243,20 @@ const BuildingDetailTable = ({
                   })}
                   <td className="py-3 px-4 sticky right-0 bg-white border-b-1 border-neutral-3">
                     <div className="flex gap-1 justify-end">
-                      {editIndex === index ? (
-                        <button
-                          type="button"
-                          onClick={() => handleSave(field)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                          title="Save"
-                        >
-                          <Icon style="solid" name="check" className="size-4" />
-                        </button>
-                      ) : (
+                      {!disableSaveBtn ? (
+                        editIndex === index ? (
+                          <button
+                            type="button"
+                            onClick={() => handleSave(field)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                            title="Save"
+                          >
+                            <Icon style="solid" name="check" className="size-4" />
+                          </button>
+                        ) : (
+                          <div></div>
+                        )
+                      ) : !disableEditBtn ? (
                         <button
                           type="button"
                           onClick={() => handleEdit(index)}
@@ -247,6 +265,8 @@ const BuildingDetailTable = ({
                         >
                           <Icon style="solid" name="pen" className="size-3.5" />
                         </button>
+                      ) : (
+                        <div></div>
                       )}
                       <button
                         type="button"
@@ -263,18 +283,6 @@ const BuildingDetailTable = ({
           </tbody>
           {
             <tfoot>
-              {/* <tr>
-                <td colSpan={headers.length + 1} className="sticky bottom-12 left-0 z-40 p-4">
-                  <button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="p-4 flex items-center justify-center gap-2 py-3 text-sm font-medium bg-white border-1 border-neutral-3 text-primary-600 hover:bg-primary-50 transition-colors rounded-lg"
-                  >
-                    <Icon style="solid" name="plus" className="size-3 text-primary-600" />
-                    {isEmpty ? 'Add first item' : 'New record'}
-                  </button>
-                </td>
-              </tr> */}
               <tr className="border-t-1 border-neutral-3">
                 {!isEmpty
                   ? headers

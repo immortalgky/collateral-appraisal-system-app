@@ -19,7 +19,6 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [editingIndex, setEditingIndex] = useState<number | undefined>();
 
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const handlePopupModal = (index: number | undefined) => {
     if (index != undefined) {
       setEditingIndex(index);
@@ -30,84 +29,14 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
     }
   };
 
-  const buildings = useWatch({ control, name });
-  const building = editingIndex != null ? buildings[editingIndex] : undefined;
+  const fieldA: Record<string, any> = {
+    buildingDepre: `${name}.${editingIndex}.buildingDepreciations`,
+  };
 
-  const area = building?.area ?? undefined;
-  const pricePerSqm = building?.pricePerSqMeterBeforeDepreciation ?? undefined;
-
-  useEffect(() => {
-    if (editingIndex == null) return;
-
-    if (building == undefined) return;
-
-    const baseTotal = toNum(area) * toNum(pricePerSqm);
-
-    let sum = 0;
-    let totalDeprePercent = 0;
-    let totalDeprePerBuildling = 0;
-
-    building.buildingDepreciations.forEach((row: any, rowIndex: number) => {
-      const depre = toNum(row.depreciationPerYear);
-      const year = toNum(row.toYear) - toNum(row.atYear);
-      const totalDepre = (depre * year) / 100;
-      const computedPriceAfter = baseTotal * totalDepre;
-
-      const pricePath = `${name}.${editingIndex}.buildingDepreciations.${rowIndex}.priceAfterDepreciation`;
-      const current = toNum(getValues(pricePath));
-
-      sum += computedPriceAfter;
-      totalDeprePercent += totalDepre;
-      totalDeprePerBuildling += computedPriceAfter;
-
-      // guard: only write when changed (prevents loops/spam)
-      if (current !== computedPriceAfter) {
-        setValue(
-          `${name}.${editingIndex}.buildingDepreciations.${rowIndex}.totalDepreciationPerYear`,
-          totalDepre * 100,
-          {
-            shouldDirty: true,
-            shouldValidate: false,
-          },
-        );
-        setValue(pricePath, computedPriceAfter, {
-          shouldDirty: true,
-          shouldValidate: false,
-        });
-      }
-    });
-
-    const totalPriceBeforeDepreciation = getValues(
-      `${name}.${editingIndex}.totalPriceBeforeDepreciation`,
-    );
-    if (totalPriceBeforeDepreciation != baseTotal) {
-      setValue(`${name}.${editingIndex}.totalPriceBeforeDepreciation`, baseTotal, {
-        shouldDirty: true,
-        shouldValidate: false,
-      });
-    }
-
-    const totalPriceAfterDepreciation = getValues(
-      `${name}.${editingIndex}.totalPriceAfterDepreciation`,
-    );
-
-    if (totalPriceAfterDepreciation !== totalPriceBeforeDepreciation - sum) {
-      setValue(
-        `${name}.${editingIndex}.totalPriceAfterDepreciation`,
-        toNum(totalPriceBeforeDepreciation) - sum,
-      );
-
-      setValue(`${name}.${editingIndex}.totalDepreciationPercent`, totalDeprePercent, {
-        shouldDirty: true,
-        shouldValidate: false,
-      });
-
-      setValue(`${name}.${editingIndex}.totalDepreciation`, totalDeprePerBuildling, {
-        shouldDirty: true,
-        shouldValidate: false,
-      });
-    }
-  }, [building, getValues, setValue]);
+  const fieldB: Record<string, any> = {
+    area: `${name}.${editingIndex}.area`,
+    pricePerSqm: `${name}.${editingIndex}.pricePerSqMeterBeforeDepreciation`,
+  };
 
   return (
     <div>
@@ -131,9 +60,16 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
           totalPriceAfterDepreciation: 0,
           buildingDepreciations: [],
         }}
+        outScopeFields={fieldA}
+        disableSaveBtn={true}
       />
       {isOpen ? (
-        <BuildingDetailPopUpModal name={name} index={editingIndex} onClose={handlePopupModal} />
+        <BuildingDetailPopUpModal
+          name={name}
+          index={editingIndex}
+          onClose={handlePopupModal}
+          outScopeFields={fieldB}
+        />
       ) : (
         <></>
       )}
@@ -219,6 +155,17 @@ const propertiesTableHeader = [
     label: 'Total Depreciation (%)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
+
+    // compute: ({ outScopeFields }) => {
+    //   const buildingDepreciations = outScopeFields['buildingDepre'];
+
+    //   if (!Array.isArray(buildingDepreciations)) return 0;
+
+    //   const totalBuildingDepreciation = buildingDepreciations
+    //     .map(b => b.totalDepreciationPerYear)
+    //     .reduce((acc, curr) => acc + toNum(curr), 0);
+    //   return totalBuildingDepreciation;
+    // },
   },
   {
     type: 'text',
