@@ -111,12 +111,17 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'Text',
+    type: 'text',
     name: 'totalPriceBeforeDepreciation',
     label: 'Total Price before Depreciation',
     align: 'right',
-
+    className: 'w-[200px]',
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ outScopeFields }) => {
+      const area = outScopeFields['area'];
+      const pricePerSqm = outScopeFields['pricePerSqm'];
+      return area * pricePerSqm;
+    },
   },
   {
     type: 'text',

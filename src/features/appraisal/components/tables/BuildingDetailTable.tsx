@@ -36,14 +36,29 @@ type FormTableHeader =
   | FormTableRowGroupHeader
   | FormTableRowRunNumberHeader;
 
-interface FormTableRegularHeader {
+type HeaderType =
+  | 'general'
+  | 'display'
+  | 'text'
+  | 'input-text'
+  | 'input-number'
+  | 'input-dropdown'
+  | 'row-number'
+  | 'group'
+  | 'component';
+
+interface BaseHeader {
+  type: HeaderType;
+  align?: Align;
+  isStickyRight?: boolean;
+  className?: string;
+}
+
+interface FormTableRegularHeader extends BaseHeader {
   type: 'general';
   name: string;
   label: string;
   inputType?: string;
-  className?: string;
-  align?: Align;
-  isStickyRight?: boolean;
 
   // value extraction for display (optional; default is row[id])
   accessor?: (row: any, rowIndex: number) => any;
@@ -56,15 +71,12 @@ interface FormTableRegularHeader {
   footerSum?: boolean; // if true, sum Number(value)
 }
 
-interface FormTableRowTextHeader {
+interface FormTableRowTextHeader extends BaseHeader {
   // header
   type: 'text';
   groupName: string;
   name?: string;
   label: string;
-  className?: string;
-  align?: Align;
-  isStickyRight?: boolean;
 
   // body
   body?: (ctx: { value?: string; outScopeFields: Record<string, any> }) => string;
@@ -75,22 +87,17 @@ interface FormTableRowTextHeader {
   footer?: (ctx: { value?: string }) => React.ReactNode;
 }
 
-interface FormTableRowGroupHeader {
+interface FormTableRowGroupHeader extends BaseHeader {
   type: 'group';
   groupName: string;
   label: string;
-  className?: string;
-  align?: Align;
 }
 
-interface FormTableRowNumberHeader {
+interface FormTableRowNumberHeader extends BaseHeader {
   type: 'number';
   groupName: string;
   name: string;
   label: string;
-  className?: string;
-  align?: Align;
-  isStickyRight?: boolean;
 
   accessor?: (tableValue: any, rowIndex: number, fieldName: string) => any;
 
@@ -99,7 +106,7 @@ interface FormTableRowNumberHeader {
   footer?: (ctx: { values: number[] }) => React.ReactNode;
 }
 
-interface FormTableRowRunNumberHeader {
+interface FormTableRowRunNumberHeader extends BaseHeader {
   type: 'row-number';
   rowNumberColumn: true;
   label: string;
@@ -121,6 +128,10 @@ function toNumber(v: any) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function isGroupHeader(h: FormTableHeader): h is FormTableRowGroupHeader {
+  return h.type === 'group';
+}
+
 const BuildingDetailTable = ({
   name,
   headers,
@@ -137,6 +148,8 @@ const BuildingDetailTable = ({
   });
 
   // reset state of table
+
+  const hasGroups = headers.some(isGroupHeader);
 
   const [editIndex, setEditIndex] = useState<number | undefined>();
 
@@ -236,12 +249,14 @@ const BuildingDetailTable = ({
                     return TableBody({
                       type: header.type,
                       header,
-                      tableValue: values,
-                      index,
-                      inner_index,
-                      fieldName: name,
+                      row: field,
+                      rows: values,
+                      rowIndex: index,
+                      arrayName: name,
                       editIndex,
                       control,
+                      inner_index,
+                      fieldName: name,
                       outScopeFields,
                     });
                   })}
@@ -331,6 +346,46 @@ const BuildingDetailTable = ({
   );
 };
 
+const TextInputCell = ({
+  arrayName,
+  rowIndex,
+  fieldName,
+  control,
+  isEditing,
+  inputType,
+  displayValue,
+}: {
+  arrayName: string;
+  rowIndex: number;
+  fieldName: string;
+  control: Control<FieldValues>;
+  isEditing: boolean;
+  inputType: string;
+  displayValue: any;
+}) => {
+  const cellName = `${arrayName}.${rowIndex}.${fieldName}`;
+
+  const { getValues } = useFormContext();
+
+  const {
+    field,
+    fieldState: { error },
+  } = useController({ name: cellName, control });
+
+  const defaultValue = getValues(cellName);
+
+  return (
+    <div>
+      {isEditing ? (
+        <Input type={inputType} {...field} />
+      ) : (
+        <div>{displayValue ?? defaultValue}</div>
+      )}
+      {error ? <div className="mt-1 text-sm text-danger">{error.message}</div> : null}
+    </div>
+  );
+};
+
 const TableCell = ({ type, name, index, editIndex, value, header, control }: TableCellProps) => {
   const cellName = `${name}.${index}.${header.name}`;
   const {
@@ -387,26 +442,32 @@ const TableFooter = ({ type, inner_index, header, values }: TableFooterProps) =>
 
 interface TableBodyProps {
   type: string;
+  arrayName: string;
   header: any;
-  tableValue: any;
-  index: number;
+  row: Record<string, ant>;
+  rows: Record<string, any>[];
+  rowIndex: number;
   inner_index: number;
   fieldName: string;
   editIndex: number | undefined;
   control: any;
   outScopeFields: Record<string, any>;
+  displayValue: any;
 }
 
 const TableBody = ({
   type,
   header,
-  tableValue,
-  index,
-  inner_index,
-  fieldName,
+  row,
+  rows,
+  rowIndex,
+  arrayName,
   editIndex,
   control,
+  inner_index,
+  fieldName,
   outScopeFields,
+  displayValue,
 }: TableBodyProps) => {
   switch (type) {
     case 'text': {
@@ -423,13 +484,11 @@ const TableBody = ({
             className="items-center justify-center text-sm font-medium truncate text-gray-600 w-full"
             title={
               header.body
-                ? header.body(tableValue[index][header.name], outScopeFields)
-                : (tableValue[index][header.name] ?? '')
+                ? header.body(rows[rowIndex][header.name], outScopeFields)
+                : (rows[rowIndex][header.name] ?? '')
             }
           >
-            {header.body
-              ? header.body(tableValue[index][header.name])
-              : tableValue[index][header.name]}
+            {header.body ? header.body(rows[rowIndex][header.name]) : rows[rowIndex][header.name]}
           </span>
         </td>
       );
@@ -443,16 +502,16 @@ const TableBody = ({
             alignClass(header.align),
             header.className,
           )}
-          title={tableValue[index][header.name] ?? ''}
+          title={rows[rowIndex][header.name] ?? ''}
         >
-          <TableCell
-            type={'text'}
-            name={fieldName}
-            index={index}
-            editIndex={editIndex}
-            value={tableValue[index][header.name]}
-            header={header}
+          <TextInputCell
+            arrayName={arrayName}
+            rowIndex={rowIndex}
+            fieldName={fieldName}
             control={control}
+            isEditing={editIndex === rowIndex}
+            inputType="text"
+            displayValue={displayValue}
           />
         </td>
       );
@@ -466,14 +525,14 @@ const TableBody = ({
             alignClass(header.align),
             header.className,
           )}
-          title={tableValue[index][header.name] ?? ''}
+          title={rows[rowIndex][header.name] ?? ''}
         >
           <TableCell
             type={'number'}
             name={fieldName}
-            index={index}
+            index={rowIndex}
             editIndex={editIndex}
-            value={tableValue[index][header.name]}
+            value={rows[rowIndex][header.name]}
             header={header}
             control={control}
           />
@@ -492,7 +551,7 @@ const TableBody = ({
           )}
         >
           <span className="inline-flex items-center w-7 h-7 justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-            {index + 1}
+            {rowIndex + 1}
           </span>
         </td>
       );
@@ -519,7 +578,7 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
         <th
           key={index}
           className={clsx(
-            'text-white text-sm font-medium py-3 px-4 truncate sticky top-0',
+            'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 bg-primary',
             header.className,
             alignClass(header.align),
           )}
@@ -541,7 +600,7 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
         <th
           key={index}
           className={clsx(
-            'text-white text-sm font-medium py-3 px-4 truncate sticky top-0',
+            'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 bg-primary',
             header.className,
             alignClass(header.align),
           )}
