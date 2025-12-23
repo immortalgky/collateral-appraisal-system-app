@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import BuildingDetailPopUpModal from './BuildingDetailPopUpModal';
-import BuildingDetailTable from './BuildingDetailTable';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import BuildingDetailTable from './BuildingDetailTable';
+import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 
 interface BuildingDetailProps {
   name: string;
@@ -14,8 +14,6 @@ const toNum = (v: any) => {
 };
 
 export function BuildingDetail({ name }: BuildingDetailProps) {
-  const { register, control, setValue, getValues } = useFormContext();
-
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [editingIndex, setEditingIndex] = useState<number | undefined>();
 
@@ -29,15 +27,6 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
     }
   };
 
-  const fieldA: Record<string, any> = {
-    buildingDepre: `${name}.${editingIndex}.buildingDepreciations`,
-  };
-
-  const fieldB: Record<string, any> = {
-    area: `${name}.${editingIndex}.area`,
-    pricePerSqm: `${name}.${editingIndex}.pricePerSqMeterBeforeDepreciation`,
-  };
-
   return (
     <div>
       <BuildingDetailTable
@@ -46,29 +35,34 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
         getEditingStatus={handlePopupModal}
         defaultValue={{
           seq: 1,
-          detail: '',
-          isBuilding: false,
+          areaDescription: '',
           area: 0,
+          isBuilding: false,
           pricePerSqMeterBeforeDepreciation: 0,
           totalPriceBeforeDepreciation: 0,
           year: 0,
-          depreciationPercentPerYear: 0,
           totalDepreciationPercent: 0,
-          method: 'Period',
-          totalDepreciation: 0,
+          depreciationPercentPerYear: 0,
+          depreciationMethod: 'Period',
+          totalDepreciationPrice: 0,
           pricePerSqMeterAfterDepreciation: 0,
           totalPriceAfterDepreciation: 0,
-          buildingDepreciations: [],
+          buildingDepreciationMethods: [],
         }}
-        outScopeFields={fieldA}
+        outScopeFields={{
+          buildingDepre: `${name}.${editingIndex}.buildingDepreciationMethods`,
+        }}
         disableSaveBtn={true}
       />
       {isOpen ? (
         <BuildingDetailPopUpModal
-          name={name}
+          name={`${name}`}
           index={editingIndex}
           onClose={handlePopupModal}
-          outScopeFields={fieldB}
+          outScopeFields={{
+            area: `${name}.${editingIndex}.area`,
+            pricePerSqm: `${name}.${editingIndex}.pricePerSqMeterBeforeDepreciation`,
+          }}
         />
       ) : (
         <></>
@@ -78,11 +72,10 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
 }
 
 const propertiesTableHeader = [
-  // { type: 'text', name: 'seq', label: 'Seq', className: 'w-[60px]' },
   { type: 'row-number', label: 'Seq', className: 'w-[70px] border-r-1 border-neutral-3' },
   {
     type: 'text',
-    name: 'detail',
+    name: 'areaDescription',
     label: 'Detail',
     className: 'w-[200px]  border-r-1 border-neutral-3',
   },
@@ -99,6 +92,7 @@ const propertiesTableHeader = [
     label: 'Area',
     className: 'w-[200px]  border-r-1 border-neutral-3',
     align: 'right',
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
     type: 'group',
@@ -106,6 +100,7 @@ const propertiesTableHeader = [
     label: 'Replacement Cost New',
     className: 'w-[400px] border-b-1 border-r-1 border-neutral-3',
     align: 'center',
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
     type: 'text',
@@ -114,6 +109,7 @@ const propertiesTableHeader = [
     label: 'Price per sq.M',
     className: 'w-[200px]  border-r-1 border-neutral-3',
     align: 'right',
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
     type: 'text',
@@ -122,6 +118,13 @@ const propertiesTableHeader = [
     label: 'Total Price',
     className: 'w-[200px]  border-r-1 border-neutral-3',
     align: 'right',
+
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ row }) => {
+      const area = row['area'];
+      const pricePerSqm = row['pricePerSqMeterBeforeDepreciation'];
+      return area * pricePerSqm;
+    },
   },
   {
     type: 'text',
@@ -142,11 +145,25 @@ const propertiesTableHeader = [
   {
     type: 'text',
     groupName: 'depreciation',
-    name: 'depreciationPercentPerYear',
+    name: 'totalDepreciationPercentPerYear',
     label: 'Depreciation (%/year)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
+
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ outScopeFields }) => {
+      const buildingDepreciations = outScopeFields['buildingDepre'];
+
+      if (!Array.isArray(buildingDepreciations)) return 0;
+
+      if (buildingDepreciations.length === 0) return 0;
+
+      const totalDepreciationPercent = buildingDepreciations
+        .map(b => b.depreciationPercentPerYear)
+        .reduce((acc, curr) => acc + toNum(curr), 0);
+
+      return totalDepreciationPercent / buildingDepreciations.length;
+    },
   },
   {
     type: 'text',
@@ -156,21 +173,22 @@ const propertiesTableHeader = [
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
 
-    // compute: ({ outScopeFields }) => {
-    //   const buildingDepreciations = outScopeFields['buildingDepre'];
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ outScopeFields }) => {
+      const buildingDepreciations = outScopeFields['buildingDepre'];
 
-    //   if (!Array.isArray(buildingDepreciations)) return 0;
+      if (!Array.isArray(buildingDepreciations)) return 0;
 
-    //   const totalBuildingDepreciation = buildingDepreciations
-    //     .map(b => b.totalDepreciationPerYear)
-    //     .reduce((acc, curr) => acc + toNum(curr), 0);
-    //   return totalBuildingDepreciation;
-    // },
+      const totalBuildingDepreciation = buildingDepreciations
+        .map(b => b.totalDepreciationPerYear)
+        .reduce((acc, curr) => acc + toNum(curr), 0);
+      return totalBuildingDepreciation;
+    },
   },
   {
     type: 'text',
     groupName: 'depreciation',
-    name: 'method',
+    name: 'depreciationMethod',
     label: 'Method',
     className: 'w-[200px] border-r-1 border-neutral-3',
     body: (value: string) => (value ? 'Period' : 'Gross'),
@@ -178,30 +196,51 @@ const propertiesTableHeader = [
   {
     type: 'text',
     groupName: 'depreciation',
-    name: 'totalDepreciation',
+    name: 'totalDepreciationPrice',
     label: 'Total Depreciation (Bath)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ outScopeFields }) => {
+      const buildingDepreciations = outScopeFields['buildingDepre'];
+
+      if (!Array.isArray(buildingDepreciations)) return 0;
+
+      const totalDepreciationPrice = buildingDepreciations
+        .map(b => b.depreciationPrice)
+        .reduce((acc, curr) => acc + toNum(curr), 0);
+      return totalDepreciationPrice;
+    },
   },
   {
     type: 'text',
-    groupName: 'depreciation',
     name: 'pricePerSqMeterAfterDepreciation',
     label: 'Price per sq.M after depreciation',
-    className: 'w-[200px] w-[200px] border-r-1 border-neutral-3',
+    className: 'w-[250px] border-r-1 border-neutral-3',
     align: 'right',
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ row }) => {
+      const totalPriceAfterDepreciation = row['totalPriceAfterDepreciation'];
+      const area = row['area'];
+
+      if (area === 0) return 0;
+      return totalPriceAfterDepreciation / area;
+    },
   },
   {
     type: 'text',
     name: 'totalPriceAfterDepreciation',
     label: 'Total Price After Depreciation',
-    className: 'w-[200px]',
+    className: 'w-[230px]',
     footerSum: true,
     align: 'right',
 
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ row }) => {
+      const totalPriceBeforeDepreciation = row['totalPriceBeforeDepreciation'];
+      const totalDepreciationPrice = row['totalDepreciationPrice'];
+      return totalPriceBeforeDepreciation - totalDepreciationPrice;
+    },
     footer: (values: any) => {
       return (
         <span>

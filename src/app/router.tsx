@@ -9,6 +9,7 @@ import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
+import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
       {
         path: 'building-detail',
         element: <CreateBuildingPage />,
+      },
+      {
+        path: 'condo-detail',
+        element: <CreateCondoPage />,
       },
       // Catch-all route for 404 pages
       {

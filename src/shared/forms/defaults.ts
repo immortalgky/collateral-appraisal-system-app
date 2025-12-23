@@ -262,8 +262,9 @@ export const createBuildingRequestDefault: CreateBuildingRequestType = {
     constType: '',
     constTypeOther: '',
     utilization: '',
-    useForOtherPurpose: '',
     buildingArea: 0,
+    buildingDepreciationDetails: [],
+    useForOtherPurpose: '',
     remark: '',
   },
 };

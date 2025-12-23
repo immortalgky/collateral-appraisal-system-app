@@ -8,6 +8,31 @@ export const SurfaceDto = z.object({
   floorSurface: z.string(),
 });
 
+export const BuildingDepreciationMethodDto = z.object({
+  fromYear: z.coerce.number(),
+  toYear: z.coerce.number(),
+  depreciationPercentPerYear: z.coerce.number(),
+  totalDepreciationPercent: z.coerce.number(),
+  depreciationPrice: z.coerce.number(),
+});
+
+export const BuildingDepreciationDetail = z.object({
+  seq: z.coerce.number(),
+  areaDescription: z.string().nullable(),
+  area: z.coerce.number(),
+  isBuilding: z.boolean(),
+  pricePerSqMeterBeforeDepreciation: z.coerce.number(),
+  totalPriceBeforeDepreciation: z.coerce.number(),
+  year: z.coerce.number(),
+  totalDepreciationPercentPerYear: z.coerce.number(),
+  totalDepreciationPercent: z.coerce.number(),
+  depreciationMethod: z.string(),
+  totalDepreciationPrice: z.coerce.number(),
+  pricePerSqMeterAfterDepreciation: z.coerce.number(),
+  totalPriceAfterDepreciation: z.coerce.number(),
+  buildingDepreciationMethods: z.array(BuildingDepreciationMethodDto),
+});
+
 export const BuildingDetailDto = z
   .object({
     verifiableOwner: z.boolean(),
@@ -53,8 +78,9 @@ export const BuildingDetailDto = z
     constType: z.string().nullable(),
     constTypeOther: z.string().nullable(),
     utilization: z.string().nullable(),
-    useForOtherPurpose: z.string().nullable(),
     buildingArea: z.coerce.number(),
+    buildingDepreciationDetails: z.array(BuildingDepreciationDetail),
+    useForOtherPurpose: z.string().nullable(),
     remark: z.string().nullable(),
   })
   .partial()

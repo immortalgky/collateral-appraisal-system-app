@@ -26,10 +26,7 @@ const FormCard = ({
 }: FormCardProps) => {
   return (
     <div
-      className={clsx(
-        'bg-white rounded-2xl shadow-sm border border-gray-100',
-        className
-      )}
+      className={clsx('bg-white rounded-2xl shadow-sm border border-gray-100', className)}
       {...props}
     >
       <SectionHeader title={title} subtitle={subtitle} rightIcon={rightIcon} variant="card" />

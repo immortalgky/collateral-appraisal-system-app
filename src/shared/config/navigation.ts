@@ -124,6 +124,13 @@ export const mainNavigation: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Condo Detail',
+        href: '/condo-detail',
+        icon: 'house',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];

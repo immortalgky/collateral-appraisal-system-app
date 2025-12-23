@@ -1,5 +1,7 @@
 import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
 import SurfaceTable from '../components/tables/SurfaceTable';
+import SectionDivider from '@/shared/components/sections/SectionDevider';
+import { BuildingDetail } from '../components/tables/BuildlingDetail';
 
 const BuildingDetailForm = () => {
   return (
@@ -155,6 +157,13 @@ const BuildingDetailForm = () => {
         <div className="grid grid-cols-12 gap-4">
           <FormSection fields={utilizationFeild} />
         </div>
+      </div>
+      <SectionDivider className="col-span-5" />
+      <div className="col-span-1">
+        <span>Building Detail</span>
+      </div>
+      <div className="col-span-4">
+        <BuildingDetail name="buildingDetail.buildingDepreciationDetails" />
       </div>
       <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
       <div className="col-span-1">

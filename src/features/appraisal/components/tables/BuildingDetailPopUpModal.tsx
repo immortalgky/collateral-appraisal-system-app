@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import BuildingDetailTable from './BuildingDetailTable';
 
 function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
-  const { register, control, getValues } = useFormContext();
+  const { register } = useFormContext();
 
   const handleOnClose = () => {
     onClose(undefined);
@@ -15,10 +15,10 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="grid flex-col gap-4 w-3/4 bg-white rounded-xl h-3/4  p-7 overflow-clip">
-        <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-rows-12 gap-4 w-3/4 bg-white rounded-xl h-3/4  p-7 overflow-clip">
+        <div className="row-span-2 flex gap-4">
           <div className="col-span-3">
-            <TextInput {...register(`${name}.${index}.detail`)} label="Detail"></TextInput>
+            <TextInput {...register(`${name}.${index}.areaDescription`)} label="Detail"></TextInput>
           </div>
           <div className="col-span-2">
             <NumberInput
@@ -59,14 +59,14 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
             />
           </div>
         </div>
-        <div className="">
+        <div className="row-span-8">
           <BuildingDetailTable
             headers={propertiesTableHeader}
-            name={`${name}.${index}.buildingDepreciations`}
+            name={`${name}.${index}.buildingDepreciationMethods`}
             outScopeFields={outScopeFields}
           />
         </div>
-        <div className="bg-white p-4">
+        <div className="row-span-2">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <Button variant="ghost" type="button" onClick={() => handleOnCancel()}>
@@ -87,7 +87,7 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
 const propertiesTableHeader = [
   {
     type: 'number',
-    name: 'atYear',
+    name: 'fromYear',
     label: 'From Year',
     className: 'w-[100px]',
     render: (value, row, rowIndex) => <div>Test</div>,
@@ -95,65 +95,70 @@ const propertiesTableHeader = [
   { name: 'toYear', label: 'To Year', type: 'number', className: 'w-[100px]' },
   {
     type: 'number',
-    name: 'depreciationPerYear',
+    name: 'depreciationPercentPerYear',
     label: 'Depreciation Per Year (%)',
     align: 'right',
+
+    footer: (values: any) => {
+      if (!Array.isArray(values)) return 0;
+      if (values.length === 0) return 0;
+
+      const sum = Number(
+        values.reduce((prev: number, curr: number) => prev + curr, 0),
+      ).toLocaleString();
+      const average = sum / values.length;
+      return <span>{`Average: ${average} %`}</span>;
+    },
+  },
+  {
+    type: 'Text',
+    name: 'totalPriceBeforeDepreciation',
+    label: 'Total Price before Depreciation',
+    align: 'right',
+
+    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
     type: 'text',
-    name: 'totalDepreciationPerYear',
+    name: 'totalDepreciationPercent',
     label: 'Total Depreciation Per Year (%)',
     align: 'right',
 
-    compute: ({ rows, row, rowIndex }) => {
-      // const atYear = row['atYear'];
-      // const toYear = row['toYear'];
-      // const depre = row['depreciationPerYear'];
-      // return (toYear - atYear) * depre;
-      if (rowIndex - 1 >= 0) {
-        const prevDepre = rows[rowIndex - 1]['depreciationPerYear'];
-        const currAtYear = row['atYear'];
-        const currToYear = row['toYear'];
-        return (currToYear - currAtYear) * prevDepre;
-      } else {
-        const currAtYear = row['atYear'];
-        const currToYear = row['toYear'];
-        return (currToYear - currAtYear) * row['depreciationPerYear'];
-      }
+    compute: ({ row }) => {
+      const prevDepre = row['depreciationPercentPerYear'];
+      const currFromYear = row['fromYear'];
+      const currToYear = row['toYear'];
+      return (currToYear - currFromYear) * prevDepre;
     },
 
     footer: (values: any) => {
-      return (
-        <span>
-          Total:{' '}
-          {Number(values.reduce((prev: number, curr: number) => prev + curr, 0)).toLocaleString()}
-        </span>
-      );
+      const sum = Number(
+        values.reduce((prev: number, curr: number) => prev + curr, 0),
+      ).toLocaleString();
+      return <span>{`Total: ${sum} %`}</span>;
     },
   },
   {
     type: 'text',
-    name: 'priceAfterDepreciation',
+    name: 'depreciationPrice',
     label: 'Price After Depreciation',
     align: 'right',
 
     body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
-    compute: ({ rows, row, rowIndex, getValues, outScopeFields }) => {
+    compute: ({ row, outScopeFields }) => {
       const area = outScopeFields['area'];
       const pricePerSqm = outScopeFields['pricePerSqm'];
-      const depre = row['depreciationPerYear'];
+      const depre = row['totalDepreciationPercent'] / 100;
       const priceAfterDepre = area * pricePerSqm * depre;
 
       return priceAfterDepre;
     },
 
     footer: (values: any) => {
-      return (
-        <span>
-          Total:{' '}
-          {Number(values.reduce((prev: number, curr: number) => prev + curr, 0)).toLocaleString()}
-        </span>
-      );
+      const sum = Number(
+        values.reduce((prev: number, curr: number) => prev + curr, 0),
+      ).toLocaleString();
+      return <span>{`Total: ${sum}`}</span>;
     },
   },
 ];
