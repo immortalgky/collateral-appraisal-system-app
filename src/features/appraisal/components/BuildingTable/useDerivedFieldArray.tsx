@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useEffect, useMemo } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 
-type ComputeCtx = {
+export type ComputeCtx = {
   rows: any[];
   row: any;
   rowIndex: number;
@@ -13,6 +13,7 @@ export type DerivedRule = {
   targetKey: string;
   compute: (ctx: ComputeCtx) => number;
   normalize?: (v: number) => number;
+  modifier?: (v: number) => number; // modify final value
 };
 
 interface useDerivedFieldArrayProps {

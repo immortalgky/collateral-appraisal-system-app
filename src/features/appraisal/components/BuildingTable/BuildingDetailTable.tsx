@@ -1,4 +1,4 @@
-import { Icon, Input } from '@/shared/components';
+import { Icon, Input, type ListBoxItem } from '@/shared/components';
 import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -9,7 +9,12 @@ import {
   type Control,
   type FieldValues,
 } from 'react-hook-form';
-import { useDerivedFieldArray, type DerivedRule } from './useDerivedFieldArray';
+import { useDerivedFieldArray, type ComputeCtx, type DerivedRule } from './useDerivedFieldArray';
+import TextInputCell from './TextInputCell';
+import NumberInputCell from './NumberInputCell';
+import RowNumberCell from './RowNumberCell';
+import DisplayCell from './DisplayCell';
+import DerivedCell from './DerivedCell';
 
 type Align = 'left' | 'right' | 'center';
 
@@ -22,105 +27,92 @@ const alignClass = (align?: Align) => {
 interface BuildingDetailProps {
   name: string;
   headers: FormTableHeader[];
+
   defaultValue?: object;
   getEditingStatus?: (index: number | undefined) => void;
   outScopeFields?: Record<string, any>;
+
   disableSaveBtn?: boolean;
   disableEditBtn?: boolean;
+  disableAddRowBtn?: boolean;
 }
 
-type FormTableHeader =
-  | FormTableRegularHeader
-  | FormTableRowNumberHeader
-  | FormTableRowTextHeader
+export type FormTableHeader =
+  | FormTableDerivedHeader
+  | FormTableRowTextInputHeader
+  | FormTableRowNumberInputHeader
   | FormTableRowGroupHeader
-  | FormTableRowRunNumberHeader;
+  | FormTableRowRunNumberHeader
+  | FormTableDisplayHeader;
 
 type HeaderType =
   | 'general'
   | 'display'
-  | 'text'
+  | 'derived'
   | 'input-text'
   | 'input-number'
-  | 'input-dropdown'
+  | 'input-dropdown' // [x]
   | 'row-number'
-  | 'group'
-  | 'component';
+  | 'group' // [x]
+  | 'component'; // [x]
 
 interface BaseHeader {
   type: HeaderType;
+  headerName: string;
   align?: Align;
   isStickyRight?: boolean;
   className?: string;
+  groupName?: string;
 }
 
-interface FormTableRegularHeader extends BaseHeader {
-  type: 'general';
+interface FormTableDerivedHeader extends BaseHeader {
+  type: 'derived';
   name: string;
-  label: string;
-  inputType?: string;
 
-  // value extraction for display (optional; default is row[id])
-  accessor?: (row: any, rowIndex: number) => any;
+  render?: (ctx: { value: any; row: any; rowIndex: number }) => React.ReactNode; // customize view rendering (optional)
 
-  // customize view rendering (optional)
-  render?: (ctx: { value: any; row: any; rowIndex: number }) => React.ReactNode;
+  compute?: (ctx: ComputeCtx) => number;
+  normalize?: (v: number) => number;
+  modifier?: (v: string) => string;
 
-  // footer aggregation / rendering
-  footer?: (ctx: { rows: any[] }) => React.ReactNode;
-  footerSum?: boolean; // if true, sum Number(value)
+  footer?: (ctx: { rows: any[] }) => React.ReactNode; // footer aggregation / rendering
 }
 
-interface FormTableRowTextHeader extends BaseHeader {
-  // header
-  type: 'text';
-  groupName: string;
-  name?: string;
-  label: string;
-
-  // body
-  body?: (ctx: { value?: string; outScopeFields: Record<string, any> }) => string;
-  compute: (ctx: ComputeCtx) => any;
-  normalize?: (v: any) => any;
-
-  // footer
-  footer?: (ctx: { value?: string }) => React.ReactNode;
+interface FormTableDisplayHeader extends BaseHeader {
+  type: 'display';
+  value: string;
+  render?: (value: any) => React.ReactNode;
 }
 
 interface FormTableRowGroupHeader extends BaseHeader {
   type: 'group';
-  groupName: string;
-  label: string;
 }
 
-interface FormTableRowNumberHeader extends BaseHeader {
-  type: 'number';
-  groupName: string;
+interface FormTableRowTextInputHeader extends BaseHeader {
+  type: 'input-text';
   name: string;
-  label: string;
 
-  accessor?: (tableValue: any, rowIndex: number, fieldName: string) => any;
+  render?: (value: string) => React.ReactNode;
+  modifier?: (v: string) => string;
 
-  render?: (ctx: { value: any; row: any; rowIndex: number }) => React.ReactNode;
+  footer?: (values: string[]) => React.ReactNode;
+}
 
-  footer?: (ctx: { values: number[] }) => React.ReactNode;
+interface FormTableRowNumberInputHeader extends BaseHeader {
+  type: 'input-number';
+  name: string;
+
+  render?: (value: number) => React.ReactNode;
+
+  compute?: (ctx: ComputeCtx) => number;
+  normalize?: (v: number) => number;
+
+  footer?: (values: number[]) => React.ReactNode;
 }
 
 interface FormTableRowRunNumberHeader extends BaseHeader {
   type: 'row-number';
-  rowNumberColumn: true;
-  label: string;
-  className?: string;
-}
-
-interface TableCellProps {
-  type: string;
-  name: string;
-  index: number;
-  editIndex: number | undefined;
-  value: string;
-  header: FormTableRegularHeader;
-  control: Control<FieldValues, any, FieldValues>;
+  rowNumberColumn: boolean;
 }
 
 function toNumber(v: any) {
@@ -157,7 +149,7 @@ const BuildingDetailTable = ({
 
   const rules: DerivedRule[] = useMemo(() => {
     return headers
-      .filter(h => 'compute' in h && h.type === 'text' && h.name != undefined)
+      .filter(h => 'compute' in h && h.name != undefined)
       .map((h): DerivedRule => {
         return { targetKey: h.name, compute: h.compute, normalize: h.normalize };
       });
@@ -190,7 +182,6 @@ const BuildingDetailTable = ({
 
   const handleEdit = (index: number | undefined) => {
     setEditIndex(index);
-    console.log(index);
     if (getEditingStatus != undefined) getEditingStatus(index);
   };
 
@@ -215,7 +206,7 @@ const BuildingDetailTable = ({
               })}
               <th
                 className={clsx(
-                  'text-white text-sm font-medium py-3 px-4 text-right w-24 bg-primary sticky top-0 right-0 z-30',
+                  'text-white text-sm font-medium py-3 px-4 text-right w-24 bg-primary sticky top-0 right-0 z-30 ',
                 )}
                 rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
               >
@@ -235,7 +226,7 @@ const BuildingDetailTable = ({
                         alignClass(header.align),
                       )}
                     >
-                      {header.label}
+                      {header.headerName}
                     </th>
                   ))}
               </tr>
@@ -248,19 +239,22 @@ const BuildingDetailTable = ({
                   {headers.map((header, inner_index) => {
                     return TableBody({
                       type: header.type,
-                      header,
-                      row: field,
+                      header: header,
                       rows: values,
+                      row: field,
                       rowIndex: index,
                       arrayName: name,
-                      editIndex,
-                      control,
-                      inner_index,
-                      fieldName: name,
+                      editIndex: editIndex,
+                      control: control,
+                      inner_index: inner_index,
+                      fieldName: header.name,
                       outScopeFields,
+                      value: header.value,
+                      render: header.render,
+                      modifier: header.modifier,
                     });
                   })}
-                  <td className="py-3 px-4 sticky right-0 z-20 bg-white">
+                  <td className="py-3 px-4 sticky right-0 z-20 bg-white ">
                     <div className="flex gap-1 justify-end">
                       {editIndex === index ? (
                         canSave ? (
@@ -315,9 +309,12 @@ const BuildingDetailTable = ({
                         {
                           return TableFooter({
                             type: header.type,
+                            arrayName: name,
+                            rows: values,
                             inner_index,
                             header: header,
                             values: values,
+                            render: header.footer,
                           });
                         }
                       })
@@ -344,220 +341,6 @@ const BuildingDetailTable = ({
       </div>
     </div>
   );
-};
-
-const TextInputCell = ({
-  arrayName,
-  rowIndex,
-  fieldName,
-  control,
-  isEditing,
-  inputType,
-  displayValue,
-}: {
-  arrayName: string;
-  rowIndex: number;
-  fieldName: string;
-  control: Control<FieldValues>;
-  isEditing: boolean;
-  inputType: string;
-  displayValue: any;
-}) => {
-  const cellName = `${arrayName}.${rowIndex}.${fieldName}`;
-
-  const { getValues } = useFormContext();
-
-  const {
-    field,
-    fieldState: { error },
-  } = useController({ name: cellName, control });
-
-  const defaultValue = getValues(cellName);
-
-  return (
-    <div>
-      {isEditing ? (
-        <Input type={inputType} {...field} />
-      ) : (
-        <div>{displayValue ?? defaultValue}</div>
-      )}
-      {error ? <div className="mt-1 text-sm text-danger">{error.message}</div> : null}
-    </div>
-  );
-};
-
-const TableCell = ({ type, name, index, editIndex, value, header, control }: TableCellProps) => {
-  const cellName = `${name}.${index}.${header.name}`;
-  const {
-    field,
-    fieldState: { error },
-  } = useController({ name: cellName, control });
-  return (
-    <div>
-      {editIndex === index ? <Input type={type} {...field} /> : <div>{value}</div>}
-      {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
-    </div>
-  );
-};
-
-interface TableFooterProps {
-  type: string;
-  inner_index: number;
-  header: any;
-  values: Record<string, any>;
-}
-
-const TableFooter = ({ type, inner_index, header, values }: TableFooterProps) => {
-  switch (type) {
-    case 'text':
-      return (
-        <td
-          key={inner_index}
-          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
-        >
-          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-            {header.footer ? header.footer(values.map((v: any) => v[header.name])) : ''}
-          </span>
-        </td>
-      );
-    case 'number':
-      return (
-        <td
-          key={inner_index}
-          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
-        >
-          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-            {header.footer ? header.footer(values.map((v: any) => toNumber(v[header.name]))) : ''}
-          </span>
-        </td>
-      );
-    case 'group':
-      return null;
-    default:
-      return (
-        <td key={inner_index} className={clsx('py-3 px-4 sticky bottom-0 right-0 bg-white')}></td>
-      );
-  }
-};
-
-interface TableBodyProps {
-  type: string;
-  arrayName: string;
-  header: any;
-  row: Record<string, ant>;
-  rows: Record<string, any>[];
-  rowIndex: number;
-  inner_index: number;
-  fieldName: string;
-  editIndex: number | undefined;
-  control: any;
-  outScopeFields: Record<string, any>;
-  displayValue: any;
-}
-
-const TableBody = ({
-  type,
-  header,
-  row,
-  rows,
-  rowIndex,
-  arrayName,
-  editIndex,
-  control,
-  inner_index,
-  fieldName,
-  outScopeFields,
-  displayValue,
-}: TableBodyProps) => {
-  switch (type) {
-    case 'text': {
-      return (
-        <td
-          key={inner_index}
-          className={clsx(
-            'py-3 px-4 border-b border-neutral-3 whitespace-nowrap truncate',
-            alignClass(header.align),
-            header.className,
-          )}
-        >
-          <span
-            className="items-center justify-center text-sm font-medium truncate text-gray-600 w-full"
-            title={
-              header.body
-                ? header.body(rows[rowIndex][header.name], outScopeFields)
-                : (rows[rowIndex][header.name] ?? '')
-            }
-          >
-            {header.body ? header.body(rows[rowIndex][header.name]) : rows[rowIndex][header.name]}
-          </span>
-        </td>
-      );
-    }
-    case 'input-text': {
-      return (
-        <td
-          key={inner_index}
-          className={clsx(
-            'py-3 px-4 truncate border-b border-neutral-3 ',
-            alignClass(header.align),
-            header.className,
-          )}
-          title={rows[rowIndex][header.name] ?? ''}
-        >
-          <TextInputCell
-            arrayName={arrayName}
-            rowIndex={rowIndex}
-            fieldName={fieldName}
-            control={control}
-            isEditing={editIndex === rowIndex}
-            inputType="text"
-            displayValue={displayValue}
-          />
-        </td>
-      );
-    }
-    case 'number': {
-      return (
-        <td
-          key={inner_index}
-          className={clsx(
-            'py-3 px-4 truncate border-b border-neutral-3 ',
-            alignClass(header.align),
-            header.className,
-          )}
-          title={rows[rowIndex][header.name] ?? ''}
-        >
-          <TableCell
-            type={'number'}
-            name={fieldName}
-            index={rowIndex}
-            editIndex={editIndex}
-            value={rows[rowIndex][header.name]}
-            header={header}
-            control={control}
-          />
-        </td>
-      );
-    }
-    case 'group':
-      return null;
-    case 'row-number':
-      return (
-        <td
-          key={inner_index}
-          className={clsx(
-            'py-3 px-4 whitespace-nowrap truncate border-b border-neutral-3 ',
-            header.className,
-          )}
-        >
-          <span className="inline-flex items-center w-7 h-7 justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-            {rowIndex + 1}
-          </span>
-        </td>
-      );
-    default:
-      return null;
-  }
 };
 
 interface TableHeaderProps {
@@ -588,7 +371,7 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
             ).length
           }
         >
-          {header.label}
+          {header.headerName}
         </th>
       );
     }
@@ -606,11 +389,228 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
           )}
           rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
         >
-          {header.label}
+          {header.headerName}
         </th>
       );
     }
   }
 };
 
+interface TableBodyProps {
+  type: string;
+  arrayName: string;
+  header: any;
+  row: Record<string, ant>;
+  rows: Record<string, any>[];
+  rowIndex: number;
+  inner_index: number;
+  fieldName: string;
+  editIndex: number | undefined;
+  control: any;
+  outScopeFields?: Record<string, any>;
+  value: any;
+  render?: (value: number | string | boolean) => React.ReactNode;
+  modifier?: (value: number | string | boolean) => number | string | boolean;
+}
+
+const TableBody = ({
+  type,
+  header,
+  row,
+  rows,
+  rowIndex,
+  arrayName,
+  editIndex,
+  control,
+  inner_index,
+  fieldName,
+  outScopeFields,
+  value,
+  render,
+  modifier,
+}: TableBodyProps) => {
+  switch (type) {
+    case 'display': {
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 border-b border-neutral-3 whitespace-nowrap truncate',
+            alignClass(header.align),
+            header.className,
+          )}
+        >
+          <DisplayCell isEditing={editIndex === rowIndex} value={value} render={render} />
+        </td>
+      );
+    }
+    case 'derived': {
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 border-b border-neutral-3 whitespace-nowrap truncate',
+            alignClass(header.align),
+            header.className,
+          )}
+        >
+          <DerivedCell
+            arrayName={arrayName}
+            rowIndex={rowIndex}
+            fieldName={fieldName}
+            control={control}
+            isEditing={editIndex === rowIndex}
+            render={render}
+            modifier={modifier}
+          />
+        </td>
+      );
+    }
+    case 'input-text': {
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 truncate border-b border-neutral-3 ',
+            alignClass(header.align),
+            header.className,
+          )}
+          title={rows[rowIndex][header.name] ?? ''}
+        >
+          <TextInputCell
+            arrayName={arrayName}
+            rowIndex={rowIndex}
+            fieldName={fieldName}
+            control={control}
+            isEditing={editIndex === rowIndex}
+            render={render}
+          />
+        </td>
+      );
+    }
+    case 'input-number': {
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 truncate border-b border-neutral-3',
+            alignClass(header.align),
+            header.className,
+          )}
+          title={rows[rowIndex][header.name] ?? ''}
+        >
+          <NumberInputCell
+            arrayName={arrayName}
+            rowIndex={rowIndex}
+            fieldName={fieldName}
+            control={control}
+            isEditing={editIndex === rowIndex}
+            render={render}
+            modifier={modifier}
+          />
+        </td>
+      );
+    }
+    case 'row-number':
+      return (
+        <td
+          key={inner_index}
+          className={clsx(
+            'py-3 px-4 whitespace-nowrap truncate border-b border-neutral-3 ',
+            header.className,
+          )}
+        >
+          <RowNumberCell rowIndex={rowIndex} />
+        </td>
+      );
+    default:
+      return null;
+  }
+};
+
+interface TableFooterProps {
+  type: string;
+  arrayName: string;
+  header: any;
+  rows: Record<string, any>[];
+  inner_index: number;
+  fieldName: string;
+  editIndex: number | undefined;
+  outScopeFields?: Record<string, any>;
+  render?: (value: any) => React.ReactNode;
+  modifier?: (v: string | number | boolean) => string | number | boolean;
+}
+
+const TableFooter = ({
+  type,
+  arrayName,
+  header,
+  rows,
+  inner_index,
+  fieldName,
+  outScopeFields,
+  value,
+  modifier,
+}: TableFooterProps) => {
+  switch (type) {
+    case 'derived':
+      return (
+        <td
+          key={inner_index}
+          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
+        >
+          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+            {modifier ? modifier(rows.map((v: any) => v[header.name]).toString()) : ''}
+          </span>
+        </td>
+      );
+    case 'display':
+      return (
+        <td
+          key={inner_index}
+          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
+        >
+          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+            {modifier ? modifier(rows.map((v: any) => v[header.name]).toString()) : ''}
+          </span>
+        </td>
+      );
+    case 'input-number':
+      return (
+        <td
+          key={inner_index}
+          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
+        >
+          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+            {modifier
+              ? modifier(
+                  rows
+                    .map((v: Record<string, string | number>) => toNumber(v[header.name]))
+                    .toString(),
+                )
+              : ''}
+          </span>
+        </td>
+      );
+    case 'input-text':
+      return (
+        <td
+          key={inner_index}
+          className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
+        >
+          <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
+            {modifier
+              ? modifier(rows.map((v: Record<string, string>) => v[header.name]).toString())
+              : ''}
+          </span>
+        </td>
+      );
+    case 'group':
+      return null;
+    default:
+      return (
+        <td key={inner_index} className={clsx('py-3 px-4 sticky bottom-0 right-0 bg-white')}></td>
+      );
+  }
+};
 export default BuildingDetailTable;

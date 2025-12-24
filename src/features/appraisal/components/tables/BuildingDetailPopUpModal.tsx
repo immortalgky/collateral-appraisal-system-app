@@ -1,6 +1,6 @@
 import { Button, FormBooleanToggle, NumberInput, TextInput } from '@/shared/components';
 import { useFormContext } from 'react-hook-form';
-import BuildingDetailTable from './BuildingDetailTable';
+import BuildingDetailTable from '../BuildingTable/BuildingDetailTable';
 
 function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
   const { register } = useFormContext();
@@ -86,17 +86,18 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
 
 const propertiesTableHeader = [
   {
-    type: 'number',
+    type: 'input-number',
     name: 'fromYear',
-    label: 'From Year',
+    headerName: 'From Year',
     className: 'w-[100px]',
-    render: (value, row, rowIndex) => <div>Test</div>,
+    align: 'right',
   },
-  { name: 'toYear', label: 'To Year', type: 'number', className: 'w-[100px]' },
+  { type: 'input-number', name: 'toYear', headerName: 'To Year', className: 'w-[100px]' },
   {
-    type: 'number',
+    type: 'input-number',
     name: 'depreciationPercentPerYear',
-    label: 'Depreciation Per Year (%)',
+    headerName: 'Depreciation Per Year (%)',
+    className: 'w-[100px]',
     align: 'right',
 
     footer: (values: any) => {
@@ -111,12 +112,14 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'totalPriceBeforeDepreciation',
-    label: 'Total Price before Depreciation',
+    headerName: 'Total Price before Depreciation',
     align: 'right',
     className: 'w-[200px]',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: number) => {
+      return Number(value) ? Number(value).toLocaleString() : value;
+    },
     compute: ({ outScopeFields }) => {
       const area = outScopeFields['area'];
       const pricePerSqm = outScopeFields['pricePerSqm'];
@@ -124,9 +127,9 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'totalDepreciationPercent',
-    label: 'Total Depreciation Per Year (%)',
+    headerName: 'Total Depreciation Per Year (%)',
     align: 'right',
 
     compute: ({ row }) => {
@@ -144,18 +147,17 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'depreciationPrice',
-    label: 'Price After Depreciation',
+    headerName: 'Price After Depreciation',
     align: 'right',
 
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row, outScopeFields }) => {
       const area = outScopeFields['area'];
       const pricePerSqm = outScopeFields['pricePerSqm'];
       const depre = row['totalDepreciationPercent'] / 100;
       const priceAfterDepre = area * pricePerSqm * depre;
-
       return priceAfterDepre;
     },
 

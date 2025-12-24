@@ -9,7 +9,7 @@ export const SurfaceDto = z.object({
 });
 
 export const BuildingDepreciationMethodDto = z.object({
-  fromYear: z.coerce.number(),
+  fromYear: z.coerce.number().max(30, { message: 'Max value must not exceed 30' }),
   toYear: z.coerce.number(),
   depreciationPercentPerYear: z.coerce.number(),
   totalDepreciationPercent: z.coerce.number(),

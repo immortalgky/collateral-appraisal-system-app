@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import BuildingDetailPopUpModal from './BuildingDetailPopUpModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import BuildingDetailTable from './BuildingDetailTable';
+import BuildingDetailTable, { type FormTableHeader } from '../BuildingTable/BuildingDetailTable';
 import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 
 interface BuildingDetailProps {
@@ -71,55 +71,59 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
   );
 }
 
-const propertiesTableHeader = [
-  { type: 'row-number', label: 'Seq', className: 'w-[70px] border-r-1 border-neutral-3' },
+const propertiesTableHeader: FormTableHeader[] = [
   {
-    type: 'text',
+    type: 'row-number',
+    rowNumberColumn: true,
+    headerName: 'Seq',
+    className: 'w-[70px] border-r-1 border-neutral-3',
+  },
+  {
+    type: 'derived',
+    headerName: 'Detail',
     name: 'areaDescription',
-    label: 'Detail',
     className: 'w-[200px]  border-r-1 border-neutral-3',
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'isBuilding',
-    label: 'IsBuilding',
+    headerName: 'IsBuilding',
     className: 'w-[100px]  border-r-1 border-neutral-3',
-    body: (value: string) => (value ? 'Yes' : 'No'),
+    modifier: (value: string) => (value ? 'Yes' : 'No'),
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'area',
-    label: 'Area',
+    headerName: 'Area',
     className: 'w-[200px]  border-r-1 border-neutral-3',
     align: 'right',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
     type: 'group',
     groupName: 'replacementCost',
-    label: 'Replacement Cost New',
+    headerName: 'Replacement Cost New',
     className: 'w-[400px] border-b-1 border-r-1 border-neutral-3',
     align: 'center',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
-    type: 'text',
+    type: 'derived',
     groupName: 'replacementCost',
     name: 'pricePerSqMeterBeforeDepreciation',
-    label: 'Price per sq.M',
+    headerName: 'Price per sq.M',
     className: 'w-[200px]  border-r-1 border-neutral-3',
     align: 'right',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
-    type: 'text',
+    type: 'derived',
     groupName: 'replacementCost',
     name: 'totalPriceBeforeDepreciation',
-    label: 'Total Price',
+    headerName: 'Total Price',
     className: 'w-[200px]  border-r-1 border-neutral-3',
     align: 'right',
 
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row }) => {
       const area = row['area'];
       const pricePerSqm = row['pricePerSqMeterBeforeDepreciation'];
@@ -127,30 +131,29 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'year',
-    label: 'Age (Year)',
+    headerName: 'Age (Year)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
     type: 'group',
     groupName: 'depreciation',
-    label: 'Depreciation',
+    headerName: 'Depreciation',
     className: 'w-[1000px] border-b-1 border-r-1 border-neutral-3',
     align: 'center',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
   },
   {
-    type: 'text',
+    type: 'derived',
     groupName: 'depreciation',
     name: 'totalDepreciationPercentPerYear',
-    label: 'Depreciation (%/year)',
+    headerName: 'Depreciation (%/year)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
 
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ outScopeFields }) => {
       const buildingDepreciations = outScopeFields['buildingDepre'];
 
@@ -166,14 +169,14 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
+    headerName: 'Total Depreciation (%)',
     groupName: 'depreciation',
     name: 'totalDepreciationPercent',
-    label: 'Total Depreciation (%)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
 
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ outScopeFields }) => {
       const buildingDepreciations = outScopeFields['buildingDepre'];
 
@@ -182,25 +185,27 @@ const propertiesTableHeader = [
       const totalBuildingDepreciation = buildingDepreciations
         .map(b => b.totalDepreciationPerYear)
         .reduce((acc, curr) => acc + toNum(curr), 0);
+
+      console.log(totalBuildingDepreciation);
       return totalBuildingDepreciation;
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     groupName: 'depreciation',
     name: 'depreciationMethod',
-    label: 'Method',
+    headerName: 'Method',
     className: 'w-[200px] border-r-1 border-neutral-3',
-    body: (value: string) => (value ? 'Period' : 'Gross'),
+    modifier: (value: string) => (value ? 'Period' : 'Gross'),
   },
   {
-    type: 'text',
+    type: 'derived',
     groupName: 'depreciation',
     name: 'totalDepreciationPrice',
-    label: 'Total Depreciation (Bath)',
+    headerName: 'Total Depreciation (Bath)',
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ outScopeFields }) => {
       const buildingDepreciations = outScopeFields['buildingDepre'];
 
@@ -213,12 +218,12 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'pricePerSqMeterAfterDepreciation',
-    label: 'Price per sq.M after depreciation',
+    headerName: 'Price per sq.M after depreciation',
     className: 'w-[250px] border-r-1 border-neutral-3',
     align: 'right',
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row }) => {
       const totalPriceAfterDepreciation = row['totalPriceAfterDepreciation'];
       const area = row['area'];
@@ -228,14 +233,13 @@ const propertiesTableHeader = [
     },
   },
   {
-    type: 'text',
+    type: 'derived',
     name: 'totalPriceAfterDepreciation',
-    label: 'Total Price After Depreciation',
+    headerName: 'Total Price After Depreciation',
     className: 'w-[230px]',
-    footerSum: true,
     align: 'right',
 
-    body: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row }) => {
       const totalPriceBeforeDepreciation = row['totalPriceBeforeDepreciation'];
       const totalDepreciationPrice = row['totalDepreciationPrice'];
