@@ -7,15 +7,15 @@ import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
-import { CreateBuidlingRequest, type CreateBuildingRequestType } from '@/shared/forms/typeBuilding';
+import { CreateBuildingRequest, type CreateBuildingRequestType } from '@/shared/forms/typeBuilding';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBuildingRequest } from '../api';
-import { createBuildingRequestDefault } from '@/shared/forms/defaults';
+import { createBuildingRequestDefaults } from '@/shared/forms/defaults';
 
 const CreateBuildingPage = () => {
   const methods = useForm<CreateBuildingRequestType>({
-    defaultValues: createBuildingRequestDefault,
-    resolver: zodResolver(CreateBuidlingRequest),
+    defaultValues: createBuildingRequestDefaults,
+    resolver: zodResolver(CreateBuildingRequest),
   });
   const { handleSubmit, getValues } = methods;
 
@@ -34,9 +34,9 @@ const CreateBuildingPage = () => {
         <AppHeader iconVariant="folder" title={'Request for Credit Limit'} />
         <NavAnchors anchors={[{ label: 'Properties', id: 'properties-information' }]} />
       </div>
-      <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -44,7 +44,7 @@ const CreateBuildingPage = () => {
               closedWidth="w-1/50"
             >
               <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 ">
+                <div>
                   <div>
                     <h2 className="text-lg font-semibol mb-2">Appraisal Information</h2>
                     <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
@@ -68,9 +68,9 @@ const CreateBuildingPage = () => {
                 <Button type="submit">Save</Button>
               </div>
             </div>
-          </form>
-        </FormProvider>
-      </div>
+          </div>
+        </form>
+      </FormProvider>
     </div>
   );
 };

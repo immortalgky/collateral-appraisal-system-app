@@ -131,6 +131,13 @@ export const mainNavigation: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Land and Building Detail',
+        href: '/land-building-detail',
+        icon: 'house',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];

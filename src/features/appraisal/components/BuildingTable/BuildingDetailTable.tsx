@@ -115,7 +115,7 @@ interface FormTableRowRunNumberHeader extends BaseHeader {
   rowNumberColumn: boolean;
 }
 
-function toNumber(v: any) {
+export function toNumber(v: string) {
   const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(/,/g, ''));
   return Number.isFinite(n) ? n : 0;
 }
@@ -206,7 +206,7 @@ const BuildingDetailTable = ({
               })}
               <th
                 className={clsx(
-                  'text-white text-sm font-medium py-3 px-4 text-right w-24 bg-primary sticky top-0 right-0 z-30 ',
+                  'text-white text-sm font-medium py-3 px-4 text-right w-24 bg-primary sticky top-0 right-0 z-21 border-l border-neutral-3',
                 )}
                 rowSpan={headers.some(h => h.type === 'group') ? 2 : 1}
               >
@@ -254,7 +254,7 @@ const BuildingDetailTable = ({
                       modifier: header.modifier,
                     });
                   })}
-                  <td className="py-3 px-4 sticky right-0 z-20 bg-white ">
+                  <td className="py-3 px-4 sticky right-0 z-21 bg-white border-neutral-3 border-l border-b">
                     <div className="flex gap-1 justify-end">
                       {editIndex === index ? (
                         canSave ? (
@@ -314,7 +314,7 @@ const BuildingDetailTable = ({
                             inner_index,
                             header: header,
                             values: values,
-                            render: header.footer,
+                            footer: header.footer,
                           });
                         }
                       })
@@ -539,6 +539,7 @@ interface TableFooterProps {
   outScopeFields?: Record<string, any>;
   render?: (value: any) => React.ReactNode;
   modifier?: (v: string | number | boolean) => string | number | boolean;
+  footer?: (value: any) => any;
 }
 
 const TableFooter = ({
@@ -551,6 +552,7 @@ const TableFooter = ({
   outScopeFields,
   value,
   modifier,
+  footer,
 }: TableFooterProps) => {
   switch (type) {
     case 'derived':
@@ -560,7 +562,7 @@ const TableFooter = ({
           className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-            {modifier ? modifier(rows.map((v: any) => v[header.name]).toString()) : ''}
+            {footer ? footer(rows) : ''}
           </span>
         </td>
       );
@@ -571,7 +573,9 @@ const TableFooter = ({
           className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-            {modifier ? modifier(rows.map((v: any) => v[header.name]).toString()) : ''}
+            {footer
+              ? footer(rows.map((v: Record<string, string | number | boolean>) => v[header.name]))
+              : ''}
           </span>
         </td>
       );
@@ -582,13 +586,7 @@ const TableFooter = ({
           className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-            {modifier
-              ? modifier(
-                  rows
-                    .map((v: Record<string, string | number>) => toNumber(v[header.name]))
-                    .toString(),
-                )
-              : ''}
+            {footer ? footer(rows) : ''}
           </span>
         </td>
       );
@@ -599,9 +597,7 @@ const TableFooter = ({
           className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-            {modifier
-              ? modifier(rows.map((v: Record<string, string>) => v[header.name]).toString())
-              : ''}
+            {footer ? footer(rows.map((v: Record<string, string>) => v[header.name])) : ''}
           </span>
         </td>
       );

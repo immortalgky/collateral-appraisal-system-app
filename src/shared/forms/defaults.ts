@@ -1,4 +1,5 @@
 import type { CreateBuildingRequestType } from './typeBuilding';
+import type { CreateLandBuildingRequestType } from './typeLandBuilding';
 import { type CreateRequestRequestType, type RequestTitleDtoType } from './v1';
 import type { CreateLandRequestType } from './v2';
 
@@ -212,7 +213,7 @@ export const createLandRequestDefaults: CreateLandRequestType = {
   },
 };
 
-export const createBuildingRequestDefault: CreateBuildingRequestType = {
+export const createBuildingRequestDefaults: CreateBuildingRequestType = {
   propertyName: null,
   buildingNumber: null,
   modelName: null,
@@ -267,4 +268,9 @@ export const createBuildingRequestDefault: CreateBuildingRequestType = {
     useForOtherPurpose: '',
     remark: '',
   },
+};
+
+export const createLandBuildingRequestDefault: CreateLandBuildingRequestType = {
+  land: createLandRequestDefaults,
+  building: createBuildingRequestDefaults,
 };

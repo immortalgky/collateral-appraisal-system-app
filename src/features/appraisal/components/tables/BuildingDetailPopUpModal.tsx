@@ -1,6 +1,6 @@
 import { Button, FormBooleanToggle, NumberInput, TextInput } from '@/shared/components';
 import { useFormContext } from 'react-hook-form';
-import BuildingDetailTable from '../BuildingTable/BuildingDetailTable';
+import BuildingDetailTable, { toNumber } from '../BuildingTable/BuildingDetailTable';
 
 function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
   const { register } = useFormContext();
@@ -15,9 +15,9 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="grid grid-rows-12 gap-4 w-3/4 bg-white rounded-xl h-3/4  p-7 overflow-clip">
-        <div className="row-span-2 flex gap-4">
-          <div className="col-span-3">
+      <div className="flex flex-col gap-4 w-3/4 bg-white rounded-xl h-3/4 p-7 overflow-hidden">
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-6">
             <TextInput {...register(`${name}.${index}.areaDescription`)} label="Detail"></TextInput>
           </div>
           <div className="col-span-2">
@@ -59,24 +59,22 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }) {
             />
           </div>
         </div>
-        <div className="row-span-8">
+        <div className="flex w-full min-w-0">
           <BuildingDetailTable
             headers={propertiesTableHeader}
             name={`${name}.${index}.buildingDepreciationMethods`}
             outScopeFields={outScopeFields}
           />
         </div>
-        <div className="row-span-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" type="button" onClick={() => handleOnCancel()}>
-                Cancel
-              </Button>
-              <div className="h-6 w-px bg-gray-200" />
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={() => handleOnClose()}>Save</Button>
-            </div>
+        <div className="flex justify-between items-center max-h-full">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" type="button" onClick={() => handleOnCancel()}>
+              Cancel
+            </Button>
+            <div className="h-6 w-px bg-gray-200" />
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={() => handleOnClose()}>Save</Button>
           </div>
         </div>
       </div>
@@ -92,23 +90,34 @@ const propertiesTableHeader = [
     className: 'w-[100px]',
     align: 'right',
   },
-  { type: 'input-number', name: 'toYear', headerName: 'To Year', className: 'w-[100px]' },
+  {
+    type: 'input-number',
+    name: 'toYear',
+    headerName: 'To Year',
+    className: 'w-[100px]',
+    align: 'right',
+  },
   {
     type: 'input-number',
     name: 'depreciationPercentPerYear',
     headerName: 'Depreciation Per Year (%)',
-    className: 'w-[100px]',
+    className: 'w-[140px]',
     align: 'right',
 
     footer: (values: any) => {
-      if (!Array.isArray(values)) return 0;
-      if (values.length === 0) return 0;
+      const depreciationPercentPerYearArr = values.map(v =>
+        toNumber(v['depreciationPercentPerYear']),
+      );
 
-      const sum = Number(
-        values.reduce((prev: number, curr: number) => prev + curr, 0),
-      ).toLocaleString();
-      const average = sum / values.length;
-      return <span>{`Average: ${average} %`}</span>;
+      if (!Array.isArray(depreciationPercentPerYearArr)) return 0;
+      if (depreciationPercentPerYearArr.length === 0) return 0;
+
+      const sum = depreciationPercentPerYearArr.reduce(
+        (prev: number, curr: number) => prev + curr,
+        0,
+      );
+      const average = sum / depreciationPercentPerYearArr.length;
+      return <span>{`Average: ${average.toLocaleString()} %`}</span>;
     },
   },
   {
@@ -131,6 +140,7 @@ const propertiesTableHeader = [
     name: 'totalDepreciationPercent',
     headerName: 'Total Depreciation Per Year (%)',
     align: 'right',
+    className: 'w-[200px]',
 
     compute: ({ row }) => {
       const prevDepre = row['depreciationPercentPerYear'];
@@ -140,9 +150,14 @@ const propertiesTableHeader = [
     },
 
     footer: (values: any) => {
-      const sum = Number(
-        values.reduce((prev: number, curr: number) => prev + curr, 0),
-      ).toLocaleString();
+      const totalDepreciationPercentArr = values.map(v => toNumber(v['totalDepreciationPercent']));
+
+      if (!Array.isArray(totalDepreciationPercentArr)) return 0;
+      if (totalDepreciationPercentArr.length === 0) return 0;
+
+      const sum = totalDepreciationPercentArr
+        .reduce((prev: number, curr: number) => prev + curr, 0)
+        .toLocaleString();
       return <span>{`Total: ${sum} %`}</span>;
     },
   },
@@ -151,6 +166,7 @@ const propertiesTableHeader = [
     name: 'depreciationPrice',
     headerName: 'Price After Depreciation',
     align: 'right',
+    className: 'w-[200px]',
 
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row, outScopeFields }) => {
@@ -162,9 +178,14 @@ const propertiesTableHeader = [
     },
 
     footer: (values: any) => {
-      const sum = Number(
-        values.reduce((prev: number, curr: number) => prev + curr, 0),
-      ).toLocaleString();
+      const depreciationPriceArr = values.map(v => toNumber(v['depreciationPrice']));
+
+      if (!Array.isArray(depreciationPriceArr)) return 0;
+      if (depreciationPriceArr.length === 0) return 0;
+
+      const sum = depreciationPriceArr
+        .reduce((prev: number, curr: number) => prev + curr, 0)
+        .toLocaleString();
       return <span>{`Total: ${sum}`}</span>;
     },
   },

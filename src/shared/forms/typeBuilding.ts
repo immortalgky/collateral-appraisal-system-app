@@ -86,7 +86,7 @@ export const BuildingDetailDto = z
   .partial()
   .passthrough();
 
-export const CreateBuidlingRequest = z
+export const CreateBuildingRequest = z
   .object({
     propertyName: z.string().nullable(),
     buildingNumber: z.string().nullable(),
@@ -97,7 +97,7 @@ export const CreateBuidlingRequest = z
   })
   .passthrough();
 
-export const CreateBuidlingResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+export const CreateBuildingResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
-export type CreateBuildingRequestType = z.infer<typeof CreateBuidlingRequest>;
-export type CreateBuildingResponseType = z.infer<typeof CreateBuidlingResponse>;
+export type CreateBuildingRequestType = z.infer<typeof CreateBuildingRequest>;
+export type CreateBuildingResponseType = z.infer<typeof CreateBuildingResponse>;

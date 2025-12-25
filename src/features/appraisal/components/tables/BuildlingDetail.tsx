@@ -1,7 +1,10 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import BuildingDetailPopUpModal from './BuildingDetailPopUpModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import BuildingDetailTable, { type FormTableHeader } from '../BuildingTable/BuildingDetailTable';
+import BuildingDetailTable, {
+  toNumber,
+  type FormTableHeader,
+} from '../BuildingTable/BuildingDetailTable';
 import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 
 interface BuildingDetailProps {
@@ -181,13 +184,13 @@ const propertiesTableHeader: FormTableHeader[] = [
       const buildingDepreciations = outScopeFields['buildingDepre'];
 
       if (!Array.isArray(buildingDepreciations)) return 0;
+      if (buildingDepreciations.length === 0) return 0;
 
       const totalBuildingDepreciation = buildingDepreciations
-        .map(b => b.totalDepreciationPerYear)
+        .map(b => b.totalDepreciationPercent)
         .reduce((acc, curr) => acc + toNum(curr), 0);
 
-      console.log(totalBuildingDepreciation);
-      return totalBuildingDepreciation;
+      return totalBuildingDepreciation / buildingDepreciations.length;
     },
   },
   {
@@ -218,10 +221,18 @@ const propertiesTableHeader: FormTableHeader[] = [
     },
   },
   {
+    type: 'group',
+    groupName: 'priceAfterDepreciation',
+    headerName: 'Replacement Cost After Depreciation',
+    className: 'w-[400px] border-b-1 border-neutral-3',
+    align: 'center',
+  },
+  {
     type: 'derived',
+    groupName: 'priceAfterDepreciation',
     name: 'pricePerSqMeterAfterDepreciation',
     headerName: 'Price per sq.M after depreciation',
-    className: 'w-[250px] border-r-1 border-neutral-3',
+    className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row }) => {
@@ -231,12 +242,30 @@ const propertiesTableHeader: FormTableHeader[] = [
       if (area === 0) return 0;
       return totalPriceAfterDepreciation / area;
     },
+    footer: (values: any) => {
+      const areaArr = values.map(v => toNumber(v['area']));
+      const totalPriceAfterDepreciationArr = values.map(v =>
+        toNumber(v['totalPriceAfterDepreciation']),
+      );
+
+      if (!Array.isArray(areaArr) && !Array.isArray(totalPriceAfterDepreciationArr)) return 0;
+      if (areaArr.length === 0 && totalPriceAfterDepreciationArr.length === 0) return 0;
+
+      const totalArea = areaArr.reduce((prev: number, curr: number) => prev + curr, 0);
+      const totalPriceAfterDepreciation = totalPriceAfterDepreciationArr.reduce(
+        (prev: number, curr: number) => prev + curr,
+        0,
+      );
+
+      return <span>Average: {(totalPriceAfterDepreciation / totalArea).toLocaleString()}</span>;
+    },
   },
   {
     type: 'derived',
+    groupName: 'priceAfterDepreciation',
     name: 'totalPriceAfterDepreciation',
     headerName: 'Total Price After Depreciation',
-    className: 'w-[230px]',
+    className: 'w-[200px]',
     align: 'right',
 
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
@@ -246,12 +275,19 @@ const propertiesTableHeader: FormTableHeader[] = [
       return totalPriceBeforeDepreciation - totalDepreciationPrice;
     },
     footer: (values: any) => {
-      return (
-        <span>
-          Total:{' '}
-          {Number(values.reduce((prev: number, curr: number) => prev + curr, 0)).toLocaleString()}
-        </span>
+      const totalPriceAfterDepreciationArr = values.map(v =>
+        toNumber(v['totalPriceAfterDepreciation']),
       );
+
+      if (!Array.isArray(totalPriceAfterDepreciationArr)) return 0;
+      if (totalPriceAfterDepreciationArr.length === 0) return 0;
+
+      const total = totalPriceAfterDepreciationArr.reduce(
+        (prev: number, curr: number) => prev + curr,
+        0,
+      );
+
+      return <span>Total: {total.toLocaleString()}</span>;
     },
   },
 ];

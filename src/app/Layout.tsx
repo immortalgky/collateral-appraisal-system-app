@@ -29,7 +29,7 @@ function Layout() {
       <div className="lg:pl-72">
         <Navbar userNavigation={userNavigation} />
 
-        <main className="py-4">
+        <main className="py-4 h-full">
           <div className="px-4 sm:px-6 lg:px-8">
             <Breadcrumb items={breadcrumbItems} className="mb-4" />
             <ErrorBoundary>

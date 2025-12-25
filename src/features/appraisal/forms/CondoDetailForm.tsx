@@ -4,7 +4,7 @@ import SectionDivider from '@/shared/components/sections/SectionDevider';
 
 function CondoDetailForm() {
   return (
-    <FormCard title="Appraisal Information">
+    <div>
       {/* Condominum Information */}
       <div className="grid grid-cols-4 gap-6 p-b">
         <div className="font-medium col-span-1">
@@ -168,7 +168,7 @@ function CondoDetailForm() {
           <FormSection fields={remarkFormFields}></FormSection>
         </div>
       </div>
-    </FormCard>
+    </div>
   );
 }
 

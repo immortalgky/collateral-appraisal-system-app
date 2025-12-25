@@ -3,7 +3,11 @@ import SurfaceTable from '../components/tables/SurfaceTable';
 import SectionDivider from '@/shared/components/sections/SectionDevider';
 import { BuildingDetail } from '../components/tables/BuildlingDetail';
 
-const BuildingDetailForm = () => {
+interface BuildingDetailFormProps {
+  prefix?: string;
+}
+const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
+  console.log(prefix);
   return (
     <div className="grid grid-cols-5 gap-6">
       <div className="col-span-1">
@@ -163,7 +167,13 @@ const BuildingDetailForm = () => {
         <span>Building Detail</span>
       </div>
       <div className="col-span-4">
-        <BuildingDetail name="buildingDetail.buildingDepreciationDetails" />
+        <BuildingDetail
+          name={
+            prefix != null
+              ? `${prefix}.buildingDetail.buildingDepreciationDetails`
+              : 'buildingDetail.buildingDepreciationDetails'
+          }
+        />
       </div>
       <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
       <div className="col-span-1">
