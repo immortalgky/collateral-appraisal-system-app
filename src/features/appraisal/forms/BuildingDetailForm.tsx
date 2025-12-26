@@ -7,7 +7,6 @@ interface BuildingDetailFormProps {
   prefix?: string;
 }
 const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
-  console.log(prefix);
   return (
     <div className="grid grid-cols-5 gap-6">
       <div className="col-span-1">

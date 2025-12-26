@@ -1,11 +1,11 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import BuildingDetailPopUpModal from './BuildingDetailPopUpModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import BuildingDetailTable, {
   toNumber,
   type FormTableHeader,
 } from '../BuildingTable/BuildingDetailTable';
-import { useController, useFieldArray, useFormContext } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 
 interface BuildingDetailProps {
   name: string;
@@ -30,6 +30,8 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
     }
   };
 
+  const buildingDetailArr = useWatch({ name });
+
   return (
     <div>
       <BuildingDetailTable
@@ -53,7 +55,7 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
           buildingDepreciationMethods: [],
         }}
         outScopeFields={{
-          buildingDepre: `${name}.${editingIndex}.buildingDepreciationMethods`,
+          buildingDepre: `${name}`,
         }}
         disableSaveBtn={true}
       />
@@ -157,12 +159,11 @@ const propertiesTableHeader: FormTableHeader[] = [
     align: 'right',
 
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
-    compute: ({ outScopeFields }) => {
-      const buildingDepreciations = outScopeFields['buildingDepre'];
+    compute: ({ rowIndex, outScopeFields }) => {
+      const buildingDepreciations =
+        outScopeFields.buildingDepre?.[rowIndex]?.buildingDepreciationMethods ?? [];
 
-      if (!Array.isArray(buildingDepreciations)) return 0;
-
-      if (buildingDepreciations.length === 0) return 0;
+      if (!Array.isArray(buildingDepreciations) || buildingDepreciations.length === 0) return 0;
 
       const totalDepreciationPercent = buildingDepreciations
         .map(b => b.depreciationPercentPerYear)
@@ -180,11 +181,11 @@ const propertiesTableHeader: FormTableHeader[] = [
     align: 'right',
 
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
-    compute: ({ outScopeFields }) => {
-      const buildingDepreciations = outScopeFields['buildingDepre'];
+    compute: ({ rowIndex, outScopeFields }) => {
+      const buildingDepreciations =
+        outScopeFields.buildingDepre?.[rowIndex]?.buildingDepreciationMethods ?? [];
 
-      if (!Array.isArray(buildingDepreciations)) return 0;
-      if (buildingDepreciations.length === 0) return 0;
+      if (!Array.isArray(buildingDepreciations) || buildingDepreciations.length === 0) return 0;
 
       const totalBuildingDepreciation = buildingDepreciations
         .map(b => b.totalDepreciationPercent)
@@ -209,10 +210,11 @@ const propertiesTableHeader: FormTableHeader[] = [
     className: 'w-[200px] border-r-1 border-neutral-3',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
-    compute: ({ outScopeFields }) => {
-      const buildingDepreciations = outScopeFields['buildingDepre'];
+    compute: ({ rowIndex, outScopeFields }) => {
+      const buildingDepreciations =
+        outScopeFields.buildingDepre?.[rowIndex]?.buildingDepreciationMethods ?? [];
 
-      if (!Array.isArray(buildingDepreciations)) return 0;
+      if (!Array.isArray(buildingDepreciations) || buildingDepreciations.length === 0) return 0;
 
       const totalDepreciationPrice = buildingDepreciations
         .map(b => b.depreciationPrice)

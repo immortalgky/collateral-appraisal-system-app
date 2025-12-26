@@ -15,19 +15,80 @@ export const BuildingDetailDto = z.object({
 
 const ZeroOne = z.enum(['0', '1']);
 
-// ---------- Main request schema ----------
+export const CondoDetailDto = z.object({
+  verifiableOwner: z.boolean(),
+  owner: z.string(),
 
+  condoConditions: z.string().optional(),
+
+  isObligation: z.string(),
+  obligation: z.string(),
+
+  documentValidation: ZeroOne.optional(),
+
+  isCondoLocationCorrect: ZeroOne.optional(),
+  street: z.string().optional(),
+  soi: z.string().optional(),
+  distance: z.coerce.number().optional(),
+  width: z.coerce.number().optional(),
+  rightOfWay: z.coerce.number().optional(),
+  roadSurface: ZeroOne.optional(),
+  publicUtility: z.string().optional(),
+  publicUtilityOther: z.string().optional(),
+
+  permanentElectricity: z.boolean().optional(),
+  waterSupply: z.boolean().optional(),
+
+  decoration: z.string(),
+  decorationOther: z.string().optional(),
+
+  buildingYear: z.coerce.number().optional(),
+  totalFloor: z.coerce.number().optional(),
+
+  buildingForm: z.string().optional(),
+
+  constructionMaterials: z.string().optional(),
+
+  roomLayout: z.string().optional(),
+  roomLayoutOther: z.string().optional(),
+
+  locationView: z.string().optional(),
+
+  groundFlooringMaterial: z.string().optional(),
+  groundFlooringMaterialOther: z.string().optional(),
+  upperFlooringMaterial: z.string().optional(),
+  bathroomFlooringMaterials: z.string().optional(),
+
+  roof: z.string().optional(),
+  roofOther: z.string().optional(),
+
+  expropriation: ZeroOne.optional(),
+  royalDecree: z.string().optional(),
+
+  condoFacility: z.string().optional(),
+  condoFacilityOther: z.string().optional(),
+
+  condoEnvironment: z.string().optional(),
+
+  inForestBoundary: z.boolean().optional(),
+  inForestBoundaryRemark: z.string().optional(),
+
+  areaDetails: z.array(AreaDetailDto).optional(),
+
+  remarks: z.string().optional(),
+
+  isBuilding: z.array(BuildingDetailDto).optional(),
+});
 export const CreateCollateralCondoRequest = z
   .object({
-    // --- Condo basic information (condoFields) ---
     propertyName: z.string().max(10),
     condoName: z.string(),
     roomNo: z.string(),
     floorNo: z.string(),
     buildingNo: z.string(),
     modelName: z.string(),
-    constructionOnTitleDeedNo: z.string(),
-    condominiumRegistrationNo: z.string(),
+    builtOnTitleNumber: z.string(),
+    condoRegistrationNumber: z.string(),
 
     usableArea: z.coerce.number(),
 
@@ -39,89 +100,21 @@ export const CreateCollateralCondoRequest = z
     longitude: z.coerce.number(),
 
     landOffice: z.string(),
-
-    verifiableOwner: z.string(),
-    owner: z.string(),
-
-    condoConditions: z.string().optional(),
-
-    isObligation: z.string(),
-    obligation: z.string(),
-
-    documentValidation: ZeroOne.optional(),
-
-    // --- Location (condoLocationFields) ---
-    isCondoLocationCorrect: ZeroOne.optional(),
-    street: z.string().optional(),
-    soi: z.string().optional(),
-    distance: z.coerce.number().optional(),
-    width: z.coerce.number().optional(),
-    rightOfWay: z.coerce.number().optional(),
-    roadSurface: ZeroOne.optional(),
-    publicUtility: z.string().optional(),
-    publicUtilityOther: z.string().optional(),
-
-    permanentElectricity: z.boolean().optional(),
-    waterSupply: z.boolean().optional(),
-
-    // --- Decoration (condoDecorationFields) ---
-    decoration: z.string(),
-    decorationOther: z.string(),
-
-    // --- Age / Height (ageHeightCondoFields) ---
-    buildingYear: z.coerce.number().optional(),
-    totalFloor: z.coerce.number().optional(),
-
-    // --- Construction Materials (constructionMaterialsFormFields) ---
-    constructionMaterials: z.string().optional(),
-
-    // --- Room Layout (condoRoomLayoutFormFields) ---
-    roomLayout: z.string().optional(),
-    roomLayoutOther: z.string().optional(),
-
-    // --- Location View (locationViewFormFields) ---
-    locationView: z.string().optional(),
-
-    // --- Floor (floorFormFields) ---
-    groundFlooringMaterial: z.string().optional(),
-    groundFlooringMaterialOther: z.string().optional(),
-    upperFlooringMaterial: z.string().optional(),
-    bathroomFlooringMaterials: z.string().optional(),
-
-    // --- Roof (roofFormFields) ---
-    roof: z.string().optional(),
-    roofOther: z.string().optional(),
-
-    // --- Expropriation (expropriationFields) ---
-    expropriation: ZeroOne.optional(),
-    royalDecree: z.string().optional(),
-
-    // --- Condo Facility (condoFacilityFields) ---
-    condoFacility: z.string().optional(),
-    condoFacilityOther: z.string().optional(),
-
-    // --- Environment (enviromentFields) ---
-    condoEnvironment: z.string().optional(),
-
-    // --- In Forest Boundary (inForestBoundaryFormFields) ---
-    inForestBoundary: z.string().optional(),
-    inForestBoundaryRemark: z.string().optional(),
-
-    // --- Area details (AreaDetailForm) ---
-    areaDetails: z.array(AreaDetailDto).optional(),
-
-    // --- Remarks ---
-    remarks: z.string().optional(),
-
-    isBuilding: z.array(BuildingDetailDto).optional(),
+    condoDetail: CondoDetailDto,
   })
   .passthrough();
 
-export type CreateCollateralCondoRequestType = z.infer<typeof CreateCollateralCondoRequest>;
+export const CreateCondoResponseType = z.object({ isSuccess: z.boolean() }).passthrough();
+
+export type CreateCondoRequestType = z.infer<typeof CreateCollateralCondoRequest>;
 export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
 
 export const CreateCollateralCondoRequestDefaults = {
-  areaDetails: [],
-  isBuilding: [],
-  verifiableOwner: '',
+  condoDetail: {
+    areaDetails: [],
+    verifiableOwner: false,
+    isObligation: '0',
+    decoration: '0',
+    condoConditions: '0',
+  },
 };

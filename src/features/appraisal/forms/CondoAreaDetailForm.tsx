@@ -3,19 +3,22 @@ import Input from '@/shared/components/Input';
 import type { AreaDetailDtoType } from '@/shared/forms/typeCondo';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 
-function CondoAreaDetailForm() {
+interface CondoAreaDetailFormProps {
+  name: string;
+}
+function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   const { control } = useFormContext();
   const {
     field,
     fieldState: { error },
-  } = useController({ name: '', control });
+  } = useController({ name: name, control });
 
-  const properties = useWatch({ name: 'areaDetails' });
+  const properties = useWatch({ name: `${name}.areaDetails` });
   const totalArea = calcTotalArea(properties);
 
   return (
     <div className="col-span-12 border-2 rounded-2xl border-gray-100">
-      <FormTable headers={propertiesTableHeader} name={'areaDetails'} />
+      <FormTable headers={propertiesTableHeader} name={`${name}.areaDetails`} />
       <div className="px-6 pb-6">
         <Input
           type="number"

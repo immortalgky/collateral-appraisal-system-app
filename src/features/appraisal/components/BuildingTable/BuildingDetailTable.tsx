@@ -149,9 +149,9 @@ const BuildingDetailTable = ({
 
   const rules: DerivedRule[] = useMemo(() => {
     return headers
-      .filter(h => 'compute' in h && h.name != undefined)
-      .map((h): DerivedRule => {
-        return { targetKey: h.name, compute: h.compute, normalize: h.normalize };
+      .filter(header => 'compute' in header && header.name != undefined)
+      .map((header): DerivedRule => {
+        return { targetKey: header.name, compute: header.compute, normalize: header.normalize };
       });
   }, [headers]);
 

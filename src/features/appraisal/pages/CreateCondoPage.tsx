@@ -12,29 +12,27 @@ import {
 import {
   CreateCollateralCondoRequest,
   CreateCollateralCondoRequestDefaults,
-  type CreateCollateralCondoRequestType,
 } from '@/shared/forms/typeCondo';
 import { zodResolver } from '@hookform/resolvers/zod';
 import CondoDetailForm from '../forms/CondoDetailForm';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useCreateCondoRequest } from '../api';
+import { CreateCondoRequestType } from '../../../shared/forms/typeCondo';
 
 function CreateCondoPage() {
-  const methods = useForm<CreateCollateralCondoRequestType>({
+  const methods = useForm<CreateCondoRequestType>({
     defaultValues: CreateCollateralCondoRequestDefaults,
     resolver: zodResolver(CreateCollateralCondoRequest),
   });
 
-  const {
-    handleSubmit,
-    getValues,
-    formState: { errors },
-  } = methods;
+  const { handleSubmit, getValues } = methods;
 
   const { isOpen, onToggle } = useDisclosure();
 
-  // const { mutate } = useCreateCollateral();
+  const { mutate } = useCreateCondoRequest();
 
-  const onSubmit: SubmitHandler<CreateCollateralCondoRequestType> = data => {
+  const onSubmit: SubmitHandler<CreateCondoRequestType> = data => {
+    // mutate(data)
     console.log(data);
   };
 
@@ -71,24 +69,24 @@ function CreateCondoPage() {
               </ResizableSidebar.Main>
             </ResizableSidebar>
           </div>
+          <div className="bg-white py-4 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <CancelButton />
+              <div className="h-6 w-px bg-gray-200" />
+              <div className="flex gap-3">
+                <DeleteButton />
+                <DuplicateButton />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                Save draft
+              </Button>
+              <Button type="submit">Save</Button>
+            </div>
+          </div>
         </form>
       </FormProvider>
-      <div className="bg-white py-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <CancelButton />
-          <div className="h-6 w-px bg-gray-200" />
-          <div className="flex gap-3">
-            <DeleteButton />
-            <DuplicateButton />
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" type="button" onClick={handleSaveDraft}>
-            Save draft
-          </Button>
-          <Button type="submit">Save</Button>
-        </div>
-      </div>
     </div>
   );
 }

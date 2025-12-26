@@ -7,7 +7,7 @@ import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
-import { useCreateLandRequest } from '../api';
+import { useCreateLandBuildingRequest } from '../api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createLandBuildingRequestDefault } from '@/shared/forms/defaults';
 import LandDetailForm from '../forms/LandDetailForm';
@@ -26,7 +26,7 @@ const CreateLandBuildingPage = () => {
   });
   const { handleSubmit, getValues } = methods;
 
-  const { mutate } = useCreateLandRequest();
+  const { mutate } = useCreateLandBuildingRequest();
   const onSubmit: SubmitHandler<CreateLandBuildingRequestType> = data => {
     mutate(data);
   };

@@ -11,6 +11,7 @@ import { CreateBuildingRequest, type CreateBuildingRequestType } from '@/shared/
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBuildingRequest } from '../api';
 import { createBuildingRequestDefaults } from '@/shared/forms/defaults';
+import { BuildingDetailTest } from '../components/RHFArrayTable/BuildingDetailTest';
 
 const CreateBuildingPage = () => {
   const methods = useForm<CreateBuildingRequestType>({
@@ -30,12 +31,12 @@ const CreateBuildingPage = () => {
   };
   return (
     <div>
-      <div className="flex flex-col gap-4 mb-6">
+      <div className="flex flex-col gap-4">
         <AppHeader iconVariant="folder" title={'Request for Credit Limit'} />
         <NavAnchors anchors={[{ label: 'Properties', id: 'properties-information' }]} />
       </div>
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
             <ResizableSidebar
               isOpen={isOpen}
@@ -44,29 +45,31 @@ const CreateBuildingPage = () => {
               closedWidth="w-1/50"
             >
               <ResizableSidebar.Main>
-                <div>
+                <div className="flex flex-col gap-6 w-full">
                   <div>
                     <h2 className="text-lg font-semibol mb-2">Appraisal Information</h2>
                     <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
                   </div>
-                  <Section id="land-title" anchor className="flex flex-col gap-6">
-                    <BuildingDetailForm />
-                  </Section>
+                  <div>
+                    <Section id="land-title" anchor className="flex flex-col gap-6">
+                      <BuildingDetailForm />
+                      {/*<BuildingDetailTest name={"building"} />*/}
+                    </Section>
+                  </div>
                 </div>
               </ResizableSidebar.Main>
             </ResizableSidebar>
-
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <CancelButton />
-                <div className="h-6 w-px bg-gray-200" />
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" type="button" onClick={handleSaveDraft}>
-                  Save draft
-                </Button>
-                <Button type="submit">Save</Button>
-              </div>
+          </div>
+          <div className="flex justify-between items-center p-4">
+            <div className="flex items-center gap-4">
+              <CancelButton />
+              <div className="h-6 w-px bg-gray-200" />
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                Save draft
+              </Button>
+              <Button type="submit">Save</Button>
             </div>
           </div>
         </form>
