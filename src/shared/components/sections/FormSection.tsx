@@ -15,6 +15,8 @@ import FormSwitch from '../inputs/FormSwitch';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { AtLeastOne } from '@/shared/types';
 import type { ParameterParams } from '@/shared/types/api';
+import type { CheckboxOption } from '../inputs/CheckboxGroup';
+import FormCheckboxGroup from '../inputs/FormCheckboxGroup';
 
 interface FormSectionProps {
   fields: FormField[];
@@ -33,6 +35,7 @@ export type FormField =
   | StringToggleField
   | TextareaField
   | CheckboxField
+  | CheckboxGroupField
   | RadioGroupField
   | SwitchField;
 
@@ -94,6 +97,13 @@ interface CheckboxField extends BaseFormField {
   label?: string;
   description?: string;
   size?: 'sm' | 'md' | 'lg';
+}
+interface CheckboxGroupField extends BaseFormField {
+  type: 'checkbox-group';
+  label?: string;
+  options: CheckboxOption[];
+  size?: 'sm' | 'md' | 'lg';
+  orientation?: 'horizontal' | 'vertical';
 }
 
 interface RadioGroupField extends BaseFormField {
@@ -201,6 +211,18 @@ const Field = ({ control, value, namePrefix, index }: FieldProps) => {
           disabled={value.disabled}
           className={value.className}
           size={value.size}
+        />
+      );
+    case 'checkbox-group':
+      return (
+        <FormCheckboxGroup
+          name={name}
+          label={value.label}
+          disabled={value.disabled}
+          className={value.className}
+          size={value.size}
+          options={value.options}
+          orientation={value.orientation}
         />
       );
     case 'radio-group':
