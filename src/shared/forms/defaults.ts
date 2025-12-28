@@ -1,3 +1,4 @@
+import type { CreateMarketSurveyRequestType } from './marketSurvey';
 import { type CreateRequestRequestType } from './v1';
 
 export const createRequestRequestDefaults: CreateRequestRequestType = {
@@ -120,4 +121,10 @@ export const requestTitleDtoDefaults = {
     machineInvoiceNo: '',
     noOfMachine: '' as unknown as number,
   },
+};
+
+export const createMarketSurveyRequestDefault: CreateMarketSurveyRequestType = {
+  surveyName: '',
+  surveyTemplateCode: 'LD1',
+  marketSurveyData: [],
 };

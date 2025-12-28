@@ -14,6 +14,8 @@ import LandDetailPage from '@/features/appraisal/pages/LandDetailPage';
 import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
+import CreateMarketSurveyPage from '@/features/appraisal/pages/CreateMarketSurveyPage';
+import ListMarketSurveyPage from '@/features/appraisal/pages/ListMarketSurveyPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 
 /**
@@ -78,6 +80,15 @@ export const router = createBrowserRouter([
       {
         path: 'tasks',
         element: <TaskListingPage />,
+      },
+      // Market Survey Routes
+      {
+        path: 'market-survey',
+        element: <ListMarketSurveyPage />,
+      },
+      {
+        path: 'market-survey/detail',
+        element: <CreateMarketSurveyPage />,
       },
       // Development Routes
       {
