@@ -1,4 +1,4 @@
-import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import { FormFields, type FormField } from '@/shared/components/form';
 import { SectionHeader } from '@shared/components';
 
 const AppointmentAndFeeForm = () => {
@@ -7,7 +7,7 @@ const AppointmentAndFeeForm = () => {
       <SectionHeader title="Appointment and Fee" />
       {/*<FormCard title="Appointment and Fee">*/}
       <div className="grid grid-cols-2 gap-4">
-        <FormSection fields={appointmentAndFeeFields} />
+        <FormFields fields={appointmentAndFeeFields} />
       </div>
       {/*</FormCard>*/}
     </div>
@@ -18,7 +18,7 @@ const appointmentAndFeeFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fee Type',
-    name: 'fee.feeType',
+    name: 'detail.fee.feePaymentType',
     options: [
       {
         value: 'a',
@@ -35,26 +35,26 @@ const appointmentAndFeeFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Fee Remark',
-    name: 'fee.feeRemark',
+    name: 'detail.fee.feeNotes',
     wrapperClassName: 'col-span-1',
   },
   {
     type: 'number-input',
     label: 'Bank Absorb Amount',
-    name: '???3', // TODO
+    name: 'detail.fee.absorbedAmount',
     wrapperClassName: 'col-span-1',
   },
   {
     type: 'datetime-input',
     label: 'Appointment Date/Time',
-    name: '???4', // TODO
+    name: 'detail.appointment.appointmentDateTime',
     wrapperClassName: 'col-span-2',
     required: true,
   },
   {
     type: 'textarea',
     label: 'Location Detail',
-    name: '???5', // TODO
+    name: 'detail.appointment.appointmentLocation',
     wrapperClassName: 'col-span-2',
     required: true,
   },

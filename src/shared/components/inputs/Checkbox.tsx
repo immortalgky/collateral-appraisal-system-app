@@ -2,6 +2,7 @@ import { Checkbox as HeadlessCheckbox, Field, Label, Description } from '@headle
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import Icon from '../Icon';
+import { useFormReadOnly } from '../form/context';
 
 interface CheckboxProps {
   checked?: boolean;
@@ -32,6 +33,8 @@ const Checkbox = ({
   name,
   value,
 }: CheckboxProps) => {
+  const isReadOnly = useFormReadOnly();
+  const isDisabled = disabled || isReadOnly;
   const sizeStyles = {
     sm: 'h-4 w-4',
     md: 'h-5 w-5',
@@ -51,13 +54,13 @@ const Checkbox = ({
           checked={checked}
           defaultChecked={defaultChecked}
           onChange={onChange}
-          disabled={disabled}
+          disabled={isDisabled}
           name={name}
           value={value}
           className={clsx(
             'group flex items-center justify-center rounded border-2 transition-all duration-200',
             sizeStyles[size],
-            disabled
+            isDisabled
               ? 'cursor-not-allowed bg-neutral-3 border-misc-1'
               : 'cursor-pointer border-misc-2 hover:border-primary',
             'data-checked:bg-primary data-checked:border-primary',
@@ -80,7 +83,7 @@ const Checkbox = ({
               <Label
                 className={clsx(
                   'text-sm font-medium cursor-pointer select-none',
-                  disabled ? 'text-neutral-4' : 'text-neutral-6',
+                  isDisabled ? 'text-neutral-4' : 'text-neutral-6',
                 )}
               >
                 {label}

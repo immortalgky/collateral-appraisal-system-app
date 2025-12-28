@@ -1,6 +1,7 @@
 import { forwardRef, useId, useState, useEffect, useRef } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import clsx from 'clsx';
+import { useFormReadOnly } from '../form/context';
 
 interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange' | 'value'> {
   label?: string;
@@ -47,6 +48,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   ) => {
     const uuid = useId();
     const inputId = id || uuid;
+    const isReadOnly = useFormReadOnly();
+    const isDisabled = disabled || isReadOnly;
     const [displayValue, setDisplayValue] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
     const cursorPosRef = useRef<number | null>(null);
@@ -137,6 +140,31 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       onBlur?.();
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const key = e.key.toLowerCase();
+
+      // Handle multiplier shortcuts: k = ×1,000, m = ×1,000,000
+      if (key === 'k' || key === 'm') {
+        e.preventDefault();
+
+        const currentValue = parseNumber(displayValue);
+        if (currentValue === null || currentValue === 0) return;
+
+        const multiplier = key === 'k' ? 1000 : 1000000;
+        const newValue = currentValue * multiplier;
+
+        const formatted = formatNumber(newValue);
+        setDisplayValue(formatted);
+
+        onChange?.({
+          target: {
+            name,
+            value: newValue,
+          },
+        });
+      }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
       const cursorPos = e.target.selectionStart || 0;
@@ -201,7 +229,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
                 : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-              disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
+              isDisabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-9',
               fullWidth && 'w-full',
@@ -211,10 +239,10 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             aria-describedby={
               error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
             }
-            required={required}
-            disabled={disabled}
+            disabled={isDisabled}
             value={displayValue}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={placeholder || '0.00'}
