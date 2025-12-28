@@ -16,6 +16,10 @@ import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeeP
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
 import CreateMarketSurveyPage from '@/features/appraisal/pages/CreateMarketSurveyPage';
 import ListMarketSurveyPage from '@/features/appraisal/pages/ListMarketSurveyPage';
+import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
+import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
+import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
+import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 
 /**
@@ -89,6 +93,23 @@ export const router = createBrowserRouter([
       {
         path: 'market-survey/detail',
         element: <CreateMarketSurveyPage />,
+      },
+      // Collateral Appraisal Routes
+      {
+        path: 'land-detail',
+        element: <CreateLandPage />,
+      },
+      {
+        path: 'building-detail',
+        element: <CreateBuildingPage />,
+      },
+      {
+        path: 'condo-detail',
+        element: <CreateCondoPage />,
+      },
+      {
+        path: 'land-building-detail',
+        element: <CreateLandBuildingPage />,
       },
       // Development Routes
       {

@@ -2,9 +2,87 @@ import type {
   CreateMarketSurveyRequestType,
   CreateMarketSurveyResponseType,
 } from '@/shared/forms/marketSurvey';
+import type {
+  CreateBuildingRequestType,
+  CreateBuildingResponseType,
+} from '@/shared/forms/typeBuilding';
+import type { CreateLandRequestType, CreateLandResponseType } from '@/shared/forms/v2';
+import {
+  CreateLandBuildingRequestType,
+  CreateLandBuildingResponseType,
+} from '../../shared/forms/typeLandBuilding';
+import { CreateCondoRequestType, CreateCondoResponseType } from '../../shared/forms/typeCondo';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import type { AppraisalData } from './context/AppraisalContext';
+
+// ==================== Collateral Appraisal APIs ====================
+
+export const useCreateLandRequest = () => {
+  return useMutation({
+    mutationFn: async (request: CreateLandRequestType): Promise<CreateLandResponseType> => {
+      console.log(request);
+      const { data } = await axios.post('https://localhost:7111/land-detail', request);
+      return data;
+    },
+    onSuccess: data => {
+      console.log(data);
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useCreateBuildingRequest = () => {
+  return useMutation({
+    mutationFn: async (request: CreateBuildingRequestType): Promise<CreateBuildingResponseType> => {
+      console.log(request);
+      const { data } = await axios.post('https://localhost:7111/building-detail', request);
+      return data;
+    },
+    onSuccess: data => {
+      console.log(data);
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useCreateLandBuildingRequest = () => {
+  return useMutation({
+    mutationFn: async (
+      request: CreateLandBuildingRequestType,
+    ): Promise<CreateLandBuildingResponseType> => {
+      console.log(request);
+      const { data } = await axios.post('https://localhost:7111/land-building-detail', request);
+      return data;
+    },
+    onSuccess: data => {
+      console.log(data);
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useCreateCondoRequest = () => {
+  return useMutation({
+    mutationFn: async (request: CreateCondoRequestType): Promise<CreateCondoResponseType> => {
+      console.log(request);
+      const { data } = await axios.post('https://localhost:7111/condo-detail', request);
+      return data;
+    },
+    onSuccess: data => {
+      console.log(data);
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
 
 // ==================== Market Survey APIs ====================
 
@@ -17,7 +95,6 @@ export const useCreateMarketSurveyRequest = () => {
       const { data } = await axios.post('https://localhost:7111/market-survey', request);
       return data;
     },
-    // TODO: Change to actual logic
     onSuccess: data => {
       console.log(data);
     },
@@ -32,12 +109,11 @@ export const useSurveyTemplateFactors = (code?: string) => {
     queryKey: ['survey-template-factor', code],
     enabled: !!code,
     queryFn: async () => {
-      // const { data } = await axios.get(`https://localhost:7111/market-survey/${code}`);
-      // return data;
       return factor;
     },
   });
 };
+
 const factor = [
   {
     marketSurveyId: 1,
@@ -87,12 +163,11 @@ export const useGetMarketSurvey = (appraisalId?: string) => {
     queryKey: ['market-survey', appraisalId],
     enabled: !!appraisalId,
     queryFn: async () => {
-      // const { data } = await axios.get(`/market-survey?id=${appraisalId}`);
-      // return data;
       return market;
     },
   });
 };
+
 const market = [
   {
     id: 1,
@@ -130,13 +205,12 @@ const market = [
     collateralType: 'LB-Land & Building',
   },
 ];
+
 export const useGetMarketSurveyById = (marketId?: string) => {
   return useQuery({
     queryKey: ['market-survey', marketId],
     enabled: !!marketId,
     queryFn: async () => {
-      // const { data } = await axios.get(`/market-survey?id=${marketId}`);
-      // return data;
       return market;
     },
   });
@@ -147,12 +221,11 @@ export const useGetMarketSurveyTemplate = (collateralType?: string) => {
     queryKey: ['market-survey-template', collateralType],
     enabled: !!collateralType,
     queryFn: async () => {
-      // const { data } = await axios.get(`/market-survey-template?collateralType=${collateralType}`);
-      // return data;
       return template;
     },
   });
 };
+
 const template = [
   {
     surveyTemplateId: 1,
@@ -181,12 +254,11 @@ export const useGetParameter = (parameterGroup?: string) => {
     queryKey: ['parameter', parameterGroup],
     enabled: !!parameterGroup,
     queryFn: async () => {
-      // const { data } = await axios.get(`/parameters?parameterGroup=${parameterGroup}`);
-      // return data;
       return parameters;
     },
   });
 };
+
 const parameters = [
   {
     parameterGroup: 'collateralType',
@@ -208,18 +280,12 @@ const parameters = [
 /**
  * Hook for fetching appraisal data by ID
  * GET /appraisals/{appraisalId}
- *
- * TODO: Remove mock and use real API
  */
 export const useGetAppraisalById = (appraisalId: string | undefined) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId],
     queryFn: async (): Promise<AppraisalData> => {
-      // TODO: Replace mock with real API call
-      // const { data } = await axios.get(`/appraisals/${appraisalId}`);
-
-      // Mock response for testing
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       return {
         appraisalId: appraisalId ?? '',
         requestId: 'AE038AFF-FB7D-44F5-AA7E-09038B523E0F',
