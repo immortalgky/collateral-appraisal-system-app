@@ -1,6 +1,7 @@
 import { forwardRef, useId } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import clsx from 'clsx';
+import { useFormReadOnly } from './form/context';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -9,6 +10,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  /** Show character count when maxLength is set */
+  showCharCount?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -24,6 +27,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       required,
       disabled,
       id,
+      showCharCount,
+      maxLength,
+      value,
       ...props
     },
     ref,
@@ -31,6 +37,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     // Generate a unique ID if not provided
     const uuid = useId();
     const inputId = id || uuid;
+    const isReadOnly = useFormReadOnly();
+    const isDisabled = disabled || isReadOnly;
+
+    // Calculate current character count for display
+    const currentLength = typeof value === 'string' ? value.length : 0;
+    const shouldShowCount = showCharCount && maxLength !== undefined;
 
     return (
       <div className={clsx(fullWidth && 'w-full')}>
@@ -57,7 +69,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
                 : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-              disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
+              isDisabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-9',
               fullWidth && 'w-full',
@@ -67,8 +79,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={
               error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
             }
-            required={required}
-            disabled={disabled}
+            disabled={isDisabled}
+            maxLength={maxLength}
+            value={value}
             {...props}
           />
 
@@ -79,13 +92,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {(helperText || error) && (
-          <p
-            className={clsx('mt-1 text-xs', error ? 'text-danger' : 'text-gray-500')}
-            id={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
-          >
-            {error || helperText}
-          </p>
+        {(helperText || error || shouldShowCount) && (
+          <div className="flex justify-between mt-1">
+            <p
+              className={clsx('text-xs', error ? 'text-danger' : 'text-gray-500')}
+              id={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+            >
+              {error || helperText}
+            </p>
+            {shouldShowCount && (
+              <span
+                className={clsx(
+                  'text-xs',
+                  currentLength > maxLength! ? 'text-danger' : 'text-gray-400'
+                )}
+              >
+                {currentLength}/{maxLength}
+              </span>
+            )}
+          </div>
         )}
       </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
 import { NumberInput } from '@/shared/components/inputs';
@@ -10,6 +10,7 @@ import {
   useFieldArray,
   useFormContext,
 } from 'react-hook-form';
+import { useFormReadOnly } from '@/shared/components/form/context';
 
 interface FormTableProps {
   name: string;
@@ -44,6 +45,7 @@ interface TableCellProps {
 
 const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTableProps) => {
   const { getValues, setValue, control, watch } = useFormContext();
+  const isReadOnly = useFormReadOnly();
   const { append, remove } = useFieldArray({
     control,
     name: name,
@@ -151,7 +153,7 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
     if (totalFieldName) setValue(totalFieldName, calculatedTotal);
   };
 
-  const isEmpty = values.length === 0;
+  const isEmpty = values?.length === 0;
   const hasSumRow = sumColumns.length > 0 && !isEmpty;
 
   return (
@@ -162,39 +164,46 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
             {headers.map((header, index) => (
               <th
                 key={index}
-                className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg"
+                className={`text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg ${isReadOnly && index === headers.length - 1 ? 'rounded-tr-lg' : ''}`}
                 style={{ width: 'width' in header ? header.width : 'auto', minWidth: '120px' }}
               >
                 {header.label}
               </th>
             ))}
-            <th className="text-primary text-sm font-semibold py-3 px-4 text-right rounded-tr-lg" style={{ width: '100px' }}>
-              Actions
-            </th>
+            {!isReadOnly && (
+              <th
+                className="text-primary text-sm font-semibold py-3 px-4 text-right rounded-tr-lg"
+                style={{ width: '100px' }}
+              >
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {isEmpty ? (
             <tr>
-              <td colSpan={headers.length + 1} className="py-8 text-center">
+              <td colSpan={isReadOnly ? headers.length : headers.length + 1} className="py-8 text-center">
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                     <Icon style="regular" name="inbox" className="size-6 text-gray-400" />
                   </div>
                   <p className="text-sm text-gray-500">No data yet</p>
-                  <button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
-                  >
-                    <Icon style="solid" name="plus" className="size-4" />
-                    Add First Item
-                  </button>
+                  {!isReadOnly && (
+                    <button
+                      type="button"
+                      onClick={handleAddRow}
+                      className="mt-2 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                    >
+                      <Icon style="solid" name="plus" className="size-4" />
+                      Add First Item
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>
           ) : (
-            values.map((field: Record<string, any>, index: number) => (
+            values?.map((field: Record<string, any>, index: number) => (
               <tr key={index} className="hover:bg-gray-50 transition-colors">
                 {headers.map((header, inner_index) => {
                   if ('name' in header) {
@@ -220,49 +229,51 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
                     );
                   }
                 })}
-                <td className="py-3 px-4">
-                  <div className="flex gap-1 justify-end">
-                    {editIndex === index ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleSaveEdit}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                          title="Save"
-                        >
-                          <Icon style="solid" name="check" className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleCancelEdit}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                          title="Cancel"
-                        >
-                          <Icon style="solid" name="xmark" className="size-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleStartEdit(index)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                          title="Edit"
-                        >
-                          <Icon style="solid" name="pen" className="size-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRow(index)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-3.5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
+                {!isReadOnly && (
+                  <td className="py-3 px-4">
+                    <div className="flex gap-1 justify-end">
+                      {editIndex === index ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleSaveEdit}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                            title="Save"
+                          >
+                            <Icon style="solid" name="check" className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                            title="Cancel"
+                          >
+                            <Icon style="solid" name="xmark" className="size-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(index)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            title="Edit"
+                          >
+                            <Icon style="solid" name="pen" className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRow(index)}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))
           )}
@@ -273,17 +284,23 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
             <tr className="bg-gray-50 border-t-2 border-gray-200">
               {headers.map((header, index) => {
                 if ('name' in header && sumColumns.includes(header.name)) {
-                  const currentTotal = totalFieldName ? (watch(totalFieldName) ?? calculatedTotal) : calculatedTotal;
+                  const currentTotal = totalFieldName
+                    ? (watch(totalFieldName) ?? calculatedTotal)
+                    : calculatedTotal;
                   return (
                     <td key={index} className="py-3 px-4">
-                      {totalFieldName ? (
+                      {isReadOnly ? (
+                        <span className="text-sm font-semibold text-gray-900 text-right block">
+                          {formatNumber(currentTotal)}
+                        </span>
+                      ) : totalFieldName ? (
                         <div className="flex items-center gap-2">
                           {isOverridden ? (
                             <>
                               <div className="relative flex-1">
                                 <NumberInput
                                   value={currentTotal}
-                                  onChange={(e) => {
+                                  onChange={e => {
                                     if (totalFieldName) setValue(totalFieldName, e.target.value);
                                   }}
                                   decimalPlaces={2}
@@ -346,12 +363,12 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
                   return <td key={index} className="py-3 px-4" />;
                 }
               })}
-              <td className="py-3 px-4" />
+              {!isReadOnly && <td className="py-3 px-4" />}
             </tr>
           </tfoot>
         )}
       </table>
-      {!isEmpty && (
+      {!isEmpty && !isReadOnly && (
         <div className="border-t border-gray-100">
           <button
             type="button"
@@ -407,12 +424,7 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
 
   const renderInput = () => {
     if (isNumber) {
-      return (
-        <NumberInput
-          {...field}
-          decimalPlaces={decimalPlaces}
-        />
-      );
+      return <NumberInput {...field} decimalPlaces={decimalPlaces} />;
     }
     return <Input type={header.inputType} {...field} />;
   };

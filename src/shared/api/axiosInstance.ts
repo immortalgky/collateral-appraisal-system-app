@@ -1,5 +1,11 @@
 import axios from 'axios';
 
+// Development delay for seeing loading states (in milliseconds)
+const DEV_API_DELAY = Number(import.meta.env.VITE_API_DELAY) || 0;
+
+// Helper function for delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Create axios instance with base URL and default headers
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -18,12 +24,20 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  error => Promise.reject(error),
+  error => {
+    return Promise.reject(error);
+  },
 );
 
-// Add response interceptor for error handling
+// Add response interceptor for error handling and dev delay
 axiosInstance.interceptors.response.use(
-  response => response,
+  async response => {
+    // Add delay for development to see loading states
+    if (DEV_API_DELAY > 0) {
+      await delay(DEV_API_DELAY);
+    }
+    return response;
+  },
   error => {
     const { response } = error;
 

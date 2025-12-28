@@ -1,4 +1,4 @@
-import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import { type FormField, FormFields, useFormReadOnly } from '@/shared/components/form';
 import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import TitleLandForm from './TitleLandForm';
@@ -21,6 +21,7 @@ interface TitleFormProps {
 }
 
 const TitleInformationForm = () => {
+  const isReadOnly = useFormReadOnly();
   const [editIndex, setEditIndex] = useState<number | undefined>();
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; index: number | null }>({
     isOpen: false,
@@ -54,8 +55,7 @@ const TitleInformationForm = () => {
         behavior: 'smooth',
       });
     }
-  }, [titles.length]);
-
+  }, [titles?.length]);
 
   const scrollToSection = () => {
     const section = document.getElementById('title-document-info');
@@ -164,7 +164,7 @@ const TitleInformationForm = () => {
   return (
     <FormCard
       title="Title Information"
-      subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles.length} title(s)`}
+      subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles?.length} title(s)`}
       icon="file-certificate"
       iconColor="purple"
       rightIcon={
@@ -177,7 +177,7 @@ const TitleInformationForm = () => {
             <Icon style="solid" name="arrow-left" className="size-4" />
             Back to List
           </button>
-        ) : (
+        ) : !isReadOnly ? (
           <button
             type="button"
             onClick={handleAddTitle}
@@ -186,7 +186,7 @@ const TitleInformationForm = () => {
             <Icon style="solid" name="plus" className="size-4" />
             Add Title
           </button>
-        )
+        ) : null
       }
     >
       {!isEditing ? (
@@ -200,18 +200,19 @@ const TitleInformationForm = () => {
           getCollateralTypeLabel={getCollateralTypeLabel}
           getCollateralTypeIcon={getCollateralTypeIcon}
           isTitleComplete={isTitleComplete}
+          isReadOnly={isReadOnly}
         />
       ) : (
         /* Detail View with Sidebar */
-        <div className="flex gap-6">
+        <div className="flex gap-4">
           {/* Left Sidebar - Title List (Sticky) */}
-          <div className="w-56 shrink-0 border-r border-gray-100 pr-6 sticky top-0 self-start">
+          <div className="w-44 shrink-0 border-r border-gray-100 pr-4 sticky top-0 self-start">
             {/* Scrollable Title List */}
             <div
               ref={listContainerRef}
               className="overflow-y-auto overflow-x-visible max-h-[calc(100vh-20rem)]"
             >
-              <div className="flex flex-col gap-3 pr-1 pt-2 pl-2">
+              <div className="flex flex-col gap-2 pr-1 pt-1 pl-1">
                 {titles.map((title, index) => {
                   const isComplete = isTitleComplete(index);
 
@@ -219,30 +220,36 @@ const TitleInformationForm = () => {
                     <div
                       key={index}
                       className={clsx(
-                        'group relative flex items-center gap-3 p-3 rounded-xl text-left transition-all cursor-pointer',
+                        'group relative flex items-center gap-2 p-2 rounded-lg text-left transition-all cursor-pointer',
                         editIndex === index
-                          ? 'bg-primary/10 border-2 border-primary shadow-sm'
-                          : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100 hover:border-gray-200',
+                          ? 'bg-primary/10 border border-primary shadow-sm'
+                          : 'bg-gray-50 border border-transparent hover:bg-gray-100 hover:border-gray-200',
                       )}
                       onClick={() => handleSelectTitle(index)}
                       onContextMenu={e => handleContextMenu(e, index)}
                     >
                       {/* Index Badge */}
-                      <div className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-gray-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                      <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
                         {index + 1}
                       </div>
 
                       {/* Validation Status Indicator */}
-                      <div className={clsx(
-                        'absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow-sm',
-                        isComplete ? 'bg-success text-white' : 'bg-amber-400 text-white'
-                      )}>
-                        <Icon style="solid" name={isComplete ? 'check' : 'exclamation'} className="size-2" />
+                      <div
+                        className={clsx(
+                          'absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm',
+                          isComplete ? 'bg-success text-white' : 'bg-amber-400 text-white',
+                        )}
+                      >
+                        <Icon
+                          style="solid"
+                          name={isComplete ? 'check' : 'exclamation'}
+                          className="size-1.5"
+                        />
                       </div>
 
                       <div
                         className={clsx(
-                          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm',
+                          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm',
                           editIndex === index
                             ? 'bg-primary text-white'
                             : 'bg-white text-gray-500 border border-gray-200',
@@ -251,59 +258,63 @@ const TitleInformationForm = () => {
                         <Icon
                           style="solid"
                           name={getCollateralTypeIcon(title?.collateralType)}
-                          className="size-4"
+                          className="size-3.5"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div
                           className={clsx(
-                            'text-sm font-medium truncate',
+                            'text-xs font-medium truncate',
                             editIndex === index ? 'text-primary' : 'text-gray-700',
                           )}
                         >
                           {getCollateralTypeLabel(title?.collateralType)}
                         </div>
-                        <div className="text-xs text-gray-400 truncate">
+                        <div className="text-[10px] text-gray-400 truncate">
                           {title?.titleNo || 'No title number'}
                         </div>
                       </div>
-                      {/* Delete button - visible on hover */}
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteTitle(index);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger/20 transition-all shrink-0"
-                        title="Delete"
-                      >
-                        <Icon style="solid" name="xmark" className="size-3" />
-                      </button>
+                      {/* Delete button - visible on hover (hidden in readOnly) */}
+                      {!isReadOnly && (
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteTitle(index);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger/20 transition-all shrink-0"
+                          title="Delete"
+                        >
+                          <Icon style="solid" name="xmark" className="size-2.5" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* Pinned Add New Button */}
-            <div className="pt-3 mt-3 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={handleAddTitle}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
-                  <Icon style="solid" name="plus" className="size-4" />
-                </div>
-                <span className="text-sm font-medium">Add New</span>
-              </button>
-            </div>
+            {/* Pinned Add New Button (hidden in readOnly) */}
+            {!isReadOnly && (
+              <div className="pt-2 mt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handleAddTitle}
+                  className="w-full flex items-center gap-2 p-2 rounded-lg border border-dashed border-gray-200 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
+                    <Icon style="solid" name="plus" className="size-3.5" />
+                  </div>
+                  <span className="text-xs font-medium">Add New</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right Panel - Detail Form */}
           <div className="flex-1 min-w-0">
             <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
-              <FormSection fields={titleFields} namePrefix="titles" index={editIndex} />
+              <FormFields fields={titleFields} namePrefix="titles" index={editIndex} />
               <TitleForm index={editIndex} currentFormType={currentFormType} />
               <TitleDocumentAdressForm index={editIndex} />
               <DopaAdressForm index={editIndex} />
@@ -312,8 +323,8 @@ const TitleInformationForm = () => {
         </div>
       )}
 
-      {/* Context Menu */}
-      {contextMenu && (
+      {/* Context Menu (hidden in readOnly) */}
+      {contextMenu && !isReadOnly && (
         <div
           className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
           style={{ top: contextMenu.y, left: contextMenu.x }}
@@ -367,6 +378,7 @@ interface TitleTableViewProps {
   getCollateralTypeLabel: (type: string | undefined) => string;
   getCollateralTypeIcon: (type: string | undefined) => string;
   isTitleComplete: (index: number) => boolean;
+  isReadOnly?: boolean;
 }
 
 const TitleTableView = ({
@@ -378,23 +390,28 @@ const TitleTableView = ({
   getCollateralTypeLabel,
   getCollateralTypeIcon,
   isTitleComplete,
+  isReadOnly = false,
 }: TitleTableViewProps) => {
-  if (titles.length === 0) {
+  if (titles?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
           <Icon style="regular" name="file-lines" className="size-8 text-gray-400" />
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-1">No titles yet</h3>
-        <p className="text-sm text-gray-500 mb-4">Add your first title document to get started</p>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
-        >
-          <Icon style="solid" name="plus" className="size-4" />
-          Add First Title
-        </button>
+        <p className="text-sm text-gray-500 mb-4">
+          {isReadOnly ? 'No title documents have been added' : 'Add your first title document to get started'}
+        </p>
+        {!isReadOnly && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+          >
+            <Icon style="solid" name="plus" className="size-4" />
+            Add First Title
+          </button>
+        )}
       </div>
     );
   }
@@ -422,13 +439,15 @@ const TitleTableView = ({
             <th className="text-center text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-10">
               Status
             </th>
-            <th className="text-right text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-32">
-              Actions
-            </th>
+            {!isReadOnly && (
+              <th className="text-right text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-32">
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {titles.map((title, index) => {
+          {titles?.map((title, index) => {
             const isComplete = isTitleComplete(index);
 
             return (
@@ -457,57 +476,63 @@ const TitleTableView = ({
                   </div>
                 </td>
                 <td className="py-3 px-4 text-sm text-gray-600">
-                  {title?.titleNo || title?.condo?.condoRoomNo || '-'}
+                  {title?.titleNo || title?.roomNo || '-'}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {title?.building?.buildingType || '-'}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">{title?.area?.usageArea || '-'}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{title?.buildingType || '-'}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{title?.usableArea || '-'}</td>
                 <td className="py-3 px-4 text-center">
-                  <div className={clsx(
-                    'inline-flex items-center justify-center w-6 h-6 rounded-full',
-                    isComplete ? 'bg-success/20 text-success' : 'bg-amber-100 text-amber-600'
-                  )}>
-                    <Icon style="solid" name={isComplete ? 'check' : 'exclamation'} className="size-3" />
+                  <div
+                    className={clsx(
+                      'inline-flex items-center justify-center w-6 h-6 rounded-full',
+                      isComplete ? 'bg-success/20 text-success' : 'bg-amber-100 text-amber-600',
+                    )}
+                  >
+                    <Icon
+                      style="solid"
+                      name={isComplete ? 'check' : 'exclamation'}
+                      className="size-3"
+                    />
                   </div>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="flex gap-1 justify-end">
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onSelect(index);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      title="Edit"
-                    >
-                      <Icon style="solid" name="pen" className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onDuplicate(index);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors"
-                      title="Duplicate"
-                    >
-                      <Icon style="regular" name="copy" className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onDelete(index);
-                      }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
-                      title="Delete"
-                    >
-                      <Icon style="solid" name="trash" className="size-3.5" />
-                    </button>
-                  </div>
-                </td>
+                {!isReadOnly && (
+                  <td className="py-3 px-4">
+                    <div className="flex gap-1 justify-end">
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onSelect(index);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        title="Edit"
+                      >
+                        <Icon style="solid" name="pen" className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onDuplicate(index);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors"
+                        title="Duplicate"
+                      >
+                        <Icon style="regular" name="copy" className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onDelete(index);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
+                        title="Delete"
+                      >
+                        <Icon style="solid" name="trash" className="size-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}

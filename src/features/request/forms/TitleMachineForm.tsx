@@ -1,18 +1,18 @@
-import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import { FormFields, type FormField } from '@/shared/components/form';
 
 interface TitleMachineFormProps {
   index: number;
 }
 
 const TitleMachineForm = ({ index }: TitleMachineFormProps) => {
-  return <FormSection fields={machineFields} namePrefix={'titles'} index={index} />;
+  return <FormFields fields={machineFields} namePrefix={'titles'} index={index} />;
 };
 
 const machineFields: FormField[] = [
   {
     type: 'dropdown',
-    label: 'Machine Status',
-    name: 'machine.machineStatus',
+    label: 'Installation Status',
+    name: 'installationStatus',
     options: [
       {
         value: 'a',
@@ -29,7 +29,7 @@ const machineFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Machine Type',
-    name: 'machine.machineType',
+    name: 'machineType',
     options: [
       {
         value: 'a',
@@ -46,7 +46,7 @@ const machineFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Registration Status',
-    name: 'machine.machineRegistrationStatus',
+    name: 'registrationStatus',
     options: [
       {
         value: 'a',
@@ -63,21 +63,21 @@ const machineFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Registration No',
-    name: 'machine.machineRegistrationNo',
+    name: 'registrationNo',
     wrapperClassName: 'col-span-3',
     required: true,
   },
   {
     type: 'text-input',
     label: 'Invoice No',
-    name: 'machine.machineInvoiceNo',
+    name: 'invoiceNumber',
     wrapperClassName: 'col-span-3',
     required: true,
   },
   {
     type: 'number-input',
     label: 'No of Machine(s)',
-    name: 'machine.noOfMachine',
+    name: 'numberOfMachine',
     wrapperClassName: 'col-span-3',
     required: true,
     decimalPlaces: 0,

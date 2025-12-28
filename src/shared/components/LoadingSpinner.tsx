@@ -14,7 +14,13 @@ const sizeMap = {
 // Building/Property spinner - building with pulsing windows
 function PropertySpinner({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       {/* Building outline */}
       <path
         d="M8 44V18L24 6L40 18V44H8Z"
@@ -34,12 +40,56 @@ function PropertySpinner({ size }: { size: number }) {
         className="text-blue-500"
       />
       {/* Door */}
-      <rect x="20" y="32" width="8" height="12" rx="1" fill="currentColor" className="text-blue-500" />
+      <rect
+        x="20"
+        y="32"
+        width="8"
+        height="12"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-500"
+      />
       {/* Windows with animation */}
-      <rect x="12" y="22" width="6" height="6" rx="1" fill="currentColor" className="text-blue-400 animate-pulse" style={{ animationDelay: '0ms' }} />
-      <rect x="30" y="22" width="6" height="6" rx="1" fill="currentColor" className="text-blue-400 animate-pulse" style={{ animationDelay: '200ms' }} />
-      <rect x="12" y="32" width="6" height="6" rx="1" fill="currentColor" className="text-blue-400 animate-pulse" style={{ animationDelay: '400ms' }} />
-      <rect x="30" y="32" width="6" height="6" rx="1" fill="currentColor" className="text-blue-400 animate-pulse" style={{ animationDelay: '600ms' }} />
+      <rect
+        x="12"
+        y="22"
+        width="6"
+        height="6"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-400 animate-pulse"
+        style={{ animationDelay: '0ms' }}
+      />
+      <rect
+        x="30"
+        y="22"
+        width="6"
+        height="6"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-400 animate-pulse"
+        style={{ animationDelay: '200ms' }}
+      />
+      <rect
+        x="12"
+        y="32"
+        width="6"
+        height="6"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-400 animate-pulse"
+        style={{ animationDelay: '400ms' }}
+      />
+      <rect
+        x="30"
+        y="32"
+        width="6"
+        height="6"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-400 animate-pulse"
+        style={{ animationDelay: '600ms' }}
+      />
     </svg>
   );
 }
@@ -47,7 +97,13 @@ function PropertySpinner({ size }: { size: number }) {
 // Document/Report spinner - document with scanning line
 function DocumentSpinner({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       {/* Document background */}
       <path
         d="M10 6C10 4.89543 10.8954 4 12 4H28L38 14V42C38 43.1046 37.1046 44 36 44H12C10.8954 44 10 43.1046 10 42V6Z"
@@ -64,11 +120,43 @@ function DocumentSpinner({ size }: { size: number }) {
       {/* Folded corner */}
       <path d="M28 4V14H38" stroke="currentColor" strokeWidth="2" className="text-blue-500" />
       {/* Text lines */}
-      <rect x="14" y="20" width="16" height="2" rx="1" fill="currentColor" className="text-blue-300" />
-      <rect x="14" y="26" width="20" height="2" rx="1" fill="currentColor" className="text-blue-300" />
-      <rect x="14" y="32" width="12" height="2" rx="1" fill="currentColor" className="text-blue-300" />
+      <rect
+        x="14"
+        y="20"
+        width="16"
+        height="2"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-300"
+      />
+      <rect
+        x="14"
+        y="26"
+        width="20"
+        height="2"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-300"
+      />
+      <rect
+        x="14"
+        y="32"
+        width="12"
+        height="2"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-300"
+      />
       {/* Scanning line */}
-      <rect x="14" y="18" width="20" height="2" rx="1" fill="currentColor" className="text-blue-500">
+      <rect
+        x="14"
+        y="18"
+        width="20"
+        height="2"
+        rx="1"
+        fill="currentColor"
+        className="text-blue-500"
+      >
         <animate attributeName="y" values="18;36;18" dur="1.5s" repeatCount="indefinite" />
         <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
       </rect>
@@ -76,7 +164,13 @@ function DocumentSpinner({ size }: { size: number }) {
       <circle cx="36" cy="38" r="8" fill="currentColor" className="text-emerald-500">
         <animate attributeName="opacity" values="0;0;1;1;0" dur="2s" repeatCount="indefinite" />
       </circle>
-      <path d="M32 38L35 41L40 35" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path
+        d="M32 38L35 41L40 35"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <animate attributeName="opacity" values="0;0;1;1;0" dur="2s" repeatCount="indefinite" />
       </path>
     </svg>
@@ -86,30 +180,92 @@ function DocumentSpinner({ size }: { size: number }) {
 // Chart/Valuation spinner - bar chart with growing bars
 function ChartSpinner({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       {/* Axes */}
-      <path d="M8 8V40H40" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-blue-300" />
+      <path
+        d="M8 8V40H40"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        className="text-blue-300"
+      />
       {/* Grid lines */}
-      <path d="M8 30H40" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" className="text-blue-200" />
-      <path d="M8 20H40" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" className="text-blue-200" />
+      <path
+        d="M8 30H40"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeDasharray="2 2"
+        className="text-blue-200"
+      />
+      <path
+        d="M8 20H40"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeDasharray="2 2"
+        className="text-blue-200"
+      />
       {/* Bars with animation */}
       <rect x="12" y="40" width="6" height="0" fill="currentColor" className="text-blue-400">
-        <animate attributeName="height" values="0;20;0" dur="1.5s" repeatCount="indefinite" begin="0s" />
-        <animate attributeName="y" values="40;20;40" dur="1.5s" repeatCount="indefinite" begin="0s" />
+        <animate
+          attributeName="height"
+          values="0;20;0"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0s"
+        />
+        <animate
+          attributeName="y"
+          values="40;20;40"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0s"
+        />
       </rect>
       <rect x="21" y="40" width="6" height="0" fill="currentColor" className="text-blue-500">
-        <animate attributeName="height" values="0;28;0" dur="1.5s" repeatCount="indefinite" begin="0.2s" />
-        <animate attributeName="y" values="40;12;40" dur="1.5s" repeatCount="indefinite" begin="0.2s" />
+        <animate
+          attributeName="height"
+          values="0;28;0"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.2s"
+        />
+        <animate
+          attributeName="y"
+          values="40;12;40"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.2s"
+        />
       </rect>
       <rect x="30" y="40" width="6" height="0" fill="currentColor" className="text-emerald-500">
-        <animate attributeName="height" values="0;32;0" dur="1.5s" repeatCount="indefinite" begin="0.4s" />
-        <animate attributeName="y" values="40;8;40" dur="1.5s" repeatCount="indefinite" begin="0.4s" />
+        <animate
+          attributeName="height"
+          values="0;32;0"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.4s"
+        />
+        <animate
+          attributeName="y"
+          values="40;8;40"
+          dur="1.5s"
+          repeatCount="indefinite"
+          begin="0.4s"
+        />
       </rect>
       {/* Dollar sign */}
       <circle cx="38" cy="10" r="6" fill="currentColor" className="text-amber-400">
         <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
       </circle>
-      <text x="38" y="13" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">$</text>
+      <text x="38" y="13" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">
+        $
+      </text>
     </svg>
   );
 }
@@ -117,7 +273,13 @@ function ChartSpinner({ size }: { size: number }) {
 // Search/Inspection spinner - magnifying glass scanning
 function SearchSpinner({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       {/* House being inspected */}
       <path
         d="M10 40V24L22 14L34 24V40H10Z"
@@ -138,8 +300,26 @@ function SearchSpinner({ size }: { size: number }) {
           dur="3s"
           repeatCount="indefinite"
         />
-        <circle cx="30" cy="18" r="8" stroke="currentColor" strokeWidth="2.5" fill="white" fillOpacity="0.8" className="text-blue-500" />
-        <line x1="36" y1="24" x2="42" y2="30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-blue-500" />
+        <circle
+          cx="30"
+          cy="18"
+          r="8"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          fill="white"
+          fillOpacity="0.8"
+          className="text-blue-500"
+        />
+        <line
+          x1="36"
+          y1="24"
+          x2="42"
+          y2="30"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="text-blue-500"
+        />
         {/* Sparkle inside magnifying glass */}
         <circle cx="28" cy="16" r="2" fill="currentColor" className="text-blue-400">
           <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" />
