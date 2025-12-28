@@ -9,7 +9,7 @@ const PropertiesForm = () => {
         name="properties"
         headers={propertiesTableHeader}
         sumColumns={['sellingPrice']}
-        totalFieldName="loanDetail.totalSellingPrice"
+        totalFieldName="detail.loanDetail.totalSellingPrice"
       />
     </div>
   );

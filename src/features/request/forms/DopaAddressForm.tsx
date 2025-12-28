@@ -1,54 +1,119 @@
-import type { FormField } from '@/shared/components/sections/FormSection';
-import FormSection from '@/shared/components/sections/FormSection';
+import { useState } from 'react';
+import { FormFields, type FormField } from '@/shared/components/form';
 import TitleInformationHeader from '../components/TitleInformationHeader';
 import { useFormContext } from 'react-hook-form';
-import type { TitleAddressType } from '@/shared/forms/v1';
+import AddressAutocomplete from '@/shared/components/inputs/AddressAutocomplete';
+import TextInput from '@/shared/components/inputs/TextInput';
+import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 
 interface DopaAdressFormProps {
   index: number;
 }
 
 const DopaAdressForm = ({ index }: DopaAdressFormProps) => {
-  const { getValues, setValue } = useFormContext();
+  const { getValues, setValue, watch } = useFormContext();
+  const [selectedAddress, setSelectedAddress] = useState<ThaiAddress | null>(null);
+
+  const prefix = `titles.${index}.dopaAddress`;
+  const postcode = watch(`${prefix}.postcode`);
+
   const handleCopy = () => {
-    const titleAddressValues: TitleAddressType = getValues(`titles.${index}.titleAddress`);
-    dopaAddressFields.forEach(key => {
-      const addressKey = key.name.split('.')[1];
-      setValue(`titles.${index}.${key.name}`, titleAddressValues[addressKey]);
-    });
+    const titleAddress = getValues(`titles.${index}.titleAddress`);
+    setValue(`${prefix}.subDistrict`, titleAddress.subDistrict);
+    setValue(`${prefix}.subDistrictName`, titleAddress.subDistrictName);
+    setValue(`${prefix}.district`, titleAddress.district);
+    setValue(`${prefix}.districtName`, titleAddress.districtName);
+    setValue(`${prefix}.province`, titleAddress.province);
+    setValue(`${prefix}.provinceName`, titleAddress.provinceName);
+    setValue(`${prefix}.postcode`, titleAddress.postcode);
+    setValue(`${prefix}.houseNumber`, titleAddress.houseNumber);
+    setValue(`${prefix}.projectName`, titleAddress.projectName);
+    setValue(`${prefix}.moo`, titleAddress.moo);
+    setValue(`${prefix}.soi`, titleAddress.soi);
+    setValue(`${prefix}.road`, titleAddress.road);
   };
+
+  const handleAddressSelect = (address: ThaiAddress | null) => {
+    setSelectedAddress(address);
+    if (address) {
+      setValue(`${prefix}.subDistrict`, address.subDistrictCode);
+      setValue(`${prefix}.subDistrictName`, address.subDistrictName);
+      setValue(`${prefix}.district`, address.districtCode);
+      setValue(`${prefix}.districtName`, address.districtName);
+      setValue(`${prefix}.province`, address.provinceCode);
+      setValue(`${prefix}.provinceName`, address.provinceName);
+      setValue(`${prefix}.postcode`, address.postcode);
+    } else {
+      setValue(`${prefix}.subDistrict`, '');
+      setValue(`${prefix}.subDistrictName`, '');
+      setValue(`${prefix}.district`, '');
+      setValue(`${prefix}.districtName`, '');
+      setValue(`${prefix}.province`, '');
+      setValue(`${prefix}.provinceName`, '');
+      setValue(`${prefix}.postcode`, '');
+    }
+  };
+
   return (
     <>
       <TitleInformationHeader title="DOPA address" onCopy={handleCopy} className="col-span-6" />
-      <FormSection fields={dopaAddressFields} namePrefix={'titles'} index={index} />
+      <FormFields fields={dopaAddressFieldsTop} namePrefix={'titles'} index={index} />
+
+      {/* Address autocomplete row */}
+      <div className="col-span-2">
+        <AddressAutocomplete
+          label="Sub District"
+          value={selectedAddress}
+          onChange={handleAddressSelect}
+          required
+        />
+      </div>
+
+      <div className="col-span-2">
+        <TextInput
+          label="District"
+          value={selectedAddress?.districtName || ''}
+          onChange={() => {}}
+          disabled
+          required
+        />
+      </div>
+
+      <div className="col-span-2">
+        <TextInput
+          label="Province"
+          value={selectedAddress?.provinceName || ''}
+          onChange={() => {}}
+          disabled
+          required
+        />
+      </div>
+
+      <div className="col-span-2">
+        <TextInput
+          label="Postcode"
+          value={selectedAddress?.postcode || postcode || ''}
+          onChange={() => {}}
+          disabled
+        />
+      </div>
     </>
   );
 };
 
-export const dopaAddressFields: FormField[] = [
+// Fields before the autocomplete row
+export const dopaAddressFieldsTop: FormField[] = [
   {
     type: 'text-input',
     label: 'House No',
-    name: 'dopaAddress.houseNo',
+    name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
   },
   {
     type: 'text-input',
-    label: 'Room No',
-    name: 'dopaAddress.roomNo',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Floor No',
-    name: 'dopaAddress.floorNo',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Village/Building No',
-    name: 'dopaAddress.villageBuilding',
-    wrapperClassName: 'col-span-6',
+    label: 'Village/Building Name',
+    name: 'dopaAddress.projectName',
+    wrapperClassName: 'col-span-4',
   },
   {
     type: 'text-input',
@@ -67,36 +132,6 @@ export const dopaAddressFields: FormField[] = [
     label: 'Road',
     name: 'dopaAddress.road',
     wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Sub District',
-    name: 'dopaAddress.subDistrict',
-    wrapperClassName: 'col-span-2',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'District',
-    name: 'dopaAddress.district',
-    wrapperClassName: 'col-span-2',
-    required: true,
-    disabled: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Province',
-    name: 'dopaAddress.province',
-    wrapperClassName: 'col-span-2',
-    required: true,
-    disabled: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Postcode',
-    name: 'dopaAddress.postcode',
-    wrapperClassName: 'col-span-2',
-    disabled: true,
   },
 ];
 

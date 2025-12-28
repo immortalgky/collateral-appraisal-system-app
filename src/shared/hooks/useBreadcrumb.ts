@@ -26,12 +26,14 @@ const routeMap = buildRouteMap(mainNavigation);
  */
 export function useBreadcrumb(customLabel?: string, customIcon?: string) {
   const location = useLocation();
-  const { items, push, reset, setItems } = useBreadcrumbStore();
+  const items = useBreadcrumbStore(state => state.items);
+  const push = useBreadcrumbStore(state => state.push);
+  const reset = useBreadcrumbStore(state => state.reset);
+  const setItems = useBreadcrumbStore(state => state.setItems);
 
   useEffect(() => {
     const path = location.pathname;
     const navItem = routeMap.get(path);
-    const label = customLabel || navItem?.name || path.split('/').pop() || 'Page';
     const icon = customIcon || navItem?.icon;
 
     // Reset breadcrumb if navigating to home
@@ -43,12 +45,30 @@ export function useBreadcrumb(customLabel?: string, customIcon?: string) {
     // If navigating to a sidebar menu item, reset and show only that item
     // This prevents stacking when clicking different menu items
     if (navItem) {
+      const label = customLabel || navItem.name;
       setItems([{ label, href: path, icon }]);
       return;
     }
 
-    // For pages not in navigation (detail pages, etc.), push to stack
-    push({ label, href: path, icon });
+    // For pages not in navigation (detail pages, etc.):
+    // Only push/update when we have a valid customLabel
+    // This prevents showing requestId before requestNumber loads
+    if (customLabel) {
+      // Get current items directly from store to avoid stale closure
+      const currentItems = useBreadcrumbStore.getState().items;
+      const existingIndex = currentItems.findIndex(i => i.href === path);
+
+      if (existingIndex !== -1) {
+        // Only update if label actually changed
+        if (currentItems[existingIndex].label !== customLabel) {
+          const updatedItems = [...currentItems];
+          updatedItems[existingIndex] = { label: customLabel, href: path, icon };
+          setItems(updatedItems);
+        }
+      } else {
+        push({ label: customLabel, href: path, icon });
+      }
+    }
   }, [location.pathname, customLabel, customIcon, push, reset, setItems]);
 
   return { items };

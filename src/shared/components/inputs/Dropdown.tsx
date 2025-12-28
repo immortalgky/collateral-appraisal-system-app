@@ -5,12 +5,13 @@ import {
   ListboxOptions as HeadlessListboxOptions,
   ListboxSelectedOption as HeadlessListboxSelectedOption,
 } from '@headlessui/react';
-import { type ReactNode, type SelectHTMLAttributes } from 'react';
+import { forwardRef, type ReactNode, type SelectHTMLAttributes } from 'react';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useParameters } from '../../api/parameters';
 import type { ParameterParams } from '@/shared/types/api';
 import type { AtLeastOne } from '@/shared/types';
+import { useFormReadOnly } from '../form/context';
 
 type DropdownProps = DropdownBaseProps &
   AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
@@ -42,93 +43,106 @@ export type ListBoxItem = {
   id?: string | number;
 };
 
-const Dropdown = ({
-  queryParameters,
-  options,
-  value,
-  onChange,
-  label,
-  placeholder = 'Please select',
-  error,
-  required,
-  disabled,
-  ...props
-}: DropdownProps) => {
-  const { data: fetchedOptions } = useParameters(queryParameters);
-  const dropdownOptions =
-    options !== undefined
-      ? options
-      : Array.isArray(fetchedOptions)
-        ? fetchedOptions.map(p => {
-            return { value: p.code, label: p.description, id: p.code };
-          })
-        : [];
-  const isControlled = onChange !== undefined && value !== undefined;
-  const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
-  const selectedOnChange = (opt: ListBoxItem) => {
-    if (isControlled) {
-      onChange(opt.value);
-    }
-  };
+const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
+  (
+    {
+      queryParameters,
+      options,
+      value,
+      onChange,
+      label,
+      placeholder = 'Please select',
+      error,
+      required,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
+    const isReadOnly = useFormReadOnly();
+    const isDisabled = disabled || isReadOnly;
+    const { data: fetchedOptions } = useParameters(queryParameters);
+    const dropdownOptions =
+      options !== undefined
+        ? options
+        : Array.isArray(fetchedOptions)
+          ? fetchedOptions.map(p => {
+              return { value: p.code, label: p.description, id: p.code };
+            })
+          : [];
+    const isControlled = onChange !== undefined && value !== undefined;
+    const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
+    const selectedOnChange = (opt: ListBoxItem) => {
+      if (isControlled) {
+        onChange(opt.value);
+      }
+    };
 
-  return (
-    <div className={clsx('w-full', props.className)}>
-      {label && (
-        <div className="block text-xs font-medium text-gray-700 mb-1">
-          {label}
-          {required && <span className="text-danger ml-0.5">*</span>}
-        </div>
-      )}
-      <ListBox
-        value={value === undefined ? undefined : selectedOption}
-        onChange={onChange === undefined ? undefined : selectedOnChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        error={error}
-      >
-        {dropdownOptions.map(option => (
-          <ListBoxOption key={option.id ?? option.value} value={option}>
-            {option.label}
-          </ListBoxOption>
-        ))}
-      </ListBox>
-      {error && <div className="mt-1 text-xs text-danger">{error}</div>}
-    </div>
-  );
-};
-
-const ListBox = ({ placeholder, children, disabled, error, ...props }: ListBoxProps) => {
-  return (
-    <HeadlessListBox disabled={disabled} {...props}>
-      <HeadlessListboxButton
-        className={clsx(
-          'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
-          'focus:outline-none focus:ring-2',
-          disabled
-            ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-            : 'bg-white hover:border-gray-300',
-          error
-            ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
-            : 'border-gray-200 focus:ring-primary-500/20 focus:border-primary-500',
+    return (
+      <div className={clsx('w-full', props.className)}>
+        {label && (
+          <div className="block text-xs font-medium text-gray-700 mb-1">
+            {label}
+            {required && <span className="text-danger ml-0.5">*</span>}
+          </div>
         )}
-      >
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-          <Icon style="regular" name="chevron-down" className="size-3.5" />
-        </div>
-        <HeadlessListboxSelectedOption
-          placeholder={<div className="px-3 py-2 text-gray-400">{placeholder}</div>}
-          options={children}
-        />
-      </HeadlessListboxButton>
-      <HeadlessListboxOptions
-        anchor="bottom"
-        className="w-(--button-width) bg-white rounded-lg border border-gray-200 shadow-lg mt-1 py-1 z-50"
-      >
-        {children}
-      </HeadlessListboxOptions>
-    </HeadlessListBox>
-  );
-};
+        <ListBox
+          ref={ref}
+          value={value === undefined ? undefined : selectedOption}
+          onChange={onChange === undefined ? undefined : selectedOnChange}
+          placeholder={placeholder}
+          disabled={isDisabled}
+          error={error}
+        >
+          {dropdownOptions.map(option => (
+            <ListBoxOption key={option.id ?? option.value} value={option}>
+              {option.label}
+            </ListBoxOption>
+          ))}
+        </ListBox>
+        {error && <div className="mt-1 text-xs text-danger">{error}</div>}
+      </div>
+    );
+  },
+);
+
+const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
+  ({ placeholder, children, disabled, error, ...props }, ref) => {
+    return (
+      <HeadlessListBox disabled={disabled} {...props}>
+        <HeadlessListboxButton
+          ref={ref}
+          className={clsx(
+            'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
+            'focus:outline-none focus:ring-2',
+            disabled
+              ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
+              : 'bg-white hover:border-gray-300',
+            error
+              ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
+              : 'border-gray-200 focus:ring-primary-500/20 focus:border-primary-500',
+          )}
+        >
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+            <Icon style="regular" name="chevron-down" className="size-3.5" />
+          </div>
+          <HeadlessListboxSelectedOption
+            placeholder={<div className="px-3 py-2 text-gray-400">{placeholder}</div>}
+            options={children}
+          />
+        </HeadlessListboxButton>
+        <HeadlessListboxOptions
+          anchor="bottom"
+          className="w-(--button-width) bg-white rounded-lg border border-gray-200 shadow-lg mt-1 py-1 z-50"
+        >
+          {children}
+        </HeadlessListboxOptions>
+      </HeadlessListBox>
+    );
+  },
+);
+ListBox.displayName = 'ListBox';
+Dropdown.displayName = 'Dropdown';
 
 const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
   return (
