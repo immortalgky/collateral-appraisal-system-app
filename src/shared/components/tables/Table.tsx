@@ -8,12 +8,14 @@ interface TableProps<T extends Record<string, any>> extends TableHTMLAttributes<
 // TODO: Find actual keys for each mapping here
 const Table = <T extends Record<string, any>>({ data, headers, ...props }: TableProps<T>) => {
   return (
-    <div className="overflow-x-auto border-base-content/5">
-      <table className="table" {...props}>
+    <div className="overflow-x-auto">
+      <table className="table w-full" {...props}>
         <thead>
-          <tr>
+          <tr className="bg-primary/10">
             {headers.map((header, index) => (
-              <th key={index}>{header.label}</th>
+              <th key={index} className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg last:rounded-tr-lg">
+                {header.label}
+              </th>
             ))}
           </tr>
         </thead>

@@ -23,11 +23,11 @@ const TitleInformationTable = () => {
 
 function mapTitleToTableData(title: RequestTitleDtoType): TableData {
   const itemNoCandidates = [
-    title.collateral?.titleNo,
+    title.titleNo,
     title.condo?.condoRoomNo,
     title.titleAddress?.roomNo,
   ];
-  const propertyTypeCandidates = [title.collateral?.collateralType];
+  const propertyTypeCandidates = [title.collateralType];
   const buildingTypeCandidates = [title.building?.buildingType];
   return {
     itemNo: checkCandidates(itemNoCandidates),

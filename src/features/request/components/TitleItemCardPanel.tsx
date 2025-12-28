@@ -27,7 +27,7 @@ const TitleItemCardPanel = ({ name, setEditIndex }: TitleItemCardPanelProps) => 
           // TODO: Stop using index as a key here
           <TitleItemCard
             label={
-              value.collateral?.collateralType ? value.collateral?.collateralType : 'Title Item'
+              value.collateralType ? value.collateralType : 'Title Item'
             }
             description="description"
             key={index}

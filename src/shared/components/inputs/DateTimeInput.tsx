@@ -1,14 +1,9 @@
-import { type InputHTMLAttributes } from 'react';
-import Input from '../Input';
+/**
+ * DateTimeInput - DateTime picker with calendar and time selection
+ *
+ * This component wraps DateTimePickerInput to provide a calendar-based
+ * date and time selection instead of the native HTML5 datetime-local input.
+ */
+import DateTimePickerInput from './DateTimePickerInput';
 
-interface DateTimeInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  className?: string;
-}
-
-const DateTimeInput = ({ error, ...props }: DateTimeInputProps) => {
-  return <Input type="datetime-local" error={error} {...props} />;
-};
-
-export default DateTimeInput;
+export default DateTimePickerInput;

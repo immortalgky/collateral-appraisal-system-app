@@ -1,5 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
 import type { UseQueryOptions } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { LoginCredentials, LoginResponse, User } from './types';
 import { useAuthStore } from './store';
@@ -28,7 +28,7 @@ export const useCurrentUser = () => {
   } as UseQueryOptions<User, Error, User, string[]>);
 };
 
-// Function to login
+// Function to log in
 export const useLogin = () => {
   const { login, setLoading, setError } = useAuthStore();
 

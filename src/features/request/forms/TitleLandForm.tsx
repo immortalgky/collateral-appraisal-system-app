@@ -1,4 +1,4 @@
-import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import { FormFields, type FormField } from '@/shared/components/form';
 
 interface TitleLandFormProps {
   index: number;
@@ -7,49 +7,52 @@ interface TitleLandFormProps {
 
 const TitleLandForm = ({ index, variant = 'land' }: TitleLandFormProps) => {
   const fields = variant === 'land' ? landLandVariantFields : landFields;
-  return <FormSection fields={fields} namePrefix={'titles'} index={index} />;
+  return <FormFields fields={fields} namePrefix={'titles'} index={index} />;
 };
 
 const landFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Title No',
-    name: 'collateral.titleNo',
+    name: 'titleNo',
     wrapperClassName: 'col-span-6',
     required: true,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Rai',
-    name: 'area.rai',
+    name: 'areaRai',
     wrapperClassName: 'col-span-1',
     required: true,
+    decimalPlaces: 0,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Ngan',
-    name: 'area.ngan',
+    name: 'areaNgan',
     wrapperClassName: 'col-span-1',
     required: true,
+    decimalPlaces: 0,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Wa',
-    name: 'area.wa',
+    name: 'areaSquareWa',
     wrapperClassName: 'col-span-1',
     required: true,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
     label: 'Owner',
-    name: 'collateral.owner',
+    name: 'ownerName',
     wrapperClassName: 'col-span-6',
     required: true,
   },
   {
     type: 'textarea',
     label: 'Title Detail',
-    name: 'collateral.titleDetail',
+    name: 'titleDetail',
     wrapperClassName: 'col-span-6',
   },
 ];

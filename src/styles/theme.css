@@ -1,83 +1,103 @@
 @theme {
-  /* LH Bank Brand Colors - Based on logo color bars */
-  /* Primary: Blue - professional, trustworthy */
-  --color-primary: #0369a1;
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
-  --color-primary-950: #082f49;
+    /* ========================================
+       Base Colors
+       ======================================== */
+    --color-base-100: oklch(100% 0 0);
+    --color-base-200: oklch(98% 0 0);
+    --color-base-300: oklch(95% 0 0);
+    --color-base-content: #1f2937;
 
-  /* Secondary: Purple/Magenta from logo */
-  --color-secondary: #7c3aed;
-  --color-secondary-50: #f5f3ff;
-  --color-secondary-100: #ede9fe;
-  --color-secondary-200: #ddd6fe;
-  --color-secondary-300: #c4b5fd;
-  --color-secondary-400: #a78bfa;
-  --color-secondary-500: #8b5cf6;
-  --color-secondary-600: #7c3aed;
-  --color-secondary-700: #6d28d9;
-  --color-secondary-800: #5b21b6;
-  --color-secondary-900: #4c1d95;
+    /* ========================================
+       Primary - Teal (Trust & Growth)
+       Professional banking green
+       ======================================== */
+    --color-primary: #0D9488;
+    --color-primary-content: #ffffff;
+    /* Shades for UI states */
+    --color-primary-50: #F0FDFA;
+    --color-primary-100: #CCFBF1;
+    --color-primary-200: #99F6E4;
+    --color-primary-300: #5EEAD4;
+    --color-primary-400: #2DD4BF;
+    --color-primary-500: #14B8A6;
+    --color-primary-600: #0D9488;
+    --color-primary-700: #0F766E;
+    --color-primary-800: #115E59;
+    --color-primary-900: #134E4A;
 
-  /* Accent: Yellow/Gold from logo */
-  --color-accent: #f59e0b;
-  --color-accent-50: #fffbeb;
-  --color-accent-100: #fef3c7;
-  --color-accent-200: #fde68a;
-  --color-accent-300: #fcd34d;
-  --color-accent-400: #fbbf24;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
-  --color-accent-700: #b45309;
-  --color-accent-800: #92400e;
-  --color-accent-900: #78350f;
+    /* ========================================
+       Secondary - Slate (Professional & Balanced)
+       Neutral complement to teal
+       ======================================== */
+    --color-secondary: #475569;
+    --color-secondary-content: #ffffff;
+    --color-secondary-50: #F8FAFC;
+    --color-secondary-100: #F1F5F9;
+    --color-secondary-200: #E2E8F0;
+    --color-secondary-300: #CBD5E1;
+    --color-secondary-400: #94A3B8;
+    --color-secondary-500: #64748B;
+    --color-secondary-600: #475569;
+    --color-secondary-700: #334155;
+    --color-secondary-800: #1E293B;
+    --color-secondary-900: #0F172A;
 
-  /* Success: Green from logo */
-  --color-success: #22c55e;
-  --color-success-50: #f0fdf4;
-  --color-success-100: #dcfce7;
-  --color-success-200: #bbf7d0;
-  --color-success-300: #86efac;
-  --color-success-400: #4ade80;
-  --color-success-500: #22c55e;
-  --color-success-600: #16a34a;
-  --color-success-700: #15803d;
-  --color-success-800: #166534;
-  --color-success-900: #14532d;
+    /* ========================================
+       Semantic Colors
+       ======================================== */
+    /* Accent - Gold (Premium, Wealth) */
+    --color-accent: #D97706;
+    --color-accent-content: #ffffff;
 
-  /* Danger/Error */
-  --color-danger: #ef4444;
-  --color-danger-50: #fef2f2;
-  --color-danger-100: #fee2e2;
-  --color-danger-200: #fecaca;
-  --color-danger-300: #fca5a5;
-  --color-danger-400: #f87171;
-  --color-danger-500: #ef4444;
-  --color-danger-600: #dc2626;
-  --color-danger-700: #b91c1c;
-  --color-danger-800: #991b1b;
-  --color-danger-900: #7f1d1d;
+    /* Success - Green */
+    --color-success: #22C55E;
+    --color-success-content: #ffffff;
+    --color-success-50: #F0FDF4;
+    --color-success-100: #DCFCE7;
+    --color-success-500: #22C55E;
+    --color-success-600: #16A34A;
 
-  /* Neutrals */
-  --color-neutral-1: #fafafa;
-  --color-neutral-2: #f7f7f7;
-  --color-neutral-3: #f1f1f1;
-  --color-neutral-4: #676769;
-  --color-neutral-5: #383838;
-  --color-neutral-6: #1f1f21;
-  --color-neutral-7: #5d5d5f;
+    /* Warning - Amber */
+    --color-warning: #F59E0B;
+    --color-warning-content: #422006;
 
-  /* Misc/Border colors */
-  --color-misc-1: #d2d2d2;
-  --color-misc-2: #c6c6c6;
-  --color-misc-3: #bfc5ce;
-  --color-misc-4: #e3eaf3;
+    /* Info - Blue */
+    --color-info: #3b82f6;
+    --color-info-content: #1e3a5f;
+
+    /* Error/Danger - Red */
+    --color-error: #EF4444;
+    --color-error-content: #450a0a;
+    --color-danger: #EF4444;
+    --color-danger-content: #450a0a;
+    /* Shades for UI states */
+    --color-danger-50: #fef2f2;
+    --color-danger-100: #fee2e2;
+    --color-danger-300: #fca5a5;
+    --color-danger-500: #EF4444;
+    --color-danger-600: #dc2626;
+    --color-danger-900: #7f1d1d;
+
+    /* ========================================
+       Neutral
+       ======================================== */
+    --color-neutral: #1f2937;
+    --color-neutral-content: #f9fafb;
+
+    /* ========================================
+       daisyUI Component Settings
+       ======================================== */
+    /* Border radius */
+    --radius-selector: 0.5rem;
+    --radius-field: 0.25rem;
+    --radius-box: 0.5rem;
+
+    /* Base sizes */
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+
+    /* Effects */
+    --depth: 1;
+    --noise: 0;
 }

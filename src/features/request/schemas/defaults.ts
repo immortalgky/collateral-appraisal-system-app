@@ -1,0 +1,57 @@
+import { type createRequestFormType } from './form';
+
+export const createRequestFormDefault: createRequestFormType = {
+  purpose: '',
+  channel: '',
+  priority: 'normal',
+  isPma: false,
+  creator: null,
+  requestor: null,
+  detail: {
+    hasAppraisalBook: false,
+    loanDetail: {
+      bankingSegment: '',
+      loanApplicationNumber: '',
+      facilityLimit: 0,
+      additionalFacilityLimit: 0,
+      previousFacilityLimit: 0,
+      totalSellingPrice: 0,
+    },
+    prevAppraisalId: '',
+    prevAppraisalValue: null,
+    prevAppraisalDate: null,
+    address: {
+      houseNumber: '',
+      projectName: '',
+      moo: '',
+      soi: '',
+      road: '',
+      subDistrict: '',
+      subDistrictName: '',
+      district: '',
+      districtName: '',
+      province: '',
+      provinceName: '',
+      postcode: '',
+    },
+    contact: {
+      contactPersonName: '',
+      contactPersonPhone: '',
+      dealerCode: '',
+    },
+    appointment: {
+      appointmentDateTime: '',
+      appointmentLocation: '',
+    },
+    fee: {
+      feePaymentType: '',
+      feeNotes: '',
+      absorbedAmount: 0,
+    },
+  },
+  customers: [],
+  properties: [],
+  titles: [],
+  documents: [],
+  comments: [],
+};
