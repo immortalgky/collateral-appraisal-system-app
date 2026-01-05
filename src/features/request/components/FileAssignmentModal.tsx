@@ -8,7 +8,6 @@ import {
   MOCK_REQUEST_DOCUMENTS,
   MOCK_TITLE_DOCUMENTS,
   type DocumentTypeInfo,
-  type UploadedDocument,
 } from '../types/document';
 
 interface FileAssignmentModalProps {
@@ -56,7 +55,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
             filePath: file.filePath,
             entityType: 'request' as const,
             entityIndex: -1,
-            docType: '',
+            docType: MOCK_REQUEST_DOCUMENTS[0]?.type || '', // Default to first document type
             set: 1,
             comment: '',
           },
@@ -115,15 +114,29 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
     return `${mb.toFixed(1)} MB`;
   };
 
-  const getFileIcon = (fileName: string) => {
+  const getFilePreview = (fileName: string, file?: File) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
+
+    // Show image thumbnail for image files
+    if (['png', 'jpg', 'jpeg', 'gif'].includes(extension || '') && file) {
+      const imageUrl = URL.createObjectURL(file);
+      return (
+        <img
+          src={imageUrl}
+          alt={fileName}
+          className="w-12 h-12 object-cover rounded border border-gray-200"
+          onLoad={() => URL.revokeObjectURL(imageUrl)}
+        />
+      );
+    }
+
     if (extension === 'pdf') {
-      return <Icon name="file-pdf" style="solid" className="w-8 h-8 text-red-500" />;
+      return <Icon name="file-pdf" style="solid" className="w-10 h-10 text-red-500" />;
     }
     if (['png', 'jpg', 'jpeg', 'gif'].includes(extension || '')) {
-      return <Icon name="file-image" style="solid" className="w-8 h-8 text-blue-500" />;
+      return <Icon name="file-image" style="solid" className="w-10 h-10 text-blue-500" />;
     }
-    return <Icon name="file" style="solid" className="w-8 h-8 text-gray-500" />;
+    return <Icon name="file" style="solid" className="w-10 h-10 text-gray-500" />;
   };
 
   return (
@@ -155,7 +168,20 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                   Document Type
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  Set
+                  <div className="flex items-center gap-1">
+                    <span>Set</span>
+                    <div className="group relative">
+                      <Icon
+                        name="circle-question"
+                        style="regular"
+                        className="w-3.5 h-3.5 text-gray-400 cursor-help"
+                      />
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                        Set number for multiple copies of the same document
+                        <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-800" />
+                      </div>
+                    </div>
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
                   Comment
@@ -173,7 +199,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                   <tr key={file.documentId} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {getFileIcon(file.fileName)}
+                        {getFilePreview(file.fileName, file.file)}
                         <div className="flex flex-col min-w-0">
                           <span className="text-sm font-medium text-gray-900 truncate">
                             {file.fileName}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
@@ -7,11 +7,17 @@ import FileInput from '@/shared/components/inputs/FileInput';
 import clsx from 'clsx';
 import { type UploadDocumentResponse, useUploadDocument } from '../api';
 import FileAssignmentModal from './FileAssignmentModal';
-import { getDocumentCategory, type UploadedDocument } from '../types/document';
+import { getDocumentCategory, getDocumentTypeInfo, type UploadedDocument } from '../types/document';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
 const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
+
+interface UploadProgress {
+  fileName: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  errorMessage?: string;
+}
 
 interface CreateRequestFileInputProps {
   getOrCreateSession: () => Promise<string>;
@@ -27,7 +33,8 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
   const [, setSelectedFiles] = useState<FileList | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const isUploading = uploadProgress.length > 0;
 
   const validateFiles = (files: FileList): { valid: File[]; errors: string[] } => {
     const valid: File[] = [];
@@ -93,10 +100,26 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     setShowAssignmentModal(true);
   };
 
+  // Update progress for a specific file
+  const updateFileProgress = useCallback(
+    (fileName: string, status: UploadProgress['status'], errorMessage?: string) => {
+      setUploadProgress(prev =>
+        prev.map(p => (p.fileName === fileName ? { ...p, status, errorMessage } : p)),
+      );
+    },
+    [],
+  );
+
   const handleAssign = async (assignments: any[]) => {
-    // Close modal and show uploading state
+    // Close modal and initialize progress tracking
     setShowAssignmentModal(false);
-    setIsUploading(true);
+
+    // Initialize progress for all files
+    const initialProgress: UploadProgress[] = assignments.map(a => ({
+      fileName: a.file.name,
+      status: 'pending' as const,
+    }));
+    setUploadProgress(initialProgress);
 
     try {
       // Get or create upload session first
@@ -107,6 +130,9 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       let failedCount = 0;
 
       for (const assignment of assignments) {
+        // Update status to uploading
+        updateFileProgress(assignment.file.name, 'uploading');
+
         try {
           // Upload single file with session
           await new Promise<void>(resolve => {
@@ -124,18 +150,29 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
                     documentId: uploadedDoc.documentId,
                     fileName: uploadedDoc.fileName,
                   });
+                  updateFileProgress(assignment.file.name, 'success');
                   resolve();
                 },
-                onError: error => {
+                onError: (error: any) => {
                   console.error('Upload failed for file:', assignment.file.name, error);
+                  updateFileProgress(
+                    assignment.file.name,
+                    'error',
+                    error.apiError?.detail || 'Upload failed',
+                  );
                   failedCount++;
                   resolve(); // Continue with other files
                 },
               },
             );
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error('Upload failed for file:', assignment.file.name, error);
+          updateFileProgress(
+            assignment.file.name,
+            'error',
+            error.apiError?.detail || 'Upload failed',
+          );
           failedCount++;
         }
       }
@@ -145,15 +182,22 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       const titleDocsMap: Record<number, UploadedDocument[]> = {};
 
       uploadResults.forEach(({ assignment, documentId, fileName }) => {
+        const docTypeInfo = getDocumentTypeInfo(assignment.docType);
         const newDoc: UploadedDocument = {
+          id: null,
+          titleId: null,
           documentId,
-          docType: assignment.docType,
-          fileName,
-          uploadDate: new Date().toISOString(),
+          documentType: assignment.docType || null,
+          fileName: fileName,
+          uploadedAt: new Date().toISOString(),
           prefix: null,
-          set: assignment.set,
-          comment: assignment.comment || null,
+          set: assignment.set ?? 1,
+          documentDescription: assignment.comment || null,
           filePath: null,
+          createdWorkstation: null,
+          isRequired: docTypeInfo?.isRequired || false,
+          uploadedBy: null,
+          uploadedByName: null,
           file: assignment.file,
         };
 
@@ -169,8 +213,8 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
 
       // Update form state
       if (requestDocs.length > 0) {
-        const currentRequestDocs = watch('requestDocuments') || [];
-        setValue('requestDocuments', [...currentRequestDocs, ...requestDocs], {
+        const currentDocs = watch('documents') || [];
+        setValue('documents', [...currentDocs, ...requestDocs], {
           shouldDirty: true,
         });
       }
@@ -178,8 +222,8 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       // Update title documents
       Object.entries(titleDocsMap).forEach(([index, docs]) => {
         const titleIndex = parseInt(index);
-        const currentTitleDocs = watch(`titles.${titleIndex}.titleDocuments`) || [];
-        setValue(`titles.${titleIndex}.titleDocuments`, [...currentTitleDocs, ...docs], {
+        const currentTitleDocs = watch(`titles.${titleIndex}.documents`) || [];
+        setValue(`titles.${titleIndex}.documents`, [...currentTitleDocs, ...docs], {
           shouldDirty: true,
         });
       });
@@ -187,7 +231,6 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       // Reset state
       setUploadedFiles([]);
       setSelectedFiles(null);
-      setIsUploading(false);
 
       // Show success/partial message
       if (failedCount > 0) {
@@ -196,14 +239,32 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       if (uploadResults.length > 0) {
         toast.success(`Successfully uploaded ${uploadResults.length} document(s)`);
       }
-    } catch (error) {
+
+      // Clear progress after a delay to show completion
+      setTimeout(() => {
+        setUploadProgress([]);
+      }, 2000);
+    } catch (error: any) {
       console.error('Session creation failed:', error);
-      toast.error('Failed to create upload session. Please try again.');
+      toast.error(error.apiError?.detail || 'Failed to create upload session. Please try again.');
+
+      // Mark all pending as error
+      setUploadProgress(prev =>
+        prev.map(p =>
+          p.status === 'pending' || p.status === 'uploading'
+            ? { ...p, status: 'error' as const, errorMessage: 'Session creation failed' }
+            : p,
+        ),
+      );
 
       // Reset state on error
       setUploadedFiles([]);
       setSelectedFiles(null);
-      setIsUploading(false);
+
+      // Clear progress after a delay
+      setTimeout(() => {
+        setUploadProgress([]);
+      }, 3000);
     }
   };
 
@@ -242,36 +303,41 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={clsx(
-            'w-full',
-            'border-2',
-            'border-dashed',
-            'p-10',
-            'transition-all',
-            'duration-200',
+            'w-full border-2 border-dashed rounded-2xl p-8 transition-all duration-200 cursor-pointer',
             isDragging
-              ? 'border-blue-500 bg-blue-100 scale-105'
-              : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50',
+              ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg shadow-primary/10'
+              : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300',
             isPending && 'opacity-50 cursor-not-allowed',
           )}
         >
-          <div className={clsx('flex', 'flex-col', 'gap-5', 'items-center', 'justify-center')}>
+          <div className="flex flex-col items-center justify-center">
             {isPending ? (
               <LoadingSpinner size="lg" variant="document" text="Uploading files..." />
             ) : (
               <>
-                <Icon
-                  style="solid"
-                  name={isDragging ? 'cloud-arrow-up' : 'folder-open'}
+                <div
                   className={clsx(
-                    'text-6xl',
-                    isDragging ? 'text-blue-600 animate-bounce' : 'text-gray-400',
+                    'w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-200',
+                    isDragging
+                      ? 'bg-primary/10 text-primary animate-bounce'
+                      : 'bg-gray-100 text-gray-400',
                   )}
-                />
-                <p className={clsx('font-medium', isDragging ? 'text-blue-600' : 'text-gray-600')}>
-                  {isDragging ? 'Drop files here' : 'Drag and drop your files here or choose files'}
+                >
+                  <Icon style="solid" name="cloud-arrow-up" className="text-2xl" />
+                </div>
+                <p
+                  className={clsx(
+                    'text-sm font-medium mb-1 transition-colors',
+                    isDragging ? 'text-primary' : 'text-gray-600',
+                  )}
+                >
+                  {isDragging ? 'Drop files here' : 'Click to upload'}
                 </p>
+                <p className="text-xs text-gray-400">or drag and drop files</p>
                 {!isDragging && (
-                  <p className="text-sm text-gray-400">Supported: PDF, PNG, JPG (Max 10MB each)</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Supported: PDF, PNG, JPG (Max 10MB each)
+                  </p>
                 )}
               </>
             )}
@@ -312,12 +378,59 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
         onAssign={handleAssign}
       />
 
-      {/* Upload loading overlay */}
+      {/* Inline upload progress */}
       {isUploading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-8 shadow-xl flex flex-col items-center gap-4">
-            <LoadingSpinner size="lg" variant="document" text="Uploading documents..." />
-            <p className="text-sm text-gray-500">Please wait while we upload your files</p>
+        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <LoadingSpinner size="sm" variant="default" />
+              <span className="text-sm font-medium text-gray-700">Uploading documents...</span>
+            </div>
+            <span className="text-xs text-gray-500">
+              {uploadProgress.filter(p => p.status === 'success').length}/{uploadProgress.length}{' '}
+              complete
+            </span>
+          </div>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {uploadProgress.map((progress, index) => (
+              <div
+                key={index}
+                className={clsx(
+                  'flex items-center gap-3 p-2 rounded-lg text-sm',
+                  progress.status === 'success' && 'bg-green-50',
+                  progress.status === 'error' && 'bg-red-50',
+                  progress.status === 'uploading' && 'bg-blue-50',
+                  progress.status === 'pending' && 'bg-gray-50',
+                )}
+              >
+                {progress.status === 'pending' && (
+                  <Icon name="clock" style="regular" className="w-4 h-4 text-gray-400" />
+                )}
+                {progress.status === 'uploading' && (
+                  <LoadingSpinner size="sm" variant="default" />
+                )}
+                {progress.status === 'success' && (
+                  <Icon name="circle-check" style="solid" className="w-4 h-4 text-green-600" />
+                )}
+                {progress.status === 'error' && (
+                  <Icon name="circle-xmark" style="solid" className="w-4 h-4 text-red-600" />
+                )}
+                <span
+                  className={clsx(
+                    'flex-1 truncate',
+                    progress.status === 'success' && 'text-green-700',
+                    progress.status === 'error' && 'text-red-700',
+                    progress.status === 'uploading' && 'text-blue-700',
+                    progress.status === 'pending' && 'text-gray-600',
+                  )}
+                >
+                  {progress.fileName}
+                </span>
+                {progress.status === 'error' && progress.errorMessage && (
+                  <span className="text-xs text-red-500">{progress.errorMessage}</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
