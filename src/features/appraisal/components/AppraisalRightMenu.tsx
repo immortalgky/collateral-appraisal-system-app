@@ -1,52 +1,124 @@
 import { useState } from 'react';
 import clsx from 'clsx';
+import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import { SidebarLabel, InfoRow, PersonRow } from '@/shared/components/rightmenu';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../context/AppraisalContext';
+import { MapPreview } from './MapPreview';
+import { useAuthStore } from '@/features/auth/store';
+import { useAddComment, useUpdateComment, useDeleteComment, useGetComments } from '@/features/request/api';
+import { getRelativeTimeString } from '@/shared/utils/dateUtils';
 
 interface AppraisalRightMenuProps {
   onClose?: () => void;
 }
 
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  createdAt: Date;
-}
-
 const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'comments'>('overview');
   const [newComment, setNewComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
   const { appraisal, isLoading } = useAppraisalContext();
+  const requestId = appraisal?.requestId;
+  const currentUser = useAuthStore((state) => state.user);
+
+  // API queries and mutations
+  const { data: commentsData, isLoading: isCommentsLoading } = useGetComments(requestId);
+  const comments = commentsData?.comments ?? [];
+  const addCommentMutation = useAddComment();
+  const updateCommentMutation = useUpdateComment();
+  const deleteCommentMutation = useDeleteComment();
+
+  // Helper to get initials from name
+  const getInitials = (name: string): string => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    const comment: Comment = {
-      id: `comment-${Date.now()}`,
-      text: newComment.trim(),
-      author: 'Me',
-      createdAt: new Date(),
-    };
-    setComments(prev => [...prev, comment]);
-    setNewComment('');
+    if (!newComment.trim() || !requestId || !currentUser) return;
+
+    addCommentMutation.mutate(
+      {
+        requestId,
+        data: {
+          comment: newComment.trim(),
+          commentedBy: currentUser.id,
+          commentedByName: currentUser.name,
+        },
+      },
+      {
+        onSuccess: () => {
+          setNewComment('');
+          queryClient.invalidateQueries({ queryKey: ['comments', requestId] });
+        },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || 'Failed to add comment');
+        },
+      },
+    );
   };
 
-  const getRelativeTime = (date: Date): string => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString();
+  const handleEditClick = (commentId: string, commentText: string) => {
+    setEditingId(commentId);
+    setEditText(commentText);
   };
 
-  const getInitials = (name: string): string => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const handleSaveEdit = () => {
+    if (!editText.trim() || !requestId || !editingId) return;
+
+    updateCommentMutation.mutate(
+      {
+        requestId,
+        commentId: editingId,
+        comment: editText.trim(),
+      },
+      {
+        onSuccess: () => {
+          handleCancelEdit();
+          queryClient.invalidateQueries({ queryKey: ['comments', requestId] });
+        },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || 'Failed to update comment');
+        },
+      },
+    );
+  };
+
+  const confirmDelete = () => {
+    if (!deleteConfirmId || !requestId) return;
+
+    deleteCommentMutation.mutate(
+      {
+        requestId,
+        commentId: deleteConfirmId,
+      },
+      {
+        onSuccess: () => {
+          setDeleteConfirmId(null);
+          queryClient.invalidateQueries({ queryKey: ['comments', requestId] });
+        },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || 'Failed to delete comment');
+        },
+      },
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -151,13 +223,18 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
             type="button"
             onClick={() => setActiveTab('comments')}
             className={clsx(
-              'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all',
+              'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all relative',
               activeTab === 'comments'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700',
             )}
           >
             Comments
+            {comments.length > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-primary text-white rounded-full">
+                {comments.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -261,12 +338,43 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 />
               </div>
             </div>
+
+            {/* Property Location Map */}
+            <div>
+              <SidebarLabel>Property Location</SidebarLabel>
+              <div className="mt-2">
+                <MapPreview
+                  latitude={appraisal.propertyLatitude}
+                  longitude={appraisal.propertyLongitude}
+                  address={appraisal.appointmentLocation}
+                />
+              </div>
+            </div>
           </div>
         ) : (
           <>
             {/* Comments list - scrollable */}
             <div className="flex-1 overflow-y-auto min-h-0 p-4">
-              {comments.length === 0 ? (
+              {isCommentsLoading ? (
+                // Skeleton loading
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-2.5 bg-gray-50 rounded-lg animate-pulse">
+                      <div className="flex items-start gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="h-3 w-16 bg-gray-200 rounded" />
+                            <div className="h-3 w-12 bg-gray-200 rounded" />
+                          </div>
+                          <div className="h-3 w-full bg-gray-200 rounded" />
+                          <div className="h-3 w-2/3 bg-gray-200 rounded mt-1" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : comments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center py-8">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
                     <Icon style="regular" name="comments" className="size-5 text-gray-400" />
@@ -276,24 +384,92 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {comments.map(comment => (
-                    <div key={comment.id} className="p-2.5 bg-gray-50 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                          <span className="text-[10px] font-medium text-primary-700">
-                            {getInitials(comment.author)}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-900">{comment.author}</span>
-                            <span className="text-xs text-gray-400">{getRelativeTime(comment.createdAt)}</span>
+                  {comments.map(comment => {
+                    const isOwnComment = comment.commentedBy === currentUser?.id;
+                    const isEditing = editingId === comment.id;
+                    const displayName = comment.commentedBy === currentUser?.id ? 'Me' : comment.commentedByName;
+                    const timeDisplay = getRelativeTimeString(comment.commentedAt);
+
+                    return (
+                      <div
+                        key={comment.id}
+                        className="group relative p-2.5 bg-gray-50 rounded-lg"
+                      >
+                        {isEditing ? (
+                          // Edit mode
+                          <div className="flex flex-col gap-2">
+                            <textarea
+                              value={editText}
+                              onChange={e => setEditText(e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                              rows={2}
+                            />
+                            <div className="flex gap-1.5 justify-end">
+                              <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSaveEdit}
+                                disabled={!editText.trim() || updateCommentMutation.isPending}
+                                className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/80 transition-colors disabled:opacity-50"
+                              >
+                                {updateCommentMutation.isPending ? 'Saving...' : 'Save'}
+                              </button>
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-600 mt-0.5 break-words">{comment.text}</p>
-                        </div>
+                        ) : (
+                          // View mode
+                          <div className="flex items-start gap-2">
+                            <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                              <span className="text-[10px] font-medium text-primary-700">
+                                {getInitials(comment.commentedByName)}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-gray-900">
+                                  {displayName}
+                                </span>
+                                <span className="text-xs text-gray-400">{timeDisplay}</span>
+                                {comment.lastModifiedAt && (
+                                  <span className="text-xs text-gray-400 italic">(edited)</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-600 mt-0.5 break-words">
+                                {comment.comment}
+                              </p>
+                            </div>
+                            {/* Show edit/delete only for own comments */}
+                            {isOwnComment && (
+                              <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 shrink-0 transition-opacity">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditClick(comment.id, comment.comment)}
+                                  className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-primary hover:bg-primary-50 transition-all"
+                                  title="Edit"
+                                >
+                                  <Icon style="regular" name="pen" className="size-2.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteConfirmId(comment.id)}
+                                  className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-danger-500 hover:bg-danger-50 transition-all"
+                                  title="Delete"
+                                >
+                                  <Icon style="solid" name="xmark" className="size-3" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -307,12 +483,13 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   onChange={e => setNewComment(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder="Add a comment..."
-                  className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  disabled={!requestId || addCommentMutation.isPending}
+                  className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={handleAddComment}
-                  disabled={!newComment.trim()}
+                  disabled={!newComment.trim() || !requestId || addCommentMutation.isPending}
                   className="px-2.5 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Icon style="solid" name="paper-plane" className="size-3.5" />
@@ -322,6 +499,18 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

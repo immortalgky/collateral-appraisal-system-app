@@ -73,8 +73,8 @@ export default function AppointmentAndFeePage() {
       console.log('Form submitted:', data);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
       toast.success('Appointment & Fee saved successfully');
-    } catch (error) {
-      toast.error('Failed to save. Please try again.');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to save. Please try again.');
       console.error('Save error:', error);
     } finally {
       setIsSubmitting(false);
@@ -89,8 +89,8 @@ export default function AppointmentAndFeePage() {
       console.log('Save draft:', data);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
       toast.success('Draft saved successfully');
-    } catch (error) {
-      toast.error('Failed to save draft. Please try again.');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
       console.error('Save draft error:', error);
     } finally {
       setIsSavingDraft(false);

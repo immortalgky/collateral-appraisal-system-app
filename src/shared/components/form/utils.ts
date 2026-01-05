@@ -173,9 +173,11 @@ export function getFieldConstraints(
 export function constraintsToInputProps(constraints: FieldConstraints) {
   const props: Record<string, any> = {};
 
-  // Note: We intentionally do NOT pass `required` to HTML elements
-  // to allow React Hook Form to handle validation instead of browser native validation.
-  // The red asterisk (*) is shown via the `required` prop in the label, not the HTML attribute.
+  // Note: We do NOT pass `required` to HTML elements (components destructure it out).
+  // React Hook Form handles validation. This is used by components for the asterisk indicator.
+  if (constraints.required !== undefined) {
+    props.required = constraints.required;
+  }
 
   if (constraints.minLength !== undefined) {
     props.minLength = constraints.minLength;

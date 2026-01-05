@@ -104,7 +104,8 @@ export const CreateCollateralCondoRequest = z
   })
   .passthrough();
 
-export const CreateCondoResponseType = z.object({ isSuccess: z.boolean() }).passthrough();
+export const CreateCondoResponseSchema = z.object({ isSuccess: z.boolean() }).passthrough();
+export type CreateCondoResponseType = z.infer<typeof CreateCondoResponseSchema>;
 
 export type CreateCondoRequestType = z.infer<typeof CreateCollateralCondoRequest>;
 export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;

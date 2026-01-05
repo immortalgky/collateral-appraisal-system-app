@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '@shared/components/Icon';
 
 interface ContextMenuItem {
@@ -23,6 +23,35 @@ export const PropertyContextMenu = ({
   onClose,
 }: PropertyContextMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x, y });
+
+  useEffect(() => {
+    // Adjust position to keep menu within viewport
+    if (menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let adjustedX = x;
+      let adjustedY = y;
+
+      // Adjust if menu goes beyond right edge
+      if (x + rect.width > viewportWidth) {
+        adjustedX = viewportWidth - rect.width - 8;
+      }
+
+      // Adjust if menu goes beyond bottom edge
+      if (y + rect.height > viewportHeight) {
+        adjustedY = viewportHeight - rect.height - 8;
+      }
+
+      // Ensure menu doesn't go beyond left or top edge
+      adjustedX = Math.max(8, adjustedX);
+      adjustedY = Math.max(8, adjustedY);
+
+      setPosition({ x: adjustedX, y: adjustedY });
+    }
+  }, [x, y]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,9 +80,9 @@ export const PropertyContextMenu = ({
       ref={menuRef}
       style={{
         position: 'fixed',
-        top: y,
-        left: x,
-        zIndex: 1000,
+        top: position.y,
+        left: position.x,
+        zIndex: 9999,
       }}
       className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[180px]"
     >

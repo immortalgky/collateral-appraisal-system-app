@@ -1,4 +1,3 @@
-import type { Modifier } from '@dnd-kit/core';
 import { useWatch, type Control, type FieldValues } from 'react-hook-form';
 
 interface DerivedCellProps {
@@ -16,6 +15,10 @@ const DerivedCell = ({ arrayName, rowIndex, fieldName, render, modifier }: Deriv
 
   const value = useWatch({ name: cellName });
 
+  const renderValue = (displayValue: string | number | boolean) => {
+    return <span className="truncate">{displayValue}</span>;
+  };
+
   if (value != undefined) {
     if (modifier != undefined) {
       if (render != undefined) {
@@ -23,10 +26,10 @@ const DerivedCell = ({ arrayName, rowIndex, fieldName, render, modifier }: Deriv
       }
       return (
         <span
-          className="items-center justify-center text-sm truncate text-gray-600 w-full"
+          className="items-center justify-center text-xs truncate text-gray-600 w-full"
           title={modifier(value).toString()}
         >
-          {modifier(value)}
+          {renderValue(modifier(value))}
         </span>
       );
     } else if (render != undefined) {
@@ -34,10 +37,10 @@ const DerivedCell = ({ arrayName, rowIndex, fieldName, render, modifier }: Deriv
     }
     return (
       <span
-        className="items-center justify-center text-sm truncate text-gray-600 w-full"
+        className="items-center justify-center text-xs truncate text-gray-600 w-full"
         title={value}
       >
-        {value}
+        {renderValue(value)}
       </span>
     );
   }

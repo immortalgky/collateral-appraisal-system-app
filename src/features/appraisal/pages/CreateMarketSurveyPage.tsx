@@ -72,7 +72,7 @@ const CreateMarketSurveyPage = () => {
   return (
     <div>
       <div className="flex flex-col gap-4 mb-6">
-        <AppHeader iconVariant="folder" title={'Request for Credit Limit'} />
+        <AppHeader title="Create Market Survey" />
       </div>
       <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
         <FormProvider {...methods}>

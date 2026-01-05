@@ -1,12 +1,19 @@
 export interface UploadedDocument {
-  documentId?: string;
-  docType: string | null;
+  id?: string | null;
+  titleId?: string | null;
+  documentId?: string | null;
+  documentType: string | null;
   fileName: string | null;
-  uploadDate: string;
+  uploadedAt: string;
   prefix: string | null;
   set: number;
-  comment: string | null;
+  documentDescription: string | null;
   filePath: string | null;
+  createdWorkstation: string | null;
+  isRequired: boolean;
+  uploadedBy: string | null;
+  uploadedByName: string | null;
+  // Local-only fields (not sent to API)
   file?: File;
   isUploading?: boolean;
 }

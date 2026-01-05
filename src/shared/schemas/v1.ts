@@ -19,7 +19,7 @@ const RequestTitleDocumentDto = z
     titleId: z.string().uuid().nullable(),
     documentId: z.string().uuid().nullable(),
     documentType: z.string().nullable(),
-    filename: z.string().nullable(),
+    fileName: z.string().nullable(),
     prefix: z.string().nullable(),
     set: z.number().int(),
     documentDescription: z.string().nullable(),
@@ -28,7 +28,7 @@ const RequestTitleDocumentDto = z
     isRequired: z.boolean(),
     uploadedBy: z.string().nullable(),
     uploadedByName: z.string().nullable(),
-    uploadedAt: z.string().datetime({ offset: true }),
+    uploadedAt: z.string(),
   })
   .partial()
   .passthrough();
@@ -144,7 +144,7 @@ const ContactDto = z
   .passthrough();
 const AppointmentDto = z
   .object({
-    appointmentDateTime: z.string().datetime({ offset: true }).nullable(),
+    appointmentDate: z.string().datetime({ offset: true }).nullable(),
     appointmentLocation: z.string().nullable(),
   })
   .passthrough();
@@ -178,20 +178,20 @@ const RequestPropertyDto = z
   .passthrough();
 const RequestDocumentDto = z
   .object({
-    id: z.string().uuid().nullable(),
-    requestId: z.string().uuid(),
-    documentId: z.string().uuid().nullable(),
-    documentType: z.string(),
-    fileName: z.string().nullable(),
-    prefix: z.string().nullable(),
-    set: z.number().int().nullable(),
-    notes: z.string().nullable(),
-    filePath: z.string().nullable(),
-    source: z.string().nullable(),
-    isRequired: z.boolean(),
-    uploadedBy: z.string().nullable(),
-    uploadedByName: z.string().nullable(),
-    uploadedAt: z.string().datetime({ offset: true }).nullable(),
+    id: z.string().uuid().nullable().optional(),
+    requestId: z.string().uuid().nullable().optional(), // Optional when creating new request
+    documentId: z.string().uuid().nullable().optional(),
+    documentType: z.string().nullable().optional(),
+    fileName: z.string().nullable().optional(),
+    prefix: z.string().nullable().optional(),
+    set: z.number().int().nullable().optional(),
+    notes: z.string().nullable().optional(),
+    filePath: z.string().nullable().optional(),
+    source: z.string().nullable().optional(),
+    isRequired: z.boolean().optional(),
+    uploadedBy: z.string().nullable().optional(),
+    uploadedByName: z.string().nullable().optional(),
+    uploadedAt: z.string().nullable().optional(),
   })
   .passthrough();
 const UpdateRequestRequest = z
@@ -215,6 +215,9 @@ const RequestDetailDto2 = z
     hasAppraisalBook: z.boolean(),
     loanDetail: LoanDetailDto.nullable(),
     prevAppraisalId: z.string().uuid().nullable(),
+    prevAppraisalReportNo: z.string().nullable(),
+    prevAppraisalValue: z.number().nullable(),
+    prevAppraisalDate: z.string().nullable(),
     address: AddressDto2.nullable(),
     contact: ContactDto.nullable(),
     appointment: AppointmentDto.nullable(),

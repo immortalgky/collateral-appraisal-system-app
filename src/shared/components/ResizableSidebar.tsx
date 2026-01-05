@@ -32,25 +32,8 @@ const ResizableSidebar = ({
 };
 
 const Main = ({ children }: { children: ReactNode }) => {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error('Main must be used within ResizableSidebar');
-  }
-  const { isOpen, onToggle } = context;
-
   return (
-    <div className="flex-1 min-w-0 p-6 overflow-hidden relative">
-      {/* Toggle button - shows when sidebar is closed */}
-      {!isOpen && (
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute top-6 right-6 z-10 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-all"
-          title="Open panel"
-        >
-          <Icon style="solid" name="sidebar" className="size-4" />
-        </button>
-      )}
+    <div className="flex-1 min-w-0 p-6 overflow-y-auto overflow-x-hidden">
       {children}
     </div>
   );

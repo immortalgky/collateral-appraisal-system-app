@@ -2,7 +2,7 @@ import LandTitleTable from '../components/tables/LandTitleTable';
 
 const TitleDeedForm = () => {
   return (
-    <div>
+    <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold mb-2 shrink-0">Land Detail</h2>
       <LandTitleTable headers={titleDeedTableHeaders} name={'landTitle'} />
     </div>
@@ -26,7 +26,7 @@ const titleDeedTableHeaders = [
   {
     name: 'boundaryMarker',
     label: 'Boundary Marker',
-    type: 'dropdown',
+    type: 'dropdown' as const,
     options: [
       { value: 'F', label: 'Found' },
       { value: 'NF', label: 'Not Found' },
@@ -40,7 +40,7 @@ const titleDeedTableHeaders = [
   {
     name: 'docValidate',
     label: 'Document Validate',
-    type: 'dropdown',
+    type: 'dropdown' as const,
     options: [
       { value: 'CM', label: 'Correctly Matched' },
       { value: 'NM', label: 'Not Matched' },
@@ -51,26 +51,26 @@ const titleDeedTableHeaders = [
   {
     name: 'isMissedOutSurvey',
     label: 'Missed out on the survey',
-    type: 'radio-group',
+    type: 'radio-group' as const,
     options: [
       { value: true, label: 'Yes' },
       { value: false, label: 'No' },
     ],
     colSpan: 2,
-    orientation: 'horizontal',
+    orientation: 'horizontal' as const,
   },
   {
     name: 'pricePerSquareWa',
     label: 'Government Price per Sq.Wa',
     colSpan: 3,
-    type: 'number-input',
+    type: 'number-input' as const,
   },
   {
     name: 'governmentPrice',
     label: 'Government Price',
     disabled: true,
     colSpan: 3,
-    type: 'number-input',
+    type: 'number-input' as const,
   },
 ];
 

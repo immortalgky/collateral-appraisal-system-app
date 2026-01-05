@@ -143,7 +143,7 @@ const SearchCompanyModal = ({ isOpen, onClose, onSelect }: SearchCompanyModalPro
                     {/* Selected Indicator */}
                     {selectedCompany?.id === company.id && (
                       <Icon
-                        name="check-circle"
+                        name="circle-check"
                         style="solid"
                         className="w-5 h-5 text-primary-600 shrink-0"
                       />

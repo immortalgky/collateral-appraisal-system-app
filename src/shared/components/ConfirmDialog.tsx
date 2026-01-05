@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   confirmText?: string;
   cancelText?: string;
   variant?: 'danger' | 'warning' | 'info';
+  isLoading?: boolean;
 }
 
 const ConfirmDialog = ({
@@ -20,6 +21,7 @@ const ConfirmDialog = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
+  isLoading = false,
 }: ConfirmDialogProps) => {
   if (!isOpen) return null;
 
@@ -48,7 +50,7 @@ const ConfirmDialog = ({
 
   const handleConfirm = () => {
     onConfirm();
-    onClose();
+    // Don't auto-close - let the caller handle it (especially for async operations)
   };
 
   return (
@@ -64,16 +66,25 @@ const ConfirmDialog = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cancelText}
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className={`flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors ${styles.confirmBtn}`}
+              disabled={isLoading}
+              className={`flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${styles.confirmBtn}`}
             >
-              {confirmText}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Icon name="spinner" style="solid" className="size-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                confirmText
+              )}
             </button>
           </div>
         </div>

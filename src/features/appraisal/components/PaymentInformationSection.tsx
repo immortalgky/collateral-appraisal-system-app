@@ -290,7 +290,7 @@ export default function PaymentInformationSection() {
         decimalPlaces={2}
         value={inspectionFee || 0}
         onChange={e => {
-          const value = parseFloat(e.target.value) || 0;
+          const value = e.target.value ?? 0;
           setValue('fee.inspectionFee', value);
         }}
       />

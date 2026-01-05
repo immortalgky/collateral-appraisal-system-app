@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../Icon';
 
 interface NavAnchorsProps {
@@ -12,9 +13,14 @@ interface NavAnchorItem {
   label: string;
   id: string;
   icon?: string;
+  /** Custom onClick handler - if provided, overrides default scroll behavior */
+  onClick?: () => void;
+  /** If provided, navigates to this URL instead of scrolling to anchor */
+  href?: string;
 }
 
 const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsProps) => {
+  const navigate = useNavigate();
   const isCompact = variant === 'compact';
   const [currentAnchor, setCurrentAnchor] = useState<string>(anchors[0]?.id ?? '');
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -69,14 +75,25 @@ const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsPro
     };
   }, [containerId, anchors]);
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, anchor: NavAnchorItem) => {
     e.preventDefault();
 
-    const target = document.getElementById(id);
-    if (!target) return;
+    // If href is provided, navigate to that URL instead
+    if (anchor.href) {
+      navigate(anchor.href);
+      return;
+    }
 
     // Update active state immediately
-    setCurrentAnchor(id);
+    setCurrentAnchor(anchor.id);
+
+    // Call custom onClick if provided (in addition to scroll behavior)
+    if (anchor.onClick) {
+      anchor.onClick();
+    }
+
+    const target = document.getElementById(anchor.id);
+    if (!target) return;
 
     // Get scroll container
     const container = containerId ? document.getElementById(containerId) : null;
@@ -115,12 +132,12 @@ const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsPro
               key={anchor.id}
               href={`#${anchor.id}`}
               data-anchor-id={anchor.id}
-              onClick={e => handleClick(e, anchor.id)}
+              onClick={e => handleClick(e, anchor)}
               className={clsx(
                 'relative z-10 flex items-center gap-1.5 rounded-md font-medium transition-all duration-200 cursor-pointer',
                 isCompact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs',
                 isActive
-                  ? 'text-primary bg-white shadow-sm'
+                  ? 'text-gray-800 bg-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
               )}
             >
@@ -128,7 +145,7 @@ const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsPro
                 <Icon
                   style="solid"
                   name={anchor.icon}
-                  className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
+                  className={clsx('size-3.5', isActive ? 'text-gray-700' : 'text-gray-400')}
                 />
               )}
               <span>{anchor.label}</span>

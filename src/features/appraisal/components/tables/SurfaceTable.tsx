@@ -1,20 +1,11 @@
 import Icon from '@/shared/components/Icon';
-import Input from '@/shared/components/Input';
-import Dropdown from '@/shared/components/inputs/Dropdown';
-import { useState } from 'react';
-import {
-  useController,
-  useFieldArray,
-  useFormContext,
-  type Control,
-  type FieldValues,
-} from 'react-hook-form';
-
-type InputType = 'text' | 'number' | 'dropdown';
+import { useState, useCallback } from 'react';
+import { useFieldArray, useFormContext } from 'react-hook-form';
+import SurfaceInputModal, { type SurfaceData } from './SurfaceInputModal';
 
 interface SurfaceTableProps {
   name: string;
-  headers: SurfaceTableHeader[];
+  headers?: SurfaceTableHeader[]; // Keep for backwards compatibility but not used in new design
 }
 
 type SurfaceTableHeader = SurfaceTableRegularHeader | SurfaceTableRowNumberHeader;
@@ -22,7 +13,7 @@ type SurfaceTableHeader = SurfaceTableRegularHeader | SurfaceTableRowNumberHeade
 interface SurfaceTableRegularHeader {
   name: string;
   label: string;
-  inputType?: InputType;
+  inputType?: 'text' | 'number' | 'dropdown';
   options?: { label: string; value: string }[];
 }
 
@@ -31,59 +22,125 @@ interface SurfaceTableRowNumberHeader {
   label: string;
 }
 
-interface TableCellProps {
-  name: string;
-  index: number;
-  editIndex: number | undefined;
-  value: string;
-  header: SurfaceTableRegularHeader;
-  control: Control<FieldValues, any, FieldValues>;
-}
+// Option mappings for display
+const floorTypeLabels: Record<string, string> = {
+  CB: 'Cement Block',
+  WOOD: 'Wood',
+  IRON: 'Iron',
+  TILE: 'Tile',
+  MARBLE: 'Marble',
+  PARQUET: 'Parquet',
+};
 
-// TODO: Find and add unique key
-const SurfaceTable = ({ name, headers }: SurfaceTableProps) => {
-  const { getValues, control } = useFormContext();
-  const { append, remove } = useFieldArray({
+const floorStructureLabels: Record<string, string> = {
+  CB: 'Cement Block',
+  WOOD: 'Wood',
+  IRON: 'Iron',
+  RFC: 'Reinforced Concrete',
+  STEEL: 'Steel',
+};
+
+const floorSurfaceLabels: Record<string, string> = {
+  CB: 'Cement Block',
+  WOOD: 'Wood',
+  IRON: 'Iron',
+  TILE: 'Tile',
+  MARBLE: 'Marble',
+  PARQUET: 'Parquet',
+  VINYL: 'Vinyl',
+  LAMINATE: 'Laminate',
+};
+
+const SurfaceTable = ({ name }: SurfaceTableProps) => {
+  const { control, getValues } = useFormContext();
+  const { append, remove, update } = useFieldArray({
     control,
     name: name,
   });
+
   const values = getValues(name) || [];
-  const [editIndex, setEditIndex] = useState<number | undefined>();
-  const handleDeleteRow = (index: number) => {
-    setEditIndex(undefined);
-    remove(index);
-  };
-  const handleAddRow = () => {
-    const newRow: Record<string, any> = {};
-    for (const header of headers) {
-      if ('name' in header) {
-        newRow[header.name] = ''; // TODO: Get default value from zod
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+
+  const handleAddClick = useCallback(() => {
+    setEditIndex(null);
+    setModalMode('add');
+    setIsModalOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback((index: number) => {
+    setEditIndex(index);
+    setModalMode('edit');
+    setIsModalOpen(true);
+  }, []);
+
+  const handleRowDoubleClick = useCallback((index: number) => {
+    handleEditClick(index);
+  }, [handleEditClick]);
+
+  const handleDeleteClick = useCallback(
+    (index: number) => {
+      remove(index);
+    },
+    [remove],
+  );
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setEditIndex(null);
+  }, []);
+
+  const handleModalSave = useCallback(
+    (data: SurfaceData) => {
+      if (modalMode === 'add') {
+        append(data);
+      } else if (editIndex !== null) {
+        update(editIndex, data);
       }
+    },
+    [modalMode, editIndex, append, update],
+  );
+
+  const getInitialData = (): SurfaceData | null => {
+    if (editIndex !== null && values[editIndex]) {
+      return values[editIndex];
     }
-    append(newRow);
-    setEditIndex(getValues(name).length - 1);
+    return null;
   };
 
   const isEmpty = values.length === 0;
 
+  const formatFloorRange = (from: number | null, to: number | null) => {
+    if (from === null && to === null) return '-';
+    if (from === to) return `Floor ${from}`;
+    if (from === null) return `Floor ${to}`;
+    if (to === null) return `Floor ${from}`;
+    return `Floor ${from} - ${to}`;
+  };
+
   return (
     <div className="col-span-12">
-      <div className="w-full overflow-x-auto">
-        <table className="table min-w-max">
+      <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+        <table className="table w-full">
           <thead>
             <tr className="bg-primary-700">
-              {headers.map((header, index) => (
-                <th
-                  key={index}
-                  className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg"
-                >
-                  {header.label}
-                </th>
-              ))}
-              <th
-                className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0
-    bg-primary-700 rounded-tr-lg w-24"
-              >
+              <th className="text-white text-sm font-medium py-3 px-4 text-left rounded-tl-lg w-12">
+                #
+              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">
+                Floor Range
+              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">
+                Floor Type
+              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">
+                Floor Structure
+              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">
+                Floor Surface
+              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">
                 Actions
               </th>
             </tr>
@@ -91,74 +148,66 @@ const SurfaceTable = ({ name, headers }: SurfaceTableProps) => {
           <tbody className="divide-y divide-gray-100">
             {isEmpty ? (
               <tr>
-                <td colSpan={headers.length + 1} className="py-8 text-center">
+                <td colSpan={6} className="py-8 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                      <Icon style="regular" name="inbox" className="size-6 text-gray-400" />
+                      <Icon style="regular" name="layer-group" className="size-6 text-gray-400" />
                     </div>
-                    <p className="text-sm text-gray-500">No data yet</p>
+                    <p className="text-sm text-gray-500">No surface data yet</p>
                     <button
                       type="button"
-                      onClick={handleAddRow}
+                      onClick={handleAddClick}
                       className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
                     >
                       <Icon style="solid" name="plus" className="size-3.5" />
-                      Add first item
+                      Add first surface
                     </button>
                   </div>
                 </td>
               </tr>
             ) : (
-              values.map((field: Record<string, any>, index: number) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  {headers.map((header, inner_index) => {
-                    if ('name' in header) {
-                      return (
-                        <td key={inner_index} className="py-3 px-4">
-                          <TableCell
-                            name={name}
-                            index={index}
-                            editIndex={editIndex}
-                            value={field[header.name]}
-                            header={header}
-                            control={control}
-                          />
-                        </td>
-                      );
-                    } else {
-                      return (
-                        <td key={inner_index} className="py-3 px-4">
-                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-                            {index + 1}
-                          </span>
-                        </td>
-                      );
-                    }
-                  })}
-                  <td className="py-3 px-4 sticky right-0 z-10 bg-white">
+              values.map((row: SurfaceData, index: number) => (
+                <tr
+                  key={index}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                  onDoubleClick={() => handleRowDoubleClick(index)}
+                >
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+                      {index + 1}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900">
+                    {formatFloorRange(row.fromFloorNumber, row.toFloorNumber)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900">
+                    {floorTypeLabels[row.floorType] || row.floorType || '-'}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900">
+                    {floorStructureLabels[row.floorStructure] || row.floorStructure || '-'}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-900">
+                    {floorSurfaceLabels[row.floorSurface] || row.floorSurface || '-'}
+                  </td>
+                  <td className="py-3 px-4">
                     <div className="flex gap-1 justify-end">
-                      {editIndex === index ? (
-                        <button
-                          type="button"
-                          onClick={() => setEditIndex(undefined)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                          title="Save"
-                        >
-                          <Icon style="solid" name="check" className="size-4" />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setEditIndex(index)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                          title="Edit"
-                        >
-                          <Icon style="solid" name="pen" className="size-3.5" />
-                        </button>
-                      )}
                       <button
                         type="button"
-                        onClick={() => handleDeleteRow(index)}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleEditClick(index);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                        title="Edit"
+                      >
+                        <Icon style="solid" name="pen" className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDeleteClick(index);
+                        }}
                         className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                         title="Delete"
                       >
@@ -172,53 +221,31 @@ const SurfaceTable = ({ name, headers }: SurfaceTableProps) => {
           </tbody>
         </table>
       </div>
+
+      {/* Add button */}
       {!isEmpty && (
-        <div className="border-t border-gray-100">
+        <div className="border-x border-b border-gray-200 rounded-b-lg">
           <button
             type="button"
-            onClick={handleAddRow}
+            onClick={handleAddClick}
             className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
           >
             <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center">
               <Icon style="solid" name="plus" className="size-3 text-white" />
             </div>
-            Add row
+            Add surface
           </button>
         </div>
       )}
-    </div>
-  );
-};
 
-const TableCell = ({ name, index, editIndex, value, header, control }: TableCellProps) => {
-  const cellName = `${name}.${index}.${header.name}`;
-  const {
-    field,
-    fieldState: { error },
-  } = useController({ name: cellName, control });
-  const label = header?.options?.find(opt => opt.value === value)?.label ?? value;
-
-  const isEditing = editIndex === index;
-
-  const inputType = () => {
-    switch (header.inputType) {
-      case 'dropdown':
-        return (
-          <Dropdown value={field.value} onChange={field.onChange} options={header.options ?? []} />
-        );
-
-      case 'number':
-        return <Input type="number" {...field} />;
-
-      default:
-        return <Input type="text" {...field} />;
-    }
-  };
-
-  return (
-    <div>
-      {isEditing ? inputType() : <div>{label}</div>}
-      {error && <div className="mt-1 text-sm text-danger">{error.message}</div>}
+      {/* Modal */}
+      <SurfaceInputModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSave={handleModalSave}
+        initialData={getInitialData()}
+        mode={modalMode}
+      />
     </div>
   );
 };

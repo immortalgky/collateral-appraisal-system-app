@@ -1,9 +1,18 @@
-import { FormProvider, useController, useForm, type SubmitHandler } from 'react-hook-form';
-import BuildingDetailTable from '../forms/building/BuildingDetailTable';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@headlessui/react';
-import { buildingDetailSchema, type BuildingDetailFormValue } from '../forms/building/bType';
-import { BuildingDetail } from '../forms/building/BuildlingDetail';
+import { z } from 'zod';
+
+// TODO: Import from proper location when files are created
+const buildingDetailSchema = z.object({
+  buildings: z.array(z.any()),
+});
+type BuildingDetailFormValue = z.infer<typeof buildingDetailSchema>;
+
+// Placeholder component until BuildingDetail is created
+const BuildingDetail = ({ name: _name }: { name: string }) => (
+  <div>Building Detail Component Placeholder</div>
+);
 
 function CreateCollateralBuilding() {
   const methods = useForm<BuildingDetailFormValue>({
@@ -31,7 +40,7 @@ function CreateCollateralBuilding() {
     mode: 'onSubmit',
   });
 
-  const { handleSubmit, control, getValues } = methods;
+  const { handleSubmit, control: _control, getValues } = methods;
 
   const onSubmit: SubmitHandler<BuildingDetailFormValue> = data => {
     console.log(data);

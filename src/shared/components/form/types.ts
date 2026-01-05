@@ -1,8 +1,53 @@
 import type { ListBoxItem } from '../inputs/Dropdown';
 import type { FormStringToggleOption } from '../inputs/FormStringToggle';
 import type { RadioOption } from '../inputs/RadioGroup';
+import type { CheckboxOption } from '../inputs/CheckboxGroup';
 import type { AtLeastOne } from '@/shared/types';
 import type { ParameterParams } from '@/shared/types/api';
+
+// =============================================================================
+// Conditional Field Types
+// =============================================================================
+
+/** Comparison operators for declarative field conditions */
+export type ConditionOperator =
+  | 'equals' // value === target (default)
+  | 'notEquals' // value !== target
+  | 'in' // target array includes value
+  | 'notIn' // target array doesn't include value
+  | 'isEmpty' // value is null/undefined/''
+  | 'isNotEmpty' // value is truthy
+  | 'gt' // value > target (number)
+  | 'gte' // value >= target (number)
+  | 'lt' // value < target (number)
+  | 'lte'; // value <= target (number)
+
+/**
+ * Single condition for field visibility/disabled state.
+ * Use $root. prefix for absolute paths in array fields.
+ */
+export interface FieldCondition {
+  /** Field name to watch. Use $root.fieldName for absolute paths in arrays. */
+  field: string;
+  /** Value to match against */
+  is?: unknown;
+  /** Comparison operator (default: 'equals') */
+  operator?: ConditionOperator;
+}
+
+/** Multiple conditions with AND/OR logic */
+export interface FieldConditions {
+  /** Array of conditions to evaluate */
+  conditions: FieldCondition[];
+  /** Match mode: 'all' = AND (default), 'any' = OR */
+  match?: 'all' | 'any';
+}
+
+/** Condition input: single, multiple with logic, or function */
+export type ConditionInput =
+  | FieldCondition
+  | FieldConditions
+  | ((values: Record<string, unknown>) => boolean);
 
 /**
  * Union type of all supported form field configurations.
@@ -19,8 +64,11 @@ export type FormField =
   | StringToggleField
   | TextareaField
   | CheckboxField
+  | CheckboxGroupField
   | RadioGroupField
-  | SwitchField;
+  | SwitchField
+  | AppraisalSelectorField
+  | LocationSelectorField;
 
 /**
  * Base properties shared by all form fields
@@ -38,6 +86,18 @@ interface BaseFormField {
   disabled?: boolean;
   /** Mark as required (shows asterisk, overrides schema) */
   required?: boolean;
+
+  // Conditional visibility (values kept when hidden)
+  /** Show field when condition is met */
+  showWhen?: ConditionInput;
+  /** Hide field when condition is met */
+  hideWhen?: ConditionInput;
+
+  // Conditional disabled state
+  /** Disable field when condition is met */
+  disableWhen?: ConditionInput;
+  /** Enable field when condition is met (overrides disabled) */
+  enableWhen?: ConditionInput;
 }
 
 // =============================================================================
@@ -122,12 +182,16 @@ export interface BooleanToggleField extends BaseFormField {
   label: string;
   /** Labels for [false, true] states */
   options: [string, string];
+  /** Size variant */
+  size?: 'sm' | 'md';
 }
 
 export interface StringToggleField extends BaseFormField {
   type: 'string-toggle';
   label: string;
   options: [FormStringToggleOption, FormStringToggleOption];
+  /** Size variant */
+  size?: 'sm' | 'md';
 }
 
 // =============================================================================
@@ -139,6 +203,15 @@ export interface CheckboxField extends BaseFormField {
   label?: string;
   description?: string;
   size?: 'sm' | 'md' | 'lg';
+}
+
+export interface CheckboxGroupField extends BaseFormField {
+  type: 'checkbox-group';
+  label?: string;
+  options: CheckboxOption[];
+  wrap?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  orientation?: 'horizontal' | 'vertical';
 }
 
 export interface RadioGroupField extends BaseFormField {
@@ -155,4 +228,38 @@ export interface SwitchField extends BaseFormField {
   description?: string;
   size?: 'sm' | 'md' | 'lg';
   labelPosition?: 'left' | 'right';
+}
+
+// =============================================================================
+// Custom selector fields
+// =============================================================================
+
+export interface AppraisalSelectorField extends BaseFormField {
+  type: 'appraisal-selector';
+  label: string;
+  placeholder?: string;
+  /** Form path for appraisal ID (required) */
+  idField: string;
+  /** Form path for appraisal value (optional) */
+  valueField?: string;
+  /** Form path for appraisal date (optional) */
+  dateField?: string;
+}
+
+export interface LocationSelectorField extends BaseFormField {
+  type: 'location-selector';
+  label: string;
+  placeholder?: string;
+  /** Form path for district code */
+  districtField: string;
+  /** Form path for district name (optional) */
+  districtNameField?: string;
+  /** Form path for province code */
+  provinceField: string;
+  /** Form path for province name (optional) */
+  provinceNameField?: string;
+  /** Form path for postcode */
+  postcodeField: string;
+  /** Form path for sub-district name (optional) */
+  subDistrictNameField?: string;
 }

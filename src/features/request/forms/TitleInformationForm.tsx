@@ -9,10 +9,10 @@ import TitleMachineForm from './TitleMachineForm';
 import FormCard from '@/shared/components/sections/FormCard';
 import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import TitleDocumentAdressForm from './TitleDocumentAddressForm';
-import DopaAdressForm from './DopaAddressForm';
-import { requestTitleDtoDefaults } from '@/shared/forms/defaults';
+import TitleDocumentAddressForm from './TitleDocumentAddressForm';
+import DopaAddressForm from './DopaAddressForm';
 import { RequestTitleDto, type RequestTitleDtoType } from '@/shared/forms/v1';
+import { requestTitleDefault } from '@/features/request/schemas/form';
 import clsx from 'clsx';
 
 interface TitleFormProps {
@@ -31,7 +31,7 @@ const TitleInformationForm = () => {
   const { append, remove } = useFieldArray({ control, name: 'titles' });
   const titles: RequestTitleDtoType[] = useWatch({ name: 'titles', control });
 
-  // Check if title passes Zod validation (uses same schema as form)
+  // Check if the title passes Zod validation (uses the same schema as form)
   const isTitleComplete = (index: number): boolean => {
     const title = titles[index];
     if (!title) return false;
@@ -72,7 +72,7 @@ const TitleInformationForm = () => {
   };
 
   const handleAddTitle = () => {
-    append({ ...requestTitleDtoDefaults });
+    append({ ...requestTitleDefault });
     setEditIndex(titles.length);
     setTimeout(scrollToSection, 100);
   };
@@ -152,7 +152,7 @@ const TitleInformationForm = () => {
 
   const closeContextMenu = () => setContextMenu(null);
 
-  // Close context menu when clicking outside
+  // Close the context menu when clicking outside
   useEffect(() => {
     const handleClick = () => closeContextMenu();
     if (contextMenu) {
@@ -316,8 +316,8 @@ const TitleInformationForm = () => {
             <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
               <FormFields fields={titleFields} namePrefix="titles" index={editIndex} />
               <TitleForm index={editIndex} currentFormType={currentFormType} />
-              <TitleDocumentAdressForm index={editIndex} />
-              <DopaAdressForm index={editIndex} />
+              <TitleDocumentAddressForm index={editIndex} />
+              <DopaAddressForm index={editIndex} />
             </div>
           </div>
         </div>
@@ -400,7 +400,9 @@ const TitleTableView = ({
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-1">No titles yet</h3>
         <p className="text-sm text-gray-500 mb-4">
-          {isReadOnly ? 'No title documents have been added' : 'Add your first title document to get started'}
+          {isReadOnly
+            ? 'No title documents have been added'
+            : 'Add your first title document to get started'}
         </p>
         {!isReadOnly && (
           <button
@@ -548,7 +550,7 @@ const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
       return <TitleLandForm index={index} />;
     case 'building':
       return <TitleBuildingForm index={index} />;
-    case 'landAndBuilding':
+    case 'LB':
       return (
         <>
           <TitleLandForm index={index} variant="landAndBuilding" />
@@ -601,39 +603,39 @@ const titleFields: FormField[] = [
     name: 'collateralType',
     options: [
       {
-        value: 'land',
+        value: 'L',
         label: 'Land',
       },
       {
-        value: 'landAndBuilding',
+        value: 'LB',
         label: 'Land and Building',
       },
       {
-        value: 'building',
+        value: 'B',
         label: 'Building',
       },
       {
-        value: 'condominium',
+        value: 'U',
         label: 'Condominium',
       },
       {
-        value: 'vehicle',
+        value: 'VEH',
         label: 'Vehicle',
       },
       {
-        value: 'machine',
+        value: 'MAC',
         label: 'Machine',
       },
       {
-        value: 'leaseAgreementLand',
+        value: 'LSL',
         label: 'Lease Agreement Land',
       },
       {
-        value: 'leaseAgreementLandAndBuilding',
+        value: 'LS',
         label: 'Lease Agreement Land and Building',
       },
       {
-        value: 'leaseAgreementBuilding',
+        value: 'LSB',
         label: 'Lease Agreement Building',
       },
     ],

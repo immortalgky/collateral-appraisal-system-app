@@ -92,7 +92,7 @@ export const navigationConfig: NavItem[] = [
       },
       {
         name: 'Create Request',
-        href: '/dev/request',
+        href: '/requests/new',
         icon: 'file-circle-plus',
         iconColor: 'text-emerald-500',
         iconStyle: 'solid',
@@ -222,13 +222,6 @@ export const navigationConfig: NavItem[] = [
     iconStyle: 'solid',
     allowedRoles: ['admin'], // Only admin can see development menu
     children: [
-      {
-        name: 'Create Request',
-        href: '/dev/request',
-        icon: 'file-circle-plus',
-        iconColor: 'text-emerald-500',
-        iconStyle: 'solid',
-      },
       {
         name: 'Property Information',
         href: '/dev/property-information',

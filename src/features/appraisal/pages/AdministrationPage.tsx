@@ -211,7 +211,7 @@ const AdministrationPage = () => {
                             </div>
                             {checked && (
                               <Icon
-                                name="check-circle"
+                                name="circle-check"
                                 style="solid"
                                 className={`w-5 h-5 text-${option.color}-500`}
                               />

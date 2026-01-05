@@ -1,19 +1,25 @@
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useParams, useLocation } from 'react-router-dom';
+
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import AppHeader from '@/shared/components/sections/AppHeader';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
+import Icon from '@/shared/components/Icon';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import { CreateBuildingRequest, type CreateBuildingRequestType } from '@/shared/forms/typeBuilding';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBuildingRequest } from '../api';
-import { createBuildingRequestDefaults } from '@/shared/forms/defaults';
-import { BuildingDetailTest } from '../components/RHFArrayTable/BuildingDetailTest';
+
+// TODO: Add proper defaults when schema is finalized
+const createBuildingRequestDefaults = {} as any;
 
 const CreateBuildingPage = () => {
+  const { propertyId } = useParams<{ propertyId?: string }>();
+  const location = useLocation();
+
   const methods = useForm<CreateBuildingRequestType>({
     defaultValues: createBuildingRequestDefaults,
     resolver: zodResolver(CreateBuildingRequest),
@@ -21,23 +27,49 @@ const CreateBuildingPage = () => {
   const { handleSubmit, getValues } = methods;
 
   const { mutate } = useCreateBuildingRequest();
+
   const onSubmit: SubmitHandler<CreateBuildingRequestType> = data => {
-    mutate(data);
+    mutate({
+      ...data,
+      collateralId: propertyId,
+    } as any);
   };
+
   const { isOpen, onToggle } = useDisclosure();
+
   const handleSaveDraft = () => {
     const data = getValues();
-    mutate(data);
+    mutate({
+      ...data,
+      collateralId: propertyId,
+    } as any);
   };
+
+  // Only show Photos tab if we have a propertyId (not for new)
+  const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
+
   return (
-    <div>
-      <div className="flex flex-col gap-4">
-        <AppHeader iconVariant="folder" title={'Request for Credit Limit'} />
-        <NavAnchors anchors={[{ label: 'Properties', id: 'properties-information' }]} />
+    <div className="flex flex-col h-full min-h-0">
+      {/* NavAnchors */}
+      <div className="shrink-0 pb-4">
+        <NavAnchors
+          containerId="form-scroll-container"
+          anchors={[
+            { label: 'Building', id: 'properties-section', icon: 'building' },
+            ...(propertyId
+              ? [{ label: 'Photos', id: 'photos', icon: 'images', href: photosHref }]
+              : []),
+          ]}
+        />
       </div>
+
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+          {/* Scrollable Form Content */}
+          <div
+            id="form-scroll-container"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
+          >
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -45,31 +77,44 @@ const CreateBuildingPage = () => {
               closedWidth="w-1/50"
             >
               <ResizableSidebar.Main>
-                <div className="flex flex-col gap-6 w-full">
-                  <div>
-                    <h2 className="text-lg font-semibol mb-2">Appraisal Information</h2>
-                    <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
-                  </div>
-                  <div>
-                    <Section id="land-title" anchor className="flex flex-col gap-6">
-                      <BuildingDetailForm />
-                      {/*<BuildingDetailTest name={"building"} />*/}
-                    </Section>
-                  </div>
+                <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Building Information Header */}
+                  <Section id="properties-section" anchor>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
+                    </div>
+                    <div className="h-px bg-gray-200" />
+                  </Section>
+
+                  {/* Building Form */}
+                  <Section id="building-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                    <BuildingDetailForm />
+                  </Section>
                 </div>
               </ResizableSidebar.Main>
             </ResizableSidebar>
           </div>
-          <div className="flex justify-between items-center p-4">
-            <div className="flex items-center gap-4">
-              <CancelButton />
-              <div className="h-6 w-px bg-gray-200" />
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" type="button" onClick={handleSaveDraft}>
-                Save draft
-              </Button>
-              <Button type="submit">Save</Button>
+
+          {/* Sticky Action Buttons */}
+          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <CancelButton />
+                <div className="h-6 w-px bg-gray-200" />
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save draft
+                </Button>
+                <Button type="submit">
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </div>
             </div>
           </div>
         </form>

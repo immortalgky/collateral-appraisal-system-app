@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 import TitleInformationHeader from '../components/TitleInformationHeader';
 import { useFormContext } from 'react-hook-form';
-import AddressAutocomplete from '@/shared/components/inputs/AddressAutocomplete';
-import TextInput from '@/shared/components/inputs/TextInput';
 import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 
 interface DopaAdressFormProps {
   index: number;
 }
 
-const DopaAdressForm = ({ index }: DopaAdressFormProps) => {
+const DopaAddressForm = ({ index }: DopaAdressFormProps) => {
   const { getValues, setValue, watch } = useFormContext();
   const [selectedAddress, setSelectedAddress] = useState<ThaiAddress | null>(null);
 
@@ -60,43 +58,43 @@ const DopaAdressForm = ({ index }: DopaAdressFormProps) => {
       <FormFields fields={dopaAddressFieldsTop} namePrefix={'titles'} index={index} />
 
       {/* Address autocomplete row */}
-      <div className="col-span-2">
-        <AddressAutocomplete
-          label="Sub District"
-          value={selectedAddress}
-          onChange={handleAddressSelect}
-          required
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <AddressAutocomplete*/}
+      {/*    label="Sub District"*/}
+      {/*    value={selectedAddress}*/}
+      {/*    onChange={handleAddressSelect}*/}
+      {/*    required*/}
+      {/*  />*/}
+      {/*</div>*/}
 
-      <div className="col-span-2">
-        <TextInput
-          label="District"
-          value={selectedAddress?.districtName || ''}
-          onChange={() => {}}
-          disabled
-          required
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <TextInput*/}
+      {/*    label="District"*/}
+      {/*    value={selectedAddress?.districtName || ''}*/}
+      {/*    onChange={() => {}}*/}
+      {/*    disabled*/}
+      {/*    required*/}
+      {/*  />*/}
+      {/*</div>*/}
 
-      <div className="col-span-2">
-        <TextInput
-          label="Province"
-          value={selectedAddress?.provinceName || ''}
-          onChange={() => {}}
-          disabled
-          required
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <TextInput*/}
+      {/*    label="Province"*/}
+      {/*    value={selectedAddress?.provinceName || ''}*/}
+      {/*    onChange={() => {}}*/}
+      {/*    disabled*/}
+      {/*    required*/}
+      {/*  />*/}
+      {/*</div>*/}
 
-      <div className="col-span-2">
-        <TextInput
-          label="Postcode"
-          value={selectedAddress?.postcode || postcode || ''}
-          onChange={() => {}}
-          disabled
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <TextInput*/}
+      {/*    label="Postcode"*/}
+      {/*    value={selectedAddress?.postcode || postcode || ''}*/}
+      {/*    onChange={() => {}}*/}
+      {/*    disabled*/}
+      {/*  />*/}
+      {/*</div>*/}
     </>
   );
 };
@@ -133,6 +131,39 @@ export const dopaAddressFieldsTop: FormField[] = [
     name: 'dopaAddress.road',
     wrapperClassName: 'col-span-2',
   },
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'dopaAddress.subDistrict',
+    districtField: 'dopaAddress.district',
+    districtNameField: 'dopaAddress.districtName',
+    provinceField: 'dopaAddress.province',
+    provinceNameField: 'dopaAddress.provinceName',
+    postcodeField: 'dopaAddress.postcode',
+    subDistrictNameField: 'dopaAddress.subDistrictName',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'dopaAddress.districtName',
+    disabled: true,
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'dopaAddress.provinceName',
+    disabled: true,
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Postcode',
+    name: 'dopaAddress.postcode',
+    disabled: true,
+    wrapperClassName: 'col-span-2',
+  },
 ];
 
-export default DopaAdressForm;
+export default DopaAddressForm;

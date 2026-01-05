@@ -55,9 +55,9 @@ const Switch = ({
       name={name}
       className={clsx(
         'group relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2',
         trackSizeStyles[size],
-        disabled ? 'cursor-not-allowed bg-neutral-3' : 'bg-misc-2 data-checked:bg-primary',
+        disabled ? 'cursor-not-allowed bg-gray-200' : 'bg-gray-300 data-checked:bg-gray-700',
         error && 'ring-2 ring-danger',
       )}
     >

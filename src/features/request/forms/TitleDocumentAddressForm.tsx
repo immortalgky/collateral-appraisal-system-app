@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 import TitleInformationHeader from '../components/TitleInformationHeader';
 import { useFormContext } from 'react-hook-form';
-import AddressAutocomplete from '@/shared/components/inputs/AddressAutocomplete';
-import TextInput from '@/shared/components/inputs/TextInput';
 import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 
 interface TitleDocumentAdressFormProps {
   index: number;
 }
 
-const TitleDocumentAdressForm = ({ index }: TitleDocumentAdressFormProps) => {
+const TitleDocumentAddressForm = ({ index }: TitleDocumentAdressFormProps) => {
   const { getValues, setValue, watch } = useFormContext();
   const [selectedAddress, setSelectedAddress] = useState<ThaiAddress | null>(null);
 
@@ -64,43 +62,43 @@ const TitleDocumentAdressForm = ({ index }: TitleDocumentAdressFormProps) => {
       <FormFields fields={titleAddressFieldsTop} namePrefix={'titles'} index={index} />
 
       {/* Address autocomplete row */}
-      <div className="col-span-2">
-        <AddressAutocomplete
-          label="Sub District"
-          value={selectedAddress}
-          onChange={handleAddressSelect}
-          required
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <AddressAutocomplete*/}
+      {/*    label="Sub District"*/}
+      {/*    value={selectedAddress}*/}
+      {/*    onChange={handleAddressSelect}*/}
+      {/*    required*/}
+      {/*  />*/}
+      {/*</div>*/}
 
-      <div className="col-span-2">
-        <TextInput
-          label="District"
-          value={selectedAddress?.districtName || ''}
-          onChange={() => {}}
-          disabled
-          required
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <TextInput*/}
+      {/*    label="District"*/}
+      {/*    value={selectedAddress?.districtName || ''}*/}
+      {/*    onChange={() => {}}*/}
+      {/*    disabled*/}
+      {/*    required*/}
+      {/*  />*/}
+      {/*</div>*/}
 
-      <div className="col-span-2">
-        <TextInput
-          label="Province"
-          value={selectedAddress?.provinceName || ''}
-          onChange={() => {}}
-          disabled
-          required
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <TextInput*/}
+      {/*    label="Province"*/}
+      {/*    value={selectedAddress?.provinceName || ''}*/}
+      {/*    onChange={() => {}}*/}
+      {/*    disabled*/}
+      {/*    required*/}
+      {/*  />*/}
+      {/*</div>*/}
 
-      <div className="col-span-2">
-        <TextInput
-          label="Postcode"
-          value={selectedAddress?.postcode || postcode || ''}
-          onChange={() => {}}
-          disabled
-        />
-      </div>
+      {/*<div className="col-span-2">*/}
+      {/*  <TextInput*/}
+      {/*    label="Postcode"*/}
+      {/*    value={selectedAddress?.postcode || postcode || ''}*/}
+      {/*    onChange={() => {}}*/}
+      {/*    disabled*/}
+      {/*  />*/}
+      {/*</div>*/}
     </>
   );
 };
@@ -137,6 +135,39 @@ export const titleAddressFieldsTop: FormField[] = [
     name: 'titleAddress.road',
     wrapperClassName: 'col-span-2',
   },
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'titleAddress.subDistrict',
+    districtField: 'titleAddress.district',
+    districtNameField: 'titleAddress.districtName',
+    provinceField: 'titleAddress.province',
+    provinceNameField: 'titleAddress.provinceName',
+    postcodeField: 'titleAddress.postcode',
+    subDistrictNameField: 'titleAddress.subDistrictName',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'titleAddress.districtName',
+    disabled: true,
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'titleAddress.provinceName',
+    disabled: true,
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Postcode',
+    name: 'titleAddress.postcode',
+    disabled: true,
+    wrapperClassName: 'col-span-2',
+  },
 ];
 
-export default TitleDocumentAdressForm;
+export default TitleDocumentAddressForm;

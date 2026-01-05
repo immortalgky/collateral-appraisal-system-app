@@ -120,7 +120,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
               : 'bg-white hover:border-gray-300',
             error
               ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
-              : 'border-gray-200 focus:ring-primary-500/20 focus:border-primary-500',
+              : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
           )}
         >
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
@@ -150,14 +150,14 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
       value={value}
       className={clsx(
         'group flex gap-2 px-3 py-2 text-sm cursor-pointer transition-colors',
-        'data-focus:bg-primary-50 data-focus:text-primary-700',
-        'data-selected:bg-primary-100 data-selected:text-primary-800 data-selected:font-medium',
+        'data-focus:bg-gray-100 data-focus:text-gray-900',
+        'data-selected:bg-gray-100 data-selected:text-gray-900 data-selected:font-medium',
       )}
       {...props}
     >
       {({ selected }) => (
         <div className="flex items-center gap-2 w-full">
-          {selected && <Icon style="solid" name="check" className="size-3.5 text-primary-600" />}
+          {selected && <Icon style="solid" name="check" className="size-3.5 text-gray-600" />}
           <span className={selected ? '' : 'ml-5'}>{children}</span>
         </div>
       )}

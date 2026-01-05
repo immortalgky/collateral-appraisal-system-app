@@ -1,4 +1,3 @@
-import { useController, useFormContext } from 'react-hook-form';
 import CheckboxGroup, { type CheckboxOption } from './CheckboxGroup';
 
 interface FormCheckboxGroupProps {
@@ -7,10 +6,16 @@ interface FormCheckboxGroupProps {
   options: CheckboxOption[];
   disabled?: boolean;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md';
   orientation?: 'horizontal' | 'vertical';
+  /** Visual variant for checkbox group */
+  variant?: 'tag' | 'chip' | 'button';
 }
 
+/**
+ * Form-integrated CheckboxGroup component.
+ * Uses react-hook-form context internally via CheckboxGroup.
+ */
 const FormCheckboxGroup = ({
   name,
   label,
@@ -18,26 +23,17 @@ const FormCheckboxGroup = ({
   disabled,
   className,
   size,
-  orientation,
+  variant,
 }: FormCheckboxGroupProps) => {
-  const { control } = useFormContext();
-  const {
-    field,
-    fieldState: { error },
-  } = useController({ name, control });
-
   return (
     <CheckboxGroup
-      value={field.value ?? []}
-      onChange={field.onChange}
+      name={name}
       label={label}
       options={options}
-      error={error?.message}
       disabled={disabled}
       className={className}
       size={size}
-      orientation={orientation}
-      name={name}
+      variant={variant}
     />
   );
 };

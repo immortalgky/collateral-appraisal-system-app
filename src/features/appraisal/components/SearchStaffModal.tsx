@@ -126,7 +126,7 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect }: SearchStaffModalProps) 
 
                     {/* Selected Indicator */}
                     {selectedStaff?.id === staff.id && (
-                      <Icon name="check-circle" style="solid" className="w-5 h-5 text-primary-600" />
+                      <Icon name="circle-check" style="solid" className="w-5 h-5 text-primary-600" />
                     )}
                   </button>
                 ))}
