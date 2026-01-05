@@ -1,11 +1,5 @@
-import { NumberInput } from '@/shared/components';
-import {
-  useController,
-  useFormContext,
-  useWatch,
-  type Control,
-  type FieldValues,
-} from 'react-hook-form';
+import { Icon, NumberInput } from '@/shared/components';
+import { useController, useWatch, type Control, type FieldValues } from 'react-hook-form';
 
 interface NumberInputCellProps {
   arrayName: string;
@@ -13,8 +7,9 @@ interface NumberInputCellProps {
   fieldName: string;
   control: Control<FieldValues>;
   isEditing: boolean;
-  render?: (value: string | number) => React.ReactNode;
-  modifier?: (value: number | string | boolean) => string;
+  render?: (value: string | number | boolean) => React.ReactNode;
+  modifier?: (value: number | string | boolean) => string | number | boolean;
+  isReadonly?: boolean;
 }
 
 const NumberInputCell = ({
@@ -25,6 +20,7 @@ const NumberInputCell = ({
   isEditing,
   render,
   modifier,
+  isReadonly = false,
 }: NumberInputCellProps) => {
   const cellName = `${arrayName}.${rowIndex}.${fieldName}`;
 
@@ -35,10 +31,24 @@ const NumberInputCell = ({
 
   const value = useWatch({ name: cellName });
 
+  // Readonly display - shows a locked indicator
+  if (isReadonly) {
+    const displayValue = modifier ? modifier(value ?? 0) : (value ?? 0);
+    return (
+      <span
+        className="inline-flex items-center gap-1 text-xs text-gray-600 w-full"
+        title={`${displayValue} (auto-filled)`}
+      >
+        <Icon style="solid" name="lock" className="size-2.5 text-gray-400 shrink-0" />
+        <span className="truncate">{displayValue}</span>
+      </span>
+    );
+  }
+
   if (isEditing) {
     return (
       <div>
-        <NumberInput type={'number'} {...field} />
+        <NumberInput {...field} />
         {error ? <div className="mt-1 text-sm text-danger">{error.message}</div> : null}
       </div>
     );
@@ -50,7 +60,7 @@ const NumberInputCell = ({
         }
         return (
           <span
-            className="items-center justify-center text-sm truncate text-gray-600 w-full"
+            className="items-center justify-center text-xs truncate text-gray-600 w-full"
             title={modifier(value).toString()}
           >
             {modifier(value)}
@@ -59,10 +69,9 @@ const NumberInputCell = ({
       } else if (render != undefined) {
         return render(value);
       }
-      console.log(modifier);
       return (
         <span
-          className="items-center justify-center text-sm truncate text-gray-600 w-full"
+          className="items-center justify-center text-xs truncate text-gray-600 w-full"
           title={value}
         >
           {value}

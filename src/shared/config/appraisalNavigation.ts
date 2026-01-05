@@ -47,6 +47,38 @@ export const applicationNavigation: NavItem[] = [
     editableRoles: ['admin', 'task_assigner', 'external_appraiser', 'internal_appraiser'],
   },
   {
+    name: 'Property Information',
+    href: '/appraisal/:appraisalId/property',
+    icon: 'buildings',
+    iconColor: 'text-purple-500',
+    iconStyle: 'solid',
+    allowedRoles: [
+      'admin',
+      'task_assigner',
+      'external_appraiser',
+      'internal_appraiser',
+      'appraisal_checker',
+      'appraisal_approver',
+    ],
+    editableRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
+  },
+  {
+    name: 'Document Checklist',
+    href: '/appraisal/:appraisalId/documents',
+    icon: 'file-circle-check',
+    iconColor: 'text-teal-500',
+    iconStyle: 'solid',
+    allowedRoles: [
+      'admin',
+      'task_assigner',
+      'external_appraiser',
+      'internal_appraiser',
+      'appraisal_checker',
+      'appraisal_approver',
+    ],
+    editableRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
+  },
+  {
     name: 'Summary & Decision',
     href: '/appraisal/:appraisalId/summary',
     icon: 'paper-plane',
@@ -292,6 +324,8 @@ export const getPageAccessByPath = (
     request: 'Request Information',
     administration: 'Administration',
     appointment: 'Appointment & Fee',
+    property: 'Property Information',
+    documents: 'Document Checklist',
     summary: 'Summary & Decision',
   };
 

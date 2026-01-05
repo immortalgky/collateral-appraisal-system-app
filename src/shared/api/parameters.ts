@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ParameterParams, ParametersResponse } from '../types/api';
-import axios from 'axios';
+import axios from './axiosInstance';
 import { useParameterStore } from '../store';
 
 export const useParameters = (params: ParameterParams | undefined) => {

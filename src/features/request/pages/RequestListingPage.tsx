@@ -110,8 +110,8 @@ function RequestListingPage() {
         onSuccess: () => {
           toast.success('Request deleted successfully');
         },
-        onError: () => {
-          toast.error('Failed to delete request. Please try again.');
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || 'Failed to delete request. Please try again.');
         },
       });
     }
@@ -174,7 +174,7 @@ function RequestListingPage() {
             {totalCount}
           </span>
         </div>
-        <Button size="sm" onClick={() => navigate('/dev/request')}>
+        <Button size="sm" onClick={() => navigate('/requests/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
           New Request
         </Button>

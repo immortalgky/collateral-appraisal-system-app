@@ -69,7 +69,7 @@ export const MoveToGroupModal = ({
                     </p>
                   </div>
                   {selectedGroupId === group.id && (
-                    <Icon name="check-circle" className="text-blue-500" />
+                    <Icon name="circle-check" className="text-blue-500" />
                   )}
                 </div>
               </button>

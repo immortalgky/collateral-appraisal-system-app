@@ -3,7 +3,7 @@ interface DisplayCellProps {
   value: any;
   render?: (value: any) => React.ReactNode;
 }
-const DisplayCell = ({ isEditing, value, render }: DisplayCellProps) => {
+const DisplayCell = ({ value, render }: DisplayCellProps) => {
   return (
     <div>
       {render ? (

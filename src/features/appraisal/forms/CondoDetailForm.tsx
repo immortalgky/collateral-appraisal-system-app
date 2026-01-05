@@ -1,184 +1,105 @@
-import { FormCard, FormSection, type FormField } from '@/shared/components';
+import { FormFields, type FormField } from '@/shared/components/form';
 import CondoAreaDetailForm from './CondoAreaDetailForm';
-import SectionDivider from '@/shared/components/sections/SectionDevider';
+import Icon from '@/shared/components/Icon';
+import type { ReactNode } from 'react';
+
+// SectionRow component for consistent section styling with icons
+interface SectionRowProps {
+  title: string;
+  icon?: string;
+  children: ReactNode;
+  isLast?: boolean;
+}
+
+const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
+  <>
+    <div className="col-span-1 pt-1">
+      <div className="flex items-center gap-2">
+        {icon && (
+          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
+            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
+          </div>
+        )}
+        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
+      </div>
+    </div>
+    <div className="col-span-4">
+      <div className="grid grid-cols-12 gap-4">
+        {children}
+      </div>
+    </div>
+    {!isLast && <div className="h-px bg-gray-200 col-span-5" />}
+  </>
+);
 
 function CondoDetailForm() {
   return (
-    <div>
-      {/* Condominum Information */}
-      <div className="grid grid-cols-4 gap-6 p-b">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Condominum Information</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} lineClassName="border-gray-100" />
+    <div className="grid grid-cols-5 gap-6">
+      <SectionRow title="Condominium Information" icon="building">
+        <FormFields fields={condoFields} />
+      </SectionRow>
 
-      {/* Condominium Location */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Condominium Location</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoLocationFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Condominium Location" icon="map-location-dot">
+        <FormFields fields={condoLocationFields} />
+      </SectionRow>
 
-      {/* Decoration */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Decoration</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoDecorationFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Decoration" icon="paint-roller">
+        <FormFields fields={condoDecorationFields} />
+      </SectionRow>
 
-      {/* Age/ Height Condominium */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Age/ Height of the Condominium Building</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={ageHeightCondoFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Age/Height of the Building" icon="calendar-days">
+        <FormFields fields={ageHeightCondoFields} />
+      </SectionRow>
 
-      {/* Building Form */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Building Form</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={buildingFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Building Form" icon="building-columns">
+        <FormFields fields={buildingFormFields} />
+      </SectionRow>
 
-      {/* Construction Materials */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Construction Materials</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={constructionMaterialsFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Construction Materials" icon="cubes">
+        <FormFields fields={constructionMaterialsFormFields} />
+      </SectionRow>
 
-      {/* Room Layout */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Room Layout</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoRoomLayoutFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Room Layout" icon="bed">
+        <FormFields fields={condoRoomLayoutFormFields} />
+      </SectionRow>
 
-      {/* Location View */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Location View</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={locationViewFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Location View" icon="eye">
+        <FormFields fields={locationViewFormFields} />
+      </SectionRow>
 
-      {/* Floor */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Floor</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={floorFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Floor" icon="layer-group">
+        <FormFields fields={floorFormFields} />
+      </SectionRow>
 
-      {/* Roof */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Roof</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={roofFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Roof" icon="tent">
+        <FormFields fields={roofFormFields} />
+      </SectionRow>
 
-      {/* Area Details */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Area Details</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
+      <SectionRow title="Area Details" icon="chart-area">
+        <div className="col-span-12">
           <CondoAreaDetailForm name={'condoDetail'} />
         </div>
-      </div>
-      <SectionDivider label={''} />
+      </SectionRow>
 
-      {/* Expropriation */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Expropriation</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={expropriationFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Expropriation" icon="file-invoice">
+        <FormFields fields={expropriationFields} />
+      </SectionRow>
 
-      {/* Condominuim Facility */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Condominuim Facility</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={condoFacilityFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Condominium Facility" icon="dumbbell">
+        <FormFields fields={condoFacilityFields} />
+      </SectionRow>
 
-      {/* Environment */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Environment</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={environmentFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="Environment" icon="tree">
+        <FormFields fields={environmentFields} />
+      </SectionRow>
 
-      {/* In Forest Boundary */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">In Forrest Boundary</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={inForestBoundaryFormFields}></FormSection>
-        </div>
-      </div>
-      <SectionDivider label={''} />
+      <SectionRow title="In Forest Boundary" icon="tree-city">
+        <FormFields fields={inForestBoundaryFormFields} />
+      </SectionRow>
 
-      {/* Remarks */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="font-medium col-span-1">
-          <p className="col-span-1">Remarks</p>
-        </div>
-        <div className="grid grid-cols-12 gap-4 col-span-3">
-          <FormSection fields={remarkFormFields}></FormSection>
-        </div>
-      </div>
+      <SectionRow title="Remarks" icon="comment" isLast>
+        <FormFields fields={remarkFormFields} />
+      </SectionRow>
     </div>
   );
 }
@@ -703,7 +624,7 @@ const condoFacilityOptions = [
   { value: '0', label: 'Passenger Elevator' },
   { value: '1', label: 'Hallway' },
   { value: '2', label: 'Parking' },
-  { value: '3', label: 'File Escape' },
+  { value: '3', label: 'Fire Escape' },
   { value: '4', label: 'Fire Extinguishing System' },
   { value: '5', label: 'Swimming Pool' },
   { value: '6', label: 'Fitness Room' },
@@ -764,7 +685,7 @@ const environmentFields: FormField[] = [
 const inForestBoundaryFormFields: FormField[] = [
   {
     type: 'boolean-toggle',
-    label: 'Is In Forrest Boundary',
+    label: 'Is In Forest Boundary',
     name: 'condoDetail.inForestBoundary',
     required: false,
     options: ['No', 'Yes'],

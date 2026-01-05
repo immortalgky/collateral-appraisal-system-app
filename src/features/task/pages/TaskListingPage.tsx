@@ -344,12 +344,12 @@ function TaskListingPage() {
         // List View
         <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
           <div className="flex-1 min-h-0 overflow-auto">
-            <table className="table table-sm table-pin-rows min-w-max">
-              <thead>
+            <table className="table table-sm min-w-max">
+              <thead className="sticky top-0 z-20 bg-gray-50">
                 <tr className="border-b border-gray-200">
                   <th
                     onClick={() => handleSort('appraisalReportNo')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky left-0 z-20 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full"
+                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full"
                   >
                     <div className="flex items-center gap-1.5">
                       Appraisal Number

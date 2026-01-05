@@ -37,7 +37,7 @@ const AddressAutocomplete = ({
 
   const formatDisplayValue = (address: ThaiAddress | null): string => {
     if (!address) return '';
-    return `${address.subDistrictName}, ${address.districtName}, ${address.provinceName}`;
+    return address.subDistrictName; // Only show subdistrict in the input field
   };
 
   const handleClear = () => {
@@ -62,7 +62,7 @@ const AddressAutocomplete = ({
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+                : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
               isDisabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
                 : 'bg-white hover:border-gray-300',
@@ -114,8 +114,8 @@ const AddressAutocomplete = ({
                 className={({ focus, selected }) =>
                   clsx(
                     'relative cursor-pointer select-none py-2.5 px-4 text-sm',
-                    focus ? 'bg-primary-50 text-primary-900' : 'text-gray-900',
-                    selected && 'bg-primary-100',
+                    focus ? 'bg-gray-100 text-gray-900' : 'text-gray-900',
+                    selected && 'bg-gray-100',
                   )
                 }
               >
@@ -125,7 +125,7 @@ const AddressAutocomplete = ({
                       {address.subDistrictName}, {address.districtName}, {address.provinceName}
                     </span>
                     {selected && (
-                      <Icon name="check" style="solid" className="w-4 h-4 text-primary-600" />
+                      <Icon name="check" style="solid" className="w-4 h-4 text-gray-600" />
                     )}
                   </div>
                 )}

@@ -1,6 +1,6 @@
-import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import { FormFields, type FormField } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useGetMarketSurveyTemplate, useGetParameter, useSurveyTemplateFactors } from '../api';
+import { useGetMarketSurveyTemplate, useSurveyTemplateFactors } from '../api';
 import { useEffect } from 'react';
 import type { GetMarketSurveyTemplateResponseType } from '@/shared/forms/marketSurvey';
 
@@ -25,13 +25,16 @@ const MarketSurveyForm = () => {
   const { data: factor = [], isLoading } = useSurveyTemplateFactors(surveyTemplateCode);
 
   // mock parameter options
-  const parameterOptions = mockParameterOptions.reduce((acc, group) => {
-    acc[group.parameterGroup] = group.values.map(v => ({
-      value: v.code,
-      label: v.description,
-    }));
-    return acc;
-  }, {});
+  const parameterOptions = mockParameterOptions.reduce(
+    (acc, group) => {
+      acc[group.parameterGroup] = group.values.map(v => ({
+        value: v.code,
+        label: v.description,
+      }));
+      return acc;
+    },
+    {} as Record<string, { value: string; label: string }[]>
+  );
 
   useEffect(() => {
     if (!factor.length) return;
@@ -56,7 +59,7 @@ const MarketSurveyForm = () => {
       </div>
       <div className="col-span-3">
         <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={collateralTypeField} />
+          <FormFields fields={collateralTypeField} />
         </div>
       </div>
       <div className="col-span-1">
@@ -64,7 +67,7 @@ const MarketSurveyForm = () => {
       </div>
       <div className="col-span-3">
         <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={templateField} />
+          <FormFields fields={templateField} />
         </div>
       </div>
       <div className="col-span-1">
@@ -72,7 +75,7 @@ const MarketSurveyForm = () => {
       </div>
       <div className="col-span-3">
         <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={surveyNameField} />
+          <FormFields fields={surveyNameField} />
         </div>
       </div>
       {isLoading ? (
@@ -88,7 +91,7 @@ const MarketSurveyForm = () => {
                 </div>
                 <div className="col-span-3">
                   <div className="grid grid-cols-12 gap-4">
-                    <FormSection fields={fields} />
+                    <FormFields fields={fields} />
                   </div>
                 </div>
               </div>
@@ -131,7 +134,11 @@ const surveyNameField: FormField[] = [
   },
 ];
 
-const buildFormField = (fac, index, parameterOptions): FormField => {
+const buildFormField = (
+  fac: GetMarketSurveyTemplateResponseType,
+  index: number,
+  parameterOptions: Record<string, { value: string; label: string }[]>
+): FormField => {
   switch (fac.dataType) {
     case 'dropdown':
       return {
@@ -228,8 +235,8 @@ const defaultMarketSurveyData = (factors: GetMarketSurveyTemplateResponseType[])
     fieldName: fac.fieldName,
     dataType: fac.dataType,
     parameterGroup: fac.parameterGroup ?? '',
-    fieldLength: fac.fieldLength ?? null,
-    fieldDecimal: fac.fieldDecimal ?? null,
+    fieldLength: fac.fieldLength ?? 0,
+    fieldDecimal: fac.fieldDecimal ?? 0,
     mandatory: 'N',
     displaySeq: 0,
     value: '',

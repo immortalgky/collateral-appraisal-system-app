@@ -1,17 +1,19 @@
 import Button from '@/shared/components/Button';
-import FormSection from '@/shared/components/sections/FormSection';
+import { FormFields, type FormField } from '@/shared/components/form';
 import { useEffect } from 'react';
 import { FormProvider, type UseFormReturn } from 'react-hook-form';
+import type { ListBoxItem } from '@/shared/components/inputs/Dropdown';
+import type { RadioOption } from '@/shared/components/inputs/RadioGroup';
 
 interface HeaderField {
-  name?: string;
+  name: string;
   label: string;
-  type?: string;
+  type?: 'text-input' | 'number-input' | 'dropdown' | 'radio-group' | 'date-input';
   colSpan: number;
   disabled?: boolean;
-  options?: [];
+  options?: ListBoxItem[] | RadioOption[];
   required?: boolean;
-  orientation?: string;
+  orientation?: 'horizontal' | 'vertical';
 }
 
 interface LandTitleModalProps {
@@ -39,36 +41,49 @@ const LandTitleModal = ({
     setValue('governmentPrice', price * sqwa);
   }, [pricePerSqWa, totalSqWa, setValue]);
 
-  const fields = headers.map(h => {
+  const fields: FormField[] = headers.map(h => {
+    const baseProps = {
+      name: h.name,
+      label: h.label,
+      wrapperClassName: `col-span-${h.colSpan ?? 4}`,
+      disabled: isEdit && h.disabled === true,
+    };
+
     if (h.type === 'dropdown') {
       return {
-        type: 'dropdown',
-        label: h.label,
-        name: h.name,
-        options: h.options ?? [],
-        wrapperClassName: `col-span-${h.colSpan ?? 4}`,
-        disabled: isEdit && h.disabled === true,
+        ...baseProps,
+        type: 'dropdown' as const,
+        options: (h.options ?? []) as ListBoxItem[],
         required: h.required,
       };
     }
+
     if (h.type === 'radio-group') {
       return {
-        type: 'radio-group',
-        label: h.label,
-        name: h.name,
-        options: h.options ?? [],
-        wrapperClassName: `col-span-${h.colSpan ?? 4}`,
+        ...baseProps,
+        type: 'radio-group' as const,
+        options: (h.options ?? []) as RadioOption[],
         orientation: h.orientation,
-        disabled: isEdit && h.disabled === true,
+      };
+    }
+
+    if (h.type === 'number-input') {
+      return {
+        ...baseProps,
+        type: 'number-input' as const,
+      };
+    }
+
+    if (h.type === 'date-input') {
+      return {
+        ...baseProps,
+        type: 'date-input' as const,
       };
     }
 
     return {
-      type: h.type ?? 'text-input',
-      label: h.label,
-      name: h.name,
-      wrapperClassName: `col-span-${h.colSpan ?? 4}`,
-      disabled: isEdit && h.disabled === true,
+      ...baseProps,
+      type: 'text-input' as const,
     };
   });
 
@@ -81,7 +96,7 @@ const LandTitleModal = ({
 
           <div className="flex-1 overflow-y-auto">
             <div className="grid grid-cols-12 gap-4">
-              <FormSection fields={fields} form={popupForm} />
+              <FormFields fields={fields} />
             </div>
           </div>
 

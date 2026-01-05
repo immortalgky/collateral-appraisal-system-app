@@ -1,4 +1,4 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 import { SectionHeader } from '@shared/components';
 
 const AppointmentAndFeeForm = () => {
@@ -47,7 +47,7 @@ const appointmentAndFeeFields: FormField[] = [
   {
     type: 'datetime-input',
     label: 'Appointment Date/Time',
-    name: 'detail.appointment.appointmentDateTime',
+    name: 'detail.appointment.appointmentDate',
     wrapperClassName: 'col-span-2',
     required: true,
   },

@@ -29,7 +29,15 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   appointment: { label: 'Appointment & Fee', icon: 'calendar-check' },
   summary: { label: 'Summary & Decision', icon: 'clipboard-check' },
   property: { label: 'Property Information', icon: 'buildings' },
-  land: { label: 'Land Detail', icon: 'map-location-dot' },
+  documents: { label: 'Document Checklist', icon: 'file-circle-check' },
+};
+
+// Labels for property sub-routes
+const propertySubRouteLabels: Record<string, { label: string; icon: string }> = {
+  land: { label: 'Land', icon: 'map-location-dot' },
+  building: { label: 'Building', icon: 'building' },
+  condo: { label: 'Condominium', icon: 'city' },
+  'land-building': { label: 'Land & Building', icon: 'house-chimney' },
 };
 
 function AppraisalLayout() {
@@ -63,16 +71,31 @@ function AppraisalLayout() {
 
     // Get current page from route
     const pathSegments = location.pathname.split('/').filter(Boolean);
-    // Path is like: /appraisal/:appraisalId/administration or /appraisal/:appraisalId/request/:requestId
+    // Path is like: /appraisal/:appraisalId/administration or /appraisal/:appraisalId/property/land/new
     if (pathSegments.length >= 3) {
-      const pageSegment = pathSegments[2]; // 'administration', 'request', etc.
+      const pageSegment = pathSegments[2]; // 'administration', 'property', etc.
       const pageInfo = routeLabels[pageSegment];
       if (pageInfo) {
+        // Add page breadcrumb
         items.push({
           label: pageInfo.label,
-          href: location.pathname,
+          href: `/appraisal/${appraisalId}/${pageSegment}`,
           icon: pageInfo.icon,
         });
+
+        // Handle nested property routes: /appraisal/:id/property/land/new
+        if (pageSegment === 'property' && pathSegments.length >= 4) {
+          const propertyType = pathSegments[3]; // 'land', 'building', 'condo', 'land-building'
+          const propertyInfo = propertySubRouteLabels[propertyType];
+          if (propertyInfo) {
+            const isNew = pathSegments[4] === 'new';
+            items.push({
+              label: isNew ? `New ${propertyInfo.label}` : propertyInfo.label,
+              href: location.pathname,
+              icon: propertyInfo.icon,
+            });
+          }
+        }
       }
     }
 
@@ -148,9 +171,9 @@ function AppraisalLayout() {
           <div className="flex-1 flex min-h-0">
             {/* Main Content */}
             <main className="py-4 flex-1 flex flex-col min-h-0">
-              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
+              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 overflow-x-hidden">
                 <Breadcrumb items={breadcrumbItems} className="mb-4 shrink-0" />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 overflow-x-hidden">
                   <ErrorBoundary>
                     <Outlet />
                   </ErrorBoundary>

@@ -10,6 +10,13 @@ export interface ThaiAddress {
 
 // Mock data for Thailand administrative divisions
 // Will be replaced with API data later
+/**
+ * Find address by subDistrict code
+ */
+export const findAddressBySubDistrictCode = (subDistrictCode: string): ThaiAddress | undefined => {
+  return mockThaiAddresses.find(addr => addr.subDistrictCode === subDistrictCode);
+};
+
 export const mockThaiAddresses: ThaiAddress[] = [
   // กรุงเทพมหานคร - พระนคร
   {

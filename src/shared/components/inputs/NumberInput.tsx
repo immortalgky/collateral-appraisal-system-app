@@ -18,8 +18,9 @@ interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
   value?: number | string | null;
   /** onChange handler - receives number value */
   onChange?: (e: { target: { name?: string; value: number | null } }) => void;
-  /** onBlur handler */
-  onBlur?: () => void;
+  /** onBlur handler - compatible with react-hook-form */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onBlur?: (...args: any[]) => any;
 }
 
 const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
@@ -228,7 +229,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
               'placeholder:text-gray-400 text-right',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+                : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
               isDisabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-9',

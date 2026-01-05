@@ -12,42 +12,12 @@ interface SearchUserModalProps {
 
 // Mock data for development
 const mockUsers: UserDtoType[] = [
-  {
-    id: '1',
-    name: 'Somchai Prasert',
-    email: 'somchai.prasert@lhbank.co.th',
-    avatar: null,
-  },
-  {
-    id: '2',
-    name: 'Nattaya Srisawat',
-    email: 'nattaya.srisawat@lhbank.co.th',
-    avatar: null,
-  },
-  {
-    id: '3',
-    name: 'Wichai Kongpan',
-    email: 'wichai.kongpan@lhbank.co.th',
-    avatar: null,
-  },
-  {
-    id: '4',
-    name: 'Pranee Thongchai',
-    email: 'pranee.thongchai@lhbank.co.th',
-    avatar: null,
-  },
-  {
-    id: '5',
-    name: 'Kittisak Wongprasert',
-    email: 'kittisak.wongprasert@lhbank.co.th',
-    avatar: null,
-  },
-  {
-    id: '6',
-    name: 'Supaporn Limwattana',
-    email: 'supaporn.limwattana@lhbank.co.th',
-    avatar: null,
-  },
+  { userId: 'P000000001', username: 'Somchai Prasert' },
+  { userId: 'P000000002', username: 'Nattaya Srisawat' },
+  { userId: 'P000000003', username: 'Wichai Kongpan' },
+  { userId: 'P000000004', username: 'Pranee Thongchai' },
+  { userId: 'P000000005', username: 'Kittisak Wongprasert' },
+  { userId: 'P000000006', username: 'Supaporn Limwattana' },
 ];
 
 const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) => {
@@ -57,11 +27,7 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return mockUsers;
     const query = searchQuery.toLowerCase();
-    return mockUsers.filter(
-      user =>
-        user.name.toLowerCase().includes(query) ||
-        (user.email && user.email.toLowerCase().includes(query)),
-    );
+    return mockUsers.filter(user => user.username.toLowerCase().includes(query));
   }, [searchQuery]);
 
   const handleSelect = () => {
@@ -77,8 +43,8 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
     onClose();
   };
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (username: string) => {
+    return username
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -116,42 +82,33 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
               <div className="divide-y divide-gray-100">
                 {filteredUsers.map(user => (
                   <button
-                    key={user.id}
+                    key={user.userId}
                     type="button"
                     onClick={() => setSelectedUser(user)}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      selectedUser?.id === user.id
+                      selectedUser?.userId === user.userId
                         ? 'bg-primary-50 hover:bg-primary-100'
                         : 'hover:bg-gray-50'
                     }`}
                   >
                     {/* Avatar */}
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-sm font-medium text-primary-700">
-                          {getInitials(user.name)}
-                        </span>
-                      </div>
-                    )}
+                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary-700">
+                        {getInitials(user.username)}
+                      </span>
+                    </div>
 
                     {/* User Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">{user.name}</div>
-                      {user.email && (
-                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
-                      )}
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {user.username}
+                      </div>
                     </div>
 
                     {/* Selected Indicator */}
-                    {selectedUser?.id === user.id && (
+                    {selectedUser?.userId === user.userId && (
                       <Icon
-                        name="check-circle"
+                        name="circle-check"
                         style="solid"
                         className="w-5 h-5 text-primary-600"
                       />

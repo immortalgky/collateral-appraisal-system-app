@@ -4,12 +4,12 @@ import AppraisalLayout from './AppraisalLayout';
 import HomePage from '../features/dashboard/pages/HomePage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import CallbackPage from '@features/auth/pages/CallbackPage.tsx';
-import CreateRequestPage from '@/features/request/pages/CreateRequestPage';
 import RequestListingPage from '@/features/request/pages/RequestListingPage';
-import RequestDetailPage from '@/features/request/pages/RequestDetailPage';
+import RequestPage from '@/features/request/pages/RequestPage';
 import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import PropertyInformationPage from '@/features/appraisal/pages/PropertyInformationPage';
+import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistPage';
 import LandDetailPage from '@/features/appraisal/pages/LandDetailPage';
 import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
@@ -20,6 +20,7 @@ import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
 import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
+import CollateralPhotoPage from '@/features/appraisal/pages/CollateralPhotoPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 
 /**
@@ -75,8 +76,12 @@ export const router = createBrowserRouter([
             element: <RequestListingPage />,
           },
           {
+            path: 'new',
+            element: <RequestPage key="new" />,
+          },
+          {
             path: ':requestId',
-            element: <RequestDetailPage />,
+            element: <RequestPage key="detail" />,
           },
         ],
       },
@@ -111,11 +116,6 @@ export const router = createBrowserRouter([
         path: 'land-building-detail',
         element: <CreateLandBuildingPage />,
       },
-      // Development Routes
-      {
-        path: 'dev/request',
-        element: <CreateRequestPage />,
-      },
       {
         path: 'dev/property-information',
         element: <PropertyInformationPage />,
@@ -143,7 +143,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'request/:requestId',
-        element: <RequestDetailPage readOnly />,
+        element: <RequestPage readOnly />,
       },
       {
         path: 'administration',
@@ -152,6 +152,67 @@ export const router = createBrowserRouter([
       {
         path: 'appointment',
         element: <AppointmentAndFeePage />,
+      },
+      {
+        path: 'property',
+        children: [
+          {
+            index: true,
+            element: <PropertyInformationPage />,
+          },
+          {
+            path: 'land/new',
+            element: <CreateLandPage />,
+          },
+          {
+            path: 'land/:propertyId',
+            element: <CreateLandPage />,
+          },
+          {
+            path: 'land/:propertyId/photos',
+            element: <CollateralPhotoPage />,
+          },
+          {
+            path: 'building/new',
+            element: <CreateBuildingPage />,
+          },
+          {
+            path: 'building/:propertyId',
+            element: <CreateBuildingPage />,
+          },
+          {
+            path: 'building/:propertyId/photos',
+            element: <CollateralPhotoPage />,
+          },
+          {
+            path: 'condo/new',
+            element: <CreateCondoPage />,
+          },
+          {
+            path: 'condo/:propertyId',
+            element: <CreateCondoPage />,
+          },
+          {
+            path: 'condo/:propertyId/photos',
+            element: <CollateralPhotoPage />,
+          },
+          {
+            path: 'land-building/new',
+            element: <CreateLandBuildingPage />,
+          },
+          {
+            path: 'land-building/:propertyId',
+            element: <CreateLandBuildingPage />,
+          },
+          {
+            path: 'land-building/:propertyId/photos',
+            element: <CollateralPhotoPage />,
+          },
+        ],
+      },
+      {
+        path: 'documents',
+        element: <DocumentChecklistPage />,
       },
       {
         path: 'summary',

@@ -45,6 +45,13 @@ export type {
   CheckboxField,
   RadioGroupField,
   SwitchField,
+  AppraisalSelectorField,
+  LocationSelectorField,
+  // Condition types
+  ConditionOperator,
+  FieldCondition,
+  FieldConditions,
+  ConditionInput,
 } from './types';
 
 // Utilities

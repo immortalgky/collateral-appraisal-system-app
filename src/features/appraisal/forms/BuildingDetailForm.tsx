@@ -1,189 +1,128 @@
-import FormSection, { type FormField } from '@/shared/components/sections/FormSection';
+import { FormFields, type FormField } from '@/shared/components/form';
 import SurfaceTable from '../components/tables/SurfaceTable';
-import SectionDivider from '@/shared/components/sections/SectionDevider';
-import { BuildingDetail } from '../components/tables/BuildlingDetail';
+import { BuildingDetail } from '../components/tables/BuildingDetail';
+import Icon from '@/shared/components/Icon';
+import type { ReactNode } from 'react';
 
 interface BuildingDetailFormProps {
   prefix?: string;
 }
+
+// SectionRow component for consistent section styling with icons
+interface SectionRowProps {
+  title: string;
+  icon?: string;
+  children: ReactNode;
+  isLast?: boolean;
+}
+
+const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
+  <>
+    <div className="col-span-1 pt-1">
+      <div className="flex items-center gap-2">
+        {icon && (
+          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
+            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
+          </div>
+        )}
+        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
+      </div>
+    </div>
+    <div className="col-span-4">
+      <div className="grid grid-cols-12 gap-4">
+        {children}
+      </div>
+    </div>
+    {!isLast && <div className="h-px bg-gray-200 col-span-5" />}
+  </>
+);
+
 const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
   return (
     <div className="grid grid-cols-5 gap-6">
-      <div className="col-span-1">
-        <p>Building Information</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={buildingInfoField} />
+      <SectionRow title="Building Information" icon="building">
+        <FormFields fields={buildingInfoField} />
+      </SectionRow>
+
+      <SectionRow title="Building Type" icon="list">
+        <FormFields fields={buildingTypeField} />
+      </SectionRow>
+
+      <SectionRow title="Decoration" icon="paint-roller">
+        <FormFields fields={decorationField} />
+      </SectionRow>
+
+      <SectionRow title="Encroachment" icon="arrows-left-right">
+        <FormFields fields={encroachmentField} />
+      </SectionRow>
+
+      <SectionRow title="Building Material" icon="cubes">
+        <FormFields fields={buildingMaterialField} />
+      </SectionRow>
+
+      <SectionRow title="Building Style" icon="ruler-combined">
+        <FormFields fields={buildingStyleField} />
+      </SectionRow>
+
+      <SectionRow title="Is Residential" icon="house">
+        <FormFields fields={isResidentialField} />
+      </SectionRow>
+
+      <SectionRow title="Construction Style" icon="hammer">
+        <FormFields fields={constructionStyleField} />
+      </SectionRow>
+
+      <SectionRow title="General Structure" icon="warehouse">
+        <FormFields fields={generalStructureField} />
+      </SectionRow>
+
+      <SectionRow title="Roof Frame" icon="house-chimney">
+        <FormFields fields={roofFrameField} />
+      </SectionRow>
+
+      <SectionRow title="Roof" icon="tent">
+        <FormFields fields={roofField} />
+      </SectionRow>
+
+      <SectionRow title="Ceiling" icon="border-top-left">
+        <FormFields fields={ceilingField} />
+      </SectionRow>
+
+      <SectionRow title="Wall" icon="square">
+        <FormFields fields={wallField} />
+      </SectionRow>
+
+      <SectionRow title="Surface" icon="layer-group">
+        <SurfaceTable headers={surfaceTableHeader} name={'buildingDetail.surface'} />
+      </SectionRow>
+
+      <SectionRow title="Fence" icon="fence">
+        <FormFields fields={fenceField} />
+      </SectionRow>
+
+      <SectionRow title="Construction Type" icon="gears">
+        <FormFields fields={constTypeFeild} />
+      </SectionRow>
+
+      <SectionRow title="Utilization" icon="hand-holding">
+        <FormFields fields={utilizationFeild} />
+      </SectionRow>
+
+      <SectionRow title="Building Detail" icon="table">
+        <div className="col-span-12">
+          <BuildingDetail
+            name={
+              prefix != null
+                ? `${prefix}.buildingDetail.buildingDepreciationDetails`
+                : 'buildingDetail.buildingDepreciationDetails'
+            }
+          />
         </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Building Type</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={buildingTypeField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Decoration</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={decorationField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Encroachment</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={encroachmentField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Building Material</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={buildingMaterialField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Building Style</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={buildingStyleField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Is Residential</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={isResidentialField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Construction Style</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={constructionStyleField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>General Structure</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={generalStructureField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Roof Frame</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={roofFrameField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Roof</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={roofField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Ceiling</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={ceilingField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Wall</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={wallField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Surface</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <SurfaceTable headers={surfaceTableHeader} name={'buildingDetail.surface'} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Fence</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={fenceField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Construction Type</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={constTypeFeild} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Utilization</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={utilizationFeild} />
-        </div>
-      </div>
-      <SectionDivider className="col-span-5" />
-      <div className="col-span-1">
-        <span>Building Detail</span>
-      </div>
-      <div className="col-span-4">
-        <BuildingDetail
-          name={
-            prefix != null
-              ? `${prefix}.buildingDetail.buildingDepreciationDetails`
-              : 'buildingDetail.buildingDepreciationDetails'
-          }
-        />
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
-      <div className="col-span-1">
-        <p>Remark</p>
-      </div>
-      <div className="col-span-4">
-        <div className="grid grid-cols-12 gap-4">
-          <FormSection fields={remarkField} />
-        </div>
-      </div>
-      <div className="h-[0.1px] bg-gray-300 mt-6 col-span-5"></div>
+      </SectionRow>
+
+      <SectionRow title="Remark" icon="comment" isLast>
+        <FormFields fields={remarkField} />
+      </SectionRow>
     </div>
   );
 };
@@ -600,13 +539,13 @@ const surfaceTableHeader = [
   {
     name: 'fromFloorNumber',
     label: 'From Floor No.',
-    inputType: 'number',
+    inputType: 'number' as const,
   },
-  { name: 'toFloorNumber', label: 'To Floor No.', inputType: 'number' },
+  { name: 'toFloorNumber', label: 'To Floor No.', inputType: 'number' as const },
   {
     name: 'floorType',
     label: 'Floor Type',
-    inputType: 'dropdown',
+    inputType: 'dropdown' as const,
     options: [
       { value: 'CB', label: 'Cement Block' },
       { value: 'WOOD', label: 'Wood' },
@@ -616,7 +555,7 @@ const surfaceTableHeader = [
   {
     name: 'floorStructure',
     label: 'Floor Structure',
-    inputType: 'dropdown',
+    inputType: 'dropdown' as const,
     options: [
       { value: 'CB', label: 'Cement Block' },
       { value: 'WOOD', label: 'Wood' },
@@ -626,7 +565,7 @@ const surfaceTableHeader = [
   {
     name: 'floorSurface',
     label: 'Floor Surface',
-    inputType: 'dropdown',
+    inputType: 'dropdown' as const,
     options: [
       { value: 'CB', label: 'Cement Block' },
       { value: 'WOOD', label: 'Wood' },

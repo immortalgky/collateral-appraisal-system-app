@@ -7,18 +7,20 @@ import type {
   CreateBuildingResponseType,
 } from '@/shared/forms/typeBuilding';
 import type { CreateLandRequestType, CreateLandResponseType } from '@/shared/forms/v2';
-import {
+import type {
   CreateLandBuildingRequestType,
   CreateLandBuildingResponseType,
 } from '../../shared/forms/typeLandBuilding';
-import { CreateCondoRequestType, CreateCondoResponseType } from '../../shared/forms/typeCondo';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import type { CreateCondoRequestType, CreateCondoResponseType } from '../../shared/forms/typeCondo';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from '@shared/api/axiosInstance';
 import type { AppraisalData } from './context/AppraisalContext';
 
 // ==================== Collateral Appraisal APIs ====================
 
 export const useCreateLandRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (request: CreateLandRequestType): Promise<CreateLandResponseType> => {
       console.log(request);
@@ -27,6 +29,7 @@ export const useCreateLandRequest = () => {
     },
     onSuccess: data => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -35,6 +38,8 @@ export const useCreateLandRequest = () => {
 };
 
 export const useCreateBuildingRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (request: CreateBuildingRequestType): Promise<CreateBuildingResponseType> => {
       console.log(request);
@@ -43,6 +48,7 @@ export const useCreateBuildingRequest = () => {
     },
     onSuccess: data => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -51,6 +57,8 @@ export const useCreateBuildingRequest = () => {
 };
 
 export const useCreateLandBuildingRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (
       request: CreateLandBuildingRequestType,
@@ -61,6 +69,7 @@ export const useCreateLandBuildingRequest = () => {
     },
     onSuccess: data => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -69,6 +78,8 @@ export const useCreateLandBuildingRequest = () => {
 };
 
 export const useCreateCondoRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (request: CreateCondoRequestType): Promise<CreateCondoResponseType> => {
       console.log(request);
@@ -77,6 +88,7 @@ export const useCreateCondoRequest = () => {
     },
     onSuccess: data => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -87,6 +99,8 @@ export const useCreateCondoRequest = () => {
 // ==================== Market Survey APIs ====================
 
 export const useCreateMarketSurveyRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (
       request: CreateMarketSurveyRequestType,
@@ -97,6 +111,7 @@ export const useCreateMarketSurveyRequest = () => {
     },
     onSuccess: data => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['market-survey'] });
     },
     onError: (error: any) => {
       console.log(error);

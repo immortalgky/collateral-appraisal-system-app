@@ -4,13 +4,14 @@ export const createRequestRequestDefaults: CreateRequestRequestType = {
   sessionId: undefined,
   purpose: null,
   channel: null,
+  // TODO: Replace with actual logged-in user when login is implemented
   requestor: {
-    userId: '',
-    username: '',
+    userId: 'P000000001',
+    username: 'System User',
   },
   creator: {
-    userId: '',
-    username: '',
+    userId: 'P000000001',
+    username: 'System User',
   },
   priority: 'NORMAL',
   isPma: false,
@@ -25,6 +26,9 @@ export const createRequestRequestDefaults: CreateRequestRequestType = {
       totalSellingPrice: null,
     },
     prevAppraisalId: null,
+    prevAppraisalReportNo: null,
+    prevAppraisalValue: null,
+    prevAppraisalDate: null,
     address: {
       houseNumber: null,
       projectName: null,

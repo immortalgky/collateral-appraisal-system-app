@@ -1,19 +1,45 @@
 import { create } from 'zustand';
 import type { PropertyGroup, PropertyItem, PropertyStore } from './types';
 
-const createDefaultGroup = (index: number): PropertyGroup => ({
+// Mock properties for development
+const MOCK_PROPERTIES: Omit<PropertyItem, 'id'>[] = [
+  {
+    type: 'Land and building',
+    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
+    address: '123/45 Sukhumvit Road, Soi 55',
+    area: '150 sq.wa.',
+    priceRange: '฿15,000,000 - ฿18,000,000',
+    location: 'Watthana, Bangkok',
+  },
+  {
+    type: 'Condominium',
+    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
+    address: 'The Line Asoke-Ratchada Unit 2501',
+    area: '45 sq.m.',
+    priceRange: '฿6,500,000 - ฿7,200,000',
+    location: 'Din Daeng, Bangkok',
+  },
+];
+
+const createDefaultGroup = (): PropertyGroup => ({
+  id: crypto.randomUUID(),
+  name: 'Group 1',
+  items: MOCK_PROPERTIES.map(prop => ({ ...prop, id: crypto.randomUUID() })),
+});
+
+const createEmptyGroup = (index: number): PropertyGroup => ({
   id: crypto.randomUUID(),
   name: `Group ${index}`,
   items: [],
 });
 
 export const usePropertyStore = create<PropertyStore>(set => ({
-  groups: [createDefaultGroup(1)],
+  groups: [createDefaultGroup()],
   clipboard: null,
 
   addGroup: () =>
     set(state => ({
-      groups: [...state.groups, createDefaultGroup(state.groups.length + 1)],
+      groups: [...state.groups, createEmptyGroup(state.groups.length + 1)],
     })),
 
   deleteGroup: (groupId: string) =>

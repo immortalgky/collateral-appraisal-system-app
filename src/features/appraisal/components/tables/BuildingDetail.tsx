@@ -30,7 +30,8 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
     }
   };
 
-  const buildingDetailArr = useWatch({ name });
+  // Watch for form changes to trigger re-renders
+  useWatch({ name });
 
   return (
     <div>
@@ -48,7 +49,7 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
           year: 0,
           totalDepreciationPercent: 0,
           depreciationPercentPerYear: 0,
-          depreciationMethod: 'Period',
+          depreciationMethod: true, // true = "Period", false = "Gross"
           totalDepreciationPrice: 0,
           pricePerSqMeterAfterDepreciation: 0,
           totalPriceAfterDepreciation: 0,
@@ -80,85 +81,111 @@ const propertiesTableHeader: FormTableHeader[] = [
   {
     type: 'row-number',
     rowNumberColumn: true,
-    headerName: 'Seq',
-    className: 'w-[70px] border-r-1 border-neutral-3',
+    headerName: 'No.',
+    className: 'w-[36px] border-r border-neutral-3',
+    tooltip: 'Row number',
   },
   {
     type: 'derived',
     headerName: 'Detail',
     name: 'areaDescription',
-    className: 'w-[200px]  border-r-1 border-neutral-3',
+    className: 'w-[120px] border-r border-neutral-3',
+    tooltip: 'Building area description',
+    footer: () => (
+      <span className="font-semibold text-gray-700 text-xs">Total</span>
+    ),
   },
   {
     type: 'derived',
     name: 'isBuilding',
-    headerName: 'IsBuilding',
-    className: 'w-[100px]  border-r-1 border-neutral-3',
-    modifier: (value: string) => (value ? 'Yes' : 'No'),
+    headerName: 'Bldg',
+    className: 'w-[45px] border-r border-neutral-3',
+    align: 'center',
+    render: ({ value }) => (
+      <span className={`inline-flex items-center justify-center text-xs font-medium px-1.5 py-0.5 rounded ${value ? 'bg-success-100 text-success-700' : 'bg-gray-100 text-gray-500'}`}>
+        {value ? 'Yes' : 'No'}
+      </span>
+    ),
+    tooltip: 'Is Building (Yes/No)',
   },
   {
     type: 'derived',
     name: 'area',
     headerName: 'Area',
-    className: 'w-[200px]  border-r-1 border-neutral-3',
+    className: 'w-[70px] border-r border-neutral-3',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    tooltip: 'Area (sq.m.)',
+    footer: ({ rows }: { rows: any[] }) => {
+      if (!Array.isArray(rows) || rows.length === 0) return null;
+      const total = rows.reduce((acc, row) => acc + toNumber(row['area']), 0);
+      return <span className="font-medium text-gray-700 text-xs">{total.toLocaleString()}</span>;
+    },
   },
   {
     type: 'group',
     groupName: 'replacementCost',
-    headerName: 'Replacement Cost New',
-    className: 'w-[400px] border-b-1 border-r-1 border-neutral-3',
+    headerName: 'Replacement Cost Before Depreciation',
+    className: 'border-b border-r border-neutral-3',
     align: 'center',
+    tooltip: 'Cost to replace the building before depreciation',
   },
   {
     type: 'derived',
     groupName: 'replacementCost',
     name: 'pricePerSqMeterBeforeDepreciation',
-    headerName: 'Price per sq.M',
-    className: 'w-[200px]  border-r-1 border-neutral-3',
+    headerName: '฿/m²',
+    className: 'w-[75px] border-r border-neutral-3',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    tooltip: 'Price per sq.m. before depreciation',
   },
   {
     type: 'derived',
     groupName: 'replacementCost',
     name: 'totalPriceBeforeDepreciation',
     headerName: 'Total Price',
-    className: 'w-[200px]  border-r-1 border-neutral-3',
+    className: 'w-[100px] border-r border-neutral-3',
     align: 'right',
-
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row }) => {
       const area = row['area'];
       const pricePerSqm = row['pricePerSqMeterBeforeDepreciation'];
       return area * pricePerSqm;
     },
+    tooltip: 'Area × Price/sq.m.',
+    isComputed: true,
+    footer: ({ rows }: { rows: any[] }) => {
+      if (!Array.isArray(rows) || rows.length === 0) return null;
+      const total = rows.reduce((acc, row) => acc + toNumber(row['totalPriceBeforeDepreciation']), 0);
+      return <span className="font-semibold text-gray-700 text-xs">{total.toLocaleString()}</span>;
+    },
   },
   {
     type: 'derived',
     name: 'year',
-    headerName: 'Age (Year)',
-    className: 'w-[200px] border-r-1 border-neutral-3',
+    headerName: 'Yr',
+    className: 'w-[40px] border-r border-neutral-3',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    tooltip: 'Building age (years)',
   },
   {
     type: 'group',
     groupName: 'depreciation',
     headerName: 'Depreciation',
-    className: 'w-[1000px] border-b-1 border-r-1 border-neutral-3',
+    className: 'border-b border-r border-neutral-3',
     align: 'center',
+    tooltip: 'Depreciation calculations',
   },
   {
     type: 'derived',
     groupName: 'depreciation',
     name: 'totalDepreciationPercentPerYear',
-    headerName: 'Depreciation (%/year)',
-    className: 'w-[200px] border-r-1 border-neutral-3',
+    headerName: '%/yr',
+    className: 'w-[50px] border-r border-neutral-3',
     align: 'right',
-
-    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toFixed(1) : value),
     compute: ({ rowIndex, outScopeFields }) => {
       const buildingDepreciations =
         outScopeFields.buildingDepre?.[rowIndex]?.buildingDepreciationMethods ?? [];
@@ -171,16 +198,17 @@ const propertiesTableHeader: FormTableHeader[] = [
 
       return totalDepreciationPercent / buildingDepreciations.length;
     },
+    tooltip: 'Avg depreciation rate/year',
+    isComputed: true,
   },
   {
     type: 'derived',
-    headerName: 'Total Depreciation (%)',
+    headerName: 'Tot%',
     groupName: 'depreciation',
     name: 'totalDepreciationPercent',
-    className: 'w-[200px] border-r-1 border-neutral-3',
+    className: 'w-[50px] border-r border-neutral-3',
     align: 'right',
-
-    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    modifier: (value: string) => (Number(value) ? Number(value).toFixed(1) : value),
     compute: ({ rowIndex, outScopeFields }) => {
       const buildingDepreciations =
         outScopeFields.buildingDepre?.[rowIndex]?.buildingDepreciationMethods ?? [];
@@ -193,21 +221,25 @@ const propertiesTableHeader: FormTableHeader[] = [
 
       return totalBuildingDepreciation / buildingDepreciations.length;
     },
+    tooltip: 'Total depreciation %',
+    isComputed: true,
   },
   {
     type: 'derived',
     groupName: 'depreciation',
     name: 'depreciationMethod',
-    headerName: 'Method',
-    className: 'w-[200px] border-r-1 border-neutral-3',
-    modifier: (value: string) => (value ? 'Period' : 'Gross'),
+    headerName: 'T',
+    className: 'w-[32px] border-r border-neutral-3',
+    align: 'center',
+    modifier: (value: string) => (value ? 'P' : 'G'),
+    tooltip: 'Method: P=Period, G=Gross',
   },
   {
     type: 'derived',
     groupName: 'depreciation',
     name: 'totalDepreciationPrice',
-    headerName: 'Total Depreciation (Bath)',
-    className: 'w-[200px] border-r-1 border-neutral-3',
+    headerName: 'Total Price',
+    className: 'w-[95px] border-r border-neutral-3',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ rowIndex, outScopeFields }) => {
@@ -221,20 +253,53 @@ const propertiesTableHeader: FormTableHeader[] = [
         .reduce((acc, curr) => acc + toNum(curr), 0);
       return totalDepreciationPrice;
     },
+    tooltip: 'Total depreciation (฿)',
+    isComputed: true,
+    footer: ({ rows }: { rows: any[] }) => {
+      if (!Array.isArray(rows) || rows.length === 0) return null;
+      const total = rows.reduce((acc, row) => acc + toNumber(row['totalDepreciationPrice']), 0);
+      return <span className="font-semibold text-orange-600 text-xs">{total.toLocaleString()}</span>;
+    },
   },
   {
     type: 'group',
     groupName: 'priceAfterDepreciation',
     headerName: 'Replacement Cost After Depreciation',
-    className: 'w-[400px] border-b-1 border-neutral-3',
+    className: 'border-b border-neutral-3',
     align: 'center',
+    tooltip: 'Values after depreciation',
+  },
+  {
+    type: 'derived',
+    groupName: 'priceAfterDepreciation',
+    name: 'totalPriceAfterDepreciation',
+    headerName: 'Total Price',
+    className: 'w-[110px] border-r border-neutral-3',
+    align: 'right',
+    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
+    compute: ({ row }) => {
+      const totalPriceBeforeDepreciation = row['totalPriceBeforeDepreciation'];
+      const totalDepreciationPrice = row['totalDepreciationPrice'];
+      return totalPriceBeforeDepreciation - totalDepreciationPrice;
+    },
+    footer: ({ rows }: { rows: any[] }) => {
+      if (!Array.isArray(rows) || rows.length === 0) return null;
+      const total = rows.reduce((acc, row) => acc + toNumber(row['totalPriceAfterDepreciation']), 0);
+      return (
+        <span className="font-bold text-success-600 text-xs">
+          {total.toLocaleString()}
+        </span>
+      );
+    },
+    tooltip: 'Total after depreciation',
+    isComputed: true,
   },
   {
     type: 'derived',
     groupName: 'priceAfterDepreciation',
     name: 'pricePerSqMeterAfterDepreciation',
-    headerName: 'Price per sq.M after depreciation',
-    className: 'w-[200px] border-r-1 border-neutral-3',
+    headerName: 'Price/Sq.m.',
+    className: 'w-[85px]',
     align: 'right',
     modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
     compute: ({ row }) => {
@@ -244,52 +309,21 @@ const propertiesTableHeader: FormTableHeader[] = [
       if (area === 0) return 0;
       return totalPriceAfterDepreciation / area;
     },
-    footer: (values: any) => {
-      const areaArr = values.map(v => toNumber(v['area']));
-      const totalPriceAfterDepreciationArr = values.map(v =>
-        toNumber(v['totalPriceAfterDepreciation']),
+    footer: ({ rows }: { rows: any[] }) => {
+      if (!Array.isArray(rows) || rows.length === 0) return null;
+
+      const totalArea = rows.reduce((acc, row) => acc + toNumber(row['area']), 0);
+      const totalPriceAfter = rows.reduce((acc, row) => acc + toNumber(row['totalPriceAfterDepreciation']), 0);
+
+      if (totalArea === 0) return null;
+
+      return (
+        <span className="font-medium text-gray-600 text-xs">
+          {Math.round(totalPriceAfter / totalArea).toLocaleString()}
+        </span>
       );
-
-      if (!Array.isArray(areaArr) && !Array.isArray(totalPriceAfterDepreciationArr)) return 0;
-      if (areaArr.length === 0 && totalPriceAfterDepreciationArr.length === 0) return 0;
-
-      const totalArea = areaArr.reduce((prev: number, curr: number) => prev + curr, 0);
-      const totalPriceAfterDepreciation = totalPriceAfterDepreciationArr.reduce(
-        (prev: number, curr: number) => prev + curr,
-        0,
-      );
-
-      return <span>Average: {(totalPriceAfterDepreciation / totalArea).toLocaleString()}</span>;
     },
-  },
-  {
-    type: 'derived',
-    groupName: 'priceAfterDepreciation',
-    name: 'totalPriceAfterDepreciation',
-    headerName: 'Total Price After Depreciation',
-    className: 'w-[200px]',
-    align: 'right',
-
-    modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
-    compute: ({ row }) => {
-      const totalPriceBeforeDepreciation = row['totalPriceBeforeDepreciation'];
-      const totalDepreciationPrice = row['totalDepreciationPrice'];
-      return totalPriceBeforeDepreciation - totalDepreciationPrice;
-    },
-    footer: (values: any) => {
-      const totalPriceAfterDepreciationArr = values.map(v =>
-        toNumber(v['totalPriceAfterDepreciation']),
-      );
-
-      if (!Array.isArray(totalPriceAfterDepreciationArr)) return 0;
-      if (totalPriceAfterDepreciationArr.length === 0) return 0;
-
-      const total = totalPriceAfterDepreciationArr.reduce(
-        (prev: number, curr: number) => prev + curr,
-        0,
-      );
-
-      return <span>Total: {total.toLocaleString()}</span>;
-    },
+    tooltip: 'Price/sq.m. after depreciation',
+    isComputed: true,
   },
 ];

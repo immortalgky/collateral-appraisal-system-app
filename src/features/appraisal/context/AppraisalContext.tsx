@@ -27,6 +27,10 @@ export interface AppraisalData {
   appointmentDateTime?: string | null;
   appointmentLocation?: string | null;
 
+  // Property Location
+  propertyLatitude?: number | null;
+  propertyLongitude?: number | null;
+
   // Fee info
   feePaymentType?: string | null;
   paymentStatus?: string | null;

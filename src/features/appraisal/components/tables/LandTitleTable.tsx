@@ -164,9 +164,10 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
   const isEmpty = values.length === 0;
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="max-h-60 overflow-y-auto">
-        <table className="table min-w-max">
+    <div className="w-full">
+      <div className="relative h-60">
+        <div className="absolute inset-0 overflow-auto border border-gray-200 rounded-lg">
+          <table className="table min-w-max">
           <thead>
             <tr className="bg-primary-700">
               {headers.map((header, index) => (
@@ -243,6 +244,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="border-t border-gray-100 ">

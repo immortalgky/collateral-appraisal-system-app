@@ -5,6 +5,7 @@ import {
 } from '@shared/schemas/v1';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { isAxiosError } from 'axios';
 import type { z } from 'zod';
 
 // Extract schemas for convenience
@@ -46,15 +47,17 @@ import type {
 } from './types/document';
 
 export const useCreateRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (request: CreateRequestRequestType): Promise<CreateRequestResponseType> => {
       console.log(request);
       const { data } = await axios.post('/requests', request);
       return data;
     },
-    // TODO: Change to actual logic
     onSuccess: data => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['requests'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -116,6 +119,14 @@ export const useGetRequestById = (id: string | undefined) => {
       return data;
     },
     enabled: !!id,
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
   });
 };
 
@@ -124,6 +135,8 @@ export const useGetRequestById = (id: string | undefined) => {
  * PUT /requests/{requestId}
  */
 export const useUpdateRequest = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       id,
@@ -135,8 +148,10 @@ export const useUpdateRequest = () => {
       const { data } = await axios.put(`/requests/${id}`, request);
       return data;
     },
-    onSuccess: data => {
+    onSuccess: (data, variables) => {
       console.log('Request updated successfully:', data);
+      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
     onError: (error: any) => {
       console.error('Failed to update request:', error);
@@ -274,6 +289,8 @@ export type GetRequestCommentsByRequestIdResponseType = z.infer<
  * POST /requests/{requestId}/comments
  */
 export const useAddComment = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       requestId,
@@ -285,6 +302,9 @@ export const useAddComment = () => {
       const { data: response } = await axios.post(`/requests/${requestId}/comments`, data);
       return response;
     },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.requestId] });
+    },
   });
 };
 
@@ -293,6 +313,8 @@ export const useAddComment = () => {
  * PUT /requests/{requestId}/comments/{commentId}
  */
 export const useUpdateComment = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       requestId,
@@ -306,6 +328,9 @@ export const useUpdateComment = () => {
       const { data } = await axios.put(`/requests/${requestId}/comments/${commentId}`, { comment });
       return data;
     },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.requestId] });
+    },
   });
 };
 
@@ -314,6 +339,8 @@ export const useUpdateComment = () => {
  * DELETE /requests/{requestId}/comments/{commentId}
  */
 export const useDeleteComment = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       requestId,
@@ -324,6 +351,9 @@ export const useDeleteComment = () => {
     }): Promise<RemoveRequestCommentResponseType> => {
       const { data } = await axios.delete(`/requests/${requestId}/comments/${commentId}`);
       return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.requestId] });
     },
   });
 };

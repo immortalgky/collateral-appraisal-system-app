@@ -6,9 +6,6 @@ const DropdownInputCell = ({
   rowIndex,
   fieldName,
   control,
-  isEditing,
-  inputType,
-  displayValue,
 }: {
   arrayName: string;
   rowIndex: number;
@@ -21,21 +18,15 @@ const DropdownInputCell = ({
 }) => {
   const cellName = `${arrayName}.${rowIndex}.${fieldName}`;
 
-  const { getValues } = useFormContext();
+  const { getValues: _getValues } = useFormContext();
 
   const {
-    field,
-    fieldState: { error },
+    field: _field,
+    fieldState: { error: _error },
   } = useController({ name: cellName, control });
 
-  const defaultValue = getValues(cellName);
-
-  return (
-    <div>
-      {/* {isEditing ? <Input type={'number'} {...field} /> : <div>{displayValue ?? defaultValue}</div>}
-      {error ? <div className="mt-1 text-sm text-danger">{error.message}</div> : null} */}
-    </div>
-  );
+  // TODO: Implement dropdown cell
+  return <div />;
 };
 
 export default DropdownInputCell;
