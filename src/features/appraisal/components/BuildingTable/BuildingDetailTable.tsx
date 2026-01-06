@@ -150,7 +150,7 @@ const BuildingDetailTable = ({
     return headers
       .filter(
         (header): header is FormTableDerivedHeader =>
-          'compute' in header && 'name' in header && header.compute !== undefined
+          'compute' in header && 'name' in header && header.compute !== undefined,
       )
       .map((header): DerivedRule => {
         return { targetKey: header.name, compute: header.compute!, normalize: header.normalize };
@@ -223,9 +223,7 @@ const BuildingDetailTable = ({
                     'text-white text-xs font-medium py-2 px-2 text-center w-16 bg-primary sticky top-0 right-0 z-21 border-l border-neutral-3',
                   )}
                   rowSpan={headers.some((h: FormTableHeader) => h.type === 'group') ? 2 : 1}
-                >
-
-                </th>
+                ></th>
               </tr>
               {headers.find(h => 'groupName' in h && h.type === 'group') ? (
                 <tr className="bg-primary-700">
@@ -321,7 +319,9 @@ const BuildingDetailTable = ({
               <tfoot className="bg-gray-50 border-t-2 border-gray-200">
                 <tr>
                   {headers
-                    .filter((h): h is Exclude<FormTableHeader, { type: 'group' }> => h.type !== 'group')
+                    .filter(
+                      (h): h is Exclude<FormTableHeader, { type: 'group' }> => h.type !== 'group',
+                    )
                     .map((header, inner_index) => {
                       const h = header as any;
                       return TableFooter({
@@ -415,7 +415,8 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
           )}
           colSpan={
             headers.filter(
-              (h: FormTableHeader) => 'groupName' in h && h.type !== 'group' && h.groupName === header.groupName,
+              (h: FormTableHeader) =>
+                'groupName' in h && h.type !== 'group' && h.groupName === header.groupName,
             ).length
           }
           title={header.tooltip}
@@ -594,19 +595,13 @@ interface TableFooterProps {
   footer?: (value: any) => any;
 }
 
-const TableFooter = ({
-  type,
-  header,
-  rows,
-  inner_index,
-  footer,
-}: TableFooterProps) => {
+const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterProps) => {
   switch (type) {
     case 'derived':
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-gray-50', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-medium">
             {footer ? footer({ rows }) : ''}
@@ -617,7 +612,7 @@ const TableFooter = ({
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-white', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-normal text-gray-400">
             {footer
@@ -630,7 +625,7 @@ const TableFooter = ({
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-white', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-normal text-gray-400">
             {footer ? footer(rows) : ''}
@@ -641,7 +636,7 @@ const TableFooter = ({
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-white', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-normal text-gray-400">
             {footer ? footer(rows.map((v: Record<string, string>) => v[header.name])) : ''}
@@ -651,9 +646,7 @@ const TableFooter = ({
     case 'group':
       return null;
     default:
-      return (
-        <td key={inner_index} className={clsx('py-1.5 px-2 sticky bottom-0 right-0 bg-white')}></td>
-      );
+      return <td key={inner_index} className={clsx('py-1.5 px-2 sticky bottom-0 right-0 ')}></td>;
   }
 };
 export default BuildingDetailTable;

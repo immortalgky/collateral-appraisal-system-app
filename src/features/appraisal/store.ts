@@ -59,11 +59,7 @@ export const usePropertyStore = create<PropertyStore>(set => ({
       ),
     })),
 
-  updateProperty: (
-    groupId: string,
-    propertyId: string,
-    updates: Partial<PropertyItem>,
-  ) =>
+  updateProperty: (groupId: string, propertyId: string, updates: Partial<PropertyItem>) =>
     set(state => ({
       groups: state.groups.map(group =>
         group.id === groupId
@@ -89,11 +85,7 @@ export const usePropertyStore = create<PropertyStore>(set => ({
       ),
     })),
 
-  movePropertyToGroup: (
-    fromGroupId: string,
-    toGroupId: string,
-    propertyId: string,
-  ) =>
+  movePropertyToGroup: (fromGroupId: string, toGroupId: string, propertyId: string) =>
     set(state => {
       const fromGroup = state.groups.find(g => g.id === fromGroupId);
       const property = fromGroup?.items.find(item => item.id === propertyId);
@@ -119,11 +111,7 @@ export const usePropertyStore = create<PropertyStore>(set => ({
       };
     }),
 
-  reorderPropertiesInGroup: (
-    groupId: string,
-    oldIndex: number,
-    newIndex: number,
-  ) =>
+  reorderPropertiesInGroup: (groupId: string, oldIndex: number, newIndex: number) =>
     set(state => ({
       groups: state.groups.map(group => {
         if (group.id !== groupId) return group;
@@ -153,10 +141,7 @@ export const usePropertyStore = create<PropertyStore>(set => ({
           group.id === groupId
             ? {
                 ...group,
-                items: [
-                  ...group.items,
-                  { ...state.clipboard!, id: crypto.randomUUID() },
-                ],
+                items: [...group.items, { ...state.clipboard!, id: crypto.randomUUID() }],
               }
             : group,
         ),

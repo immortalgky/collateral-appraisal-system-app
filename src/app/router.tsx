@@ -22,6 +22,7 @@ import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
 import CollateralPhotoPage from '@/features/appraisal/pages/CollateralPhotoPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
+import PriceAnalysisPage from '@/features/appraisal/pages/PriceAnalysisPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -123,6 +124,10 @@ export const router = createBrowserRouter([
       {
         path: 'dev/land-detail',
         element: <LandDetailPage />,
+      },
+      {
+        path: 'dev/price-analysis',
+        element: <PriceAnalysisPage />,
       },
       // Catch-all route for 404 pages
       {

@@ -1,7 +1,10 @@
 import { Button, FormBooleanToggle, Icon, NumberInput, TextInput } from '@/shared/components';
 import { useEffect, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import BuildingDetailTable, { toNumber, type FormTableHeader } from '../BuildingTable/BuildingDetailTable';
+import BuildingDetailTable, {
+  toNumber,
+  type FormTableHeader,
+} from '../BuildingTable/BuildingDetailTable';
 import type { ComputeCtx } from '../BuildingTable/useDerivedFieldArray';
 
 interface BuildingDetailPopUpModalProps {
@@ -15,14 +18,17 @@ interface BuildingDetailPopUpModalProps {
 function ComputedPriceRow({ name, index }: { name: string; index: number | undefined }) {
   const area = useWatch({ name: `${name}.${index}.area` }) || 0;
   const pricePerSqm = useWatch({ name: `${name}.${index}.pricePerSqMeterBeforeDepreciation` }) || 0;
-  const totalPriceAfterDepreciation = useWatch({ name: `${name}.${index}.totalPriceAfterDepreciation` }) || 0;
+  const totalPriceAfterDepreciation =
+    useWatch({ name: `${name}.${index}.totalPriceAfterDepreciation` }) || 0;
 
   const totalBefore = area * pricePerSqm;
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">Price Before Depreciation</label>
+        <label className="block text-xs font-medium text-gray-500 mb-1">
+          Price Before Depreciation
+        </label>
         <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
           <span className="text-sm font-semibold text-blue-700">
             ฿{totalBefore.toLocaleString()}
@@ -30,7 +36,9 @@ function ComputedPriceRow({ name, index }: { name: string; index: number | undef
         </div>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">Price After Depreciation</label>
+        <label className="block text-xs font-medium text-gray-500 mb-1">
+          Price After Depreciation
+        </label>
         <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
           <span className="text-sm font-semibold text-green-700">
             ฿{totalPriceAfterDepreciation.toLocaleString()}
@@ -52,15 +60,18 @@ function TotalRCNDisplay({ name, index }: { name: string; index: number | undefi
     <div>
       <label className="block text-xs font-medium text-gray-500 mb-1">Total RCN (Baht)</label>
       <div className="bg-gray-100 border border-gray-300 rounded-lg px-3 py-2">
-        <span className="text-sm font-medium text-gray-700">
-          {totalRCN.toLocaleString()}
-        </span>
+        <span className="text-sm font-medium text-gray-700">{totalRCN.toLocaleString()}</span>
       </div>
     </div>
   );
 }
 
-function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }: BuildingDetailPopUpModalProps) {
+function BuildingDetailPopUpModal({
+  name,
+  index,
+  onClose,
+  outScopeFields,
+}: BuildingDetailPopUpModalProps) {
   const { register, setValue, getValues } = useFormContext();
   const prevMethodRef = useRef<boolean | null>(null);
 
@@ -77,13 +88,15 @@ function BuildingDetailPopUpModal({ name, index, onClose, outScopeFields }: Buil
 
       if (currentRows.length === 0) {
         // Add initial row with toYear set to building year
-        setValue(depreciationArrayName, [{
-          fromYear: 1,
-          toYear: buildingYear,
-          depreciationPercentPerYear: 0,
-          totalDepreciationPercent: 0,
-          depreciationPrice: 0,
-        }]);
+        setValue(depreciationArrayName, [
+          {
+            fromYear: 1,
+            toYear: buildingYear,
+            depreciationPercentPerYear: 0,
+            totalDepreciationPercent: 0,
+            depreciationPrice: 0,
+          },
+        ]);
       } else {
         // Update first row's toYear and keep only first row
         setValue(`${depreciationArrayName}.0.toYear`, buildingYear);
@@ -249,14 +262,12 @@ const propertiesTableHeader: FormTableHeader[] = [
     footer: (rows: any[]) => {
       if (!Array.isArray(rows) || rows.length === 0) return null;
 
-      const values = rows.map((v: Record<string, any>) => toNumber(v['depreciationPercentPerYear']));
+      const values = rows.map((v: Record<string, any>) =>
+        toNumber(v['depreciationPercentPerYear']),
+      );
       const sum = values.reduce((prev: number, curr: number) => prev + curr, 0);
       const average = values.length > 0 ? sum / values.length : 0;
-      return (
-        <span className="font-medium text-gray-600 text-xs">
-          Avg: {average.toFixed(1)}%
-        </span>
-      );
+      return <span className="font-medium text-gray-600 text-xs">Avg: {average.toFixed(1)}%</span>;
     },
   },
   {
@@ -282,9 +293,7 @@ const propertiesTableHeader: FormTableHeader[] = [
 
       const sum = rows.reduce((acc, row) => acc + toNumber(row['totalDepreciationPercent']), 0);
       return (
-        <span className="font-semibold text-orange-600 text-xs">
-          Total: {sum.toFixed(1)}%
-        </span>
+        <span className="font-semibold text-orange-600 text-xs">Total: {sum.toFixed(1)}%</span>
       );
     },
   },
@@ -308,9 +317,7 @@ const propertiesTableHeader: FormTableHeader[] = [
 
       const sum = rows.reduce((acc, row) => acc + toNumber(row['depreciationPrice']), 0);
       return (
-        <span className="font-semibold text-red-600 text-xs">
-          Total: ฿{sum.toLocaleString()}
-        </span>
+        <span className="font-semibold text-red-600 text-xs">Total: ฿{sum.toLocaleString()}</span>
       );
     },
   },

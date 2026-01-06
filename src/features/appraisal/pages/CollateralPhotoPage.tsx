@@ -41,39 +41,32 @@ const CollateralPhotoPage = () => {
   // Build anchors based on collateral type - same as detail pages
   const anchors = useMemo(() => {
     const baseAnchors = {
-      land: [
-        { label: 'Land', id: 'properties-section', icon: 'mountain-sun', href: detailHref },
-      ],
+      land: [{ label: 'Land', id: 'properties-section', icon: 'mountain-sun', href: detailHref }],
       building: [
         { label: 'Building', id: 'properties-section', icon: 'building', href: detailHref },
       ],
-      condo: [
-        { label: 'Condo', id: 'properties-section', icon: 'building', href: detailHref },
-      ],
+      condo: [{ label: 'Condo', id: 'properties-section', icon: 'building', href: detailHref }],
       'land-building': [
         { label: 'Land', id: 'land-section', icon: 'mountain-sun', href: detailHref },
         { label: 'Building', id: 'building-section', icon: 'building', href: detailHref },
       ],
     };
 
-    return [
-      ...baseAnchors[collateralType],
-      { label: 'Photos', id: 'photos', icon: 'images' },
-    ];
+    return [...baseAnchors[collateralType], { label: 'Photos', id: 'photos', icon: 'images' }];
   }, [collateralType, detailHref]);
 
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* NavAnchors - same as other collateral pages */}
       <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="photo-scroll-container"
-          anchors={anchors}
-        />
+        <NavAnchors containerId="photo-scroll-container" anchors={anchors} />
       </div>
 
       {/* Photo Content */}
-      <div id="photo-scroll-container" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth p-6">
+      <div
+        id="photo-scroll-container"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth p-6"
+      >
         <div id="photos" className="flex-auto flex flex-col gap-6 min-w-0">
           {/* Photos Section Header */}
           <div>
@@ -86,10 +79,7 @@ const CollateralPhotoPage = () => {
             <div className="h-px bg-gray-200" />
           </div>
 
-          <CollateralPhotoTab
-            collateralId={collateralId}
-            collateralType={collateralType}
-          />
+          <CollateralPhotoTab collateralId={collateralId} collateralType={collateralType} />
         </div>
       </div>
     </div>

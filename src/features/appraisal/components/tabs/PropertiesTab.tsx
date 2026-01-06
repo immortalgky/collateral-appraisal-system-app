@@ -22,10 +22,10 @@ import type { PropertyItem } from '../../types';
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
   const typeMap: Record<string, string> = {
-    'Building': 'building',
-    'Condominium': 'condo',
+    Building: 'building',
+    Condominium: 'condo',
     'Land and building': 'land-building',
-    'Lands': 'land',
+    Lands: 'land',
     'Lease Agreement Building': 'building',
     'Lease Agreement Land and building': 'land-building',
     'Lease Agreement Lands': 'land',
@@ -92,7 +92,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -163,7 +163,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   const handleEditProperty = (property: PropertyItem, groupId: string) => {
     if (appraisalId) {
       const routeSegment = getRouteSegment(property.type);
-      navigate(`/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`);
+      navigate(
+        `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+      );
     }
   };
 
@@ -228,6 +230,12 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     if (deleteModalState.property && deleteModalState.groupId) {
       deleteProperty(deleteModalState.groupId, deleteModalState.property.id);
     }
+  };
+
+  const handleGoToPriceAnalysis = (groupId: string) => {
+    // check condition before navigate
+
+    navigate('/dev/price-analysis', { state: { groupId } });
   };
 
   const contextMenuItems = [
@@ -312,7 +320,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
               <Icon name="layer-group" className="text-4xl mb-3" />
               <p className="text-sm font-medium text-gray-500">No property groups yet</p>
-              <p className="text-xs text-gray-400 mt-1">Click "Add New Group" to create your first group</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Click "Add New Group" to create your first group
+              </p>
             </div>
           ) : (
             groups.map(group => (
@@ -327,6 +337,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onCopy={handleCopyProperty}
                 onPaste={pasteProperty}
                 onDelete={handleDeleteProperty}
+                onGoToPriceAnalysis={handleGoToPriceAnalysis}
                 hasClipboard={!!clipboard}
               />
             ))
@@ -368,7 +379,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                   </h3>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
-                      <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
+                      <Icon
+                        name="ruler-combined"
+                        className="text-gray-400 text-[10px]"
+                        style="solid"
+                      />
                       <span>{activeProperty.area}</span>
                     </div>
                     <div className="flex items-center gap-1">
