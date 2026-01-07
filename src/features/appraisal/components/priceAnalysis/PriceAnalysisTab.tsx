@@ -1,18 +1,13 @@
-import { Icon, Toggle } from '@/shared/components';
-import clsx from 'clsx';
-import { set } from 'date-fns';
-import { useState } from 'react';
-import { Group, Panel, Separator } from 'react-resizable-panels';
+import { useLocation } from 'react-router-dom';
 import { PriceAnalysisAccordion } from './PriceAnalysisAccordion';
 
-interface PriceAnalysisTabProps {
-  groupId: string;
-}
-
-export function PriceAnalysisTab({ groupId }: PriceAnalysisTabProps): JSX.Element {
+export function PriceAnalysisTab(): JSX.Element {
+  const location = useLocation();
+  const { state } = location;
+  const { groupId } = state;
   return (
     <div>
-      <PriceAnalysisAccordion data={groupId} />
+      <PriceAnalysisAccordion groupId={groupId} />
     </div>
   );
 }

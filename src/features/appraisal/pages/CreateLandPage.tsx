@@ -83,7 +83,11 @@ const CreateLandPage = () => {
                   <Section id="properties-section" anchor>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon name="mountain-sun" style="solid" className="w-5 h-5 text-amber-600" />
+                        <Icon
+                          name="mountain-sun"
+                          style="solid"
+                          className="w-5 h-5 text-amber-600"
+                        />
                       </div>
                       <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
                     </div>
@@ -91,10 +95,18 @@ const CreateLandPage = () => {
                   </Section>
 
                   {/* Land Forms */}
-                  <Section id="land-title" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="land-title"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <TitleDeedForm />
                   </Section>
-                  <Section id="land-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="land-info"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <LandDetailForm />
                   </Section>
                 </div>
