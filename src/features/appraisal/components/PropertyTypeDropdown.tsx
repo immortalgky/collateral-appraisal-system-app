@@ -103,7 +103,7 @@ export const PropertyTypeDropdown = ({
       <MenuButton
         className={clsx(
           'flex items-center gap-2 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors',
-          buttonClassName
+          buttonClassName,
         )}
       >
         <Icon name="circle-plus" className="text-gray-500" />
@@ -123,11 +123,11 @@ export const PropertyTypeDropdown = ({
         <MenuItems
           className={clsx(
             'absolute z-50 mt-2 w-72 origin-top rounded-xl bg-white shadow-lg ring-1 ring-black/5 focus:outline-none',
-            align === 'right' ? 'right-0' : 'left-0'
+            align === 'right' ? 'right-0' : 'left-0',
           )}
         >
           <div className="py-2 max-h-[400px] overflow-y-auto">
-            {PROPERTY_TYPES.map((propertyType) => (
+            {PROPERTY_TYPES.map(propertyType => (
               <MenuItem key={propertyType.type}>
                 {({ focus }) => (
                   <button
@@ -137,20 +137,20 @@ export const PropertyTypeDropdown = ({
                     className={clsx(
                       'w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
                       focus && propertyType.route ? 'bg-gray-50' : '',
-                      !propertyType.route ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      !propertyType.route ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
                     )}
                   >
                     <div
                       className={clsx(
                         'w-8 h-8 rounded-lg flex items-center justify-center',
-                        propertyType.route ? 'bg-primary/10' : 'bg-gray-100'
+                        propertyType.route ? 'bg-primary/10' : 'bg-gray-100',
                       )}
                     >
                       <Icon
                         name={propertyType.icon}
                         className={clsx(
                           'text-sm',
-                          propertyType.route ? 'text-primary' : 'text-gray-400'
+                          propertyType.route ? 'text-primary' : 'text-gray-400',
                         )}
                         style="solid"
                       />
@@ -159,14 +159,12 @@ export const PropertyTypeDropdown = ({
                       <p
                         className={clsx(
                           'text-sm font-medium',
-                          propertyType.route ? 'text-gray-900' : 'text-gray-500'
+                          propertyType.route ? 'text-gray-900' : 'text-gray-500',
                         )}
                       >
                         {propertyType.type}
                       </p>
-                      {!propertyType.route && (
-                        <p className="text-xs text-gray-400">Coming soon</p>
-                      )}
+                      {!propertyType.route && <p className="text-xs text-gray-400">Coming soon</p>}
                     </div>
                     {propertyType.route && (
                       <Icon name="chevron-right" className="text-gray-300" style="solid" />

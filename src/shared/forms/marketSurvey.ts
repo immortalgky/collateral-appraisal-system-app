@@ -26,6 +26,8 @@ export const CreateMarketSurveyRequest = z
   })
   .passthrough();
 
+const DeleteMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+
 export const GetMarketSurveyTemplateResponse = z
   .object({
     marketSurveyId: z.coerce.number().int(),
@@ -41,7 +43,11 @@ export const GetMarketSurveyTemplateResponse = z
   .passthrough();
 export const CreateMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
-export const schema = { MarketSurveyDataDto, CreateMarketSurveyRequest };
+export const schema = {
+  MarketSurveyDataDto,
+  CreateMarketSurveyRequest,
+  DeleteMarketSurveyResponse,
+};
 
 export type CreateMarketSurveyRequestType = z.infer<typeof CreateMarketSurveyRequest>;
 export type CreateMarketSurveyResponseType = z.infer<typeof CreateMarketSurveyResponse>;

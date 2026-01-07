@@ -1,6 +1,6 @@
-import type {
-  CreateMarketSurveyRequestType,
-  CreateMarketSurveyResponseType,
+import {
+  type CreateMarketSurveyRequestType,
+  type CreateMarketSurveyResponseType,
 } from '@/shared/forms/marketSurvey';
 import type {
   CreateBuildingRequestType,
@@ -15,6 +15,12 @@ import type { CreateCondoRequestType, CreateCondoResponseType } from '../../shar
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AppraisalData } from './context/AppraisalContext';
+import { schema } from '@/shared/forms/marketSurvey.ts';
+import type z from 'zod';
+
+const { DeleteMarketSurveyResponse } = schema;
+
+export type DeleteMarketSurveyResponseType = z.infer<typeof DeleteMarketSurveyResponse>;
 
 // ==================== Collateral Appraisal APIs ====================
 
@@ -131,7 +137,6 @@ export const useSurveyTemplateFactors = (code?: string) => {
 
 const factor = [
   {
-    marketSurveyId: 1,
     factorCode: 'F007',
     factorDesc: 'Building Type',
     fieldName: 'buildingType',
@@ -142,7 +147,6 @@ const factor = [
     active: 'Y',
   },
   {
-    marketSurveyId: 1,
     factorCode: 'F002',
     factorDesc: 'Land Area',
     fieldName: 'landArea',
@@ -151,22 +155,21 @@ const factor = [
     fieldDecimal: 2,
     parameterGroup: '',
   },
+
   {
-    marketSurveyId: 1,
-    factorCode: 'F003',
-    factorDesc: 'Building Area',
-    fieldName: 'buildingArea',
-    dataType: 'number-input',
-    fieldLength: 3,
-    fieldDecimal: 2,
-    parameterGroup: '',
-  },
-  {
-    marketSurveyId: 1,
     factorCode: 'F005',
     factorDesc: 'Building Condition',
     fieldName: 'buildingCondition',
     dataType: 'dropdown',
+    fieldLength: null,
+    fieldDecimal: null,
+    parameterGroup: 'BuildingCondition',
+  },
+  {
+    factorCode: 'F009',
+    factorDesc: 'Plot Location',
+    fieldName: 'plotLocation',
+    dataType: 'checkbox-group',
     fieldLength: null,
     fieldDecimal: null,
     parameterGroup: 'BuildingCondition',
@@ -182,53 +185,121 @@ export const useGetMarketSurvey = (appraisalId?: string) => {
     },
   });
 };
-
 const market = [
   {
     id: 1,
     surveyNumber: 1,
     surveyName: 'Townhouse',
+    templateCode: 'LD1',
     templateDesc: 'Survey Template for Townhouse',
-    collateralType: 'LB-Land & Building',
+    collateralCode: 'LB',
+    collateralDesc: 'LB-Land & Building',
   },
   {
     id: 2,
     surveyNumber: 2,
     surveyName: 'Condo',
+    templateCode: 'LD3',
     templateDesc: 'Survey Template for Luxury Condominium',
-    collateralType: 'CD-Condominium',
+    collateralCode: 'U',
+    collateralDesc: 'CD-Condominium',
   },
   {
     id: 3,
     surveyNumber: 3,
     surveyName: 'Baan',
-    templateDesc: 'Survey Template for Village',
-    collateralType: 'LB-Land & Building',
-  },
-  {
-    id: 4,
-    surveyNumber: 4,
-    surveyName: 'Baan',
-    templateDesc: 'Survey Template for Village',
-    collateralType: 'LB-Land & Building',
-  },
-  {
-    id: 5,
-    surveyNumber: 5,
-    surveyName: 'Baan',
-    templateDesc: 'Survey Template for Village',
-    collateralType: 'LB-Land & Building',
+    templateCode: 'LD1',
+    templateDesc: 'Survey Template for Townhouse',
+    collateralCode: 'LB',
+    collateralDesc: 'LB-Land & Building',
   },
 ];
 
-export const useGetMarketSurveyById = (marketId?: string) => {
+export const useGetMarketSurveyById = (marketId: string) => {
   return useQuery({
     queryKey: ['market-survey', marketId],
     enabled: !!marketId,
     queryFn: async () => {
-      return market;
+      return marketById;
     },
   });
+};
+const marketById = {
+  id: 1,
+  surveyNumber: 1,
+  surveyName: 'Townhouse',
+  templateCode: 'LD1',
+  templateDesc: 'Survey Template for Townhouse',
+  collateralCode: 'LB',
+  collateralDesc: 'LB-Land & Building',
+  marketSurveyData: [
+    {
+      marketSurveyId: 1,
+      factorCode: 'F007',
+      value: 'SGH',
+      measurementUnit: '',
+      otherRemark: '',
+      factorDesc: 'Building Type',
+      fieldName: 'buildingType',
+      dataType: 'radio-group',
+      fieldLength: null,
+      fieldDecimal: null,
+      parameterGroup: 'BuildingType',
+    },
+
+    {
+      marketSurveyId: 1,
+      factorCode: 'F002',
+      value: 111.25,
+      measurementUnit: '',
+      otherRemark: '',
+      factorDesc: 'Land Area',
+      fieldName: 'landArea',
+      dataType: 'number-input',
+      fieldLength: 3,
+      fieldDecimal: 2,
+      parameterGroup: '',
+    },
+    {
+      marketSurveyId: 1,
+      factorCode: 'F003',
+      value: 111,
+      measurementUnit: '',
+      otherRemark: '',
+      factorDesc: 'Building Area',
+      fieldName: 'buildingArea',
+      dataType: 'number-input',
+      fieldLength: 3,
+      fieldDecimal: 2,
+      parameterGroup: '',
+    },
+    {
+      marketSurveyId: 1,
+      factorCode: 'F005',
+      value: 'NEW',
+      measurementUnit: '',
+      otherRemark: '',
+      factorDesc: 'Building Condition',
+      fieldName: 'buildingCondition',
+      dataType: 'dropdown',
+      fieldLength: null,
+      fieldDecimal: null,
+      parameterGroup: 'BuildingCondition',
+    },
+    {
+      marketSurveyId: 1,
+      factorCode: 'F009',
+      value: ['NEW', 'MODERATE'],
+      measurementUnit: '',
+      otherRemark: '',
+      factorDesc: 'Plot Location',
+      fieldName: 'plotLocation',
+      dataType: 'checkbox-group',
+      fieldLength: null,
+      fieldDecimal: null,
+      parameterGroup: 'BuildingCondition',
+    },
+  ],
 };
 
 export const useGetMarketSurveyTemplate = (collateralType?: string) => {
@@ -267,7 +338,6 @@ const template = [
 export const useGetParameter = (parameterGroup?: string) => {
   return useQuery({
     queryKey: ['parameter', parameterGroup],
-    enabled: !!parameterGroup,
     queryFn: async () => {
       return parameters;
     },
@@ -288,7 +358,34 @@ const parameters = [
       { code: 'LBS', description: 'Lease Agreement Land and Building' },
     ],
   },
+  {
+    parameterGroup: 'conditionType',
+    values: [
+      { code: 'L', description: 'Lands' },
+      { code: 'B', description: 'Building' },
+      { code: 'LB', description: 'Land and Building' },
+      { code: 'U', description: 'Condominium' },
+      { code: 'MC', description: 'Machinery' },
+      { code: 'LS', description: 'Lease Agreement Lands' },
+      { code: 'BS', description: 'Lease Agreement Building' },
+      { code: 'LBS', description: 'Lease Agreement Land and Building' },
+    ],
+  },
 ];
+
+export const useDeleteMarketSurvey = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (marketId: string): Promise<DeleteMarketSurveyResponseType> => {
+      const { data } = await axios.delete(`/market-survey/${marketId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['markets'] });
+    },
+  });
+};
 
 // ==================== Appraisal APIs ====================
 

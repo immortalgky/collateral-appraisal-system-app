@@ -10,18 +10,19 @@ import {
   CreateMarketSurveyRequest,
   type CreateMarketSurveyRequestType,
 } from '@/shared/forms/marketSurvey';
-import { useCreateMarketSurveyRequest } from '../api';
+import { useCreateMarketSurveyRequest, useGetMarketSurveyById } from '../api';
 import MarketSurveyForm from '../forms/MarketSurveyForm';
 import { createMarketSurveyRequestDefault } from '@/shared/forms/defaults';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+// Define collateral types
 type CollateralCode = 'L' | 'LB' | 'B' | 'U' | 'LS' | 'BS' | 'LBS' | 'MC';
 interface Collateral {
   code: CollateralCode;
   description: string;
 }
-
+// List of collateral types
 const Collateral: Collateral[] = [
   { code: 'L', description: 'Lands' },
   { code: 'LB', description: 'Land and Building' },
@@ -32,18 +33,39 @@ const Collateral: Collateral[] = [
   { code: 'LBS', description: 'Lease Agreement Land and Building' },
   { code: 'MC', description: 'Machinery' },
 ];
-
+// Helper to get collateral code by description
 const getCollateralCodeByDescription = (description?: string): CollateralCode | undefined => {
   return Collateral.find(c => c.description === description)?.code;
 };
 
 const CreateMarketSurveyPage = () => {
+  // Get search params for edit mode and collateral type
   const [searchParams] = useSearchParams();
+  // Wacth for marketId and collateralType in URL
+  const marketId = searchParams.get('id');
   const collateralType = searchParams.get('collateralType');
+  // if got marketId, will define isEditMode as true
+  const isEditMode = !!marketId;
+  // Fetch market survey data if got marketId
+  const { data: marketSurvey } = useGetMarketSurveyById(isEditMode ? marketId : undefined);
+
+  // Initialize form methods
   const methods = useForm<CreateMarketSurveyRequestType>({
     defaultValues: createMarketSurveyRequestDefault,
     resolver: zodResolver(CreateMarketSurveyRequest),
   });
+
+  // Populate form for edit
+  useEffect(() => {
+    if (!isEditMode || !marketSurvey) return;
+
+    methods.reset({
+      surveyName: marketSurvey.surveyName,
+      collateralType: marketSurvey.collateralCode,
+      surveyTemplateCode: marketSurvey.templateCode,
+      marketSurveyData: marketSurvey.marketSurveyData,
+    });
+  }, [isEditMode, marketSurvey]);
 
   const { handleSubmit, getValues, setValue } = methods;
 
@@ -60,6 +82,7 @@ const CreateMarketSurveyPage = () => {
     mutate(data);
   };
 
+  // Set collateral type in form when got collateralType in URL
   useEffect(() => {
     if (!collateralType) return;
 
@@ -86,7 +109,7 @@ const CreateMarketSurveyPage = () => {
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 ">
                   <div>
-                    <h2 className="text-lg font-semibol mb-2">Survey Information</h2>
+                    <h2 className="text-lg font-semibold mb-2">Survey Information</h2>
                     <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
                   </div>
                   <Section anchor className="flex flex-col gap-6">

@@ -1,30 +1,56 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useGetMarketSurveyTemplate, useSurveyTemplateFactors } from '../api';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { GetMarketSurveyTemplateResponseType } from '@/shared/forms/marketSurvey';
 
 const MarketSurveyForm = () => {
   const { getValues, setValue } = useFormContext();
+  const [isTemplateChanged, setIsTemplateChanged] = useState(false);
+
+  // Watch collateral type to fetch templates
   const collateralType = useWatch({
     name: 'collateralType',
   });
 
+  // Fetch survey templates based on collateral type
   const { data: templates = [] } = useGetMarketSurveyTemplate(collateralType);
 
+  // Prepare survey template options for dropdown
   const surveyTemplateOptions =
     templates?.map((t: any) => ({
       label: t.templateDesc,
       value: t.surveyTemplateCode,
     })) ?? [];
 
+  // Watch survey template code to fetch factors
   const surveyTemplateCode = useWatch({
     name: 'surveyTemplateCode',
   });
 
-  const { data: factor = [], isLoading } = useSurveyTemplateFactors(surveyTemplateCode);
+  useEffect(() => {
+    if (!surveyTemplateCode) return;
+    setIsTemplateChanged(true);
+  }, [surveyTemplateCode]);
 
-  // mock parameter options
+  // Watch market survey data to determine edit mode
+  const marketSurveyData = useWatch({
+    name: 'marketSurveyData',
+  });
+  const isEditMode = !!marketSurveyData?.length;
+
+  const useTemplateFactor = !isEditMode || isTemplateChanged;
+
+  // Fetch survey template factors based on selected template code
+  // if isEditmode is true, do not fetch factors
+  const { data: factor = [], isLoading } = useSurveyTemplateFactors(
+    useTemplateFactor ? surveyTemplateCode : undefined,
+  );
+
+  // Determine which factors to display
+  const displayFactors = useTemplateFactor ? factor : marketSurveyData;
+
+  // TODO: remove mock parameter options
   const parameterOptions = mockParameterOptions.reduce(
     (acc, group) => {
       acc[group.parameterGroup] = group.values.map(v => ({
@@ -33,13 +59,17 @@ const MarketSurveyForm = () => {
       }));
       return acc;
     },
-    {} as Record<string, { value: string; label: string }[]>
+    {} as Record<string, { value: string; label: string }[]>,
   );
 
+  // Initialize market survey data field
   useEffect(() => {
+    const existing = getValues('marketSurveyData');
+    if (!useTemplateFactor) return;
+    if (existing?.length) return;
     if (!factor.length) return;
     setValue('marketSurveyData', defaultMarketSurveyData(factor));
-  }, [factor, getValues, setValue]);
+  }, [factor, useTemplateFactor, getValues, setValue]);
 
   const templateField: FormField[] = [
     {
@@ -82,7 +112,7 @@ const MarketSurveyForm = () => {
         <span className="loading loading-spinner text-primary"></span>
       ) : (
         <div className="grid col-span-4 gap-6">
-          {factor.map((fac, index) => {
+          {displayFactors.map((fac, index) => {
             const fields: FormField[] = [buildFormField(fac, index, parameterOptions)];
             return (
               <div key={fac.factorCode} className="grid grid-cols-4 gap-6">
@@ -137,13 +167,13 @@ const surveyNameField: FormField[] = [
 const buildFormField = (
   fac: GetMarketSurveyTemplateResponseType,
   index: number,
-  parameterOptions: Record<string, { value: string; label: string }[]>
+  parameterOptions: Record<string, { value: string; label: string }[]>,
 ): FormField => {
   switch (fac.dataType) {
     case 'dropdown':
       return {
         type: 'dropdown',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `marketSurveyData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-6',
         options: parameterOptions[fac.parameterGroup] ?? [],
@@ -152,7 +182,7 @@ const buildFormField = (
     case 'radio-group':
       return {
         type: 'radio-group',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `marketSurveyData.[${index}].value`,
         orientation: 'horizontal',
         options: parameterOptions[fac.parameterGroup] ?? [],
         wrapperClassName: 'col-span-12',
@@ -161,7 +191,7 @@ const buildFormField = (
     case 'checkbox-group':
       return {
         type: 'checkbox-group',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `marketSurveyData.[${index}].value`,
         orientation: 'horizontal',
         options: parameterOptions[fac.parameterGroup] ?? [],
         wrapperClassName: 'col-span-12',
@@ -170,7 +200,7 @@ const buildFormField = (
     case 'boolean-toggle':
       return {
         type: 'boolean-toggle',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `marketSurveyData.[${index}].value`,
         label: '',
         options: fac.options,
         wrapperClassName: 'col-span-6',
@@ -179,7 +209,7 @@ const buildFormField = (
     case 'number-input':
       return {
         type: 'number-input',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `marketSurveyData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-6',
       };
@@ -187,7 +217,7 @@ const buildFormField = (
     default:
       return {
         type: 'text-input',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `marketSurveyData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-6',
       };
