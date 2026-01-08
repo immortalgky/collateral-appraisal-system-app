@@ -24,7 +24,7 @@ export const useCreateLandRequest = () => {
   return useMutation({
     mutationFn: async (request: CreateLandRequestType): Promise<CreateLandResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/land-detail', request);
+      const { data } = await axios.post(`/appraisals/${request.apprId}/land-properties`, request);
       return data;
     },
     onSuccess: data => {

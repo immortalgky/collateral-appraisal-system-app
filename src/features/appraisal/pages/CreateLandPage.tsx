@@ -10,29 +10,33 @@ import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { CreateLandRequest, type CreateLandRequestType } from '@/shared/forms/v2';
 import { useCreateLandRequest } from '../api';
 import LandDetailForm from '../forms/LandDetailForm';
-
-// TODO: Add proper defaults when schema is finalized
-const createLandRequestDefaults = {} as any;
+import { createLandForm, createLandFormDefault, type createLandFormType } from '../schemas/form';
 
 const CreateLandPage = () => {
+  // Get propertyId from URL params to determine edit or create mode
   const { propertyId } = useParams<{ propertyId?: string }>();
+  // const propertyId = 'AF39433E-F36B-1410-8762-004DC4E1D9A2';
+  const isEditMode = Boolean(propertyId);
+
+  // const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = '49FF1203-037C-44E4-B124-791F1B0C75D3';
   const location = useLocation();
 
-  const methods = useForm<CreateLandRequestType>({
-    defaultValues: createLandRequestDefaults,
-    resolver: zodResolver(CreateLandRequest),
+  const methods = useForm<createLandFormType>({
+    defaultValues: createLandFormDefault,
+    resolver: zodResolver(createLandForm),
   });
   const { handleSubmit, getValues } = methods;
 
   const { mutate } = useCreateLandRequest();
 
-  const onSubmit: SubmitHandler<CreateLandRequestType> = data => {
+  const onSubmit: SubmitHandler<createLandFormType> = data => {
     mutate({
       ...data,
-      collateralId: propertyId,
+      propertyId: propertyId,
+      apprId: appraisalId,
     } as any);
   };
 
@@ -41,8 +45,8 @@ const CreateLandPage = () => {
   const handleSaveDraft = () => {
     const data = getValues();
     mutate({
-      ...data,
-      collateralId: propertyId,
+      apprId: appraisalId,
+      request: { ...data, propertyId: propertyId },
     } as any);
   };
 
@@ -83,7 +87,11 @@ const CreateLandPage = () => {
                   <Section id="properties-section" anchor>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon name="mountain-sun" style="solid" className="w-5 h-5 text-amber-600" />
+                        <Icon
+                          name="mountain-sun"
+                          style="solid"
+                          className="w-5 h-5 text-amber-600"
+                        />
                       </div>
                       <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
                     </div>
@@ -91,10 +99,18 @@ const CreateLandPage = () => {
                   </Section>
 
                   {/* Land Forms */}
-                  <Section id="land-title" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="land-title"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <TitleDeedForm />
                   </Section>
-                  <Section id="land-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="land-info"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <LandDetailForm />
                   </Section>
                 </div>
