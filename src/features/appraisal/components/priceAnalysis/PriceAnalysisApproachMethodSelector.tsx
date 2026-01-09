@@ -46,79 +46,87 @@ export const PriceAnalysisApproachMethodSelector = ({
         ></Toggle>
       </div>
 
-      {/* Approach and Method Selection */}
-      <div className="flex w-full">
-        {viewMode === 'editing' && (
-          <div className="flex flex-col w-full gap-4">
-            {/* edit mode */}
+      {isSystemCalculation ? (
+        <div className="flex w-full">
+          {viewMode === 'editing' && (
+            <div className="flex flex-col w-full gap-4">
+              {/* edit mode */}
 
-            {/* Approach and methods */}
-            <div className="flex flex-col overflow-y-auto w-full max-h-58 gap-2">
-              {editSelected?.map(appr => (
-                <PriceAnalysisApproachAccordion key={appr.id} viewMode={viewMode} approach={appr} />
-              ))}
-            </div>
+              {/* Approach and methods */}
+              <div className="flex flex-col overflow-y-auto w-full max-h-58 gap-2">
+                {editSelected?.map(appr => (
+                  <PriceAnalysisApproachAccordion
+                    key={appr.id}
+                    viewMode={viewMode}
+                    approach={appr}
+                  />
+                ))}
+              </div>
 
-            {/* Footer Actions */}
-            <div className="flex w-full justify-between py-2">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => dispatch({ type: 'EDIT_CANCEL' })}
-              >
-                Cancel
-              </button>
-              <div className="flex gap-4">
+              {/* Footer Actions */}
+              <div className="flex w-full justify-between py-2">
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  onClick={() => onEditModeSave(editSelected, dispatch)}
+                  className="btn btn-ghost"
+                  onClick={() => dispatch({ type: 'EDIT_CANCEL' })}
                 >
-                  Save
+                  Cancel
                 </button>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => onEditModeSave(editSelected, dispatch)}
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        {viewMode === 'summary' && (
-          <div className="flex flex-col w-full gap-4">
-            {/* summary mode */}
-            <button
-              type="button"
-              className="flex justify-center items-center w-full p-2 border border-dashed border-gray-200 rounded-md hover:bg-gray-100 duration-300 transition-all cursor-pointer"
-              onClick={() => dispatch({ type: 'EDIT_ENTER' })}
-            >
-              Determine Approach and Method
-            </button>
-
-            {/* Approach and methods */}
-            <div className="flex flex-col overflow-y-auto w-full max-h-44 gap-2">
-              {summarySelected?.map(appr => (
-                <PriceAnalysisApproachAccordion
-                  key={appr.id}
-                  viewMode={viewMode}
-                  approach={{
-                    ...appr,
-                    methods: appr.methods.filter(method => method.isSelected),
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Footer Actions */}
-            <div className="flex w-full justify-between py-2">
-              <button type="button" className="btn btn-ghost" onClick={() => null}>
-                Cancel
+          )}
+          {viewMode === 'summary' && (
+            <div className="flex flex-col w-full gap-4">
+              {/* summary mode */}
+              <button
+                type="button"
+                className="flex justify-center items-center w-full p-2 border border-dashed border-gray-200 rounded-md hover:bg-gray-100 duration-300 transition-all cursor-pointer"
+                onClick={() => dispatch({ type: 'EDIT_ENTER' })}
+              >
+                Determine Approach and Method
               </button>
-              <div className="flex gap-4">
-                <button type="submit" className="btn btn-primary">
-                  Save
+
+              {/* Approach and methods */}
+              <div className="flex flex-col overflow-y-auto w-full max-h-44 gap-2">
+                {summarySelected?.map(appr => (
+                  <PriceAnalysisApproachAccordion
+                    key={appr.id}
+                    viewMode={viewMode}
+                    approach={{
+                      ...appr,
+                      methods: appr.methods.filter(method => method.isSelected),
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex w-full justify-between py-2">
+                <button type="button" className="btn btn-ghost" onClick={() => null}>
+                  Cancel
                 </button>
+                <div className="flex gap-4">
+                  <button type="submit" className="btn btn-primary">
+                    Save
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div></div>
+      )}
+      {/* Approach and Method Selection */}
     </div>
   );
 };

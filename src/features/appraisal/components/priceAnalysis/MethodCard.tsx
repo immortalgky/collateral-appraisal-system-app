@@ -16,12 +16,16 @@ export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) =>
     return (
       <div
         className={clsx(
-          'flex flex-col items-center h-14 py-2 px-4 transition-all duration-300 rounded-lg',
-          method.isSelected ? ' bg-primary/10 text-primary' : '',
+          'flex flex-col items-center h-14 transition-all duration-300 rounded-lg',
+          method.isSelected ? 'text-primary' : 'text-neutral-600',
         )}
       >
         <button
-          className="flex flex-row items-center cursor-pointer w-full h-full"
+          className={clsx(
+            'grid grid-cols-12 items-center justify-start cursor-pointer w-full h-full transition-all duration-300 px-4 py-2 rounded-lg',
+            method.isSelected ? '  text-primary' : '',
+            'hover:bg-primary/20',
+          )}
           onClick={() =>
             dispatch({
               type: 'EDIT_TOGGLE_METHOD',
@@ -29,13 +33,15 @@ export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) =>
             })
           }
         >
-          <Icon name={method.icon} style="solid" className="size-3" />
-          <span className="w-full">{method.label}</span>
-          <Icon
-            name={'check'}
-            style="solid"
-            className={clsx('size-3', method.isSelected ? 'opacity-100' : 'opacity-0')}
-          />
+          <div className="col-span-1">
+            <Icon name={'check'} style="solid" className={clsx('size-3')} />
+          </div>
+          <div className="col-span-1">
+            <Icon name={method.icon} style="solid" className="size-3" />
+          </div>
+          <div className="col-span-10 flex flex-row items-center justify-start">
+            <span>{method.label}</span>
+          </div>
         </button>
       </div>
     );
@@ -46,12 +52,34 @@ export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) =>
       className={clsx(
         'grid grid-cols-12 gap-4 items-center h-16 py-2 px-4 transition-all duration-300 rounded-lg',
         'hover:bg-primary/10',
+        method.isCandidated ? 'text-primary' : 'text-neutral-400',
       )}
     >
+      <div className="col-span-1 flex items-center justify-center">
+        <button
+          type="button"
+          onClick={() =>
+            dispatch({
+              type: 'SUMMARY_SELECT_METHOD',
+              payload: { apprId: approachId, methodId: method.id },
+            })
+          }
+          className="cursor-pointer"
+        >
+          <Icon
+            name="check"
+            style="solid"
+            className={clsx(
+              'size-4 transition-transform duration-300 ease-in-out',
+              method.isCandidated ? 'text-primary' : '',
+            )}
+          />
+        </button>
+      </div>
       <div className="col-span-1 flex items-center">
         <Icon name={method.icon} style="solid" className="size-4" />
       </div>
-      <div className="col-span-10 flex flex-col">
+      <div className="col-span-9 flex flex-col">
         <div className="flex">
           <span>{method.label}</span>
         </div>
@@ -69,7 +97,7 @@ export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) =>
           <Icon
             name="pen"
             style="solid"
-            className={clsx('size-4 transition-transform duration-300 ease-in-out')}
+            className={clsx('size-4 transition-transform duration-300 ease-in-out text-black')}
           />
         </button>
       </div>

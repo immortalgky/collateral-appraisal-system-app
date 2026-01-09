@@ -103,7 +103,7 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
 
       return {
         viewMode: 'summary',
-        summarySelected: sorted,
+        summarySelected: cloneApproaches(sorted),
         editSelected: cloneApproaches(sorted),
       };
     }
@@ -182,9 +182,15 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
        * control logic
        *
        */
+
+      if (state.summarySelected == null) return state;
+
+      const visibleApproach = getVisibleApproach(state.summarySelected);
+      const sortVisibleApproach = sortApproaches(visibleApproach);
+
       const nextState = {
         ...state,
-        summarySelected: sortApproaches(state.summarySelected),
+        summarySelected: cloneApproaches(sortVisibleApproach),
         viewMode: 'summary',
       };
       return nextState;
@@ -231,6 +237,12 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
        */
 
       if (state.summarySelected == null) return state;
+
+      const allApproachHavecandidated = state.summarySelected.every(appr =>
+        appr.methods.some(method => method.isCandidated),
+      );
+
+      if (!allApproachHavecandidated) return state;
 
       const candidatedApproach = checkApproachIsCandidated(state.summarySelected);
       if (action.payload.apprId === candidatedApproach) return state;

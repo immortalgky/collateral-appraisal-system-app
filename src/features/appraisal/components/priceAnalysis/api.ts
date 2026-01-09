@@ -59,7 +59,7 @@ const APPROACHES_MOC: PriceAnalysisApproachRequest[] = [
     appraisalValue: 0,
     methods: [
       { id: '01', appraisalValue: 1000000000 },
-      { id: '02', appraisalValue: 1000000000 },
+      { id: '02', appraisalValue: 1200000000 },
     ],
   },
   {
@@ -82,7 +82,9 @@ export const useGetApproachParams = () => {
   //     return data;
   //   },
   // });
-
+  console.log(
+    'GET /params { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons }',
+  );
   return { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons };
 };
 
@@ -100,6 +102,7 @@ export const useGetPriceAnalysisApproachMethodByGroupId = (groupId: string | und
   //   },
   // });
 
+  console.log('GET /appraisal/price-analysis/ { approach, method }');
   return APPROACHES_MOC;
 };
 
@@ -118,6 +121,7 @@ export const useGetAppraisalGroupById = (groupId: string | undefined) => {
   //   },
   // });
 
+  console.log('GET /appraisal/${groupId}');
   return null;
 };
 

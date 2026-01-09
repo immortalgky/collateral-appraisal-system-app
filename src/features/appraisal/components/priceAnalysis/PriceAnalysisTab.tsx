@@ -6,7 +6,7 @@ export function PriceAnalysisTab(): JSX.Element {
   const { state } = location;
   const { groupId } = state;
   return (
-    <div>
+    <div className="h-full">
       <PriceAnalysisAccordion groupId={groupId} />
     </div>
   );

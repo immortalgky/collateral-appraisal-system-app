@@ -10,6 +10,7 @@ import {
   useAddPriceAnalysisApproachMethod,
   useGetApproachParams,
   useGetPriceAnalysisApproachMethodByGroupId,
+  useSelectPriceAnalysisApproachMethod,
 } from './api';
 import {
   approachMethodReducer,
@@ -76,18 +77,18 @@ interface PriceAnalysisAccordionProps {
 
 export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps) => {
   /* Server state: fetch property data by groupId */
-
   const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
   const { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons } =
     useGetApproachParams();
 
-  const initialState: State = {
+  const initialState: PriceAnalysisSelectorState = {
     viewMode: 'summary',
     editSelected: null,
     summarySelected: null,
   };
 
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
+  const { summarySelected } = state;
 
   useEffect(() => {
     if (!approachesMoc?.length) return;
@@ -103,6 +104,7 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     );
 
     dispatch({ type: 'INIT', payload: { approaches } });
+    dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
   }, [
     approachesMoc,
     approachMethodLinkedParams,
@@ -111,8 +113,6 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     methodParams,
     methodIcons,
   ]);
-
-  // const [initialApproaches, setInitialApproaches] = useState<Approach[]>([]);
 
   /* Local state:  */
   // state to control 'show or collapse'
@@ -129,13 +129,27 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     setIsSystemCalculation(!isSystemCalculation);
   };
 
-  const { mutate } = useAddPriceAnalysisApproachMethod();
+  const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
+  const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const handleOnEditModeSave = (
     data: PriceAnalysisApproachRequest,
     dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
   ) => {
-    // mutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
-    console.log('press!');
+    addPriceAnalysisMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
+    console.log(
+      'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
+    );
+    dispatch({ type: 'EDIT_SAVE' });
+  };
+
+  const handleOnSummaryModeSave = (
+    data: PriceAnalysisApproachRequest,
+    dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
+  ) => {
+    addCandidateApproachMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
+    console.log(
+      'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
+    );
     dispatch({ type: 'EDIT_SAVE' });
   };
 
@@ -152,20 +166,32 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   return (
     <StateCtx.Provider value={state}>
       <DispatchCtx.Provider value={dispatch}>
-        <div className="border border-base-300 rounded-xl p-4">
+        <div className="border border-base-300 rounded-xl p-4 h-full">
           {/* header */}
-          <div className="flex justify-between items-center ">
-            <span>GroupId: {groupId}</span>
-            <button type="button" onClick={handleOnOpen} className="btn btn-ghost btn-sm">
-              <Icon
-                name="chevron-down"
-                style="solid"
-                className={clsx(
-                  'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
-                  isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
-                )}
-              />
-            </button>
+          <div className="grid grid-cols-12 justify-between items-center ">
+            <div className="col-span-3">
+              <span>GroupId: {groupId}</span>
+            </div>
+            <div className="col-span-8 flex flex-row gap-1 items-center">
+              <span>
+                {summarySelected
+                  ? summarySelected.find(appr => appr.isCandidated)?.appraisalValue
+                  : 0}
+              </span>
+              <Icon name="baht-sign" style="light" className="size-4" />
+            </div>
+            <div className="col-span-1 flex items-center justify-end">
+              <button type="button" onClick={handleOnOpen} className="btn btn-ghost btn-sm">
+                <Icon
+                  name="chevron-down"
+                  style="solid"
+                  className={clsx(
+                    'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
+                    isOpen ? 'rotate-180' : 'rotate-0',
+                  )}
+                />
+              </button>
+            </div>
           </div>
 
           {/* detail */}
