@@ -1,79 +1,30 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import {
   PriceAnalysisApproachMethodSelector,
   type Approach,
 } from './PriceAnalysisApproachMethodSelector';
+import {
+  useAddPriceAnalysisApproachMethod,
+  useGetApproachParams,
+  useGetPriceAnalysisApproachMethodByGroupId,
+} from './api';
+import {
+  approachMethodReducer,
+  type PriceAnalysisSelectorAction,
+  type PriceAnalysisSelectorState,
+} from './useReducer';
+import type { ApproachMethodLink, PriceAnalysisApproachRequest } from './type';
 
-// ==== Mock Data ====
-/*
- * initialize approach and method choices
- * 1 api to fetch all approach and method choices
- */
-
-const approachParams: Record<string, string>[] = [
-  { id: '01', label: 'Market Approach' },
-  { id: '02', label: 'Cost Approach' },
-  { id: '03', label: 'Income Approach' },
-  { id: '04', label: 'Residual Approach' },
-];
-
-const methodParams: Record<string, string>[] = [
-  { id: '01', label: 'Weighted Quality Score (WQS)' },
-  { id: '02', label: 'Sales Adjustment Grid' },
-  { id: '03', label: 'Direct Comparison' },
-];
-
-const approachMethodLinkedParams: ApproachMethodLink[] = [
-  { apprId: '01', methodIds: ['01', '02', '03'] },
-  { apprId: '02', methodIds: ['01', '02', '03'] },
-];
-
-const approachIcons: Record<string, string> = {
-  '01': 'shop',
-  '02': 'triangle-person-digging',
-};
-
-const methodIcons: Record<string, string> = {
-  '01': 'scale-balanced',
-  '02': 'table',
-  '03': 'house-building',
-};
-
-/*
- * initialize selected approach and method
- * 1 api to fetch selected approach and method by groupId
- * accually
- */
-
-type ApproachMethodLink = {
-  apprId: string;
-  methodIds: string[]; // pick ONE naming and stick to it
-};
-
-const approachesMoc = [
-  {
-    id: '01',
-    appraisalValue: 0,
-    methods: [
-      { id: '01', isCandidated: false, appraisalValue: 0 },
-      { id: '02', isCandidated: false, appraisalValue: 0 },
-    ],
-  },
-  {
-    id: '02',
-    appraisalValue: 0,
-    methods: [{ id: '02', isCandidated: false, appraisalValue: 0 }],
-  },
-];
-
-const mappingApproachMethodParams = (
-  approachData: Approach[],
+const createInitialState = (
+  approachData: PriceAnalysisApproachRequest[],
   links: ApproachMethodLink[],
   approachParams: Record<string, string>[],
+  approachIcons: Record<string, string>,
   methodParams: Record<string, string>[],
+  methodIcons: Record<string, string>,
 ): Approach[] => {
   const approaches = links.map(link => ({
     id: link.apprId,
@@ -102,35 +53,74 @@ const mappingApproachMethodParams = (
   return approaches;
 };
 
-interface PriceAnalysisAccordionProps {
-  groupId: string;
+const StateCtx = createContext<PriceAnalysisSelectorState | null>(null);
+const DispatchCtx = createContext<React.Dispatch<PriceAnalysisSelectorAction> | null>(null);
+
+export function useSelectionState() {
+  const v = useContext(StateCtx);
+  if (!v) throw new Error('useSelectionState must be used within SelectionProvider');
+  return v;
+}
+
+export function useSelectionDispatch() {
+  const v = useContext(DispatchCtx);
+  if (!v) throw new Error('useSelectionDispatch must be used within SelectionProvider');
+  return v;
 }
 
 export type PriceAnalysisSelectorMode = 'editing' | 'summary';
 
+interface PriceAnalysisAccordionProps {
+  groupId: string;
+}
+
 export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps) => {
   /* Server state: fetch property data by groupId */
+
+  const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
+  const { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons } =
+    useGetApproachParams();
+
+  const initialState: State = {
+    viewMode: 'summary',
+    editSelected: null,
+    summarySelected: null,
+  };
+
+  const [state, dispatch] = useReducer(approachMethodReducer, initialState);
+
   useEffect(() => {
-    // fetch data
-    setInitialApproaches(
-      mappingApproachMethodParams(
-        approachesMoc,
-        approachMethodLinkedParams,
-        approachParams,
-        methodParams,
-      ).sort((prev, curr) => prev.id.localeCompare(curr.id)),
+    if (!approachesMoc?.length) return;
+    if (!approachMethodLinkedParams?.length) return;
+
+    const approaches = createInitialState(
+      approachesMoc,
+      approachMethodLinkedParams,
+      approachParams,
+      approachIcons,
+      methodParams,
+      methodIcons,
     );
-  }, []);
-  const [initialApproaches, setInitialApproaches] = useState<Approach[]>([]);
+
+    dispatch({ type: 'INIT', payload: { approaches } });
+  }, [
+    approachesMoc,
+    approachMethodLinkedParams,
+    approachParams,
+    approachIcons,
+    methodParams,
+    methodIcons,
+  ]);
+
+  // const [initialApproaches, setInitialApproaches] = useState<Approach[]>([]);
 
   /* Local state:  */
   // state to control 'show or collapse'
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(true);
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<PriceAnalysisSelectorMode>('summary');
 
-  const handleOnCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+  const handleOnOpen = () => {
+    setIsOpen(!isOpen);
   };
 
   // state to control 'use system calculation'
@@ -139,82 +129,72 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     setIsSystemCalculation(!isSystemCalculation);
   };
 
-  // state to control view mode on click 'determinde cost approach and metho' button
-  const handleOnViewModeChange = () => {
-    if (viewMode === 'editing') setViewMode('summary');
-    else if (viewMode === 'summary') setViewMode('editing');
+  const { mutate } = useAddPriceAnalysisApproachMethod();
+  const handleOnEditModeSave = (
+    data: PriceAnalysisApproachRequest,
+    dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
+  ) => {
+    // mutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
+    console.log('press!');
+    dispatch({ type: 'EDIT_SAVE' });
   };
 
-  // state to set/ remove approach & method
-  const handleOnMethodChange = (approach: any, method: any) => {
-    // check is existed or not
-    const appr = {
-      id: approach.id,
-      label: approach.label,
-      icon: approach.icon,
-      appraisalValue: approach.appraisalValue,
-      isCandidated: approach.isCandidated,
-      methods: [
-        ...approach.methods.filter(m => m.id !== method.id),
-        { ...method, isSelected: !method.isSelected },
-      ].sort((prev, curr) => prev.id.localeCompare(curr.id)),
-    };
-    setInitialApproaches(
-      [...initialApproaches.filter(appr => appr.id !== approach.id), appr].sort((prev, curr) =>
-        prev.id.localeCompare(curr.id),
-      ),
-    );
-  };
+  // state to collect approach & method which selected
+  /**
+   * select condition:
+   * 1. every method must calculate
+   * 2. one method must be select
+   * 3. one approach must be select
+   */
 
-  // state to collect approach & method which selected to fire Api
+  // function to shape api form and fire api to save
 
   return (
-    <div className="border border-base-300 rounded-xl p-4">
-      {/* header */}
-      <div className="flex justify-between items-center ">
-        <span>GroupId: {groupId}</span>
-        <button type="button" onClick={handleOnCollapse} className="btn btn-ghost btn-sm">
-          <Icon
-            name="chevron-down"
-            style="solid"
-            className={clsx(
-              'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
-              !isCollapsed ? 'rotate-180' : '',
-            )}
-          />
-        </button>
-      </div>
-
-      {/* detail */}
-      <div
-        className={clsx(
-          'transition-all ease-in-out duration-300 overflow-hidden',
-          isCollapsed ? 'max-h-0 opacity-0' : 'max-h-96 opacity-100',
-        )}
-      >
-        {!isCollapsed && (
-          <Group className="flex gap-4 p-4">
-            <Panel minSize="20%" maxSize="50%">
-              left
-            </Panel>
-            <Separator>
-              <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
-                <Icon name="grip-vertical" className="text-gray-400" />
-              </div>
-            </Separator>
-            <Panel minSize="20%">
-              <PriceAnalysisApproachMethodSelector
-                isSystemCalculation={isSystemCalculation}
-                onSystemCalculationChange={handleOnSystemCalculationChange}
-                viewMode={viewMode}
-                onViewModeChange={handleOnViewModeChange}
-                approaches={initialApproaches}
-                onApproachChange={handleOnMethodChange}
+    <StateCtx.Provider value={state}>
+      <DispatchCtx.Provider value={dispatch}>
+        <div className="border border-base-300 rounded-xl p-4">
+          {/* header */}
+          <div className="flex justify-between items-center ">
+            <span>GroupId: {groupId}</span>
+            <button type="button" onClick={handleOnOpen} className="btn btn-ghost btn-sm">
+              <Icon
+                name="chevron-down"
+                style="solid"
+                className={clsx(
+                  'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
+                  isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
+                )}
               />
-            </Panel>
-          </Group>
-        )}
-      </div>
-    </div>
+            </button>
+          </div>
+
+          {/* detail */}
+          <div
+            className={clsx(
+              'transition-all ease-in-out duration-300 overflow-hidden',
+              isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
+            )}
+          >
+            <Group className="flex gap-4">
+              <Panel minSize="20%" maxSize="40%">
+                left
+              </Panel>
+              <Separator>
+                <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
+                  <Icon name="grip-vertical" className="text-gray-400" />
+                </div>
+              </Separator>
+              <Panel>
+                <PriceAnalysisApproachMethodSelector
+                  isSystemCalculation={isSystemCalculation}
+                  onSystemCalculationChange={handleOnSystemCalculationChange}
+                  onEditModeSave={handleOnEditModeSave}
+                />
+              </Panel>
+            </Group>
+          </div>
+        </div>
+      </DispatchCtx.Provider>
+    </StateCtx.Provider>
   );
 };
