@@ -18,38 +18,38 @@ import {
   type PriceAnalysisSelectorState,
 } from './useReducer';
 import type { ApproachMethodLink, PriceAnalysisApproachRequest } from './type';
+import { usePriceAnalysisQuery } from './usePriceAnalysisQuery';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
 
 const createInitialState = (
+  approachConfig: any,
   approachData: PriceAnalysisApproachRequest[],
-  links: ApproachMethodLink[],
-  approachParams: Record<string, string>[],
-  approachIcons: Record<string, string>,
-  methodParams: Record<string, string>[],
-  methodIcons: Record<string, string>,
 ): Approach[] => {
-  const approaches = links.map(link => ({
-    id: link.apprId,
-    label: approachParams.find(appr => appr.id === link.apprId)?.label ?? '',
-    icon: approachIcons[link.apprId] ?? '',
-    appraisalValue: approachData.find(appr => appr.id === link.apprId)?.appraisalValue ?? 0,
-    isCandidated: false,
-    methods: link.methodIds.map(methodId => ({
-      id: methodId,
-      label: methodParams.find(method => method.id === methodId)?.label ?? '',
-      icon: methodIcons[methodId] ?? '',
-      // if approachData could not match id, means that method not selected
-      isSelected: approachData
-        .find(appr => appr.id === link.apprId)
-        ?.methods.find(method => method.id === methodId)
-        ? true
-        : false,
-      isCandidated: false,
-      appraisalValue:
-        approachData
-          .find(appr => appr.id === link.apprId)
-          ?.methods.find(method => method.id === methodId)?.appraisalValue ?? 0,
-    })),
-  }));
+  const approaches = approachConfig.map(appr => {
+    const apprData = approachData.find(data => data.id === appr.id);
+    return {
+      id: appr.id,
+      label: appr.label,
+      icon: appr.icon,
+      appraisalValue: apprData ? apprData.appraisalValue : 0,
+      isCandidated: apprData && (apprData.isCandidated ? true : false),
+      methods: appr.methods.map(method => {
+        return {
+          id: method.id,
+          label: method.label,
+          icon: method.icon,
+          // if approachData could not match id, means that method not selected
+          isSelected:
+            apprData && (apprData.methods.find(data => data.id === method.id) ? true : false),
+          isCandidated:
+            apprData && apprData.methods.find(data => data.id === method.id)?.isCandidated,
+          appraisalValue: apprData
+            ? (apprData.methods.find(data => data.id === method.id)?.appraisalValue ?? 0)
+            : method.appraisalValue,
+        };
+      }),
+    };
+  });
 
   return approaches;
 };
@@ -77,9 +77,8 @@ interface PriceAnalysisAccordionProps {
 
 export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps) => {
   /* Server state: fetch property data by groupId */
+  const { data, isLoading, isError, error } = usePriceAnalysisQuery();
   const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
-  const { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons } =
-    useGetApproachParams();
 
   const initialState: PriceAnalysisSelectorState = {
     viewMode: 'summary',
@@ -91,37 +90,34 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   const { summarySelected } = state;
 
   useEffect(() => {
-    if (!approachesMoc?.length) return;
-    if (!approachMethodLinkedParams?.length) return;
+    if (isLoading) return;
 
-    const approaches = createInitialState(
-      approachesMoc,
-      approachMethodLinkedParams,
-      approachParams,
-      approachIcons,
-      methodParams,
-      methodIcons,
-    );
+    if (!approachesMoc?.length) return;
+
+    const approaches = createInitialState(data?.approaches, approachesMoc);
+    console.log(approaches);
 
     dispatch({ type: 'INIT', payload: { approaches } });
     dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
-  }, [
-    approachesMoc,
-    approachMethodLinkedParams,
-    approachParams,
-    approachIcons,
-    methodParams,
-    methodIcons,
-  ]);
+  }, [data, isLoading, isError, error, approachesMoc]);
 
   /* Local state:  */
   // state to control 'show or collapse'
-  const [isOpen, setIsOpen] = useState<boolean>(true);
-  const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
+  const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
+    useDisclosure();
 
-  const handleOnOpen = () => {
-    setIsOpen(!isOpen);
-  };
+  const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
+  const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
+  const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
+  const {
+    isOpen: isConfirmDeselectedMethodOpen,
+    onOpen: onConfirmDeselectedMethodOpen,
+    onClose: onConfirmDeselectedMethodClose,
+  } = useDisclosure();
+  const {
+    isOpen: isPriceAnalysisSelectorAccordionOpen,
+    onToggle: onPriceAnalysisSelectorAccordionChange,
+  } = useDisclosure();
 
   // state to control 'use system calculation'
   // 1. default value from request field 'bring appraisal book?'
@@ -129,13 +125,11 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     setIsSystemCalculation(!isSystemCalculation);
   };
 
-  const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
-  const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const handleOnEditModeSave = (
     data: PriceAnalysisApproachRequest,
     dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
   ) => {
-    addPriceAnalysisMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
+    addPriceAnalysisMutate(groupId, data); // convert to PriceAnalysisApproachRequest
     console.log(
       'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
     );
@@ -146,22 +140,36 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     data: PriceAnalysisApproachRequest,
     dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
   ) => {
-    addCandidateApproachMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
     console.log(
       'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
+      data,
     );
-    dispatch({ type: 'EDIT_SAVE' });
+    // addCandidateApproachMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
+    console.log(data);
+    dispatch({ type: 'SUMMARY_SAVE' });
   };
 
-  // state to collect approach & method which selected
-  /**
-   * select condition:
-   * 1. every method must calculate
-   * 2. one method must be select
-   * 3. one approach must be select
-   */
+  const handleOnSelectMethod = (approachId: string, methodId: string) => {
+    const beforeChange =
+      state.editDraft.find(appr => appr.id === approachId)?.methods.find(m => m.id === methodId)
+        ?.appraisalValue ?? 0;
+    if (beforeChange > 0) {
+      onOpen();
+      return;
+    }
+    dispatch({
+      type: 'EDIT_TOGGLE_METHOD',
+      payload: { apprId: approachId, methodId: methodId },
+    });
+  };
 
-  // function to shape api form and fire api to save
+  const handleOnConfirmMethod = (approachId: string, methodId: string) => {
+    dispatch({
+      type: 'EDIT_TOGGLE_METHOD',
+      payload: { apprId: approachId, methodId: methodId },
+    });
+    onClose();
+  };
 
   return (
     <StateCtx.Provider value={state}>
@@ -169,25 +177,31 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
         <div className="border border-base-300 rounded-xl p-4 h-full">
           {/* header */}
           <div className="grid grid-cols-12 justify-between items-center ">
-            <div className="col-span-3">
+            <div className="col-span-2">
               <span>GroupId: {groupId}</span>
             </div>
-            <div className="col-span-8 flex flex-row gap-1 items-center">
+            <div className="col-span-8 flex flex-row gap-1 items-center justify-end">
               <span>
                 {summarySelected
-                  ? summarySelected.find(appr => appr.isCandidated)?.appraisalValue
+                  ? (Number(
+                      summarySelected.find(appr => appr.isCandidated)?.appraisalValue,
+                    ).toLocaleString() ?? 0)
                   : 0}
               </span>
               <Icon name="baht-sign" style="light" className="size-4" />
             </div>
             <div className="col-span-1 flex items-center justify-end">
-              <button type="button" onClick={handleOnOpen} className="btn btn-ghost btn-sm">
+              <button
+                type="button"
+                onClick={onPriceAnalysisAccordionChange}
+                className="btn btn-ghost btn-sm"
+              >
                 <Icon
                   name="chevron-down"
                   style="solid"
                   className={clsx(
                     'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
-                    isOpen ? 'rotate-180' : 'rotate-0',
+                    isPriceAnalysisAccordionOpen ? 'rotate-180' : 'rotate-0',
                   )}
                 />
               </button>
@@ -198,7 +212,7 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
           <div
             className={clsx(
               'transition-all ease-in-out duration-300 overflow-hidden',
-              isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
+              isPriceAnalysisAccordionOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
             )}
           >
             <Group className="flex gap-4">
@@ -215,6 +229,10 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
                   isSystemCalculation={isSystemCalculation}
                   onSystemCalculationChange={handleOnSystemCalculationChange}
                   onEditModeSave={handleOnEditModeSave}
+                  onSummaryModeSave={handleOnSummaryModeSave}
+                  isConfirmSelectedMethodOpen={}
+                  onSelectedMethod={}
+                  onDeSelectMethod={}
                 />
               </Panel>
             </Group>

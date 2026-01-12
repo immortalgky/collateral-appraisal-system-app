@@ -18,6 +18,12 @@ interface Approach {
   appraisalValue: number;
   isCandidated: boolean;
 }
+
+// state to collect approach & method which selected
+  select condition:
+  1. every method must calculate
+  2. one method must be select
+  3. one approach must be select
 */
 
 interface Method {
@@ -43,9 +49,10 @@ type ViewMode = 'editing' | 'summary';
 export type PriceAnalysisSelectorState = {
   viewMode: ViewMode;
 
-  editSelected: Approach[] | null;
+  editDraft: Approach[];
+  editSaved: Approach[];
 
-  summarySelected: Approach[] | null;
+  summarySelected: Approach[];
 };
 
 export type PriceAnalysisSelectorAction =
@@ -60,10 +67,23 @@ export type PriceAnalysisSelectorAction =
   | { type: 'SUMMARY_SAVE' };
 
 const getVisibleApproach = (approaches: Approach[]) => {
-  return approaches.filter(appr => appr.methods.some(method => method.isSelected));
+  return approaches
+    .filter(appr => appr.methods.some(method => method.isSelected))
+    .map(appr => ({ ...appr, methods: appr.methods.filter(method => method.isSelected) }));
 };
 
-const firstKey = () => {};
+const selectionKey = (approaches: approach[]) => {
+  return getVisibleApproach(approaches)
+    .map(appr => {
+      const methodIds = appr.methods
+        .map(m => m.id)
+        .sort()
+        .join(',');
+      return `${appr.id}:${methodIds}`;
+    })
+    .sort()
+    .join('}');
+};
 
 const checkMethodIsCandidated = (methods: Method[]): string | null => {
   return methods.find(method => method.isCandidated)?.id ?? null;
@@ -73,7 +93,7 @@ const checkApproachIsCandidated = (approaches: Approach[]): string | null => {
   return approaches.find(appr => appr.isCandidated)?.id ?? null;
 };
 
-const sortApproaches = (approaches: Approach[] | null): Approach[] | null => {
+const sortApproaches = (approaches: Approach[]): Approach[] | null => {
   if (!approaches) return null;
 
   return approaches
@@ -93,18 +113,24 @@ const cloneApproaches = (approaches: Approach[] | null): Approach[] | null => {
     : null;
 };
 
+const diffApproaches = (oldApproaches: Approach[], newApproaches: Approach[]) => {};
+
 export const approachMethodReducer: React.Reducer<State, Action> = (
   state: PriceAnalysisSelectorState,
   action: PriceAnalysisSelectorAction,
 ) => {
   switch (action.type) {
     case 'INIT': {
-      const sorted = sortApproaches(action.payload.approaches) ?? null;
+      // const sorted = sortApproaches(action.payload.approaches) ?? null;
+
+      const approaches = action.payload.approaches;
+      const visibleApproach = getVisibleApproach(action.payload.approaches);
 
       return {
         viewMode: 'summary',
-        summarySelected: cloneApproaches(sorted),
-        editSelected: cloneApproaches(sorted),
+        editSaved: cloneApproaches(approaches),
+        editDraft: cloneApproaches(approaches),
+        summarySelected: cloneApproaches(visibleApproach),
       };
     }
 
@@ -113,17 +139,17 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
        * control logic
        *
        */
+      // const sorted = sortApproaches(state.editDraft) ?? null;
       const nextState = {
         ...state,
-        editSelected: sortApproaches(state.editSelected),
         viewMode: 'editing',
       };
       return nextState;
     }
 
     case 'EDIT_TOGGLE_METHOD': {
-      if (state.editSelected == null) return state;
-      if (!state.editSelected.find(appr => appr.id === action.payload.apprId)) return state;
+      if (state.editDraft == null) return state;
+      if (!state.editDraft.find(appr => appr.id === action.payload.apprId)) return state;
 
       /**
        * control logic
@@ -132,13 +158,14 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
 
       const nextState = {
         ...state,
-        editSelected: state.editSelected.map(appr => {
+        editDraft: state.editDraft.map(appr => {
           if (appr.id !== action.payload.apprId) return appr;
           return {
             ...appr,
             methods: appr.methods.map(method => {
               if (method.id !== action.payload.methodId) return method;
-              return { ...method, isSelected: !method.isSelected };
+              if (method.isSelected) return { ...method, appraisalValue: 0, isSelected: false };
+              return { ...method, appraisalValue: 0, isSelected: true };
             }),
           };
         }),
@@ -153,7 +180,7 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
        */
       const nextState = {
         ...state,
-        editSelected: cloneApproaches(state.summarySelected),
+        editDraft: cloneApproaches(state.editSaved),
         viewMode: 'summary',
       };
       return nextState;
@@ -163,14 +190,32 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
       /**
        * control logic
        * if summary and editing is difference, warning
+       * if summary and editing is difference, reset selected on approach and method in summary screen
        */
 
-      if (state.editSelected == null) return state;
+      if (state.editDraft == null) return state;
 
-      const visibleApproach = getVisibleApproach(state.editSelected);
+      const changed = selectionKey(state.editDraft) !== selectionKey(state.editSaved);
+
+      let visibleApproach = getVisibleApproach(state.editDraft);
+
+      if (changed) {
+        visibleApproach = visibleApproach.map(appr => ({
+          ...appr,
+          appraisalValue: 0,
+          isCandidated: false,
+          methods: appr.methods.map(method => {
+            return {
+              ...method,
+              isCandidated: false,
+            };
+          }),
+        }));
+      }
 
       const nextState = {
         ...state,
+        editSaved: cloneApproaches(state.editDraft),
         summarySelected: cloneApproaches(visibleApproach),
         viewMode: 'summary',
       };
@@ -186,27 +231,26 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
       if (state.summarySelected == null) return state;
 
       const visibleApproach = getVisibleApproach(state.summarySelected);
-      const sortVisibleApproach = sortApproaches(visibleApproach);
+      // const sortVisibleApproach = sortApproaches(visibleApproach);
 
       const nextState = {
         ...state,
-        summarySelected: cloneApproaches(sortVisibleApproach),
+        summarySelected: cloneApproaches(visibleApproach),
         viewMode: 'summary',
       };
       return nextState;
     }
 
     case 'SUMMARY_SELECT_METHOD': {
-      /**
-       * control logic
-       * (1) every seleted method must have value system will allow user to select method
-       */
-
       if (state.summarySelected == null) return state;
 
-      /**
-       * clear previous selected, change current selected
-       */
+      // every seleted method must have value system will allow user to select method
+      if (
+        state.summarySelected.some(appr => appr.methods.some(method => method.appraisalValue <= 0))
+      )
+        return state;
+
+      // if any method has select, clear that method and enable selected one
       const nextState = {
         ...state,
         summarySelected: state.summarySelected.map(appr => {
@@ -231,13 +275,9 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
     }
 
     case 'SUMMARY_SELECT_APPROACH': {
-      /**
-       * control logic
-       * (1) method under the approach must be selected
-       */
-
       if (state.summarySelected == null) return state;
 
+      // every approach must got selected method
       const allApproachHavecandidated = state.summarySelected.every(appr =>
         appr.methods.some(method => method.isCandidated),
       );

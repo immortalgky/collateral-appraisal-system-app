@@ -1,0 +1,108 @@
+{
+  "approaches": [
+    {
+      "id": "MARAPPR",
+      "label": "Market Approach",
+      "icon": "shop",
+      "appraisalValue": 0,
+      "methods": [
+        {
+          "id": "WQS",
+          "icon": "scale-balanced",
+          "appraisalValue": 0,
+          "label": "Weighted Quality Score (WQS)"
+        },
+        {
+          "id": "SAG",
+          "icon": "table",
+          "appraisalValue": 0,
+          "label": "Sales Adjustment Grid"
+        },
+        {
+          "id": "DC",
+          "icon": "house-building",
+          "appraisalValue": 0,
+          "label": "Direct Comparison"
+        }
+      ]
+    },
+    {
+      "id": "COSTAPPR",
+      "label": "Cost Approach",
+      "icon": "triangle-person-digging",
+      "appraisalValue": 0,
+      "methods": [
+        {
+          "id": "WQS",
+          "icon": "scale-balanced",
+          "appraisalValue": 0,
+          "label": "Weighted Quality Score (WQS)"
+        },
+        {
+          "id": "SAG",
+          "icon": "table",
+          "appraisalValue": 0,
+          "label": "Sales Adjustment Grid"
+        },
+        {
+          "id": "DC",
+          "icon": "house-building",
+          "appraisalValue": 0,
+          "label": "Direct Comparison"
+        },
+        {
+          "id": "BC",
+          "icon": "person-digging",
+          "appraisalValue": 0,
+          "label": "Building Cost"
+        },
+        {
+          "id": "PR",
+          "icon": "file-signature",
+          "appraisalValue": 0,
+          "label": "Profit Rent"
+        },
+        {
+          "id": "LH",
+          "icon": "file-contract",
+          "appraisalValue": 0,
+          "label": "Leasehold"
+        },
+        {
+          "id": "MC",
+          "icon": "gears",
+          "appraisalValue": 0,
+          "label": "Machinery Cost"
+        }
+      ]
+    },
+    {
+      "id": "INCOMEAPPR",
+      "label": "Income Approach",
+      "icon": "chart-line-up",
+      "appraisalValue": 0,
+      "methods": [
+        {
+          "id": "I",
+          "icon": "chart-line",
+          "appraisalValue": 0,
+          "label": "Income"
+        }
+      ]
+    },
+    {
+      "id": "RESAPPR",
+      "label": "Residual Approach",
+      "icon": "land-mine-on",
+      "appraisalValue": 0,
+      "methods": [
+        {
+          "id": "HYPO",
+          "icon": "flask-vial",
+          "appraisalValue": 0,
+          "label": "Hypothesis"
+        }
+      ]
+    }
+  ]
+}

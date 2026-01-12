@@ -1,37 +1,44 @@
 import { Icon } from '@/shared/components';
 import { Checkbox } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useSelectionDispatch } from './PriceAnalysisAccordion';
+import { useSelectionDispatch, useSelectionState } from './PriceAnalysisAccordion';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
 
-interface MethodCardProps {
+interface PriceAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';
   approachId: string;
   method: any;
+  onSelectedMethod: (approachId: string, methodId: string, dispatch: React.Dispatch<any>) => void;
+  onDeSelectMethod: (approachId: string, methodId: string, dispatch: React.Dispatch<any>) => void;
 }
 
-export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) => {
+export const PriceAnalysisMethodCard = ({
+  viewMode,
+  approachId,
+  method,
+  onSelectedMethod,
+  onDeSelectMethod,
+}: PriceAnalysisMethodCardProps) => {
   const dispatch = useSelectionDispatch();
+  const { editDraft } = useSelectionState();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   if (viewMode === 'editing') {
     return (
       <div
         className={clsx(
           'flex flex-col items-center h-14 transition-all duration-300 rounded-lg',
-          method.isSelected ? 'text-primary' : 'text-neutral-600',
+          method.isSelected ? 'text-primary' : 'text-gray-400',
         )}
       >
         <button
           className={clsx(
             'grid grid-cols-12 items-center justify-start cursor-pointer w-full h-full transition-all duration-300 px-4 py-2 rounded-lg',
             method.isSelected ? '  text-primary' : '',
-            'hover:bg-primary/20',
+            'hover:bg-primary/10',
           )}
-          onClick={() =>
-            dispatch({
-              type: 'EDIT_TOGGLE_METHOD',
-              payload: { apprId: approachId, methodId: method.id },
-            })
-          }
+          onClick={() => onSelectedMethod(approachId, method.Id)}
         >
           <div className="col-span-1">
             <Icon name={'check'} style="solid" className={clsx('size-3')} />
@@ -43,6 +50,12 @@ export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) =>
             <span>{method.label}</span>
           </div>
         </button>
+        <ConfirmDialog
+          isOpen={isOpen}
+          onClose={onClose}
+          onConfirm={() => onDeSelectMethod(approachId, method.id)}
+          message="Are you sure? If you confirm the appraisal value, this method will be removed."
+        />
       </div>
     );
   }
@@ -52,7 +65,7 @@ export const MethodCard = ({ viewMode, approachId, method }: MethodCardProps) =>
       className={clsx(
         'grid grid-cols-12 gap-4 items-center h-16 py-2 px-4 transition-all duration-300 rounded-lg',
         'hover:bg-primary/10',
-        method.isCandidated ? 'text-primary' : 'text-neutral-400',
+        method.isCandidated ? 'text-primary' : 'text-gray-400',
       )}
     >
       <div className="col-span-1 flex items-center justify-center">

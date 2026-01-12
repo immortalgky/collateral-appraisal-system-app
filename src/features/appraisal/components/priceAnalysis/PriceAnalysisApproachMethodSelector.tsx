@@ -24,14 +24,24 @@ interface PriceAnalysisApproachMethodSelectorProps {
   isSystemCalculation: boolean;
   onSystemCalculationChange: () => void;
   onEditModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
+  onSummaryModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
+
+  isConfirmSelectedMethodOpen: boolean;
+  onSelectedMethod: (approachId: string, methodId: string) => void;
+  onDeSelectMethod: (approachId: string, methodId: string) => void;
 }
 
 export const PriceAnalysisApproachMethodSelector = ({
   isSystemCalculation,
   onSystemCalculationChange,
   onEditModeSave,
+  onSummaryModeSave,
+
+  isConfirmSelectedMethodOpen,
+  onSelectedMethod,
+  onDeSelectMethod,
 }: PriceAnalysisApproachMethodSelectorProps) => {
-  const { viewMode, editSelected, summarySelected } = useSelectionState();
+  const { viewMode, editDraft, summarySelected } = useSelectionState();
   const dispatch = useSelectionDispatch();
 
   return (
@@ -54,11 +64,14 @@ export const PriceAnalysisApproachMethodSelector = ({
 
               {/* Approach and methods */}
               <div className="flex flex-col overflow-y-auto w-full max-h-58 gap-2">
-                {editSelected?.map(appr => (
+                {editDraft?.map(appr => (
                   <PriceAnalysisApproachAccordion
                     key={appr.id}
                     viewMode={viewMode}
                     approach={appr}
+                    isConfirmSelectedMethodOpen={isConfirmSelectedMethodOpen}
+                    onConfirmSelectedMethodOpen={onConfirmSelectedMethodOpen}
+                    onConfirmSelectedMethodClose={onConfirmSelectedMethodClose}
                   />
                 ))}
               </div>
@@ -76,7 +89,7 @@ export const PriceAnalysisApproachMethodSelector = ({
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => onEditModeSave(editSelected, dispatch)}
+                    onClick={() => onEditModeSave(editDraft, dispatch)}
                   >
                     Save
                   </button>
@@ -105,6 +118,9 @@ export const PriceAnalysisApproachMethodSelector = ({
                       ...appr,
                       methods: appr.methods.filter(method => method.isSelected),
                     }}
+                    isConfirmSelectedMethodOpen={isConfirmSelectedMethodOpen}
+                    onConfirmSelectedMethodOpen={onConfirmSelectedMethodOpen}
+                    onConfirmSelectedMethodClose={onConfirmSelectedMethodClose}
                   />
                 ))}
               </div>
@@ -115,7 +131,11 @@ export const PriceAnalysisApproachMethodSelector = ({
                   Cancel
                 </button>
                 <div className="flex gap-4">
-                  <button type="submit" className="btn btn-primary">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => onSummaryModeSave(summarySelected, dispatch)}
+                  >
                     Save
                   </button>
                 </div>

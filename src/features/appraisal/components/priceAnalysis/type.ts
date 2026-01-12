@@ -1,11 +1,13 @@
 export interface PriceAnalysisMethodRequest {
   id: string;
+  isCandidated: boolean;
   appraisalValue: number;
 }
 
 export interface PriceAnalysisApproachRequest {
   id: string;
   appraisalValue: number;
+  isCandidated: boolean;
   methods: PriceAnalysisMethodRequest[];
 }
 
