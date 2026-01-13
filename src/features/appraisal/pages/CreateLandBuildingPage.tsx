@@ -11,7 +11,7 @@ import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useCreateLandBuildingRequest } from '../api';
+import { useCreateLandBuildingProperty } from '../api';
 import LandDetailForm from '../forms/LandDetailForm';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import {
@@ -32,7 +32,7 @@ const CreateLandBuildingPage = () => {
   });
   const { handleSubmit, getValues } = methods;
 
-  const { mutate } = useCreateLandBuildingRequest();
+  const { mutate } = useCreateLandBuildingProperty();
 
   const onSubmit: SubmitHandler<CreateLandBuildingRequestType> = data => {
     mutate({
@@ -64,8 +64,18 @@ const CreateLandBuildingPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Land', id: 'land-section', icon: 'mountain-sun', onClick: () => setActiveTab('land') },
-            { label: 'Building', id: 'building-section', icon: 'building', onClick: () => setActiveTab('building') },
+            {
+              label: 'Land',
+              id: 'land-section',
+              icon: 'mountain-sun',
+              onClick: () => setActiveTab('land'),
+            },
+            {
+              label: 'Building',
+              id: 'building-section',
+              icon: 'building',
+              onClick: () => setActiveTab('building'),
+            },
             ...(propertyId
               ? [{ label: 'Photos', id: 'photos', icon: 'images', href: photosHref }]
               : []),
@@ -93,20 +103,32 @@ const CreateLandBuildingPage = () => {
                     id="land-section"
                     className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
                   >
-                      {/* Land Section Header */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <Icon name="mountain-sun" style="solid" className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                    {/* Land Section Header */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                        <Icon
+                          name="mountain-sun"
+                          style="solid"
+                          className="w-5 h-5 text-amber-600"
+                        />
                       </div>
-                      <div className="h-px bg-gray-200" />
-                      <Section id="land-title" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
-                        <TitleDeedForm />
-                      </Section>
-                      <Section id="land-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
-                        <LandDetailForm />
-                      </Section>
+                      <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                    </div>
+                    <div className="h-px bg-gray-200" />
+                    <Section
+                      id="land-title"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <TitleDeedForm />
+                    </Section>
+                    <Section
+                      id="land-info"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <LandDetailForm />
+                    </Section>
                   </div>
 
                   {/* Building Tab Content */}
@@ -114,17 +136,17 @@ const CreateLandBuildingPage = () => {
                     id="building-section"
                     className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
                   >
-                      {/* Building Section Header */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
+                    {/* Building Section Header */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
                       </div>
-                      <div className="h-px bg-gray-200" />
-                      <Section id="building-info" anchor className="flex flex-col gap-6">
-                        <BuildingDetailForm prefix="building" />
-                      </Section>
+                      <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
+                    </div>
+                    <div className="h-px bg-gray-200" />
+                    <Section id="building-info" anchor className="flex flex-col gap-6">
+                      <BuildingDetailForm prefix="building" />
+                    </Section>
                   </div>
                 </div>
               </ResizableSidebar.Main>

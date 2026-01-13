@@ -15,7 +15,7 @@ import {
   CreateCollateralCondoRequestDefaults,
   type CreateCondoRequestType,
 } from '@/shared/forms/typeCondo';
-import { useCreateCondoRequest } from '../api';
+import { useCreateCondoProperty } from '../api';
 
 const CreateCondoPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -27,7 +27,7 @@ const CreateCondoPage = () => {
   });
   const { handleSubmit, getValues } = methods;
 
-  const { mutate } = useCreateCondoRequest();
+  const { mutate } = useCreateCondoProperty();
 
   const onSubmit: SubmitHandler<CreateCondoRequestType> = data => {
     mutate({
@@ -91,7 +91,11 @@ const CreateCondoPage = () => {
                   </Section>
 
                   {/* Condo Form */}
-                  <Section id="condo-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="condo-info"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <CondoDetailForm />
                   </Section>
                 </div>

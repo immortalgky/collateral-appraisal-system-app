@@ -120,10 +120,10 @@ export const router = createBrowserRouter([
         path: 'dev/property-information',
         element: <PropertyInformationPage />,
       },
-      {
-        path: 'dev/land-detail',
-        element: <LandDetailPage />,
-      },
+      // {
+      //   path: 'dev/land-detail',
+      //   element: <LandDetailPage />,
+      // },
       // Catch-all route for 404 pages
       {
         path: '*',

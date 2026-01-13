@@ -1,6 +1,6 @@
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -10,48 +10,151 @@ import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useCreateLandRequest } from '../api';
+import { useCreateLandProperty, useGetLandPropertyById, useUpdateLandProperty } from '../api';
 import LandDetailForm from '../forms/LandDetailForm';
 import { createLandForm, createLandFormDefault, type createLandFormType } from '../schemas/form';
+import { useEffect, useState } from 'react';
+import { mapLandPropertyResponseToForm } from '@/features/appraisal/utils/mappers';
+import toast from 'react-hot-toast';
 
 const CreateLandPage = () => {
+  const navigate = useNavigate();
+
   // Get propertyId from URL params to determine edit or create mode
   const { propertyId } = useParams<{ propertyId?: string }>();
-  // const propertyId = 'AF39433E-F36B-1410-8762-004DC4E1D9A2';
+  // const propertyId = 'B539433E-F36B-1410-8762-004DC4E1D9A2';
+
   const isEditMode = Boolean(propertyId);
 
-  // const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
-  const appraisalId = '49FF1203-037C-44E4-B124-791F1B0C75D3';
+  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  // const appraisalId = '49FF1203-037C-44E4-B124-791F1B0C75D3';
   const location = useLocation();
 
   const methods = useForm<createLandFormType>({
     defaultValues: createLandFormDefault,
     resolver: zodResolver(createLandForm),
   });
-  const { handleSubmit, getValues } = methods;
+  const { handleSubmit, getValues, reset } = methods;
 
-  const { mutate } = useCreateLandRequest();
+  const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
+
+  useEffect(() => {
+    if (isEditMode && propertyData) {
+      const formValues = mapLandPropertyResponseToForm(propertyData);
+      reset(formValues);
+    }
+  }, [isEditMode, propertyData, reset]);
+
+  const { mutate: createLandProperties, isPending: isCreating } = useCreateLandProperty();
+  const { mutate: updateLandProperties, isPending: isUpdating } = useUpdateLandProperty();
+
+  const isPending = isCreating || isUpdating;
+
+  // Track which save action is in progress (for loading state on the correct button)
+  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
   const onSubmit: SubmitHandler<createLandFormType> = data => {
-    mutate({
-      ...data,
-      propertyId: propertyId,
-      apprId: appraisalId,
-    } as any);
+    setSaveAction('submit');
+
+    if (isEditMode && propertyId) {
+      updateLandProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Property land updated successfully');
+            setSaveAction(null);
+            navigate(`/appraisal/${appraisalId}/property`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    } else {
+      createLandProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Property land updated successfully');
+            setSaveAction(null);
+            navigate(`/appraisa/${appraisalId}/property/land/${response.id}`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    }
   };
 
   const { isOpen, onToggle } = useDisclosure();
 
   const handleSaveDraft = () => {
+    setSaveAction('draft');
     const data = getValues();
-    mutate({
-      apprId: appraisalId,
-      request: { ...data, propertyId: propertyId },
-    } as any);
+
+    if (isEditMode && propertyId) {
+      updateLandProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Draft saved successfully');
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    } else {
+      createLandProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Draft saved successfully');
+            setSaveAction(null);
+            if (response.id) {
+              navigate(`/appraisa/${appraisalId}/property/land/${response.id}`);
+            }
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    }
   };
 
   // Only show Photos tab if we have a propertyId (not for new)
   const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -126,11 +229,21 @@ const CreateLandPage = () => {
                 <div className="h-6 w-px bg-gray-200" />
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                   Save draft
                 </Button>
-                <Button type="submit">
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
                   Save
                 </Button>

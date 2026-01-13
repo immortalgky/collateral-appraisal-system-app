@@ -11,7 +11,7 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import { CreateBuildingRequest, type CreateBuildingRequestType } from '@/shared/forms/typeBuilding';
-import { useCreateBuildingRequest } from '../api';
+import { useCreateBuildingProperty } from '../api';
 
 // TODO: Add proper defaults when schema is finalized
 const createBuildingRequestDefaults = {} as any;
@@ -26,7 +26,7 @@ const CreateBuildingPage = () => {
   });
   const { handleSubmit, getValues } = methods;
 
-  const { mutate } = useCreateBuildingRequest();
+  const { mutate } = useCreateBuildingProperty();
 
   const onSubmit: SubmitHandler<CreateBuildingRequestType> = data => {
     mutate({
@@ -90,7 +90,11 @@ const CreateBuildingPage = () => {
                   </Section>
 
                   {/* Building Form */}
-                  <Section id="building-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="building-info"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <BuildingDetailForm />
                   </Section>
                 </div>
