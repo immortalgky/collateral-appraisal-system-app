@@ -200,22 +200,22 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
         <div className="flex flex-col border border-base-300 rounded-xl px-4 py-2 min-h-0 max-h-[70vh]">
           {/* header */}
           <div className="grid grid-cols-12 justify-between items-center h-12">
-            <div className="col-span-3">
+            <div className="col-span-8">
               <span>{`${group?.name} (${group?.items.length} item(s))`}</span>
             </div>
-            <div className="col-span-8 flex flex-row gap-1 items-center justify-end">
-              <span>
-                {summarySelected
-                  ? summarySelected.find(appr => appr.isCandidated)
-                    ? Number(
-                        summarySelected.find(appr => appr.isCandidated).appraisalValue,
-                      ).toLocaleString()
-                    : 0
-                  : 0}
-              </span>
-              <Icon name="baht-sign" style="light" className="size-4" />
-            </div>
-            <div className="col-span-1 flex items-center justify-end">
+            <div className="col-span-4 flex items-center justify-end gap-1">
+              <div className="flex flex-row gap-1 items-center justify-end">
+                <span>
+                  {summarySelected
+                    ? summarySelected.find(appr => appr.isCandidated)
+                      ? Number(
+                          summarySelected.find(appr => appr.isCandidated).appraisalValue,
+                        ).toLocaleString()
+                      : 0
+                    : 0}
+                </span>
+                <Icon name="baht-sign" style="light" className="size-4" />
+              </div>
               <button
                 type="button"
                 onClick={onPriceAnalysisAccordionChange}
@@ -284,7 +284,7 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
             isOpen={isConfirmDeselectedMethodOpen}
             onClose={handleOnCancelDeselectMethod}
             onConfirm={handleOnConfirmDeselectMethod}
-            message={`Are you sure? If you confirm the appraisal value, this method will be removed.`}
+            message={`Are you sure? If you confirm the appraisal value of this method will be removed.`}
           />
         </div>
       </DispatchCtx.Provider>

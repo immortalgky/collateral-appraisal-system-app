@@ -10,41 +10,22 @@ import type { PriceAnalysisApproachRequest } from './type';
 // onload
 
 const APPROACHES_MOC: PriceAnalysisApproachRequest[] = [
-  // {
-  //   id: 'MARAPPR',
-  //   appraisalValue: 1000000000,
-  //   isCandidated: true,
-  //   methods: [
-  //     { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
-  //     { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
-  //   ],
-  // },
-  // {
-  //   id: 'COSTAPPR',
-  //   appraisalValue: 1000000,
-  //   isCandidated: false,
-  //   methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
-  // },
+  {
+    id: 'MARAPPR',
+    appraisalValue: 1000000000,
+    isCandidated: true,
+    methods: [
+      { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
+      { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
+    ],
+  },
+  {
+    id: 'COSTAPPR',
+    appraisalValue: 1000000,
+    isCandidated: false,
+    methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
+  },
 ];
-
-/**
- * Hook for fetching approach, method, link between approach and method
- * GET /params ...
- * parameter
- */
-export const useGetApproachParams = () => {
-  // return useQuery({
-  //   queryKey: [''],
-  //   queryFn: async (): Promise<> => {
-  //     const { data } = await axios.get(`/params/`, { params: {} });
-  //     return data;
-  //   },
-  // });
-  // console.log(
-  //   'GET /params { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons }',
-  // );
-  // return { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons };
-};
 
 /**
  * Hook for fetching price analysis approach and method by group Id
