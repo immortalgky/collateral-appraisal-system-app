@@ -1,6 +1,7 @@
 import { Toggle } from '@/shared/components';
 import { useSelectionDispatch, useSelectionState } from './PriceAnalysisAccordion';
 import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 export interface Method {
   id: string;
@@ -25,10 +26,7 @@ interface PriceAnalysisApproachMethodSelectorProps {
   onSystemCalculationChange: () => void;
   onEditModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
   onSummaryModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
-
-  isConfirmSelectedMethodOpen: boolean;
-  onSelectedMethod: (approachId: string, methodId: string) => void;
-  onDeSelectMethod: (approachId: string, methodId: string) => void;
+  onSelectMethod: (approachId: string, methodId: string) => void;
 }
 
 export const PriceAnalysisApproachMethodSelector = ({
@@ -37,9 +35,7 @@ export const PriceAnalysisApproachMethodSelector = ({
   onEditModeSave,
   onSummaryModeSave,
 
-  isConfirmSelectedMethodOpen,
-  onSelectedMethod,
-  onDeSelectMethod,
+  onSelectMethod,
 }: PriceAnalysisApproachMethodSelectorProps) => {
   const { viewMode, editDraft, summarySelected } = useSelectionState();
   const dispatch = useSelectionDispatch();
@@ -69,9 +65,7 @@ export const PriceAnalysisApproachMethodSelector = ({
                     key={appr.id}
                     viewMode={viewMode}
                     approach={appr}
-                    isConfirmSelectedMethodOpen={isConfirmSelectedMethodOpen}
-                    onConfirmSelectedMethodOpen={onConfirmSelectedMethodOpen}
-                    onConfirmSelectedMethodClose={onConfirmSelectedMethodClose}
+                    onSelectMethod={onSelectMethod}
                   />
                 ))}
               </div>
@@ -118,9 +112,7 @@ export const PriceAnalysisApproachMethodSelector = ({
                       ...appr,
                       methods: appr.methods.filter(method => method.isSelected),
                     }}
-                    isConfirmSelectedMethodOpen={isConfirmSelectedMethodOpen}
-                    onConfirmSelectedMethodOpen={onConfirmSelectedMethodOpen}
-                    onConfirmSelectedMethodClose={onConfirmSelectedMethodClose}
+                    onSelectMethod={onSelectMethod}
                   />
                 ))}
               </div>

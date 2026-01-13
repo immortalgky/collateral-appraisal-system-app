@@ -9,21 +9,16 @@ interface PriceAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';
   approachId: string;
   method: any;
-  onSelectedMethod: (approachId: string, methodId: string, dispatch: React.Dispatch<any>) => void;
-  onDeSelectMethod: (approachId: string, methodId: string, dispatch: React.Dispatch<any>) => void;
+  onSelectMethod: (approachId: string, methodId: string) => void;
 }
 
 export const PriceAnalysisMethodCard = ({
   viewMode,
   approachId,
   method,
-  onSelectedMethod,
-  onDeSelectMethod,
+  onSelectMethod,
 }: PriceAnalysisMethodCardProps) => {
   const dispatch = useSelectionDispatch();
-  const { editDraft } = useSelectionState();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   if (viewMode === 'editing') {
     return (
       <div
@@ -38,7 +33,7 @@ export const PriceAnalysisMethodCard = ({
             method.isSelected ? '  text-primary' : '',
             'hover:bg-primary/10',
           )}
-          onClick={() => onSelectedMethod(approachId, method.Id)}
+          onClick={() => onSelectMethod(approachId, method.id)}
         >
           <div className="col-span-1">
             <Icon name={'check'} style="solid" className={clsx('size-3')} />
@@ -50,12 +45,6 @@ export const PriceAnalysisMethodCard = ({
             <span>{method.label}</span>
           </div>
         </button>
-        <ConfirmDialog
-          isOpen={isOpen}
-          onClose={onClose}
-          onConfirm={() => onDeSelectMethod(approachId, method.id)}
-          message="Are you sure? If you confirm the appraisal value, this method will be removed."
-        />
       </div>
     );
   }

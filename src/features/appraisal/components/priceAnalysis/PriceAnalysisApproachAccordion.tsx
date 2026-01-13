@@ -9,19 +9,13 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 interface PriceAnalysisApproachAccordian {
   viewMode: 'editing' | 'summary';
   approach: any;
-
-  isConfirmSelectedMethodOpen: boolean;
-  onSelectedMethod: (approachId: string, methodId: string) => void;
-  onDeSelectMethod: (approachId: string, methodId: string) => void;
+  onSelectMethod: (approachId: string, methodId: string) => void;
 }
 
 export const PriceAnalysisApproachAccordion = ({
   viewMode,
   approach,
-
-  isConfirmSelectedMethodOpen,
-  onSelectedMethod,
-  onDeSelectMethod,
+  onSelectMethod,
 }: PriceAnalysisApproachAccordian) => {
   const { isOpen: isApproachAccordianOpen, onToggle: onApproachAccordianChange } = useDisclosure();
 
@@ -31,7 +25,7 @@ export const PriceAnalysisApproachAccordion = ({
         <PriceAnalysisApproachCard
           approach={approach}
           isOpen={isApproachAccordianOpen}
-          onOpen={onApproachAccordianChange}
+          onToggle={onApproachAccordianChange}
         />
         <div
           className={clsx(
@@ -47,8 +41,7 @@ export const PriceAnalysisApproachAccordion = ({
               viewMode={viewMode}
               approachId={approach.id}
               method={method}
-              onDeSelectMethod={}
-              onSelectedMethod={}
+              onSelectMethod={onSelectMethod}
             />
           ))}
         </div>
@@ -61,22 +54,20 @@ export const PriceAnalysisApproachAccordion = ({
       <PriceAnalysisApproachCard
         approach={approach}
         isOpen={isApproachAccordianOpen}
-        onOpen={onApproachAccordianChange}
+        onToggle={onApproachAccordianChange}
       />
 
       <div className={clsx('transition-all ease-in-out duration-300 overflow-hidden')}>
         {/* method */}
         <div className="flex flex-col gap-2 ml-6 pl-4 border-l border-base-300">
           {approach.methods.map(method => (
-            <div key={method.id}>
-              <PriceAnalysisMethodCard
-                viewMode={viewMode}
-                approachId={approach.id}
-                method={method}
-                onDeSelectMethod={}
-                onSelectedMethod={}
-              />
-            </div>
+            <PriceAnalysisMethodCard
+              key={method.id}
+              viewMode={viewMode}
+              approachId={approach.id}
+              method={method}
+              onSelectMethod={onSelectMethod}
+            />
           ))}
         </div>
       </div>

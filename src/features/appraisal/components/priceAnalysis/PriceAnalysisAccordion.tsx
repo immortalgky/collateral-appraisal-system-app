@@ -1,6 +1,6 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import {
   PriceAnalysisApproachMethodSelector,
@@ -8,7 +8,6 @@ import {
 } from './PriceAnalysisApproachMethodSelector';
 import {
   useAddPriceAnalysisApproachMethod,
-  useGetApproachParams,
   useGetPriceAnalysisApproachMethodByGroupId,
   useSelectPriceAnalysisApproachMethod,
 } from './api';
@@ -17,9 +16,13 @@ import {
   type PriceAnalysisSelectorAction,
   type PriceAnalysisSelectorState,
 } from './useReducer';
-import type { ApproachMethodLink, PriceAnalysisApproachRequest } from './type';
+import type { PriceAnalysisApproachRequest } from './type';
 import { usePriceAnalysisQuery } from './usePriceAnalysisQuery';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { usePropertyStore } from '../../store';
+import { PropertyCard } from '../PropertyCard';
 
 const createInitialState = (
   approachConfig: any,
@@ -82,12 +85,22 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
 
   const initialState: PriceAnalysisSelectorState = {
     viewMode: 'summary',
-    editSelected: null,
-    summarySelected: null,
+    editDraft: [],
+    editSaved: [],
+    summarySelected: [],
   };
 
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
   const { summarySelected } = state;
+  const { groups } = usePropertyStore();
+  const group = groups.find(group => group.id === groupId) ?? null;
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    property: null,
+    groupId: null,
+  });
 
   useEffect(() => {
     if (isLoading) return;
@@ -102,9 +115,8 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   }, [data, isLoading, isError, error, approachesMoc]);
 
   /* Local state:  */
-  // state to control 'show or collapse'
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
-    useDisclosure();
+    useDisclosure({ defaultIsOpen: true });
 
   const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
   const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
@@ -149,12 +161,18 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     dispatch({ type: 'SUMMARY_SAVE' });
   };
 
+  const [pendingDeselect, setPendingDeselect] = useState<{
+    approachId: string;
+    methodId: string;
+  } | null>(null);
   const handleOnSelectMethod = (approachId: string, methodId: string) => {
     const beforeChange =
       state.editDraft.find(appr => appr.id === approachId)?.methods.find(m => m.id === methodId)
         ?.appraisalValue ?? 0;
+
     if (beforeChange > 0) {
-      onOpen();
+      setPendingDeselect({ approachId, methodId });
+      onConfirmDeselectedMethodOpen();
       return;
     }
     dispatch({
@@ -163,12 +181,18 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     });
   };
 
-  const handleOnConfirmMethod = (approachId: string, methodId: string) => {
+  const handleOnConfirmDeselectMethod = () => {
     dispatch({
       type: 'EDIT_TOGGLE_METHOD',
-      payload: { apprId: approachId, methodId: methodId },
+      payload: { apprId: pendingDeselect?.approachId, methodId: pendingDeselect?.methodId },
     });
-    onClose();
+    setPendingDeselect(null);
+    onConfirmDeselectedMethodClose();
+  };
+
+  const handleOnCancelDeselectMethod = () => {
+    setPendingDeselect(null);
+    onConfirmDeselectedMethodClose();
   };
 
   return (
@@ -177,8 +201,8 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
         <div className="border border-base-300 rounded-xl p-4 h-full">
           {/* header */}
           <div className="grid grid-cols-12 justify-between items-center ">
-            <div className="col-span-2">
-              <span>GroupId: {groupId}</span>
+            <div className="col-span-3">
+              <span>{`${group?.name} (${group?.items.length} item(s))`}</span>
             </div>
             <div className="col-span-8 flex flex-row gap-1 items-center justify-end">
               <span>
@@ -217,7 +241,23 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
           >
             <Group className="flex gap-4">
               <Panel minSize="20%" maxSize="40%">
-                left
+                {group && (
+                  <SortableContext
+                    items={group.items.map(item => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-2">
+                      {group.items.map(property => (
+                        <PropertyCard
+                          key={property.id}
+                          property={property}
+                          groupId={group.id}
+                          onContextMenu={contextMenu}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                )}
               </Panel>
               <Separator>
                 <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
@@ -230,13 +270,17 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
                   onSystemCalculationChange={handleOnSystemCalculationChange}
                   onEditModeSave={handleOnEditModeSave}
                   onSummaryModeSave={handleOnSummaryModeSave}
-                  isConfirmSelectedMethodOpen={}
-                  onSelectedMethod={}
-                  onDeSelectMethod={}
+                  onSelectMethod={handleOnSelectMethod}
                 />
               </Panel>
             </Group>
           </div>
+          <ConfirmDialog
+            isOpen={isConfirmDeselectedMethodOpen}
+            onClose={handleOnCancelDeselectMethod}
+            onConfirm={handleOnConfirmDeselectMethod}
+            message={`Are you sure? If you confirm the appraisal value, this method will be removed.`}
+          />
         </div>
       </DispatchCtx.Provider>
     </StateCtx.Provider>

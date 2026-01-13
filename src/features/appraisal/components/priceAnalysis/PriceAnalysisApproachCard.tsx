@@ -5,12 +5,12 @@ import { useSelectionDispatch, useSelectionState } from './PriceAnalysisAccordio
 interface PriceAnalysisApproachCard {
   approach: any;
   isOpen: boolean;
-  onOpen: () => void;
+  onToggle: () => void;
 }
 export const PriceAnalysisApproachCard = ({
   approach,
   isOpen,
-  onOpen,
+  onToggle,
 }: PriceAnalysisApproachCard) => {
   const { viewMode } = useSelectionState();
   const dispatch = useSelectionDispatch();
@@ -19,7 +19,7 @@ export const PriceAnalysisApproachCard = ({
       <div className="flex flex-col">
         <button
           type="button"
-          onClick={onOpen}
+          onClick={onToggle}
           className={clsx(
             'cursor-pointer text-sm hover:bg-gray-50 rounded-lg',
             isOpen ? 'bg-gray-50' : '',
