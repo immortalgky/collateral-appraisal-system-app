@@ -1,9 +1,6 @@
 import { Icon } from '@/shared/components';
-import { Checkbox } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useSelectionDispatch, useSelectionState } from './PriceAnalysisAccordion';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useSelectionDispatch } from './PriceAnalysisAccordion';
 
 interface PriceAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';
@@ -73,7 +70,7 @@ export const PriceAnalysisMethodCard = ({
             style="solid"
             className={clsx(
               'size-4 transition-transform duration-300 ease-in-out',
-              method.isCandidated ? 'text-primary' : '',
+              method.isCandidated ? 'text-primary' : 'text-gray-400',
             )}
           />
         </button>

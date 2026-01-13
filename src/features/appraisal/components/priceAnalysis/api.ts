@@ -92,7 +92,7 @@ export const useAddPriceAnalysisApproachMethod = () => {
   // const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ groupId, data }: { groupdId: string; data: any }) => {
+    mutationFn: async ({ groupId, data }: { groupId: string; data: any }) => {
       const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
       return response;
     },

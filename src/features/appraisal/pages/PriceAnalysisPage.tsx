@@ -49,7 +49,7 @@ function PriceAnalysisPage() {
   };
 
   return (
-    <div>
+    <div className="flex flex-col h-full min-h-0">
       {/* Tab Navigation - Compact */}
       <div className="shrink-0 pb-4">
         <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">

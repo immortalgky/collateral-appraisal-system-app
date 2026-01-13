@@ -1,7 +1,6 @@
 import { Toggle } from '@/shared/components';
 import { useSelectionDispatch, useSelectionState } from './PriceAnalysisAccordion';
 import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 export interface Method {
   id: string;
@@ -41,7 +40,7 @@ export const PriceAnalysisApproachMethodSelector = ({
   const dispatch = useSelectionDispatch();
 
   return (
-    <div className="flex flex-col overflow-hidden gap-4 max-h-96">
+    <div className="flex flex-col overflow-hidden gap-4 h-full">
       {/* System Calculation */}
       <div className="flex items-center gap-4 justify-center">
         <span>Use System Calculation: </span>
@@ -51,15 +50,12 @@ export const PriceAnalysisApproachMethodSelector = ({
           onChange={onSystemCalculationChange}
         ></Toggle>
       </div>
-
       {isSystemCalculation ? (
-        <div className="flex w-full">
+        <div className="flex flex-col min-h-0 h-full">
           {viewMode === 'editing' && (
-            <div className="flex flex-col w-full gap-4">
-              {/* edit mode */}
-
+            <div className="flex flex-col w-full h-full min-h-0 gap-4">
               {/* Approach and methods */}
-              <div className="flex flex-col overflow-y-auto w-full max-h-58 gap-2">
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
                 {editDraft?.map(appr => (
                   <PriceAnalysisApproachAccordion
                     key={appr.id}
@@ -71,7 +67,7 @@ export const PriceAnalysisApproachMethodSelector = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="flex w-full justify-between py-2">
+              <div className="shrink-0 min-h-14 flex items-center justify-between py-2">
                 <button
                   type="button"
                   className="btn btn-ghost"
@@ -92,18 +88,18 @@ export const PriceAnalysisApproachMethodSelector = ({
             </div>
           )}
           {viewMode === 'summary' && (
-            <div className="flex flex-col w-full gap-4">
+            <div className="flex flex-col w-full h-full min-h-0 gap-4">
               {/* summary mode */}
-              <button
-                type="button"
-                className="flex justify-center items-center w-full p-2 border border-dashed border-gray-200 rounded-md hover:bg-gray-100 duration-300 transition-all cursor-pointer"
-                onClick={() => dispatch({ type: 'EDIT_ENTER' })}
-              >
-                Determine Approach and Method
-              </button>
 
               {/* Approach and methods */}
-              <div className="flex flex-col overflow-y-auto w-full max-h-44 gap-2">
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="flex justify-center items-center w-full p-2 border border-dashed border-gray-200 rounded-md hover:bg-gray-100 duration-300 transition-all cursor-pointer"
+                  onClick={() => dispatch({ type: 'EDIT_ENTER' })}
+                >
+                  Determine Approach and Method
+                </button>
                 {summarySelected?.map(appr => (
                   <PriceAnalysisApproachAccordion
                     key={appr.id}
@@ -118,7 +114,7 @@ export const PriceAnalysisApproachMethodSelector = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="flex w-full justify-between py-2">
+              <div className="shrink-0 min-h-14 flex items-center justify-between py-2">
                 <button type="button" className="btn btn-ghost" onClick={() => null}>
                   Cancel
                 </button>

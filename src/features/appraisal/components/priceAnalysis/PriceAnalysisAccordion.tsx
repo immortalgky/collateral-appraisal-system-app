@@ -79,7 +79,7 @@ interface PriceAnalysisAccordionProps {
 }
 
 export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps) => {
-  /* Server state: fetch property data by groupId */
+  /* Server state: fetch property data by groupId && fetch approach and method by groupId */
   const { data, isLoading, isError, error } = usePriceAnalysisQuery();
   const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
 
@@ -92,6 +92,8 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
 
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
   const { summarySelected } = state;
+
+  // replace by fetch property data
   const { groups } = usePropertyStore();
   const group = groups.find(group => group.id === groupId) ?? null;
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -106,7 +108,6 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     if (isLoading) return;
 
     const approaches = createInitialState(data?.approaches, approachesMoc);
-    console.log(approaches);
 
     dispatch({ type: 'INIT', payload: { approaches } });
     dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
@@ -115,7 +116,6 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   /* Local state:  */
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
     useDisclosure({ defaultIsOpen: true });
-
   const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
   const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
@@ -124,13 +124,11 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     onOpen: onConfirmDeselectedMethodOpen,
     onClose: onConfirmDeselectedMethodClose,
   } = useDisclosure();
-  const {
-    isOpen: isPriceAnalysisSelectorAccordionOpen,
-    onToggle: onPriceAnalysisSelectorAccordionChange,
-  } = useDisclosure();
 
-  // state to control 'use system calculation'
-  // 1. default value from request field 'bring appraisal book?'
+  /**
+   * control:
+   * (1) clear data on system calculation changed
+   */
   const handleOnSystemCalculationChange = () => {
     setIsSystemCalculation(!isSystemCalculation);
   };
@@ -139,7 +137,9 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     data: PriceAnalysisApproachRequest,
     dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
   ) => {
-    addPriceAnalysisMutate(groupId, data); // convert to PriceAnalysisApproachRequest
+    // if some method has remove, need to fire api to update
+
+    addPriceAnalysisMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
     console.log(
       'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
     );
@@ -184,6 +184,7 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
       type: 'EDIT_TOGGLE_METHOD',
       payload: { apprId: pendingDeselect?.approachId, methodId: pendingDeselect?.methodId },
     });
+
     setPendingDeselect(null);
     onConfirmDeselectedMethodClose();
   };
@@ -196,9 +197,9 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   return (
     <StateCtx.Provider value={state}>
       <DispatchCtx.Provider value={dispatch}>
-        <div className="border border-base-300 rounded-xl p-4 h-full">
+        <div className="flex flex-col border border-base-300 rounded-xl px-4 py-2 min-h-0 max-h-[70vh]">
           {/* header */}
-          <div className="grid grid-cols-12 justify-between items-center ">
+          <div className="grid grid-cols-12 justify-between items-center h-12">
             <div className="col-span-3">
               <span>{`${group?.name} (${group?.items.length} item(s))`}</span>
             </div>
@@ -236,17 +237,19 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
           <div
             className={clsx(
               'transition-all ease-in-out duration-300 overflow-hidden',
-              isPriceAnalysisAccordionOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
+              isPriceAnalysisAccordionOpen
+                ? 'flex-1 min-h-0 flex flex-col opacity-100'
+                : 'max-h-0 opacity-0',
             )}
           >
-            <Group className="flex gap-4">
-              <Panel minSize="20%" maxSize="40%">
+            <Group className="flex-1 min-h-0 h-full gap-4">
+              <Panel className="h-full min-h-0" minSize="20%" maxSize="40%">
                 {group && (
                   <SortableContext
                     items={group.items.map(item => item.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="space-y-2">
+                    <div className="h-full min-h-0 overflow-y-auto space-y-2">
                       {group.items.map(property => (
                         <PropertyCard
                           key={property.id}
@@ -264,14 +267,16 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
                   <Icon name="grip-vertical" className="text-gray-400" />
                 </div>
               </Separator>
-              <Panel>
-                <PriceAnalysisApproachMethodSelector
-                  isSystemCalculation={isSystemCalculation}
-                  onSystemCalculationChange={handleOnSystemCalculationChange}
-                  onEditModeSave={handleOnEditModeSave}
-                  onSummaryModeSave={handleOnSummaryModeSave}
-                  onSelectMethod={handleOnSelectMethod}
-                />
+              <Panel className="h-full min-h-0">
+                <div className="h-full min-h-0">
+                  <PriceAnalysisApproachMethodSelector
+                    isSystemCalculation={isSystemCalculation}
+                    onSystemCalculationChange={handleOnSystemCalculationChange}
+                    onEditModeSave={handleOnEditModeSave}
+                    onSummaryModeSave={handleOnSummaryModeSave}
+                    onSelectMethod={handleOnSelectMethod}
+                  />
+                </div>
               </Panel>
             </Group>
           </div>

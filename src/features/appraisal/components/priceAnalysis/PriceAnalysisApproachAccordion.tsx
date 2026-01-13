@@ -1,8 +1,5 @@
-import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useState } from 'react';
 import { PriceAnalysisMethodCard } from './PriceAnalysisMethodCard';
-import { useSelectionDispatch } from './PriceAnalysisAccordion';
 import { PriceAnalysisApproachCard } from './PriceAnalysisApproachCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 
@@ -50,26 +47,29 @@ export const PriceAnalysisApproachAccordion = ({
   }
 
   return (
-    <div className="flex flex-col">
+    <div>
       <PriceAnalysisApproachCard
         approach={approach}
         isOpen={isApproachAccordianOpen}
         onToggle={onApproachAccordianChange}
       />
-
-      <div className={clsx('transition-all ease-in-out duration-300 overflow-hidden')}>
+      <div
+        className={clsx(
+          'flex flex-col gap-2 ml-4 pl-4 border-l border-base-300',
+          'transition-all ease-in-out duration-300 overflow-hidden',
+          'max-h-96 mt-2',
+        )}
+      >
         {/* method */}
-        <div className="flex flex-col gap-2 ml-6 pl-4 border-l border-base-300">
-          {approach.methods.map(method => (
-            <PriceAnalysisMethodCard
-              key={method.id}
-              viewMode={viewMode}
-              approachId={approach.id}
-              method={method}
-              onSelectMethod={onSelectMethod}
-            />
-          ))}
-        </div>
+        {approach.methods.map(method => (
+          <PriceAnalysisMethodCard
+            key={method.id}
+            viewMode={viewMode}
+            approachId={approach.id}
+            method={method}
+            onSelectMethod={onSelectMethod}
+          />
+        ))}
       </div>
     </div>
   );
