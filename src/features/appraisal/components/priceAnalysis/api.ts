@@ -8,67 +8,23 @@ import type { PriceAnalysisApproachRequest } from './type';
  */
 
 // onload
-const approachParams: Record<string, string>[] = [
-  { id: '01', label: 'Market Approach' },
-  { id: '02', label: 'Cost Approach' },
-  { id: '03', label: 'Income Approach' },
-  { id: '04', label: 'Residual Approach' },
-];
-
-const methodParams: Record<string, string>[] = [
-  { id: '01', label: 'Weighted Quality Score (WQS)' },
-  { id: '02', label: 'Sales Adjustment Grid' },
-  { id: '03', label: 'Direct Comparison' },
-  { id: '04', label: 'Building Cost' },
-  { id: '05', label: 'Profit Rent' },
-  { id: '06', label: 'Leasehold' },
-  { id: '07', label: 'Machinery Cost' },
-  { id: '08', label: 'Income' },
-  { id: '09', label: 'Hypothesis' },
-];
-
-const approachMethodLinkedParams: ApproachMethodLink[] = [
-  { apprId: '01', methodIds: ['01', '02', '03'] },
-  { apprId: '02', methodIds: ['01', '02', '03', '04', '05', '06', '07'] },
-  { apprId: '03', methodIds: ['08'] },
-  { apprId: '04', methodIds: ['09'] },
-];
-
-const approachIcons: Record<string, string> = {
-  '01': 'shop',
-  '02': 'triangle-person-digging',
-  '03': 'chart-line-up',
-  '04': 'land-mine-on',
-};
-
-const methodIcons: Record<string, string> = {
-  '01': 'scale-balanced',
-  '02': 'table',
-  '03': 'house-building',
-  '04': 'person-digging',
-  '05': 'file-signature',
-  '06': 'file-contract',
-  '07': 'gears',
-  '08': 'chart-line',
-  '09': 'flask-vial',
-};
 
 const APPROACHES_MOC: PriceAnalysisApproachRequest[] = [
-  {
-    id: 'MARAPPR',
-    appraisalValue: 1000000000,
-    isCandidated: true,
-    methods: [
-      { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
-      { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
-    ],
-  },
-  {
-    id: 'COSTAPPR',
-    appraisalValue: 1000000,
-    isCandidated: false,
-    methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
-  },
+  // {
+  //   id: 'MARAPPR',
+  //   appraisalValue: 1000000000,
+  //   isCandidated: true,
+  //   methods: [
+  //     { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
+  //     { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
+  //   ],
+  // },
+  // {
+  //   id: 'COSTAPPR',
+  //   appraisalValue: 1000000,
+  //   isCandidated: false,
+  //   methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
+  // },
 ];
 
 /**
@@ -87,7 +43,7 @@ export const useGetApproachParams = () => {
   // console.log(
   //   'GET /params { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons }',
   // );
-  return { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons };
+  // return { approachParams, methodParams, approachMethodLinkedParams, approachIcons, methodIcons };
 };
 
 /**

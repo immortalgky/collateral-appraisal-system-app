@@ -105,8 +105,6 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   useEffect(() => {
     if (isLoading) return;
 
-    if (!approachesMoc?.length) return;
-
     const approaches = createInitialState(data?.approaches, approachesMoc);
     console.log(approaches);
 
@@ -207,9 +205,11 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
             <div className="col-span-8 flex flex-row gap-1 items-center justify-end">
               <span>
                 {summarySelected
-                  ? (Number(
-                      summarySelected.find(appr => appr.isCandidated)?.appraisalValue,
-                    ).toLocaleString() ?? 0)
+                  ? summarySelected.find(appr => appr.isCandidated)
+                    ? Number(
+                        summarySelected.find(appr => appr.isCandidated).appraisalValue,
+                      ).toLocaleString()
+                    : 0
                   : 0}
               </span>
               <Icon name="baht-sign" style="light" className="size-4" />
