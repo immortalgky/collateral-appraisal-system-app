@@ -1,3 +1,4 @@
+import { NumberInput } from '@/shared/components';
 import type { ColumnDef, ColumnGroup } from './types';
 
 export const columns: ColumnDef[] = [
@@ -5,37 +6,65 @@ export const columns: ColumnDef[] = [
     id: 'factor',
     header: <div>Factor</div>,
     renderCell: ({ row, rowIndex, value, ctx }) => {
-      return <span>{`${value}`}</span>;
+      return (
+        <div>
+          <span>{`${value}`}</span>
+        </div>
+      );
     },
   },
   {
     id: 'weight',
     header: <div>Weight</div>,
     renderCell: ({ row, rowIndex, value, ctx }) => {
-      return <span>{`${value}`}</span>;
+      return (
+        <div>
+          <NumberInput />
+        </div>
+      );
     },
 
     renderFooter: ({ rows, ctx, columnIndex }) => {
-      const totalWeight = rows.reduce((acc, curr) => acc[columnIndex] + curr[columnIndex]);
-      return <span>{`${totalWeight}`}</span>;
+      const totalWeight = rows.reduce((acc, curr) => {
+        return acc + curr[columnIndex];
+      }, 0);
+      return (
+        <div>
+          <span>{`${totalWeight}`}</span>
+        </div>
+      );
     },
   },
   {
     id: 'intensity',
     header: <div>Intensity</div>,
     renderCell: ({ row, rowIndex, value, ctx }) => {
-      return <span>{`${value}`}</span>;
+      return (
+        <div>
+          <NumberInput />
+        </div>
+      );
     },
     renderFooter: ({ rows, ctx, columnIndex }) => {
-      const totalIntensity = rows.reduce((acc, curr) => acc[columnIndex] + curr[columnIndex]);
-      return <span>{`${totalIntensity}`}</span>;
+      const totalIntensity = rows.reduce((acc, curr) => {
+        return acc + curr[columnIndex];
+      }, 0);
+      return (
+        <div>
+          <span>{`${totalIntensity}`}</span>;
+        </div>
+      );
     },
   },
   {
     id: 'score',
     header: <div>Score</div>,
     renderCell: ({ row, rowIndex, value, ctx }) => {
-      return <span>{`${row.weight * row.intensity}`}</span>;
+      return (
+        <div>
+          <span>{`${row.weight * row.intensity}`}</span>
+        </div>
+      );
     },
   },
   {
@@ -51,7 +80,11 @@ export const columns: ColumnDef[] = [
     ),
 
     renderCell: ({ row, rowIndex, value, ctx }) => {
-      return <span>{`${value}`}</span>;
+      return (
+        <div>
+          <span>{`${value}`}</span>
+        </div>
+      );
     },
   },
   {
@@ -67,7 +100,11 @@ export const columns: ColumnDef[] = [
     ),
 
     renderCell: ({ row, rowIndex, value, ctx }) => {
-      return <span>{`${value}`}</span>;
+      return (
+        <div>
+          <span>{`${value}`}</span>;
+        </div>
+      );
     },
   },
 ];
@@ -93,8 +130,8 @@ export const rows: Record<string, any>[] = [
     weight: 1,
     intensity: 10,
     surveys: [
-      { id: 'survey1', score: 5, weightedScore: 6 },
-      { id: 'survey2', score: 7, weightedScore: 7 },
+      { id: 'survey1', score: 5 },
+      { id: 'survey2', score: 7 },
     ],
   },
   {
@@ -102,8 +139,8 @@ export const rows: Record<string, any>[] = [
     weight: 2,
     intensity: 10,
     surveys: [
-      { id: 'survey1', score: 5, weightedScore: 10 },
-      { id: 'survey2', score: 7, weightedScore: 14 },
+      { id: 'survey1', score: 5 },
+      { id: 'survey2', score: 7 },
     ],
   },
 ];

@@ -13,8 +13,9 @@ interface renderHeaderProps {
   columns: ColumnDef[];
   colToGroup: Map<string, string>;
   groups: ColumnGroup[];
+  hasAddButton: boolean;
 }
-const renderHeader = ({ columns, colToGroup, groups }: renderHeaderProps) => {
+const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeaderProps) => {
   const hasGroup = groups.length > 0;
   const groupById = new Map(groups.map(group => [group.id, group] as const));
   const renderedGroup = new Set<string>();
@@ -51,6 +52,16 @@ const renderHeader = ({ columns, colToGroup, groups }: renderHeaderProps) => {
             </th>
           );
         })}
+        {hasAddButton && (
+          <th
+            className={clsx(
+              'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 bg-primary',
+            )}
+            rowSpan={hasGroup ? 2 : 1}
+          >
+            Action
+          </th>
+        )}
       </tr>
       {hasGroup && (
         <tr>
@@ -85,6 +96,7 @@ interface renderBodyProps {
   hasBody: boolean;
   hasAddButton?: boolean;
   onAdd: () => void;
+  onDelete: (rowIndex: number) => void;
   addButtonLabel?: (isEmpty: boolean) => string;
 }
 const renderBody = ({
@@ -94,6 +106,7 @@ const renderBody = ({
   isEmpty,
   hasAddButton = true,
   onAdd,
+  onDelete,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
 }: renderBodyProps) => {
   return (
@@ -120,11 +133,23 @@ const renderBody = ({
                 </td>
               );
             })}
+            {hasAddButton && (
+              <td>
+                <button
+                  type="button"
+                  onClick={() => onDelete?.(rowIndex)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                  title="Delete"
+                >
+                  <Icon style="solid" name="trash" className="size-3.5" />
+                </button>
+              </td>
+            )}
           </tr>
         ))
       ) : (
         <tr>
-          <span>Empty</span>
+          <td>Empty</td>
         </tr>
       )}
       {hasAddButton ? (
@@ -172,7 +197,9 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
           ))}
         </tr>
       ) : (
-        <span>Empty</span>
+        <tr>
+          <td>Empty</td>
+        </tr>
       )}
     </tfoot>
   );
@@ -188,6 +215,7 @@ interface DataTableProps {
   hasFooter: boolean;
 
   onAdd: () => void;
+  onDelete: (rowIndex: number) => void;
   addButtonLabel?: (isEmpty: boolean) => string;
   hasAddButton: boolean;
 }
@@ -201,6 +229,7 @@ export const DataTable = ({
   hasBody,
   hasFooter,
   onAdd,
+  onDelete,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
   hasAddButton,
 }: DataTableProps) => {
@@ -213,7 +242,7 @@ export const DataTable = ({
     <div className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip">
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-full h-full border-separate border-spacing-0">
-          {hasHeader && renderHeader({ columns, colToGroup, groups })}
+          {hasHeader && renderHeader({ columns, colToGroup, groups, hasAddButton })}
           {hasBody &&
             renderBody({
               columns,
@@ -223,6 +252,7 @@ export const DataTable = ({
               hasBody,
               hasAddButton,
               onAdd,
+              onDelete,
               addButtonLabel,
             })}
           {hasFooter && renderFooter({ columns, rows, ctx })}
