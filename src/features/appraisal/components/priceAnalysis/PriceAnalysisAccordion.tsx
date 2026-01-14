@@ -115,7 +115,7 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
 
   /* Local state:  */
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
-    useDisclosure({ defaultIsOpen: true });
+    useDisclosure({ defaultIsOpen: false });
   const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
   const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
