@@ -1,10 +1,20 @@
-import { columnGroups, columns } from './data';
+import { columnGroups, columns, rows } from './data';
 import { DataTable } from './DataTable';
 
 export const RHFArrayTable = () => {
   return (
     <div>
-      <DataTable columns={columns} groups={columnGroups} hasHeader={true} />
+      <DataTable
+        rows={rows}
+        columns={columns}
+        groups={columnGroups}
+        ctx={null}
+        hasHeader={true}
+        hasBody={true}
+        hasFooter={true}
+        onAdd={() => null}
+        hasAddButton={true}
+      />
     </div>
   );
 };

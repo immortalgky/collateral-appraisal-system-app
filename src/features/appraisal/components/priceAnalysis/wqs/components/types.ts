@@ -16,13 +16,7 @@ export interface ColumnDef {
 
   accessor?: (row: any, rowIndex: number, ctx: Ctx) => any;
 
-  renderCell?: (args: {
-    row: any;
-    rowIndex: number;
-    value: any;
-    ctx: Ctx;
-    isEditing: boolean;
-  }) => React.ReactNode;
+  renderCell?: (args: { row: any; rowIndex: number; value: any; ctx: Ctx }) => React.ReactNode;
 
-  renderFooter?: (args: { rows: any[]; ctx: Ctx }) => React.ReactNode;
+  renderFooter?: (args: { rows: any[]; ctx: Ctx; columnIndex: string }) => React.ReactNode;
 }

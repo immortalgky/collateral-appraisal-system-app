@@ -3,19 +3,40 @@ import type { ColumnDef, ColumnGroup } from './types';
 export const columns: ColumnDef[] = [
   {
     id: 'factor',
-    header: <div>Header 1</div>,
+    header: <div>Factor</div>,
+    renderCell: ({ row, rowIndex, value, ctx }) => {
+      return <span>{`${value}`}</span>;
+    },
   },
   {
     id: 'weight',
-    header: <div>Header 2</div>,
+    header: <div>Weight</div>,
+    renderCell: ({ row, rowIndex, value, ctx }) => {
+      return <span>{`${value}`}</span>;
+    },
+
+    renderFooter: ({ rows, ctx, columnIndex }) => {
+      const totalWeight = rows.reduce((acc, curr) => acc[columnIndex] + curr[columnIndex]);
+      return <span>{`${totalWeight}`}</span>;
+    },
   },
   {
     id: 'intensity',
-    header: <div>Header 3</div>,
+    header: <div>Intensity</div>,
+    renderCell: ({ row, rowIndex, value, ctx }) => {
+      return <span>{`${value}`}</span>;
+    },
+    renderFooter: ({ rows, ctx, columnIndex }) => {
+      const totalIntensity = rows.reduce((acc, curr) => acc[columnIndex] + curr[columnIndex]);
+      return <span>{`${totalIntensity}`}</span>;
+    },
   },
   {
     id: 'score',
-    header: <div>Header 5</div>,
+    header: <div>Score</div>,
+    renderCell: ({ row, rowIndex, value, ctx }) => {
+      return <span>{`${row.weight * row.intensity}`}</span>;
+    },
   },
   {
     id: 'survey1',
@@ -28,6 +49,10 @@ export const columns: ColumnDef[] = [
         </div>
       </div>
     ),
+
+    renderCell: ({ row, rowIndex, value, ctx }) => {
+      return <span>{`${value}`}</span>;
+    },
   },
   {
     id: 'survey2',
@@ -40,6 +65,10 @@ export const columns: ColumnDef[] = [
         </div>
       </div>
     ),
+
+    renderCell: ({ row, rowIndex, value, ctx }) => {
+      return <span>{`${value}`}</span>;
+    },
   },
 ];
 
@@ -47,6 +76,34 @@ export const columnGroups: ColumnGroup[] = [
   {
     id: 'group 1',
     label: <span>Group 1</span>,
-    columns: ['factor', 'weight', 'intensity', 'score'],
+    columns: ['intensity', 'score'],
+    align: 'center',
+  },
+  {
+    id: 'group 2',
+    label: <span>Group 2</span>,
+    columns: ['survey1', 'survey2'],
+    align: 'center',
+  },
+];
+
+export const rows: Record<string, any>[] = [
+  {
+    factor: 'environment',
+    weight: 1,
+    intensity: 10,
+    surveys: [
+      { id: 'survey1', score: 5, weightedScore: 6 },
+      { id: 'survey2', score: 7, weightedScore: 7 },
+    ],
+  },
+  {
+    factor: 'plotLocation',
+    weight: 2,
+    intensity: 10,
+    surveys: [
+      { id: 'survey1', score: 5, weightedScore: 10 },
+      { id: 'survey2', score: 7, weightedScore: 14 },
+    ],
   },
 ];
