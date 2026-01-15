@@ -10,13 +10,36 @@ export interface ColumnGroup {
 
 export interface ColumnDef {
   id: string;
+  name: string;
   header: React.ReactNode;
   align?: Align;
   className?: string;
 
-  accessor?: (row: any, rowIndex: number, ctx: Ctx) => any;
+  rhfRenderCell?: {
+    input: 'text' | 'number' | 'select' | 'display';
+    options?: { label: string; value: string }[];
+  };
 
-  renderCell?: (args: { row: any; rowIndex: number; value: any; ctx: Ctx }) => React.ReactNode;
+  renderCell?: (args: {
+    fieldName: string;
+    row: any;
+    rowIndex: string;
+    value: any;
+    ctx: Ctx;
+  }) => React.ReactNode;
+
+  accessor?: (row: any, rowIndex: number, ctx: Ctx) => any;
 
   renderFooter?: (args: { rows: any[]; ctx: Ctx; columnIndex: string }) => React.ReactNode;
 }
+
+export type RHFColumn = ColumnDef & {
+  derived?: {
+    compute: (args: { row: Row; rows: Row[]; rowIndex: number; ctx: Ctx }) => number;
+
+    normalize?: (v: number) => number;
+    persist?: boolean; // default true
+  };
+
+  format?: (value: any, row: Row, rowIndex: number, ctx: Ctx) => React.ReactNode;
+};

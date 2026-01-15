@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import type { Align, ColumnDef, ColumnGroup } from './types';
-import { isEmpty } from '@/shared/utils/validationUtils';
 import { Icon } from '@/shared/components';
 
 const alignClass = (align?: Align) => {
@@ -55,7 +54,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
         {hasAddButton && (
           <th
             className={clsx(
-              'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 bg-primary',
+              'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 bg-primary w-24',
             )}
             rowSpan={hasGroup ? 2 : 1}
           >
@@ -94,9 +93,17 @@ interface renderBodyProps {
   ctx: any;
   isEmpty: boolean;
   hasBody: boolean;
-  hasAddButton?: boolean;
+
+  canEdit?: boolean;
+  onEdit?: (rowIndex: number) => void;
+
+  canSave?: boolean;
+  onSave?: (rowIndex: number) => void;
+
   onAdd: () => void;
   onDelete: (rowIndex: number) => void;
+
+  hasAddButton?: boolean;
   addButtonLabel?: (isEmpty: boolean) => string;
 }
 const renderBody = ({
@@ -104,16 +111,24 @@ const renderBody = ({
   rows,
   ctx,
   isEmpty,
-  hasAddButton = true,
+
+  canEdit = true,
+  onEdit,
+
+  canSave,
+  onSave,
+
   onAdd,
   onDelete,
+
+  hasAddButton = true,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
 }: renderBodyProps) => {
   return (
     <tbody className="divide-y divide-neutral-3">
       {!isEmpty ? (
         rows.map((row, rowIndex) => (
-          <tr key={rowIndex}>
+          <tr key={(row as any).__rowId ?? rowIndex}>
             {columns.map(column => {
               const value = column.accessor
                 ? column.accessor(row, rowIndex, ctx)
@@ -127,36 +142,63 @@ const renderBody = ({
                     column.className,
                   )}
                 >
-                  {column.renderCell
-                    ? column.renderCell({ row, rowIndex, value, ctx })
+                  {canEdit
+                    ? column.renderCell
+                      ? column.renderCell({ fieldName, row, rowIndex, value, ctx })
+                      : (value ?? '')
                     : (value ?? '')}
                 </td>
               );
             })}
             {hasAddButton && (
-              <td>
-                <button
-                  type="button"
-                  onClick={() => onDelete?.(rowIndex)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                  title="Delete"
-                >
-                  <Icon style="solid" name="trash" className="size-3.5" />
-                </button>
+              <td className="border-b border-neutral-3">
+                <div className="w-full flex flex-row gap-2 justify-center items-center">
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      onClick={() => onSave?.(rowIndex)}
+                      className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                      title="Save"
+                    >
+                      <Icon style="solid" name="check" className="size-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onEdit?.(rowIndex)}
+                      className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                      title="Edit"
+                    >
+                      <Icon style="solid" name="pen" className="size-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onDelete?.(rowIndex)}
+                    className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                    title="Delete"
+                  >
+                    <Icon style="solid" name="trash" className="size-3.5" />
+                  </button>
+                </div>
               </td>
             )}
           </tr>
         ))
       ) : (
         <tr>
-          <td>Empty</td>
+          <td colSpan={columns.length + (hasAddButton ? 1 : 0)}>
+            {/* <div className="flex justify-center items-center text-sm font-medium h-14">
+              <span>No Data</span>
+            </div> */}
+          </td>
         </tr>
       )}
       {hasAddButton ? (
         <tr>
           <th
             className="text-white text-sm font-medium py-2 px-2 truncate"
-            colSpan={columns.length}
+            colSpan={columns.length + (hasAddButton ? 1 : 0)}
           >
             <button
               type="button"
@@ -172,6 +214,7 @@ const renderBody = ({
     </tbody>
   );
 };
+
 interface renderFooterProps {
   columns: ColumnDef[];
   rows: any[];
@@ -214,6 +257,12 @@ interface DataTableProps {
   hasBody: boolean;
   hasFooter: boolean;
 
+  canEdit?: boolean;
+  onEdit?: (rowIndex: number) => void;
+
+  canSave?: boolean;
+  onSave?: (rowIndex: number) => void;
+
   onAdd: () => void;
   onDelete: (rowIndex: number) => void;
   addButtonLabel?: (isEmpty: boolean) => string;
@@ -228,6 +277,13 @@ export const DataTable = ({
   hasHeader,
   hasBody,
   hasFooter,
+
+  canEdit,
+  onEdit,
+
+  canSave,
+  onSave,
+
   onAdd,
   onDelete,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
@@ -249,10 +305,14 @@ export const DataTable = ({
               rows,
               ctx,
               isEmpty,
-              hasBody,
-              hasAddButton,
+              canEdit,
+              onEdit,
+              canSave,
+              onSave,
               onAdd,
               onDelete,
+              hasBody,
+              hasAddButton,
               addButtonLabel,
             })}
           {hasFooter && renderFooter({ columns, rows, ctx })}

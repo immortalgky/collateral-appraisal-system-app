@@ -25,7 +25,7 @@ export const WQSSection = () => {
    */
 
   const methods = useForm<WQSRequestType>({
-    defaultValues: {},
+    defaultValues: { WQSMarketSurveys: [] },
     resolver: zodResolver(WQSDto),
   });
 

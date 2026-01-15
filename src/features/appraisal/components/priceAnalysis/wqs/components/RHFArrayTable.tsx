@@ -1,17 +1,29 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { columnGroups, columns, rows } from './data';
+import { useMemo } from 'react';
 import { DataTable } from './DataTable';
-import type { ColumnDef, ColumnGroup } from './types';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import type { ColumnDef, ColumnGroup, RHFColumn } from './types';
+import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useDerivedFieldArray, type DerivedRule } from './useDerivedFieldArray';
+import { RHFInputCell } from './RHFInputCell';
 
-interface RHFArrayTableProps {
+const clone = <T,>(v: T): T => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sc = (globalThis as any).structuredClone as ((x: any) => any) | undefined;
+  return sc ? sc(v) : (JSON.parse(JSON.stringify(v)) as T);
+};
+
+type RHFArrayTableProps<Row extends Record<String, any>, Ctx extends Record<string, any>> = {
   name: string;
-  columns: ColumnDef[];
+  columns: RHFColumn[];
   groups: ColumnGroup[];
   defaultRow: any;
-  ctx?: any;
+  ctx?: Partial<Ctx>;
   watch?: Record<string, string>;
-}
+
+  onEdit?: (rowIndex: number, handleOnEdit: () => void) => void;
+
+  onSave?: (rowIndex: number, handleOnEdit: () => void) => void;
+};
+
 export const RHFArrayTable = ({
   name,
   columns,
@@ -24,20 +36,49 @@ export const RHFArrayTable = ({
   const { fields, append, remove } = useFieldArray({ control, name });
 
   const handleOnAdd = () => {
-    append({ id: '0', factorCode: '01', surveyScore: 0, surveyWeightedScore: 0 });
+    const row = defaultRow;
+    append(clone(row));
   };
 
   const handleOnDelete = (rowIndex: number) => {
     remove(rowIndex);
   };
 
-  const rows = useWatch({ control, name, defaultValue: [...defaultRow] }) ?? [...defaultRow];
+  const watchedRows = useWatch({ control, name, defaultValue: [] }) ?? [];
+
+  const tableRows = fields.map((f, i) => ({
+    ...watchedRows[i],
+    __rowId: f.id,
+  }));
+
+  const rules: DerivedRule[] = useMemo(() => {
+    return columns
+      .filter(c => c.derived?.compute && c.rhf?.name && (c.derived.persist ?? true))
+      .map(c => ({
+        targetKey: c.rhf!.name,
+        normalize: c.derived!.normalize,
+        compute: ({ row, rows, rowIndex, ctx }) => c.derived!.compute({ row, rows, rowIndex, ctx }),
+      }));
+  }, [columns]);
+
+  useDerivedFieldArray<Row, Ctx>({ arrayName: name, rules, watch, ctx });
+
+  const tableCtx = ctx;
+
   return (
     <DataTable
-      rows={rows}
-      columns={columns}
+      rows={tableRows}
+      columns={columns.map(column => {
+        return {
+          ...column,
+          renderCell: column.renderCell ?? ({ fieldName, row, rowIndex, value, ctx }) => {
+            const inputType = column.rhfRenderCell.input;
+            return <RHFInputCell fieldName={fieldName} inputType={col} />;
+          },
+        };
+      })}
       groups={groups}
-      ctx={ctx}
+      ctx={tableCtx}
       hasHeader={true}
       hasBody={true}
       hasFooter={true}

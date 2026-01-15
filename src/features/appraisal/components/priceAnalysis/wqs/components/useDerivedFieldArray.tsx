@@ -31,7 +31,7 @@ interface UseDerivedFieldArrayProps<Ctx = Record<string, any>, Row = any> {
   ctx?: Partial<Ctx>; // constants / other variables
 }
 
-export function useDerivedFieldArray<Ctx = Record<string, any>, Row = any>({
+export function useDerivedFieldArray<Row = any, Ctx = Record<string, any>>({
   arrayName,
   rules,
   watch = {},
