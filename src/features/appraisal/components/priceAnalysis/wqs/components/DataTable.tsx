@@ -144,7 +144,13 @@ const renderBody = ({
                 >
                   {canEdit
                     ? column.renderCell
-                      ? column.renderCell({ fieldName, row, rowIndex, value, ctx })
+                      ? column.renderCell({
+                          fieldName: `${rowIndex}.${column.name}`,
+                          row,
+                          rowIndex,
+                          value,
+                          ctx,
+                        })
                       : (value ?? '')
                     : (value ?? '')}
                 </td>

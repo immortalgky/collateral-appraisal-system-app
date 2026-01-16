@@ -68,15 +68,20 @@ export const RHFArrayTable = ({
   return (
     <DataTable
       rows={tableRows}
-      columns={columns.map(column => {
-        return {
-          ...column,
-          renderCell: column.renderCell ?? ({ fieldName, row, rowIndex, value, ctx }) => {
-            const inputType = column.rhfRenderCell.input;
-            return <RHFInputCell fieldName={fieldName} inputType={col} />;
-          },
-        };
-      })}
+      columns={columns.map(column => ({
+        ...column,
+        renderCell: column.renderCell
+          ? { fieldName, row, rowIndex, value, ctx }
+          : ({ fieldName, row, rowIndex, value, ctx }) => {
+              return (
+                <RHFInputCell
+                  fieldName={`${name}.${fieldName}`}
+                  inputType={column.rhfRenderCell.inputType}
+                  options={column.rhfRenderCell.options}
+                />
+              );
+            },
+      }))}
       groups={groups}
       ctx={tableCtx}
       hasHeader={true}

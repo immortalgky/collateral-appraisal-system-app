@@ -10,20 +10,20 @@ export interface ColumnGroup {
 
 export interface ColumnDef {
   id: string;
-  name: string;
+  name?: string;
   header: React.ReactNode;
   align?: Align;
   className?: string;
 
   rhfRenderCell?: {
-    input: 'text' | 'number' | 'select' | 'display';
+    inputType: 'text' | 'number' | 'select';
     options?: { label: string; value: string }[];
   };
 
   renderCell?: (args: {
     fieldName: string;
     row: any;
-    rowIndex: string;
+    rowIndex: number;
     value: any;
     ctx: Ctx;
   }) => React.ReactNode;

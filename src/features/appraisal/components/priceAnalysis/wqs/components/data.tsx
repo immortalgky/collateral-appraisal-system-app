@@ -6,9 +6,9 @@ export const columns: RHFColumn[] = [
   {
     id: 'factor',
     header: <div>Factor</div>,
-    rhf: {
-      name: 'factor',
-      input: 'select',
+    name: 'factor',
+    rhfRenderCell: {
+      inputType: 'select',
       options: [
         { label: 'environment', value: 'Environment' },
         { label: 'plotLocation', value: 'Plot Location' },
@@ -18,9 +18,10 @@ export const columns: RHFColumn[] = [
   {
     id: 'weight',
     header: <div>Weight</div>,
-    rhf: { name: 'weight', input: 'number' },
+    name: 'weight',
+    rhfRenderCell: { inputType: 'number' },
 
-    renderFooter: ({ rows, ctx, columnIndex }) => {
+    renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
       const totalWeight = rows.reduce((acc, curr) => {
         return acc + curr[columnIndex];
       }, 0);
@@ -34,7 +35,8 @@ export const columns: RHFColumn[] = [
   {
     id: 'intensity',
     header: <div>Intensity</div>,
-    rhf: { name: 'intensity', input: 'number' },
+    name: 'intensity',
+    rhfRenderCell: { inputType: 'number' },
     align: 'right',
 
     renderFooter: ({ rows, ctx, columnIndex }) => {
@@ -51,39 +53,47 @@ export const columns: RHFColumn[] = [
   {
     id: 'score',
     header: <div>Score</div>,
-    renderCell: ({ row, rowIndex, value, ctx }) => <span>{`${value}`}</span>,
-    rhf: { name: 'score', input: 'display' },
+    renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
+      <span>{`${row['intensity'] * row['weight']}`}</span>
+    ),
     align: 'right',
-    derived: {
-      compute: ({ row, rows, rowIndex, ctx }) => {
-        return row['intensity'] * row['weight'];
-      },
-    },
   },
   {
     id: 'survey1',
+    name: 'survey1',
     header: (
       <div className="flex flex-col">
         <div className="flex justify-center items-center">
           <span>Survey 1</span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-row justify-between items-center">
           <span>Score</span>
           <span>Weighted Score</span>
         </div>
       </div>
     ),
 
-    renderCell: ({ row, rowIndex, value, ctx }) => {
+    accessor: (row, rowIndex, ctx) => ({
+      score: row['survey1'],
+    }),
+
+    renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
+      console.log(fieldName);
       return (
-        <div>
-          <RHFInputCell fieldName="survey1" inputType="number" />
+        <div className="flex flex-row justify-between items-center">
+          <div>
+            <RHFInputCell fieldName={fieldName} inputType="number" />
+          </div>
+          <div>
+            <span>{`${row['weight'] * value.score}`}</span>
+          </div>
         </div>
       );
     },
   },
   {
     id: 'survey2',
+    name: 'survey2',
     header: (
       <div className="flex flex-col">
         <div className="flex justify-center items-center">
@@ -96,7 +106,7 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    renderCell: ({ row, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
         <div>
           <span>{`${value}`}</span>;
@@ -106,6 +116,7 @@ export const columns: RHFColumn[] = [
   },
   {
     id: 'survey3',
+    name: 'survey3',
     header: (
       <div className="flex flex-col">
         <div className="flex justify-center items-center">
@@ -118,7 +129,7 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    renderCell: ({ row, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
         <div>
           <span>{`${value}`}</span>;
@@ -134,7 +145,7 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    renderCell: ({ row, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
         <div>
           <span>{`${value}`}</span>;
