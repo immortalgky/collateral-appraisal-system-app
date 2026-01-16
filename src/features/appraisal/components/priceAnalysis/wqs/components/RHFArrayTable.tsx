@@ -22,6 +22,11 @@ type RHFArrayTableProps<Row extends Record<String, any>, Ctx extends Record<stri
   onEdit?: (rowIndex: number, handleOnEdit: () => void) => void;
 
   onSave?: (rowIndex: number, handleOnEdit: () => void) => void;
+
+  hasHeader?: boolean;
+  hasBody?: boolean;
+  hasFooter?: boolean;
+  hasAddButton?: boolean;
 };
 
 export const RHFArrayTable = ({
@@ -31,6 +36,12 @@ export const RHFArrayTable = ({
   defaultRow,
   ctx,
   watch,
+  onEdit,
+  onSave,
+  hasHeader = true,
+  hasBody = true,
+  hasFooter = true,
+  hasAddButton = true,
 }: RHFArrayTableProps) => {
   const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
@@ -71,7 +82,15 @@ export const RHFArrayTable = ({
       columns={columns.map(column => ({
         ...column,
         renderCell: column.renderCell
-          ? { fieldName, row, rowIndex, value, ctx }
+          ? ({ fieldName, row, rowIndex, value, ctx }) => {
+              return column.renderCell({
+                fieldName: `${name}.${fieldName}`,
+                row: row,
+                rowIndex: rowIndex,
+                value: value,
+                ctx: ctx,
+              });
+            }
           : ({ fieldName, row, rowIndex, value, ctx }) => {
               return (
                 <RHFInputCell
@@ -84,12 +103,12 @@ export const RHFArrayTable = ({
       }))}
       groups={groups}
       ctx={tableCtx}
-      hasHeader={true}
-      hasBody={true}
-      hasFooter={true}
+      hasHeader={hasHeader}
+      hasBody={hasBody}
+      hasFooter={hasFooter}
       onAdd={() => handleOnAdd()}
       onDelete={handleOnDelete}
-      hasAddButton={true}
+      hasAddButton={hasAddButton}
     />
   );
 };

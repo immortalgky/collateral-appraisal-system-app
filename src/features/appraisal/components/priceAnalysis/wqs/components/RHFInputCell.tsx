@@ -9,7 +9,7 @@ export function toNumber(v: any) {
 
 interface RHFInputCellProps {
   fieldName: string;
-  inputType?: 'number' | 'select' | 'text';
+  inputType?: 'number' | 'select' | 'text' | 'display';
   options?: { label: string; value: string }[];
 }
 export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProps) => {

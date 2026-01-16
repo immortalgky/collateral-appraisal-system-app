@@ -11,12 +11,12 @@ export interface ColumnGroup {
 export interface ColumnDef {
   id: string;
   name?: string;
-  header: React.ReactNode;
+  header?: React.ReactNode;
   align?: Align;
   className?: string;
 
   rhfRenderCell?: {
-    inputType: 'text' | 'number' | 'select';
+    inputType: 'text' | 'number' | 'select' | 'display';
     options?: { label: string; value: string }[];
   };
 

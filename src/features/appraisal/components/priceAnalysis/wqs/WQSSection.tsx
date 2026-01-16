@@ -2,9 +2,18 @@ import { Dropdown } from '@/shared/components';
 import { RHFArrayTable } from './components/RHFArrayTable';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { columnGroups, columns, rows } from './components/data';
+import {
+  calculation,
+  calculationRows,
+  columnGroups,
+  columns,
+  compColumns,
+  compRows,
+  rows,
+} from './components/data';
 import { any } from 'zod';
 import { WQSDto, type WQSRequestType } from './form';
+import { VerticalDataTable } from './components/VerticalDataTable';
 
 export const WQSSection = () => {
   /**
@@ -25,7 +34,11 @@ export const WQSSection = () => {
    */
 
   const methods = useForm<WQSRequestType>({
-    defaultValues: { WQSMarketSurveys: [] },
+    defaultValues: {
+      comparativeData: [...compRows],
+      WQSMarketSurveys: [{ WQSScores: [] }],
+      WQSCalculation: [...calculation],
+    },
     resolver: zodResolver(WQSDto),
   });
 
@@ -42,7 +55,7 @@ export const WQSSection = () => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="flex flex-col w-full min-h-0 mt-2">
+        <div className="flex flex-col gap-4 w-full min-h-0 mt-2">
           <div className="flex items-center gap-4">
             <span>Pricing Analysis Template</span>
             <div>
@@ -63,14 +76,37 @@ export const WQSSection = () => {
           </div>
           <div>
             <RHFArrayTable
+              name="comparativeData"
+              columns={compColumns}
+              defaultRow={compRows}
+              hasAddButton={false}
+              hasFooter={false}
+            />
+          </div>
+          <div>
+            <RHFArrayTable
               name="WQSMarketSurveys.WQSScores"
               columns={columns}
               groups={columnGroups}
               defaultRow={rows}
             />
           </div>
-          <div></div>
-          <div></div>
+          <div>
+            {/* <RHFArrayTable
+              name="WQSCalculation"
+              columns={calculationColumns}
+              defaultRow={calculation}
+              hasHeader={false}
+              hasAddButton={false}
+            /> */}
+            <VerticalDataTable
+              columns={calculation}
+              rows={calculationRows}
+              hasAddButton={false}
+              onAdd={() => null}
+              onDelete={() => null}
+            />
+          </div>
           <div>
             <button type="submit">Submit</button>
           </div>

@@ -13,11 +13,11 @@ const WQSMarketSurvey = z
   .object({
     id: z.string(),
     offeringPrice: z.number(),
-    offeringPriceMeasureUnit: z.string(),
+    offeringPriceMeasurementUnit: z.string(),
     offeringPriceAdjustmentPct: z.number(),
     offeringPriceAdjustmentAmt: z.number(),
     sellingPrice: z.number(),
-    sellingPriceMeasureUnit: z.string(),
+    sellingPriceMeasurementUnit: z.string(),
     sellingDate: z.date(),
     sellingPriceAdjustmentYear: z.number(),
     numberOfYears: z.number(),

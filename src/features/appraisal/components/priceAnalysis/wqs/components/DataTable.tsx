@@ -221,6 +221,21 @@ const renderBody = ({
   );
 };
 
+/*
+{
+  id: 'survey1',
+  offeringPrice: 0,
+  offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+  offeringPriceAdjustmentAmt: 0,
+},
+{
+  id: 'survey2',
+  offeringPrice: 0,
+  offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+  offeringPriceAdjustmentAmt: 0,
+},
+*/
+
 interface renderFooterProps {
   columns: ColumnDef[];
   rows: any[];
@@ -259,6 +274,8 @@ interface DataTableProps {
   columns: ColumnDef[];
   groups: ColumnGroup[];
   ctx: any;
+  // dataAlignment: 'row' | 'column';
+
   hasHeader: boolean;
   hasBody: boolean;
   hasFooter: boolean;
