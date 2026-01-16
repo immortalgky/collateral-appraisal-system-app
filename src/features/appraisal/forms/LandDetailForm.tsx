@@ -1,5 +1,6 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
+import { Field } from '@headlessui/react';
 
 /** Section row component for form layout */
 interface SectionRowProps {
@@ -113,7 +114,6 @@ const landInfoField: FormField[] = [
     label: 'Property Name',
     name: 'propertyName',
     wrapperClassName: 'col-span-12',
-    required: true,
   },
   {
     type: 'text-input',
@@ -189,8 +189,9 @@ const landInfoField: FormField[] = [
     type: 'text-input',
     label: 'Owner',
     name: 'ownerName',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-4',
     required: true,
+    disableWhen: { field: 'isOwnerVerified', is: false },
   },
   {
     type: 'boolean-toggle',
@@ -205,6 +206,7 @@ const landInfoField: FormField[] = [
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
     required: true,
+    showWhen: { field: 'hasObligation', is: true },
   },
 ];
 
@@ -232,7 +234,9 @@ const landLocationField: FormField[] = [
     type: 'text-input',
     label: 'Other',
     name: 'landCheckMethodTypeOther',
-    wrapperClassName: 'col-span-12 hidden',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landCheckMethodType', is: '99', operator: 'equals' },
+    required: true,
   },
   {
     type: 'text-input',
@@ -327,7 +331,7 @@ const plotLocationField: FormField[] = [
     options: [
       { value: 'ShowHouse', label: 'Show House' },
       { value: 'CornerPlot', label: 'Corner Plot' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -336,6 +340,7 @@ const plotLocationField: FormField[] = [
     label: 'Other',
     name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
   },
 ];
 
@@ -358,6 +363,7 @@ const landFillField: FormField[] = [
     label: 'Other',
     name: 'landFillStatusTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'in' },
   },
   {
     type: 'number-input',
@@ -438,7 +444,7 @@ const roadSurfaceField: FormField[] = [
       { value: 'Gravel/CrushedStone', label: 'Gravel/Crushed Stone' },
       { value: 'Soil', label: 'Soil' },
       { value: 'Paved', label: 'Paved' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -447,6 +453,7 @@ const roadSurfaceField: FormField[] = [
     label: 'Other',
     name: 'roadSurfaceTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'roadSurfaceType', is: '99', operator: 'equals' },
   },
 ];
 
@@ -460,7 +467,7 @@ const publicUtilityField: FormField[] = [
       { value: 'TapWater/Groundwater', label: 'Tap Water/Groundwater' },
       { value: 'DrainagePipe/Sump', label: 'Drainage Pipe/Sump' },
       { value: 'Streetlight', label: 'Streetlight' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -469,6 +476,7 @@ const publicUtilityField: FormField[] = [
     label: 'Other',
     name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
   },
 ];
 
@@ -482,7 +490,7 @@ const landUseField: FormField[] = [
       { value: 'Commercial', label: 'Commercial' },
       { value: 'Industrial', label: 'Industrial' },
       { value: 'Agricultural', label: 'Agricultural' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -491,6 +499,7 @@ const landUseField: FormField[] = [
     label: 'Other',
     name: 'landUseTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landUseType', is: '99', operator: 'in' },
   },
 ];
 
@@ -504,7 +513,7 @@ const landEntranceField: FormField[] = [
       { value: 'InsideAllocationProject', label: 'Inside the  Allocation Project' },
       { value: 'Personal', label: 'Personal' },
       { value: 'Servitude', label: 'Servitude' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -513,6 +522,7 @@ const landEntranceField: FormField[] = [
     label: 'Other',
     name: 'landEntranceExitTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
   },
 ];
 
@@ -526,7 +536,7 @@ const transpotationField: FormField[] = [
       { value: 'Bus', label: 'Bus' },
       { value: 'Ship', label: 'Ship' },
       { value: 'Footpath', label: 'Footpath' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -535,6 +545,7 @@ const transpotationField: FormField[] = [
     label: 'Other',
     name: 'transportationAccessTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
   },
 ];
 
@@ -578,12 +589,14 @@ const expropriateField: FormField[] = [
     label: 'Is Expropriated',
     name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isExpropriated', is: true },
   },
   {
     type: 'textarea',
-    label: 'Is Expropriate',
+    label: 'Is In Line Expropriate',
     name: 'expropriationLineRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isInExpropriationLine', is: true },
   },
 ];
 
@@ -592,19 +605,21 @@ const encroachedField: FormField[] = [
     type: 'checkbox',
     name: 'isEncroached',
     label: 'Is Encroached',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-9',
   },
   {
-    type: 'text-input',
-    label: 'Area Sq.wa',
+    type: 'number-input',
+    label: 'Encraoched Area Sq.wa',
     name: 'encroachArea',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-3',
+    disableWhen: { field: 'isEncroached', is: false },
   },
   {
     type: 'textarea',
     label: 'Is Encroached',
     name: 'encroachedRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isEncroached', is: true },
   },
 ];
 const LimitationOther: FormField[] = [
@@ -612,13 +627,14 @@ const LimitationOther: FormField[] = [
     type: 'checkbox',
     name: 'electricity',
     label: 'hasElectricity',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-9',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Distance',
     name: 'electricityDistance',
     wrapperClassName: 'col-span-3',
+    disableWhen: { field: 'electricity', is: false },
   },
   {
     type: 'checkbox',
@@ -637,6 +653,7 @@ const LimitationOther: FormField[] = [
     label: 'Is Landlocked Other',
     name: 'landlockedRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isLandlocked', is: true },
   },
 
   {
@@ -644,6 +661,7 @@ const LimitationOther: FormField[] = [
     label: 'Is Forest Boundary Other',
     name: 'forestBoundaryRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isForestBoundary', is: true },
   },
   {
     type: 'textarea',
@@ -661,7 +679,7 @@ const evictionField: FormField[] = [
     options: [
       { value: 'PermanentElectricity', label: 'Permanent Electricity' },
       { value: 'SubwayLine', label: 'Subway Line' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
@@ -670,6 +688,7 @@ const evictionField: FormField[] = [
     label: 'Other',
     name: 'evictionStatusTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'evictionStatusType', is: '99', operator: 'in' },
   },
 ];
 
@@ -761,6 +780,7 @@ const otherInformationField: FormField[] = [
     label: 'Other',
     name: 'hasBuildingOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'hasBuilding', is: true },
   },
 ];
 

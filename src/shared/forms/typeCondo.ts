@@ -79,43 +79,250 @@ export const CondoDetailDto = z.object({
 
   isBuilding: z.array(BuildingDetailDto).optional(),
 });
-export const CreateCollateralCondoRequest = z
+
+export const CreateCondoRequest = z
   .object({
-    propertyName: z.string().max(10),
+    ownerName: z.string(),
+
+    propertyName: z.string(),
     condoName: z.string(),
-    roomNo: z.string(),
-    floorNo: z.string(),
-    buildingNo: z.string(),
+    buildingNumber: z.string(),
     modelName: z.string(),
-    builtOnTitleNumber: z.string(),
-    condoRegistrationNumber: z.string(),
-
+    builtOnTitleNo: z.string(),
+    condoRegisNo: z.string(),
+    roomNo: z.string(),
+    floorNo: z.coerce.number(),
     usableArea: z.coerce.number(),
-
-    subDistrict: z.string(),
-    district: z.string(),
-    province: z.string(),
 
     latitude: z.coerce.number(),
     longitude: z.coerce.number(),
 
+    subDistrict: z.string(),
+    district: z.string(),
+    province: z.string(),
     landOffice: z.string(),
-    condoDetail: CondoDetailDto,
+
+    isOwnerVerified: z.boolean(),
+    buildingCondition: z.string(),
+    hasObligation: z.boolean(),
+    obligationDetails: z.string(),
+    docValidate: z.boolean(),
+
+    locationType: z.string(),
+    street: z.string(),
+    soi: z.string(),
+    distanceFromMainRoad: z.coerce.number(),
+    accessRoadWidth: z.coerce.number(),
+    rightOfWay: z.string(),
+    roadSurfaceType: z.string(),
+    publicUtility: z.array(z.string()),
+    publicUtilityOther: z.string(),
+
+    decoration: z.string(),
+    decorationOther: z.string(),
+    buildingAge: z.coerce.number(),
+    numberOfFloor: z.coerce.number(),
+    buildingForm: z.string(),
+    constructionMaterialType: z.string(),
+
+    roomLayoutType: z.string(),
+    roomLayoutTypeOther: z.string(),
+    locationView: z.array(z.string()),
+    groundFloorMaterial: z.string(),
+    groundFloorMaterialOther: z.string(),
+    upperFloorMaterial: z.string(),
+    upperFloorMaterialOther: z.string(),
+    bathroomFloorMaterial: z.string(),
+    bathroomFloorMaterialOther: z.string(),
+    roofType: z.string(),
+    roofTypeOther: z.string(),
+
+    totalBuildingArea: z.coerce.number(),
+
+    isExpropriated: z.boolean(),
+    expropriationRemark: z.string(),
+    isInExpropriationLine: z.boolean(),
+    expropriationLineRemark: z.string(),
+    royalDecree: z.string(),
+    isForestBoundary: z.boolean(),
+    forestBoundaryRemark: z.string(),
+
+    facilityType: z.array(z.string()),
+    facilityTypeOther: z.string(),
+    environmentType: z.array(z.string()),
+
+    buildingInsurancePrice: z.coerce.number(),
+    sellingPrice: z.coerce.number(),
+    forcedSalePrice: z.coerce.number(),
+
+    remark: z.string(),
   })
   .passthrough();
 
-export const CreateCondoResponseSchema = z.object({ isSuccess: z.boolean() }).passthrough();
-export type CreateCondoResponseType = z.infer<typeof CreateCondoResponseSchema>;
+export const UpdateCondoRequest = z
+  .object({
+    ownerName: z.string(),
 
-export type CreateCondoRequestType = z.infer<typeof CreateCollateralCondoRequest>;
+    propertyName: z.string(),
+    condoName: z.string(),
+    buildingNumber: z.string(),
+    modelName: z.string(),
+    builtOnTitleNo: z.string(),
+    condoRegisNo: z.string(),
+    roomNo: z.string(),
+    floorNo: z.coerce.number(),
+    usableArea: z.coerce.number(),
+
+    latitude: z.coerce.number(),
+    longitude: z.coerce.number(),
+
+    subDistrict: z.string(),
+    district: z.string(),
+    province: z.string(),
+    landOffice: z.string(),
+
+    isOwnerVerified: z.boolean(),
+    buildingCondition: z.string(),
+    hasObligation: z.boolean(),
+    obligationDetails: z.string(),
+    docValidate: z.boolean(),
+
+    locationType: z.string(),
+    street: z.string(),
+    soi: z.string(),
+    distanceFromMainRoad: z.coerce.number(),
+    accessRoadWidth: z.coerce.number(),
+    rightOfWay: z.string(),
+    roadSurfaceType: z.string(),
+    publicUtility: z.array(z.string()),
+    publicUtilityOther: z.string(),
+
+    decoration: z.string(),
+    decorationOther: z.string(),
+    buildingAge: z.coerce.number(),
+    numberOfFloor: z.coerce.number(),
+    buildingForm: z.string(),
+    constructionMaterialType: z.string(),
+
+    roomLayoutType: z.string(),
+    roomLayoutTypeOther: z.string(),
+    locationView: z.array(z.string()),
+    groundFloorMaterial: z.string(),
+    groundFloorMaterialOther: z.string(),
+    upperFloorMaterial: z.string(),
+    upperFloorMaterialOther: z.string(),
+    bathroomFloorMaterial: z.string(),
+    bathroomFloorMaterialOther: z.string(),
+    roofType: z.string(),
+    roofTypeOther: z.string(),
+
+    totalBuildingArea: z.coerce.number(),
+
+    isExpropriated: z.boolean(),
+    expropriationRemark: z.string(),
+    isInExpropriationLine: z.boolean(),
+    expropriationLineRemark: z.string(),
+    royalDecree: z.string(),
+    isForestBoundary: z.boolean(),
+    forestBoundaryRemark: z.string(),
+
+    facilityType: z.array(z.string()),
+    facilityTypeOther: z.string(),
+    environmentType: z.array(z.string()),
+
+    buildingInsurancePrice: z.coerce.number(),
+    sellingPrice: z.coerce.number(),
+    forcedSalePrice: z.coerce.number(),
+
+    remark: z.string(),
+  })
+  .passthrough();
+
+export const GetCondoPropertyByIdResult = z
+  .object({
+    ownerName: z.string(),
+
+    propertyName: z.string(),
+    condoName: z.string(),
+    buildingNumber: z.string(),
+    modelName: z.string(),
+    builtOnTitleNo: z.string(),
+    condoRegisNo: z.string(),
+    roomNo: z.string(),
+    floorNo: z.coerce.number(),
+    usableArea: z.coerce.number(),
+
+    latitude: z.coerce.number(),
+    longitude: z.coerce.number(),
+
+    subDistrict: z.string(),
+    district: z.string(),
+    province: z.string(),
+    landOffice: z.string(),
+
+    isOwnerVerified: z.boolean(),
+    buildingCondition: z.string(),
+    hasObligation: z.boolean(),
+    obligationDetails: z.string(),
+    docValidate: z.boolean(),
+
+    locationType: z.string(),
+    street: z.string(),
+    soi: z.string(),
+    distanceFromMainRoad: z.coerce.number(),
+    accessRoadWidth: z.coerce.number(),
+    rightOfWay: z.string(),
+    roadSurfaceType: z.string(),
+    publicUtility: z.array(z.string()),
+    publicUtilityOther: z.string(),
+
+    decoration: z.string(),
+    decorationOther: z.string(),
+    buildingAge: z.coerce.number(),
+    numberOfFloor: z.coerce.number(),
+    buildingForm: z.string(),
+    constructionMaterialType: z.string(),
+
+    roomLayoutType: z.string(),
+    roomLayoutTypeOther: z.string(),
+    locationView: z.array(z.string()),
+    groundFloorMaterial: z.string(),
+    groundFloorMaterialOther: z.string(),
+    upperFloorMaterial: z.string(),
+    upperFloorMaterialOther: z.string(),
+    bathroomFloorMaterial: z.string(),
+    bathroomFloorMaterialOther: z.string(),
+    roofType: z.string(),
+    roofTypeOther: z.string(),
+
+    totalBuildingArea: z.coerce.number(),
+
+    isExpropriated: z.boolean(),
+    expropriationRemark: z.string(),
+    isInExpropriationLine: z.boolean(),
+    expropriationLineRemark: z.string(),
+    royalDecree: z.string(),
+    isForestBoundary: z.boolean(),
+    forestBoundaryRemark: z.string(),
+
+    facilityType: z.array(z.string()),
+    facilityTypeOther: z.string(),
+    environmentType: z.array(z.string()),
+
+    buildingInsurancePrice: z.coerce.number(),
+    sellingPrice: z.coerce.number(),
+    forcedSalePrice: z.coerce.number(),
+
+    remark: z.string(),
+  })
+  .passthrough();
+
+export const CreateCondoResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+export const UpdateCondoResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+
+export type CreateCondoResponseType = z.infer<typeof CreateCondoResponse>;
+export type CreateCondoRequestType = z.infer<typeof CreateCondoRequest>;
 export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
-
-export const CreateCollateralCondoRequestDefaults = {
-  condoDetail: {
-    areaDetails: [],
-    verifiableOwner: false,
-    isObligation: '0',
-    decoration: '0',
-    condoConditions: '0',
-  },
-};
+export type UpdateCondoRequestType = z.infer<typeof UpdateCondoRequest>;
+export type UpdateCondoResponseType = z.infer<typeof UpdateCondoResponse>;
+export type GetCondoPropertyByIdResultType = z.infer<typeof GetCondoPropertyByIdResult>;

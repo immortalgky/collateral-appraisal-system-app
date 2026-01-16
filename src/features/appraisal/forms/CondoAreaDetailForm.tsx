@@ -13,12 +13,12 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
     fieldState: { error },
   } = useController({ name: name, control });
 
-  const properties = useWatch({ name: `${name}.areaDetails` });
+  const properties = useWatch({ name: `${name}` });
   const totalArea = calcTotalArea(properties);
 
   return (
     <div className="col-span-12 border-2 rounded-2xl border-gray-100">
-      <FormTable headers={propertiesTableHeader} name={`${name}.areaDetails`} />
+      <FormTable headers={propertiesTableHeader} name={`${name}`} />
       <div className="px-6 pb-6">
         <Input
           type="number"

@@ -22,12 +22,10 @@ const CreateLandPage = () => {
 
   // Get propertyId from URL params to determine edit or create mode
   const { propertyId } = useParams<{ propertyId?: string }>();
-  // const propertyId = 'B539433E-F36B-1410-8762-004DC4E1D9A2';
 
   const isEditMode = Boolean(propertyId);
 
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
-  // const appraisalId = '49FF1203-037C-44E4-B124-791F1B0C75D3';
   const location = useLocation();
 
   const methods = useForm<createLandFormType>({
@@ -133,7 +131,7 @@ const CreateLandPage = () => {
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.id) {
-              navigate(`/appraisa/${appraisalId}/property/land/${response.id}`);
+              navigate(`/appraisal/${appraisalId}/property/land/${response.id}`);
             }
           },
           onError: (error: any) => {

@@ -29,9 +29,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
       </div>
     </div>
     <div className="col-span-4">
-      <div className="grid grid-cols-12 gap-4">
-        {children}
-      </div>
+      <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
     {!isLast && <div className="h-px bg-gray-200 col-span-5" />}
   </>
@@ -93,7 +91,7 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
       </SectionRow>
 
       <SectionRow title="Surface" icon="layer-group">
-        <SurfaceTable headers={surfaceTableHeader} name={'buildingDetail.surface'} />
+        <SurfaceTable headers={surfaceTableHeader} name={'surface'} />
       </SectionRow>
 
       <SectionRow title="Fence" icon="fence">
@@ -113,8 +111,8 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
           <BuildingDetail
             name={
               prefix != null
-                ? `${prefix}.buildingDetail.buildingDepreciationDetails`
-                : 'buildingDetail.buildingDepreciationDetails'
+                ? `${prefix}.buildingDepreciationDetails`
+                : 'buildingDepreciationDetails'
             }
           />
         </div>
@@ -158,7 +156,7 @@ const buildingInfoField: FormField[] = [
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
-    name: 'buildingDetail.verifiableOwner',
+    name: 'isOwnerVerified',
     required: true,
     options: ['Can', 'Can not'],
     wrapperClassName: 'col-span-3',
@@ -166,9 +164,10 @@ const buildingInfoField: FormField[] = [
   {
     type: 'text-input',
     label: 'Owner',
-    name: 'buildingDetail.owner',
+    name: 'ownerName',
     wrapperClassName: 'col-span-4',
     required: true,
+    disableWhen: { field: 'isOwnerVerified', is: false },
   },
   {
     type: 'text-input',
@@ -176,17 +175,6 @@ const buildingInfoField: FormField[] = [
     name: 'builtOnTitleNumber',
     wrapperClassName: 'col-span-5',
     required: true,
-  },
-  {
-    type: 'radio-group',
-    label: 'No House Number',
-    options: [
-      { value: 'NI', label: 'Not Installed' },
-      { value: 'NR', label: 'Not Request' },
-    ],
-    orientation: 'horizontal',
-    name: 'buildingDetail.noHouseNumber',
-    wrapperClassName: 'col-span-6',
   },
   {
     type: 'radio-group',
@@ -199,63 +187,58 @@ const buildingInfoField: FormField[] = [
       { value: 'DILAPIDATED', label: 'Dilapidated' },
     ],
     orientation: 'horizontal',
-    name: 'buildingDetail.buildingCondition',
+    name: 'buildingCondition',
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
     label: 'Under Construction',
-    options: [
-      { value: 'YES', label: 'Yes' },
-      { value: 'NO', label: 'No' },
-    ],
-    orientation: 'horizontal',
-    name: 'buildingDetail.underConst',
+    name: 'isUnderConstruction',
     wrapperClassName: 'col-span-3',
+    options: ['Yes', 'No'],
   },
   {
     type: 'number-input',
     label: 'Construction Completion (%)',
-    name: 'buildingDetail.constCompletionPct',
+    name: 'constructionCompletionPercent',
     wrapperClassName: 'col-span-3',
+    disableWhen: { field: 'isUnderConstruction', is: true },
   },
   {
     type: 'datetime-input',
     label: 'License Expiration Date',
-    name: 'buildingDetail.licenseExpirationDate',
+    name: 'constructionLicenseExpirationDate',
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'boolean-toggle',
     label: 'Is Appraise',
-    name: 'buildingDetail.isAppraise',
+    name: 'isAppraisable',
     required: true,
     options: ['Appraise', 'Not Appraise'],
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
     label: 'Is Obligation',
-    name: 'buildingDetail.isObligation',
-    orientation: 'horizontal',
-    options: [
-      { value: '1', label: 'No Obligation' },
-      { value: '2', label: 'Mortgage as Security' },
-    ],
+    name: 'hasObligation',
+    options: ['Mortgage as Security', 'No Obligation'],
     wrapperClassName: 'col-span-6',
   },
   {
     type: 'text-input',
     label: 'Obligation',
-    name: 'buildingDetail.obligation',
+    name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
+    required: true,
+    showWhen: { field: 'hasObligation', is: true },
   },
 ];
 
 const buildingTypeField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.buildingType',
+    name: 'buildingType',
     orientation: 'horizontal',
     options: [
       { value: 'SGH', label: 'Single House' },
@@ -280,21 +263,23 @@ const buildingTypeField: FormField[] = [
   {
     type: 'text-input',
     label: 'Building Type Other',
-    name: 'buildingDetail.buidingTypeOther',
+    name: 'buildingTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'buildingType', is: '99', operator: 'equals' },
   },
   {
     type: 'number-input',
     label: 'Total Floor',
-    name: 'buildingDetail.totalFloor',
+    name: 'numberOfFloors',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
 ];
 
 const decorationField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.decoration',
+    name: 'decorationType',
     orientation: 'horizontal',
     options: [
       { value: 'RDTM', label: 'Ready to move in' },
@@ -308,8 +293,9 @@ const decorationField: FormField[] = [
   {
     type: 'text-input',
     label: 'Decoration Other',
-    name: 'buildingDetail.decorationOther',
+    name: 'decorationTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'decorationType', is: '99', operator: 'equals' },
   },
 ];
 
@@ -317,28 +303,29 @@ const encroachmentField: FormField[] = [
   {
     type: 'boolean-toggle',
     label: '',
-    name: 'buildingDetail.isEncroached',
+    name: 'isEncroached',
     options: ['Is Encroached', 'Is not Encroached'],
     wrapperClassName: 'col-span-4 flex items-center',
   },
   {
     type: 'number-input',
     label: 'Encroachment Area',
-    name: 'buildingDetail.encroachArea',
+    name: 'encroachmentArea',
     wrapperClassName: 'col-span-2',
   },
   {
     type: 'text-input',
     label: 'Encroachment Remark',
-    name: 'buildingDetail.isEncroachedRemark',
+    name: 'encroachmentRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isEncroached', is: true },
   },
 ];
 
 const buildingMaterialField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.buildingMaterial',
+    name: 'buildingMaterial',
     orientation: 'horizontal',
     options: [
       { value: 'VERYGOOD', label: 'Very Good' },
@@ -353,7 +340,7 @@ const buildingMaterialField: FormField[] = [
 const buildingStyleField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.buildingStyle',
+    name: 'buildingStyle',
     orientation: 'horizontal',
     options: [
       { value: 'VERYGOOD', label: 'Very Good' },
@@ -369,27 +356,28 @@ const isResidentialField: FormField[] = [
   {
     type: 'boolean-toggle',
     label: '',
-    name: 'buildingDetail.isResidential',
+    name: 'isResidential',
     options: ['Can', 'Can not'],
     wrapperClassName: 'col-span-10 flex items-center',
   },
   {
     type: 'number-input',
     label: 'Building Age',
-    name: 'buildingDetail.buildingAge',
+    name: 'buildingAge',
     wrapperClassName: 'col-span-2',
   },
   {
     type: 'textarea',
     label: 'Due To',
-    name: 'buildingDetail.dueTo',
+    name: 'isResidentialRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isResidential', is: false },
   },
 ];
 const constructionStyleField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.constStyle',
+    name: 'constructionStyleType',
     orientation: 'horizontal',
     options: [
       { value: 'BUILDING', label: 'Building' },
@@ -401,7 +389,7 @@ const constructionStyleField: FormField[] = [
   {
     type: 'textarea',
     label: 'Remark',
-    name: 'buildingDetail.constStyleRemark',
+    name: 'constructionStyleRemark',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -409,7 +397,7 @@ const constructionStyleField: FormField[] = [
 const generalStructureField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'buildingDetail.generalStructure',
+    name: 'structureType',
     orientation: 'horizontal',
     options: [
       { value: 'RFC', label: 'Reinforced Concrete' },
@@ -423,15 +411,16 @@ const generalStructureField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.generalStructureOther',
+    name: 'structureTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'structureType', is: '99', operator: 'in' },
   },
 ];
 
 const roofFrameField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'buildingDetail.roofFrame',
+    name: 'roofFrameType',
     orientation: 'horizontal',
     options: [
       { value: 'RFC', label: 'Reinforced Concrete' },
@@ -445,15 +434,16 @@ const roofFrameField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.roofFrameOther',
+    name: 'roofFrameTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
   },
 ];
 
 const roofField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'buildingDetail.roof',
+    name: 'roofType',
     orientation: 'horizontal',
     options: [
       { value: 'RFC', label: 'Reinforced Concrete' },
@@ -467,15 +457,16 @@ const roofField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.roofOther',
+    name: 'roofTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'roofType', is: '99', operator: 'in' },
   },
 ];
 
 const ceilingField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'buildingDetail.ceiling',
+    name: 'ceilingType',
     orientation: 'horizontal',
     options: [
       { value: 'SG', label: 'Smooth Gypsum' },
@@ -490,8 +481,9 @@ const ceilingField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.ceilingOther',
+    name: 'ceilingTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'ceilingType', is: '99', operator: 'in' },
   },
 ];
 
@@ -499,7 +491,7 @@ const wallField: FormField[] = [
   {
     type: 'checkbox-group',
     label: 'Interior',
-    name: 'buildingDetail.interiorWall',
+    name: 'interiorWallType',
     orientation: 'horizontal',
     options: [
       { value: 'WOOD', label: 'Wood' },
@@ -512,13 +504,14 @@ const wallField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.interiorWallOther',
+    name: 'interiorWallTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
   },
   {
     type: 'checkbox-group',
     label: 'Exterior',
-    name: 'buildingDetail.exteriorWall',
+    name: 'exteriorWallType',
     orientation: 'horizontal',
     options: [
       { value: 'WOOD', label: 'Wood' },
@@ -530,8 +523,9 @@ const wallField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.exteriorWallOther',
+    name: 'exteriorWallTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
   },
 ];
 
@@ -577,7 +571,7 @@ const surfaceTableHeader = [
 const fenceField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'buildingDetail.fence',
+    name: 'fenceType',
     orientation: 'horizontal',
     options: [
       { value: 'CB', label: 'Cement Block' },
@@ -595,15 +589,16 @@ const fenceField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'buildingDetail.fenceOther',
+    name: 'fenceTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'fenchType', is: '99', operator: 'in' },
   },
 ];
 
 const constTypeFeild: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.constType',
+    name: 'constructionType',
     orientation: 'horizontal',
     options: [
       { value: 'HES', label: 'House Estate' },
@@ -615,15 +610,16 @@ const constTypeFeild: FormField[] = [
   {
     type: 'textarea',
     label: 'Other',
-    name: 'buildingDetail.constTypeOther',
+    name: 'constructionTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'constructionType', is: '99', operator: 'equals' },
   },
 ];
 
 const utilizationFeild: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingDetail.utilization',
+    name: 'utilizationType',
     orientation: 'horizontal',
     options: [
       { value: 'HES', label: 'House Estate' },
@@ -635,8 +631,9 @@ const utilizationFeild: FormField[] = [
   {
     type: 'textarea',
     label: 'Other',
-    name: 'buildingDetail.useForOtherPurpose',
+    name: 'otherPurposeUsage',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'utilizationType', is: '99', operator: 'equals' },
   },
 ];
 
@@ -644,7 +641,7 @@ const remarkField: FormField[] = [
   {
     type: 'textarea',
     label: 'Remark',
-    name: 'buildingDetail.remark',
+    name: 'remark',
     wrapperClassName: 'col-span-12',
   },
 ];
