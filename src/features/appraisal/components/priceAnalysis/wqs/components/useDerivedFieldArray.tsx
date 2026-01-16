@@ -1,7 +1,8 @@
+import { mergeConfig } from 'axios';
 import { useEffect, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 
-export type ComputeCtx<Ctx = Record<string, any>, Row = any> = {
+export type ComputeRowCtx<Ctx = Record<string, any>, Row = any> = {
   rows: Row[];
   row: Row;
   rowIndex: number;
@@ -9,9 +10,19 @@ export type ComputeCtx<Ctx = Record<string, any>, Row = any> = {
   ctx: Ctx; // merged: { ...plainCtx, ...watchedValues }
 };
 
+export type ComputeColumnCtx<Ctx = Record<string, any>, Column = any> = {
+  columns: Column[];
+  column: Column;
+  columnIndex: number;
+  getValues: any;
+  ctx: Ctx;
+};
+
+export type ComputeCtx = ComputeRowCtx | ComputeColumnCtx;
+
 export type DerivedRule<Ctx = Record<string, any>, Row = any> = {
   targetKey: string;
-  compute: (ctx: ComputeCtx<Ctx, Row>) => number;
+  compute: (ctx: ComputeCtx) => number;
   normalize?: (v: number) => number;
 
   // allow tuning behavior per field
@@ -25,6 +36,7 @@ export type DerivedRule<Ctx = Record<string, any>, Row = any> = {
 type WatchMap = Record<string, string>; // key -> formPath
 
 interface UseDerivedFieldArrayProps<Ctx = Record<string, any>, Row = any> {
+  dataAlignment: 'horizontal' | 'vertical';
   arrayName: string;
   rules: DerivedRule<Ctx, Row>[];
   watch?: WatchMap; // watched external form fields
@@ -32,6 +44,7 @@ interface UseDerivedFieldArrayProps<Ctx = Record<string, any>, Row = any> {
 }
 
 export function useDerivedFieldArray<Row = any, Ctx = Record<string, any>>({
+  dataAlignment,
   arrayName,
   rules,
   watch = {},
@@ -39,8 +52,8 @@ export function useDerivedFieldArray<Row = any, Ctx = Record<string, any>>({
 }: UseDerivedFieldArrayProps<Ctx, Row>) {
   const { control, register, setValue, getValues } = useFormContext();
 
-  // Watch rows so recompute happens on relevant row changes
-  const watchRows = useWatch({ control, name: arrayName, defaultValue: [] }) as Row[];
+  // Watch data so recompute happens on relevant row / column changes
+  const watchData = useWatch({ control, name: arrayName, defaultValue: [] }) as Row[];
 
   // Watch external form paths
   const watchNames = useMemo(() => Object.values(watch), [watch]);
@@ -59,12 +72,12 @@ export function useDerivedFieldArray<Row = any, Ctx = Record<string, any>>({
 
   // Register derived targets when row count changes
   useEffect(() => {
-    for (let i = 0; i < watchRows.length; i++) {
+    for (let i = 0; i < watchData.length; i++) {
       for (const r of rules) {
         register(`${arrayName}.${i}.${r.targetKey}`);
       }
     }
-  }, [arrayName, register, watchRows.length, rules]);
+  }, [arrayName, register, watchData.length, rules]);
 
   useEffect(() => {
     const liveRows = (getValues(arrayName) ?? []) as Row[];
@@ -75,13 +88,23 @@ export function useDerivedFieldArray<Row = any, Ctx = Record<string, any>>({
       const row = liveRows[rowIndex];
       for (const r of rules) {
         const path = `${arrayName}.${rowIndex}.${r.targetKey}`;
-        const computeCtx: ComputeCtx<Ctx, Row> = {
-          rows: liveRows,
-          row,
-          rowIndex,
-          getValues,
-          ctx: mergedCtx,
-        };
+
+        const computeCtx =
+          dataAlignment === 'horizontal'
+            ? {
+                rows: liveRows,
+                row,
+                rowIndex,
+                getValues,
+                ctx: mergedCtx,
+              }
+            : {
+                columns: liveRows,
+                column: row,
+                columnIndex: rowIndex,
+                getValues,
+                ctx: mergedCtx,
+              };
 
         let nextRaw = r.compute(computeCtx);
         if (nextRaw == null || (typeof nextRaw === 'number' && Number.isNaN(nextRaw))) nextRaw = 0;
@@ -103,5 +126,5 @@ export function useDerivedFieldArray<Row = any, Ctx = Record<string, any>>({
         }
       }
     }
-  }, [arrayName, watchRows, rules, setValue, getValues, mergedCtx]);
+  }, [arrayName, watchData, rules, setValue, getValues, mergedCtx]);
 }

@@ -1,6 +1,7 @@
 import { NumberInput } from '@/shared/components';
-import type { ColumnDef, ColumnGroup, RHFColumn } from './types';
+import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow, RowDef } from './types';
 import { RHFInputCell } from './RHFInputCell';
+import { forecast } from './excelUtils/forecast';
 
 export const columns: RHFColumn[] = [
   {
@@ -238,9 +239,6 @@ export const compColumns: ColumnDef[] = [
     id: 'factor',
     header: <div>Factor</div>,
     name: 'factor',
-    accessor: (row, rowIndex, ctx) => {
-      console.log(row);
-    },
     rhfRenderCell: {
       inputType: 'display',
     },
@@ -282,7 +280,7 @@ export const compColumns: ColumnDef[] = [
 export const calculation: Record<string, any>[] = [
   {
     id: 'survey1',
-    offeringPrice: 0,
+    offeringPrice: 22750,
     offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
     offeringPriceAdjustmentAmt: 0,
     sellingPrice: null,
@@ -293,7 +291,7 @@ export const calculation: Record<string, any>[] = [
   },
   {
     id: 'survey2',
-    offeringPrice: 0,
+    offeringPrice: 22500,
     offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
     offeringPriceAdjustmentAmt: 0,
     sellingPrice: null,
@@ -307,23 +305,23 @@ export const calculation: Record<string, any>[] = [
     offeringPrice: null,
     offeringPriceMeasurementUnit: null,
     offeringPriceAdjustmentAmt: null,
-    sellingPrice: 0,
+    sellingPrice: 21500,
     sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
     sellingDate: 0,
     sellingPriceAdjustmentYear: 0,
-    numberOfYears: 0,
+    numberOfYears: 6,
   },
 ];
 
-export const calculationRows: ColumnDef[] = [
+export const calculationRows: RHFRow[] = [
   {
     id: 'offeringPrice',
     header: <div>Offering Price</div>,
     name: 'offeringPrice',
-    accessor: (row, rowIndex, ctx) => {
-      return Object.keys(row)[rowIndex + 1];
+    accessor: (column, columnIndex, ctx) => {
+      return column['offeringPrice'];
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
       // console.log(fieldName, value);
       return <div>{`${value}`}</div>;
     },
@@ -332,32 +330,40 @@ export const calculationRows: ColumnDef[] = [
     id: 'offeringPriceAdjustmentPct',
     header: <div>Adjustment of Offer Price</div>,
     name: 'offeringPriceAdjustmentPct',
-    accessor: (row, rowIndex, ctx) => {
-      return row['offeringPrice'];
+    accessor: (column, columnIndex, ctx) => {
+      return column['offeringPriceAdjustmentPct'] ?? null;
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
-      return <div>{`${value}`}</div>;
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      return (
+        <div>
+          <RHFInputCell fieldName={fieldName} inputType="number" />
+        </div>
+      );
     },
   },
   {
     id: 'offeringPriceAdjustmentAmt',
     header: <div>Adjustment of Offer Price</div>,
     name: 'offeringPriceAdjustmentAmt',
-    accessor: (row, rowIndex, ctx) => {
-      return row['offeringPrice'];
+    accessor: (column, columnIndex, ctx) => {
+      return column['offeringPriceAdjustmentAmt'] ?? null;
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
-      return <div>{`${value}`}</div>;
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      return (
+        <div>
+          <RHFInputCell fieldName={fieldName} inputType="number" />
+        </div>
+      );
     },
   },
   {
     id: 'sellingPrice',
     header: <div>Selling Price</div>,
     name: 'sellingPrice',
-    accessor: (row, rowIndex, ctx) => {
-      return row['offeringPrice'];
+    accessor: (column, columnIndex, ctx) => {
+      return column['sellingPrice'] ?? null;
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
       return <div>{`${value}`}</div>;
     },
   },
@@ -365,10 +371,10 @@ export const calculationRows: ColumnDef[] = [
     id: 'numberOfYears',
     header: <div>Number of Years</div>,
     name: 'numberOfYears',
-    accessor: (row, rowIndex, ctx) => {
-      return row['offeringPrice'];
+    accessor: (column, columnIndex, ctx) => {
+      return column['numberOfYears'] ?? null;
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
       return <div>{`${value}`}</div>;
     },
   },
@@ -376,20 +382,78 @@ export const calculationRows: ColumnDef[] = [
     id: 'sellingPriceAdjustmentYear',
     header: <div>Adjust Period</div>,
     name: 'sellingPriceAdjustmentYear',
-    accessor: (row, rowIndex, ctx) => {
-      return row['offeringPrice'];
+    accessor: (column, columnIndex, ctx) => {
+      return column['sellingPriceAdjustmentYear'] ?? null;
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
-      return <div>{`${value}`}</div>;
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      return (
+        <div>
+          <RHFInputCell fieldName={fieldName} inputType="number" />
+        </div>
+      );
     },
   },
   {
     id: 'cumulativeAdjustedPeriod',
     header: <div>Cumulative Adjusted Period</div>,
-    accessor: (row, rowIndex, ctx) => {
-      return row['offeringPrice'];
+    accessor: (column, columnIndex, ctx) => {
+      return column['numberOfYears'] * column['sellingPriceAdjustmentYear'];
     },
-    renderCell: ({ fieldName, row, rows, rowIndex, value, ctx }) => {
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      return <div>{`${value}`}</div>;
+    },
+  },
+  {
+    id: 'adjustedValue',
+    header: <div>Adjusted Value</div>,
+    name: 'adjustedValue',
+    // accessor: (column, columnIndex, ctx) => {
+    //   if (column['offeringPrice'])
+    //     return column['offeringPriceAdjustmentPct'] > 0
+    //       ? column['offeringPrice'] -
+    //           (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
+    //       : column['offeringPriceAdjustmentAmt'];
+    //   return (
+    //     column['sellingPrice'] +
+    //     (column['sellingPrice'] * column['numberOfYears'] * column['sellingPriceAdjustmentYear']) /
+    //       100
+    //   );
+    // },
+    // renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+    //   return <div>{`${value}`}</div>;
+    // },
+    rhfRenderCell: { inputType: 'display' },
+    derived: {
+      compute: ({ column, columns, columnIndex, ctx }) => {
+        console.log(columns);
+        return 0;
+        // if (column['offeringPrice'])
+        //   return column['offeringPriceAdjustmentPct'] > 0
+        //     ? column['offeringPrice'] -
+        //         (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
+        //     : column['offeringPriceAdjustmentAmt'];
+        // return (
+        //   column['sellingPrice'] +
+        //   (column['sellingPrice'] *
+        //     column['numberOfYears'] *
+        //     column['sellingPriceAdjustmentYear']) /
+        //     100
+        // );
+      },
+    },
+  },
+  {
+    id: 'finalValue',
+    header: <div>Final Value</div>,
+    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      if (!ctx['WQSScore']) return;
+
+      const x: number = ctx['WQSScore'].reduce((acc, curr) => {
+        return acc + curr['collateral'];
+      }, 0);
+      const known_y: number = 0;
+      const known_x: number = 0;
+      forecast(x, known_y, known_x);
       return <div>{`${value}`}</div>;
     },
   },

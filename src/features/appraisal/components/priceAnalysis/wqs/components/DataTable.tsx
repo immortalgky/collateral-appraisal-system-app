@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import type { Align, ColumnDef, ColumnGroup } from './types';
 import { Icon } from '@/shared/components';
 
-const alignClass = (align?: Align) => {
+export const alignClass = (align?: Align) => {
   if (align === 'right') return 'text-right';
   if (align === 'center') return 'text-center';
   return 'text-left';

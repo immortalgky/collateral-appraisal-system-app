@@ -8,7 +8,7 @@ export interface ColumnGroup {
   className?: string;
 }
 
-export interface ColumnDef {
+export interface ColumnDef<Row = Record<string, any>, Ctx = Record<string, any>> {
   id: string;
   name?: string;
   header?: React.ReactNode;
@@ -22,18 +22,18 @@ export interface ColumnDef {
 
   renderCell?: (args: {
     fieldName: string;
-    row: any;
+    row: Row;
     rowIndex: number;
     value: any;
     ctx: Ctx;
   }) => React.ReactNode;
 
-  accessor?: (row: any, rowIndex: number, ctx: Ctx) => any;
+  accessor?: (row: Row, rowIndex: number, ctx: Ctx) => any;
 
-  renderFooter?: (args: { rows: any[]; ctx: Ctx; columnIndex: string }) => React.ReactNode;
+  renderFooter?: (args: { rows: Row[]; ctx: Ctx; columnIndex: string }) => React.ReactNode;
 }
 
-export type RHFColumn = ColumnDef & {
+export type RHFColumn<Row = Record<string, any>, Ctx = Record<string, any>> = ColumnDef & {
   derived?: {
     compute: (args: { row: Row; rows: Row[]; rowIndex: number; ctx: Ctx }) => number;
 
@@ -42,4 +42,40 @@ export type RHFColumn = ColumnDef & {
   };
 
   format?: (value: any, row: Row, rowIndex: number, ctx: Ctx) => React.ReactNode;
+};
+
+export type RowDef<Column = Record<string, any>, Ctx = Record<string, any>> = {
+  id: string;
+  name?: string;
+  header?: React.ReactNode;
+  align?: Align;
+  className?: string;
+
+  rhfRenderCell?: {
+    inputType: 'text' | 'number' | 'select' | 'display';
+    options?: { label: string; value: string }[];
+  };
+
+  renderCell?: (args: {
+    fieldName: string;
+    column: Column;
+    columnIndex: number;
+    value: any;
+    ctx: Ctx;
+  }) => React.ReactNode;
+
+  accessor?: (column: Column, columnIndex: number, ctx: Ctx) => any;
+
+  renderFooter?: (args: { columns: Column[]; columnIndex: string; ctx: Ctx }) => React.ReactNode;
+};
+
+export type RHFRow<Column = Record<string, any>, Ctx = Record<string, any>> = RowDef & {
+  derived?: {
+    compute: (args: { column: Column; columns: Column[]; columnIndex: number; ctx: Ctx }) => number;
+
+    normalize?: (v: number) => number;
+    persist?: boolean; // default true
+  };
+
+  format?: (value: any, column: Column, Column: number, ctx: Ctx) => React.ReactNode;
 };

@@ -92,19 +92,14 @@ export const WQSSection = () => {
             />
           </div>
           <div>
-            {/* <RHFArrayTable
+            <RHFArrayTable
               name="WQSCalculation"
-              columns={calculationColumns}
+              dataAlignment="vertical"
+              rows={calculationRows}
               defaultRow={calculation}
               hasHeader={false}
               hasAddButton={false}
-            /> */}
-            <VerticalDataTable
-              columns={calculation}
-              rows={calculationRows}
-              hasAddButton={false}
-              onAdd={() => null}
-              onDelete={() => null}
+              watch={{ WQSScore: 'WQSMarketSurveys.WQSScores' }}
             />
           </div>
           <div>
