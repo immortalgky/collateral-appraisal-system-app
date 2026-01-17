@@ -58,7 +58,8 @@ export type RowDef<Column = Record<string, any>, Ctx = Record<string, any>> = {
 
   renderCell?: (args: {
     fieldName: string;
-    column: Column;
+    column: any;
+    columns: any[];
     columnIndex: number;
     value: any;
     ctx: Ctx;

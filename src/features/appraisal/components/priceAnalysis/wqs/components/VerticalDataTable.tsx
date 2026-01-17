@@ -1,9 +1,10 @@
 import clsx from 'clsx';
 import type { RowDef } from './types';
 import { alignClass } from './DataTable';
+import { Icon } from '@/shared/components';
 
 interface VerticalDataTableTableProps {
-  columns: any[];
+  columns: Record<string, any>[];
   rows: RowDef[];
   ctx: any;
   hasBody?: boolean;
@@ -56,7 +57,7 @@ export const VerticalDataTable = ({
               {/* row body */}
               {columns.map((column, columnIndex) => {
                 const value = row.accessor
-                  ? row.accessor(column, rowIndex, ctx)
+                  ? row.accessor(column, columnIndex, ctx)
                   : (column as any)?.[row.id];
                 return (
                   <td
@@ -72,6 +73,7 @@ export const VerticalDataTable = ({
                         ? row.renderCell({
                             fieldName: `${columnIndex}.${row.name}`,
                             column,
+                            columns,
                             columnIndex,
                             value,
                             ctx,

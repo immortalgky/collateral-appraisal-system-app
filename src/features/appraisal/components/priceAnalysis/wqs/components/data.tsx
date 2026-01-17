@@ -407,54 +407,69 @@ export const calculationRows: RHFRow[] = [
     id: 'adjustedValue',
     header: <div>Adjusted Value</div>,
     name: 'adjustedValue',
-    // accessor: (column, columnIndex, ctx) => {
-    //   if (column['offeringPrice'])
-    //     return column['offeringPriceAdjustmentPct'] > 0
-    //       ? column['offeringPrice'] -
-    //           (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-    //       : column['offeringPriceAdjustmentAmt'];
-    //   return (
-    //     column['sellingPrice'] +
-    //     (column['sellingPrice'] * column['numberOfYears'] * column['sellingPriceAdjustmentYear']) /
-    //       100
-    //   );
-    // },
-    // renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-    //   return <div>{`${value}`}</div>;
-    // },
     rhfRenderCell: { inputType: 'display' },
     derived: {
       compute: ({ column, columns, columnIndex, ctx }) => {
-        console.log(columns);
-        return 0;
-        // if (column['offeringPrice'])
-        //   return column['offeringPriceAdjustmentPct'] > 0
-        //     ? column['offeringPrice'] -
-        //         (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-        //     : column['offeringPriceAdjustmentAmt'];
-        // return (
-        //   column['sellingPrice'] +
-        //   (column['sellingPrice'] *
-        //     column['numberOfYears'] *
-        //     column['sellingPriceAdjustmentYear']) /
-        //     100
-        // );
+        if (column['offeringPrice'])
+          return column['offeringPriceAdjustmentPct'] > 0
+            ? column['offeringPrice'] -
+                (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
+            : column['offeringPriceAdjustmentAmt'];
+        return (
+          column['sellingPrice'] +
+          (column['sellingPrice'] *
+            column['numberOfYears'] *
+            column['sellingPriceAdjustmentYear']) /
+            100
+        );
       },
     },
   },
   {
     id: 'finalValue',
     header: <div>Final Value</div>,
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      if (!ctx['WQSScore']) return;
+    renderCell: ({ columns, ctx }) => {
+      const x = (ctx.WQSScore ?? []).reduce((acc, curr) => acc + curr.collateral * curr.weight, 0);
+      console.log(ctx.WQSScore);
+      // known_y = adjusted values of each comparable
+      const known_y = (columns ?? [])
+        .map((c: any) => Number(c?.adjustedValue))
+        .filter(Number.isFinite);
 
-      const x: number = ctx['WQSScore'].reduce((acc, curr) => {
-        return acc + curr['collateral'];
-      }, 0);
-      const known_y: number = 0;
-      const known_x: number = 0;
-      forecast(x, known_y, known_x);
-      return <div>{`${value}`}</div>;
+      // known_x = score totals of each comparable
+      // const known_x = (columns ?? [])
+      //   .map((c: any) => {
+      //     const row = scoreByCompId.get(c.id);
+      //     if (!row) return NaN;
+      //
+      //     return (
+      //       Number(row.survey1 ?? 0) +
+      //       Number(row.survey2 ?? 0) +
+      //       Number(row.survey3 ?? 0) +
+      //       Number(row.collateral ?? 0)
+      //     );
+      //   })
+      //   .filter(Number.isFinite);
+
+      const known_x = (ctx.WQSScore ?? []).reduce(
+        (acc, curr) => {
+          return [
+            acc[0] + curr.survey1 * curr.weight,
+            acc[1] + curr.survey2 * curr.weight,
+            acc[2] + curr.survey3 * curr.weight,
+          ];
+        },
+        [0, 0, 0],
+      );
+
+      // must have >= 2 points
+      if (known_x.length < 2 || known_y.length < 2 || known_x.length !== known_y.length) {
+        return <div>0</div>;
+      }
+
+      const finalValue = forecast(x, known_y, known_x);
+      console.log(x, known_y, known_x, finalValue);
+      return <div>{Number.isFinite(finalValue) ? finalValue.toFixed(2) : 0}</div>;
     },
   },
 ];

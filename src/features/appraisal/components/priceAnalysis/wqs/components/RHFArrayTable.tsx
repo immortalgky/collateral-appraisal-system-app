@@ -1,10 +1,15 @@
 import { useMemo } from 'react';
 import { DataTable } from './DataTable';
-import type { ColumnDef, ColumnGroup, RHFColumn } from './types';
+import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow } from './types';
 import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useDerivedFieldArray, type DerivedRule } from './useDerivedFieldArray';
+import {
+  useDerivedFieldArray,
+  type DerivedRule,
+  type Row,
+  type Column,
+} from './useDerivedFieldArray';
 import { RHFInputCell } from './RHFInputCell';
-import { VerticalDataTable, type RHFRow } from './VerticalDataTable';
+import { VerticalDataTable } from './VerticalDataTable';
 import { useMergedCtx } from './useMergedCtx';
 
 const clone = <T,>(v: T): T => {
@@ -13,44 +18,33 @@ const clone = <T,>(v: T): T => {
   return sc ? sc(v) : (JSON.parse(JSON.stringify(v)) as T);
 };
 
-type AnyRecord = Record<string, any>;
-
-interface RHFTable<Row extends AnyRecord, Ctx extends AnyRecord> {
-  name: string;
-  dataAlignment: 'horizontal' | 'vertical';
-  columns: RHFColumn[];
-  groups: ColumnGroup[];
-  defaultRow: any;
-  ctx?: Partial<Ctx>;
-  watch?: Record<string, string>;
-
-  onEdit?: (rowIndex: number, handleOnEdit: () => void) => void;
-
-  onSave?: (rowIndex: number, handleOnEdit: () => void) => void;
-
-  hasHeader?: boolean;
-  hasBody?: boolean;
-  hasFooter?: boolean;
-  hasAddButton?: boolean;
-}
-
-interface RHFHorizontalTable<Row extends AnyRecord, Ctx extends AnyRecord> extends RHFTable {
+interface RHFHorizontalTable<Row = Record<string, any>, Ctx = any> extends RHFTable {
   rows: RHFRow[];
   dataAlignment: 'horizontal';
-  defaultColumns: any;
+  defaultRow: Row;
 }
 
-interface RHFVerticalTable<Row extends AnyRecord, Ctx extends AnyRecord> extends RHFTable {
+interface RHFVerticalTable<Row = Record<string, any>, Ctx = any> extends RHFTable {
   columns: RHFColumn[];
   dataAlignment: 'vertical';
-  defaultRows: any;
+  defaultColumn: Row;
 }
 
-type RHFArrayTableProps<Row extends AnyRecord, Ctx extends AnyRecord> =
+type RHFArrayTableProps<Row = Record<string, any>, Ctx = any> =
   | RHFVerticalTable<Row, Ctx>
-  | RHFHorizontalTable<Row, Ctx>;
+  | (RHFHorizontalTable<Row, Ctx> & {
+      name: string;
+      groups: ColumnGroup;
+      ctx: Partial<Ctx>;
+      watch?: Record<string, string>;
+      onEdit?: (rowIndex: number, handleOnEdit: () => void) => void;
+      onSave?: (rowIndex: number, handleOnEdit: () => void) => void;
+      hasHeader: boolean;
+      hasFooter: boolean;
+      hasAddButton: boolean;
+    });
 
-export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
+export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
   name,
   dataAlignment = 'horizontal',
   columns,
@@ -67,7 +61,7 @@ export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
 
   rows,
   defaultColumns,
-}: RHFArrayTableProps<Row, Ctx>) => {
+}: RHFArrayTableProps<Ctx, T>) => {
   const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
 
@@ -83,15 +77,16 @@ export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
   const watchedData = useWatch({ control, name, defaultValue: [] }) ?? [];
 
   const tableData = fields.map((f, i) => ({
-    ...watchedData[i],
+    ...(watchedData?.[i] ?? {}),
     __id: f.id,
   }));
 
-  const rules: DerivedRule[] = useMemo(() => {
+  const rules: DerivedRule<Ctx, T>[] = useMemo(() => {
     if (dataAlignment === 'horizontal') {
       return columns
         .filter(c => c.derived?.compute && c.name && (c.derived.persist ?? true))
         .map(c => ({
+          alignment: 'horizontal' as const,
           targetKey: c.name,
           normalize: c.derived!.normalize,
           compute: ({ row, rows, rowIndex, ctx }) =>
@@ -102,15 +97,16 @@ export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
     return rows
       .filter(r => r.derived?.compute && r.name && (r.derived.persist ?? true))
       .map(r => ({
+        alignment: 'vertical' as const,
         targetKey: r.name,
         normalize: r.derived!.normalize,
-        compute: ({ row, rows, rowIndex, ctx }) => r.derived!.compute({ row, rows, rowIndex, ctx }),
+        compute: ({ column, columns, columnIndex, ctx }) =>
+          r.derived!.compute({ column, columns, columnIndex, ctx }),
       }));
-  }, [columns, rows]);
+  }, [dataAlignment, columns, rows]);
 
-  useDerivedFieldArray<Row, Ctx>({ dataAlignment, arrayName: name, rules, watch, ctx });
-
-  const tableCtx = useMergedCtx({ baseCtx: ctx, watch: watch });
+  const tableCtx: Ctx = useMergedCtx({ baseCtx: ctx, watch: watch });
+  useDerivedFieldArray<Ctx, T>({ dataAlignment, arrayName: name, rules, mergedCtx: tableCtx });
 
   return (
     <div>
@@ -144,7 +140,7 @@ export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
           hasHeader={hasHeader}
           hasBody={hasBody}
           hasFooter={hasFooter}
-          onAdd={() => handleOnAdd()}
+          onAdd={handleOnAdd}
           onDelete={handleOnDelete}
           hasAddButton={hasAddButton}
         />
@@ -154,16 +150,17 @@ export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
           rows={rows.map(row => ({
             ...row,
             renderCell: row.renderCell
-              ? ({ fieldName, column, columnIndex, value, ctx }) => {
+              ? ({ fieldName, column, columns, columnIndex, value, ctx }) => {
                   return row.renderCell({
                     fieldName: `${name}.${fieldName}`,
                     column,
+                    columns,
                     columnIndex,
                     value: value,
                     ctx: ctx,
                   });
                 }
-              : ({ fieldName, column, columnIndex, value, ctx }) => {
+              : ({ fieldName, column, columns, columnIndex, value, ctx }) => {
                   return (
                     <RHFInputCell
                       fieldName={`${name}.${fieldName}`}
@@ -174,7 +171,7 @@ export const RHFArrayTable = <Row extends AnyRecord, Ctx extends AnyRecord>({
                 },
           }))}
           hasAddButton={false}
-          onAdd={() => handleOnAdd}
+          onAdd={handleOnAdd}
           onDelete={handleOnDelete}
           ctx={tableCtx}
         />

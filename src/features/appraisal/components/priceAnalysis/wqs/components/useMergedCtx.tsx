@@ -7,7 +7,7 @@ type useMergedCtxProps = {
   baseCtx: Partial<Ctx>;
   watch: WatchMap;
 };
-export const useMergedCtx = <Ctx extends Record<string, any>>({
+export const useMergedCtx = <Ctx = Record<string, any>,>({
   baseCtx = {},
   watch = {},
 }: useMergedCtxProps) => {
