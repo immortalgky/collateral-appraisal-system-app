@@ -1,12 +1,6 @@
 import clsx from 'clsx';
-import type { Align, ColumnDef, ColumnGroup } from './types';
+import { type Align, alignClass, type ColumnDef, type ColumnGroup } from './types';
 import { Icon } from '@/shared/components';
-
-export const alignClass = (align?: Align) => {
-  if (align === 'right') return 'text-right';
-  if (align === 'center') return 'text-center';
-  return 'text-left';
-};
 
 interface renderHeaderProps {
   columns: ColumnDef[];
@@ -21,17 +15,20 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
   return (
     <thead>
       <tr>
-        {columns.map(col => {
-          const groupId = colToGroup.get(col.id);
+        {columns.map(column => {
+          const groupId = colToGroup.get(column.id);
 
           if (!hasGroup || !groupId)
             return (
               <th
-                key={col.id}
-                className="text-white text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 bg-primary"
+                key={column.id}
+                className={clsx(
+                  'text-white bg-neutral-300 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20',
+                  column.className,
+                )}
                 rowSpan={hasGroup ? 2 : 1}
               >
-                {col.header}
+                {column.header}
               </th>
             );
           if (renderedGroup.has(groupId)) return null;
@@ -41,7 +38,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
             <th
               key={groupHeader.id}
               className={clsx(
-                'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 bg-primary',
+                'text-white bg-neutral-300 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 ',
                 groupHeader.className,
                 alignClass(groupHeader.align),
               )}
@@ -54,7 +51,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
         {hasAddButton && (
           <th
             className={clsx(
-              'text-white text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 bg-primary w-24',
+              'text-white bg-neutral-300 text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 w-24',
             )}
             rowSpan={hasGroup ? 2 : 1}
           >
@@ -64,20 +61,20 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
       </tr>
       {hasGroup && (
         <tr>
-          {columns.map((col, index) => {
-            const groupId = colToGroup.get(col.id);
+          {columns.map(column => {
+            const groupId = colToGroup.get(column.id);
 
             if (!groupId) return null;
             return (
               <th
-                key={col.id}
+                key={column.id}
                 className={clsx(
-                  'text-white text-sm font-medium py-3 px-4 text-left truncate bg-primary sticky top-0 z-20',
-                  col.className,
-                  alignClass(col.align),
+                  'text-white text-sm font-medium py-3 px-4 text-left truncate bg-neutral-300 sticky top-0 z-20',
+                  column.className,
+                  alignClass(column.align),
                 )}
               >
-                {col.header}
+                {column.header}
               </th>
             );
           })}
@@ -269,7 +266,7 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
   );
 };
 
-interface DataTableProps {
+interface HorizontalDataTableProps {
   rows: Record<string, any>[];
   columns: ColumnDef[];
   groups: ColumnGroup[];
@@ -292,7 +289,7 @@ interface DataTableProps {
   hasAddButton: boolean;
 }
 
-export const DataTable = ({
+export const HorizontalDataTable = ({
   rows,
   columns,
   groups,
@@ -311,7 +308,7 @@ export const DataTable = ({
   onDelete,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
   hasAddButton,
-}: DataTableProps) => {
+}: HorizontalDataTableProps) => {
   const isEmpty = rows.length === 0;
   const colToGroup = new Map<string, string>();
   for (const group of groups)

@@ -1,6 +1,5 @@
 import clsx from 'clsx';
-import type { RowDef } from './types';
-import { alignClass } from './DataTable';
+import { alignClass, type RowDef } from './types';
 import { Icon } from '@/shared/components';
 
 interface VerticalDataTableTableProps {

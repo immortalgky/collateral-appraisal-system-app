@@ -1,3 +1,9 @@
+interface forecastProps {
+  x: number;
+  known_y: number[];
+  known_x: number[];
+}
+
 /**
  * Replicates the Excel FORECAST.LINEAR function (which is the same as the older FORECAST function).
  *
@@ -6,7 +12,8 @@
  * @param {number[]} known_x The independent array or range of data (known x-values).
  * @returns {number} The predicted y-value.
  */
-export function forecast(x, known_y, known_x) {
+
+export function forecast({ x, known_y, known_x }: forecastProps): number {
   let i,
     nr = 0,
     dr = 0,
@@ -15,7 +22,7 @@ export function forecast(x, known_y, known_x) {
     a,
     b;
 
-  function average(arr) {
+  function average(arr: number[]) {
     let r = 0;
     for (i = 0; i < arr.length; i++) {
       r += arr[i];

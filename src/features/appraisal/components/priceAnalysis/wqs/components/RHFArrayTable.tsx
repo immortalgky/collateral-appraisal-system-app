@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { DataTable } from './DataTable';
 import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow } from './types';
 import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import {
@@ -11,6 +10,7 @@ import {
 import { RHFInputCell } from './RHFInputCell';
 import { VerticalDataTable } from './VerticalDataTable';
 import { useMergedCtx } from './useMergedCtx';
+import { HorizontalDataTable } from '@features/appraisal/components/priceAnalysis/wqs/components/HorizontalDataTable.tsx';
 
 const clone = <T,>(v: T): T => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,7 +111,7 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
   return (
     <div>
       {dataAlignment === 'horizontal' ? (
-        <DataTable
+        <HorizontalDataTable
           rows={tableData}
           columns={columns.map(column => ({
             ...column,

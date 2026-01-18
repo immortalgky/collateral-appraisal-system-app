@@ -80,3 +80,9 @@ export type RHFRow<Column = Record<string, any>, Ctx = Record<string, any>> = Ro
 
   format?: (value: any, column: Column, Column: number, ctx: Ctx) => React.ReactNode;
 };
+
+export const alignClass = (align?: Align) => {
+  if (align === 'right') return 'text-right';
+  if (align === 'center') return 'text-center';
+  return 'text-left';
+};

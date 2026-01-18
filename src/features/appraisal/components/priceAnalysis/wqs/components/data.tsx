@@ -430,26 +430,10 @@ export const calculationRows: RHFRow[] = [
     header: <div>Final Value</div>,
     renderCell: ({ columns, ctx }) => {
       const x = (ctx.WQSScore ?? []).reduce((acc, curr) => acc + curr.collateral * curr.weight, 0);
-      console.log(ctx.WQSScore);
       // known_y = adjusted values of each comparable
       const known_y = (columns ?? [])
         .map((c: any) => Number(c?.adjustedValue))
         .filter(Number.isFinite);
-
-      // known_x = score totals of each comparable
-      // const known_x = (columns ?? [])
-      //   .map((c: any) => {
-      //     const row = scoreByCompId.get(c.id);
-      //     if (!row) return NaN;
-      //
-      //     return (
-      //       Number(row.survey1 ?? 0) +
-      //       Number(row.survey2 ?? 0) +
-      //       Number(row.survey3 ?? 0) +
-      //       Number(row.collateral ?? 0)
-      //     );
-      //   })
-      //   .filter(Number.isFinite);
 
       const known_x = (ctx.WQSScore ?? []).reduce(
         (acc, curr) => {
@@ -466,9 +450,8 @@ export const calculationRows: RHFRow[] = [
       if (known_x.length < 2 || known_y.length < 2 || known_x.length !== known_y.length) {
         return <div>0</div>;
       }
-
-      const finalValue = forecast(x, known_y, known_x);
-      console.log(x, known_y, known_x, finalValue);
+      console.log(x, known_y, known_x);
+      const finalValue = forecast({ x, known_y, known_x });
       return <div>{Number.isFinite(finalValue) ? finalValue.toFixed(2) : 0}</div>;
     },
   },
