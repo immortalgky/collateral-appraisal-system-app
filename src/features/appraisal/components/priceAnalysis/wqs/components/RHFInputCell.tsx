@@ -1,4 +1,4 @@
-import { NumberInput } from '@/shared/components';
+import { Dropdown, NumberInput } from '@/shared/components';
 import { Input } from '@headlessui/react';
 import { useController, useFormContext } from 'react-hook-form';
 
@@ -14,7 +14,10 @@ interface RHFInputCellProps {
 }
 export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProps) => {
   const { control, getValues } = useFormContext();
-  const { field } = useController({ control, name: fieldName });
+  const {
+    field,
+    fieldState: { errors },
+  } = useController({ control, name: fieldName });
 
   if (inputType === 'number') {
     return (
@@ -30,17 +33,18 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
 
   if (inputType === 'select') {
     return (
-      <select
-        className="w-full border border-gray-300 rounded-md px-2 py-2 text-sm"
-        value={field.value ?? ''}
-        onChange={e => field.onChange(e.target.value)}
-      >
-        {(options ?? []).map(opt => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      // <select
+      //   className="w-full border border-gray-300 rounded-md px-2 py-2 text-sm"
+      //   value={field.value ?? ''}
+      //   onChange={e => field.onChange(e.target.value)}
+      // >
+      //   {(options ?? []).map(opt => (
+      //     <option key={opt.value} value={opt.value}>
+      //       {opt.label}
+      //     </option>
+      //   ))}
+      // </select>
+      <Dropdown {...field} options={options} error={errors} />
     );
   }
 

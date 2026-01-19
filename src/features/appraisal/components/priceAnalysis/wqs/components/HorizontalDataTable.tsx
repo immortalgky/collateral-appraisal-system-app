@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { type Align, alignClass, type ColumnDef, type ColumnGroup } from './types';
 import { Icon } from '@/shared/components';
+import { string } from 'zod';
 
 interface renderHeaderProps {
   columns: ColumnDef[];
@@ -23,7 +24,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
               <th
                 key={column.id}
                 className={clsx(
-                  'text-white bg-neutral-300 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20',
+                  'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20',
                   column.className,
                 )}
                 rowSpan={hasGroup ? 2 : 1}
@@ -38,7 +39,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
             <th
               key={groupHeader.id}
               className={clsx(
-                'text-white bg-neutral-300 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 ',
+                'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 ',
                 groupHeader.className,
                 alignClass(groupHeader.align),
               )}
@@ -51,7 +52,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
         {hasAddButton && (
           <th
             className={clsx(
-              'text-white bg-neutral-300 text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 w-24',
+              'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 w-24',
             )}
             rowSpan={hasGroup ? 2 : 1}
           >
@@ -69,7 +70,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
               <th
                 key={column.id}
                 className={clsx(
-                  'text-white text-sm font-medium py-3 px-4 text-left truncate bg-neutral-300 sticky top-0 z-20',
+                  'text-white text-sm font-medium py-3 px-4 text-left truncate bg-neutral-400 sticky top-0 z-20',
                   column.className,
                   alignClass(column.align),
                 )}
@@ -91,6 +92,7 @@ interface renderBodyProps {
   isEmpty: boolean;
   hasBody: boolean;
 
+  editingRow: number | undefined;
   canEdit?: boolean;
   onEdit?: (rowIndex: number) => void;
 
@@ -109,6 +111,7 @@ const renderBody = ({
   ctx,
   isEmpty,
 
+  editingRow,
   canEdit = true,
   onEdit,
 
@@ -125,8 +128,8 @@ const renderBody = ({
     <tbody className="divide-y divide-neutral-3">
       {!isEmpty ? (
         rows.map((row, rowIndex) => (
-          <tr key={(row as any).__rowId ?? rowIndex}>
-            {columns.map(column => {
+          <tr key={rowIndex}>
+            {columns.map((column, columnIndex) => {
               const value = column.accessor
                 ? column.accessor(row, rowIndex, ctx)
                 : (row as any)?.[column.id];
@@ -134,47 +137,64 @@ const renderBody = ({
                 <td
                   key={column.id}
                   className={clsx(
-                    'py-3 px-4 border-b border-neutral-3 whitespace-nowrap truncate',
+                    'py-3 px-4 border-b border-neutral-300 whitespace-nowrap truncate',
                     alignClass(column.align),
                     column.className,
                   )}
                 >
-                  {canEdit
-                    ? column.renderCell
-                      ? column.renderCell({
+                  {hasAddButton ? (
+                    canEdit && editingRow === rowIndex ? (
+                      column.renderCell ? (
+                        column.renderCell({
                           fieldName: `${rowIndex}.${column.name}`,
                           row,
                           rowIndex,
                           value,
                           ctx,
                         })
-                      : (value ?? '')
-                    : (value ?? '')}
+                      ) : (
+                        <span>{value ?? ''}</span>
+                      )
+                    ) : (
+                      <span>{value ?? ''}</span>
+                    )
+                  ) : column.renderCell ? (
+                    column.renderCell({
+                      fieldName: `${rowIndex}.${column.name}`,
+                      row,
+                      rowIndex,
+                      value,
+                      ctx,
+                    })
+                  ) : (
+                    <span>{value ?? ''}</span>
+                  )}
                 </td>
               );
             })}
             {hasAddButton && (
-              <td className="border-b border-neutral-3">
+              <td className="border-b border-neutral-300">
                 <div className="w-full flex flex-row gap-2 justify-center items-center">
-                  {canEdit ? (
-                    <button
-                      type="button"
-                      onClick={() => onSave?.(rowIndex)}
-                      className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                      title="Save"
-                    >
-                      <Icon style="solid" name="check" className="size-3.5" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => onEdit?.(rowIndex)}
-                      className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                      title="Edit"
-                    >
-                      <Icon style="solid" name="pen" className="size-3.5" />
-                    </button>
-                  )}
+                  {canEdit &&
+                    (editingRow === rowIndex ? (
+                      <button
+                        type="button"
+                        onClick={() => onSave?.(rowIndex)}
+                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                        title="Save"
+                      >
+                        <Icon style="solid" name="check" className="size-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onEdit?.(rowIndex)}
+                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                        title="Edit"
+                      >
+                        <Icon style="solid" name="pen" className="size-3.5" />
+                      </button>
+                    ))}
                   <button
                     type="button"
                     onClick={() => onDelete?.(rowIndex)}
@@ -243,7 +263,7 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
   return (
     <tfoot>
       {!isEmpty ? (
-        <tr className="border-t-1 border-neutral-3">
+        <tr className="border-t-1 border-neutral-300">
           {columns.map(column => (
             <td
               key={column.id}
@@ -277,6 +297,7 @@ interface HorizontalDataTableProps {
   hasBody: boolean;
   hasFooter: boolean;
 
+  editingRow: number | undefined;
   canEdit?: boolean;
   onEdit?: (rowIndex: number) => void;
 
@@ -298,6 +319,7 @@ export const HorizontalDataTable = ({
   hasBody,
   hasFooter,
 
+  editingRow,
   canEdit,
   onEdit,
 
@@ -315,7 +337,7 @@ export const HorizontalDataTable = ({
     for (const columnId of group.columns) colToGroup.set(columnId, group.id);
 
   return (
-    <div className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip">
+    <div className="w-full max-h-full flex flex-col rounded-lg overflow-clip">
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-full h-full border-separate border-spacing-0">
           {hasHeader && renderHeader({ columns, colToGroup, groups, hasAddButton })}
@@ -325,6 +347,7 @@ export const HorizontalDataTable = ({
               rows,
               ctx,
               isEmpty,
+              editingRow,
               canEdit,
               onEdit,
               canSave,

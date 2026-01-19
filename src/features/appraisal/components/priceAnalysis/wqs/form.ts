@@ -1,15 +1,6 @@
 import { z } from 'zod';
 
-const WQSScore = z
-  .object({
-    id: z.string(),
-    factorCode: z.number(),
-    surveyScore: z.number(),
-    surveyWeightedScore: z.number(),
-  })
-  .passthrough();
-
-const WQSMarketSurvey = z
+const WQSCalculation = z
   .object({
     id: z.string(),
     offeringPrice: z.number(),
@@ -21,7 +12,23 @@ const WQSMarketSurvey = z
     sellingDate: z.date(),
     sellingPriceAdjustmentYear: z.number(),
     numberOfYears: z.number(),
-    WQSScores: z.array(WQSScore),
+  })
+  .passthrough();
+
+const WQSScore = z
+  .object({
+    id: z.string(),
+    factorCode: z.string(),
+    weight: z.number(),
+    intensity: z.number(),
+  })
+  .passthrough();
+
+const ComparativeData = z
+  .object({
+    id: z.string(),
+    factorCode: z.string(),
+    value: z.string(),
   })
   .passthrough();
 
@@ -30,7 +37,9 @@ export const WQSDto = z
     collateralType: z.string(),
     template: z.string(),
     finalValue: z.number(),
-    WQSMarketSurveys: z.array(WQSMarketSurvey),
+    ComparativeData: z.array(ComparativeData),
+    WQSScores: z.array(WQSScore),
+    WQSCalculations: z.array(WQSCalculation),
   })
   .passthrough();
 

@@ -3,6 +3,40 @@ import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow, RowDef } from './types'
 import { RHFInputCell } from './RHFInputCell';
 import { forecast } from './excelUtils/forecast';
 
+export const COLLATERAL_TYPE = [
+  {
+    value: 'L',
+    label: 'Land',
+  },
+  {
+    value: 'B',
+    label: 'Building',
+  },
+  {
+    value: 'LB',
+    label: 'Land and Building',
+  },
+  {
+    value: 'C',
+    label: 'Condo',
+  },
+];
+
+export const TEMPLATE = [
+  { value: 'L01', label: 'Land - 01' },
+  { value: 'B01', label: 'Building - 01' },
+  { value: 'LB01', label: 'Land and Building - 01' },
+  { value: 'C01', label: 'Condo - 01' },
+];
+
+// from template
+export const FACTORS = [
+  { value: 'L01_TEMP01', label: 'Environment', weight: 1, intensity: 10 },
+  { value: 'L01_TEMP02', label: 'Plot Location', weight: 2, intensity: 10 },
+  { value: 'L01_TEMP03', label: 'Land Shape', weight: 1, intensity: 10 },
+  { value: 'L01_TEMP04', label: 'Land Condition', weight: 1, intensity: 10 },
+];
+
 export const columns: RHFColumn[] = [
   {
     id: 'factor',
@@ -10,10 +44,7 @@ export const columns: RHFColumn[] = [
     name: 'factor',
     rhfRenderCell: {
       inputType: 'select',
-      options: [
-        { label: 'Environment', value: 'environment' },
-        { label: 'Plot Location', value: 'plotlocation' },
-      ],
+      options: FACTORS,
     },
   },
   {
@@ -39,7 +70,6 @@ export const columns: RHFColumn[] = [
     name: 'intensity',
     rhfRenderCell: { inputType: 'number' },
     align: 'right',
-
     renderFooter: ({ rows, ctx, columnIndex }) => {
       const totalIntensity = rows.reduce((acc, curr) => {
         return acc + curr[columnIndex];
@@ -55,7 +85,7 @@ export const columns: RHFColumn[] = [
     id: 'score',
     header: <div>Score</div>,
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
-      <span>{`${row['intensity'] * row['weight']}`}</span>
+      <span>{`${row['weight'] * row['intensity']}`}</span>
     ),
     align: 'right',
   },
@@ -74,9 +104,9 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    accessor: (row, rowIndex, ctx) => ({
-      score: row['survey1'],
-    }),
+    // accessor: (row, rowIndex, ctx) => ({
+    //   score: row['survey1'],
+    // }),
 
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
@@ -85,7 +115,8 @@ export const columns: RHFColumn[] = [
             <RHFInputCell fieldName={fieldName} inputType="number" />
           </div>
           <div>
-            <span>{`${row['weight'] * value.score}`}</span>
+            {/* <span>{`${row['weight'] * row.score}`}</span> */}
+            <span>{`${row['weight'] * row['survey1']}`}</span>
           </div>
         </div>
       );
@@ -106,9 +137,9 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    accessor: (row, rowIndex, ctx) => ({
-      score: row['survey2'],
-    }),
+    // accessor: (row, rowIndex, ctx) => ({
+    //   score: row['survey2'],
+    // }),
 
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
@@ -117,7 +148,8 @@ export const columns: RHFColumn[] = [
             <RHFInputCell fieldName={fieldName} inputType="number" />
           </div>
           <div>
-            <span>{`${row['weight'] * value.score}`}</span>
+            {/* <span>{`${row['weight'] * value.score}`}</span> */}
+            <span>{`${row['weight'] * row['survey2']}`}</span>
           </div>
         </div>
       );
@@ -138,9 +170,9 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    accessor: (row, rowIndex, ctx) => ({
-      score: row['survey3'],
-    }),
+    // accessor: (row, rowIndex, ctx) => ({
+    //   score: row['survey3'],
+    // }),
 
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
@@ -149,7 +181,8 @@ export const columns: RHFColumn[] = [
             <RHFInputCell fieldName={fieldName} inputType="number" />
           </div>
           <div>
-            <span>{`${row['weight'] * value.score}`}</span>
+            {/* <span>{`${row['weight'] * value.score}`}</span> */}
+            <span>{`${row['weight'] * row['survey3']}`}</span>
           </div>
         </div>
       );
@@ -170,9 +203,9 @@ export const columns: RHFColumn[] = [
       </div>
     ),
 
-    accessor: (row, rowIndex, ctx) => ({
-      score: row['collateral'],
-    }),
+    // accessor: (row, rowIndex, ctx) => ({
+    //   score: row['collateral'],
+    // }),
 
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
       return (
@@ -181,7 +214,8 @@ export const columns: RHFColumn[] = [
             <RHFInputCell fieldName={fieldName} inputType="number" />
           </div>
           <div>
-            <span>{`${row['weight'] * value.score}`}</span>
+            {/* <span>{`${row['weight'] * value.score}`}</span> */}
+            <span>{`${row['weight'] * row['collateral']}`}</span>
           </div>
         </div>
       );
@@ -205,7 +239,7 @@ export const columnGroups: ColumnGroup[] = [
 ];
 
 // default factor which initial from template
-export const rows: Record<string, any>[] = [
+export const rows = [
   {
     factor: '',
     weight: 1,
@@ -217,7 +251,7 @@ export const rows: Record<string, any>[] = [
   },
 ];
 
-export const compRows: Record<string, any>[] = [
+export const defaultComparativeData: Record<string, any>[] = [
   {
     factor: 'Environment',
     collateral: 'collateral Environment',
@@ -322,8 +356,7 @@ export const calculationRows: RHFRow[] = [
       return column['offeringPrice'];
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      // console.log(fieldName, value);
-      return <div>{`${value}`}</div>;
+      return <div>{`${value ?? ''}`}</div>;
     },
   },
   {
@@ -334,11 +367,11 @@ export const calculationRows: RHFRow[] = [
       return column['offeringPriceAdjustmentPct'] ?? null;
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return (
+      return column['offeringPrice'] ? (
         <div>
           <RHFInputCell fieldName={fieldName} inputType="number" />
         </div>
-      );
+      ) : null;
     },
   },
   {
@@ -349,11 +382,11 @@ export const calculationRows: RHFRow[] = [
       return column['offeringPriceAdjustmentAmt'] ?? null;
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return (
+      return column['offeringPrice'] ? (
         <div>
           <RHFInputCell fieldName={fieldName} inputType="number" />
         </div>
-      );
+      ) : null;
     },
   },
   {
@@ -364,7 +397,7 @@ export const calculationRows: RHFRow[] = [
       return column['sellingPrice'] ?? null;
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value}`}</div>;
+      return <div>{`${value ?? ''}`}</div>;
     },
   },
   {
@@ -372,10 +405,10 @@ export const calculationRows: RHFRow[] = [
     header: <div>Number of Years</div>,
     name: 'numberOfYears',
     accessor: (column, columnIndex, ctx) => {
-      return column['numberOfYears'] ?? null;
+      return column['numberOfYears'] ?? '';
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value}`}</div>;
+      return <div>{`${value ?? ''}`}</div>;
     },
   },
   {
@@ -383,24 +416,25 @@ export const calculationRows: RHFRow[] = [
     header: <div>Adjust Period</div>,
     name: 'sellingPriceAdjustmentYear',
     accessor: (column, columnIndex, ctx) => {
-      return column['sellingPriceAdjustmentYear'] ?? null;
+      return column['sellingPriceAdjustmentYear'] ?? '';
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return (
+      return column['sellingPrice'] ? (
         <div>
           <RHFInputCell fieldName={fieldName} inputType="number" />
         </div>
-      );
+      ) : null;
     },
   },
   {
     id: 'cumulativeAdjustedPeriod',
     header: <div>Cumulative Adjusted Period</div>,
     accessor: (column, columnIndex, ctx) => {
+      if (!column['numberOfYears'] && !column['sellingPriceAdjustmentYear']) return null;
       return column['numberOfYears'] * column['sellingPriceAdjustmentYear'];
     },
     renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value}`}</div>;
+      return <div>{`${value ?? ''}`}</div>;
     },
   },
   {
@@ -414,7 +448,9 @@ export const calculationRows: RHFRow[] = [
           return column['offeringPriceAdjustmentPct'] > 0
             ? column['offeringPrice'] -
                 (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-            : column['offeringPriceAdjustmentAmt'];
+            : column['offeringPriceAdjustmentAmt'] > 0
+              ? column['offeringPriceAdjustmentAmt']
+              : column['offeringPrice'];
         return (
           column['sellingPrice'] +
           (column['sellingPrice'] *
@@ -428,14 +464,16 @@ export const calculationRows: RHFRow[] = [
   {
     id: 'finalValue',
     header: <div>Final Value</div>,
-    renderCell: ({ columns, ctx }) => {
-      const x = (ctx.WQSScore ?? []).reduce((acc, curr) => acc + curr.collateral * curr.weight, 0);
+    renderCell: ({ columns, columnIndex, ctx }) => {
+      if (columnIndex != columns.length - 1) return '';
+      const x = (ctx.WQSScores ?? []).reduce((acc, curr) => acc + curr.collateral * curr.weight, 0);
       // known_y = adjusted values of each comparable
       const known_y = (columns ?? [])
         .map((c: any) => Number(c?.adjustedValue))
         .filter(Number.isFinite);
 
-      const known_x = (ctx.WQSScore ?? []).reduce(
+      console.log(ctx);
+      const known_x = (ctx.WQSScores ?? []).reduce(
         (acc, curr) => {
           return [
             acc[0] + curr.survey1 * curr.weight,
@@ -446,11 +484,11 @@ export const calculationRows: RHFRow[] = [
         [0, 0, 0],
       );
 
+      console.log(x, known_y, known_x, forecast({ x, known_y, known_x }));
       // must have >= 2 points
       if (known_x.length < 2 || known_y.length < 2 || known_x.length !== known_y.length) {
         return <div>0</div>;
       }
-      console.log(x, known_y, known_x);
       const finalValue = forecast({ x, known_y, known_x });
       return <div>{Number.isFinite(finalValue) ? finalValue.toFixed(2) : 0}</div>;
     },

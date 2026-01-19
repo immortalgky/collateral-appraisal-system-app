@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow } from './types';
 import { useController, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import {
@@ -65,21 +65,33 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
   const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
 
+  const [editingRow, setEditingRow] = useState<number | undefined>(undefined);
+
   const handleOnAdd = () => {
     const row = defaultRow;
+    setEditingRow(fields.length);
     append(clone(row));
   };
 
   const handleOnDelete = (rowIndex: number) => {
+    setEditingRow(undefined);
     remove(rowIndex);
+  };
+
+  const handleOnEdit = (rowIndex: number) => {
+    console.log(rowIndex);
+    setEditingRow(rowIndex);
+  };
+
+  const handleOnSave = () => {
+    setEditingRow(undefined);
   };
 
   const watchedData = useWatch({ control, name, defaultValue: [] }) ?? [];
 
-  const tableData = fields.map((f, i) => ({
-    ...(watchedData?.[i] ?? {}),
-    __id: f.id,
-  }));
+  const tableData = fields.map((f, i) => {
+    return { ...(watchedData?.[i] ?? {}), __id: f.id };
+  });
 
   const rules: DerivedRule<Ctx, T>[] = useMemo(() => {
     if (dataAlignment === 'horizontal') {
@@ -142,6 +154,10 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
           hasFooter={hasFooter}
           onAdd={handleOnAdd}
           onDelete={handleOnDelete}
+          editingRow={editingRow}
+          onEdit={handleOnEdit}
+          canEdit={true}
+          onSave={handleOnSave}
           hasAddButton={hasAddButton}
         />
       ) : (
