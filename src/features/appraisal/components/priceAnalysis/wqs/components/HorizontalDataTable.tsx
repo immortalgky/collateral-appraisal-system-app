@@ -155,6 +155,14 @@ const renderBody = ({
                       ) : (
                         <span>{value ?? ''}</span>
                       )
+                    ) : column.renderOnEditingCell ? (
+                      column.renderOnEditingCell({
+                        fieldName: `${rowIndex}.${column.name}`,
+                        row,
+                        rowIndex,
+                        value,
+                        ctx,
+                      })
                     ) : (
                       <span>{value ?? ''}</span>
                     )
@@ -238,21 +246,6 @@ const renderBody = ({
   );
 };
 
-/*
-{
-  id: 'survey1',
-  offeringPrice: 0,
-  offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-  offeringPriceAdjustmentAmt: 0,
-},
-{
-  id: 'survey2',
-  offeringPrice: 0,
-  offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-  offeringPriceAdjustmentAmt: 0,
-},
-*/
-
 interface renderFooterProps {
   columns: ColumnDef[];
   rows: any[];
@@ -277,11 +270,7 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
             </td>
           ))}
         </tr>
-      ) : (
-        <tr>
-          <td>Empty</td>
-        </tr>
-      )}
+      ) : null}
     </tfoot>
   );
 };

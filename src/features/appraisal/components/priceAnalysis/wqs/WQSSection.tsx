@@ -3,15 +3,13 @@ import { RHFArrayTable } from './components/RHFArrayTable';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  calculation,
   calculationRows,
   COLLATERAL_TYPE,
   columnGroups,
   columns,
   compColumns,
-  defaultComparativeData,
+  DEFAULT_WQSSCORE_ROW,
   FACTORS,
-  rows,
   TEMPLATE,
 } from './components/data';
 import { WQSDto, type WQSRequestType } from './form';
@@ -48,6 +46,7 @@ export const WQSSection = () => {
       collateralType: 'land',
       template: '01',
       finalValue: 0,
+      roundedFinalValue: 0,
       comparativeData: [
         {
           factor: 'Environment',
@@ -158,15 +157,24 @@ export const WQSSection = () => {
                 onClick={() => console.log('Generate!')}
                 className="px-4 py-2 border border-gray-300 rounded-lg"
               >
-                GENERATE
+                Generate
               </button>
             </div>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => console.log('Generate!')}
+              className="px-4 py-2 border border-gray-300 rounded-lg"
+            >
+              Add Comparative Data
+            </button>
           </div>
           <div>
             <RHFArrayTable
               name="comparativeData"
               columns={compColumns}
-              hasAddButton={false}
+              hasAddButton={true}
               hasFooter={false}
             />
           </div>
@@ -175,7 +183,8 @@ export const WQSSection = () => {
               name="WQSScores"
               columns={columns}
               groups={columnGroups}
-              defaultRow={rows}
+              defaultRow={DEFAULT_WQSSCORE_ROW}
+              ctx={FACTORS}
             />
             <div className="border-y border-neutral-300 flex justify-center h-14 text-sm items-center">
               {`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}
@@ -184,7 +193,6 @@ export const WQSSection = () => {
               name="WQSCalculations"
               dataAlignment="vertical"
               rows={calculationRows}
-              defaultRow={calculation}
               hasHeader={false}
               hasAddButton={false}
               watch={{ WQSScores: 'WQSScores' }}

@@ -28,6 +28,14 @@ export interface ColumnDef<Row = Record<string, any>, Ctx = Record<string, any>>
     ctx: Ctx;
   }) => React.ReactNode;
 
+  renderOnEditingCell?: (args: {
+    fieldName: string;
+    row: Row;
+    rowIndex: number;
+    value: any;
+    ctx: Ctx;
+  }) => React.ReactNode;
+
   accessor?: (row: Row, rowIndex: number, ctx: Ctx) => any;
 
   renderFooter?: (args: { rows: Row[]; ctx: Ctx; columnIndex: string }) => React.ReactNode;
@@ -35,7 +43,7 @@ export interface ColumnDef<Row = Record<string, any>, Ctx = Record<string, any>>
 
 export type RHFColumn<Row = Record<string, any>, Ctx = Record<string, any>> = ColumnDef & {
   derived?: {
-    compute: (args: { row: Row; rows: Row[]; rowIndex: number; ctx: Ctx }) => number;
+    compute: (args: { row: Row; rows: Row[]; rowIndex: number; getValue: any; ctx: Ctx }) => number;
 
     normalize?: (v: number) => number;
     persist?: boolean; // default true
@@ -61,6 +69,14 @@ export type RowDef<Column = Record<string, any>, Ctx = Record<string, any>> = {
     column: any;
     columns: any[];
     columnIndex: number;
+    value: any;
+    ctx: Ctx;
+  }) => React.ReactNode;
+
+  renderOnEditingCell?: (args: {
+    fieldName: string;
+    row: Row;
+    rowIndex: number;
     value: any;
     ctx: Ctx;
   }) => React.ReactNode;
