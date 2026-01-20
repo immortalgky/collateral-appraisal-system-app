@@ -8,6 +8,7 @@ interface VerticalDataTableTableProps {
   ctx: any;
   hasBody?: boolean;
 
+  editingColumn: number | undefined;
   canEdit?: boolean;
   onEdit?: (rowIndex: number) => void;
 
@@ -26,6 +27,7 @@ export const VerticalDataTable = ({
   ctx,
   hasBody = true,
 
+  editingColumn,
   canEdit = true,
   onEdit,
 
@@ -44,6 +46,53 @@ export const VerticalDataTable = ({
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-full h-full border-separate border-spacing-0">
           <tbody className="divide-y divide-neutral-300">
+            {/* Action row use for take action on column*/}
+            {hasAddButton && (
+              <tr>
+                <th className="text-white text-sm font-medium py-3 px-4 truncate sticky left-0 z-20  w-100">
+                  Action
+                </th>
+                {!isEmpty &&
+                  columns.map((column, columnIndex) => {
+                    return (
+                      hasAddButton && (
+                        <td className="border-b border-neutral-300 bg-neutral-400 w-30">
+                          <div className="w-full flex flex-row gap-2 justify-center items-center">
+                            {canEdit && columnIndex === editingColumn ? (
+                              <button
+                                type="button"
+                                onClick={() => onSave?.(columnIndex)}
+                                className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                                title="Save"
+                              >
+                                <Icon style="solid" name="check" className="size-3.5" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => onEdit?.(columnIndex)}
+                                className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                                title="Edit"
+                              >
+                                <Icon style="solid" name="pen" className="size-3.5" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onDelete?.(columnIndex)}
+                              className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                              title="Delete"
+                            >
+                              <Icon style="solid" name="trash" className="size-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      )
+                    );
+                  })}
+              </tr>
+            )}
+            {/* body */}
             {!isEmpty ? (
               rows.map((row, rowIndex) => (
                 <tr key={(row as any).__rowId ?? rowIndex}>
@@ -69,9 +118,10 @@ export const VerticalDataTable = ({
                           row.className,
                         )}
                       >
-                        {canEdit
-                          ? row.renderCell
-                            ? row.renderCell({
+                        {hasAddButton ? (
+                          canEdit && editingColumn === columnIndex ? (
+                            row.renderCell ? (
+                              row.renderCell({
                                 fieldName: `${columnIndex}.${row.name}`,
                                 column,
                                 columns,
@@ -79,45 +129,27 @@ export const VerticalDataTable = ({
                                 value,
                                 ctx,
                               })
-                            : (value ?? '')
-                          : (value ?? '')}
+                            ) : (
+                              <span>{value ?? ''}</span>
+                            )
+                          ) : (
+                            <span>{value ?? ''}</span>
+                          )
+                        ) : row.renderCell ? (
+                          row.renderCell({
+                            fieldName: `${columnIndex}.${row.name}`,
+                            column,
+                            columns,
+                            columnIndex,
+                            value,
+                            ctx,
+                          })
+                        ) : (
+                          <span>{value ?? ''}</span>
+                        )}
                       </td>
                     );
                   })}
-
-                  {hasAddButton && (
-                    <td className="border-b border-neutral-3">
-                      <div className="w-full flex flex-row gap-2 justify-center items-center">
-                        {canEdit ? (
-                          <button
-                            type="button"
-                            onClick={() => onSave?.(rowIndex)}
-                            className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                            title="Save"
-                          >
-                            <Icon style="solid" name="check" className="size-3.5" />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onEdit?.(rowIndex)}
-                            className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                            title="Edit"
-                          >
-                            <Icon style="solid" name="pen" className="size-3.5" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => onDelete?.(rowIndex)}
-                          className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  )}
                 </tr>
               ))
             ) : (

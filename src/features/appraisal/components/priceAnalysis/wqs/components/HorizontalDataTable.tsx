@@ -181,10 +181,10 @@ const renderBody = ({
               );
             })}
             {hasAddButton && (
-              <td className="border-b border-neutral-300">
+              <td className="border-b border-neutral-300 w-30">
                 <div className="w-full flex flex-row gap-2 justify-center items-center">
-                  {canEdit &&
-                    (editingRow === rowIndex ? (
+                  {canEdit ? (
+                    editingRow === rowIndex ? (
                       <button
                         type="button"
                         onClick={() => onSave?.(rowIndex)}
@@ -202,7 +202,17 @@ const renderBody = ({
                       >
                         <Icon style="solid" name="pen" className="size-3.5" />
                       </button>
-                    ))}
+                    )
+                  ) : canSave ? (
+                    <button
+                      type="button"
+                      onClick={() => onSave?.(rowIndex)}
+                      className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                      title="Save"
+                    >
+                      <Icon style="solid" name="check" className="size-3.5" />
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => onDelete?.(rowIndex)}

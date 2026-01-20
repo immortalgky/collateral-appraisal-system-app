@@ -117,6 +117,7 @@ export const columns: RHFColumn[] = [
     id: 'weight',
     header: <div>Weight</div>,
     name: 'weight',
+    className: 'w-30',
     rhfRenderCell: { inputType: 'number' },
 
     renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
@@ -134,6 +135,7 @@ export const columns: RHFColumn[] = [
     id: 'intensity',
     header: <div>Intensity</div>,
     name: 'intensity',
+    className: 'w-30',
     align: 'right',
     renderCell: ({ fieldName, row, ctx }) => {
       // if (row['factor'] ==)
@@ -153,11 +155,11 @@ export const columns: RHFColumn[] = [
   {
     id: 'score',
     header: <div>Score</div>,
+    className: 'w-16',
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
       <span>{`${row['weight'] * row['intensity']}`}</span>
     ),
     renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-      console.log(row);
       return <span>{`${row['weight'] * row['intensity']}`}</span>;
     },
     align: 'right',
@@ -561,7 +563,6 @@ export const calculationRows: RHFRow[] = [
         .map((c: any) => Number(c?.adjustedValue))
         .filter(Number.isFinite);
 
-      console.log(ctx);
       const known_x = (ctx.WQSScores ?? []).reduce(
         (acc, curr) => {
           return [
@@ -573,7 +574,6 @@ export const calculationRows: RHFRow[] = [
         [0, 0, 0],
       );
 
-      console.log(x, known_y, known_x, forecast({ x, known_y, known_x }));
       // must have >= 2 points
       if (known_x.length < 2 || known_y.length < 2 || known_x.length !== known_y.length) {
         return <div>0</div>;
@@ -586,7 +586,6 @@ export const calculationRows: RHFRow[] = [
     id: 'roundedFinalValue',
     header: <div>Final Value</div>,
     renderCell: ({ fieldName, columns, columnIndex }) => {
-      console.log(fieldName);
       if (columnIndex !== columns.length - 1) return '';
       return <RHFInputCell fieldName={'roundedFinalValue'} inputType="number" />;
     },

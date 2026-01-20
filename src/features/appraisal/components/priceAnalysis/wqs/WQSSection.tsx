@@ -176,6 +176,7 @@ export const WQSSection = () => {
               columns={compColumns}
               hasAddButton={true}
               hasFooter={false}
+              canEdit={false}
             />
           </div>
           <div className="border border-neutral-300 rounded-lg overflow-clip">
@@ -195,6 +196,7 @@ export const WQSSection = () => {
               rows={calculationRows}
               hasHeader={false}
               hasAddButton={false}
+              canEdit={true}
               watch={{ WQSScores: 'WQSScores' }}
             />
           </div>

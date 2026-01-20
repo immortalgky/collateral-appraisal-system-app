@@ -37,8 +37,10 @@ type RHFArrayTableProps<Row = Record<string, any>, Ctx = any> =
       groups: ColumnGroup;
       ctx: Partial<Ctx>;
       watch?: Record<string, string>;
-      onEdit?: (rowIndex: number, handleOnEdit: () => void) => void;
-      onSave?: (rowIndex: number, handleOnEdit: () => void) => void;
+      canEdit?: boolean;
+      onEdit?: (rowIndex: number, handleOnEdit: (rowIndex: number) => void) => void;
+      canSave?: boolean;
+      onSave?: (rowIndex: number, handleOnEdit: (rowIndex: number) => void) => void;
       hasHeader: boolean;
       hasFooter: boolean;
       hasAddButton: boolean;
@@ -52,7 +54,9 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
   defaultRow,
   ctx,
   watch,
+  canEdit = true,
   onEdit,
+  canSave,
   onSave,
   hasHeader = true,
   hasBody = true,
@@ -79,7 +83,6 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
   };
 
   const handleOnEdit = (rowIndex: number) => {
-    console.log(rowIndex);
     setEditingRow(rowIndex);
   };
 
@@ -155,9 +158,12 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
           onAdd={handleOnAdd}
           onDelete={handleOnDelete}
           editingRow={editingRow}
-          onEdit={handleOnEdit}
-          canEdit={true}
+          onEdit={rowIndex => {
+            return onEdit ? onEdit(rowIndex, handleOnEdit) : handleOnEdit(rowIndex);
+          }}
+          canEdit={canEdit}
           onSave={handleOnSave}
+          canSave={canSave}
           hasAddButton={hasAddButton}
         />
       ) : (
@@ -186,9 +192,15 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
                   );
                 },
           }))}
-          hasAddButton={false}
+          hasAddButton={hasAddButton}
           onAdd={handleOnAdd}
           onDelete={handleOnDelete}
+          editingColumn={editingRow}
+          onEdit={rowIndex => {
+            return onEdit ? onEdit(rowIndex, handleOnEdit) : handleOnEdit(rowIndex);
+          }}
+          canEdit={canEdit}
+          onSave={handleOnSave}
           ctx={tableCtx}
         />
       )}
