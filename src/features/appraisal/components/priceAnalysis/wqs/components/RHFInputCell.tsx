@@ -33,18 +33,12 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
 
   if (inputType === 'select') {
     return (
-      // <select
-      //   className="w-full border border-gray-300 rounded-md px-2 py-2 text-sm"
-      //   value={field.value ?? ''}
-      //   onChange={e => field.onChange(e.target.value)}
-      // >
-      //   {(options ?? []).map(opt => (
-      //     <option key={opt.value} value={opt.value}>
-      //       {opt.label}
-      //     </option>
-      //   ))}
-      // </select>
-      <Dropdown {...field} options={options} error={errors} />
+      <Dropdown
+        {...field}
+        options={options}
+        placeholder={getValues(fieldName) ?? null}
+        error={errors}
+      />
     );
   }
 
@@ -54,6 +48,10 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
   }
 
   if (inputType === 'display') {
-    return <span>{`${getValues(fieldName)}`}</span>;
+    return (
+      <div className="truncate" title={getValues(fieldName)}>
+        <span>{`${getValues(fieldName)}`}</span>
+      </div>
+    );
   }
 };

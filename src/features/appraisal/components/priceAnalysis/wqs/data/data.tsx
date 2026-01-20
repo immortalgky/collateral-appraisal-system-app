@@ -1,30 +1,38 @@
-import { NumberInput } from '@/shared/components';
-import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow, RowDef } from './types';
-import { RHFInputCell } from './RHFInputCell';
-import { forecast } from './excelUtils/forecast';
+import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow, RowDef } from '../components/types';
+import { RHFInputCell } from '../components/RHFInputCell';
+import { forecast } from '../components/excelUtils/forecast';
+import { MOC_COMPARATIVE_DATA_LAND } from './comparativeData';
 
-export const SURVEYDATA = [
+/* Collateral type in group, Initial on loading price analysis page*/
+export const PROPERTIES = [
   {
-    id: 'SURVEY_01',
-    offeringPrice: 22750,
-    offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-    offeringPriceAdjustmentAmt: 0,
-    sellingPrice: null,
-    sellingPriceMeasurementUnit: null,
-    sellingDate: null,
-    sellingPriceAdjustmentYear: null,
-    numberOfYears: null,
+    collateralType: 'L',
+    environment: 'ที่อยู่อาศัย และอุตสาหกรรม',
+    plotLocation: 'แปลงกลาง',
+    landShape: 'รูปหลายเหลี่ยม',
+    landCondition: 'ถมแล้ว',
+    landArea: 17518.6,
+    roadFrontage: 284,
+    maximunUtilization: 'อุตสาหกรรม',
+    laws: 'ที่ดินประเภทอุตสาหกรรม และคลังสินค้า',
   },
   {
-    id: 'SURVEY_02',
-    offeringPrice: 22000,
-    offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-    offeringPriceAdjustmentAmt: 0,
-    sellingPrice: null,
-    sellingPriceMeasurementUnit: null,
-    sellingDate: null,
-    sellingPriceAdjustmentYear: null,
-    numberOfYears: null,
+    collateralType: 'LB',
+    addressLocation: 'ถนนภายในโครงการ',
+    plotLocation: 'แปลงกลาง',
+    buildingCondition: 'ปานกลาง',
+    facility: 'คลับเฮ้าส์ สวนสาธารณะ',
+    landArea: 65,
+    usableArea: 206,
+    developerReputation: 'บจก ดีๆ ที่มีชื่อเสียงนิดหน่อย',
+  },
+  {
+    collateralType: 'C',
+    condoName: 'พลัส 38 คอนโดมีเนียม',
+    facility: 'สระว่ายน้ำ ห้องฟิตเนส',
+    roomCondition: 'ปานกลาง',
+    roomFloor: '5',
+    usableArea: 73.63,
   },
 ];
 
@@ -47,13 +55,6 @@ export const COLLATERAL_TYPE = [
   },
 ];
 
-export const TEMPLATE = [
-  { value: 'L01', label: 'Land - 01' },
-  { value: 'B01', label: 'Building - 01' },
-  { value: 'LB01', label: 'Land and Building - 01' },
-  { value: 'C01', label: 'Condo - 01' },
-];
-
 export const ALL_FACTORS = [
   { value: '01', label: 'Environment' },
   { value: '02', label: 'Plot Location' },
@@ -62,18 +63,30 @@ export const ALL_FACTORS = [
   { value: '05', label: 'Wide frontage of land adjacent to the road' },
   { value: '06', label: 'Maximum Utilization' },
   { value: '07', label: 'Rule/ Law' },
-  { value: '08', label: 'Offering Price' },
-  { value: '09', label: 'Selling Price' },
-  { value: '10', label: 'Adjustment of Offer Price (Pct)' },
-  { value: '11', label: 'Adjustment of Offer Price (Amt)' },
-  { value: '12', label: 'Information Date/ Time' },
-  { value: '13', label: 'Adjustment of Period (Pct)' },
+  { value: '08', label: 'Address/ Location' },
+
+  { value: '09', label: 'Building condition' },
+  { value: '10', label: 'Facility' },
+  { value: '11', label: 'Usable area' },
+  { value: '12', label: 'Developer reputation' },
+
+  { value: '13', label: 'Room condition' },
+  { value: '14', label: 'Room floor' },
+  { value: '15', label: 'Project Name/ Village Name' },
+
+  { value: '15', label: 'Offering Price' },
+  { value: '16', label: 'Selling Price' },
+  { value: '17', label: 'Adjustment of Offer Price (Pct)' },
+  { value: '18', label: 'Adjustment of Offer Price (Amt)' },
+  { value: '19', label: 'Information Date/ Time' },
+  { value: '20', label: 'Adjustment of Period (Pct)' },
 ];
 
-export const TEMP = [
+export const TEMPLATE = [
   {
     id: 'L01',
-    collateralId: 'L',
+    label: 'LAND_01',
+    collateralType: 'L',
     factors: [
       { id: '01', weight: 1, intensity: 10 },
       { id: '02', weight: 2, intensity: 10 },
@@ -83,15 +96,89 @@ export const TEMP = [
     ],
   },
   {
-    id: 'L02',
-    collateralId: 'L',
+    id: 'LB01',
+    label: 'LB_01',
+    collateralType: 'LB',
     factors: [
-      { id: '01', weight: 1, intensity: 10 },
-      { id: '04', weight: 2, intensity: 10 },
-      { id: '05', weight: 2, intensity: 10 },
-      { id: '06', weight: 1, intensity: 10 },
-      { id: '07', weight: 1, intensity: 10 },
+      { id: '02', weight: 1, intensity: 10 },
+      { id: '04', weight: 1, intensity: 10 },
+      { id: '08', weight: 2, intensity: 10 },
+      { id: '09', weight: 2, intensity: 10 },
+      { id: '10', weight: 1, intensity: 10 },
+      { id: '11', weight: 1, intensity: 10 },
+      { id: '12', weight: 1, intensity: 10 },
     ],
+  },
+  {
+    id: 'C01',
+    label: 'CONDO_01',
+    collateralType: 'C',
+    factors: [
+      { id: '15', weight: 1, intensity: 10 },
+      { id: '10', weight: 1, intensity: 10 },
+      { id: '03', weight: 2, intensity: 10 },
+      { id: '14', weight: 2, intensity: 10 },
+      { id: '10', weight: 1, intensity: 10 },
+      { id: '11', weight: 1, intensity: 10 },
+    ],
+  },
+];
+
+export const SURVEYDATA = [
+  {
+    id: 'SURVEY_01',
+    offeringPrice: 22750,
+    offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+    offeringPriceAdjustmentAmt: undefined,
+    sellingPrice: undefined,
+    sellingPriceMeasurementUnit: undefined,
+    sellingDate: undefined,
+    sellingPriceAdjustmentYear: undefined,
+    numberOfYears: undefined,
+  },
+  {
+    id: 'SURVEY_02',
+    offeringPrice: 22000,
+    offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+    offeringPriceAdjustmentAmt: undefined,
+    sellingPrice: undefined,
+    sellingPriceMeasurementUnit: undefined,
+    sellingDate: undefined,
+    sellingPriceAdjustmentYear: undefined,
+    numberOfYears: undefined,
+  },
+  {
+    id: 'SURVEY_03',
+    offeringPrice: undefined,
+    offeringPriceMeasurementUnit: undefined,
+    offeringPriceAdjustmentAmt: undefined,
+    sellingPrice: 30000,
+    sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
+    sellingDate: undefined,
+    sellingPriceAdjustmentYear: undefined,
+    numberOfYears: 8,
+  },
+  {
+    id: 'SURVEY_04',
+    offeringPrice: 30000,
+    offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+    offeringPriceAdjustmentAmt: undefined,
+    sellingPrice: undefined,
+    sellingPriceMeasurementUnit: undefined,
+    sellingDate: undefined,
+    sellingPriceAdjustmentYear: undefined,
+    numberOfYears: undefined,
+  },
+  {
+    id: 'SURVEY_05',
+    offeringPrice: undefined,
+    offeringPriceMeasurementUnit: undefined,
+    offeringPriceAdjustmentAmt: undefined,
+    sellingPrice: 21500,
+    sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
+    sellingDate: undefined,
+    sellingPriceAdjustmentYear: undefined,
+    numberOfYears: 6,
   },
 ];
 
@@ -103,11 +190,82 @@ export const FACTORS = [
   { value: 'L01_TEMP04', label: 'Land Condition', weight: 1, intensity: 10 },
 ];
 
+export const WQS_LAND = {
+  collateralType: 'land',
+  template: '01',
+  finalValue: 0,
+  roundedFinalValue: 0,
+  comparativeData: MOC_COMPARATIVE_DATA_LAND, // template factors join property join market surveys
+  WQSScores: [
+    {
+      id: `${FACTORS[0].value}`,
+      factorCode: FACTORS[0].value,
+      factor: FACTORS[0].label,
+      weight: FACTORS[0].weight,
+      intensity: FACTORS[0].intensity,
+      survey1: 0,
+      survey2: 0,
+      survey3: 0,
+      collateral: 0,
+    },
+    {
+      id: `${FACTORS[1].value}`,
+      factorCode: FACTORS[0].value,
+      factor: FACTORS[0].label,
+      weight: FACTORS[0].weight,
+      intensity: FACTORS[0].intensity,
+      survey1: 0,
+      survey2: 0,
+      survey3: 0,
+      collateral: 0,
+    },
+  ],
+  WQSCalculations: [
+    {
+      id: 'survey1',
+      offeringPrice: 22750,
+      offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+      offeringPriceAdjustmentAmt: 0,
+      sellingPrice: undefined,
+      sellingPriceMeasurementUnit: undefined,
+      sellingDate: undefined,
+      sellingPriceAdjustmentYear: undefined,
+      numberOfYears: undefined,
+    },
+    {
+      id: 'survey2',
+      offeringPrice: 22500,
+      offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+      offeringPriceAdjustmentAmt: 0,
+      sellingPrice: undefined,
+      sellingPriceMeasurementUnit: undefined,
+      sellingDate: undefined,
+      sellingPriceAdjustmentYear: undefined,
+      numberOfYears: undefined,
+    },
+    {
+      id: 'survey3',
+      offeringPrice: undefined,
+      offeringPriceMeasurementUnit: undefined,
+      offeringPriceAdjustmentAmt: undefined,
+      sellingPrice: 21500,
+      sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
+      sellingDate: undefined,
+      sellingPriceAdjustmentYear: 0,
+      numberOfYears: 6,
+    },
+    {
+      id: 'collateral',
+    },
+  ],
+};
+
 export const columns: RHFColumn[] = [
   {
     id: 'factor',
     header: <div>Factor</div>,
     name: 'factor',
+    className: 'w-60',
     rhfRenderCell: {
       inputType: 'select',
       options: FACTORS,
@@ -155,7 +313,7 @@ export const columns: RHFColumn[] = [
   {
     id: 'score',
     header: <div>Score</div>,
-    className: 'w-16',
+    className: 'w-30',
     renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
       <span>{`${row['weight'] * row['intensity']}`}</span>
     ),
@@ -345,6 +503,7 @@ export const columnGroups: ColumnGroup[] = [
     label: <span>Calculation</span>,
     columns: ['intensity', 'score'],
     align: 'center',
+    className: 'w-60',
   },
   {
     id: 'group 2',
@@ -364,66 +523,6 @@ export const DEFAULT_WQSSCORE_ROW = [
     survey2: 0,
     survey3: 0,
     collateral: 0,
-  },
-];
-
-export const defaultComparativeData: Record<string, any>[] = [
-  {
-    factor: 'Environment',
-    collateral: 'collateral Environment',
-    survey1: 'survey 1 - Environment',
-    survey2: 'survey 2 - Environment',
-    survey3: 'survey 3 - Environment',
-  },
-  {
-    factor: 'Plot Location',
-    collateral: 'collateral Plot Location',
-    survey1: 'survey 1 - Plot Location',
-    survey2: 'survey 2 - Plot Location',
-    survey3: 'survey 3 - Plot Location',
-  },
-];
-
-export const compColumns: ColumnDef[] = [
-  {
-    id: 'factor',
-    header: <div>Factor</div>,
-    name: 'factor',
-    rhfRenderCell: {
-      inputType: 'display',
-    },
-  },
-  {
-    id: 'collateral',
-    header: <div>collateral</div>,
-    name: 'collateral',
-    rhfRenderCell: {
-      inputType: 'display',
-    },
-  },
-  {
-    id: 'survey1',
-    header: <div>survey 1</div>,
-    name: 'survey1',
-    rhfRenderCell: {
-      inputType: 'display',
-    },
-  },
-  {
-    id: 'survey2',
-    header: <div>survey 2</div>,
-    name: 'survey2',
-    rhfRenderCell: {
-      inputType: 'display',
-    },
-  },
-  {
-    id: 'survey3',
-    header: <div>survey 3</div>,
-    name: 'survey3',
-    rhfRenderCell: {
-      inputType: 'display',
-    },
   },
 ];
 

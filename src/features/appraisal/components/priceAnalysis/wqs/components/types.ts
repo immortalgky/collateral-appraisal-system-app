@@ -36,7 +36,7 @@ export interface ColumnDef<Row = Record<string, any>, Ctx = Record<string, any>>
     ctx: Ctx;
   }) => React.ReactNode;
 
-  accessor?: (row: Row, rowIndex: number, ctx: Ctx) => any;
+  accessor?: (args: { row: Row; rowIndex: number; columnIndex: number; ctx: Ctx }) => any;
 
   renderFooter?: (args: { rows: Row[]; ctx: Ctx; columnIndex: string }) => React.ReactNode;
 }

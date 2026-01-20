@@ -131,7 +131,7 @@ const renderBody = ({
           <tr key={rowIndex}>
             {columns.map((column, columnIndex) => {
               const value = column.accessor
-                ? column.accessor(row, rowIndex, ctx)
+                ? column.accessor(row, rowIndex, columnIndex, ctx)
                 : (row as any)?.[column.id];
               return (
                 <td
