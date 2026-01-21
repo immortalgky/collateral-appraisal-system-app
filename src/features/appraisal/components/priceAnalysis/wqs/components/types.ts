@@ -26,6 +26,9 @@ export interface ColumnDef<Row = Record<string, any>, Ctx = Record<string, any>>
     rowIndex: number;
     value: any;
     ctx: Ctx;
+    onSave: (rowIndex: number) => void;
+    onRemove: (rowIndex: number) => void;
+    onAdd: () => void;
   }) => React.ReactNode;
 
   renderOnEditingCell?: (args: {

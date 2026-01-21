@@ -42,7 +42,7 @@ export const VerticalDataTable = ({
 }: VerticalDataTableTableProps) => {
   const isEmpty: boolean = columns.length === 0;
   return (
-    <div className="w-full max-h-full flex flex-col rounded-lg overflow-clip">
+    <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-full h-full border-separate border-spacing-0">
           <tbody className="divide-y divide-neutral-300">

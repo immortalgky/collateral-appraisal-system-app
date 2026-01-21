@@ -35,9 +35,9 @@ const ComparativeData = z
 export const WQSDto = z
   .object({
     collateralType: z.string(),
-    template: z.string(),
+    templateId: z.string(),
     finalValue: z.number(),
-    ComparativeData: z.array(ComparativeData),
+    comparativeData: z.array(ComparativeData),
     WQSScores: z.array(WQSScore),
     WQSCalculations: z.array(WQSCalculation),
   })

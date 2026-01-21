@@ -1,13 +1,43 @@
 import { Dropdown, Icon } from '@/shared/components';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { COLLATERAL_TYPE, TEMPLATE, WQS_LAND } from './data/data';
+import {
+  ALL_FACTORS,
+  COLLATERAL_TYPE,
+  FACTORS,
+  MAPPING_FACTORS_PROPERTIES_FIELDS,
+  PROPERTIES,
+  TEMPLATE,
+} from './data/data';
 import { WQSDto, type WQSRequestType } from './form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { ComparativeSection } from './ComparativeSection';
 import { CalculationSection } from './CalculationSection';
 import { useEffect, useState } from 'react';
-import { MOC_COMPARATIVE_DATA_LAND } from './data/comparativeData';
+import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
+
+export const getDesciptions = (id: string) => {
+  const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
+  return factors.get(id) ?? null;
+};
+
+const getCollateralTypeDescriptions = (id: string) => {
+  const factors = new Map(COLLATERAL_TYPE.map(factor => [factor.value, factor.label]));
+  return factors.get(id) ?? null;
+};
+
+export const getPropertyValueByFactorCode = (id: string) => {
+  const mapping = new Map(
+    MAPPING_FACTORS_PROPERTIES_FIELDS.map(factor => [factor.id, factor.value]),
+  );
+
+  const field = mapping.get(id);
+
+  if (!field) return '';
+
+  const property = PROPERTIES[0];
+  return property[field] ?? '';
+};
 
 export const WQSSection = () => {
   /**
@@ -37,19 +67,79 @@ export const WQSSection = () => {
   // });
 
   const methods = useForm<WQSRequestType>({
-    defaultValues: WQS_LAND,
+    // defaultValues: WQS_LAND,
     resolver: zodResolver(WQSDto),
   });
 
   const { handleSubmit, getValues, reset } = methods;
+  const [collateralType, setCollateralType] = useState<string | undefined>('');
+  const [templateId, setTemplateId] = useState<string | undefined>('');
+  const [onLoading, setOnLoading] = useState<boolean>(true);
 
-  const [comparativeData, setComparativeData] = useState<any>();
+  const handleOnGenerate = () => {
+    if (!templateId) return;
 
-  useEffect(() => {
     setTimeout(() => {
-      setComparativeData(MOC_COMPARATIVE_DATA_LAND);
-    }, 500); // 500ms minimum loading time
-  }, [comparativeData]);
+      setOnLoading(true);
+      reset({
+        collateralType: collateralType,
+        template: templateId,
+        finalValue: 0,
+        roundedFinalValue: 0,
+        comparativeData: TEMPLATE.find(t => t.id === templateId).comparativeFactors.map(
+          compFact => ({
+            factorId: compFact.id,
+          }),
+        ),
+        WQSScores: TEMPLATE.find(t => t.id === templateId)?.calculationFactors.map(calFact => ({
+          factorId: calFact.id,
+          weight: calFact.weight,
+          intensity: calFact.intensity,
+          surveys: [],
+          collateral: 0,
+        })),
+        WQSCalculations: [
+          {
+            id: 'survey1',
+            offeringPrice: 22750,
+            offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+            offeringPriceAdjustmentAmt: 0,
+            sellingPrice: undefined,
+            sellingPriceMeasurementUnit: undefined,
+            sellingDate: undefined,
+            sellingPriceAdjustmentYear: undefined,
+            numberOfYears: undefined,
+          },
+          {
+            id: 'survey2',
+            offeringPrice: 22500,
+            offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+            offeringPriceAdjustmentAmt: 0,
+            sellingPrice: undefined,
+            sellingPriceMeasurementUnit: undefined,
+            sellingDate: undefined,
+            sellingPriceAdjustmentYear: undefined,
+            numberOfYears: undefined,
+          },
+          {
+            id: 'survey3',
+            offeringPrice: undefined,
+            offeringPriceMeasurementUnit: undefined,
+            offeringPriceAdjustmentAmt: undefined,
+            sellingPrice: 21500,
+            sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
+            sellingDate: undefined,
+            sellingPriceAdjustmentYear: 0,
+            numberOfYears: 6,
+          },
+          {
+            id: 'collateral',
+          },
+        ],
+      });
+      setOnLoading(false);
+    }, 1000);
+  };
 
   const onSubmit = data => {
     console.log(getValues());
@@ -72,47 +162,64 @@ export const WQSSection = () => {
           <div className="flex items-center gap-4">
             <span>Pricing Analysis Template</span>
             <div>
-              <Dropdown label="Collateral Type" options={COLLATERAL_TYPE} />
+              <Dropdown
+                label="Collateral Type"
+                options={[...COLLATERAL_TYPE]}
+                value={collateralType}
+                onChange={value => {
+                  setCollateralType(value);
+                }}
+              />
             </div>
             <div>
-              <Dropdown label="Template" options={TEMPLATE} />
+              <Dropdown
+                label="Template"
+                options={
+                  TEMPLATE.filter(t => t.collateralType === collateralType).map(t => ({
+                    value: t.id,
+                    label: t.label,
+                  })) ?? ''
+                }
+                value={templateId}
+                onChange={value => {
+                  setTemplateId(value);
+                }}
+              />
             </div>
             <div>
               <button
                 type="button"
-                onClick={() => console.log('Generate!')}
+                onClick={() => handleOnGenerate()}
                 className="px-4 py-2 border border-gray-300 rounded-lg"
               >
                 Generate
               </button>
             </div>
           </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => console.log('Generate!')}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
-            >
-              Add Comparative Data
-            </button>
-          </div>
-          <div>
-            <ComparativeSection comparativeData={comparativeData} />
-          </div>
-          <div>
-            <CalculationSection />
-          </div>
-          <div>
-            <AdjustFinalValueSection />
-          </div>
-          <div>
-            <button type="submit">Submit</button>
-          </div>
-          <div>
-            <button type="button" onClick={() => onDraft()}>
-              Draft
-            </button>
-          </div>
+          {!onLoading && (
+            <div className="flex flex-col gap-4">
+              <div>
+                <ComparativeSection
+                  comparativeData={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND}
+                  surveyData={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND}
+                />
+              </div>
+              <div>
+                <CalculationSection comparativeData={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND} />
+              </div>
+              <div>
+                <AdjustFinalValueSection />
+              </div>
+              <div>
+                <button type="submit">Submit</button>
+              </div>
+              <div>
+                <button type="button" onClick={() => onDraft()}>
+                  Draft
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </form>
     </FormProvider>

@@ -49,7 +49,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
             </th>
           );
         })}
-        {hasAddButton && (
+        {/* {hasAddButton && (
           <th
             className={clsx(
               'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 w-24',
@@ -58,13 +58,12 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
           >
             Action
           </th>
-        )}
+        )} */}
       </tr>
       {hasGroup && (
         <tr>
           {columns.map(column => {
             const groupId = colToGroup.get(column.id);
-
             if (!groupId) return null;
             return (
               <th
@@ -99,11 +98,11 @@ interface renderBodyProps {
 
   hasSaveButton?: boolean;
   canSave?: boolean;
-  onSave?: (rowIndex: number) => void;
+  onSave: (rowIndex: number) => void;
 
   hasAddButton?: boolean;
   onAdd: () => void;
-  onDelete: (rowIndex: number) => void;
+  onRemove: (rowIndex: number) => void;
 
   addButtonLabel?: (isEmpty: boolean) => string;
 }
@@ -122,6 +121,8 @@ const renderBody = ({
   hasSaveButton = true,
   canSave,
   onSave,
+
+  onRemove,
 
   hasAddButton = true,
   onAdd,
@@ -147,7 +148,21 @@ const renderBody = ({
                     column.className,
                   )}
                 >
-                  {hasAddButton ? (
+                  {column.renderCell ? (
+                    column.renderCell({
+                      fieldName: `${rowIndex}.${column.name}`,
+                      row,
+                      rowIndex,
+                      value,
+                      ctx,
+                      onSave,
+                      onRemove,
+                      onAdd,
+                    })
+                  ) : (
+                    <span>{value ?? ''}</span>
+                  )}
+                  {/* {hasAddButton ? (
                     canEdit && editingRow === rowIndex ? (
                       column.renderCell ? (
                         column.renderCell({
@@ -181,11 +196,11 @@ const renderBody = ({
                     })
                   ) : (
                     <span>{value ?? ''}</span>
-                  )}
+                  )} */}
                 </td>
               );
             })}
-            {hasAddButton && (
+            {/* {hasAddButton && (
               <td className="border-b border-neutral-300 w-30">
                 <div className="w-full flex flex-row gap-2 justify-center items-center">
                   {canEdit ? (
@@ -220,7 +235,7 @@ const renderBody = ({
                   ) : null}
                   <button
                     type="button"
-                    onClick={() => onDelete?.(rowIndex)}
+                    onClick={() => onRemove?.(rowIndex)}
                     className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                     title="Delete"
                   >
@@ -228,7 +243,7 @@ const renderBody = ({
                   </button>
                 </div>
               </td>
-            )}
+            )} */}
           </tr>
         ))
       ) : (
@@ -244,7 +259,8 @@ const renderBody = ({
         <tr>
           <th
             className="text-white text-sm font-medium py-2 px-2 truncate"
-            colSpan={columns.length + (hasAddButton ? 1 : 0)}
+            // colSpan={columns.length + (hasAddButton ? 1 : 0)}
+            colSpan={columns.length}
           >
             <button
               type="button"
@@ -313,7 +329,7 @@ interface HorizontalDataTableProps {
 
   hasAddButton?: boolean;
   onAdd: () => void;
-  onDelete: (rowIndex: number) => void;
+  onRemove: (rowIndex: number) => void;
   addButtonLabel?: (isEmpty: boolean) => string;
 }
 
@@ -338,7 +354,7 @@ export const HorizontalDataTable = ({
 
   hasAddButton,
   onAdd,
-  onDelete,
+  onRemove,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
 }: HorizontalDataTableProps) => {
   const isEmpty = rows.length === 0;
@@ -368,7 +384,7 @@ export const HorizontalDataTable = ({
 
               hasAddButton,
               onAdd,
-              onDelete,
+              onRemove,
               addButtonLabel,
 
               hasBody,

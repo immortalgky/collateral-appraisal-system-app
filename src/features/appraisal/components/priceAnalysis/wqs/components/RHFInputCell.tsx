@@ -1,4 +1,4 @@
-import { Dropdown, NumberInput } from '@/shared/components';
+import { Dropdown, NumberInput, type ListBoxItem } from '@/shared/components';
 import { Input } from '@headlessui/react';
 import { useController, useFormContext } from 'react-hook-form';
 
@@ -10,13 +10,13 @@ export function toNumber(v: any) {
 interface RHFInputCellProps {
   fieldName: string;
   inputType?: 'number' | 'select' | 'text' | 'display';
-  options?: { label: string; value: string }[];
+  options?: ListBoxItem[];
 }
 export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProps) => {
   const { control, getValues } = useFormContext();
   const {
     field,
-    fieldState: { errors },
+    fieldState: { error },
   } = useController({ control, name: fieldName });
 
   if (inputType === 'number') {
@@ -32,14 +32,7 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
   }
 
   if (inputType === 'select') {
-    return (
-      <Dropdown
-        {...field}
-        options={options}
-        placeholder={getValues(fieldName) ?? null}
-        error={errors}
-      />
-    );
+    return <Dropdown {...field} options={options} error={error?.message} />;
   }
 
   // text default

@@ -41,6 +41,8 @@ type RHFArrayTableProps<Row = Record<string, any>, Ctx = any> =
       onEdit?: (rowIndex: number, handleOnEdit: (rowIndex: number) => void) => void;
       canSave?: boolean;
       onSave?: (rowIndex: number, handleOnEdit: (rowIndex: number) => void) => void;
+      onRemove?: (rowIndex: number, handleOnRemove: (rowIndex: number) => void) => void;
+      onAdd?: (handleOnAdd: (newRecord?: Record<string, any>) => void) => void;
       hasHeader: boolean;
       hasFooter: boolean;
       hasAddButton: boolean;
@@ -54,13 +56,20 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
   defaultRow,
   ctx,
   watch,
-  canEdit = true,
-  onEdit,
-  canSave,
-  onSave,
+
   hasHeader = true,
   hasBody = true,
   hasFooter = true,
+
+  canEdit = true,
+  onEdit,
+
+  canSave,
+  onSave,
+
+  onRemove,
+
+  onAdd,
   hasAddButton = true,
 
   rows,
@@ -71,13 +80,12 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
 
   const [editingRow, setEditingRow] = useState<number | undefined>(undefined);
 
-  const handleOnAdd = () => {
-    const row = defaultRow;
-    setEditingRow(fields.length);
+  const handleOnAdd = (newRecord?: Record<string, any>) => {
+    const row = newRecord ?? defaultRow ?? defaultColumns ?? {};
     append(clone(row));
   };
 
-  const handleOnDelete = (rowIndex: number) => {
+  const handleOnRemove = (rowIndex: number) => {
     setEditingRow(undefined);
     remove(rowIndex);
   };
@@ -92,6 +100,8 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
 
   // const watchedData = useWatch({ control, name, defaultValue: getValues(name) }) ?? [];
   const watchedData = getValues(name);
+  
+  const watchData = useMemo(() => {}, )
 
   const tableData = fields.map((f, i) => {
     return { ...(watchedData?.[i] ?? {}), __id: f.id };
@@ -132,15 +142,11 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
           columns={columns.map(column => ({
             ...column,
             renderCell: column.renderCell
-              ? ({ fieldName, row, rowIndex, value, ctx }) => {
-                  return column.renderCell({
-                    fieldName: `${name}.${fieldName}`,
-                    row: row,
-                    rowIndex: rowIndex,
-                    value: value,
-                    ctx: ctx,
-                  });
-                }
+              ? props =>
+                  column.renderCell({
+                    ...props,
+                    fieldName: `${name}.${props.fieldName}`,
+                  })
               : ({ fieldName, row, rowIndex, value, ctx }) => {
                   return (
                     <RHFInputCell
@@ -156,8 +162,12 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
           hasHeader={hasHeader}
           hasBody={hasBody}
           hasFooter={hasFooter}
-          onAdd={handleOnAdd}
-          onDelete={handleOnDelete}
+          onAdd={() => {
+            return onAdd ? onAdd(handleOnAdd) : handleOnAdd();
+          }}
+          onRemove={rowIndex => {
+            return onRemove ? onRemove(rowIndex, handleOnRemove) : handleOnRemove(rowIndex);
+          }}
           editingRow={editingRow}
           onEdit={rowIndex => {
             return onEdit ? onEdit(rowIndex, handleOnEdit) : handleOnEdit(rowIndex);
@@ -173,7 +183,17 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
           rows={rows.map(row => ({
             ...row,
             renderCell: row.renderCell
-              ? ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+              ? ({
+                  fieldName,
+                  column,
+                  columns,
+                  columnIndex,
+                  value,
+                  ctx,
+                  onSave,
+                  onRemove,
+                  onAdd,
+                }) => {
                   return row.renderCell({
                     fieldName: `${name}.${fieldName}`,
                     column,
@@ -195,7 +215,7 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
           }))}
           hasAddButton={hasAddButton}
           onAdd={handleOnAdd}
-          onDelete={handleOnDelete}
+          onDelete={handleOnRemove}
           editingColumn={editingRow}
           onEdit={rowIndex => {
             return onEdit ? onEdit(rowIndex, handleOnEdit) : handleOnEdit(rowIndex);
