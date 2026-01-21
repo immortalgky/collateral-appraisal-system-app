@@ -93,16 +93,18 @@ interface renderBodyProps {
   hasBody: boolean;
 
   editingRow: number | undefined;
+  hasEditButton?: boolean;
   canEdit?: boolean;
   onEdit?: (rowIndex: number) => void;
 
+  hasSaveButton?: boolean;
   canSave?: boolean;
   onSave?: (rowIndex: number) => void;
 
+  hasAddButton?: boolean;
   onAdd: () => void;
   onDelete: (rowIndex: number) => void;
 
-  hasAddButton?: boolean;
   addButtonLabel?: (isEmpty: boolean) => string;
 }
 const renderBody = ({
@@ -112,16 +114,19 @@ const renderBody = ({
   isEmpty,
 
   editingRow,
+
+  hasEditButton = true,
   canEdit = true,
   onEdit,
 
+  hasSaveButton = true,
   canSave,
   onSave,
 
+  hasAddButton = true,
   onAdd,
   onDelete,
 
-  hasAddButton = true,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
 }: renderBodyProps) => {
   return (
@@ -131,7 +136,7 @@ const renderBody = ({
           <tr key={rowIndex}>
             {columns.map((column, columnIndex) => {
               const value = column.accessor
-                ? column.accessor(row, rowIndex, columnIndex, ctx)
+                ? column.accessor({ row, rowIndex, columnIndex, ctx })
                 : (row as any)?.[column.id];
               return (
                 <td
@@ -297,16 +302,19 @@ interface HorizontalDataTableProps {
   hasFooter: boolean;
 
   editingRow: number | undefined;
+
+  hasEditButton?: boolean;
   canEdit?: boolean;
   onEdit?: (rowIndex: number) => void;
 
+  hasSaveButton?: boolean;
   canSave?: boolean;
   onSave?: (rowIndex: number) => void;
 
+  hasAddButton?: boolean;
   onAdd: () => void;
   onDelete: (rowIndex: number) => void;
   addButtonLabel?: (isEmpty: boolean) => string;
-  hasAddButton: boolean;
 }
 
 export const HorizontalDataTable = ({
@@ -319,16 +327,19 @@ export const HorizontalDataTable = ({
   hasFooter,
 
   editingRow,
+
+  hasEditButton,
   canEdit,
   onEdit,
 
+  hasSaveButton,
   canSave,
   onSave,
 
+  hasAddButton,
   onAdd,
   onDelete,
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
-  hasAddButton,
 }: HorizontalDataTableProps) => {
   const isEmpty = rows.length === 0;
   const colToGroup = new Map<string, string>();
@@ -336,7 +347,7 @@ export const HorizontalDataTable = ({
     for (const columnId of group.columns) colToGroup.set(columnId, group.id);
 
   return (
-    <div className="w-full max-h-full flex flex-col rounded-lg overflow-clip">
+    <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-full h-full border-separate border-spacing-0">
           {hasHeader && renderHeader({ columns, colToGroup, groups, hasAddButton })}
@@ -346,16 +357,21 @@ export const HorizontalDataTable = ({
               rows,
               ctx,
               isEmpty,
+
               editingRow,
+
               canEdit,
               onEdit,
+
               canSave,
               onSave,
+
+              hasAddButton,
               onAdd,
               onDelete,
-              hasBody,
-              hasAddButton,
               addButtonLabel,
+
+              hasBody,
             })}
           {hasFooter && renderFooter({ columns, rows, ctx })}
         </table>

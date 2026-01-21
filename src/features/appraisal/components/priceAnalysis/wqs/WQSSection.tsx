@@ -6,6 +6,8 @@ import { WQSDto, type WQSRequestType } from './form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { ComparativeSection } from './ComparativeSection';
 import { CalculationSection } from './CalculationSection';
+import { useEffect, useState } from 'react';
+import { MOC_COMPARATIVE_DATA_LAND } from './data/comparativeData';
 
 export const WQSSection = () => {
   /**
@@ -39,7 +41,15 @@ export const WQSSection = () => {
     resolver: zodResolver(WQSDto),
   });
 
-  const { handleSubmit, getValues } = methods;
+  const { handleSubmit, getValues, reset } = methods;
+
+  const [comparativeData, setComparativeData] = useState<any>();
+
+  useEffect(() => {
+    setTimeout(() => {
+      setComparativeData(MOC_COMPARATIVE_DATA_LAND);
+    }, 500); // 500ms minimum loading time
+  }, [comparativeData]);
 
   const onSubmit = data => {
     console.log(getValues());
@@ -87,7 +97,7 @@ export const WQSSection = () => {
             </button>
           </div>
           <div>
-            <ComparativeSection />
+            <ComparativeSection comparativeData={comparativeData} />
           </div>
           <div>
             <CalculationSection />

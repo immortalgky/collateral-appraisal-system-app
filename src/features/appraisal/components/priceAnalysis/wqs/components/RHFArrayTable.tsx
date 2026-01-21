@@ -90,7 +90,8 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
     setEditingRow(undefined);
   };
 
-  const watchedData = useWatch({ control, name, defaultValue: getValues(name) }) ?? [];
+  // const watchedData = useWatch({ control, name, defaultValue: getValues(name) }) ?? [];
+  const watchedData = getValues(name);
 
   const tableData = fields.map((f, i) => {
     return { ...(watchedData?.[i] ?? {}), __id: f.id };
