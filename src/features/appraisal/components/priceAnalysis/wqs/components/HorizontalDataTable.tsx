@@ -24,7 +24,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
               <th
                 key={column.id}
                 className={clsx(
-                  'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20',
+                  'text-white bg-neutral-400 text-sm font-medium truncate sticky top-0 z-20',
                   column.className,
                 )}
                 rowSpan={hasGroup ? 2 : 1}
@@ -39,7 +39,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
             <th
               key={groupHeader.id}
               className={clsx(
-                'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 z-20 ',
+                'text-white bg-neutral-400 text-sm font-medium truncate sticky top-0 z-20 ',
                 groupHeader.className,
                 alignClass(groupHeader.align),
               )}
@@ -49,16 +49,6 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
             </th>
           );
         })}
-        {/* {hasAddButton && (
-          <th
-            className={clsx(
-              'text-white bg-neutral-400 text-sm font-medium py-3 px-4 truncate sticky top-0 right-0 z-20 w-24',
-            )}
-            rowSpan={hasGroup ? 2 : 1}
-          >
-            Action
-          </th>
-        )} */}
       </tr>
       {hasGroup && (
         <tr>
@@ -69,7 +59,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
               <th
                 key={column.id}
                 className={clsx(
-                  'text-white text-sm font-medium py-3 px-4 text-left truncate bg-neutral-400 sticky top-0 z-20',
+                  'text-white text-sm font-medium text-left truncate bg-neutral-400 sticky top-0 z-20',
                   column.className,
                   alignClass(column.align),
                 )}
@@ -136,9 +126,10 @@ const renderBody = ({
         rows.map((row, rowIndex) => (
           <tr key={rowIndex}>
             {columns.map((column, columnIndex) => {
+              console.log(row);
               const value = column.accessor
                 ? column.accessor({ row, rowIndex, columnIndex, ctx })
-                : (row as any)?.[column.id];
+                : (row as any)?.[column.name ?? column.id];
               return (
                 <td
                   key={column.id}
@@ -293,11 +284,9 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
               key={column.id}
               className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(column.align))}
             >
-              <span className="inline-flex items-center justify-center text-sm font-normal text-gray-400">
-                {column.renderFooter
-                  ? column.renderFooter({ rows, ctx, columnIndex: column.id })
-                  : ''}
-              </span>
+              {column.renderFooter
+                ? column.renderFooter({ rows, ctx, columnIndex: column.id })
+                : ''}
             </td>
           ))}
         </tr>

@@ -13,18 +13,23 @@ import type { ColumnDef } from './components/types';
 import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
 import { RHFInputCell } from './components/RHFInputCell';
 import { getDesciptions } from './WQSSection';
+import { Icon } from '@/shared/components';
+import { useFormContext } from 'react-hook-form';
+import clsx from 'clsx';
 
 interface CalculationSectionProps {
   comparativeData: Record<string, string>[];
 }
 
 export const CalculationSection = ({ comparativeData }: CalculationSectionProps) => {
+  const { getValues } = useFormContext();
+
   let scoreConfiguration: ColumnDef[] = [
     {
       id: 'factorId',
       header: <div>Factor</div>,
       name: 'factorId',
-      className: 'w-60',
+      className: 'w-60 border-r border-neutral-300',
       renderCell: ({ fieldName, ctx, rowIndex, value }) => {
         if (rowIndex >= ctx.template[0].calculationFactors.length) {
           const comparativeFactors =
@@ -47,7 +52,7 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
       id: 'weight',
       header: <div>Weight</div>,
       name: 'weight',
-      className: 'w-30',
+      className: 'w-30 border-r border-neutral-300',
       rhfRenderCell: { inputType: 'number' },
 
       renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
@@ -55,8 +60,12 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
           return acc + curr[columnIndex];
         }, 0);
         return (
-          <div>
-            <span>{`${totalWeight}`}</span>
+          <div
+            className={clsx(
+              'flex justify-end items-center text-right text-sm font-normal text-gray-400',
+            )}
+          >
+            {`${totalWeight}`}
           </div>
         );
       },
@@ -65,7 +74,7 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
       id: 'intensity',
       header: <div>Intensity</div>,
       name: 'intensity',
-      className: 'w-30',
+      className: 'w-30 border-r border-neutral-300',
       align: 'right',
       renderCell: ({ fieldName, row, ctx }) => {
         // if (row['factor'] ==)
@@ -76,8 +85,13 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
           return acc + curr[columnIndex];
         }, 0);
         return (
-          <div>
-            <span>{`${totalIntensity}`}</span>
+          <div
+            className={clsx(
+              'flex justify-end items-center text-right text-sm font-normal',
+              totalIntensity > 100 ? 'text-danger' : 'text-gray-400',
+            )}
+          >
+            {Number.isFinite(totalIntensity) ? totalIntensity.toFixed(0) : 0}
           </div>
         );
       },
@@ -85,13 +99,10 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
     {
       id: 'score',
       header: <div>Score</div>,
-      className: 'w-30',
+      className: 'w-30 border-r border-neutral-300',
       renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
         <span>{`${row['weight'] * row['intensity']}`}</span>
       ),
-      renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-        return <span>{`${row['weight'] * row['intensity']}`}</span>;
-      },
       align: 'right',
     },
   ];
@@ -100,32 +111,47 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
     scoreConfiguration = [
       ...scoreConfiguration,
       ...comparativeData.map((data, index) => {
-        console.log(data, index);
         return {
           id: data.id,
           name: `surveys.${index}.value`,
+          className: 'border-r border-neutral-300 w-60',
           header: (
             <div className="flex flex-col">
               <div className="flex justify-center items-center truncate">
                 <span>Survey {index + 1}</span>
               </div>
               <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
-                <span className="text-left">Score</span>
-                <span className="text-right">Weighted Score</span>
+                <div className="text-left p-2">Score</div>
+                <div className="text-right p-2">Weighted Score</div>
               </div>
             </div>
           ),
 
-          renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
+          renderCell: ({ fieldName, row }) => {
+            const value = getValues(fieldName) ?? 0;
+            const score = row['weight'] * value;
             return (
               <div className="flex flex-row justify-between items-center">
                 <div className="w-18">
                   <RHFInputCell fieldName={fieldName} inputType="number" />
                 </div>
                 <div>
-                  {/* <span>{`${row['weight'] * row.score}`}</span> */}
-                  <span>{`${row['weight'] * row['survey1']}`}</span>
+                  <span>{Number.isFinite(score) ? score.toFixed(0) : 0}</span>
                 </div>
+              </div>
+            );
+          },
+
+          renderFooter: ({ rows }) => {
+            const totalScore = rows.reduce((acc, curr) => {
+              const score = curr['surveys'][index]?.value ?? 0;
+              const weight = curr['weight'] ?? 0;
+              return acc + score * weight;
+            }, 0);
+
+            return (
+              <div className="flex justify-end items-center text-right text-sm font-normal text-gray-400">
+                {Number.isFinite(totalScore) ? totalScore.toFixed(0) : 0}
               </div>
             );
           },
@@ -139,18 +165,20 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
     {
       id: 'collateral',
       name: 'collateral',
+      className: 'border-r border-neutral-300',
       header: (
         <div className="flex flex-col w-full h-full">
-          <div className="flex justify-center items-start w-full h-full">
+          <div className="flex justify-center items-start w-full h-full border-b border-neutral-300 p-2">
             <span>collateral</span>
           </div>
           <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
-            <span className="text-left">Score</span>
-            <span className="text-right">Weighted Score</span>
+            <div className="text-left p-2">Score</div>
+            <div className="text-right p-2">Weighted Score</div>
           </div>
         </div>
       ),
       renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
+        const score = row['weight'] * value;
         return (
           <div className="flex flex-row justify-between items-center">
             <div className="w-18">
@@ -158,40 +186,66 @@ export const CalculationSection = ({ comparativeData }: CalculationSectionProps)
             </div>
             <div>
               {/* <span>{`${row['weight'] * value.score}`}</span> */}
-              <span>{`${row['weight'] * row['collateral']}`}</span>
+              <span>{Number.isFinite(score) ? score.toFixed(0) : 0}</span>
             </div>
           </div>
         );
       },
-      renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
+
+      renderFooter: ({ rows }) => {
+        const totalScore = rows.reduce((acc, curr) => {
+          const score = curr['collateral'] ?? 0;
+          const weight = curr['weight'] ?? 0;
+          return acc + score * weight;
+        }, 0);
+
         return (
-          <div className="flex flex-row justify-between items-center">
-            <div className="w-18">
-              <span>{value ?? ''}</span>
-            </div>
-            <div>
-              {/* <span>{`${row['weight'] * row.score}`}</span> */}
-              <span>{`${row['weight'] * row['survey1']}`}</span>
-            </div>
+          <div className="flex justify-end items-center text-right text-sm font-normal text-gray-400">
+            {Number.isFinite(totalScore) ? totalScore.toFixed(0) : 0}
           </div>
         );
+      },
+    },
+    {
+      id: 'action',
+      header: <div></div>,
+      className: 'w-16',
+      renderCell: ({ rowIndex, onRemove, ctx }) => {
+        /*
+          factor which was set from template not allow to change
+         */
+        if (rowIndex >= ctx.template[0].calculationFactors.length)
+          return (
+            <div className="flex justify-center items-center">
+              <button
+                type="button"
+                onClick={() => onRemove?.(rowIndex)}
+                className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                title="Delete"
+              >
+                <Icon style="solid" name="trash" className="size-3.5" />
+              </button>
+            </div>
+          );
+        return <div></div>;
       },
     },
   ];
 
   const columnGroups: ColumnGroup[] = [
     {
-      id: 'group 1',
-      label: <span>Calculation</span>,
+      id: 'calculation',
+      label: <div className="p-2">Calculation</div>,
       columns: ['intensity', 'score'],
       align: 'center',
-      className: 'w-60',
+      className: 'border-b border-r border-neutral-300',
     },
     {
-      id: 'group 2',
-      label: <span>Comparative Data</span>,
-      columns: comparativeData.map((data, index) => `${data.id}`),
+      id: 'comparativeData',
+      label: <div className="p-2">Comparative Data</div>,
+      columns: comparativeData.map((data, index) => data.id),
       align: 'center',
+      className: `border-b border-r border-neutral-300`,
     },
   ];
 

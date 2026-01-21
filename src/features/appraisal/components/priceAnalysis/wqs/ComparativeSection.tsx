@@ -32,7 +32,7 @@ export const ComparativeSection = ({ comparativeData, surveyData }: ComparativeS
     {
       id: 'factorId',
       name: 'factorId',
-      header: <div>Factor</div>,
+      header: <div className="px-2 py-4">Factor</div>,
       className: 'border-r border-neutral-300 w-60',
       renderCell: ({ row, rowIndex, fieldName, ctx, value }) => {
         if (rowIndex >= ctx.template[0].comparativeFactors.length) {
@@ -58,7 +58,7 @@ export const ComparativeSection = ({ comparativeData, surveyData }: ComparativeS
     {
       id: 'collateral',
       name: 'collateral',
-      header: <div>Collateral</div>,
+      header: <div className="px-2 py-4">Collateral</div>,
       className: 'border-r border-neutral-300 min-w-60',
       accessor: ({ row, rowIndex, columnIndex, ctx }) => {
         return getPropertyValueByFactorCode(row['factorId']) ?? '';
@@ -80,7 +80,7 @@ export const ComparativeSection = ({ comparativeData, surveyData }: ComparativeS
       ...comparativeData.map((data, index) => ({
         id: `surveys${index}`,
         name: `surveys.${index}.value`,
-        header: <div>Survey {index + 1}</div>,
+        header: <div className="px-2 py-4">Survey {index + 1}</div>,
         className: 'border-r border-neutral-300 min-w-20',
         accessor: ({ row, rowIndex, columnIndex, ctx }) => {
           return (
@@ -103,7 +103,7 @@ export const ComparativeSection = ({ comparativeData, surveyData }: ComparativeS
     ...comparativeTableConfig,
     {
       id: 'action',
-      header: <div></div>,
+      header: <div className="px-2 py-4"></div>,
       className: 'w-16',
       renderCell: ({ rowIndex, onRemove, ctx }) => {
         /*
