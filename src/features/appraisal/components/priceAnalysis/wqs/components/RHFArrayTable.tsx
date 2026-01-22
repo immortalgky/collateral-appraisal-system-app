@@ -100,8 +100,8 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
 
   // const watchedData = useWatch({ control, name, defaultValue: getValues(name) }) ?? [];
   const watchedData = getValues(name);
-  
-  const watchData = useMemo(() => {}, )
+
+  // const watchData = useMemo(() => {});
 
   const tableData = fields.map((f, i) => {
     return { ...(watchedData?.[i] ?? {}), __id: f.id };

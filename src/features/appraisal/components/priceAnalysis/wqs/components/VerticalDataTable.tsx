@@ -108,7 +108,7 @@ export const VerticalDataTable = ({
                   {columns.map((column, columnIndex) => {
                     const value = row.accessor
                       ? row.accessor(column, columnIndex, ctx)
-                      : (column as any)?.[row.id];
+                      : (column as any)?.[row.name ?? row.id];
                     return (
                       <td
                         key={column.id}
@@ -118,24 +118,7 @@ export const VerticalDataTable = ({
                           row.className,
                         )}
                       >
-                        {hasAddButton ? (
-                          canEdit && editingColumn === columnIndex ? (
-                            row.renderCell ? (
-                              row.renderCell({
-                                fieldName: `${columnIndex}.${row.name}`,
-                                column,
-                                columns,
-                                columnIndex,
-                                value,
-                                ctx,
-                              })
-                            ) : (
-                              <span>{value ?? ''}</span>
-                            )
-                          ) : (
-                            <span>{value ?? ''}</span>
-                          )
-                        ) : row.renderCell ? (
+                        {row.renderCell ? (
                           row.renderCell({
                             fieldName: `${columnIndex}.${row.name}`,
                             column,

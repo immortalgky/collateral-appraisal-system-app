@@ -4,17 +4,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ALL_FACTORS,
   COLLATERAL_TYPE,
-  FACTORS,
   MAPPING_FACTORS_PROPERTIES_FIELDS,
   PROPERTIES,
-  TEMPLATE,
+  WQS_TEMPLATES,
 } from './data/data';
 import { WQSDto, type WQSRequestType } from './form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { ComparativeSection } from './ComparativeSection';
 import { CalculationSection } from './CalculationSection';
 import { useEffect, useState } from 'react';
-import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
@@ -71,75 +69,124 @@ export const WQSSection = () => {
     resolver: zodResolver(WQSDto),
   });
 
-  const { handleSubmit, getValues, reset } = methods;
-  const [collateralType, setCollateralType] = useState<string | undefined>('');
-  const [templateId, setTemplateId] = useState<string | undefined>('');
+  const { handleSubmit, getValues, reset, setValue } = methods;
   const [onLoading, setOnLoading] = useState<boolean>(true);
+  const [allFactors, setAllFactors] =
+    useState<{ value: string; description: string }[]>(ALL_FACTORS);
+  const [property, setProperty] = useState<any>(PROPERTIES[0]); // property will be initial when user come to price analysis modal
+
+  const [collateralTypeId, setCollateralTypeId] = useState<string>('');
+  const [pricingTemplateCode, setPricingTemplateCode] = useState<string>('');
+
+  const [template, setTemplate] = useState<any>(undefined); // template will be initial when user click generate
+  const [surveys, setSurveys] = useState<any>([]); // market survey will be initial when user choose market survey data in application
 
   const handleOnGenerate = () => {
-    if (!templateId) return;
+    if (!pricingTemplateCode) return;
 
+    // load template configuration
+    setTemplate(WQS_TEMPLATES.find(template => template.templateCode === pricingTemplateCode));
+  };
+
+  useEffect(() => {
+    setValue('comparativeSurveys', surveys);
+    setValue('WQSCalculations', [
+      ...surveys.map(survey => {
+        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+        return {
+          marketId: survey.id,
+          offeringPrice: surveyMap.get('17'),
+          offeringPriceMeasurementUnit: surveyMap.get('20'),
+          offeringPriceAdjustmentPct: surveyMap.get('18'),
+          offeringPriceAdjustmentAmt: surveyMap.get('19'),
+          sellingPrice: surveyMap.get('21'),
+          sellingPriceMeasurementUnit: surveyMap.get('20'),
+          sellingDate: surveyMap.get('22'),
+          sellingPriceAdjustmentYear: surveyMap.get('23'),
+          numberOfYears: 10, // TODO: convert selling date to number of year
+        };
+      }),
+      {}, // config for collateral column
+    ]);
+  }, [surveys]);
+
+  useEffect(() => {
+    if (!template) return;
+
+    // initial data
     setTimeout(() => {
       setOnLoading(true);
       reset({
-        collateralType: collateralType,
-        template: templateId,
+        methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
+        collateralType: collateralTypeId,
+        pricingTemplateCode: pricingTemplateCode,
         finalValue: 0,
         roundedFinalValue: 0,
-        comparativeData: TEMPLATE.find(t => t.id === templateId).comparativeFactors.map(
-          compFact => ({
-            factorId: compFact.id,
-          }),
-        ),
-        WQSScores: TEMPLATE.find(t => t.id === templateId)?.calculationFactors.map(calFact => ({
-          factorId: calFact.id,
+        comparativeSurveys: [],
+        comparativeFactors: template.comparativeFactors.map(compFact => ({
+          factorCode: compFact.factorId,
+        })),
+        WQSScores: template.calculationFactors.map(calFact => ({
+          factorCode: calFact.factorId,
           weight: calFact.weight,
           intensity: calFact.intensity,
           surveys: [],
           collateral: 0,
         })),
         WQSCalculations: [
-          {
-            id: 'survey1',
-            offeringPrice: 22750,
-            offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-            offeringPriceAdjustmentAmt: 0,
-            sellingPrice: undefined,
-            sellingPriceMeasurementUnit: undefined,
-            sellingDate: undefined,
-            sellingPriceAdjustmentYear: undefined,
-            numberOfYears: undefined,
-          },
-          {
-            id: 'survey2',
-            offeringPrice: 22500,
-            offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-            offeringPriceAdjustmentAmt: 0,
-            sellingPrice: undefined,
-            sellingPriceMeasurementUnit: undefined,
-            sellingDate: undefined,
-            sellingPriceAdjustmentYear: undefined,
-            numberOfYears: undefined,
-          },
-          {
-            id: 'survey3',
-            offeringPrice: undefined,
-            offeringPriceMeasurementUnit: undefined,
-            offeringPriceAdjustmentAmt: undefined,
-            sellingPrice: 21500,
-            sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
-            sellingDate: undefined,
-            sellingPriceAdjustmentYear: 0,
-            numberOfYears: 6,
-          },
+          // {
+          //   id: 'survey1',
+          //   offeringPrice: 22750,
+          //   offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+          //   offeringPriceAdjustmentAmt: 0,
+          //   sellingPrice: undefined,
+          //   sellingPriceMeasurementUnit: undefined,
+          //   sellingDate: undefined,
+          //   sellingPriceAdjustmentYear: undefined,
+          //   numberOfYears: undefined,
+          // },
+          // {
+          //   id: 'survey2',
+          //   offeringPrice: 22500,
+          //   offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
+          //   offeringPriceAdjustmentAmt: 0,
+          //   sellingPrice: undefined,
+          //   sellingPriceMeasurementUnit: undefined,
+          //   sellingDate: undefined,
+          //   sellingPriceAdjustmentYear: undefined,
+          //   numberOfYears: undefined,
+          // },
+          // {
+          //   id: 'survey3',
+          //   offeringPrice: undefined,
+          //   offeringPriceMeasurementUnit: undefined,
+          //   offeringPriceAdjustmentAmt: undefined,
+          //   sellingPrice: 21500,
+          //   sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
+          //   sellingDate: undefined,
+          //   sellingPriceAdjustmentYear: 0,
+          //   numberOfYears: 6,
+          // },
           {
             id: 'collateral',
           },
         ],
+        WQSFinalValue: {
+          finalValue: 0,
+          finalValueRounded: 0,
+          coefficientOfDecision: 0,
+          standardError: 0,
+          intersectionPoint: 0,
+          slope: 0,
+          finalAssesedValue: 0,
+          lowestEstimate: 0,
+          highestEstimate: 0,
+          appraisalPriceRounded: 0,
+        },
       });
       setOnLoading(false);
     }, 1000);
-  };
+  }, [template]);
 
   const onSubmit = data => {
     console.log(getValues());
@@ -147,6 +194,15 @@ export const WQSSection = () => {
 
   const onDraft = () => {
     console.log(getValues());
+  };
+
+  const handleOnSelectMarketSurvey = survey => {
+    if (surveys.find(s => s.id === survey.id)) {
+      setSurveys([...surveys.filter(s => s.id != survey.id)]);
+      return;
+    }
+
+    setSurveys([...surveys, survey]);
   };
 
   return (
@@ -165,9 +221,9 @@ export const WQSSection = () => {
               <Dropdown
                 label="Collateral Type"
                 options={[...COLLATERAL_TYPE]}
-                value={collateralType}
+                value={collateralTypeId}
                 onChange={value => {
-                  setCollateralType(value);
+                  setCollateralTypeId(value);
                 }}
               />
             </div>
@@ -175,14 +231,16 @@ export const WQSSection = () => {
               <Dropdown
                 label="Template"
                 options={
-                  TEMPLATE.filter(t => t.collateralType === collateralType).map(t => ({
-                    value: t.id,
-                    label: t.label,
+                  WQS_TEMPLATES.filter(
+                    template => template.collateralTypeId === collateralTypeId,
+                  ).map(template => ({
+                    value: template.templateCode,
+                    label: template.templateName,
                   })) ?? ''
                 }
-                value={templateId}
+                value={pricingTemplateCode}
                 onChange={value => {
-                  setTemplateId(value);
+                  setPricingTemplateCode(value);
                 }}
               />
             </div>
@@ -200,12 +258,20 @@ export const WQSSection = () => {
             <div className="flex flex-col gap-4">
               <div>
                 <ComparativeSection
-                  comparativeData={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND}
-                  surveyData={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND}
+                  surveys={surveys}
+                  template={template}
+                  property={property}
+                  allFactors={allFactors}
+                  onSelectSurvey={handleOnSelectMarketSurvey}
                 />
               </div>
               <div>
-                <CalculationSection comparativeData={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND} />
+                <CalculationSection
+                  surveys={surveys}
+                  template={template}
+                  allFactors={allFactors}
+                  property={property}
+                />
               </div>
               <div>
                 <AdjustFinalValueSection />

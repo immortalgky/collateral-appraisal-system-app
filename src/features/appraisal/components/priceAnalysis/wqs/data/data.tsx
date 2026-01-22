@@ -1,7 +1,3 @@
-import type { ColumnDef, ColumnGroup, RHFColumn, RHFRow, RowDef } from '../components/types';
-import { RHFInputCell } from '../components/RHFInputCell';
-import { forecast } from '../components/excelUtils/forecast';
-
 /* Collateral type in group, Initial on loading price analysis page*/
 export const PROPERTIES = [
   {
@@ -90,558 +86,84 @@ export const ALL_FACTORS = [
   { value: '19', description: 'Adjustment of Offer Price (Amt)' },
   { value: '20', description: 'Measurement Unit' },
   { value: '21', description: 'Selling Price' },
-  { value: '22', description: 'Information Date/ Time' },
+  { value: '22', description: 'Selling Date' },
   { value: '23', description: 'Adjustment of Period (Pct)' },
 ];
 
-export const TEMPLATE = [
+type Template = {
+  templateCode: string;
+  templateName: string;
+  collateralTypeId: string;
+  comparativeFactors: { factorId: string }[];
+  calculationFactors: { factorId: string; weight: number; intensity: number }[];
+};
+export const WQS_TEMPLATES: Template[] = [
   {
-    id: 'L01',
-    label: 'LAND_01',
-    collateralType: 'L',
+    templateCode: 'L01',
+    templateName: 'LAND_01',
+    collateralTypeId: 'L',
     comparativeFactors: [
-      { id: '01' },
-      { id: '02' },
-      { id: '03' },
-      { id: '04' },
-      { id: '05' },
-      { id: '06' },
-      { id: '20' },
-      { id: '17' },
-      { id: '21' },
+      { factorId: '01' },
+      { factorId: '02' },
+      { factorId: '03' },
+      { factorId: '04' },
+      { factorId: '05' },
+      { factorId: '06' },
+      { factorId: '20' },
+      { factorId: '17' },
+      { factorId: '21' },
     ],
     calculationFactors: [
-      { id: '01', weight: 1, intensity: 10 },
-      { id: '02', weight: 2, intensity: 10 },
-      { id: '03', weight: 1, intensity: 10 },
-      { id: '04', weight: 1, intensity: 10 },
-      { id: '05', weight: 1, intensity: 10 },
-      { id: '06', weight: 1, intensity: 10 },
-      { id: '17', weight: 1, intensity: 10 },
+      { factorId: '01', weight: 1, intensity: 10 },
+      { factorId: '02', weight: 2, intensity: 10 },
+      { factorId: '03', weight: 1, intensity: 10 },
+      { factorId: '04', weight: 1, intensity: 10 },
+      { factorId: '05', weight: 1, intensity: 10 },
+      { factorId: '06', weight: 1, intensity: 10 },
     ],
   },
   {
-    id: 'LB01',
-    label: 'LB_01',
-    collateralType: 'LB',
-    factors: [
-      { id: '02', weight: 1, intensity: 10 },
-      { id: '04', weight: 1, intensity: 10 },
-      { id: '08', weight: 2, intensity: 10 },
-      { id: '09', weight: 2, intensity: 10 },
-      { id: '10', weight: 1, intensity: 10 },
-      { id: '11', weight: 1, intensity: 10 },
-      { id: '12', weight: 1, intensity: 10 },
+    templateCode: 'LB01',
+    templateName: 'LB_01',
+    collateralTypeId: 'LB',
+    comparativeFactors: [
+      { factorId: '02' },
+      { factorId: '04' },
+      { factorId: '08' },
+      { factorId: '09' },
+      { factorId: '10' },
+      { factorId: '11' },
+      { factorId: '12' },
+    ],
+    calculationFactors: [
+      { factorId: '02', weight: 1, intensity: 10 },
+      { factorId: '04', weight: 1, intensity: 10 },
+      { factorId: '08', weight: 2, intensity: 10 },
+      { factorId: '09', weight: 2, intensity: 10 },
+      { factorId: '10', weight: 1, intensity: 10 },
+      { factorId: '11', weight: 1, intensity: 10 },
+      { factorId: '12', weight: 1, intensity: 10 },
     ],
   },
   {
-    id: 'C01',
-    label: 'CONDO_01',
-    collateralType: 'C',
-    factors: [
-      { id: '15', weight: 1, intensity: 10 },
-      { id: '10', weight: 1, intensity: 10 },
-      { id: '03', weight: 2, intensity: 10 },
-      { id: '14', weight: 2, intensity: 10 },
-      { id: '10', weight: 1, intensity: 10 },
-      { id: '11', weight: 1, intensity: 10 },
+    templateCode: 'C01',
+    templateName: 'CONDO_01',
+    collateralTypeId: 'C',
+    comparativeFactors: [
+      { factorId: '15' },
+      { factorId: '10' },
+      { factorId: '03' },
+      { factorId: '14' },
+      { factorId: '10' },
+      { factorId: '11' },
     ],
-  },
-];
-
-// export const SURVEYDATA = [
-//   {
-//     id: 'SURVEY_01',
-//     offeringPrice: 22750,
-//     offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-//     offeringPriceAdjustmentAmt: undefined,
-//     sellingPrice: undefined,
-//     sellingPriceMeasurementUnit: undefined,
-//     sellingDate: undefined,
-//     sellingPriceAdjustmentYear: undefined,
-//     numberOfYears: undefined,
-//   },
-//   {
-//     id: 'SURVEY_02',
-//     offeringPrice: 22000,
-//     offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-//     offeringPriceAdjustmentAmt: undefined,
-//     sellingPrice: undefined,
-//     sellingPriceMeasurementUnit: undefined,
-//     sellingDate: undefined,
-//     sellingPriceAdjustmentYear: undefined,
-//     numberOfYears: undefined,
-//   },
-//   {
-//     id: 'SURVEY_03',
-//     offeringPrice: undefined,
-//     offeringPriceMeasurementUnit: undefined,
-//     offeringPriceAdjustmentAmt: undefined,
-//     sellingPrice: 30000,
-//     sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
-//     sellingDate: undefined,
-//     sellingPriceAdjustmentYear: undefined,
-//     numberOfYears: 8,
-//   },
-//   {
-//     id: 'SURVEY_04',
-//     offeringPrice: 30000,
-//     offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-//     offeringPriceAdjustmentAmt: undefined,
-//     sellingPrice: undefined,
-//     sellingPriceMeasurementUnit: undefined,
-//     sellingDate: undefined,
-//     sellingPriceAdjustmentYear: undefined,
-//     numberOfYears: undefined,
-//   },
-//   {
-//     id: 'SURVEY_05',
-//     offeringPrice: undefined,
-//     offeringPriceMeasurementUnit: undefined,
-//     offeringPriceAdjustmentAmt: undefined,
-//     sellingPrice: 21500,
-//     sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
-//     sellingDate: undefined,
-//     sellingPriceAdjustmentYear: undefined,
-//     numberOfYears: 6,
-//   },
-// ];
-
-// from template
-export const FACTORS = [
-  { value: 'L01_TEMP01', label: 'Environment', weight: 1, intensity: 10 },
-  { value: 'L01_TEMP02', label: 'Plot Location', weight: 2, intensity: 10 },
-  { value: 'L01_TEMP03', label: 'Land Shape', weight: 1, intensity: 10 },
-  { value: 'L01_TEMP04', label: 'Land Condition', weight: 1, intensity: 10 },
-];
-
-export const columns: RHFColumn[] = [
-  // {
-  //   id: 'factor',
-  //   header: <div>Factor</div>,
-  //   name: 'factor',
-  //   className: 'w-60',
-  //   rhfRenderCell: {
-  //     inputType: 'select',
-  //     options: FACTORS,
-  //   },
-  // },
-  // {
-  //   id: 'weight',
-  //   header: <div>Weight</div>,
-  //   name: 'weight',
-  //   className: 'w-30',
-  //   rhfRenderCell: { inputType: 'number' },
-
-  //   renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
-  //     const totalWeight = rows.reduce((acc, curr) => {
-  //       return acc + curr[columnIndex];
-  //     }, 0);
-  //     return (
-  //       <div>
-  //         <span>{`${totalWeight}`}</span>
-  //       </div>
-  //     );
-  //   },
-  // },
-  // {
-  //   id: 'intensity',
-  //   header: <div>Intensity</div>,
-  //   name: 'intensity',
-  //   className: 'w-30',
-  //   align: 'right',
-  //   renderCell: ({ fieldName, row, ctx }) => {
-  //     // if (row['factor'] ==)
-  //     return <RHFInputCell fieldName={fieldName} inputType="number" />;
-  //   },
-  //   renderFooter: ({ rows, ctx, columnIndex }) => {
-  //     const totalIntensity = rows.reduce((acc, curr) => {
-  //       return acc + curr[columnIndex];
-  //     }, 0);
-  //     return (
-  //       <div>
-  //         <span>{`${totalIntensity}`}</span>
-  //       </div>
-  //     );
-  //   },
-  // },
-  // {
-  //   id: 'score',
-  //   header: <div>Score</div>,
-  //   className: 'w-30',
-  //   renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
-  //     <span>{`${row['weight'] * row['intensity']}`}</span>
-  //   ),
-  //   renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return <span>{`${row['weight'] * row['intensity']}`}</span>;
-  //   },
-  //   align: 'right',
-  // },
-  // {
-  //   id: 'survey1',
-  //   name: 'survey1',
-  //   header: (
-  //     <div className="flex flex-col">
-  //       <div className="flex justify-center items-center truncate">
-  //         <span>Survey 1</span>
-  //       </div>
-  //       <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
-  //         <span className="text-left">Score</span>
-  //         <span className="text-right">Weighted Score</span>
-  //       </div>
-  //     </div>
-  //   ),
-
-  //   renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return (
-  //       <div className="flex flex-row justify-between items-center">
-  //         <div className="w-18">
-  //           <RHFInputCell fieldName={fieldName} inputType="number" />
-  //         </div>
-  //         <div>
-  //           {/* <span>{`${row['weight'] * row.score}`}</span> */}
-  //           <span>{`${row['weight'] * row['survey1']}`}</span>
-  //         </div>
-  //       </div>
-  //     );
-  //   },
-  //   renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return (
-  //       <div className="flex flex-row justify-between items-center">
-  //         <div className="w-18">
-  //           <span>{value ?? ''}</span>
-  //         </div>
-  //         <div>
-  //           {/* <span>{`${row['weight'] * row.score}`}</span> */}
-  //           <span>{`${row['weight'] * row['survey1']}`}</span>
-  //         </div>
-  //       </div>
-  //     );
-  //   },
-  // },
-  // {
-  //   id: 'survey2',
-  //   name: 'survey2',
-  //   header: (
-  //     <div className="flex flex-col">
-  //       <div className="flex justify-center items-center truncate">
-  //         <span>Survey 2</span>
-  //       </div>
-  //       <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
-  //         <span className="text-left">Score</span>
-  //         <span className="text-right">Weighted Score</span>
-  //       </div>
-  //     </div>
-  //   ),
-
-  //   // accessor: (row, rowIndex, ctx) => ({
-  //   //   score: row['survey2'],
-  //   // }),
-
-  //   renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return (
-  //       <div className="flex flex-row justify-between items-center">
-  //         <div className="w-18">
-  //           <RHFInputCell fieldName={fieldName} inputType="number" />
-  //         </div>
-  //         <div>
-  //           {/* <span>{`${row['weight'] * value.score}`}</span> */}
-  //           <span>{`${row['weight'] * row['survey2']}`}</span>
-  //         </div>
-  //       </div>
-  //     );
-  //   },
-
-  //   renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return (
-  //       <div className="flex flex-row justify-between items-center">
-  //         <div className="w-18">
-  //           <span>{value ?? ''}</span>
-  //         </div>
-  //         <div>
-  //           {/* <span>{`${row['weight'] * row.score}`}</span> */}
-  //           <span>{`${row['weight'] * row['survey1']}`}</span>
-  //         </div>
-  //       </div>
-  //     );
-  //   },
-  // },
-  // {
-  //   id: 'survey3',
-  //   name: 'survey3',
-  //   header: (
-  //     <div className="flex flex-col">
-  //       <div className="flex justify-center items-center truncate">
-  //         <span>Survey 3</span>
-  //       </div>
-  //       <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
-  //         <span className="text-left">Score</span>
-  //         <span className="text-right">Weighted Score</span>
-  //       </div>
-  //     </div>
-  //   ),
-
-  //   renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return (
-  //       <div className="flex flex-row justify-between items-center">
-  //         <div className="w-18">
-  //           <RHFInputCell fieldName={fieldName} inputType="number" />
-  //         </div>
-  //         <div>
-  //           {/* <span>{`${row['weight'] * value.score}`}</span> */}
-  //           <span>{`${row['weight'] * row['survey3']}`}</span>
-  //         </div>
-  //       </div>
-  //     );
-  //   },
-
-  //   renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-  //     return (
-  //       <div className="flex flex-row justify-between items-center">
-  //         <div className="w-18">
-  //           <span>{value ?? ''}</span>
-  //         </div>
-  //         <div>
-  //           {/* <span>{`${row['weight'] * row.score}`}</span> */}
-  //           <span>{`${row['weight'] * row['survey1']}`}</span>
-  //         </div>
-  //       </div>
-  //     );
-  //   },
-  // },
-  {
-    id: 'collateral',
-    name: 'collateral',
-    header: (
-      <div className="flex flex-col w-full h-full">
-        <div className="flex justify-center items-start w-full h-full">
-          <span>collateral</span>
-        </div>
-        <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
-          <span className="text-left">Score</span>
-          <span className="text-right">Weighted Score</span>
-        </div>
-      </div>
-    ),
-    renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-      return (
-        <div className="flex flex-row justify-between items-center">
-          <div className="w-18">
-            <RHFInputCell fieldName={fieldName} inputType="number" />
-          </div>
-          <div>
-            {/* <span>{`${row['weight'] * value.score}`}</span> */}
-            <span>{`${row['weight'] * row['collateral']}`}</span>
-          </div>
-        </div>
-      );
-    },
-    renderOnEditingCell: ({ fieldName, row, rowIndex, value, ctx }) => {
-      return (
-        <div className="flex flex-row justify-between items-center">
-          <div className="w-18">
-            <span>{value ?? ''}</span>
-          </div>
-          <div>
-            {/* <span>{`${row['weight'] * row.score}`}</span> */}
-            <span>{`${row['weight'] * row['survey1']}`}</span>
-          </div>
-        </div>
-      );
-    },
-  },
-];
-
-export const columnGroups: ColumnGroup[] = [
-  {
-    id: 'group 1',
-    label: <span>Calculation</span>,
-    columns: ['intensity', 'score'],
-    align: 'center',
-    className: 'w-60',
-  },
-  {
-    id: 'group 2',
-    label: <span>Comparative Data</span>,
-    columns: ['survey1', 'survey2', 'survey3'],
-    align: 'center',
-  },
-];
-
-// default factor which initial from template
-export const DEFAULT_WQSSCORE_ROW = [
-  {
-    factor: '',
-    weight: 0,
-    intensity: 0,
-    survey1: 0,
-    survey2: 0,
-    survey3: 0,
-    collateral: 0,
-  },
-];
-
-export const calculationRows: RHFRow[] = [
-  {
-    id: 'offeringPrice',
-    header: <div className="flex justify-start items-center">Offering Price</div>,
-    name: 'offeringPrice',
-    accessor: (column, columnIndex, ctx) => {
-      return column['offeringPrice'];
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value ?? ''}`}</div>;
-    },
-  },
-  {
-    id: 'offeringPriceAdjustmentPct',
-    header: (
-      <div className="flex flex-row justify-between items-center">
-        <div>Adjustment of Offer Price</div>
-        <div>(%)</div>
-      </div>
-    ),
-    name: 'offeringPriceAdjustmentPct',
-    accessor: (column, columnIndex, ctx) => {
-      return column['offeringPriceAdjustmentPct'] ?? null;
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return column['offeringPrice'] ? (
-        <div>
-          <RHFInputCell fieldName={fieldName} inputType="number" />
-        </div>
-      ) : null;
-    },
-  },
-  {
-    id: 'offeringPriceAdjustmentAmt',
-    header: (
-      <div className="flex flex-row justify-between items-center">
-        <div>Adjustment of Offer Price</div>
-        <div>(Amt)</div>
-      </div>
-    ),
-    name: 'offeringPriceAdjustmentAmt',
-    accessor: (column, columnIndex, ctx) => {
-      return column['offeringPriceAdjustmentAmt'] ?? null;
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return column['offeringPrice'] ? (
-        <div>
-          <RHFInputCell fieldName={fieldName} inputType="number" />
-        </div>
-      ) : null;
-    },
-  },
-  {
-    id: 'sellingPrice',
-    header: <div className="">Selling Price</div>,
-    name: 'sellingPrice',
-    accessor: (column, columnIndex, ctx) => {
-      return column['sellingPrice'] ?? null;
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value ?? ''}`}</div>;
-    },
-  },
-  {
-    id: 'numberOfYears',
-    header: <div>Number of Years</div>,
-    name: 'numberOfYears',
-    accessor: (column, columnIndex, ctx) => {
-      return column['numberOfYears'] ?? '';
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value ?? ''}`}</div>;
-    },
-  },
-  {
-    id: 'sellingPriceAdjustmentYear',
-    header: <div>Adjust Period</div>,
-    name: 'sellingPriceAdjustmentYear',
-    accessor: (column, columnIndex, ctx) => {
-      return column['sellingPriceAdjustmentYear'] ?? '';
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return column['sellingPrice'] ? (
-        <div>
-          <RHFInputCell fieldName={fieldName} inputType="number" />
-        </div>
-      ) : null;
-    },
-  },
-  {
-    id: 'cumulativeAdjustedPeriod',
-    header: <div>Cumulative Adjusted Period</div>,
-    accessor: (column, columnIndex, ctx) => {
-      if (!column['numberOfYears'] && !column['sellingPriceAdjustmentYear']) return null;
-      return column['numberOfYears'] * column['sellingPriceAdjustmentYear'];
-    },
-    renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-      return <div>{`${value ?? ''}`}</div>;
-    },
-  },
-  {
-    id: 'adjustedValue',
-    header: <div>Adjusted Value</div>,
-    name: 'adjustedValue',
-    rhfRenderCell: { inputType: 'display' },
-    derived: {
-      compute: ({ column, columns, columnIndex, ctx }) => {
-        if (column['offeringPrice'])
-          return column['offeringPriceAdjustmentPct'] > 0
-            ? column['offeringPrice'] -
-                (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-            : column['offeringPriceAdjustmentAmt'] > 0
-              ? column['offeringPriceAdjustmentAmt']
-              : column['offeringPrice'];
-        return (
-          column['sellingPrice'] +
-          (column['sellingPrice'] *
-            column['numberOfYears'] *
-            column['sellingPriceAdjustmentYear']) /
-            100
-        );
-      },
-    },
-  },
-  {
-    id: 'finalValue',
-    header: <div>Final Value</div>,
-    name: 'finalValue',
-    renderCell: ({ columns, columnIndex, ctx }) => {
-      if (columnIndex !== columns.length - 1) return '';
-      const x = (ctx.WQSScores ?? []).reduce((acc, curr) => acc + curr.collateral * curr.weight, 0);
-      // known_y = adjusted values of each comparable
-      const known_y = (columns ?? [])
-        .map((c: any) => Number(c?.adjustedValue))
-        .filter(Number.isFinite);
-
-      const known_x = (ctx.WQSScores ?? []).reduce(
-        (acc, curr) => {
-          return [
-            acc[0] + curr.survey1 * curr.weight,
-            acc[1] + curr.survey2 * curr.weight,
-            acc[2] + curr.survey3 * curr.weight,
-          ];
-        },
-        [0, 0, 0],
-      );
-
-      // must have >= 2 points
-      if (known_x.length < 2 || known_y.length < 2 || known_x.length !== known_y.length) {
-        return <div>0</div>;
-      }
-      const finalValue = forecast({ x, known_y, known_x });
-      return <div>{Number.isFinite(finalValue) ? finalValue.toFixed(2) : 0}</div>;
-    },
-  },
-  {
-    id: 'roundedFinalValue',
-    header: <div>Final Value</div>,
-    renderCell: ({ fieldName, columns, columnIndex }) => {
-      if (columnIndex !== columns.length - 1) return '';
-      return <RHFInputCell fieldName={'roundedFinalValue'} inputType="number" />;
-    },
+    calculationFactors: [
+      { factorId: '15', weight: 1, intensity: 10 },
+      { factorId: '10', weight: 1, intensity: 10 },
+      { factorId: '03', weight: 2, intensity: 10 },
+      { factorId: '14', weight: 2, intensity: 10 },
+      { factorId: '10', weight: 1, intensity: 10 },
+      { factorId: '11', weight: 1, intensity: 10 },
+    ],
   },
 ];

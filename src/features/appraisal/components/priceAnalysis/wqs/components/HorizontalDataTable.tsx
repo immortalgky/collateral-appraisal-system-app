@@ -126,7 +126,6 @@ const renderBody = ({
         rows.map((row, rowIndex) => (
           <tr key={rowIndex}>
             {columns.map((column, columnIndex) => {
-              console.log(row);
               const value = column.accessor
                 ? column.accessor({ row, rowIndex, columnIndex, ctx })
                 : (row as any)?.[column.name ?? column.id];
@@ -282,7 +281,7 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
           {columns.map(column => (
             <td
               key={column.id}
-              className={clsx('py-3 px-4 sticky bottom-0 bg-white', alignClass(column.align))}
+              className={clsx('sticky bottom-0 bg-white', alignClass(column.align))}
             >
               {column.renderFooter
                 ? column.renderFooter({ rows, ctx, columnIndex: column.id })
