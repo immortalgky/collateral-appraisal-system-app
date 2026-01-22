@@ -6,7 +6,7 @@ import clsx from 'clsx';
 interface MarketSurveySelectionModalProps {
   allFactors: Record<string, any>[];
   surveys: Record<string, any>[];
-  selectedSurveys: Record<string, any>[];
+  comparativeSurveys: Record<string, any>[];
   onSelect: (survey: Record<string, any>) => void;
   onCancel: () => void;
 }
@@ -14,7 +14,7 @@ interface MarketSurveySelectionModalProps {
 export const MarketSurveySelectionModal = ({
   allFactors,
   surveys,
-  selectedSurveys,
+  comparativeSurveys,
   onSelect,
   onCancel,
 }: MarketSurveySelectionModalProps) => {
@@ -26,7 +26,7 @@ export const MarketSurveySelectionModal = ({
 
         <div className="flex-1 overflow-auto space-y-3">
           {surveys.map((survey, idx) => {
-            const isSelected = selectedSurveys.some(s => s.id === survey.id);
+            const isSelected = comparativeSurveys.some(s => s.id === survey.id);
             return (
               <button
                 key={idx}

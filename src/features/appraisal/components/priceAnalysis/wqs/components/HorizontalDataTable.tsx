@@ -24,7 +24,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
               <th
                 key={column.id}
                 className={clsx(
-                  'text-white bg-neutral-400 text-sm font-medium truncate sticky top-0 z-20',
+                  'text-white bg-neutral-400 text-sm sticky top-0 z-30 font-medium truncate',
                   column.className,
                 )}
                 rowSpan={hasGroup ? 2 : 1}
@@ -39,7 +39,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
             <th
               key={groupHeader.id}
               className={clsx(
-                'text-white bg-neutral-400 text-sm font-medium truncate sticky top-0 z-20 ',
+                'sticky top-0 z-30 bg-neutral-400 text-white text-sm font-medium truncate',
                 groupHeader.className,
                 alignClass(groupHeader.align),
               )}
@@ -59,7 +59,7 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
               <th
                 key={column.id}
                 className={clsx(
-                  'text-white text-sm font-medium text-left truncate bg-neutral-400 sticky top-0 z-20',
+                  'sticky top-0 z-20 bg-neutral-400 text-white text-sm font-medium truncate',
                   column.className,
                   alignClass(column.align),
                 )}
@@ -152,88 +152,9 @@ const renderBody = ({
                   ) : (
                     <span>{value ?? ''}</span>
                   )}
-                  {/* {hasAddButton ? (
-                    canEdit && editingRow === rowIndex ? (
-                      column.renderCell ? (
-                        column.renderCell({
-                          fieldName: `${rowIndex}.${column.name}`,
-                          row,
-                          rowIndex,
-                          value,
-                          ctx,
-                        })
-                      ) : (
-                        <span>{value ?? ''}</span>
-                      )
-                    ) : column.renderOnEditingCell ? (
-                      column.renderOnEditingCell({
-                        fieldName: `${rowIndex}.${column.name}`,
-                        row,
-                        rowIndex,
-                        value,
-                        ctx,
-                      })
-                    ) : (
-                      <span>{value ?? ''}</span>
-                    )
-                  ) : column.renderCell ? (
-                    column.renderCell({
-                      fieldName: `${rowIndex}.${column.name}`,
-                      row,
-                      rowIndex,
-                      value,
-                      ctx,
-                    })
-                  ) : (
-                    <span>{value ?? ''}</span>
-                  )} */}
                 </td>
               );
             })}
-            {/* {hasAddButton && (
-              <td className="border-b border-neutral-300 w-30">
-                <div className="w-full flex flex-row gap-2 justify-center items-center">
-                  {canEdit ? (
-                    editingRow === rowIndex ? (
-                      <button
-                        type="button"
-                        onClick={() => onSave?.(rowIndex)}
-                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                        title="Save"
-                      >
-                        <Icon style="solid" name="check" className="size-3.5" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onEdit?.(rowIndex)}
-                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                        title="Edit"
-                      >
-                        <Icon style="solid" name="pen" className="size-3.5" />
-                      </button>
-                    )
-                  ) : canSave ? (
-                    <button
-                      type="button"
-                      onClick={() => onSave?.(rowIndex)}
-                      className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                      title="Save"
-                    >
-                      <Icon style="solid" name="check" className="size-3.5" />
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => onRemove?.(rowIndex)}
-                    className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                    title="Delete"
-                  >
-                    <Icon style="solid" name="trash" className="size-3.5" />
-                  </button>
-                </div>
-              </td>
-            )} */}
           </tr>
         ))
       ) : (
@@ -353,7 +274,7 @@ export const HorizontalDataTable = ({
   return (
     <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
-        <table className="table-fixed w-full h-full border-separate border-spacing-0">
+        <table className="table-fixed w-max min-w-full h-full border-separate border-spacing-0">
           {hasHeader && renderHeader({ columns, colToGroup, groups, hasAddButton })}
           {hasBody &&
             renderBody({

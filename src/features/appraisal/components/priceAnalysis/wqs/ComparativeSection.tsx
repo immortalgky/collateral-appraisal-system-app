@@ -7,6 +7,7 @@ import { RHFInputCell } from './components/RHFInputCell';
 import { getDesciptions, getPropertyValueByFactorCode } from './WQSSection';
 import { MarketSurveySelectionModal } from './components/MarketSurveySelectionModal';
 import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
+import type { WQSTemplate } from './data/data';
 
 type ComparativeDataRowType = {
   factor: string;
@@ -18,7 +19,8 @@ type ComparativeCtxType = {};
 
 interface ComparativeSectionProps {
   surveys: Record<string, any>[];
-  template: Record<string, any>[];
+  comparativeSurveys: Record<string, any>[];
+  template: WQSTemplate;
   property: Record<string, string>[];
   allFactors: { value: string; description: string }[];
   onSelectMarketSurvey: (survey: Record<string, any>) => void;
@@ -26,10 +28,11 @@ interface ComparativeSectionProps {
 
 export const ComparativeSection = ({
   surveys,
+  comparativeSurveys,
   template,
   property,
   allFactors,
-  onSelectSurvey,
+  onSelectMarketSurvey,
 }: ComparativeSectionProps) => {
   const { control, getValues } = useFormContext();
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
@@ -80,10 +83,10 @@ export const ComparativeSection = ({
   ];
 
   // config market survey column
-  if (surveys) {
+  if (comparativeSurveys) {
     comparativeTableConfig = [
       ...comparativeTableConfig,
-      ...surveys.map((data, index) => ({
+      ...comparativeSurveys.map((data, index) => ({
         id: `surveys${index}`,
         name: `surveys.${index}.value`,
         header: <div className="px-2 py-4">Survey {index + 1}</div>,
@@ -144,8 +147,8 @@ export const ComparativeSection = ({
           <MarketSurveySelectionModal
             allFactors={allFactors}
             surveys={MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND}
-            selectedSurveys={surveys}
-            onSelect={onSelectSurvey}
+            comparativeSurveys={comparativeSurveys}
+            onSelect={onSelectMarketSurvey}
             onCancel={() => setShowMarketSurveySelection(false)}
           />
         )}
@@ -163,7 +166,7 @@ export const ComparativeSection = ({
           ctx={{
             allFactors: allFactors,
             template,
-            surveys: surveys,
+            surveys: comparativeSurveys,
             property,
           }}
         />

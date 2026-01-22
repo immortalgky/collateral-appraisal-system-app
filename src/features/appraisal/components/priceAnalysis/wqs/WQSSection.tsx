@@ -1,4 +1,4 @@
-import { Dropdown, Icon } from '@/shared/components';
+import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -7,12 +7,14 @@ import {
   MAPPING_FACTORS_PROPERTIES_FIELDS,
   PROPERTIES,
   WQS_TEMPLATES,
+  type WQSTemplate,
 } from './data/data';
 import { WQSDto, type WQSRequestType } from './form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { ComparativeSection } from './ComparativeSection';
 import { CalculationSection } from './CalculationSection';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
@@ -39,76 +41,85 @@ export const getPropertyValueByFactorCode = (id: string) => {
 
 export const WQSSection = () => {
   /**
-   * Initial
-   * (1) get property information in the group
-   * (2) get market survey information in application
-   * When we should map between market survey, wqs template and property?
    * => default collateral type, template => generate => query factors in template
    * =>
+   * API stages:
+   * stage (1): after user click 'AP' button
+   * - use 'groupId' to query property in the group, market survey in application
+   *
+   * stage (2): after user trigger 'pencil' button to start method
+   * - load 'collateral type', 'template', 'all factors' parameter
+   *
+   * stage (3): after user trigger 'generate' button
+   * - initial template setting into methods
+   *
+   * WQS divided into 4 sections:
+   * (1) select comparative data
+   * (2) WQS score
+   * (3) WQS calculation
+   * (4) adjust value
+   *
+   * WQS flow:
+   * (1) user choose collateral type and template then system initial data
+   * (2) user choose market survey in application to calculate at section (1)
+   * (3) user adjust score in section (2)
+   * (4) user adjust pricing from market survey such as offering price or selling price (3)
+   * (5) after system calculate final value, user will adjust final value at section (4)
+   *
+   * Control logic:
+   * section (1)
+   * - in selection market survey screen, system will display in map ***
+   * - factor from template setting cannot change/ remove
+   * - user can add more factor from all parameter
+   * section (2)
+   * - factor from template setting cannot change/ remove
+   * - user can add more factor from section (1), these factors can change or remove
+   * - if total intensity > 100, system will show red color
+   * section (3)
+   * - market survey data will deliver either offering price or selling price
+   * - if offering price has value, user can adjust value by either percentage or amount. but default percentage 5%
+   * - if selling price has value, system will calculate total number of year of collateral from date. then, user can adjust period of time (%) and period of time also default 3%
+   * section (4)
+   * - if coefficient > 0.85, highlight red color
+   * others
+   * - warning when change template button data already key in ***
    */
 
-  /**
-   * Comparative
-   */
+  // stage (1): moc data
+  const [property, setProperty] = useState<Record<string, any>[]>(PROPERTIES[0]);
+  const [surveys, setSurvey] = useState<Record<string, any>[]>(
+    MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND,
+  );
 
-  /**
-   * Calculation
-   */
-
-  // const methods = useForm<WQSRequestType>({
-  //   defaultValues: {
-  //     comparativeData: [...compRows],
-  //     WQSMarketSurveys: [{ WQSScores: [] }],
-  //     WQSCalculation: [...calculation],
-  //   },
-  //   resolver: zodResolver(WQSDto),
-  // });
-
-  const methods = useForm<WQSRequestType>({
-    // defaultValues: WQS_LAND,
-    resolver: zodResolver(WQSDto),
-  });
-
-  const { handleSubmit, getValues, reset, setValue } = methods;
-  const [onLoading, setOnLoading] = useState<boolean>(true);
+  // stage (2): moc data
   const [allFactors, setAllFactors] =
     useState<{ value: string; description: string }[]>(ALL_FACTORS);
-  const [property, setProperty] = useState<any>(PROPERTIES[0]); // property will be initial when user come to price analysis modal
+  const [templates, setTemplates] = useState<WQSTemplate[]>(WQS_TEMPLATES);
+  const [collateralTypes, setCollateralTypes] =
+    useState<{ value: string; label: string }[]>(COLLATERAL_TYPE);
 
+  // stage (3): generate button was triggered
+  const [templateQuery, setTemplateQuery] = useState<WQSTemplate | undefined>(undefined); // template will be initial when user click generate
+  const template = useMemo(() => {
+    return templateQuery;
+  }, [templateQuery]);
+
+  // ===== implement =====
+
+  const methods = useForm<WQSRequestType>({
+    resolver: zodResolver(WQSDto),
+  });
+  const { handleSubmit, getValues, reset, setValue } = methods;
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
   const [pricingTemplateCode, setPricingTemplateCode] = useState<string>('');
-
-  const [template, setTemplate] = useState<any>(undefined); // template will be initial when user click generate
-  const [surveys, setSurveys] = useState<any>([]); // market survey will be initial when user choose market survey data in application
+  const [onLoading, setOnLoading] = useState<boolean>(true);
+  const [comparativeSurveys, setComparativeSurveys] = useState<any>([]); // market survey will be initial when user choose market survey data in application
 
   const handleOnGenerate = () => {
     if (!pricingTemplateCode) return;
-
     // load template configuration
-    setTemplate(WQS_TEMPLATES.find(template => template.templateCode === pricingTemplateCode));
+    setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
   };
-
-  useEffect(() => {
-    setValue('comparativeSurveys', surveys);
-    setValue('WQSCalculations', [
-      ...surveys.map(survey => {
-        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
-        return {
-          marketId: survey.id,
-          offeringPrice: surveyMap.get('17'),
-          offeringPriceMeasurementUnit: surveyMap.get('20'),
-          offeringPriceAdjustmentPct: surveyMap.get('18'),
-          offeringPriceAdjustmentAmt: surveyMap.get('19'),
-          sellingPrice: surveyMap.get('21'),
-          sellingPriceMeasurementUnit: surveyMap.get('20'),
-          sellingDate: surveyMap.get('22'),
-          sellingPriceAdjustmentYear: surveyMap.get('23'),
-          numberOfYears: 10, // TODO: convert selling date to number of year
-        };
-      }),
-      {}, // config for collateral column
-    ]);
-  }, [surveys]);
 
   useEffect(() => {
     if (!template) return;
@@ -134,39 +145,6 @@ export const WQSSection = () => {
           collateral: 0,
         })),
         WQSCalculations: [
-          // {
-          //   id: 'survey1',
-          //   offeringPrice: 22750,
-          //   offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-          //   offeringPriceAdjustmentAmt: 0,
-          //   sellingPrice: undefined,
-          //   sellingPriceMeasurementUnit: undefined,
-          //   sellingDate: undefined,
-          //   sellingPriceAdjustmentYear: undefined,
-          //   numberOfYears: undefined,
-          // },
-          // {
-          //   id: 'survey2',
-          //   offeringPrice: 22500,
-          //   offeringPriceMeasurementUnit: 'Baht/ Sq.Wa',
-          //   offeringPriceAdjustmentAmt: 0,
-          //   sellingPrice: undefined,
-          //   sellingPriceMeasurementUnit: undefined,
-          //   sellingDate: undefined,
-          //   sellingPriceAdjustmentYear: undefined,
-          //   numberOfYears: undefined,
-          // },
-          // {
-          //   id: 'survey3',
-          //   offeringPrice: undefined,
-          //   offeringPriceMeasurementUnit: undefined,
-          //   offeringPriceAdjustmentAmt: undefined,
-          //   sellingPrice: 21500,
-          //   sellingPriceMeasurementUnit: 'Baht/ Sq.Wa',
-          //   sellingDate: undefined,
-          //   sellingPriceAdjustmentYear: 0,
-          //   numberOfYears: 6,
-          // },
           {
             id: 'collateral',
           },
@@ -188,106 +166,162 @@ export const WQSSection = () => {
     }, 1000);
   }, [template]);
 
-  const onSubmit = data => {
+  useEffect(() => {
+    setValue('comparativeSurveys', comparativeSurveys);
+    setValue('WQSCalculations', [
+      ...comparativeSurveys.map(survey => {
+        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+        return {
+          marketId: survey.id,
+          offeringPrice: surveyMap.get('17') ?? 0,
+          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+          offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+          offeringPriceAdjustmentAmt: surveyMap.get('19') ?? undefined,
+          sellingPrice: surveyMap.get('21') ?? 0,
+          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+          sellingDate: surveyMap.get('22') ?? '',
+          sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+          numberOfYears: 10, // TODO: convert selling date to number of year
+        };
+      }),
+      {}, // config for collateral column
+    ]);
+  }, [comparativeSurveys, setValue]);
+
+  const handleOnSave = data => {
     console.log(getValues());
   };
 
-  const onDraft = () => {
+  const handleOnSaveDraft = () => {
     console.log(getValues());
   };
 
-  const handleOnSelectMarketSurvey = survey => {
-    if (surveys.find(s => s.id === survey.id)) {
-      setSurveys([...surveys.filter(s => s.id != survey.id)]);
+  const handleOnSelectMarketSurvey = (survey: Record<string, any>) => {
+    if (comparativeSurveys.find(s => s.id === survey.id)) {
+      setComparativeSurveys([...comparativeSurveys.filter(s => s.id != survey.id)]);
       return;
     }
 
-    setSurveys([...surveys, survey]);
+    setComparativeSurveys([...comparativeSurveys, survey]);
   };
 
   return (
-    <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="flex flex-col gap-4 w-full min-h-0 mt-2">
-          <div className="flex flex-row gap-2">
-            <div className="text-2xl">
-              <Icon name="scale-balanced"></Icon>
+    <div className="flex flex-col h-full min-h-0 gap-4 mt-4">
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(handleOnSave)} className="flex-1 min-h-0 flex flex-col">
+          <div
+            id="form-scroll-container"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4"
+          >
+            <div className="flex flex-row gap-2">
+              <div className="text-2xl">
+                <Icon name="scale-balanced"></Icon>
+              </div>
+              <span className="text-2xl">{'Weighted Quality Scores (WQS)'}</span>
             </div>
-            <span className="text-2xl">{'Weighted Quality Scores (WQS)'}</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span>Pricing Analysis Template</span>
-            <div>
-              <Dropdown
-                label="Collateral Type"
-                options={[...COLLATERAL_TYPE]}
-                value={collateralTypeId}
-                onChange={value => {
-                  setCollateralTypeId(value);
-                }}
-              />
-            </div>
-            <div>
-              <Dropdown
-                label="Template"
-                options={
-                  WQS_TEMPLATES.filter(
-                    template => template.collateralTypeId === collateralTypeId,
-                  ).map(template => ({
-                    value: template.templateCode,
-                    label: template.templateName,
-                  })) ?? ''
-                }
-                value={pricingTemplateCode}
-                onChange={value => {
-                  setPricingTemplateCode(value);
-                }}
-              />
-            </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => handleOnGenerate()}
-                className="px-4 py-2 border border-gray-300 rounded-lg"
-              >
-                Generate
-              </button>
-            </div>
-          </div>
-          {!onLoading && (
-            <div className="flex flex-col gap-4">
-              <div>
-                <ComparativeSection
-                  surveys={surveys}
-                  template={template}
-                  property={property}
-                  allFactors={allFactors}
-                  onSelectSurvey={handleOnSelectMarketSurvey}
+            <div className="grid grid-cols-12 items-end gap-4">
+              <div className="col-span-2 flex h-full items-center">
+                <span>Pricing Analysis Template</span>
+              </div>
+              <div className="col-span-4">
+                <Dropdown
+                  label="Collateral Type"
+                  options={[...collateralTypes]}
+                  value={collateralTypeId}
+                  onChange={value => {
+                    setCollateralTypeId(value);
+                  }}
                 />
               </div>
-              <div>
-                <CalculationSection
-                  surveys={surveys}
-                  template={template}
-                  allFactors={allFactors}
-                  property={property}
+              <div className="col-span-4">
+                <Dropdown
+                  label="Template"
+                  options={
+                    templates
+                      .filter(template => template.collateralTypeId === collateralTypeId)
+                      .map(template => ({
+                        value: template.templateCode,
+                        label: template.templateName,
+                      })) ?? ''
+                  }
+                  value={pricingTemplateCode}
+                  onChange={value => {
+                    setPricingTemplateCode(value);
+                  }}
                 />
               </div>
-              <div>
-                <AdjustFinalValueSection />
-              </div>
-              <div>
-                <button type="submit">Submit</button>
-              </div>
-              <div>
-                <button type="button" onClick={() => onDraft()}>
-                  Draft
+              <div className="col-span-2">
+                <button
+                  type="button"
+                  onClick={() => handleOnGenerate()}
+                  className="px-4 py-2 border border-primary text-primary rounded-lg cursor-pointer hover:bg-primary/10"
+                >
+                  Generate
                 </button>
               </div>
             </div>
+            {!onLoading && (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
+                  <div className="text-lg border-b border-neutral-300 py-2">
+                    Comparative Analysis
+                  </div>
+                  <div className="px-4 mt-4">
+                    <ComparativeSection
+                      surveys={surveys}
+                      comparativeSurveys={comparativeSurveys}
+                      template={template}
+                      property={property}
+                      allFactors={allFactors}
+                      onSelectMarketSurvey={handleOnSelectMarketSurvey}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-lg border-b border-neutral-300 py-2">
+                    Calculation of Appraisal Value
+                  </div>
+                  <div className="px-4 mt-4">
+                    <CalculationSection
+                      comparativeSurveys={comparativeSurveys}
+                      template={template}
+                      allFactors={allFactors}
+                      property={property}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
+                  <div className="px-4 mt-4">
+                    <AdjustFinalValueSection />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          {!onLoading && (
+            <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <CancelButton />
+                  <div className="h-6 w-px bg-gray-200" />
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" type="button" onClick={handleOnSaveDraft}>
+                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                    Save draft
+                  </Button>
+                  <Button type="submit">
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
-        </div>
-      </form>
-    </FormProvider>
+          {/* Sticky Action Buttons */}
+        </form>
+      </FormProvider>
+    </div>
   );
 };

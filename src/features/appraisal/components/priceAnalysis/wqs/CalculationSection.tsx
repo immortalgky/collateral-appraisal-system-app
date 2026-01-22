@@ -6,16 +6,17 @@ import { Icon } from '@/shared/components';
 import { useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
 import { forecast } from './components/excelUtils/forecast';
+import { classNames } from '@/shared/utils/classNames';
 
 interface CalculationSectionProps {
-  surveys: Record<string, string>[];
+  comparativeSurveys: Record<string, string>[];
   template: Record<string, string>[];
   allFactors: Record<string, string>[];
   property: Record<string, any>;
 }
 
 export const CalculationSection = ({
-  surveys,
+  comparativeSurveys,
   template,
   allFactors,
   property,
@@ -35,9 +36,11 @@ export const CalculationSection = ({
   let scoreConfigurations: ColumnDef[] = [
     {
       id: 'factorCode',
-      header: <div>Factor</div>,
+      header: (
+        <div className="flex items-center justify-center w-full h-full bg-neutral-400">Factor</div>
+      ),
       name: 'factorCode',
-      className: 'w-60 border-r border-neutral-300',
+      className: 'w-[100px] border-r border-neutral-300 sticky left-0 z-40 bg-white',
       renderCell: ({ fieldName, ctx, rowIndex, value }) => {
         if (rowIndex > ctx.template.calculationFactors.length - 1) {
           const comparativeFactors =
@@ -67,7 +70,7 @@ export const CalculationSection = ({
       id: 'weight',
       header: <div>Weight</div>,
       name: 'weight',
-      className: 'min-w-30 border-r border-neutral-300',
+      className: 'w-30 border-r border-neutral-300',
       rhfRenderCell: { inputType: 'number' },
 
       renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
@@ -87,9 +90,9 @@ export const CalculationSection = ({
     },
     {
       id: 'intensity',
-      header: <div>Intensity</div>,
+      header: <div className="px-3">Intensity</div>,
       name: 'intensity',
-      className: 'w-30 border-r border-neutral-300',
+      className: 'w-30 h-14 border-r border-neutral-300',
       align: 'right',
       renderCell: ({ fieldName, row, ctx }) => {
         // if (row['factor'] ==)
@@ -113,8 +116,8 @@ export const CalculationSection = ({
     },
     {
       id: 'score',
-      header: <div>Score</div>,
-      className: 'w-30 border-r border-neutral-300',
+      header: <div className="px-3">Score</div>,
+      className: 'w-30 h-14 border-r border-neutral-300',
       renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
         <span>{`${row['weight'] * row['intensity']}`}</span>
       ),
@@ -122,20 +125,20 @@ export const CalculationSection = ({
     },
   ];
 
-  if (surveys) {
+  if (comparativeSurveys) {
     scoreConfigurations = [
       ...scoreConfigurations,
-      ...surveys.map((data, index) => {
+      ...comparativeSurveys.map((data, index) => {
         return {
           id: data.id,
           name: `surveys.${index}.value`,
-          className: 'border-r border-neutral-300',
+          className: 'border-r border-neutral-300 w-[200px]',
           header: (
             <div className="flex flex-col">
               <div className="flex justify-center items-center truncate">
                 <span>Survey {index + 1}</span>
               </div>
-              <div className="flex flex-row justify-between items-start gap-2 text-wrap ">
+              <div className="flex flex-row justify-between items-center h-full gap-2 text-wrap ">
                 <div className="text-left p-2">Score</div>
                 <div className="text-right p-2">Weighted Score</div>
               </div>
@@ -147,7 +150,7 @@ export const CalculationSection = ({
             const score = row['weight'] * value;
             return (
               <div className="flex flex-row justify-between items-center">
-                <div className="w-18">
+                <div className="w-20">
                   <RHFInputCell fieldName={fieldName} inputType="number" />
                 </div>
                 <div>
@@ -181,10 +184,10 @@ export const CalculationSection = ({
     {
       id: 'collateral',
       name: 'collateral',
-      className: 'border-r border-neutral-300',
+      className: 'border-r border-neutral-300 w-[200px]',
       header: (
-        <div className="flex flex-col w-full h-full">
-          <div className="flex justify-center items-start w-full h-14 border-b border-neutral-300 p-2">
+        <div className="flex flex-col h-full">
+          <div className="flex flex-row justify-center items-center w-full h-14 border-b border-neutral-300">
             <span>collateral</span>
           </div>
           <div className="flex flex-row justify-between items-start w-full gap-2 text-wrap ">
@@ -224,8 +227,8 @@ export const CalculationSection = ({
     },
     {
       id: 'action',
-      header: <div></div>,
-      className: 'w-16',
+      header: <div className="bg-neutral-400 w-full h-full"></div>,
+      className: 'min-w-20 sticky right-0 bg-white z-40 border-l border-neutral-300',
       renderCell: ({ rowIndex, onRemove, ctx }) => {
         /*
           factor which was set from template not allow to change
@@ -259,7 +262,7 @@ export const CalculationSection = ({
     {
       id: 'surveys',
       label: <div className="p-2">Comparative Data</div>,
-      columns: surveys.map((data, index) => data.id),
+      columns: comparativeSurveys.map((data, index) => data.id),
       align: 'center',
       className: `border-b border-r border-neutral-300 h-14`,
     },
@@ -275,7 +278,7 @@ export const CalculationSection = ({
         ctx={{
           factors: allFactors,
           template: template,
-          surveys: surveys,
+          surveys: comparativeSurveys,
           property: property,
         }}
         watch={{ comparativeFactors: 'comparativeFactors', scoreFactor: 'WQSScores' }}
@@ -302,6 +305,8 @@ const getCalculationConfigurations = setValue => {
       id: 'offeringPrice',
       header: <div className="flex justify-start items-center">Offering Price</div>,
       name: 'offeringPrice',
+      columnWidth: 'w-[100px]',
+      classNames: 'px-3 py-4',
       accessor: (column, columnIndex, ctx) => {
         return column['offeringPrice'];
       },

@@ -44,12 +44,12 @@ export const VerticalDataTable = ({
   return (
     <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
-        <table className="table-fixed w-full h-full border-separate border-spacing-0">
+        <table className="table-fixed w-max min-w-full h-full border-separate border-spacing-0">
           <tbody className="divide-y divide-neutral-300">
             {/* Action row use for take action on column*/}
-            {hasAddButton && (
+            {/* {hasAddButton && (
               <tr>
-                <th className="text-white text-sm font-medium py-3 px-4 truncate sticky left-0 z-20  w-100">
+                <th className="text-white text-sm font-medium py-3 px-4 truncate sticky left-0 z-20">
                   Action
                 </th>
                 {!isEmpty &&
@@ -91,7 +91,7 @@ export const VerticalDataTable = ({
                     );
                   })}
               </tr>
-            )}
+            )} */}
             {/* body */}
             {!isEmpty ? (
               rows.map((row, rowIndex) => (
@@ -99,7 +99,10 @@ export const VerticalDataTable = ({
                   {/* row header */}
                   <th
                     key={row.id ?? rowIndex}
-                    className="text-white text-sm font-medium py-3 px-4 truncate sticky left-0 z-20 bg-neutral-400"
+                    className={clsx(
+                      'text-white bg-neutral-400 text-sm sticky left-0 z-30 font-medium truncate w-30',
+                      row.columnWidth,
+                    )}
                   >
                     {row.header ?? ''}
                   </th>

@@ -90,14 +90,14 @@ export const ALL_FACTORS = [
   { value: '23', description: 'Adjustment of Period (Pct)' },
 ];
 
-type Template = {
+export type WQSTemplate = {
   templateCode: string;
   templateName: string;
   collateralTypeId: string;
   comparativeFactors: { factorId: string }[];
   calculationFactors: { factorId: string; weight: number; intensity: number }[];
 };
-export const WQS_TEMPLATES: Template[] = [
+export const WQS_TEMPLATES: WQSTemplate[] = [
   {
     templateCode: 'L01',
     templateName: 'LAND_01',
