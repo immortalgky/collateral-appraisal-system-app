@@ -19,8 +19,7 @@ const CreateCondoPage = () => {
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
-  // const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
-  const appraisalId = 'F71CD54D-4F78-4FB1-858C-19A85485C523';
+  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
 
   const isEditMode = Boolean(propertyId);
 
@@ -38,6 +37,7 @@ const CreateCondoPage = () => {
     if (isEditMode && propertyData) {
       const formValues = mapCondoPropertyResponseToForm(propertyData);
       reset(formValues);
+      console.log(formValues);
     }
   }, [isEditMode, propertyData, reset]);
 

@@ -187,7 +187,7 @@ const buildingInfoField: FormField[] = [
       { value: 'DILAPIDATED', label: 'Dilapidated' },
     ],
     orientation: 'horizontal',
-    name: 'buildingCondition',
+    name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -303,29 +303,29 @@ const encroachmentField: FormField[] = [
   {
     type: 'boolean-toggle',
     label: '',
-    name: 'isEncroached',
+    name: 'isEncroachingOthers',
     options: ['Is Encroached', 'Is not Encroached'],
     wrapperClassName: 'col-span-4 flex items-center',
   },
   {
     type: 'number-input',
     label: 'Encroachment Area',
-    name: 'encroachmentArea',
+    name: 'encroachingOthersArea',
     wrapperClassName: 'col-span-2',
   },
   {
     type: 'text-input',
     label: 'Encroachment Remark',
-    name: 'encroachmentRemark',
+    name: 'encroachingOthersRemark',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'isEncroached', is: true },
+    showWhen: { field: 'isEncroachingOthers', is: true },
   },
 ];
 
 const buildingMaterialField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingMaterial',
+    name: 'buildingMaterialType',
     orientation: 'horizontal',
     options: [
       { value: 'VERYGOOD', label: 'Very Good' },
@@ -340,7 +340,7 @@ const buildingMaterialField: FormField[] = [
 const buildingStyleField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'buildingStyle',
+    name: 'buildingStyleType',
     orientation: 'horizontal',
     options: [
       { value: 'VERYGOOD', label: 'Very Good' },
@@ -369,7 +369,7 @@ const isResidentialField: FormField[] = [
   {
     type: 'textarea',
     label: 'Due To',
-    name: 'isResidentialRemark',
+    name: 'residentialRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isResidential', is: false },
   },
@@ -391,6 +391,7 @@ const constructionStyleField: FormField[] = [
     label: 'Remark',
     name: 'constructionStyleRemark',
     wrapperClassName: 'col-span-12',
+    required: false,
   },
 ];
 
@@ -631,7 +632,7 @@ const utilizationFeild: FormField[] = [
   {
     type: 'textarea',
     label: 'Other',
-    name: 'otherPurposeUsage',
+    name: 'utilizationTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'utilizationType', is: '99', operator: 'equals' },
   },
@@ -643,6 +644,7 @@ const remarkField: FormField[] = [
     label: 'Remark',
     name: 'remark',
     wrapperClassName: 'col-span-12',
+    required: false,
   },
 ];
 

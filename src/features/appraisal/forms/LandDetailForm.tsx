@@ -346,8 +346,8 @@ const plotLocationField: FormField[] = [
 
 const landFillField: FormField[] = [
   {
-    type: 'checkbox-group',
-    name: 'landFillStatusType',
+    type: 'radio-group',
+    name: 'landFillType',
     orientation: 'horizontal',
     options: [
       { value: 'Empty Land', label: 'Empty Land' },
@@ -361,7 +361,7 @@ const landFillField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landFillStatusTypeOther',
+    name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'in' },
   },
@@ -610,14 +610,14 @@ const encroachedField: FormField[] = [
   {
     type: 'number-input',
     label: 'Encraoched Area Sq.wa',
-    name: 'encroachArea',
+    name: 'encroachmentArea',
     wrapperClassName: 'col-span-3',
     disableWhen: { field: 'isEncroached', is: false },
   },
   {
     type: 'textarea',
     label: 'Is Encroached',
-    name: 'encroachedRemark',
+    name: 'encroachmentRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isEncroached', is: true },
   },
@@ -625,8 +625,8 @@ const encroachedField: FormField[] = [
 const LimitationOther: FormField[] = [
   {
     type: 'checkbox',
-    name: 'electricity',
-    label: 'hasElectricity',
+    name: 'hasElectricity',
+    label: 'Has Electricity',
     wrapperClassName: 'col-span-9',
   },
   {
@@ -634,7 +634,7 @@ const LimitationOther: FormField[] = [
     label: 'Distance',
     name: 'electricityDistance',
     wrapperClassName: 'col-span-3',
-    disableWhen: { field: 'electricity', is: false },
+    disableWhen: { field: 'hasElectricity', is: false },
   },
   {
     type: 'checkbox',
@@ -674,7 +674,7 @@ const LimitationOther: FormField[] = [
 const evictionField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'evictionStatusType',
+    name: 'evictionType',
     orientation: 'horizontal',
     options: [
       { value: 'PermanentElectricity', label: 'Permanent Electricity' },
@@ -686,7 +686,7 @@ const evictionField: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'evictionStatusTypeOther',
+    name: 'evictionTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'evictionStatusType', is: '99', operator: 'in' },
   },
@@ -695,7 +695,7 @@ const evictionField: FormField[] = [
 const allocationField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'allocationStatusType',
+    name: 'allocationType',
     orientation: 'horizontal',
     options: [
       { value: 'AllocateNewProjects', label: 'Allocate Projects' },
@@ -759,8 +759,8 @@ const sizeAndBoundary: FormField[] = [
 const otherInformationField: FormField[] = [
   {
     type: 'number-input',
-    label: 'Pound Area',
-    name: 'poundArea',
+    label: 'Pond Area',
+    name: 'pondArea',
     wrapperClassName: 'col-span-6',
   },
   {

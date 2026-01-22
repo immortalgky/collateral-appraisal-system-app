@@ -13,10 +13,14 @@ import {
   schemas,
   type CreateLandRequestType,
   type CreateLandResponseType,
+  type DeletePropertyResponseType,
 } from '@/shared/forms/v2';
 import type {
-  CreateLandBuildingRequestType,
-  CreateLandBuildingResponseType,
+  CreateLandAndBuildingRequestType,
+  CreateLandAndBuildingResponseType,
+  GetLandAndBuildingPropertyByIdResultType,
+  UpdateLandAndBuildingRequestType,
+  UpdateLandAndBuildingResponseType,
 } from '../../shared/forms/typeLandBuilding';
 import type {
   CreateCondoRequestType,
@@ -82,15 +86,18 @@ export const useCreateBuildingProperty = () => {
   });
 };
 
-export const useCreateLandBuildingProperty = () => {
+export const useCreateLandAndBuildingProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (
-      request: CreateLandBuildingRequestType,
-    ): Promise<CreateLandBuildingResponseType> => {
+      request: CreateLandAndBuildingRequestType,
+    ): Promise<CreateLandAndBuildingResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/land-building-detail', request);
+      const { data } = await axios.post(
+        `/appraisals/${request.apprId}/land-and-building-properties`,
+        request,
+      );
       return data;
     },
     onSuccess: data => {
@@ -190,6 +197,30 @@ export const useUpdateCondoProperty = () => {
   });
 };
 
+export const useUpdateLandAndBuildingProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: UpdateLandAndBuildingRequestType,
+    ): Promise<UpdateLandAndBuildingResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/land-and-building-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties land and building updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
 // ==================== Get Properties ============================
 
 export const useGetLandPropertyById = (appraisalId: string, propertyId: string) => {
@@ -242,6 +273,7 @@ export const useGetCondoPropertyById = (appraisalId: string, propertyId: string)
       const { data } = await axios.get(
         `/appraisals/${appraisalId}/properties/${propertyId}/condo-detail`,
       );
+      // console.log(data);
       return data;
     },
     retry: (failureCount, error) => {
@@ -251,6 +283,42 @@ export const useGetCondoPropertyById = (appraisalId: string, propertyId: string)
       }
       // Default: retry up to 3 times for other errors
       return failureCount < 3;
+    },
+  });
+};
+
+export const useGetLandAndBuildingPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'land-and-building-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandAndBuildingPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/land-and-building-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+//===================== Delete Property ==========================
+export const useDeleteProperty = (appraisalId: string, propertyId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<DeletePropertyResponseType> => {
+      const { data } = await axios.delete(`/appraisal/${appraisalId}/${propertyId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
     },
   });
 };

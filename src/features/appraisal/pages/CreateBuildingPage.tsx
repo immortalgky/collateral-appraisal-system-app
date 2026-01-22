@@ -1,4 +1,5 @@
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
@@ -23,6 +24,10 @@ import {
 import { useEffect, useState } from 'react';
 import { mapBuildingPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
+
+interface BuildingPageProp {
+  readOnly?: boolean;
+}
 
 const CreateBuildingPage = () => {
   const navigate = useNavigate();
@@ -174,7 +179,7 @@ const CreateBuildingPage = () => {
         />
       </div>
 
-      <FormProvider {...methods}>
+      <FormProvider methods={methods} schema={createBuildingForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -214,6 +219,7 @@ const CreateBuildingPage = () => {
           </div>
 
           {/* Sticky Action Buttons */}
+
           <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">

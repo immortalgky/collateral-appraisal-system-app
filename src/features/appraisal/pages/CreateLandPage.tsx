@@ -84,7 +84,7 @@ const CreateLandPage = () => {
           onSuccess: response => {
             toast.success('Property land updated successfully');
             setSaveAction(null);
-            navigate(`/appraisa/${appraisalId}/property/land/${response.id}`);
+            navigate(`/appraisal/${appraisalId}/property/land/${response.id}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
