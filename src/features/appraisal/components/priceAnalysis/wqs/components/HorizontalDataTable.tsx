@@ -7,7 +7,6 @@ interface renderHeaderProps {
   columns: ColumnDef[];
   colToGroup: Map<string, string>;
   groups: ColumnGroup[];
-  hasAddButton: boolean;
 }
 const renderHeader = ({ columns, colToGroup, groups }: renderHeaderProps) => {
   const hasGroup = groups.length > 0;
@@ -120,10 +119,10 @@ const renderBody = ({
   addButtonLabel = isEmpty => (isEmpty ? 'Add first item' : 'New record'),
 }: renderBodyProps) => {
   return (
-    <tbody className="divide-y divide-neutral-3">
+    <tbody>
       {!isEmpty ? (
         rows.map((row, rowIndex) => (
-          <tr key={rowIndex}>
+          <tr key={row.__id ?? row.id}>
             {columns.map((column, columnIndex) => {
               const value = column.accessor
                 ? column.accessor({ row, rowIndex, columnIndex, ctx })
@@ -132,7 +131,7 @@ const renderBody = ({
                 <td
                   key={column.id}
                   className={clsx(
-                    'px-2 py-3 border-b border-neutral-300 whitespace-nowrap truncate',
+                    'px-2 py-3 border-b border-neutral-300 whitespace-nowrap truncate text-xs',
                     alignClass(column.align),
                     column.className,
                   )}
@@ -147,6 +146,8 @@ const renderBody = ({
                       onSave,
                       onRemove,
                       onAdd,
+                      // setValue
+                      // getValue
                     })
                   ) : (
                     <span>{value ?? ''}</span>
@@ -157,18 +158,12 @@ const renderBody = ({
           </tr>
         ))
       ) : (
-        <tr>
-          <td colSpan={columns.length + (hasAddButton ? 1 : 0)}>
-            {/* <div className="flex justify-center items-center text-sm font-medium h-14">
-              <span>No Data</span>
-            </div> */}
-          </td>
-        </tr>
+        <tr></tr>
       )}
       {hasAddButton ? (
         <tr>
           <th
-            className="text-white text-sm font-medium py-2 px-2 truncate"
+            className="text-white text-sm font-medium py-2 px-2 truncate sticky bottom-0 z-20"
             // colSpan={columns.length + (hasAddButton ? 1 : 0)}
             colSpan={columns.length}
           >
@@ -201,7 +196,7 @@ const renderFooter = ({ columns, rows, ctx }: renderFooterProps) => {
           {columns.map(column => (
             <td
               key={column.id}
-              className={clsx('sticky bottom-0 bg-white', alignClass(column.align))}
+              className={clsx('sticky bottom-0 z-30 bg-white', alignClass(column.align))}
             >
               {column.renderFooter
                 ? column.renderFooter({ rows, ctx, columnIndex: column.id })
@@ -271,9 +266,9 @@ export const HorizontalDataTable = ({
     for (const columnId of group.columns) colToGroup.set(columnId, group.id);
 
   return (
-    <div className="w-full max-h-full flex flex-col overflow-clip scroll-smooth">
-      <div className="w-full h-full overflow-auto scroll-smooth">
-        <table className="table-fixed w-max min-w-full h-full border-separate border-spacing-0">
+    <div className="w-full max-h-full flex flex-col">
+      <div className="w-full h-full overflow-auto">
+        <table className="table-fixed min-w-full h-full border-separate border-spacing-0">
           {hasHeader && renderHeader({ columns, colToGroup, groups })}
           {hasBody &&
             renderBody({

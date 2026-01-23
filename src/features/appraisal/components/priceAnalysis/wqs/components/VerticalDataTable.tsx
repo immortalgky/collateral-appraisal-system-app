@@ -57,7 +57,7 @@ export const VerticalDataTable = ({
   return (
     <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
-        <table className="table-fixed w-max min-w-full h-full border-separate border-spacing-0">
+        <table className="table-fixed min-w-full h-full border-separate border-spacing-0">
           {/* <colgroup>
             <col className={clsx(leftHeaderStyle)} />
             {columns.map((col, i) => {
@@ -84,7 +84,7 @@ export const VerticalDataTable = ({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-300">
+          <tbody>
             {/* Action row use for take action on column*/}
             {/* {hasAddButton && (
               <tr>

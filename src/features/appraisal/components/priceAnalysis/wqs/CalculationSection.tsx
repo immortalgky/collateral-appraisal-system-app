@@ -41,7 +41,7 @@ export const CalculationSection = ({
         <div className="flex items-center justify-center w-full h-full bg-neutral-400">Factor</div>
       ),
       name: 'factorCode',
-      className: 'w-[100px] border-r border-neutral-300 sticky left-0 z-40 bg-white',
+      className: 'border-r border-neutral-300 sticky left-0 z-40 bg-white w-[100px] min-w-0',
       renderCell: ({ fieldName, ctx, rowIndex, value }) => {
         if (rowIndex > ctx.template.calculationFactors.length - 1) {
           const comparativeFactors =
@@ -57,13 +57,13 @@ export const CalculationSection = ({
                 value: compFact.factorCode,
               })) ?? [];
           return (
-            <div className="w-full truncate">
+            <div className="w-[300px] truncate">
               <RHFInputCell fieldName={fieldName} inputType="select" options={comparativeFactors} />
             </div>
           );
         }
         return (
-          <div className="flex truncate" title={getDesciptions(value) ?? ''}>
+          <div className="w-[300px] truncate" title={getDesciptions(value) ?? ''}>
             {getDesciptions(value) ?? ''}
           </div>
         );
@@ -73,7 +73,7 @@ export const CalculationSection = ({
       id: 'weight',
       header: <div>Weight</div>,
       name: 'weight',
-      className: 'w-[100px] border-r border-neutral-300',
+      className: 'border-r border-neutral-300 w-[100px]',
       rhfRenderCell: { inputType: 'number' },
 
       renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
@@ -83,7 +83,7 @@ export const CalculationSection = ({
         return (
           <div
             className={clsx(
-              'flex justify-end items-center text-right text-sm font-normal text-gray-400 px-3 py-4',
+              'flex justify-end items-center text-right text-sm font-normal text-gray-400 px-3 py-4 w-[100px]',
             )}
           >
             {`${totalWeight}`}
@@ -95,7 +95,7 @@ export const CalculationSection = ({
       id: 'intensity',
       header: <div className="px-3">Intensity</div>,
       name: 'intensity',
-      className: 'w-[100px] h-14 border-r border-neutral-300',
+      className: 'h-14 border-r border-neutral-300 sticky top-14 w-[100px]',
       align: 'right',
       renderCell: ({ fieldName, row, ctx }) => {
         // if (row['factor'] ==)
@@ -108,7 +108,7 @@ export const CalculationSection = ({
         return (
           <div
             className={clsx(
-              'flex justify-end items-center text-right text-sm font-normal px-3 py-4',
+              'flex justify-end items-center text-right text-sm font-normal px-3 py-4 w-[100px]',
               totalIntensity > 100 ? 'text-danger' : 'text-gray-400',
             )}
           >
@@ -120,9 +120,9 @@ export const CalculationSection = ({
     {
       id: 'score',
       header: <div className="px-3">Score</div>,
-      className: 'w-[100px] h-14 border-r border-neutral-300',
+      className: 'h-14 border-r border-neutral-300 sticky top-14 w-[100px]',
       renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
-        <span>{`${row['weight'] * row['intensity']}`}</span>
+        <div className="w-[100px]">{row['weight'] * row['intensity']}</div>
       ),
       align: 'right',
     },
@@ -135,13 +135,13 @@ export const CalculationSection = ({
         return {
           id: data.id,
           name: `surveys.${index}.surveyScore`,
-          className: 'border-r border-neutral-300 w-[200px]',
+          className: 'border-r border-neutral-300 sticky top-14 w-[200px]',
           header: (
-            <div className="flex flex-col">
+            <div className="w-full h-full min-w-0">
               <div className="flex justify-center items-center truncate">
                 <span>Survey {index + 1}</span>
               </div>
-              <div className="flex flex-row justify-between items-center h-full gap-2 text-wrap ">
+              <div className="flex flex-row justify-between items-center h-full w-full gap-2 text-wrap ">
                 <div className="text-left p-2">Score</div>
                 <div className="text-right p-2">Weighted Score</div>
               </div>
@@ -154,11 +154,11 @@ export const CalculationSection = ({
             const score = weight * surveyScore;
 
             return (
-              <div className="flex flex-row justify-between items-center">
-                <div className="w-20">
+              <div className="w-[200px] h-full flex flex-row justify-between items-center">
+                <div className="w-30">
                   <RHFInputCell fieldName={fieldName} inputType="number" />
                 </div>
-                <div>
+                <div className="w-full text-right">
                   <span>{Number.isFinite(score) ? score.toFixed(0) : 0}</span>
                 </div>
               </div>
@@ -167,7 +167,6 @@ export const CalculationSection = ({
 
           renderFooter: ({ rows }) => {
             const totalScore = rows.reduce((acc, curr) => {
-              console.log(rows, curr['surveys'][index], index);
               const score = curr['surveys'][index]?.surveyScore ?? 0;
               const weight = curr['weight'] ?? 0;
               return acc + score * weight;
@@ -189,7 +188,7 @@ export const CalculationSection = ({
     {
       id: 'collateral',
       name: 'collateral',
-      className: 'border-r border-neutral-300 w-[200px]',
+      className: 'border-r border-neutral-300 w-[200px] sticky top-0 w-[200px]',
       header: (
         <div className="flex flex-col h-full">
           <div className="flex flex-row justify-center items-center w-full h-14 border-b border-neutral-300">
@@ -204,7 +203,7 @@ export const CalculationSection = ({
       renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
         const score = row['weight'] * value;
         return (
-          <div className="flex flex-row justify-between items-center">
+          <div className="w-[200px] flex flex-row justify-between items-center">
             <div className="w-18">
               <RHFInputCell fieldName={fieldName} inputType="number" />
             </div>
@@ -310,14 +309,14 @@ const getCalculationConfigurations = setValue => {
   const calculationConfigurations: RHFRow[] = [
     {
       id: 'offeringPrice',
-      header: <div className="flex justify-start items-center">Offering Price</div>,
+      header: <div className="flex justify-start items-center w-[600px]">Offering Price</div>,
       name: 'offeringPrice',
       className: 'px-3 py-4',
       accessor: (column, columnIndex, ctx) => {
         return column['offeringPrice'];
       },
       renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-        return <div>{`${value ?? ''}`}</div>;
+        return <div className="w-[300px]">{`${value ?? ''}`}</div>;
       },
     },
     {
@@ -482,9 +481,13 @@ const getCalculationConfigurations = setValue => {
 
         const forecastResult = forecast({ x, known_ys, known_xs });
         const finalValue = useMemo(() => {
+          console.log(forecastResult, x, known_xs, known_ys);
           return forecastResult;
-        }, [forecastResult]);
-        setValue('WQSFinalValue.finalValue', finalValue);
+        }, [forecastResult, known_xs, known_ys, x]);
+        setValue(
+          'WQSFinalValue.finalValue',
+          Number.isFinite(finalValue) ? Number(finalValue).toFixed(2) : 0,
+        );
         return <div>{Number.isFinite(finalValue) ? Number(finalValue).toLocaleString() : 0}</div>;
       },
     },

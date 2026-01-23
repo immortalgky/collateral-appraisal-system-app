@@ -1,10 +1,14 @@
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useController, useFormContext, useWatch } from 'react-hook-form';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from './components/excelUtils/regression';
 import clsx from 'clsx';
+import { useEffect } from 'react';
 
 export const AdjustFinalValueSection = ({ property }) => {
+  const { setValue } = useFormContext();
   const { WQSScores, WQSCalculations, WQSFinalValue } = useWatch();
-  const known_ys = (WQSScores ?? [])
+
+  // WQS score section
+  const known_xs = (WQSScores ?? [])
     .map(
       f =>
         f.surveys?.map(survey => ({
@@ -17,36 +21,69 @@ export const AdjustFinalValueSection = ({ property }) => {
         acc[i] = (acc[i] ?? 0) + value.score * value.weight;
       });
       return acc;
-    }, []); // wqs calculaitno
-  const known_xs = (WQSCalculations ?? []).filter(c => c.marketId).map(c => c.adjustedValue ?? 0); // wqs scores
+    }, []);
 
-  // if (known_ys.length > 2 && known_xs.length > 2) console.log(RSQ(known_ys, known_xs));
+  // WQS calculation section
+  const known_ys = (WQSCalculations ?? []).filter(c => c.marketId).map(c => c.adjustedValue ?? 0);
 
-  if (known_xs.length < 2 || known_ys.length < 2 || known_xs.length !== known_ys.length) {
-    return <div>0</div>;
-  }
+  const finalValue = known_xs.length === known_ys.length ? WQSFinalValue.finalValue : 0;
+  const RSQResult = known_xs.length === known_ys.length ? RSQ(known_ys, known_xs) : 0;
+  const stdErrorResult = known_xs.length === known_ys.length ? STEYX(known_ys, known_xs) : 0;
+  const intersectionPointResult =
+    known_xs.length === known_ys.length ? INTERCEPT(known_ys, known_xs) : 0;
+  const slopeResult = known_xs.length === known_ys.length ? SLOPE(known_ys, known_xs) : 0;
+  const lowestEstimate = finalValue - stdErrorResult;
+  const highestEstitmate = finalValue + stdErrorResult;
 
-  console.log(property);
+  useEffect(() => {
+    const name = 'WQSFinalValue';
+    setValue(`${name}.standardError`, stdErrorResult.toFixed(2));
+    setValue(`${name}.coefficientOfDecision`, RSQResult.toFixed(4));
+    setValue(`${name}.intersectionPoint`, intersectionPointResult.toFixed(2));
+    setValue(`${name}.slope`, slopeResult.toFixed(2));
+    setValue(`${name}.lowestEstimate`, lowestEstimate.toFixed(2));
+    setValue(`${name}.highestEstimate`, highestEstitmate.toFixed(2));
+  }, [
+    RSQResult,
+    highestEstitmate,
+    intersectionPointResult,
+    lowestEstimate,
+    setValue,
+    slopeResult,
+    stdErrorResult,
+  ]);
 
   return (
     <div className="flex flex-col gap-2 text-sm">
       <div className="grid grid-cols-12">
+        <div className="col-span-3">Final value</div>
+        <div className={clsx('col-span-9')}>{finalValue ?? 0}</div>
+      </div>
+      <div className="grid grid-cols-12">
         <div className="col-span-3">Coefficient of decision</div>
-        <div className={(clsx('col-span-9'), RSQ(known_ys, known_xs) < 0.85 ? 'text-danger' : '')}>
-          {RSQ(known_ys, known_xs).toFixed(5) ?? 0}
+        <div className={(clsx('col-span-9'), RSQResult < 0.85 ? 'text-danger' : '')}>
+          {RSQResult.toFixed(5) ?? 0}
         </div>
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Standard error</div>
-        <div className={clsx('col-span-9')}>{STEYX(known_ys, known_xs) ?? 0}</div>
+        <div className={clsx('col-span-9')}>{stdErrorResult.toFixed(6) ?? 0}</div>
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Intersection point</div>
-        <div className={clsx('col-span-9')}>{INTERCEPT(known_ys, known_xs) ?? 0}</div>
+        <div className={clsx('col-span-9')}>{intersectionPointResult}</div>
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Slope</div>
-        <div className={clsx('col-span-9')}>{SLOPE(known_ys, known_xs) ?? 0}</div>
+        <div className={clsx('col-span-9')}>{slopeResult}</div>
+      </div>
+      <div className="grid grid-cols-12">
+        <div className="col-span-3">Lowest estimate</div>
+        <div className={clsx('col-span-9')}>{lowestEstimate}</div>
+      </div>
+      <div className="grid grid-cols-12">
+        <div className="col-span-3">Highest estimate</div>
+        <div className={clsx('col-span-9')}>{highestEstitmate}</div>
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Include area</div>
@@ -68,10 +105,6 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">{'Appraisal Price (rounded)'}</div>
-        <div className="col-span-9"></div>
-      </div>
-      <div className="grid grid-cols-12">
-        <div className="col-span-3">{'Include building cost'}</div>
         <div className="col-span-9"></div>
       </div>
     </div>

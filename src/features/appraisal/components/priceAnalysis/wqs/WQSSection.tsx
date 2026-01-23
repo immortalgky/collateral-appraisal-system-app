@@ -167,7 +167,12 @@ export const WQSSection = () => {
   }, [template]);
 
   useEffect(() => {
-    setValue('comparativeSurveys', comparativeSurveys);
+    setValue(
+      'comparativeSurveys',
+      comparativeSurveys.map(survey => ({
+        surveyId: survey.id,
+      })),
+    );
     setValue('WQSCalculations', [
       ...comparativeSurveys.map(survey => {
         const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));

@@ -43,7 +43,7 @@ export const ComparativeSection = ({
       id: 'factorCode',
       name: 'factorCode',
       header: <div className="px-2 py-4">Factor</div>,
-      className: 'border-r border-neutral-300 w-60',
+      className: 'border-r border-neutral-300 w-[200px]',
       renderCell: ({ row, rowIndex, fieldName, ctx, value }) => {
         const totalTemplateFactors = ctx.template?.comparativeFactors?.length ?? 0;
         if (rowIndex >= totalTemplateFactors) {
@@ -70,7 +70,7 @@ export const ComparativeSection = ({
       id: 'collateral',
       name: 'collateral',
       header: <div className="px-2 py-4">Collateral</div>,
-      className: 'border-r border-neutral-300 min-w-60',
+      className: 'border-r border-neutral-300 max-w-[50px]',
       renderCell: ({ row }) => {
         const propertyValue = getPropertyValueByFactorCode(row['factorCode']) ?? '';
         return (
@@ -90,7 +90,7 @@ export const ComparativeSection = ({
         id: `surveys${index}`,
         name: `surveys.${index}.value`,
         header: <div className="px-2 py-4">Survey {index + 1}</div>,
-        className: 'border-r border-neutral-300 min-w-20',
+        className: 'border-r border-neutral-300 w-[200px]',
         renderCell: ({ row, ctx }) => {
           const surveys =
             ctx.surveys[index].factors.find(factor => factor.id === row['factorCode'])?.value ?? '';
