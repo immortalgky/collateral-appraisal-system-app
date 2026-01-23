@@ -131,7 +131,7 @@ const renderBody = ({
                 <td
                   key={column.id}
                   className={clsx(
-                    'px-2 py-3 border-b border-neutral-300 whitespace-nowrap truncate text-xs',
+                    'p-2 border-b border-neutral-300 whitespace-nowrap truncate text-xs',
                     alignClass(column.align),
                     column.className,
                   )}

@@ -58,23 +58,6 @@ export const VerticalDataTable = ({
     <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed min-w-full h-full border-separate border-spacing-0">
-          {/* <colgroup>
-            <col className={clsx(leftHeaderStyle)} />
-            {columns.map((col, i) => {
-              const s = getColumnSize?.(col, i) ?? {};
-              console.log(s);
-              return (
-                <col
-                  key={col.__colId}
-                  style={{
-                    width: s.width ?? 240,
-                    minWidth: s.minWidth,
-                    maxWidth: s.maxWidth,
-                  }}
-                />
-              );
-            })}
-          </colgroup> */}
           <thead>
             <tr>
               <th className={clsx(leftHeaderStyle)}></th>
@@ -86,7 +69,7 @@ export const VerticalDataTable = ({
           </thead>
           <tbody>
             {/* Action row use for take action on column*/}
-            {/* {hasAddButton && (
+            {hasAddButton && (
               <tr>
                 <th className="text-white text-sm font-medium py-3 px-4 truncate sticky left-0 z-20">
                   Action
@@ -130,7 +113,7 @@ export const VerticalDataTable = ({
                     );
                   })}
               </tr>
-            )} */}
+            )}
             {/* body */}
             {!isEmpty ? (
               rows.map((row, rowIndex) => (

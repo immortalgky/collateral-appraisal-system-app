@@ -297,7 +297,7 @@ export const CalculationSection = ({
         getColumnSize={(col, colIndex) => 'w-[200px]'}
         rows={getCalculationConfigurations(setValue)}
         hasHeader={false}
-        hasAddButton={false}
+        hasAddButton={true}
         canEdit={true}
         watch={{ WQSScores: 'WQSScores' }}
       />

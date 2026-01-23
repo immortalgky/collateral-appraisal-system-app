@@ -228,7 +228,7 @@ export const WQSSection = () => {
               <div className="col-span-2 flex h-full items-center">
                 <span>Pricing Analysis Template</span>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <Dropdown
                   label="Collateral Type"
                   options={[...collateralTypes]}
@@ -238,7 +238,7 @@ export const WQSSection = () => {
                   }}
                 />
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <Dropdown
                   label="Template"
                   options={
