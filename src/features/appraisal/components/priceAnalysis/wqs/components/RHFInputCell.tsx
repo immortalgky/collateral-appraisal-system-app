@@ -26,7 +26,7 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
         value={field.value ?? ''}
         onChange={e => field.onChange(toNumber(e.target.value))}
         inputMode="numeric"
-        className="w-full border border-gray-300 rounded-lg px-2 py-2"
+        className="w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth"
       />
     );
   }
@@ -42,8 +42,8 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
 
   if (inputType === 'display') {
     return (
-      <div className="truncate" title={getValues(fieldName)}>
-        <span>{`${getValues(fieldName)}`}</span>
+      <div className="flex truncate" title={getValues(fieldName)}>
+        {getValues(fieldName) ?? ''}
       </div>
     );
   }

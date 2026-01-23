@@ -86,7 +86,7 @@ export const WQSSection = () => {
    */
 
   // stage (1): moc data
-  const [property, setProperty] = useState<Record<string, any>[]>(PROPERTIES[0]);
+  const [property, setProperty] = useState<Record<string, any>>(PROPERTIES[0]);
   const [surveys, setSurvey] = useState<Record<string, any>[]>(
     MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND,
   );
@@ -293,7 +293,7 @@ export const WQSSection = () => {
                 <div>
                   <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
                   <div className="px-4 mt-4">
-                    <AdjustFinalValueSection />
+                    <AdjustFinalValueSection property={property} />
                   </div>
                 </div>
               </div>

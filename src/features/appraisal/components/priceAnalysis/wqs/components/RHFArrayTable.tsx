@@ -8,7 +8,7 @@ import {
   type Column,
 } from './useDerivedFieldArray';
 import { RHFInputCell } from './RHFInputCell';
-import { VerticalDataTable } from './VerticalDataTable';
+import { VerticalDataTable, type ColumnRecord, type ColumnSize } from './VerticalDataTable';
 import { useMergedCtx } from './useMergedCtx';
 import { HorizontalDataTable } from '@features/appraisal/components/priceAnalysis/wqs/components/HorizontalDataTable.tsx';
 
@@ -28,6 +28,8 @@ interface RHFVerticalTable<Row = Record<string, any>, Ctx = any> extends RHFTabl
   columns: RHFColumn[];
   dataAlignment: 'vertical';
   defaultColumn: Row;
+  leftHeaderStyle: string;
+  getColumnSize?: (col: ColumnRecord, colIndex: number) => string;
 }
 
 type RHFArrayTableProps<Row = Record<string, any>, Ctx = any> =
@@ -74,6 +76,8 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
 
   rows,
   defaultColumns,
+  leftHeaderStyle,
+  getColumnSize,
 }: RHFArrayTableProps<Ctx, T>) => {
   const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
@@ -213,6 +217,8 @@ export const RHFArrayTable = <Ctx = Record<string, any>, T = Row | Column>({
                   );
                 },
           }))}
+          leftHeaderStyle={leftHeaderStyle}
+          getColumnSize={getColumnSize}
           hasAddButton={hasAddButton}
           onAdd={handleOnAdd}
           onDelete={handleOnRemove}

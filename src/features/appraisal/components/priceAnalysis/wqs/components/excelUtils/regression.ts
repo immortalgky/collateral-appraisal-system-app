@@ -125,11 +125,17 @@ function sums(xs: number[], ys: number[]) {
  */
 export function SLOPE(knownY: RangeLike, knownX: RangeLike, opts: ExcelStatOptions = {}): number {
   const { xs, ys } = collectPairs(knownY, knownX, opts);
-  if (xs.length < 2) throw new ExcelError('#DIV/0!', 'Not enough data points.');
+
+  if (xs.length < 2) return 0;
+
+  // if (xs.length < 2) throw new ExcelError('#DIV/0!', 'Not enough data points.');
 
   const { n, sumX, sumY, sumXX, sumXY } = sums(xs, ys);
   const denom = n * sumXX - sumX * sumX;
-  if (denom === 0) throw new ExcelError('#DIV/0!', 'Variance of X is zero.');
+
+  if (denom === 0) return 0;
+
+  // if (denom === 0) throw new ExcelError('#DIV/0!', 'Variance of X is zero.');
 
   const numer = n * sumXY - sumX * sumY;
   return numer / denom;
@@ -145,7 +151,10 @@ export function INTERCEPT(
   opts: ExcelStatOptions = {},
 ): number {
   const { xs, ys } = collectPairs(knownY, knownX, opts);
-  if (xs.length < 2) throw new ExcelError('#DIV/0!', 'Not enough data points.');
+
+  if (xs.length < 2) return 0;
+
+  // if (xs.length < 2) throw new ExcelError('#DIV/0!', 'Not enough data points.');
 
   const { n, sumX, sumY } = sums(xs, ys);
   const m = SLOPE(ys, xs, opts); // reuse for consistent error behavior
@@ -167,7 +176,9 @@ export function RSQ(knownY: RangeLike, knownX: RangeLike, opts: ExcelStatOptions
   const { n, sumX, sumY, sumXX, sumYY, sumXY } = sums(xs, ys);
   const sxx = n * sumXX - sumX * sumX;
   const syy = n * sumYY - sumY * sumY;
-  if (sxx === 0 || syy === 0) throw new ExcelError('#DIV/0!', 'Zero variance in X or Y.');
+  if (sxx === 0 || syy === 0) return 0;
+
+  // if (sxx === 0 || syy === 0) throw new ExcelError('#DIV/0!', 'Zero variance in X or Y.');
 
   const sxy = n * sumXY - sumX * sumY;
   return (sxy * sxy) / (sxx * syy);
@@ -182,7 +193,10 @@ export function RSQ(knownY: RangeLike, knownX: RangeLike, opts: ExcelStatOptions
 export function STEYX(knownY: RangeLike, knownX: RangeLike, opts: ExcelStatOptions = {}): number {
   const { xs, ys } = collectPairs(knownY, knownX, opts);
   const n = xs.length;
-  if (n < 3) throw new ExcelError('#DIV/0!', 'Need at least 3 data points.');
+
+  if (n < 3) return 0;
+
+  // if (n < 3) throw new ExcelError('#DIV/0!', 'Need at least 3 data points.');
 
   const m = SLOPE(ys, xs, opts);
   const b = INTERCEPT(ys, xs, opts);

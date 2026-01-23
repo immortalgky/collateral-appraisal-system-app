@@ -2,9 +2,19 @@ import clsx from 'clsx';
 import { alignClass, type RowDef } from './types';
 import { Icon } from '@/shared/components';
 
+export type ColumnRecord = { __colId: string } & Record<string, any>;
+
+export type ColumnSize = {
+  width?: number | string;
+  minWidth?: number | string;
+  maxWidth?: number | string;
+};
+
 interface VerticalDataTableTableProps {
   columns: Record<string, any>[];
   rows: RowDef[];
+  leftHeaderStyle: string;
+  getColumnSize?: (col: ColumnRecord, colIndex: number) => string;
   ctx: any;
   hasBody?: boolean;
 
@@ -21,9 +31,12 @@ interface VerticalDataTableTableProps {
   hasAddButton?: boolean;
   addButtonLabel?: (isEmpty: boolean) => string;
 }
+
 export const VerticalDataTable = ({
   columns, // raw data
   rows, // config row
+  leftHeaderStyle,
+  getColumnSize,
   ctx,
   hasBody = true,
 
@@ -45,6 +58,32 @@ export const VerticalDataTable = ({
     <div className="w-full max-h-full flex flex-col overflow-clip">
       <div className="w-full h-full overflow-auto">
         <table className="table-fixed w-max min-w-full h-full border-separate border-spacing-0">
+          {/* <colgroup>
+            <col className={clsx(leftHeaderStyle)} />
+            {columns.map((col, i) => {
+              const s = getColumnSize?.(col, i) ?? {};
+              console.log(s);
+              return (
+                <col
+                  key={col.__colId}
+                  style={{
+                    width: s.width ?? 240,
+                    minWidth: s.minWidth,
+                    maxWidth: s.maxWidth,
+                  }}
+                />
+              );
+            })}
+          </colgroup> */}
+          <thead>
+            <tr>
+              <th className={clsx(leftHeaderStyle)}></th>
+              {columns.map((column, columnIndex) => {
+                const style = getColumnSize?.(column, columnIndex) ?? '';
+                return <th key={column.__colId} className={clsx(style)}></th>;
+              })}
+            </tr>
+          </thead>
           <tbody className="divide-y divide-neutral-300">
             {/* Action row use for take action on column*/}
             {/* {hasAddButton && (
@@ -95,13 +134,12 @@ export const VerticalDataTable = ({
             {/* body */}
             {!isEmpty ? (
               rows.map((row, rowIndex) => (
-                <tr key={(row as any).__rowId ?? rowIndex}>
+                <tr key={rowIndex}>
                   {/* row header */}
                   <th
                     key={row.id ?? rowIndex}
                     className={clsx(
-                      'text-white bg-neutral-400 text-sm sticky left-0 z-30 font-medium truncate w-30',
-                      row.columnWidth,
+                      'px-2 py-3 text-white bg-neutral-400 text-sm sticky left-0 z-30 font-medium truncate',
                     )}
                   >
                     {row.header ?? ''}
@@ -112,13 +150,15 @@ export const VerticalDataTable = ({
                     const value = row.accessor
                       ? row.accessor(column, columnIndex, ctx)
                       : (column as any)?.[row.name ?? row.id];
+                    const style = getColumnSize?.(column, columnIndex) ?? '';
                     return (
                       <td
                         key={column.id}
                         className={clsx(
-                          'py-3 px-4 border-b border-neutral-300 whitespace-nowrap truncate',
+                          'py-2 px-3 border-b border-neutral-300 whitespace-nowrap truncate',
                           alignClass(row.align),
                           row.className,
+                          style,
                         )}
                       >
                         {row.renderCell ? (

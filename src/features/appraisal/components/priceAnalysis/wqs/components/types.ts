@@ -61,7 +61,6 @@ export type RowDef<Column = Record<string, any>, Ctx = Record<string, any>> = {
   header?: React.ReactNode;
   align?: Align;
   className?: string;
-  columnWidth?: string;
 
   rhfRenderCell?: {
     inputType: 'text' | 'number' | 'select' | 'display';

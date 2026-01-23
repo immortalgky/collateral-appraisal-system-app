@@ -1,5 +1,5 @@
 import { RHFArrayTable } from './components/RHFArrayTable';
-import type { ColumnDef, ColumnGroup } from './components/types';
+import type { ColumnDef, ColumnGroup, RHFRow } from './components/types';
 import { RHFInputCell } from './components/RHFInputCell';
 import { getDesciptions } from './WQSSection';
 import { Icon } from '@/shared/components';
@@ -7,6 +7,7 @@ import { useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
 import { forecast } from './components/excelUtils/forecast';
 import { classNames } from '@/shared/utils/classNames';
+import { useMemo } from 'react';
 
 interface CalculationSectionProps {
   comparativeSurveys: Record<string, string>[];
@@ -56,12 +57,14 @@ export const CalculationSection = ({
                 value: compFact.factorCode,
               })) ?? [];
           return (
-            <RHFInputCell fieldName={fieldName} inputType="select" options={comparativeFactors} />
+            <div className="w-full truncate">
+              <RHFInputCell fieldName={fieldName} inputType="select" options={comparativeFactors} />
+            </div>
           );
         }
         return (
-          <div className="w-full truncate" title={getDesciptions(value) ?? ''}>
-            <span>{getDesciptions(value) ?? ''}</span>
+          <div className="flex truncate" title={getDesciptions(value) ?? ''}>
+            {getDesciptions(value) ?? ''}
           </div>
         );
       },
@@ -70,7 +73,7 @@ export const CalculationSection = ({
       id: 'weight',
       header: <div>Weight</div>,
       name: 'weight',
-      className: 'w-30 border-r border-neutral-300',
+      className: 'w-[100px] border-r border-neutral-300',
       rhfRenderCell: { inputType: 'number' },
 
       renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
@@ -92,7 +95,7 @@ export const CalculationSection = ({
       id: 'intensity',
       header: <div className="px-3">Intensity</div>,
       name: 'intensity',
-      className: 'w-30 h-14 border-r border-neutral-300',
+      className: 'w-[100px] h-14 border-r border-neutral-300',
       align: 'right',
       renderCell: ({ fieldName, row, ctx }) => {
         // if (row['factor'] ==)
@@ -117,7 +120,7 @@ export const CalculationSection = ({
     {
       id: 'score',
       header: <div className="px-3">Score</div>,
-      className: 'w-30 h-14 border-r border-neutral-300',
+      className: 'w-[100px] h-14 border-r border-neutral-300',
       renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
         <span>{`${row['weight'] * row['intensity']}`}</span>
       ),
@@ -131,7 +134,7 @@ export const CalculationSection = ({
       ...comparativeSurveys.map((data, index) => {
         return {
           id: data.id,
-          name: `surveys.${index}.value`,
+          name: `surveys.${index}.surveyScore`,
           className: 'border-r border-neutral-300 w-[200px]',
           header: (
             <div className="flex flex-col">
@@ -146,8 +149,10 @@ export const CalculationSection = ({
           ),
 
           renderCell: ({ fieldName, row }) => {
-            const value = getValues(fieldName) ?? 0;
-            const score = row['weight'] * value;
+            const surveyScore = getValues(fieldName) ?? 0;
+            const weight = row['weight'] ?? 0;
+            const score = weight * surveyScore;
+
             return (
               <div className="flex flex-row justify-between items-center">
                 <div className="w-20">
@@ -163,7 +168,7 @@ export const CalculationSection = ({
           renderFooter: ({ rows }) => {
             const totalScore = rows.reduce((acc, curr) => {
               console.log(rows, curr['surveys'][index], index);
-              const score = curr['surveys'][index]?.value ?? 0;
+              const score = curr['surveys'][index]?.surveyScore ?? 0;
               const weight = curr['weight'] ?? 0;
               return acc + score * weight;
             }, 0);
@@ -289,6 +294,8 @@ export const CalculationSection = ({
       <RHFArrayTable
         name="WQSCalculations"
         dataAlignment="vertical"
+        leftHeaderStyle={'w-[100px]'}
+        getColumnSize={(col, colIndex) => 'w-[200px]'}
         rows={getCalculationConfigurations(setValue)}
         hasHeader={false}
         hasAddButton={false}
@@ -305,8 +312,7 @@ const getCalculationConfigurations = setValue => {
       id: 'offeringPrice',
       header: <div className="flex justify-start items-center">Offering Price</div>,
       name: 'offeringPrice',
-      columnWidth: 'w-[100px]',
-      classNames: 'px-3 py-4',
+      className: 'px-3 py-4',
       accessor: (column, columnIndex, ctx) => {
         return column['offeringPrice'];
       },
@@ -450,31 +456,36 @@ const getCalculationConfigurations = setValue => {
           0,
         );
         // known_y = adjusted values of each comparable
-        const known_y = (columns ?? [])
+        const known_ys = (columns ?? [])
           .map((c: any) => Number(c?.adjustedValue))
           .filter(Number.isFinite);
 
-        const known_x = (ctx.WQSScores ?? []).reduce(
-          (acc, curr) => {
-            return [
-              acc[0] + curr.survey1 * curr.weight,
-              acc[1] + curr.survey2 * curr.weight,
-              acc[2] + curr.survey3 * curr.weight,
-            ];
-          },
-          [0, 0, 0],
-        );
+        const known_xs = (ctx.WQSScores ?? [])
+          .map(
+            f =>
+              f.surveys?.map(survey => ({
+                score: survey.surveyScore ?? 0,
+                weight: f.weight ?? 0,
+              })) ?? [],
+          )
+          .reduce((acc, curr) => {
+            curr.forEach((value, i) => {
+              acc[i] = (acc[i] ?? 0) + value.score * value.weight;
+            });
+            return acc;
+          }, []);
 
         // must have >= 2 points
-        if (known_x.length < 2 || known_y.length < 2 || known_x.length !== known_y.length) {
+        if (known_xs.length < 2 || known_ys.length < 2 || known_xs.length !== known_ys.length) {
           return <div>0</div>;
         }
-        const finalValue = forecast({ x, known_y, known_x });
-        return (
-          <div>
-            {Number.isFinite(finalValue) ? Number(finalValue).toFixed(2).toLocaleString() : 0}
-          </div>
-        );
+
+        const forecastResult = forecast({ x, known_ys, known_xs });
+        const finalValue = useMemo(() => {
+          return forecastResult;
+        }, [forecastResult]);
+        setValue('WQSFinalValue.finalValue', finalValue);
+        return <div>{Number.isFinite(finalValue) ? Number(finalValue).toLocaleString() : 0}</div>;
       },
     },
     {

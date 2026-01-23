@@ -9,7 +9,7 @@ interface renderHeaderProps {
   groups: ColumnGroup[];
   hasAddButton: boolean;
 }
-const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeaderProps) => {
+const renderHeader = ({ columns, colToGroup, groups }: renderHeaderProps) => {
   const hasGroup = groups.length > 0;
   const groupById = new Map(groups.map(group => [group.id, group] as const));
   const renderedGroup = new Set<string>();
@@ -18,7 +18,6 @@ const renderHeader = ({ columns, colToGroup, groups, hasAddButton }: renderHeade
       <tr>
         {columns.map(column => {
           const groupId = colToGroup.get(column.id);
-
           if (!hasGroup || !groupId)
             return (
               <th
@@ -133,7 +132,7 @@ const renderBody = ({
                 <td
                   key={column.id}
                   className={clsx(
-                    'py-3 px-4 border-b border-neutral-300 whitespace-nowrap truncate',
+                    'px-2 py-3 border-b border-neutral-300 whitespace-nowrap truncate',
                     alignClass(column.align),
                     column.className,
                   )}
@@ -272,10 +271,10 @@ export const HorizontalDataTable = ({
     for (const columnId of group.columns) colToGroup.set(columnId, group.id);
 
   return (
-    <div className="w-full max-h-full flex flex-col overflow-clip">
-      <div className="w-full h-full overflow-auto">
+    <div className="w-full max-h-full flex flex-col overflow-clip scroll-smooth">
+      <div className="w-full h-full overflow-auto scroll-smooth">
         <table className="table-fixed w-max min-w-full h-full border-separate border-spacing-0">
-          {hasHeader && renderHeader({ columns, colToGroup, groups, hasAddButton })}
+          {hasHeader && renderHeader({ columns, colToGroup, groups })}
           {hasBody &&
             renderBody({
               columns,

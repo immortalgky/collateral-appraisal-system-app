@@ -15,7 +15,10 @@ const WQSCalculation = z
   })
   .passthrough();
 
-const WQSSurveyScore = z.object({ marketId: z.string(), surveyScore: z.number() });
+const WQSSurveyScore = z.object({
+  marketId: z.string(),
+  surveyScore: z.number(),
+});
 
 const WQSScore = z
   .object({
