@@ -24,6 +24,12 @@ export type RHFHorizontalColumn<Row, Ctx> = {
     rowIndex: number;
     ctx: Ctx;
     value: any;
+    actions: {
+      addColumn: () => void;
+      removeColumn: (columnIndex: number) => void;
+      saveColumn: (columnIndex: number) => void;
+      editColumn: (columnIndex: number) => void;
+    };
   }) => React.ReactNode;
 
   accessor?: (args: { row: Row; rowIndex: number; ctx: Ctx }) => any;
@@ -48,6 +54,12 @@ export type RHFVerticalRowDef<ColumnItem, Ctx> = {
     columnIndex: number;
     ctx: Ctx;
     value: any;
+    actions: {
+      addColumn: () => void;
+      removeColumn: (columnIndex: number) => void;
+      saveColumn: (columnIndex: number) => void;
+      editColumn: (columnIndex: number) => void;
+    };
   }) => React.ReactNode;
 
   accessor?: (args: { columnItem: ColumnItem; columnIndex: number; ctx: Ctx }) => any;

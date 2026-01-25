@@ -1,20 +1,19 @@
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { WQSDto, type WQSRequestType } from './form';
+import { AdjustFinalValueSection } from './AdjustFinalValueSection';
+import { ComparativeSection } from './ComparativeSection';
+import { CalculationSection } from './CalculationSection';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ALL_FACTORS,
   COLLATERAL_TYPE,
   MAPPING_FACTORS_PROPERTIES_FIELDS,
   PROPERTIES,
   WQS_TEMPLATES,
-  type WQSTemplate,
-} from './data/data';
-import { WQSDto, type WQSRequestType } from './form';
-import { AdjustFinalValueSection } from './AdjustFinalValueSection';
-import { ComparativeSection } from './ComparativeSection';
-import { CalculationSection } from './CalculationSection';
-import { useEffect, useMemo, useState } from 'react';
-import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
+} from '../../data/data';
+import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));

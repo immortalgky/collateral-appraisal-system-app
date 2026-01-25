@@ -10,7 +10,7 @@ import {
 import { RHFInputCell } from './RHFInputCell';
 import { VerticalDataTable, type ColumnRecord, type ColumnSize } from './VerticalDataTable';
 import { useMergedCtx } from './useMergedCtx';
-import { HorizontalDataTable } from '@features/appraisal/components/priceAnalysis/wqs/components/HorizontalDataTable.tsx';
+import { HorizontalDataTable } from './HorizontalDataTable';
 
 const clone = <T,>(v: T): T => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

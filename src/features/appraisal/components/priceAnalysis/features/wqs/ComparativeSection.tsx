@@ -1,13 +1,12 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
-import { RHFArrayTable } from './components/RHFArrayTable';
-import type { ColumnDef } from './components/types';
+import { useFormContext } from 'react-hook-form';
 import { useState } from 'react';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './components/RHFInputCell';
 import { getDesciptions, getPropertyValueByFactorCode } from './WQSSection';
 import { MarketSurveySelectionModal } from './components/MarketSurveySelectionModal';
-import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from './data/comparativeData';
-import type { WQSTemplate } from './data/data';
+import type { RHFHorizontalColumn } from '../../adapters/rhf-table/spec';
+import { RHFHorizontalArrayTable } from '../../adapters/rhf-table/RHFArrayTable';
+import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
 
 type ComparativeDataRowType = {
   factor: string;
@@ -37,19 +36,19 @@ export const ComparativeSection = ({
   const { control, getValues } = useFormContext();
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
 
-  let comparativeTableConfig: ColumnDef[] = [
+  let comparativeTableConfig: RHFHorizontalColumn<Record<string, any>, any>[] = [
     // config factor column
     {
       id: 'factorCode',
-      name: 'factorCode',
       header: <div className="px-2 py-4">Factor</div>,
-      className: 'border-r border-neutral-300 w-[200px]',
-      renderCell: ({ row, rowIndex, fieldName, ctx, value }) => {
+      className: 'border-r border-neutral-300 min-w-[200px]',
+      field: 'factorCode',
+      render: ({ row, rowIndex, fieldPath, ctx, value }) => {
         const totalTemplateFactors = ctx.template?.comparativeFactors?.length ?? 0;
         if (rowIndex >= totalTemplateFactors) {
           return (
             <RHFInputCell
-              fieldName={fieldName}
+              fieldName={fieldPath}
               inputType="select"
               options={ctx.allFactors.map(factor => ({
                 label: factor.description,
@@ -59,7 +58,7 @@ export const ComparativeSection = ({
           );
         }
         return (
-          <div className="w-full truncate" title={getDesciptions(value) ?? ''}>
+          <div className="w-[200px] truncate" title={getDesciptions(value) ?? ''}>
             <span>{getDesciptions(value) ?? ''}</span>
           </div>
         );
@@ -68,10 +67,10 @@ export const ComparativeSection = ({
     // config collateral column
     {
       id: 'collateral',
-      name: 'collateral',
       header: <div className="px-2 py-4">Collateral</div>,
-      className: 'border-r border-neutral-300 max-w-[50px]',
-      renderCell: ({ row }) => {
+      className: 'border-r border-neutral-300 min-w-[200px]',
+      field: 'collateral',
+      render: ({ row }) => {
         const propertyValue = getPropertyValueByFactorCode(row['factorCode']) ?? '';
         return (
           <div className="w-full truncate" title={propertyValue ?? ''}>
@@ -88,10 +87,10 @@ export const ComparativeSection = ({
       ...comparativeTableConfig,
       ...comparativeSurveys.map((data, index) => ({
         id: `surveys${index}`,
-        name: `surveys.${index}.value`,
         header: <div className="px-2 py-4">Survey {index + 1}</div>,
-        className: 'border-r border-neutral-300 w-[200px]',
-        renderCell: ({ row, ctx }) => {
+        className: 'border-r border-neutral-300 min-w-[200px]',
+        field: `surveys.${index}.value`,
+        render: ({ row, ctx }) => {
           const surveys =
             ctx.surveys[index].factors.find(factor => factor.id === row['factorCode'])?.value ?? '';
           return (
@@ -111,7 +110,7 @@ export const ComparativeSection = ({
       id: 'action',
       header: <div className="px-2 py-4"></div>,
       className: 'w-16',
-      renderCell: ({ rowIndex, onRemove, ctx }) => {
+      render: ({ rowIndex, ctx }) => {
         /*
           factor which was set from template not allow to change
          */
@@ -120,7 +119,8 @@ export const ComparativeSection = ({
             <div className="flex justify-center items-center">
               <button
                 type="button"
-                onClick={() => onRemove?.(rowIndex)}
+                // onClick={() => onRemove?.(rowIndex)}
+                onClick={() => null}
                 className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                 title="Delete"
               >
@@ -154,15 +154,15 @@ export const ComparativeSection = ({
         )}
       </div>
       <div>
-        <RHFArrayTable
+        <RHFHorizontalArrayTable
           name="comparativeFactors"
           columns={comparativeTableConfig}
           defaultRow={{
             factorCode: '',
           }}
-          hasAddButton={true}
+          hasHeader={true}
+          hasBody={true}
           hasFooter={false}
-          canEdit={true}
           ctx={{
             allFactors: allFactors,
             template,

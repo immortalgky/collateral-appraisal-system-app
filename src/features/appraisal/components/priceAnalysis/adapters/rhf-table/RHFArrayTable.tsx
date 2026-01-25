@@ -1,8 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import type { GridColumn, GridGroup } from '@/ui/table/types';
-import { RHFInputCell } from './RHFInputCell';
-import { buildFieldPath } from './buildFieldPath';
 import { DataGrid } from '@features/appraisal/components/priceAnalysis/components/table/DataGrid.tsx';
 import {
   buildHorizontalGrid,
@@ -32,6 +29,11 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   hasHeader?: boolean;
   hasBody?: boolean;
   hasFooter?: boolean;
+
+  addColumn?: () => void;
+  removeColumn?: (columnIndex: number) => void;
+  saveColumn?: (columnIndex: number) => void;
+  editColumn?: (columnIndex: number) => void;
 }) => {
   const { control } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
@@ -53,7 +55,7 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   }, [columns, name, ctx, fields, watched]);
 
   return (
-    <div className="rounded-xl border border-neutral-300 overflow-clip">
+    <div className="border border-neutral-300 overflow-clip">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
@@ -65,11 +67,11 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
       />
 
       {/* optional add button */}
-      <div className="p-2 border-t border-neutral-300">
+      <div className="flex flex-row items-center justify-center p-2 border-t border-neutral-300">
         <button
           type="button"
           onClick={() => append(defaultRow)}
-          className="px-4 py-2 border border-gray-300 rounded-lg"
+          className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer"
         >
           + Add row
         </button>
@@ -115,7 +117,7 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   }, [rowDefs, name, ctx, fields, watched, leftHeaderClassName, getColClassName]);
 
   return (
-    <div className="rounded-xl border border-neutral-300 overflow-clip">
+    <div className="border border-neutral-300 overflow-clip">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
@@ -126,11 +128,11 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
       />
 
       {/* optional add button */}
-      <div className="p-2 border-t border-neutral-300">
+      <div className="flex flex-row items-center justify-center p-2 border-t border-neutral-300">
         <button
           type="button"
           onClick={() => append(defaultColumn)}
-          className="px-4 py-2 border border-gray-300 rounded-lg"
+          className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer"
         >
           + Add row
         </button>

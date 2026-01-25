@@ -26,121 +26,123 @@ export function DataGrid<Row, Ctx>({
   for (const g of groups) for (const colId of g.columnIds) colToGroup.set(colId, g.id);
 
   return (
-    <div className="w-full h-full overflow-auto">
-      <table className="table-fixed min-w-full border-separate border-spacing-0">
-        {hasHeader && (
-          <thead>
-            {!!groups.length && (
-              <tr>
-                {columns.map(col => {
-                  const groupId = colToGroup.get(col.id);
-                  if (!groupId) {
+    <div className="w-full max-h-full flex flex-col">
+      <div className="w-full h-full overflow-auto">
+        <table className="table-fixed min-w-full border-separate border-spacing-0">
+          {hasHeader && (
+            <thead>
+              {!!groups.length && (
+                <tr>
+                  {columns.map(col => {
+                    const groupId = colToGroup.get(col.id);
+                    if (!groupId) {
+                      return (
+                        <th
+                          key={col.id}
+                          rowSpan={2}
+                          className={clsx(
+                            'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
+                            col.className,
+                          )}
+                        >
+                          {col.header}
+                        </th>
+                      );
+                    }
+
+                    // render group header only once per group
+                    const group = groupById.get(groupId)!;
+                    const isFirst = group.columnIds[0] === col.id;
+                    if (!isFirst) return null;
+
                     return (
                       <th
-                        key={col.id}
-                        rowSpan={2}
+                        key={group.id}
+                        colSpan={group.columnIds.length}
                         className={clsx(
                           'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
-                          col.className,
+                          group.className,
                         )}
                       >
-                        {col.header}
+                        {group.label}
                       </th>
                     );
-                  }
+                  })}
+                </tr>
+              )}
 
-                  // render group header only once per group
-                  const group = groupById.get(groupId)!;
-                  const isFirst = group.columnIds[0] === col.id;
-                  if (!isFirst) return null;
+              <tr>
+                {columns.map(col => {
+                  if (!groups.length || !colToGroup.get(col.id)) {
+                    if (!groups.length) {
+                      return (
+                        <th
+                          key={col.id}
+                          className={clsx(
+                            'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
+                            col.className,
+                          )}
+                        >
+                          {col.header}
+                        </th>
+                      );
+                    }
+                    return null;
+                  }
 
                   return (
                     <th
-                      key={group.id}
-                      colSpan={group.columnIds.length}
+                      key={col.id}
                       className={clsx(
-                        'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
-                        group.className,
+                        'sticky top-0 z-20 bg-neutral-400 text-white text-sm',
+                        col.className,
                       )}
                     >
-                      {group.label}
+                      {col.header}
                     </th>
                   );
                 })}
               </tr>
-            )}
+            </thead>
+          )}
 
-            <tr>
-              {columns.map(col => {
-                if (!groups.length || !colToGroup.get(col.id)) {
-                  if (!groups.length) {
-                    return (
-                      <th
+          {hasBody && (
+            <tbody>
+              {!isEmpty ? (
+                rows.map((row, rowIndex) => (
+                  <tr key={(row as any).__id ?? rowIndex}>
+                    {columns.map(col => (
+                      <td
                         key={col.id}
                         className={clsx(
-                          'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
+                          'p-2 border-b border-neutral-300 whitespace-nowrap truncate text-xs',
                           col.className,
                         )}
                       >
-                        {col.header}
-                      </th>
-                    );
-                  }
-                  return null;
-                }
+                        {col.renderCell({ row, rowIndex, ctx })}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr />
+              )}
+            </tbody>
+          )}
 
-                return (
-                  <th
-                    key={col.id}
-                    className={clsx(
-                      'sticky top-0 z-20 bg-neutral-400 text-white text-sm',
-                      col.className,
-                    )}
-                  >
-                    {col.header}
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-        )}
-
-        {hasBody && (
-          <tbody>
-            {!isEmpty ? (
-              rows.map((row, rowIndex) => (
-                <tr key={(row as any).__id ?? rowIndex}>
-                  {columns.map(col => (
-                    <td
-                      key={col.id}
-                      className={clsx(
-                        'p-2 border-b border-neutral-300 whitespace-nowrap truncate text-xs',
-                        col.className,
-                      )}
-                    >
-                      {col.renderCell({ row, rowIndex, ctx })}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr />
-            )}
-          </tbody>
-        )}
-
-        {hasFooter && !isEmpty && (
-          <tfoot>
-            <tr className="border-t border-neutral-300">
-              {columns.map(col => (
-                <td key={col.id} className="sticky bottom-0 z-30 bg-white">
-                  {col.renderFooter?.({ rows, ctx }) ?? null}
-                </td>
-              ))}
-            </tr>
-          </tfoot>
-        )}
-      </table>
+          {hasFooter && !isEmpty && (
+            <tfoot>
+              <tr className="border-t border-neutral-300">
+                {columns.map(col => (
+                  <td key={col.id} className="sticky bottom-0 z-30 bg-white">
+                    {col.renderFooter?.({ rows, ctx }) ?? null}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
     </div>
   );
 }

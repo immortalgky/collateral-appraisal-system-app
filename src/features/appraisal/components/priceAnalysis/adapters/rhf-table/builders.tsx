@@ -3,20 +3,43 @@ import type {
   RHFHorizontalColumn,
   RHFVerticalRowDef,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/spec.ts';
-import type { GridColumn, GridRow } from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
+import type {
+  GridColumn,
+  GridRow,
+} from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/features/wqs/components/RHFInputCell.tsx';
+
+// === HORIZONTAL GRID BUILDER ===
 
 interface buildHorizontalGridProps<Row extends Record<string, any>, Ctx> {
   arrayName: string;
   items: { id: string; value: Row }[];
   columns: RHFHorizontalColumn<Row, Ctx>[];
   ctx: Ctx;
+
+  canEdit?: boolean;
+  onEdit?: (colIndex: number, handleOnEdit: (colIndex: number) => void) => void;
+
+  canSave?: boolean;
+  onSave?: (colIndex: number, handleOnEdit: (colIndex: number) => void) => void;
+
+  onRemove?: (colIndex: number, handleOnRemove: (colIndex: number) => void) => void;
+  onAdd?: (handleOnAdd: (newRecord?: Record<string, any>) => void) => void;
 }
 export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
   arrayName,
   items,
   columns,
   ctx,
+
+  canEdit,
+  onEdit,
+
+  canSave,
+  onSave,
+
+  onRemove,
+  onAdd,
 }: buildHorizontalGridProps<Row, Ctx>): {
   gridRows: GridRow<Row>[];
   gridCols: GridColumn<Row, Ctx>[];
@@ -40,10 +63,22 @@ export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
         (col.field ? rawRow[col.field as any] : rawRow[col.id as any]);
 
       const field = col.field ?? col.id;
-      const fieldPath = buildFieldPath(arrayName, rowIndex, field) : '';
+      const fieldPath = buildFieldPath(arrayName, rowIndex, field) ?? '';
 
       if (col.render) {
-        return col.render({ fieldPath, row: rawRow, rowIndex, ctx, value });
+        return col.render({
+          fieldPath,
+          row: rawRow,
+          rowIndex,
+          ctx,
+          value,
+          actions: {
+            addColumn: () => onAdd?.(),
+            removeColumn: i => onRemove?.(i),
+            saveColumn: i => onSave?.(i),
+            editColumn: i => onEdit?.(i),
+          },
+        });
       }
 
       if (col.rhf && col.field) {
@@ -66,6 +101,8 @@ export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
 
   return { gridRows, gridCols };
 }
+
+// === VERTICAL GRID BUILDER ===
 
 interface buildVerticalGridProps<ColumnItem extends Record<string, any>, Ctx> {
   arrayName: string;
@@ -114,7 +151,7 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
           rowDef.accessor?.({ columnItem: colItem, columnIndex, ctx }) ??
           (rowDef.field ? colItem[rowDef.field as any] : colItem[rowDef.id as any]);
 
-        const field = item.field ?? row.id;
+        const field = row.id;
         const fieldPath = buildFieldPath(arrayName, columnIndex, field) ?? '';
 
         if (rowDef.render) {
