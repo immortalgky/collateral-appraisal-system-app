@@ -26,13 +26,30 @@ export const CreateMarketSurveyRequest = z
   })
   .passthrough();
 
+export const UpdateMarketSurveyRequest = z
+  .object({
+    marketSurveyData: z.array(MarketSurveyDataDto),
+    surveyName: z.string(),
+    surveyTemplateCode: z.string(),
+  })
+  .passthrough();
+
+export const GetMarketSurveyResponse = z
+  .object({
+    marketSurveyData: z.array(MarketSurveyDataDto),
+    surveyName: z.string(),
+    surveyTemplateCode: z.string(),
+  })
+  .passthrough();
+
 const DeleteMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
-export const GetMarketSurveyTemplateResponse = z
+export const GetMarketSurveyTemplateFactorResponse = z
   .object({
     marketSurveyId: z.coerce.number().int(),
     factorCode: z.string(),
     factorDesc: z.string(),
+    value: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.coerce.number(),
@@ -41,6 +58,8 @@ export const GetMarketSurveyTemplateResponse = z
     active: z.string(),
   })
   .passthrough();
+
+export const UpdateMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 export const CreateMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schema = {
@@ -50,5 +69,10 @@ export const schema = {
 };
 
 export type CreateMarketSurveyRequestType = z.infer<typeof CreateMarketSurveyRequest>;
+export type UpdateMarketSurveyRequestType = z.infer<typeof UpdateMarketSurveyRequest>;
 export type CreateMarketSurveyResponseType = z.infer<typeof CreateMarketSurveyResponse>;
-export type GetMarketSurveyTemplateResponseType = z.infer<typeof GetMarketSurveyTemplateResponse>;
+export type UpdateMarketSurveyResponseType = z.infer<typeof UpdateMarketSurveyResponse>;
+export type GetMarketSurveyTemplateFactorResponseType = z.infer<
+  typeof GetMarketSurveyTemplateFactorResponse
+>;
+export type GetMarketSurveyResponseType = z.infer<typeof GetMarketSurveyResponse>;

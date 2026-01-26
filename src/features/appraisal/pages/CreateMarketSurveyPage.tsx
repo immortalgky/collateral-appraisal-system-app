@@ -1,20 +1,24 @@
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import AppHeader from '@/shared/components/sections/AppHeader';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, useWatch, type SubmitHandler } from 'react-hook-form';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  CreateMarketSurveyRequest,
-  type CreateMarketSurveyRequestType,
-} from '@/shared/forms/marketSurvey';
-import { useCreateMarketSurveyRequest, useGetMarketSurveyById } from '../api';
+  useCreateMarketSurveyRequest,
+  useGetMarketSurveyById,
+  useUpdateMarketSurveyRequest,
+} from '../api';
 import MarketSurveyForm from '../forms/MarketSurveyForm';
-import { createMarketSurveyRequestDefault } from '@/shared/forms/defaults';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import {
+  createMarketSurveyForm,
+  createMarketSurveyFormDefault,
+  type createMarketSurveyFormType,
+} from '../schemas/form';
+import toast from 'react-hot-toast';
 
 // Define collateral types
 type CollateralCode = 'L' | 'LB' | 'B' | 'U' | 'LS' | 'BS' | 'LBS' | 'MC';
@@ -49,10 +53,15 @@ const CreateMarketSurveyPage = () => {
   // Fetch market survey data if got marketId
   const { data: marketSurvey } = useGetMarketSurveyById(isEditMode ? marketId : undefined);
 
+  const { mutate: createMarketSurvey, isPending: isCreating } = useCreateMarketSurveyRequest();
+  const { mutate: updateMarketSurvey, isPending: isUpdating } = useUpdateMarketSurveyRequest();
+
+  const isPending = isCreating || isUpdating;
+
   // Initialize form methods
-  const methods = useForm<CreateMarketSurveyRequestType>({
-    defaultValues: createMarketSurveyRequestDefault,
-    resolver: zodResolver(CreateMarketSurveyRequest),
+  const methods = useForm<createMarketSurveyFormType>({
+    defaultValues: createMarketSurveyFormDefault,
+    resolver: zodResolver(createMarketSurveyForm),
   });
 
   // Populate form for edit
@@ -71,8 +80,40 @@ const CreateMarketSurveyPage = () => {
 
   const { mutate } = useCreateMarketSurveyRequest();
 
-  const onSubmit: SubmitHandler<CreateMarketSurveyRequestType> = data => {
-    mutate(data);
+  const onSubmit: SubmitHandler<createMarketSurveyFormType> = data => {
+    if (isEditMode && marketId) {
+      updateMarketSurvey(
+        {
+          data,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Market survey updated successfully');
+          },
+          onError: (error: any) => {
+            toast.error(
+              error.apiError?.detail || 'Failed to update market survey. Please try again.',
+            );
+          },
+        },
+      );
+    } else {
+      createMarketSurvey(
+        {
+          data,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Market survey created successfully');
+          },
+          onError: (error: any) => {
+            toast.error(
+              error.apiError?.detail || 'Failed to update market survey. Please try again.',
+            );
+          },
+        },
+      );
+    }
   };
 
   const { isOpen, onToggle } = useDisclosure();
@@ -93,46 +134,41 @@ const CreateMarketSurveyPage = () => {
   }, [collateralType, setValue]);
 
   return (
-    <div>
-      <div className="flex flex-col gap-4 mb-6">
-        <AppHeader title="Create Market Survey" />
-      </div>
-      <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
-            >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 ">
-                  <div>
-                    <h2 className="text-lg font-semibold mb-2">Survey Information</h2>
-                    <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
-                  </div>
-                  <Section anchor className="flex flex-col gap-6">
-                    <MarketSurveyForm />
-                  </Section>
+    <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <ResizableSidebar
+            isOpen={isOpen}
+            onToggle={onToggle}
+            openedWidth="w-1/5"
+            closedWidth="w-1/50"
+          >
+            <ResizableSidebar.Main>
+              <div className="flex-auto flex flex-col gap-6 ">
+                <div>
+                  <h2 className="text-lg font-semibold mb-2">Survey Information</h2>
+                  <div className="h-[0.1px] bg-gray-300 col-span-5"></div>
                 </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <CancelButton />
-                <div className="h-6 w-px bg-gray-200" />
+                <Section anchor className="flex flex-col gap-6">
+                  <MarketSurveyForm />
+                </Section>
               </div>
-              <div className="flex gap-3">
-                <Button variant="outline" type="button" onClick={handleSaveDraft}>
-                  Save draft
-                </Button>
-                <Button type="submit">Save</Button>
-              </div>
+            </ResizableSidebar.Main>
+          </ResizableSidebar>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <CancelButton />
+              <div className="h-6 w-px bg-gray-200" />
             </div>
-          </form>
-        </FormProvider>
-      </div>
+            <div className="flex gap-3">
+              <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                Save draft
+              </Button>
+              <Button type="submit">Save</Button>
+            </div>
+          </div>
+        </form>
+      </FormProvider>
     </div>
   );
 };

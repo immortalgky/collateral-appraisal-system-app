@@ -1,8 +1,8 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useGetMarketSurveyTemplate, useSurveyTemplateFactors } from '../api';
+import { useGetMarketSurveyTemplate } from '../api';
 import { useEffect, useState } from 'react';
-import type { GetMarketSurveyTemplateResponseType } from '@/shared/forms/marketSurvey';
+import type { GetMarketSurveyTemplateFactorResponseType } from '@/shared/forms/marketSurvey';
 
 const MarketSurveyForm = () => {
   const { getValues, setValue } = useFormContext();
@@ -14,7 +14,7 @@ const MarketSurveyForm = () => {
   });
 
   // Fetch survey templates based on collateral type
-  const { data: templates = [] } = useGetMarketSurveyTemplate(collateralType);
+  const { data: templates = [], isLoading } = useGetMarketSurveyTemplate(collateralType);
 
   // Prepare survey template options for dropdown
   const surveyTemplateOptions =
@@ -28,10 +28,9 @@ const MarketSurveyForm = () => {
     name: 'surveyTemplateCode',
   });
 
-  useEffect(() => {
-    if (!surveyTemplateCode) return;
-    setIsTemplateChanged(true);
-  }, [surveyTemplateCode]);
+  const selectedTemplate = templates?.find(t => t.surveyTemplateCode === surveyTemplateCode);
+
+  const factor = selectedTemplate?.factor ?? [];
 
   // Watch market survey data to determine edit mode
   const marketSurveyData = useWatch({
@@ -41,15 +40,10 @@ const MarketSurveyForm = () => {
 
   const useTemplateFactor = !isEditMode || isTemplateChanged;
 
-  // Fetch survey template factors based on selected template code
-  // if isEditmode is true, do not fetch factors
-  const { data: factor = [], isLoading } = useSurveyTemplateFactors(
-    useTemplateFactor ? surveyTemplateCode : undefined,
-  );
-
   // Determine which factors to display
   const displayFactors = useTemplateFactor ? factor : marketSurveyData;
 
+  // Map Option
   // TODO: remove mock parameter options
   const parameterOptions = mockParameterOptions.reduce(
     (acc, group) => {
@@ -62,14 +56,34 @@ const MarketSurveyForm = () => {
     {} as Record<string, { value: string; label: string }[]>,
   );
 
+  useEffect(() => {
+    if (!surveyTemplateCode) return;
+    setIsTemplateChanged(true);
+  }, [surveyTemplateCode]);
+
+  // Initialize market surveytemplate code
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!templates?.length) return;
+    const current = getValues('surveyTemplateCode');
+    if (current) return;
+    setValue('surveyTemplateCode', templates[0].surveyTemplateCode);
+  }, [templates, isEditMode, getValues, setValue]);
+
   // Initialize market survey data field
   useEffect(() => {
-    const existing = getValues('marketSurveyData');
-    if (!useTemplateFactor) return;
-    if (existing?.length) return;
-    if (!factor.length) return;
-    setValue('marketSurveyData', defaultMarketSurveyData(factor));
-  }, [factor, useTemplateFactor, getValues, setValue]);
+    if (!surveyTemplateCode) return;
+    if (!displayFactors.length) return;
+
+    // edit mode + ยังไม่ได้เปลี่ยน template → อย่าแตะ
+    if (isEditMode && !isTemplateChanged) return;
+
+    const oldData = getValues('marketSurveyData') ?? [];
+
+    const defaultData = defaultMarketSurveyData(displayFactors, oldData);
+
+    setValue('marketSurveyData', defaultData, { shouldDirty: true });
+  }, [surveyTemplateCode, displayFactors, isEditMode, isTemplateChanged, getValues, setValue]);
 
   const templateField: FormField[] = [
     {
@@ -112,7 +126,7 @@ const MarketSurveyForm = () => {
         <span className="loading loading-spinner text-primary"></span>
       ) : (
         <div className="grid col-span-4 gap-6">
-          {displayFactors.map((fac, index) => {
+          {displayFactors.map((fac: any, index: number) => {
             const fields: FormField[] = [buildFormField(fac, index, parameterOptions)];
             return (
               <div key={fac.factorCode} className="grid grid-cols-4 gap-6">
@@ -165,7 +179,7 @@ const surveyNameField: FormField[] = [
 ];
 
 const buildFormField = (
-  fac: GetMarketSurveyTemplateResponseType,
+  fac: GetMarketSurveyTemplateFactorResponseType,
   index: number,
   parameterOptions: Record<string, { value: string; label: string }[]>,
 ): FormField => {
@@ -195,15 +209,6 @@ const buildFormField = (
         orientation: 'horizontal',
         options: parameterOptions[fac.parameterGroup] ?? [],
         wrapperClassName: 'col-span-12',
-      };
-
-    case 'boolean-toggle':
-      return {
-        type: 'boolean-toggle',
-        name: `marketSurveyData.[${index}].value`,
-        label: '',
-        options: fac.options,
-        wrapperClassName: 'col-span-6',
       };
 
     case 'number-input':
@@ -255,24 +260,42 @@ const mockParameterOptions = [
       { code: 'DILAPIDATED', description: 'Dilapidated' },
     ],
   },
+  {
+    parameterGroup: 'PlotLocation',
+    values: [
+      { code: 'ShowHouse', description: 'Show House' },
+      { code: 'PrivateZone', description: 'Private Zone' },
+      { code: 'CornerPlot', description: 'Corner Plot' },
+      { code: 'NearClubhouse', description: 'Near Clubhouse' },
+    ],
+  },
 ];
 
-const defaultMarketSurveyData = (factors: GetMarketSurveyTemplateResponseType[]) => {
-  return factors.map(fac => ({
-    marketSurveyId: fac.marketSurveyId,
-    factorCode: fac.factorCode,
-    factorDesc: fac.factorDesc,
-    fieldName: fac.fieldName,
-    dataType: fac.dataType,
-    parameterGroup: fac.parameterGroup ?? '',
-    fieldLength: fac.fieldLength ?? 0,
-    fieldDecimal: fac.fieldDecimal ?? 0,
-    mandatory: 'N',
-    displaySeq: 0,
-    value: '',
-    measurementUnit: '',
-    otherRemark: '',
-  }));
+const defaultMarketSurveyData = (
+  newFactors: GetMarketSurveyTemplateFactorResponseType[],
+  oldData: any[] = [],
+) => {
+  return newFactors.map(fac => {
+    const old = oldData.find(d => d.factorCode === fac.factorCode);
+
+    return {
+      marketSurveyId: fac.marketSurveyId,
+      factorCode: fac.factorCode,
+      factorDesc: fac.factorDesc,
+      fieldName: fac.fieldName,
+      dataType: fac.dataType,
+      parameterGroup: fac.parameterGroup ?? '',
+      fieldLength: fac.fieldLength ?? 0,
+      fieldDecimal: fac.fieldDecimal ?? 2,
+      value:
+        old?.value ??
+        (fac.dataType === 'checkbox-group'
+          ? fac.value || []
+          : fac.dataType === 'number-input'
+            ? fac.value || ''
+            : ''),
+    };
+  });
 };
 
 export default MarketSurveyForm;

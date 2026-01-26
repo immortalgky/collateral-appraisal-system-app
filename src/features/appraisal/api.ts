@@ -1,6 +1,8 @@
 import {
   type CreateMarketSurveyRequestType,
   type CreateMarketSurveyResponseType,
+  type UpdateMarketSurveyRequestType,
+  type UpdateMarketSurveyResponseType,
 } from '@/shared/forms/marketSurvey';
 import type {
   CreateBuildingRequestType,
@@ -125,54 +127,161 @@ export const useCreateMarketSurveyRequest = () => {
   });
 };
 
-export const useSurveyTemplateFactors = (code?: string) => {
-  return useQuery({
-    queryKey: ['survey-template-factor', code],
-    enabled: !!code,
-    queryFn: async () => {
-      return factor;
+export const useUpdateMarketSurveyRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: UpdateMarketSurveyRequestType,
+    ): Promise<UpdateMarketSurveyResponseType> => {
+      console.log(request);
+      const { data } = await axios.put('https://localhost:7111/market-survey', request);
+      return data;
+    },
+    onSuccess: data => {
+      console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['market-survey'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
     },
   });
 };
 
-const factor = [
-  {
-    factorCode: 'F007',
-    factorDesc: 'Building Type',
-    fieldName: 'buildingType',
-    dataType: 'radio-group',
-    fieldLength: null,
-    fieldDecimal: null,
-    parameterGroup: 'BuildingType',
-    active: 'Y',
-  },
-  {
-    factorCode: 'F002',
-    factorDesc: 'Land Area',
-    fieldName: 'landArea',
-    dataType: 'number-input',
-    fieldLength: 3,
-    fieldDecimal: 2,
-    parameterGroup: '',
-  },
+export const useGetMarketSurveyTemplate = (collateralType?: string) => {
+  return useQuery({
+    queryKey: ['market-survey-template', collateralType],
+    enabled: !!collateralType,
+    queryFn: async () => {
+      return template;
+    },
+  });
+};
 
+const template = [
   {
-    factorCode: 'F005',
-    factorDesc: 'Building Condition',
-    fieldName: 'buildingCondition',
-    dataType: 'dropdown',
-    fieldLength: null,
-    fieldDecimal: null,
-    parameterGroup: 'BuildingCondition',
+    surveyTemplateId: 1,
+    surveyTemplateCode: 'LD1',
+    templateDesc: 'Survey Template for Commercial Land',
+    factor: [
+      {
+        factorCode: 'F007',
+        factorDesc: 'Building Type',
+        fieldName: 'buildingType',
+        dataType: 'radio-group',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'BuildingType',
+        active: 'Y',
+      },
+      {
+        factorCode: 'F002',
+        factorDesc: 'Land Area',
+        fieldName: 'landArea',
+        dataType: 'number-input',
+        fieldLength: 3,
+        fieldDecimal: 2,
+        parameterGroup: '',
+      },
+
+      {
+        factorCode: 'F005',
+        factorDesc: 'Building Condition',
+        fieldName: 'buildingCondition',
+        dataType: 'dropdown',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'BuildingCondition',
+      },
+      {
+        factorCode: 'F009',
+        factorDesc: 'Plot Location',
+        fieldName: 'plotLocation',
+        dataType: 'checkbox-group',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'PlotLocation',
+      },
+    ],
   },
   {
-    factorCode: 'F009',
-    factorDesc: 'Plot Location',
-    fieldName: 'plotLocation',
-    dataType: 'checkbox-group',
-    fieldLength: null,
-    fieldDecimal: null,
-    parameterGroup: 'BuildingCondition',
+    surveyTemplateId: 2,
+    surveyTemplateCode: 'LD2',
+    templateDesc: 'Survey Template for Industrial Land',
+    factor: [
+      {
+        factorCode: 'F007',
+        factorDesc: 'Building Type',
+        fieldName: 'buildingType',
+        dataType: 'radio-group',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'BuildingType',
+        active: 'Y',
+      },
+      {
+        factorCode: 'F002',
+        factorDesc: 'Land Area',
+        fieldName: 'landArea',
+        dataType: 'number-input',
+        fieldLength: 3,
+        fieldDecimal: 2,
+        parameterGroup: '',
+      },
+
+      {
+        factorCode: 'F005',
+        factorDesc: 'Building Condition',
+        fieldName: 'buildingCondition',
+        dataType: 'dropdown',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'BuildingCondition',
+      },
+    ],
+  },
+  {
+    surveyTemplateId: 3,
+    surveyTemplateCode: 'LD3',
+    templateDesc: 'Survey Template for Agricultural Land',
+    factor: [
+      {
+        factorCode: 'F007',
+        factorDesc: 'Building Type',
+        fieldName: 'buildingType',
+        dataType: 'radio-group',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'BuildingType',
+        active: 'Y',
+      },
+      {
+        factorCode: 'F002',
+        factorDesc: 'Land Area',
+        fieldName: 'landArea',
+        dataType: 'number-input',
+        fieldLength: 3,
+        fieldDecimal: 2,
+        parameterGroup: '',
+      },
+    ],
+  },
+  {
+    surveyTemplateId: 4,
+    surveyTemplateCode: 'LB1',
+    templateDesc: 'Survey Template for Residential Land',
+    factor: [
+      {
+        factorCode: 'F007',
+        factorDesc: 'Building Type',
+        fieldName: 'buildingType',
+        dataType: 'radio-group',
+        fieldLength: null,
+        fieldDecimal: null,
+        parameterGroup: 'BuildingType',
+        active: 'Y',
+      },
+    ],
   },
 ];
 
@@ -220,10 +329,12 @@ export const useGetMarketSurveyById = (marketId: string) => {
     queryKey: ['market-survey', marketId],
     enabled: !!marketId,
     queryFn: async () => {
+      console.log(marketById);
       return marketById;
     },
   });
 };
+
 const marketById = {
   id: 1,
   surveyNumber: 1,
@@ -236,7 +347,7 @@ const marketById = {
     {
       marketSurveyId: 1,
       factorCode: 'F007',
-      value: 'SGH',
+      value: 'TWH',
       measurementUnit: '',
       otherRemark: '',
       factorDesc: 'Building Type',
@@ -246,7 +357,6 @@ const marketById = {
       fieldDecimal: null,
       parameterGroup: 'BuildingType',
     },
-
     {
       marketSurveyId: 1,
       factorCode: 'F002',
@@ -262,19 +372,6 @@ const marketById = {
     },
     {
       marketSurveyId: 1,
-      factorCode: 'F003',
-      value: 111,
-      measurementUnit: '',
-      otherRemark: '',
-      factorDesc: 'Building Area',
-      fieldName: 'buildingArea',
-      dataType: 'number-input',
-      fieldLength: 3,
-      fieldDecimal: 2,
-      parameterGroup: '',
-    },
-    {
-      marketSurveyId: 1,
       factorCode: 'F005',
       value: 'NEW',
       measurementUnit: '',
@@ -282,58 +379,21 @@ const marketById = {
       factorDesc: 'Building Condition',
       fieldName: 'buildingCondition',
       dataType: 'dropdown',
-      fieldLength: null,
-      fieldDecimal: null,
       parameterGroup: 'BuildingCondition',
     },
     {
       marketSurveyId: 1,
       factorCode: 'F009',
-      value: ['NEW', 'MODERATE'],
+      value: ['ShowHouse', 'NearClubhouse'],
       measurementUnit: '',
       otherRemark: '',
       factorDesc: 'Plot Location',
       fieldName: 'plotLocation',
       dataType: 'checkbox-group',
-      fieldLength: null,
-      fieldDecimal: null,
-      parameterGroup: 'BuildingCondition',
+      parameterGroup: 'PlotLocation',
     },
   ],
 };
-
-export const useGetMarketSurveyTemplate = (collateralType?: string) => {
-  return useQuery({
-    queryKey: ['market-survey-template', collateralType],
-    enabled: !!collateralType,
-    queryFn: async () => {
-      return template;
-    },
-  });
-};
-
-const template = [
-  {
-    surveyTemplateId: 1,
-    surveyTemplateCode: 'LD1',
-    templateDesc: 'Survey Template for Commercial Land',
-  },
-  {
-    surveyTemplateId: 2,
-    surveyTemplateCode: 'LD2',
-    templateDesc: 'Survey Template for Industrial Land',
-  },
-  {
-    surveyTemplateId: 3,
-    surveyTemplateCode: 'LD3',
-    templateDesc: 'Survey Template for Agricultural Land',
-  },
-  {
-    surveyTemplateId: 4,
-    surveyTemplateCode: 'LB1',
-    templateDesc: 'Survey Template for Residential Land',
-  },
-];
 
 export const useGetParameter = (parameterGroup?: string) => {
   return useQuery({
