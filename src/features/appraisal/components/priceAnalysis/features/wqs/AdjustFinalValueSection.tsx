@@ -1,5 +1,5 @@
 import { useController, useFormContext, useWatch } from 'react-hook-form';
-import { INTERCEPT, RSQ, SLOPE, STEYX } from './components/excelUtils/regression';
+import { INTERCEPT, RSQ, SLOPE, STEYX } from '../../domain/excelUtils/regression';
 import clsx from 'clsx';
 import { useEffect } from 'react';
 
@@ -32,8 +32,8 @@ export const AdjustFinalValueSection = ({ property }) => {
   const intersectionPointResult =
     known_xs.length === known_ys.length ? INTERCEPT(known_ys, known_xs) : 0;
   const slopeResult = known_xs.length === known_ys.length ? SLOPE(known_ys, known_xs) : 0;
-  const lowestEstimate = finalValue - stdErrorResult;
-  const highestEstitmate = finalValue + stdErrorResult;
+  const lowestEstimate = Number.isFinite(finalValue) ? finalValue - stdErrorResult : 0;
+  const highestEstitmate = Number.isFinite(finalValue) ? finalValue + stdErrorResult : 0;
 
   useEffect(() => {
     const name = 'WQSFinalValue';

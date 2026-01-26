@@ -5,11 +5,15 @@ import {
   buildHorizontalGrid,
   buildVerticalGrid,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/builders.tsx';
-import type { GridRow } from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
+import type {
+  GridGroup,
+  GridRow,
+} from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
 import type {
   RHFHorizontalColumn,
   RHFVerticalRowDef,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/spec.ts';
+import { useDerivedFields } from '../../components/useDerivedFieldArray';
 
 export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   name,
@@ -30,14 +34,13 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   hasBody?: boolean;
   hasFooter?: boolean;
 
-  addColumn?: () => void;
-  removeColumn?: (columnIndex: number) => void;
-  saveColumn?: (columnIndex: number) => void;
-  editColumn?: (columnIndex: number) => void;
+  addRow?: () => void;
+  removeRow?: (columnIndex: number) => void;
 }) => {
-  const { control } = useFormContext();
+  const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
-  const watched = useWatch({ control, name, defaultValue: [] }) as Row[];
+  // const watched = useWatch({ control, name, defaultValue: [] }) as Row[];
+  const watched = getValues(name) as Row[];
 
   const {
     gridRows,
@@ -64,6 +67,8 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
         hasHeader={hasHeader}
         hasBody={hasBody}
         hasFooter={hasFooter}
+        onAdd={append}
+        onRemove={remove}
       />
 
       {/* optional add button */}
@@ -95,9 +100,10 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   leftHeaderClassName?: string;
   getColClassName?: (i: number) => string;
 }) => {
-  const { control } = useFormContext();
+  const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
-  const watched = useWatch({ control, name, defaultValue: [] }) as ColumnItem[];
+  // const watched = useWatch({ control, name, defaultValue: [] }) as ColumnItem[];
+  const watched = getValues(name) as ColumnItem[];
 
   const {
     gridRows,
@@ -128,7 +134,7 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
       />
 
       {/* optional add button */}
-      <div className="flex flex-row items-center justify-center p-2 border-t border-neutral-300">
+      {/* <div className="flex flex-row items-center justify-center p-2 border-t border-neutral-300">
         <button
           type="button"
           onClick={() => append(defaultColumn)}
@@ -136,7 +142,7 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
         >
           + Add row
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -110,7 +110,7 @@ export const ComparativeSection = ({
       id: 'action',
       header: <div className="px-2 py-4"></div>,
       className: 'w-16',
-      render: ({ rowIndex, ctx }) => {
+      render: ({ rowIndex, ctx, actions: { removeColumn } }) => {
         /*
           factor which was set from template not allow to change
          */
@@ -120,7 +120,7 @@ export const ComparativeSection = ({
               <button
                 type="button"
                 // onClick={() => onRemove?.(rowIndex)}
-                onClick={() => null}
+                onClick={() => removeColumn(rowIndex)}
                 className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                 title="Delete"
               >

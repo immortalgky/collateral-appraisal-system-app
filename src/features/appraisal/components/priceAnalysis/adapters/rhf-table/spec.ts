@@ -27,10 +27,20 @@ export type RHFHorizontalColumn<Row, Ctx> = {
     actions: {
       addColumn: () => void;
       removeColumn: (columnIndex: number) => void;
-      saveColumn: (columnIndex: number) => void;
-      editColumn: (columnIndex: number) => void;
     };
   }) => React.ReactNode;
+
+  // derived?: {
+  //   targetPath: string;
+  //   deps: string[];
+  //   compute: (args: { getValues: any; ctx: Ctx }) => any;
+  //   normalize?: (v: any) => any;
+  //   setValueOptions?: {
+  //     shouldDirty?: boolean;
+  //     shouldTouch?: boolean;
+  //     shouldValidate?: boolean;
+  //   };
+  // };
 
   accessor?: (args: { row: Row; rowIndex: number; ctx: Ctx }) => any;
 
@@ -57,8 +67,6 @@ export type RHFVerticalRowDef<ColumnItem, Ctx> = {
     actions: {
       addColumn: () => void;
       removeColumn: (columnIndex: number) => void;
-      saveColumn: (columnIndex: number) => void;
-      editColumn: (columnIndex: number) => void;
     };
   }) => React.ReactNode;
 

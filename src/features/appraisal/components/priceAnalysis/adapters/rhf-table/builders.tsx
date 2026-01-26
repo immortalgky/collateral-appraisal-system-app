@@ -17,29 +17,17 @@ interface buildHorizontalGridProps<Row extends Record<string, any>, Ctx> {
   columns: RHFHorizontalColumn<Row, Ctx>[];
   ctx: Ctx;
 
-  canEdit?: boolean;
-  onEdit?: (colIndex: number, handleOnEdit: (colIndex: number) => void) => void;
+  handleOnAdd?: () => void;
+  onAdd?: () => void;
 
-  canSave?: boolean;
-  onSave?: (colIndex: number, handleOnEdit: (colIndex: number) => void) => void;
-
-  onRemove?: (colIndex: number, handleOnRemove: (colIndex: number) => void) => void;
-  onAdd?: (handleOnAdd: (newRecord?: Record<string, any>) => void) => void;
+  handleOnRemove?: (index: number) => void;
+  onRemove?: (index: number) => void;
 }
 export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
   arrayName,
   items,
   columns,
   ctx,
-
-  canEdit,
-  onEdit,
-
-  canSave,
-  onSave,
-
-  onRemove,
-  onAdd,
 }: buildHorizontalGridProps<Row, Ctx>): {
   gridRows: GridRow<Row>[];
   gridCols: GridColumn<Row, Ctx>[];
@@ -55,7 +43,7 @@ export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
     className: col.className,
     align: col.align,
 
-    renderCell: ({ row, rowIndex, ctx }) => {
+    renderCell: ({ row, rowIndex, ctx, actions: { onAdd, onRemove } }) => {
       const rawRow = row.raw;
 
       const value =
@@ -73,10 +61,8 @@ export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
           ctx,
           value,
           actions: {
-            addColumn: () => onAdd?.(),
-            removeColumn: i => onRemove?.(i),
-            saveColumn: i => onSave?.(i),
-            editColumn: i => onEdit?.(i),
+            addColumn: onAdd,
+            removeColumn: onRemove,
           },
         });
       }
@@ -137,6 +123,7 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
     renderCell: ({ row }) => <div className="truncate">{row.raw.header ?? ''}</div>,
   };
 
+  // items: [ { id: string; value: {...calculation }}, { id: string; value: {...calculation }}]; column data
   const dataCols: GridColumn<RHFVerticalRowDef<ColumnItem, Ctx>, Ctx>[] = items.map(
     (item, columnIndex) => ({
       id: item.id,
@@ -155,7 +142,14 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
         const fieldPath = buildFieldPath(arrayName, columnIndex, field) ?? '';
 
         if (rowDef.render) {
-          return rowDef.render({ fieldPath, columnItem: colItem, columnIndex, ctx, value });
+          return rowDef.render({
+            fieldPath,
+            columnItem: colItem,
+            columnIndex,
+            ctx,
+            value,
+            actions: {},
+          });
         }
 
         if (rowDef.rhf && rowDef.field) {
@@ -170,6 +164,8 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
 
         return <span>{value ?? ''}</span>;
       },
+
+      // derived:
     }),
   );
 

@@ -9,6 +9,9 @@ export function DataGrid<Row, Ctx>({
   hasHeader = true,
   hasFooter = false,
   hasBody = true,
+
+  onRemove,
+  onAdd,
 }: {
   rows: Row[];
   columns: GridColumn<Row, Ctx>[];
@@ -17,6 +20,9 @@ export function DataGrid<Row, Ctx>({
   hasHeader?: boolean;
   hasFooter?: boolean;
   hasBody?: boolean;
+
+  onRemove?: any;
+  onAdd?: any;
 }) {
   const isEmpty = rows.length === 0;
 
@@ -119,7 +125,12 @@ export function DataGrid<Row, Ctx>({
                           col.className,
                         )}
                       >
-                        {col.renderCell({ row, rowIndex, ctx })}
+                        {col.renderCell({
+                          row,
+                          rowIndex,
+                          ctx,
+                          actions: { onAdd, onRemove },
+                        })}
                       </td>
                     ))}
                   </tr>

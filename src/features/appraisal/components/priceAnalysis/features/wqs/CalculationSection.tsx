@@ -5,8 +5,15 @@ import { getDesciptions } from './WQSSection';
 import { Icon } from '@/shared/components';
 import { useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { forecast } from './components/excelUtils/forecast';
+import { forecast } from '../../domain/excelUtils/forecast';
 import { useMemo } from 'react';
+import {
+  RHFHorizontalArrayTable,
+  RHFVerticalArrayTable,
+} from '../../adapters/rhf-table/RHFArrayTable';
+import type { RHFHorizontalColumn, RHFVerticalRowDef } from '../../adapters/rhf-table/spec';
+import type { GridGroup } from '../../components/table/types';
+import { useDerivedFields } from '../../components/useDerivedFieldArray';
 
 interface CalculationSectionProps {
   comparativeSurveys: Record<string, string>[];
@@ -33,15 +40,47 @@ export const CalculationSection = ({
     },
   ];
 
-  let scoreConfigurations: ColumnDef[] = [
+  // useDerivedFields({
+  //   rules: [
+  //     {
+  //       targetPath: 'WQSCaculations.adjustedValue',
+  //       deps: [],
+  //       compute: ({ getValues, ctx }) => {
+  //         if (column['offeringPrice']) {
+  //           return column['offeringPriceAdjustmentPct'] > 0
+  //             ? column['offeringPrice'] -
+  //                 (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
+  //             : column['offeringPriceAdjustmentAmt'] > 0
+  //               ? column['offeringPriceAdjustmentAmt']
+  //               : column['offeringPrice'];
+  //         }
+  //         if (column['sellingPrice']) {
+  //           return (
+  //             column['sellingPrice'] +
+  //             (column['sellingPrice'] *
+  //               column['numberOfYears'] *
+  //               column['sellingPriceAdjustmentYear']) /
+  //               100
+  //           );
+  //         }
+  //         return 0;
+  //       },
+  //     },
+  //   ],
+  //   ctx: {},
+  // });
+
+  let scoreConfigurations: RHFHorizontalColumn<Record<string, any>, any>[] = [
     {
       id: 'factorCode',
       header: (
-        <div className="flex items-center justify-center w-full h-full bg-neutral-400">Factor</div>
+        <div className="flex items-center justify-center w-full min-h-full bg-neutral-400">
+          Factor
+        </div>
       ),
-      name: 'factorCode',
+      field: 'factorCode',
       className: 'border-r border-neutral-300 sticky left-0 z-40 bg-white w-[100px] min-w-0',
-      renderCell: ({ fieldName, ctx, rowIndex, value }) => {
+      render: ({ fieldPath, ctx, rowIndex, value }) => {
         if (rowIndex > ctx.template.calculationFactors.length - 1) {
           const comparativeFactors =
             ctx.comparativeFactors
@@ -57,7 +96,7 @@ export const CalculationSection = ({
               })) ?? [];
           return (
             <div className="w-[300px] truncate">
-              <RHFInputCell fieldName={fieldName} inputType="select" options={comparativeFactors} />
+              <RHFInputCell fieldName={fieldPath} inputType="select" options={comparativeFactors} />
             </div>
           );
         }
@@ -71,11 +110,11 @@ export const CalculationSection = ({
     {
       id: 'weight',
       header: <div>Weight</div>,
-      name: 'weight',
+      field: 'weight',
       className: 'border-r border-neutral-300 w-[100px]',
-      rhfRenderCell: { inputType: 'number' },
+      rhf: { inputType: 'number' },
 
-      renderFooter: ({ fieldName, rows, ctx, columnIndex }) => {
+      footer: ({ fieldName, rows, ctx, columnIndex }) => {
         const totalWeight = rows.reduce((acc, curr) => {
           return acc + curr[columnIndex];
         }, 0);
@@ -93,14 +132,14 @@ export const CalculationSection = ({
     {
       id: 'intensity',
       header: <div className="px-3">Intensity</div>,
-      name: 'intensity',
+      field: 'intensity',
       className: 'h-14 border-r border-neutral-300 sticky top-14 w-[100px]',
       align: 'right',
-      renderCell: ({ fieldName, row, ctx }) => {
+      render: ({ fieldPath, row, ctx }) => {
         // if (row['factor'] ==)
-        return <RHFInputCell fieldName={fieldName} inputType="number" />;
+        return <RHFInputCell fieldName={fieldPath} inputType="number" />;
       },
-      renderFooter: ({ rows, ctx, columnIndex }) => {
+      footer: ({ rows, ctx, columnIndex }) => {
         const totalIntensity = rows.reduce((acc, curr) => {
           return acc + curr[columnIndex];
         }, 0);
@@ -120,7 +159,7 @@ export const CalculationSection = ({
       id: 'score',
       header: <div className="px-3">Score</div>,
       className: 'h-14 border-r border-neutral-300 sticky top-14 w-[100px]',
-      renderCell: ({ fieldName, row, rowIndex, value, ctx }) => (
+      render: ({ fieldPath, row, rowIndex, value, ctx }) => (
         <div className="w-[100px]">{row['weight'] * row['intensity']}</div>
       ),
       align: 'right',
@@ -133,7 +172,7 @@ export const CalculationSection = ({
       ...comparativeSurveys.map((data, index) => {
         return {
           id: data.id,
-          name: `surveys.${index}.surveyScore`,
+          field: `surveys.${index}.surveyScore`,
           className: 'border-r border-neutral-300 sticky top-14 w-[200px]',
           header: (
             <div className="w-full h-full min-w-0">
@@ -147,15 +186,15 @@ export const CalculationSection = ({
             </div>
           ),
 
-          renderCell: ({ fieldName, row }) => {
-            const surveyScore = getValues(fieldName) ?? 0;
+          render: ({ fieldPath, row }) => {
+            const surveyScore = getValues(fieldPath) ?? 0;
             const weight = row['weight'] ?? 0;
             const score = weight * surveyScore;
 
             return (
               <div className="w-[200px] h-full flex flex-row justify-between items-center">
                 <div className="w-30">
-                  <RHFInputCell fieldName={fieldName} inputType="number" />
+                  <RHFInputCell fieldName={fieldPath} inputType="number" />
                 </div>
                 <div className="w-full text-right">
                   <span>{Number.isFinite(score) ? score.toFixed(0) : 0}</span>
@@ -164,8 +203,10 @@ export const CalculationSection = ({
             );
           },
 
-          renderFooter: ({ rows }) => {
+          footer: ({ rows }) => {
+            console.log(rows);
             const totalScore = rows.reduce((acc, curr) => {
+              console.log(curr);
               const score = curr['surveys'][index]?.surveyScore ?? 0;
               const weight = curr['weight'] ?? 0;
               return acc + score * weight;
@@ -186,7 +227,7 @@ export const CalculationSection = ({
     ...scoreConfigurations,
     {
       id: 'collateral',
-      name: 'collateral',
+      field: 'collateral',
       className: 'border-r border-neutral-300 w-[200px] sticky top-0 w-[200px]',
       header: (
         <div className="flex flex-col h-full">
@@ -199,12 +240,12 @@ export const CalculationSection = ({
           </div>
         </div>
       ),
-      renderCell: ({ fieldName, row, rowIndex, value, ctx }) => {
+      render: ({ fieldPath, row, rowIndex, value, ctx }) => {
         const score = row['weight'] * value;
         return (
           <div className="w-[200px] flex flex-row justify-between items-center">
             <div className="w-18">
-              <RHFInputCell fieldName={fieldName} inputType="number" />
+              <RHFInputCell fieldName={fieldPath} inputType="number" />
             </div>
             <div>
               {/* <span>{`${row['weight'] * value.score}`}</span> */}
@@ -214,7 +255,7 @@ export const CalculationSection = ({
         );
       },
 
-      renderFooter: ({ rows }) => {
+      footer: ({ rows }) => {
         const totalScore = rows.reduce((acc, curr) => {
           const score = curr['collateral'] ?? 0;
           const weight = curr['weight'] ?? 0;
@@ -232,7 +273,7 @@ export const CalculationSection = ({
       id: 'action',
       header: <div className="bg-neutral-400 w-full h-full"></div>,
       className: 'min-w-20 sticky right-0 bg-white z-40 border-l border-neutral-300',
-      renderCell: ({ rowIndex, onRemove, ctx }) => {
+      render: ({ rowIndex, onRemove, ctx }) => {
         /*
           factor which was set from template not allow to change
          */
@@ -254,18 +295,18 @@ export const CalculationSection = ({
     },
   ];
 
-  const scoreColumnGroupConfigurations: ColumnGroup[] = [
+  const scoreColumnGroupConfigurations: GridGroup[] = [
     {
       id: 'calculation',
       label: <div className="p-2">Calculation</div>,
-      columns: ['intensity', 'score'],
+      columnIds: ['intensity', 'score'],
       align: 'center',
       className: 'border-b border-r border-neutral-300 h-14',
     },
     {
       id: 'surveys',
       label: <div className="p-2">Comparative Data</div>,
-      columns: comparativeSurveys.map((data, index) => data.id),
+      columnIds: comparativeSurveys.map((data, index) => data.id),
       align: 'center',
       className: `border-b border-r border-neutral-300 h-14`,
     },
@@ -273,7 +314,7 @@ export const CalculationSection = ({
 
   return (
     <div className="border border-neutral-300 rounded-lg overflow-clip">
-      <RHFArrayTable
+      <RHFHorizontalArrayTable
         name="WQSScores"
         columns={scoreConfigurations}
         groups={scoreColumnGroupConfigurations}
@@ -284,12 +325,24 @@ export const CalculationSection = ({
           surveys: comparativeSurveys,
           property: property,
         }}
-        watch={{ comparativeFactors: 'comparativeFactors', scoreFactor: 'WQSScores' }}
+        // watch={{ comparativeFactors: 'comparativeFactors', scoreFactor: 'WQSScores' }} // TODO
+        hasHeader={true}
+        hasBody={true}
+        hasFooter={true}
       />
       <div className="border-y border-neutral-300 flex justify-center h-14 text-sm items-center">
         {`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}
       </div>
-      <RHFArrayTable
+      <RHFVerticalArrayTable
+        name="WQSCalculations"
+        leftHeaderClassName={'max-w-[600px]'}
+        rowDefs={getCalculationConfigurations(setValue)}
+        hasHeader={false}
+        hasAddButton={true}
+        canEdit={true}
+        watch={{ WQSScores: 'WQSScores' }}
+      />
+      {/* <RHFArrayTable
         name="WQSCalculations"
         dataAlignment="vertical"
         leftHeaderStyle={'w-[100px]'}
@@ -299,22 +352,22 @@ export const CalculationSection = ({
         hasAddButton={true}
         canEdit={true}
         watch={{ WQSScores: 'WQSScores' }}
-      />
+      /> */}
     </div>
   );
 };
 
 const getCalculationConfigurations = setValue => {
-  const calculationConfigurations: RHFRow[] = [
+  const calculationConfigurations: RHFVerticalRowDef<Record<string, any>, any>[] = [
     {
       id: 'offeringPrice',
       header: <div className="flex justify-start items-center w-[600px]">Offering Price</div>,
-      name: 'offeringPrice',
       className: 'px-3 py-4',
-      accessor: (column, columnIndex, ctx) => {
-        return column['offeringPrice'];
+      field: 'offeringPrice',
+      accessor: ({ columnItem }) => {
+        return columnItem['offeringPrice'];
       },
-      renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      render: ({ value }) => {
         return <div className="w-[300px]">{`${value ?? ''}`}</div>;
       },
     },
@@ -326,14 +379,14 @@ const getCalculationConfigurations = setValue => {
           <div>(%)</div>
         </div>
       ),
-      name: 'offeringPriceAdjustmentPct',
-      accessor: (column, columnIndex, ctx) => {
-        return column['offeringPriceAdjustmentPct'] ?? null;
+      field: 'offeringPriceAdjustmentPct',
+      accessor: ({ columnItem, columnIndex, ctx }) => {
+        return columnItem['offeringPriceAdjustmentPct'] ?? null;
       },
-      renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-        return column['offeringPrice'] ? (
+      render: ({ fieldPath, columnItem, columns, columnIndex, value, ctx }) => {
+        return columnItem['offeringPrice'] ? (
           <div>
-            <RHFInputCell fieldName={fieldName} inputType="number" />
+            <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
       },
@@ -346,14 +399,14 @@ const getCalculationConfigurations = setValue => {
           <div>(Amt)</div>
         </div>
       ),
-      name: 'offeringPriceAdjustmentAmt',
-      accessor: (column, columnIndex, ctx) => {
-        return column['offeringPriceAdjustmentAmt'] ?? null;
+      field: 'offeringPriceAdjustmentAmt',
+      accessor: ({ columnItem }) => {
+        return columnItem['offeringPriceAdjustmentAmt'] ?? null;
       },
-      renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-        return column['offeringPrice'] ? (
+      render: ({ fieldPath, columnItem }) => {
+        return columnItem['offeringPrice'] ? (
           <div>
-            <RHFInputCell fieldName={fieldName} inputType="number" />
+            <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
       },
@@ -361,36 +414,36 @@ const getCalculationConfigurations = setValue => {
     {
       id: 'sellingPrice',
       header: <div className="">Selling Price</div>,
-      name: 'sellingPrice',
-      accessor: (column, columnIndex, ctx) => {
-        return column['sellingPrice'] ?? null;
+      field: 'sellingPrice',
+      accessor: ({ columnItem, columnIndex, ctx }) => {
+        return columnItem['sellingPrice'] ?? null;
       },
-      renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      render: ({ value, ctx }) => {
         return <div>{`${value ?? ''}`}</div>;
       },
     },
     {
       id: 'numberOfYears',
       header: <div>Number of Years</div>,
-      name: 'numberOfYears',
-      accessor: (column, columnIndex, ctx) => {
-        return column['numberOfYears'] ?? '';
+      field: 'numberOfYears',
+      accessor: ({ columnItem, columnIndex, ctx }) => {
+        return columnItem['numberOfYears'] ?? '';
       },
-      renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
+      render: ({ value, ctx }) => {
         return <div>{`${value ?? ''}`}</div>;
       },
     },
     {
       id: 'sellingPriceAdjustmentYear',
       header: <div>Adjust Period</div>,
-      name: 'sellingPriceAdjustmentYear',
-      accessor: (column, columnIndex, ctx) => {
-        return column['sellingPriceAdjustmentYear'] ?? '';
+      field: 'sellingPriceAdjustmentYear',
+      accessor: ({ columnItem, columnIndex, ctx }) => {
+        return columnItem['sellingPriceAdjustmentYear'] ?? '';
       },
-      renderCell: ({ fieldName, column, columns, columnIndex, value, ctx }) => {
-        return column['sellingPrice'] ? (
+      render: ({ fieldPath, columnItem, columns, columnIndex, value, ctx }) => {
+        return columnItem['sellingPrice'] ? (
           <div>
-            <RHFInputCell fieldName={fieldName} inputType="number" />
+            <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
       },
@@ -398,15 +451,15 @@ const getCalculationConfigurations = setValue => {
     {
       id: 'cumulativeAdjustedPeriod',
       header: <div>Cumulative Adjusted Period</div>,
-      accessor: (column, columnIndex, ctx) => {
-        if (!column['numberOfYears'] && !column['sellingPriceAdjustmentYear']) return 0;
-        return column['numberOfYears'] * column['sellingPriceAdjustmentYear'];
+      accessor: ({ columnItem, columnIndex, ctx }) => {
+        if (!columnItem['numberOfYears'] && !columnItem['sellingPriceAdjustmentYear']) return 0;
+        return columnItem['numberOfYears'] * columnItem['sellingPriceAdjustmentYear'];
       },
-      renderCell: ({ column }) => {
-        if (!column['sellingPrice']) return '';
+      render: ({ columnItem }) => {
+        if (!columnItem['sellingPrice']) return '';
 
-        const numberOfYears = column['numberOfYears'] ?? 0;
-        const sellingPriceAdjustmentYear = column['sellingPriceAdjustmentYear'] ?? 0;
+        const numberOfYears = columnItem['numberOfYears'] ?? 0;
+        const sellingPriceAdjustmentYear = columnItem['sellingPriceAdjustmentYear'] ?? 0;
         const cumulativeAdjustedPeriod = numberOfYears * sellingPriceAdjustmentYear;
         return (
           <div>{`${Number.isFinite(cumulativeAdjustedPeriod) ? cumulativeAdjustedPeriod.toFixed(0) : ''}`}</div>
@@ -416,45 +469,45 @@ const getCalculationConfigurations = setValue => {
     {
       id: 'adjustedValue',
       header: <div>Adjusted Value</div>,
-      name: 'adjustedValue',
-      derived: {
-        compute: ({ column }) => {
-          if (column['offeringPrice']) {
-            return column['offeringPriceAdjustmentPct'] > 0
-              ? column['offeringPrice'] -
-                  (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-              : column['offeringPriceAdjustmentAmt'] > 0
-                ? column['offeringPriceAdjustmentAmt']
-                : column['offeringPrice'];
-          }
-          if (column['sellingPrice']) {
-            return (
-              column['sellingPrice'] +
-              (column['sellingPrice'] *
-                column['numberOfYears'] *
-                column['sellingPriceAdjustmentYear']) /
-                100
-            );
-          }
-          return 0;
-        },
-      },
-      renderCell: ({ value }) => {
+      field: 'adjustedValue',
+      // derived: {
+      //   compute: ({ column }) => {
+      //     if (column['offeringPrice']) {
+      //       return column['offeringPriceAdjustmentPct'] > 0
+      //         ? column['offeringPrice'] -
+      //             (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
+      //         : column['offeringPriceAdjustmentAmt'] > 0
+      //           ? column['offeringPriceAdjustmentAmt']
+      //           : column['offeringPrice'];
+      //     }
+      //     if (column['sellingPrice']) {
+      //       return (
+      //         column['sellingPrice'] +
+      //         (column['sellingPrice'] *
+      //           column['numberOfYears'] *
+      //           column['sellingPriceAdjustmentYear']) /
+      //           100
+      //       );
+      //     }
+      //     return 0;
+      //   },
+      // },
+      render: ({ value }) => {
         return <span>{Number.isFinite(value) ? Number(value).toLocaleString() : 0}</span>;
       },
     },
     {
       id: 'finalValue',
       header: <div>Final Value</div>,
-      name: 'finalValue',
-      renderCell: ({ columns, columnIndex, ctx }) => {
-        if (columnIndex !== columns.length - 1) return '';
+      field: 'finalValue',
+      render: ({ columnItem, columnIndex, ctx }) => {
+        if (columnIndex !== columnItem.length - 1) return '';
         const x = (ctx.WQSScores ?? []).reduce(
           (acc, curr) => acc + curr.collateral * curr.weight,
           0,
         );
         // known_y = adjusted values of each comparable
-        const known_ys = (columns ?? [])
+        const known_ys = (columnItem ?? [])
           .map((c: any) => Number(c?.adjustedValue))
           .filter(Number.isFinite);
 
@@ -493,8 +546,8 @@ const getCalculationConfigurations = setValue => {
     {
       id: 'roundedFinalValue',
       header: <div>Final Value</div>,
-      renderCell: ({ fieldName, columns, columnIndex }) => {
-        if (columnIndex !== columns.length - 1) return '';
+      render: ({ columnItem, columnIndex }) => {
+        if (columnIndex !== columnItem.length - 1) return '';
         return <RHFInputCell fieldName={'roundedFinalValue'} inputType="number" />;
       },
     },

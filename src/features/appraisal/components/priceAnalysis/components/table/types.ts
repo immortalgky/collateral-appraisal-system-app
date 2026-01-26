@@ -9,6 +9,10 @@ export type GridCellCtx<RawRow, Ctx> = {
   row: GridRow<RawRow>;
   rowIndex: number;
   ctx: Ctx;
+  actions: {
+    onAdd: any; // TODO
+    onRemove: any; // TODO
+  };
 };
 
 export type GridColumn<RawRow, Ctx> = {
