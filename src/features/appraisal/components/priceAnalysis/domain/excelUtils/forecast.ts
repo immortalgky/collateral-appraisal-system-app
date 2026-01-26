@@ -23,7 +23,6 @@ export function forecast({ x, known_ys, known_xs }: forecastProps): number {
     b;
 
   function average(arr: number[]) {
-    console.log(arr, known_xs);
     let r = 0;
     for (i = 0; i < arr.length; i++) {
       r += arr[i];

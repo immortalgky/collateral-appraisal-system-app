@@ -124,7 +124,6 @@ function sums(xs: number[], ys: number[]) {
  * slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX^2)
  */
 export function SLOPE(knownY: RangeLike, knownX: RangeLike, opts: ExcelStatOptions = {}): number {
-
   const { xs, ys } = collectPairs(knownY, knownX, opts);
 
   if (xs.length < 2) return 0;
@@ -197,7 +196,6 @@ export function STEYX(knownY: RangeLike, knownX: RangeLike, opts: ExcelStatOptio
   const { xs, ys } = collectPairs(knownY, knownX, opts);
   const n = xs.length;
 
-  console.log(n);
   if (n < 3) return 0;
 
   // if (n < 3) throw new ExcelError('#DIV/0!', 'Need at least 3 data points.');

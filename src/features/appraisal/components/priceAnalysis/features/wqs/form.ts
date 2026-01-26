@@ -46,7 +46,6 @@ const WQSFinalValue = z
     standardError: z.number(),
     intersectionPoint: z.number(),
     slope: z.number(),
-    finalAssesedValue: z.number(),
     lowestEstimate: z.number(),
     highestEstimate: z.number(),
     hasBuildingCost: z.boolean().nullable(),

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { DataGrid } from '@features/appraisal/components/priceAnalysis/components/table/DataGrid.tsx';
 import {
@@ -6,6 +6,7 @@ import {
   buildVerticalGrid,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/builders.tsx';
 import type {
+  GridColumn,
   GridGroup,
   GridRow,
 } from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
@@ -13,7 +14,7 @@ import type {
   RHFHorizontalColumn,
   RHFVerticalRowDef,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/spec.ts';
-import { useDerivedFields } from '../../components/useDerivedFieldArray';
+import { useDerivedFields, type DerivedFieldRule } from '../../components/useDerivedFieldArray';
 
 export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   name,
@@ -39,8 +40,8 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
 }) => {
   const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
-  // const watched = useWatch({ control, name, defaultValue: [] }) as Row[];
-  const watched = getValues(name) as Row[];
+  const watched = useWatch({ control, name, defaultValue: [] }) as Row[];
+  // const watched = getValues(name) as Row[];
 
   const {
     gridRows,
@@ -104,6 +105,27 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   const { fields, append, remove } = useFieldArray({ control, name });
   // const watched = useWatch({ control, name, defaultValue: [] }) as ColumnItem[];
   const watched = getValues(name) as ColumnItem[];
+
+  // const derivedRules: DerivedFieldRule<Ctx>[] = useMemo(() => {
+  //   return rowDefs
+  //     .filter(r => r.derived)
+  //     .map(r => ({
+  //       alignment: 'vertical' as const,
+  //       targetKey: (r.derived?.targetField ?? r.field ?? r.id) as string,
+  //       scope: r.derived?.scope ?? 'row',
+  //       normalize: r.derived?.normalize,
+  //       compute: ({ column, columns, columnIndex, ctx, getValues }: any) =>
+  //         r.derived!.compute({
+  //           columnItem: column,
+  //           columns,
+  //           columnIndex,
+  //           ctx,
+  //           getValues,
+  //         }),
+  //     }));
+  // }, [rowDefs]);
+
+  // useDerivedFields<Ctx>({ rules: derivedRules, ctx });
 
   const {
     gridRows,

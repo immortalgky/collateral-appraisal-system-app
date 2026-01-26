@@ -3,7 +3,7 @@ import type { ColumnDef, ColumnGroup, RHFRow } from './components/types';
 import { RHFInputCell } from './components/RHFInputCell';
 import { getDesciptions } from './WQSSection';
 import { Icon } from '@/shared/components';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import clsx from 'clsx';
 import { forecast } from '../../domain/excelUtils/forecast';
 import { useMemo } from 'react';
@@ -40,68 +40,113 @@ export const CalculationSection = ({
     },
   ];
 
-  // useDerivedFields({
-  //   rules: [
-  //     {
-  //       targetPath: 'WQSCaculations.adjustedValue',
-  //       deps: [],
-  //       compute: ({ getValues, ctx }) => {
-  //         if (column['offeringPrice']) {
-  //           return column['offeringPriceAdjustmentPct'] > 0
-  //             ? column['offeringPrice'] -
-  //                 (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-  //             : column['offeringPriceAdjustmentAmt'] > 0
-  //               ? column['offeringPriceAdjustmentAmt']
-  //               : column['offeringPrice'];
-  //         }
-  //         if (column['sellingPrice']) {
-  //           return (
-  //             column['sellingPrice'] +
-  //             (column['sellingPrice'] *
-  //               column['numberOfYears'] *
-  //               column['sellingPriceAdjustmentYear']) /
-  //               100
-  //           );
-  //         }
-  //         return 0;
-  //       },
-  //     },
-  //   ],
-  //   ctx: {},
-  // });
+  const WQSScores = useWatch({ name: 'WQSScores' });
+  const WQSCalculations = useWatch({ name: 'WQSCalculations' });
+
+  const derivedRules = useMemo(() => {
+    const finalValueRule = {
+      targetPath: 'WQSFinalValue.finalValue',
+      deps: ['WQSCalculations', 'WQSScores'],
+      compute: () => {
+        const x = (WQSScores ?? []).reduce((acc, curr) => acc + curr.collateral * curr.weight, 0);
+        // known_y = adjusted values of each comparable
+        const known_ys = (WQSCalculations ?? [])
+          .map((c: any) => Number(c?.adjustedValue))
+          .filter(Number.isFinite);
+
+        const known_xs = (WQSScores ?? [])
+          .map(
+            f =>
+              f.surveys?.map(survey => ({
+                score: survey.surveyScore ?? 0,
+                weight: f.weight ?? 0,
+              })) ?? [],
+          )
+          .reduce((acc, curr) => {
+            curr.forEach((value, i) => {
+              acc[i] = (acc[i] ?? 0) + value.score * value.weight;
+            });
+            return acc;
+          }, []);
+
+        // must have >= 2 points
+        if (known_xs.length < 2 || known_ys.length < 2 || known_xs.length !== known_ys.length) {
+          return <div>0</div>;
+        }
+
+        const forecastResult = Number.isFinite(forecast({ x, known_ys, known_xs }))
+          ? forecast({ x, known_ys, known_xs })
+          : 0;
+
+        return forecastResult;
+      },
+    };
+
+    return [
+      finalValueRule,
+      ...WQSCalculations.map((column, index) => {
+        return {
+          targetPath: `WQSCalculations.[${index}].adjustedValue`,
+          deps: ['WQSCaculations'],
+          compute: () => {
+            if (column.offeringPrice) {
+              return column.offeringPriceAdjustmentPct > 0
+                ? column.offeringPrice -
+                    (column.offeringPrice * column.offeringPriceAdjustmentPct) / 100
+                : column.offeringPriceAdjustmentAmt > 0
+                  ? column.offeringPriceAdjustmentAmt
+                  : column.offeringPrice;
+            }
+            if (column.sellingPrice) {
+              return (
+                column.sellingPrice +
+                (column.sellingPrice * column.numberOfYears * column.sellingPriceAdjustmentYear) /
+                  100
+              );
+            }
+            return 0;
+          },
+        };
+      }),
+    ];
+  }, [WQSCalculations, WQSScores]);
+
+  useDerivedFields({
+    rules: derivedRules,
+    ctx: {},
+  });
 
   let scoreConfigurations: RHFHorizontalColumn<Record<string, any>, any>[] = [
     {
       id: 'factorCode',
       header: (
-        <div className="flex items-center justify-center w-full min-h-full bg-neutral-400">
-          Factor
-        </div>
+        <div className="flex items-center justify-center bg-neutral-400 h-[116px]">Factor</div>
       ),
       field: 'factorCode',
-      className: 'border-r border-neutral-300 sticky left-0 z-40 bg-white w-[100px] min-w-0',
+      className: 'border-r border-neutral-300 sticky left-0 z-40 bg-white max-w-[200px] w-[200px]',
       render: ({ fieldPath, ctx, rowIndex, value }) => {
         if (rowIndex > ctx.template.calculationFactors.length - 1) {
           const comparativeFactors =
-            ctx.comparativeFactors
+            (getValues('comparativeFactors') ?? [])
               ?.filter(
                 compFact =>
                   !template.calculationFactors.some(
-                    calFact => calFact.factorId === compFact.factorCode,
+                    calFact => calFact.factorId === compFact.factorId,
                   ),
               )
               .map(compFact => ({
-                label: getDesciptions(compFact.factorCode),
-                value: compFact.factorCode,
+                label: getDesciptions(compFact.factorId),
+                value: compFact.factorId,
               })) ?? [];
+          console.log('comparativeFactors', comparativeFactors);
           return (
-            <div className="w-[300px] truncate">
+            <div className="max-w-[200px] truncate">
               <RHFInputCell fieldName={fieldPath} inputType="select" options={comparativeFactors} />
             </div>
           );
         }
         return (
-          <div className="w-[300px] truncate" title={getDesciptions(value) ?? ''}>
+          <div className="max-w-[200px] truncate" title={getDesciptions(value) ?? ''}>
             {getDesciptions(value) ?? ''}
           </div>
         );
@@ -109,14 +154,16 @@ export const CalculationSection = ({
     },
     {
       id: 'weight',
-      header: <div>Weight</div>,
+      header: (
+        <div className="flex items-center justify-center bg-neutral-400 h-[116px]">Weight</div>
+      ),
       field: 'weight',
-      className: 'border-r border-neutral-300 w-[100px]',
+      className: 'border-r border-neutral-300 w-[100px] sticky left-[200px] z-40 bg-white',
       rhf: { inputType: 'number' },
 
-      footer: ({ fieldName, rows, ctx, columnIndex }) => {
+      footer: ({ rows }) => {
         const totalWeight = rows.reduce((acc, curr) => {
-          return acc + curr[columnIndex];
+          return acc + curr.weight;
         }, 0);
         return (
           <div
@@ -124,7 +171,7 @@ export const CalculationSection = ({
               'flex justify-end items-center text-right text-sm font-normal text-gray-400 px-3 py-4 w-[100px]',
             )}
           >
-            {`${totalWeight}`}
+            {`${Number.isFinite(totalWeight) ? totalWeight : 0}`}
           </div>
         );
       },
@@ -133,20 +180,24 @@ export const CalculationSection = ({
       id: 'intensity',
       header: <div className="px-3">Intensity</div>,
       field: 'intensity',
-      className: 'h-14 border-r border-neutral-300 sticky top-14 w-[100px]',
+      className: 'h-14 border-r border-neutral-300 sticky top-14',
       align: 'right',
       render: ({ fieldPath, row, ctx }) => {
         // if (row['factor'] ==)
-        return <RHFInputCell fieldName={fieldPath} inputType="number" />;
+        return (
+          <div className="min-w-[100px]">
+            <RHFInputCell fieldName={fieldPath} inputType="number" />
+          </div>
+        );
       },
       footer: ({ rows, ctx, columnIndex }) => {
         const totalIntensity = rows.reduce((acc, curr) => {
-          return acc + curr[columnIndex];
+          return acc + curr.intensity;
         }, 0);
         return (
           <div
             className={clsx(
-              'flex justify-end items-center text-right text-sm font-normal px-3 py-4 w-[100px]',
+              'flex justify-end items-center text-right text-sm font-normal max-w-full',
               totalIntensity > 100 ? 'text-danger' : 'text-gray-400',
             )}
           >
@@ -159,10 +210,24 @@ export const CalculationSection = ({
       id: 'score',
       header: <div className="px-3">Score</div>,
       className: 'h-14 border-r border-neutral-300 sticky top-14 w-[100px]',
+      align: 'right',
       render: ({ fieldPath, row, rowIndex, value, ctx }) => (
         <div className="w-[100px]">{row['weight'] * row['intensity']}</div>
       ),
-      align: 'right',
+      footer: ({ rows }) => {
+        const totalScore = rows.reduce((acc, curr) => {
+          return acc + curr.weight * curr.intensity;
+        }, 0);
+        return (
+          <div
+            className={clsx(
+              'flex justify-end items-center text-right text-sm font-normal px-3 py-4 max-w-full text-gray-400',
+            )}
+          >
+            {Number.isFinite(totalScore) ? totalScore.toFixed(0) : 0}
+          </div>
+        );
+      },
     },
   ];
 
@@ -173,9 +238,9 @@ export const CalculationSection = ({
         return {
           id: data.id,
           field: `surveys.${index}.surveyScore`,
-          className: 'border-r border-neutral-300 sticky top-14 w-[200px]',
+          className: 'border-r border-neutral-300 sticky top-14 min-w-[200px]',
           header: (
-            <div className="w-full h-full min-w-0">
+            <div className="h-full">
               <div className="flex justify-center items-center truncate">
                 <span>Survey {index + 1}</span>
               </div>
@@ -186,17 +251,17 @@ export const CalculationSection = ({
             </div>
           ),
 
-          render: ({ fieldPath, row }) => {
+          render: ({ fieldPath, row, rowIndex }) => {
             const surveyScore = getValues(fieldPath) ?? 0;
-            const weight = row['weight'] ?? 0;
+            const weight = row.weight ?? 0;
             const score = weight * surveyScore;
 
             return (
-              <div className="w-[200px] h-full flex flex-row justify-between items-center">
+              <div className="max-w-full h-full flex flex-row justify-between items-center">
                 <div className="w-30">
                   <RHFInputCell fieldName={fieldPath} inputType="number" />
                 </div>
-                <div className="w-full text-right">
+                <div className="max-w-full text-right">
                   <span>{Number.isFinite(score) ? score.toFixed(0) : 0}</span>
                 </div>
               </div>
@@ -204,10 +269,10 @@ export const CalculationSection = ({
           },
 
           footer: ({ rows }) => {
-            console.log(rows);
             const totalScore = rows.reduce((acc, curr) => {
-              console.log(curr);
-              const score = curr['surveys'][index]?.surveyScore ?? 0;
+              if (!curr) return acc;
+
+              const score = curr['surveys']?.[index]?.surveyScore ?? 0;
               const weight = curr['weight'] ?? 0;
               return acc + score * weight;
             }, 0);
@@ -228,28 +293,29 @@ export const CalculationSection = ({
     {
       id: 'collateral',
       field: 'collateral',
-      className: 'border-r border-neutral-300 w-[200px] sticky top-0 w-[200px]',
+      className: 'border-r border-neutral-300 sticky top-0',
       header: (
-        <div className="flex flex-col h-full">
-          <div className="flex flex-row justify-center items-center w-full h-14 border-b border-neutral-300">
+        <div className="min-h-0 h-[116px]">
+          <div className="flex flex-row justify-center items-center min-h-[60px] border-b border-neutral-300">
             <span>collateral</span>
           </div>
-          <div className="flex flex-row justify-between items-start w-full gap-2 text-wrap ">
+          <div className="flex flex-row justify-between items-start gap-2 text-wrap">
             <div className="p-2">Score</div>
             <div className="p-2">Weighted Score</div>
           </div>
         </div>
       ),
       render: ({ fieldPath, row, rowIndex, value, ctx }) => {
-        const score = row['weight'] * value;
+        const score = getValues(fieldPath) ?? 0;
+        const weightedScore = row.weight * score;
         return (
-          <div className="w-[200px] flex flex-row justify-between items-center">
+          <div className="min-w-full flex flex-row justify-between items-center">
             <div className="w-18">
               <RHFInputCell fieldName={fieldPath} inputType="number" />
             </div>
             <div>
               {/* <span>{`${row['weight'] * value.score}`}</span> */}
-              <span>{Number.isFinite(score) ? score.toFixed(0) : 0}</span>
+              <span>{Number.isFinite(weightedScore) ? weightedScore.toFixed(0) : 0}</span>
             </div>
           </div>
         );
@@ -263,7 +329,7 @@ export const CalculationSection = ({
         }, 0);
 
         return (
-          <div className="flex justify-end items-center text-right text-sm font-normal text-gray-400  px-3 py-4">
+          <div className="flex justify-end items-center text-right text-sm font-normal text-gray-400 px-2">
             {Number.isFinite(totalScore) ? totalScore.toFixed(0) : 0}
           </div>
         );
@@ -271,18 +337,18 @@ export const CalculationSection = ({
     },
     {
       id: 'action',
-      header: <div className="bg-neutral-400 w-full h-full"></div>,
-      className: 'min-w-20 sticky right-0 bg-white z-40 border-l border-neutral-300',
-      render: ({ rowIndex, onRemove, ctx }) => {
+      header: <div className="bg-neutral-400 w-full h-[116px]"></div>,
+      className: 'min-w-20 sticky right-0 z-40 border-l border-neutral-300 bg-white',
+      render: ({ rowIndex, actions: { removeColumn }, ctx }) => {
         /*
           factor which was set from template not allow to change
          */
         if (rowIndex >= ctx.template.calculationFactors.length)
           return (
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center items-center bg-white w-full h-full">
               <button
                 type="button"
-                onClick={() => onRemove?.(rowIndex)}
+                onClick={() => removeColumn?.(rowIndex)}
                 className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                 title="Delete"
               >
@@ -290,7 +356,7 @@ export const CalculationSection = ({
               </button>
             </div>
           );
-        return <div></div>;
+        return <div className="min-w-full min-h-full bg-white"></div>;
       },
     },
   ];
@@ -301,14 +367,14 @@ export const CalculationSection = ({
       label: <div className="p-2">Calculation</div>,
       columnIds: ['intensity', 'score'],
       align: 'center',
-      className: 'border-b border-r border-neutral-300 h-14',
+      className: 'border-b border-r border-neutral-300 h-[60px]',
     },
     {
       id: 'surveys',
       label: <div className="p-2">Comparative Data</div>,
       columnIds: comparativeSurveys.map((data, index) => data.id),
       align: 'center',
-      className: `border-b border-r border-neutral-300 h-14`,
+      className: `border-b border-r border-neutral-300 h-[60px]`,
     },
   ];
 
@@ -335,24 +401,17 @@ export const CalculationSection = ({
       </div>
       <RHFVerticalArrayTable
         name="WQSCalculations"
-        leftHeaderClassName={'max-w-[600px]'}
+        leftHeaderClassName={'sticky left-0 bg-white z-30 border-r max-w-[600px]'}
         rowDefs={getCalculationConfigurations(setValue)}
-        hasHeader={false}
+        // hasHeader={false}
+        defaultColumn={{}}
         hasAddButton={true}
         canEdit={true}
         watch={{ WQSScores: 'WQSScores' }}
+        getColClassName={i => {
+          return 'max-w-full h-[50px] border-r border-neutral-300';
+        }}
       />
-      {/* <RHFArrayTable
-        name="WQSCalculations"
-        dataAlignment="vertical"
-        leftHeaderStyle={'w-[100px]'}
-        getColumnSize={(col, colIndex) => 'w-[200px]'}
-        rows={getCalculationConfigurations(setValue)}
-        hasHeader={false}
-        hasAddButton={true}
-        canEdit={true}
-        watch={{ WQSScores: 'WQSScores' }}
-      /> */}
     </div>
   );
 };
@@ -368,7 +427,7 @@ const getCalculationConfigurations = setValue => {
         return columnItem['offeringPrice'];
       },
       render: ({ value }) => {
-        return <div className="w-[300px]">{`${value ?? ''}`}</div>;
+        return <div className="">{`${value ?? ''}`}</div>;
       },
     },
     {
@@ -470,28 +529,6 @@ const getCalculationConfigurations = setValue => {
       id: 'adjustedValue',
       header: <div>Adjusted Value</div>,
       field: 'adjustedValue',
-      // derived: {
-      //   compute: ({ column }) => {
-      //     if (column['offeringPrice']) {
-      //       return column['offeringPriceAdjustmentPct'] > 0
-      //         ? column['offeringPrice'] -
-      //             (column['offeringPrice'] * column['offeringPriceAdjustmentPct']) / 100
-      //         : column['offeringPriceAdjustmentAmt'] > 0
-      //           ? column['offeringPriceAdjustmentAmt']
-      //           : column['offeringPrice'];
-      //     }
-      //     if (column['sellingPrice']) {
-      //       return (
-      //         column['sellingPrice'] +
-      //         (column['sellingPrice'] *
-      //           column['numberOfYears'] *
-      //           column['sellingPriceAdjustmentYear']) /
-      //           100
-      //       );
-      //     }
-      //     return 0;
-      //   },
-      // },
       render: ({ value }) => {
         return <span>{Number.isFinite(value) ? Number(value).toLocaleString() : 0}</span>;
       },

@@ -155,7 +155,6 @@ export const WQSSection = () => {
           standardError: 0,
           intersectionPoint: 0,
           slope: 0,
-          finalAssesedValue: 0,
           lowestEstimate: 0,
           highestEstimate: 0,
           appraisalPriceRounded: 0,
@@ -188,7 +187,6 @@ export const WQSSection = () => {
           numberOfYears: 10, // TODO: convert selling date to number of year
         };
       }),
-      {}, // config for collateral column
     ]);
   }, [comparativeSurveys, setValue]);
 

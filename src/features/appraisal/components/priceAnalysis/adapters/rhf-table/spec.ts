@@ -70,5 +70,19 @@ export type RHFVerticalRowDef<ColumnItem, Ctx> = {
     };
   }) => React.ReactNode;
 
+  // derived?: {
+  //   /** where to store the derived value (default = field ?? id) */
+  //   targetField?: string;
+  //   scope?: 'row' | 'all';
+  //   compute: (args: {
+  //     columnItem: ColumnItem;
+  //     columns: ColumnItem[];
+  //     columnIndex: number;
+  //     ctx: Ctx;
+  //     getValues: any;
+  //   }) => any;
+  //   normalize?: (v: any) => any;
+  // };
+
   accessor?: (args: { columnItem: ColumnItem; columnIndex: number; ctx: Ctx }) => any;
 };

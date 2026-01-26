@@ -25,6 +25,7 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
         {...field}
         value={field.value ?? ''}
         onChange={e => field.onChange(toNumber(e.target.value))}
+        error={error?.message ?? ''}
         inputMode="numeric"
         className="w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth"
       />
