@@ -34,7 +34,7 @@ export function DataGrid<Row, Ctx>({
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="table table-sm min-w-max">
+        <table className="table table-sm min-w-max border-separate border-spacing-0">
           {hasHeader && (
             <thead className="sticky top-0 z-20 bg-neutral-50">
               {!!groups.length && (

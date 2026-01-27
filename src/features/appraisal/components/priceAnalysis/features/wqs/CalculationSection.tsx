@@ -147,6 +147,7 @@ export const CalculationSection = ({
 
   const { scoreConfigurations, scoreColumnGroupConfigurations } =
     getWQSScoreConfigurations(comparativeSurveys);
+  const { calculationConfigurations } = getCalculationConfigurations();
 
   return (
     <div className="flex flex-col rounded-lg border border-gray-300 border-spacing border-spacing-0 overflow-hidden">
@@ -181,19 +182,22 @@ export const CalculationSection = ({
       <div>
         <RHFVerticalArrayTable
           name="WQSCalculations"
-          rowDefs={getCalculationConfigurations()}
+          rowDefs={calculationConfigurations}
           // hasHeader={false}
           defaultColumn={{}}
-          hasAddButton={true}
-          canEdit={true}
           topHeader={comparativeSurveys?.map((survey, index) => (
-            <div key={survey.Id ?? index} className="w-[200px]">{`Survey ${index + 1}`}</div>
+            <div key={survey.Id ?? index} className="">{`Survey ${index + 1}`}</div>
           ))}
           style={{
-            headerClassName:
-              'sticky left-0 z-30 bg-neutral-400 text-white border-r border-neutral-300 h-[50px] w-[200px]',
+            headerClassName: i => {
+              if (i === 0)
+                return 'sticky left-0 z-30 border-r border-neutral-300 h-[50px] w-[500px] bg-gray-50';
+              return 'border-r border-neutral-300 h-[50px] w-[200px]';
+            },
             bodyClassName: i => {
-              return 'w-[200px] border-r border-neutral-300 h-[56px]';
+              if (i === 0)
+                return 'sticky left-0 z-30 bg-white w-[500px] border-r border-neutral-300 h-[56px] border-b border-gray-300';
+              return 'border-r border-neutral-300 h-[56px] w-[200px] border-b border-gray-300';
             },
           }}
         />
@@ -209,9 +213,10 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       header: <div className="flex items-center justify-center">Factor</div>,
       field: 'factorCode',
       style: {
-        headerClassName: 'border-r border-gray-300 left-0 bg-gray-50 z-30 sticky h-14',
-        bodyClassName: 'border-r border-gray-300 sticky left-0 z-30 bg-white',
-        footerClassName: 'sticky left-0 bg-white z-30',
+        headerClassName: 'border-r border-gray-300 left-0 bg-gray-50 z-30 sticky h-14 w-[200px]',
+        bodyClassName:
+          'border-r border-gray-300 sticky left-0 z-30 bg-white w-[200px] border-b border-gray-300',
+        footerClassName: 'sticky left-0 bg-white z-30 h-14 w-[200px]',
       },
       render: ({ fieldPath, ctx, rowIndex, value }) => {
         if (rowIndex > ctx.template.calculationFactors.length - 1) {
@@ -228,13 +233,16 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
                 value: compFact.factorCode,
               })) ?? [];
           return (
-            <div className="flex items-center w-60 h-12 truncate">
+            <div className="flex flex-row w-[190px] items-center h-12 truncate">
               <RHFInputCell fieldName={fieldPath} inputType="select" options={comparativeFactors} />
             </div>
           );
         }
         return (
-          <div className="flex items-center w-60 truncate h-12" title={getDesciptions(value) ?? ''}>
+          <div
+            className="flex flex-row items-center justify-start truncate h-12 w-[190px]"
+            title={getDesciptions(value) ?? ''}
+          >
             {getDesciptions(value) ?? ''}
           </div>
         );
@@ -245,8 +253,11 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       header: <div className="flex items-center justify-center">Weight</div>,
       field: 'weight',
       style: {
-        headerClassName: 'border-r border-gray-300 w-[100px] h-14',
-        bodyClassName: 'border-r border-gray-300',
+        headerClassName:
+          'border-r border-gray-300 w-[100px] h-14 sticky left-[200px] z-30 bg-gray-50',
+        bodyClassName:
+          'border-r border-gray-300 sticky left-[200px] bg-white z-30 border-b border-gray-300',
+        footerClassName: 'h-14 sticky left-[200px] bg-white z-30',
       },
       render: ({ fieldPath }) => {
         return (
@@ -276,8 +287,11 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       header: <div className="">Intensity</div>,
       field: 'intensity',
       style: {
-        headerClassName: 'border-r border-gray-300 w-[100px] text-center h-14',
-        bodyClassName: 'border-r border-gray-300',
+        headerClassName:
+          'border-r border-gray-300 w-[100px] text-center h-14 sticky left-[300px] bg-gray-50 z-30',
+        bodyClassName:
+          'border-r border-gray-300 sticky left-[300px] bg-white z-30 border-b border-gray-300',
+        footerClassName: 'h-14 left-[300px] bg-white z-30',
       },
       align: 'right',
       render: ({ fieldPath, row, ctx }) => {
@@ -307,8 +321,11 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       id: 'score',
       header: <div className="">Score</div>,
       style: {
-        headerClassName: 'border-r border-gray-300 w-[100px] text-center h-14',
-        bodyClassName: 'border-r border-gray-300',
+        headerClassName:
+          'border-r border-gray-300 w-[100px] text-center h-14 sticky left-[400px] bg-gray-50',
+        bodyClassName:
+          'border-r border-gray-300 sticky left-[400px] bg-white z-30 border-b border-gray-300',
+        footerClassName: 'h-14 sticky left-[400px] bg-white z-30',
       },
       align: 'right',
       render: ({ fieldPath, row, rowIndex, value, ctx }) => (
@@ -323,7 +340,7 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
         return (
           <div
             className={clsx(
-              'w-full h-full flex justify-end items-center text-right text-sm font-normal px-3 py-4 text-gray-400',
+              'w-full h-full flex justify-end items-center text-right text-sm font-normal text-gray-400',
             )}
           >
             {Number.isFinite(totalScore) ? totalScore.toFixed(0) : 0}
@@ -341,8 +358,9 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
           id: data.id,
           field: `surveys.${index}.surveyScore`,
           style: {
-            headerClassName: 'border-r border-gray-300 h-14',
-            bodyClassName: 'border-r border-gray-300',
+            headerClassName: 'border-r border-gray-300 h-14 w-[200px]',
+            bodyClassName: 'border-r border-gray-300 border-b border-gray-300',
+            footerClassName: 'h-14',
           },
           header: (
             <div className="">
@@ -384,7 +402,7 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
             }, 0);
 
             return (
-              <div className="flex justify-end items-center text-right text-sm font-normal text-gray-400  px-3 py-4">
+              <div className="flex justify-end items-center text-right text-sm font-normal text-gray-400">
                 {Number.isFinite(totalScore) ? totalScore.toFixed(0) : 0}
               </div>
             );
@@ -401,7 +419,8 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       field: 'collateral',
       style: {
         headerClassName: 'border-r border-gray-300 h-14',
-        bodyClassName: 'border-r border-gray-300',
+        bodyClassName: 'border-r border-gray-300 border-b border-gray-300',
+        footerClassName: 'h-14',
       },
       header: (
         <div className="w-full h-full flex flex-col justify-end items-end">
@@ -450,7 +469,8 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       header: <div className="w-full"></div>,
       style: {
         headerClassName: 'w-20 bg-gray-50 h-14',
-        bodyClassName: 'z-30 bg-white',
+        bodyClassName: 'z-30 bg-white border-b border-gray-300',
+        footerClassName: 'h-14',
       },
       render: ({ rowIndex, actions: { removeColumn }, ctx }) => {
         /*
@@ -480,7 +500,8 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       label: <div className="">Calculation</div>,
       columnIds: ['intensity', 'score'],
       align: 'center',
-      className: 'border-b border-r border-neutral-300 sticky top-0 z-20 h-10 text-center',
+      className:
+        'border-b border-r border-neutral-300 sticky top-0 z-20 h-10 text-center sticky left-[300px] z-30 bg-gray-50',
     },
     {
       id: 'surveys',
@@ -497,11 +518,11 @@ const getCalculationConfigurations = () => {
   const calculationConfigurations: RHFVerticalRowDef<Record<string, any>, any>[] = [
     {
       id: 'offeringPrice',
-      header: <div className="flex justify-start items-center">Offering Price</div>,
+      header: <div className="flex justify-start items-center w-[200px]">Offering Price</div>,
       field: 'offeringPrice',
       render: ({ columnItem }) => {
         return (
-          <div className="w-[200px] h-full flex justify-end items-center">
+          <div className=" h-full flex justify-end items-center">
             {formatNumber(columnItem['offeringPrice'])}
           </div>
         );
@@ -510,7 +531,7 @@ const getCalculationConfigurations = () => {
     {
       id: 'offeringPriceAdjustmentPct',
       header: (
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center ">
           <div>Adjustment of Offer Price</div>
           <div>(%)</div>
         </div>
@@ -521,7 +542,7 @@ const getCalculationConfigurations = () => {
       },
       render: ({ fieldPath, columnItem, columns, columnIndex, value, ctx }) => {
         return columnItem['offeringPrice'] ? (
-          <div className="flex justify-end items-center w-[200px] h-full">
+          <div className="flex justify-end items-center  h-full">
             <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
@@ -530,7 +551,7 @@ const getCalculationConfigurations = () => {
     {
       id: 'offeringPriceAdjustmentAmt',
       header: (
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center ">
           <div>Adjustment of Offer Price</div>
           <div>(Amt)</div>
         </div>
@@ -541,7 +562,7 @@ const getCalculationConfigurations = () => {
       },
       render: ({ fieldPath, columnItem }) => {
         return columnItem['offeringPrice'] ? (
-          <div className="flex justify-end items-center w-[200px] h-full">
+          <div className="flex justify-end items-center  h-full">
             <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
@@ -549,11 +570,11 @@ const getCalculationConfigurations = () => {
     },
     {
       id: 'sellingPrice',
-      header: <div className="w-[200px]">Selling Price</div>,
+      header: <div className="">Selling Price</div>,
       field: 'sellingPrice',
       render: ({ columnItem }) => {
         return (
-          <div className="flex justify-end items-center w-[200px] h-full">
+          <div className="flex justify-end items-center  h-full">
             {formatNumber(columnItem['sellingPrice'])}
           </div>
         );
@@ -561,11 +582,11 @@ const getCalculationConfigurations = () => {
     },
     {
       id: 'numberOfYears',
-      header: <div className="w-[200px]">Number of Years</div>,
+      header: <div className="">Number of Years</div>,
       field: 'numberOfYears',
       render: ({ columnItem }) => {
         return (
-          <div className="flex justify-end items-center w-[200px] h-full">
+          <div className="flex justify-end items-center  h-full">
             {formatNumber(columnItem['numberOfYears'])}
           </div>
         );
@@ -573,14 +594,14 @@ const getCalculationConfigurations = () => {
     },
     {
       id: 'sellingPriceAdjustmentYear',
-      header: <div className="w-[200px]">Adjust Period</div>,
+      header: <div className="">Adjust Period</div>,
       field: 'sellingPriceAdjustmentYear',
       accessor: ({ columnItem, columnIndex, ctx }) => {
         return columnItem['sellingPriceAdjustmentYear'] ?? '';
       },
       render: ({ fieldPath, columnItem, columns, columnIndex, value, ctx }) => {
         return columnItem['sellingPrice'] ? (
-          <div className="flex justify-end items-center w-[200px] h-full">
+          <div className="flex justify-end items-center  h-full">
             <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
@@ -589,7 +610,7 @@ const getCalculationConfigurations = () => {
     {
       id: 'cumulativeAdjustedPeriod',
       header: (
-        <div className="flex justify-between items-center w-[200px]">
+        <div className="flex justify-between items-center ">
           <span>Cumulative Adjusted Period</span>
           <span>(%)</span>
         </div>
@@ -605,22 +626,22 @@ const getCalculationConfigurations = () => {
         const sellingPriceAdjustmentYear = columnItem['sellingPriceAdjustmentYear'] ?? 0;
         const cumulativeAdjustedPeriod = numberOfYears * sellingPriceAdjustmentYear;
         return (
-          <div className="w-[200px]">{`${Number.isFinite(cumulativeAdjustedPeriod) ? formatNumber(cumulativeAdjustedPeriod) : ''}`}</div>
+          <div className=" h-full">{`${Number.isFinite(cumulativeAdjustedPeriod) ? formatNumber(cumulativeAdjustedPeriod) : ''}`}</div>
         );
       },
     },
     {
       id: 'adjustedValue',
-      header: <div className="w-[200px]">Adjusted Value</div>,
+      header: <div className="">Adjusted Value</div>,
       field: 'adjustedValue',
       render: ({ value }) => {
         return (
-          <div className="flex justify-end items-center w-[200px] h-full p-2">
+          <div className="flex justify-end items-center  h-full p-2">
             {Number.isFinite(value) ? Number(value).toLocaleString() : 0}
           </div>
         );
       },
     },
   ];
-  return calculationConfigurations;
+  return { calculationConfigurations };
 };

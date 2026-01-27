@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { PriceAnalysisMethodCard } from './PriceAnalysisMethodCard';
-import { PriceAnalysisApproachCard } from './PriceAnalysisApproachCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { PriceAnalysisApproachCard } from './PriceAnalysisApproachCard';
+import { PriceAnalysisMethodCard } from './PriceAnalysisMethodCard';
 
 interface PriceAnalysisApproachAccordian {
   viewMode: 'editing' | 'summary';

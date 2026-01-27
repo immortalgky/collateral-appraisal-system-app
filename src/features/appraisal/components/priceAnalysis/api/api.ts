@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import type { PriceAnalysisApproachRequest } from './type';
+import type { PriceAnalysisApproachRequest } from '../features/selection/type';
 
 /**
  * initialize approach and method choices

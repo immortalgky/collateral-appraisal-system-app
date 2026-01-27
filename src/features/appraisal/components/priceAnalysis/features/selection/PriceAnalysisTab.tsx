@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { PriceAnalysisAccordion } from './PriceAnalysisAccordion';
-import { WQSSection } from './features/wqs/WQSSection';
+import { WQSSection } from '../wqs/WQSSection';
+import type { JSX } from 'react';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();

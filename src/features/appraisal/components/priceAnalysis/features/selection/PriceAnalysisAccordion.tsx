@@ -10,19 +10,19 @@ import {
   useAddPriceAnalysisApproachMethod,
   useGetPriceAnalysisApproachMethodByGroupId,
   useSelectPriceAnalysisApproachMethod,
-} from './api';
+} from '../../api/api';
 import {
   approachMethodReducer,
   type PriceAnalysisSelectorAction,
   type PriceAnalysisSelectorState,
-} from './useReducer';
+} from '../../domain/useReducer';
 import type { PriceAnalysisApproachRequest } from './type';
-import { usePriceAnalysisQuery } from './usePriceAnalysisQuery';
+import { usePriceAnalysisQuery } from '../../domain/usePriceAnalysisQuery';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { usePropertyStore } from '../../store';
-import { PropertyCard } from '../PropertyCard';
+import { usePropertyStore } from '../../../../store';
+import { PropertyCard } from '../../../PropertyCard';
 
 const createInitialState = (
   approachConfig: any,

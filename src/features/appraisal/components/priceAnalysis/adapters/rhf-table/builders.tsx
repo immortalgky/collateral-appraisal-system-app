@@ -102,8 +102,9 @@ interface buildVerticalGridProps<ColumnItem extends Record<string, any>, Ctx> {
   ctx: Ctx;
 
   topHeader?: React.ReactNode[];
+
   style?: {
-    headerClassName?: string;
+    headerClassName?: (colIndex: number) => string;
     bodyClassName?: (colIndex: number) => string;
     footerClassName?: string;
   };
@@ -112,9 +113,9 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
   arrayName,
   items,
   rowDefs,
+  topHeader,
   ctx,
   style,
-  topHeader = [],
 }: buildVerticalGridProps<ColumnItem, Ctx>): {
   gridRows: GridRow<RHFVerticalRowDef<ColumnItem, Ctx>>[];
   gridCols: GridColumn<RHFVerticalRowDef<ColumnItem, Ctx>, Ctx>[];
@@ -129,8 +130,8 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
     id: '__rowHeader',
     header: '',
     style: {
-      headerClassName: style?.headerClassName,
-      bodyClassName: 'sticky left-0 z-20 bg-white border-r border-neutral-300 p-2',
+      headerClassName: style?.headerClassName?.(0),
+      bodyClassName: style?.bodyClassName?.(0),
     },
     renderCell: ({ row }) => row.raw.header ?? <div className={'truncate'}></div>,
   };
@@ -142,8 +143,8 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
       header: topHeader?.[columnIndex] ?? '', // optionally label columnIndex+1 here
 
       style: {
-        headerClassName: style?.headerClassName,
-        bodyClassName: style?.bodyClassName?.(columnIndex),
+        headerClassName: style?.headerClassName?.(columnIndex + 1),
+        bodyClassName: style?.bodyClassName?.(columnIndex + 1),
         footerClassName: style?.footerClassName,
       },
 
@@ -183,6 +184,15 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
       },
     }),
   );
+  const endingCol: GridColumn<RHFVerticalRowDef<ColumnItem, Ctx>, Ctx> = {
+    id: '__rowEnding',
+    header: '',
+    style: {
+      headerClassName: '',
+      bodyClassName: '',
+    },
+    renderCell: ({ row }) => <></>,
+  };
 
-  return { gridRows, gridCols: [headerCol, ...dataCols] };
+  return { gridRows, gridCols: [headerCol, ...dataCols, endingCol] };
 }

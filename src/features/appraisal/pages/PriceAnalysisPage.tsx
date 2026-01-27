@@ -2,8 +2,10 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { GalleryTab, LawsRegulationTab, MarketsTab, PropertiesTab } from '../components/tabs';
-import { PriceAnalysisTab } from '../components/priceAnalysis/PriceAnalysisTab';
+import { PriceAnalysisTab } from '../components/priceAnalysis/features/selection/PriceAnalysisTab';
+import MarketsTab from '../components/tabs/MarketsTab';
+import GalleryTab from '../components/tabs/GalleryTab';
+import LawsRegulationTab from '../components/tabs/LawsRegulationTab';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
 type ViewMode = 'grid' | 'list';

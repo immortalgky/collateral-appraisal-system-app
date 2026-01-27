@@ -58,7 +58,7 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   }, [columns, name, ctx, fields, watched]);
 
   return (
-    <div className="border border-gray-300 overflow-hidden">
+    <div className="flex-1 min-h-0 min-w-0 bg-white border border-gray-200 overflow-hidden flex flex-col">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
@@ -72,11 +72,11 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
       />
 
       {/* optional add button */}
-      <div className="flex flex-row items-center justify-center p-2 border-neutral-300">
+      <div className="flex flex-row items-center justify-center p-2 border-t border-gray-300">
         <button
           type="button"
           onClick={() => append(defaultRow)}
-          className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer"
+          className="px-4 py-2 border border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
         >
           + Add row
         </button>
@@ -91,7 +91,6 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   ctx,
   defaultColumn,
   leftHeaderClassName,
-  getColClassName,
   topHeader,
   style,
 }: {
@@ -101,9 +100,8 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   defaultColumn: ColumnItem;
   leftHeaderClassName?: string;
   topHeader?: React.ReactNode[];
-  getColClassName?: (i: number) => string;
   style?: {
-    headerClassName?: string;
+    headerClassName?: (colIndex: number) => string;
     bodyClassName?: (colIndex: number) => string;
     footerClassName?: string;
   };

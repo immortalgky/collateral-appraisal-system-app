@@ -41,7 +41,7 @@ export const ComparativeSection = ({
       header: <div className="">Factor</div>,
       style: {
         headerClassName: 'border-r border-neutral-300 w-[200px]',
-        bodyClassName: 'border-r border-neutral-300 h-[56px]',
+        bodyClassName: 'border-r border-neutral-300 h-[56px] border-b border-gray-300',
       },
       field: 'factorCode',
       render: ({ row, rowIndex, fieldPath, ctx, value }) => {
@@ -73,7 +73,7 @@ export const ComparativeSection = ({
       header: <div className="">Collateral</div>,
       style: {
         headerClassName: 'border-r border-neutral-300 min-w-[200px]',
-        bodyClassName: 'border-r border-neutral-300 h-[56px]',
+        bodyClassName: 'border-r border-neutral-300 h-[56px]  border-b border-gray-300',
       },
       field: 'collateral',
       render: ({ row }) => {
@@ -95,8 +95,8 @@ export const ComparativeSection = ({
         id: `surveys${index}`,
         header: <div className="">Survey {index + 1}</div>,
         style: {
-          headerClassName: 'border-r border-neutral-300 min-w-[200px]',
-          bodyClassName: 'border-r border-neutral-300 h-[56px]',
+          headerClassName: 'border-r border-neutral-300 w-[200px]',
+          bodyClassName: 'border-r border-neutral-300 h-[56px] border-b border-gray-300',
         },
         field: `surveys.${index}.value`,
         render: ({ row, ctx }) => {
@@ -120,6 +120,7 @@ export const ComparativeSection = ({
       header: <div className="px-2 py-4"></div>,
       style: {
         headerClassName: 'w-16',
+        bodyClassName: ' border-b border-gray-300',
       },
       render: ({ rowIndex, ctx, actions: { removeColumn } }) => {
         /*
