@@ -1,5 +1,4 @@
 import { FormFields, type FormField } from '@/shared/components/form';
-import CondoAreaDetailForm from './CondoAreaDetailForm';
 import Icon from '@/shared/components/Icon';
 import type { ReactNode } from 'react';
 
@@ -236,6 +235,7 @@ const condoFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     required: true,
     disableWhen: { field: 'isOwnerVerified', is: false },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },
   {
     type: 'radio-group',
@@ -367,7 +367,7 @@ const condoLocationFields: FormField[] = [
 const condoDecorationFields: FormField[] = [
   {
     type: 'radio-group',
-    label: 'Decoration',
+    label: '',
     name: 'decorationType',
     wrapperClassName: 'col-span-12',
     required: true,

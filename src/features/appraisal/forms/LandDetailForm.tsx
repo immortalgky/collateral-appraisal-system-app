@@ -1,6 +1,5 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
-import { Field } from '@headlessui/react';
 
 /** Section row component for form layout */
 interface SectionRowProps {
@@ -150,6 +149,7 @@ const landInfoField: FormField[] = [
     label: 'District',
     name: 'districtName',
     disabled: true,
+    required: true,
     wrapperClassName: 'col-span-3',
   },
   {
@@ -157,6 +157,7 @@ const landInfoField: FormField[] = [
     label: 'Province',
     name: 'provinceName',
     disabled: true,
+    required: true,
     wrapperClassName: 'col-span-3',
   },
   {
@@ -192,6 +193,7 @@ const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-4',
     required: true,
     disableWhen: { field: 'isOwnerVerified', is: false },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },
   {
     type: 'boolean-toggle',

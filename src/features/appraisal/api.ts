@@ -273,7 +273,6 @@ export const useGetCondoPropertyById = (appraisalId: string, propertyId: string)
       const { data } = await axios.get(
         `/appraisals/${appraisalId}/properties/${propertyId}/condo-detail`,
       );
-      // console.log(data);
       return data;
     },
     retry: (failureCount, error) => {

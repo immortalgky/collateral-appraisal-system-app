@@ -107,6 +107,7 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
       </SectionRow>
 
       <SectionRow title="Building Detail" icon="table">
+        <FormFields fields={buildingArea} />
         <div className="col-span-12">
           <BuildingDetail
             name={
@@ -168,6 +169,7 @@ const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-4',
     required: true,
     disableWhen: { field: 'isOwnerVerified', is: false },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },
   {
     type: 'text-input',
@@ -304,14 +306,15 @@ const encroachmentField: FormField[] = [
     type: 'boolean-toggle',
     label: '',
     name: 'isEncroachingOthers',
-    options: ['Is Encroached', 'Is not Encroached'],
+    options: ['Is Encroaching', 'Is not Encroaching'],
     wrapperClassName: 'col-span-4 flex items-center',
   },
   {
     type: 'number-input',
-    label: 'Encroachment Area',
+    label: 'Encroaching Area',
     name: 'encroachingOthersArea',
     wrapperClassName: 'col-span-2',
+    disableWhen: { field: 'isEncroachingOthers', is: false },
   },
   {
     type: 'text-input',
@@ -607,6 +610,23 @@ const constTypeFeild: FormField[] = [
       { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'constructionTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'constructionType', is: '99', operator: 'equals' },
+  },
+];
+
+const buildingArea: FormField[] = [
+  {
+    type: 'number-input',
+    name: 'totalBuildingArea',
+    label: 'Total Building Area (sq.m.)',
+    wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'textarea',
