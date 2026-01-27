@@ -3,15 +3,15 @@ import { z } from 'zod';
 const WQSCalculation = z
   .object({
     marketId: z.string(),
-    offeringPrice: z.number(),
+    offeringPrice: z.number().nullable(),
     offeringPriceMeasurementUnit: z.string().nullable(),
     offeringPriceAdjustmentPct: z.number().nullable(),
     offeringPriceAdjustmentAmt: z.number().nullable(),
-    sellingPrice: z.number(),
+    sellingPrice: z.number().nullable(),
     sellingPriceMeasurementUnit: z.string().nullable(),
-    sellingDate: z.date(),
+    // sellingDate: z.date(),
     sellingPriceAdjustmentYear: z.number().nullable(),
-    numberOfYears: z.number(),
+    numberOfYears: z.number().nullable(),
   })
   .passthrough();
 
@@ -50,9 +50,9 @@ const WQSFinalValue = z
     slope: z.number(),
     lowestEstimate: z.number(),
     highestEstimate: z.number(),
-    hasBuildingCost: z.boolean().nullable(),
-    includeLandArea: z.boolean().nullable(),
-    landArea: z.number().nullable(),
+    hasBuildingCost: z.boolean().optional(),
+    includeLandArea: z.boolean().optional(),
+    landArea: z.number().optional(),
     appraisalPrice: z.number(),
     appraisalPriceRounded: z.number(),
   })

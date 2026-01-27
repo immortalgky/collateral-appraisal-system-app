@@ -35,18 +35,6 @@ export type RHFHorizontalColumn<Row, Ctx> = {
     };
   }) => React.ReactNode;
 
-  // derived?: {
-  //   targetPath: string;
-  //   deps: string[];
-  //   compute: (args: { getValues: any; ctx: Ctx }) => any;
-  //   normalize?: (v: any) => any;
-  //   setValueOptions?: {
-  //     shouldDirty?: boolean;
-  //     shouldTouch?: boolean;
-  //     shouldValidate?: boolean;
-  //   };
-  // };
-
   accessor?: (args: { row: Row; rowIndex: number; ctx: Ctx }) => any;
 
   footer?: (args: { rows: Row[]; ctx: Ctx }) => React.ReactNode;
@@ -74,20 +62,6 @@ export type RHFVerticalRowDef<ColumnItem, Ctx> = {
       removeColumn: (columnIndex: number) => void;
     };
   }) => React.ReactNode;
-
-  // derived?: {
-  //   /** where to store the derived value (default = field ?? id) */
-  //   targetField?: string;
-  //   scope?: 'row' | 'all';
-  //   compute: (args: {
-  //     columnItem: ColumnItem;
-  //     columns: ColumnItem[];
-  //     columnIndex: number;
-  //     ctx: Ctx;
-  //     getValues: any;
-  //   }) => any;
-  //   normalize?: (v: any) => any;
-  // };
 
   accessor?: (args: { columnItem: ColumnItem; columnIndex: number; ctx: Ctx }) => any;
 };

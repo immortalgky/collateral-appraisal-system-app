@@ -112,6 +112,7 @@ export const CalculationSection = ({
 
     return [
       finalValueRule,
+      finalValueRoundedRule,
       ...WQSCalculations.map((column, index) => {
         return {
           targetPath: `WQSCalculations.[${index}].adjustedValue`,
@@ -148,7 +149,7 @@ export const CalculationSection = ({
     getWQSScoreConfigurations(comparativeSurveys);
 
   return (
-    <div className="flex flex-col border border-neutral-300 rounded-lg overflow-clip">
+    <div className="flex flex-col rounded-lg border border-gray-300 border-spacing border-spacing-0 overflow-hidden">
       <div>
         <RHFHorizontalArrayTable
           name="WQSScores"
@@ -174,7 +175,7 @@ export const CalculationSection = ({
           hasFooter={true}
         />
       </div>
-      <div className="border-y border-neutral-300 flex justify-center h-14 text-sm items-center">
+      <div className="flex justify-center h-14 text-sm items-center">
         {`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}
       </div>
       <div>
@@ -186,14 +187,11 @@ export const CalculationSection = ({
           hasAddButton={true}
           canEdit={true}
           topHeader={comparativeSurveys?.map((survey, index) => (
-            <div
-              key={survey.Id ?? index}
-              className="w-full min-h-full"
-            >{`Survey ${index + 1}`}</div>
+            <div key={survey.Id ?? index} className="w-[200px]">{`Survey ${index + 1}`}</div>
           ))}
           style={{
             headerClassName:
-              'sticky left-0 z-30 bg-neutral-400 text-white border-r border-neutral-300 border-b h-[50px] w-[200px]',
+              'sticky left-0 z-30 bg-neutral-400 text-white border-r border-neutral-300 h-[50px] w-[200px]',
             bodyClassName: i => {
               return 'w-[200px] border-r border-neutral-300 h-[56px]';
             },
@@ -351,9 +349,9 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
               <div className="flex justify-center items-center truncate">
                 <span>Survey {index + 1}</span>
               </div>
-              <div className="flex flex-row justify-between items-center gap-2 truncate ">
-                <div className="text-left p-2">Score</div>
-                <div className="text-right p-2">Weighted Score</div>
+              <div className="flex flex-row justify-between items-center gap-4 truncate ">
+                <div className="text-left flex">Score</div>
+                <div className="text-right flex">Weighted Score</div>
               </div>
             </div>
           ),
@@ -366,7 +364,7 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
 
             return (
               <div className="max-w-full h-full flex flex-row justify-between items-center">
-                <div className="w-[100px]">
+                <div className="w-[80px]">
                   <RHFInputCell fieldName={fieldPath} inputType="number" />
                 </div>
                 <div className="text-right">
@@ -479,17 +477,17 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
   const scoreColumnGroupConfigurations: GridGroup[] = [
     {
       id: 'calculation',
-      label: <div className="p-2">Calculation</div>,
+      label: <div className="">Calculation</div>,
       columnIds: ['intensity', 'score'],
       align: 'center',
-      className: 'border-b border-r border-neutral-300 sticky top-0 z-20 h-14 text-center',
+      className: 'border-b border-r border-neutral-300 sticky top-0 z-20 h-10 text-center',
     },
     {
       id: 'surveys',
-      label: <div className="p-2">Comparative Data</div>,
+      label: <div className="">Comparative Data</div>,
       columnIds: comparativeSurveys.map((data, index) => data.id),
       align: 'center',
-      className: `border-b border-r border-neutral-300 h-[60px] h-14 text-center`,
+      className: `border-b border-r border-neutral-300 h-10 text-center`,
     },
   ];
   return { scoreConfigurations, scoreColumnGroupConfigurations };
@@ -499,12 +497,11 @@ const getCalculationConfigurations = () => {
   const calculationConfigurations: RHFVerticalRowDef<Record<string, any>, any>[] = [
     {
       id: 'offeringPrice',
-      header: <div className="flex justify-start items-center w-[200px]">Offering Price</div>,
-      className: 'px-3 py-4',
+      header: <div className="flex justify-start items-center">Offering Price</div>,
       field: 'offeringPrice',
       render: ({ columnItem }) => {
         return (
-          <div className="w-full h-full flex justify-end items-center p-2">
+          <div className="w-[200px] h-full flex justify-end items-center">
             {formatNumber(columnItem['offeringPrice'])}
           </div>
         );
@@ -513,7 +510,7 @@ const getCalculationConfigurations = () => {
     {
       id: 'offeringPriceAdjustmentPct',
       header: (
-        <div className="flex flex-row justify-between items-center-[200px]">
+        <div className="flex flex-row justify-between items-center">
           <div>Adjustment of Offer Price</div>
           <div>(%)</div>
         </div>
@@ -524,7 +521,7 @@ const getCalculationConfigurations = () => {
       },
       render: ({ fieldPath, columnItem, columns, columnIndex, value, ctx }) => {
         return columnItem['offeringPrice'] ? (
-          <div className="flex justify-end items-center w-full h-full p-2">
+          <div className="flex justify-end items-center w-[200px] h-full">
             <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
@@ -533,7 +530,7 @@ const getCalculationConfigurations = () => {
     {
       id: 'offeringPriceAdjustmentAmt',
       header: (
-        <div className="flex flex-row justify-between items-centerw-[200px]">
+        <div className="flex flex-row justify-between items-center">
           <div>Adjustment of Offer Price</div>
           <div>(Amt)</div>
         </div>
@@ -544,7 +541,7 @@ const getCalculationConfigurations = () => {
       },
       render: ({ fieldPath, columnItem }) => {
         return columnItem['offeringPrice'] ? (
-          <div className="flex justify-end items-center w-full h-full p-2">
+          <div className="flex justify-end items-center w-[200px] h-full">
             <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
@@ -556,7 +553,7 @@ const getCalculationConfigurations = () => {
       field: 'sellingPrice',
       render: ({ columnItem }) => {
         return (
-          <div className="flex justify-end items-center w-full h-full p-2">
+          <div className="flex justify-end items-center w-[200px] h-full">
             {formatNumber(columnItem['sellingPrice'])}
           </div>
         );
@@ -568,7 +565,7 @@ const getCalculationConfigurations = () => {
       field: 'numberOfYears',
       render: ({ columnItem }) => {
         return (
-          <div className="flex justify-end items-center w-full h-full p-2">
+          <div className="flex justify-end items-center w-[200px] h-full">
             {formatNumber(columnItem['numberOfYears'])}
           </div>
         );
@@ -583,7 +580,7 @@ const getCalculationConfigurations = () => {
       },
       render: ({ fieldPath, columnItem, columns, columnIndex, value, ctx }) => {
         return columnItem['sellingPrice'] ? (
-          <div className="flex justify-end items-center w-full h-full p-2">
+          <div className="flex justify-end items-center w-[200px] h-full">
             <RHFInputCell fieldName={fieldPath} inputType="number" />
           </div>
         ) : null;
@@ -608,7 +605,7 @@ const getCalculationConfigurations = () => {
         const sellingPriceAdjustmentYear = columnItem['sellingPriceAdjustmentYear'] ?? 0;
         const cumulativeAdjustedPeriod = numberOfYears * sellingPriceAdjustmentYear;
         return (
-          <div>{`${Number.isFinite(cumulativeAdjustedPeriod) ? formatNumber(cumulativeAdjustedPeriod) : ''}`}</div>
+          <div className="w-[200px]">{`${Number.isFinite(cumulativeAdjustedPeriod) ? formatNumber(cumulativeAdjustedPeriod) : ''}`}</div>
         );
       },
     },
@@ -618,7 +615,7 @@ const getCalculationConfigurations = () => {
       field: 'adjustedValue',
       render: ({ value }) => {
         return (
-          <div className="flex justify-end items-center w-full h-full p-2">
+          <div className="flex justify-end items-center w-[200px] h-full p-2">
             {Number.isFinite(value) ? Number(value).toLocaleString() : 0}
           </div>
         );

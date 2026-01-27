@@ -1,5 +1,5 @@
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useController, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WQSDto, type WQSRequestType } from '../../schemas/form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
@@ -25,7 +25,7 @@ const getCollateralTypeDescriptions = (id: string) => {
   return factors.get(id) ?? null;
 };
 
-export const getPropertyValueByFactorCode = (id: string) => {
+export const getPropertyValueByFactorCode = (id: string, property: Record<string, any>) => {
   const mapping = new Map(
     MAPPING_FACTORS_PROPERTIES_FIELDS.map(factor => [factor.id, factor.value]),
   );
@@ -34,8 +34,8 @@ export const getPropertyValueByFactorCode = (id: string) => {
 
   if (!field) return '';
 
-  const property = PROPERTIES[0];
-  return property[field] ?? '';
+  const value = property;
+  return value[field] ?? '';
 };
 
 export const WQSSection = () => {
@@ -85,7 +85,7 @@ export const WQSSection = () => {
    */
 
   // stage (1): moc data
-  const [property, setProperty] = useState<Record<string, any>>(PROPERTIES[0]);
+  const [property, setProperty] = useState<Record<string, any>>(PROPERTIES[1]);
   const [surveys, setSurvey] = useState<Record<string, any>[]>(
     MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND,
   );
@@ -109,11 +109,19 @@ export const WQSSection = () => {
     mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
   });
-  const { handleSubmit, getValues, reset, setValue } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    setValue,
+    formState: { errors },
+  } = methods;
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
   const [pricingTemplateCode, setPricingTemplateCode] = useState<string>('');
   const [onLoading, setOnLoading] = useState<boolean>(true);
   const [comparativeSurveys, setComparativeSurveys] = useState<any>([]); // market survey will be initial when user choose market survey data in application
+
+  console.log('WQS form errors: ', errors);
 
   const handleOnGenerate = () => {
     if (!pricingTemplateCode) return;
@@ -162,8 +170,9 @@ export const WQSSection = () => {
   useEffect(() => {
     setValue(
       'comparativeSurveys',
-      comparativeSurveys.map(survey => ({
-        surveyId: survey.id,
+      comparativeSurveys.map((survey, index) => ({
+        marketId: survey.id,
+        displaySeq: index + 1,
       })),
     );
     setValue(
@@ -193,7 +202,7 @@ export const WQSSection = () => {
   }, [comparativeSurveys, setValue]);
 
   const handleOnSave = data => {
-    console.log(getValues());
+    console.log(data);
   };
 
   const handleOnSaveDraft = () => {

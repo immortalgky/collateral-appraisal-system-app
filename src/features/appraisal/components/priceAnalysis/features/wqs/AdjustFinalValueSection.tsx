@@ -20,6 +20,7 @@ export const AdjustFinalValueSection = ({ property }) => {
 
   const {
     finalValue,
+    finalValueRounded,
     RSQResult,
     stdErrorResult,
     intersectionPointResult,
@@ -53,6 +54,11 @@ export const AdjustFinalValueSection = ({ property }) => {
         ? WQSFinalValue.finalValue
         : 0
       : 0;
+    const finalValueRounded = isEqualLength
+      ? Number.isFinite(WQSFinalValue.finalValueRounded)
+        ? WQSFinalValue.finalValueRounded
+        : 0
+      : 0;
     const RSQResult = isEqualLength
       ? Number.isFinite(RSQ(known_ys, known_xs))
         ? RSQ(known_ys, known_xs)
@@ -73,11 +79,16 @@ export const AdjustFinalValueSection = ({ property }) => {
         ? SLOPE(known_ys, known_xs)
         : 0
       : 0;
-    const lowestEstimate = Number.isFinite(finalValue) ? finalValue - stdErrorResult : 0;
-    const highestEstimate = Number.isFinite(finalValue) ? finalValue + stdErrorResult : 0;
+    const lowestEstimate = Number.isFinite(finalValueRounded)
+      ? finalValueRounded - stdErrorResult
+      : 0;
+    const highestEstimate = Number.isFinite(finalValueRounded)
+      ? finalValueRounded + stdErrorResult
+      : 0;
 
     return {
       finalValue,
+      finalValueRounded,
       RSQResult,
       stdErrorResult,
       intersectionPointResult,
@@ -124,9 +135,9 @@ export const AdjustFinalValueSection = ({ property }) => {
         deps: ['WQSScores', 'WQSCalculations'],
         compute: () => {
           if (property.collateralType === 'L') {
-            return parseFloat((property.landArea * finalValue).toFixed(2));
+            return parseFloat((property.landArea * finalValueRounded).toFixed(2));
           }
-          return parseFloat(finalValue).toFixed(2);
+          return parseFloat(finalValueRounded.toFixed(2));
         },
       },
     ],
@@ -189,7 +200,9 @@ export const AdjustFinalValueSection = ({ property }) => {
       <div className="grid grid-cols-12">
         <div className="col-span-3">Appraisal Price</div>
         <div className="col-span-9">
-          {property.collateralType === 'L' ? formatNumber(property.landArea * finalValue) : 0}
+          {property.collateralType === 'L'
+            ? formatNumber(property.landArea * finalValueRounded)
+            : finalValueRounded}
         </div>
       </div>
       <div className="grid grid-cols-12">

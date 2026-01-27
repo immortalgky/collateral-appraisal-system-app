@@ -19,7 +19,7 @@ interface ComparativeSectionProps {
   surveys: Record<string, any>[];
   comparativeSurveys: Record<string, any>[];
   template: WQSTemplate;
-  property: Record<string, string>[];
+  property: Record<string, string>;
   allFactors: { value: string; description: string }[];
   onSelectMarketSurvey: (survey: Record<string, any>) => void;
 }
@@ -38,7 +38,7 @@ export const ComparativeSection = ({
     // config factor column
     {
       id: 'factorCode',
-      header: <div className="px-2 py-4">Factor</div>,
+      header: <div className="">Factor</div>,
       style: {
         headerClassName: 'border-r border-neutral-300 w-[200px]',
         bodyClassName: 'border-r border-neutral-300 h-[56px]',
@@ -48,7 +48,7 @@ export const ComparativeSection = ({
         const totalTemplateFactors = ctx.template?.comparativeFactors?.length ?? 0;
         if (rowIndex >= totalTemplateFactors) {
           return (
-            <div className="w-[200px] p-2">
+            <div className="w-[200px]">
               <RHFInputCell
                 fieldName={fieldPath}
                 inputType="select"
@@ -70,16 +70,16 @@ export const ComparativeSection = ({
     // config collateral column
     {
       id: 'collateral',
-      header: <div className="px-2 py-4">Collateral</div>,
+      header: <div className="">Collateral</div>,
       style: {
         headerClassName: 'border-r border-neutral-300 min-w-[200px]',
         bodyClassName: 'border-r border-neutral-300 h-[56px]',
       },
       field: 'collateral',
       render: ({ row }) => {
-        const propertyValue = getPropertyValueByFactorCode(row['factorCode']) ?? '';
+        const propertyValue = getPropertyValueByFactorCode(row['factorCode'], property) ?? '';
         return (
-          <div className="w-full truncate p-2" title={propertyValue ?? ''}>
+          <div className="w-full truncate" title={propertyValue ?? ''}>
             {propertyValue ?? ''}
           </div>
         );
@@ -93,7 +93,7 @@ export const ComparativeSection = ({
       ...comparativeTableConfig,
       ...comparativeSurveys.map((data, index) => ({
         id: `surveys${index}`,
-        header: <div className="px-2 py-4">Survey {index + 1}</div>,
+        header: <div className="">Survey {index + 1}</div>,
         style: {
           headerClassName: 'border-r border-neutral-300 min-w-[200px]',
           bodyClassName: 'border-r border-neutral-300 h-[56px]',
@@ -103,7 +103,7 @@ export const ComparativeSection = ({
           const surveys =
             ctx.surveys[index].factors.find(factor => factor.id === row['factorCode'])?.value ?? '';
           return (
-            <div className="w-full truncate p-2" title={surveys ?? ''}>
+            <div className="w-full truncate" title={surveys ?? ''}>
               {surveys ?? ''}
             </div>
           );

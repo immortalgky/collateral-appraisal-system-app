@@ -32,9 +32,9 @@ export function DataGrid<Row, Ctx>({
   for (const g of groups) for (const colId of g.columnIds) colToGroup.set(colId, g.id);
 
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-white border border-gray-200 overflow-hidden flex flex-col">
+    <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="table table-sm min-w-max border-collapse border-spacing-0">
+        <table className="table table-sm min-w-max">
           {hasHeader && (
             <thead className="sticky top-0 z-20 bg-neutral-50">
               {!!groups.length && (

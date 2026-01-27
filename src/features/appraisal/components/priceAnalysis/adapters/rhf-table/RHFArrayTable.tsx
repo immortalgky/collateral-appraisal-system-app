@@ -58,7 +58,7 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   }, [columns, name, ctx, fields, watched]);
 
   return (
-    <div className="overflow-clip">
+    <div className="border border-gray-300 overflow-hidden">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
@@ -72,7 +72,7 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
       />
 
       {/* optional add button */}
-      <div className="flex flex-row items-center justify-center p-2 border-t border-neutral-300">
+      <div className="flex flex-row items-center justify-center p-2 border-neutral-300">
         <button
           type="button"
           onClick={() => append(defaultRow)}
@@ -131,7 +131,7 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   }, [name, fields, rowDefs, ctx, topHeader, style, watched]);
 
   return (
-    <div className="overflow-clip">
+    <div className="border border-gray-300 overflow-clip">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
