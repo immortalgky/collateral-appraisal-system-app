@@ -18,7 +18,11 @@ export type GridCellCtx<RawRow, Ctx> = {
 export type GridColumn<RawRow, Ctx> = {
   id: string;
   header?: React.ReactNode;
-  className?: string;
+  style?: {
+    headerClassName?: string;
+    bodyClassName?: string;
+    footerClassName?: string;
+  };
   align?: Align;
 
   renderCell: (cell: GridCellCtx<RawRow, Ctx>) => React.ReactNode;

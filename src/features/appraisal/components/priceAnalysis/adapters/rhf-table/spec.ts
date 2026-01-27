@@ -8,7 +8,12 @@ export type RHFCellBinding = {
 export type RHFHorizontalColumn<Row, Ctx> = {
   id: string;
   header?: React.ReactNode;
-  className?: string;
+  style?: {
+    headerClassName?: string;
+    bodyClassName?: string;
+    footerClassName?: string;
+  };
+
   align?: 'left' | 'center' | 'right';
 
   /** field name inside a row object: e.g. "weight" or "surveys.0.surveyScore" */

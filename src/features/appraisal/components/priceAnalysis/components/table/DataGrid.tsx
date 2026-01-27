@@ -32,13 +32,13 @@ export function DataGrid<Row, Ctx>({
   for (const g of groups) for (const colId of g.columnIds) colToGroup.set(colId, g.id);
 
   return (
-    <div className="w-full max-h-full flex flex-col">
-      <div className="w-full h-full overflow-auto">
-        <table className="table-fixed min-w-full border-separate border-spacing-0">
+    <div className="flex-1 min-h-0 min-w-0 bg-white border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 overflow-auto">
+        <table className="table table-sm min-w-max border-collapse border-spacing-0">
           {hasHeader && (
-            <thead>
+            <thead className="sticky top-0 z-20 bg-neutral-50">
               {!!groups.length && (
-                <tr>
+                <tr className="border-b border-gray-300">
                   {columns.map(col => {
                     const groupId = colToGroup.get(col.id);
                     if (!groupId) {
@@ -47,8 +47,8 @@ export function DataGrid<Row, Ctx>({
                           key={col.id}
                           rowSpan={2}
                           className={clsx(
-                            'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
-                            col.className,
+                            'font-medium text-gray-600 px-3 py-2.5',
+                            col.style?.headerClassName ?? '',
                           )}
                         >
                           {col.header}
@@ -65,10 +65,7 @@ export function DataGrid<Row, Ctx>({
                       <th
                         key={group.id}
                         colSpan={group.columnIds.length}
-                        className={clsx(
-                          'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
-                          group.className,
-                        )}
+                        className={clsx('font-medium text-gray-600 px-3 py-2.5', group.className)}
                       >
                         {group.label}
                       </th>
@@ -77,7 +74,7 @@ export function DataGrid<Row, Ctx>({
                 </tr>
               )}
 
-              <tr>
+              <tr className="border-b border-gray-300">
                 {columns.map(col => {
                   if (!groups.length || !colToGroup.get(col.id)) {
                     if (!groups.length) {
@@ -85,8 +82,8 @@ export function DataGrid<Row, Ctx>({
                         <th
                           key={col.id}
                           className={clsx(
-                            'sticky top-0 z-30 bg-neutral-400 text-white text-sm',
-                            col.className,
+                            'font-medium text-gray-600 px-3 py-2.5',
+                            col.style?.headerClassName ?? col.className,
                           )}
                         >
                           {col.header}
@@ -100,8 +97,8 @@ export function DataGrid<Row, Ctx>({
                     <th
                       key={col.id}
                       className={clsx(
-                        'sticky top-0 z-20 bg-neutral-400 text-white text-sm',
-                        col.className,
+                        'font-medium text-gray-600 px-3 py-2.5',
+                        col.style?.headerClassName ?? col.className,
                       )}
                     >
                       {col.header}
@@ -113,16 +110,16 @@ export function DataGrid<Row, Ctx>({
           )}
 
           {hasBody && (
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {!isEmpty ? (
                 rows.map((row, rowIndex) => (
-                  <tr key={(row as any).__id ?? rowIndex}>
+                  <tr key={(row as any).__id ?? rowIndex} className="border-b border-gray-300">
                     {columns.map(col => (
                       <td
                         key={col.id}
                         className={clsx(
-                          'p-2 border-b border-neutral-300 whitespace-nowrap truncate text-xs',
-                          col.className,
+                          ' whitespace-nowrap truncate text-sm',
+                          col.style?.bodyClassName ?? '',
                         )}
                       >
                         {col.renderCell({
@@ -145,7 +142,10 @@ export function DataGrid<Row, Ctx>({
             <tfoot>
               <tr className="border-t border-neutral-300">
                 {columns.map(col => (
-                  <td key={col.id} className="sticky bottom-0 z-30 bg-white">
+                  <td
+                    key={col.id}
+                    className={clsx('sticky bottom-0 bg-white', col.style?.footerClassName ?? '')}
+                  >
                     {col.renderFooter?.({ rows, ctx }) ?? null}
                   </td>
                 ))}

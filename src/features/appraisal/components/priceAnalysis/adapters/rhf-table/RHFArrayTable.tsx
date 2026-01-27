@@ -14,7 +14,6 @@ import type {
   RHFHorizontalColumn,
   RHFVerticalRowDef,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/spec.ts';
-import { useDerivedFields, type DerivedFieldRule } from '../../components/useDerivedFieldArray';
 
 export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   name,
@@ -59,7 +58,7 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   }, [columns, name, ctx, fields, watched]);
 
   return (
-    <div className="border border-neutral-300 overflow-clip">
+    <div className="overflow-clip">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
@@ -93,39 +92,26 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   defaultColumn,
   leftHeaderClassName,
   getColClassName,
+  topHeader,
+  style,
 }: {
   name: string;
   rowDefs: RHFVerticalRowDef<ColumnItem, Ctx>[];
   ctx: Ctx;
   defaultColumn: ColumnItem;
   leftHeaderClassName?: string;
+  topHeader?: React.ReactNode[];
   getColClassName?: (i: number) => string;
+  style?: {
+    headerClassName?: string;
+    bodyClassName?: (colIndex: number) => string;
+    footerClassName?: string;
+  };
 }) => {
   const { control, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
   // const watched = useWatch({ control, name, defaultValue: [] }) as ColumnItem[];
   const watched = getValues(name) as ColumnItem[];
-
-  // const derivedRules: DerivedFieldRule<Ctx>[] = useMemo(() => {
-  //   return rowDefs
-  //     .filter(r => r.derived)
-  //     .map(r => ({
-  //       alignment: 'vertical' as const,
-  //       targetKey: (r.derived?.targetField ?? r.field ?? r.id) as string,
-  //       scope: r.derived?.scope ?? 'row',
-  //       normalize: r.derived?.normalize,
-  //       compute: ({ column, columns, columnIndex, ctx, getValues }: any) =>
-  //         r.derived!.compute({
-  //           columnItem: column,
-  //           columns,
-  //           columnIndex,
-  //           ctx,
-  //           getValues,
-  //         }),
-  //     }));
-  // }, [rowDefs]);
-
-  // useDerivedFields<Ctx>({ rules: derivedRules, ctx });
 
   const {
     gridRows,
@@ -139,18 +125,18 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
       items: fields.map((f, i) => ({ value: watched?.[i] ?? {}, id: f.id })),
       rowDefs: rowDefs,
       ctx,
-      leftHeaderClassName,
-      getColClassName,
+      topHeader,
+      style,
     });
-  }, [rowDefs, name, ctx, fields, watched, leftHeaderClassName, getColClassName]);
+  }, [name, fields, rowDefs, ctx, topHeader, style, watched]);
 
   return (
-    <div className="border border-neutral-300 overflow-clip">
+    <div className="overflow-clip">
       <DataGrid
         rows={gridRows}
         columns={gridCols}
         ctx={ctx}
-        hasHeader={false}
+        hasHeader={true}
         hasBody={true}
         hasFooter={false}
       />

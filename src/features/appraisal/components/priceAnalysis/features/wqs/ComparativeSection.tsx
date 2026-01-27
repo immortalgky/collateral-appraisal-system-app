@@ -1,9 +1,8 @@
-import { useFormContext } from 'react-hook-form';
 import { useState } from 'react';
 import { Icon } from '@/shared/components';
-import { RHFInputCell } from './components/RHFInputCell';
+import { RHFInputCell } from '../../components/table/RHFInputCell';
 import { getDesciptions, getPropertyValueByFactorCode } from './WQSSection';
-import { MarketSurveySelectionModal } from './components/MarketSurveySelectionModal';
+import { MarketSurveySelectionModal } from '../../components/MarketSurveySelectionModal';
 import type { RHFHorizontalColumn } from '../../adapters/rhf-table/spec';
 import { RHFHorizontalArrayTable } from '../../adapters/rhf-table/RHFArrayTable';
 import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
@@ -33,7 +32,6 @@ export const ComparativeSection = ({
   allFactors,
   onSelectMarketSurvey,
 }: ComparativeSectionProps) => {
-  const { control, getValues } = useFormContext();
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
 
   let comparativeTableConfig: RHFHorizontalColumn<Record<string, any>, any>[] = [
@@ -41,24 +39,29 @@ export const ComparativeSection = ({
     {
       id: 'factorCode',
       header: <div className="px-2 py-4">Factor</div>,
-      className: 'border-r border-neutral-300 min-w-[200px]',
+      style: {
+        headerClassName: 'border-r border-neutral-300 w-[200px]',
+        bodyClassName: 'border-r border-neutral-300 h-[56px]',
+      },
       field: 'factorCode',
       render: ({ row, rowIndex, fieldPath, ctx, value }) => {
         const totalTemplateFactors = ctx.template?.comparativeFactors?.length ?? 0;
         if (rowIndex >= totalTemplateFactors) {
           return (
-            <RHFInputCell
-              fieldName={fieldPath}
-              inputType="select"
-              options={ctx.allFactors.map(factor => ({
-                label: factor.description,
-                value: factor.value,
-              }))}
-            />
+            <div className="w-[200px] p-2">
+              <RHFInputCell
+                fieldName={fieldPath}
+                inputType="select"
+                options={ctx.allFactors.map(factor => ({
+                  label: factor.description,
+                  value: factor.value,
+                }))}
+              />
+            </div>
           );
         }
         return (
-          <div className="w-[200px] truncate" title={getDesciptions(value) ?? ''}>
+          <div className="w-[200px] p-2 truncate" title={getDesciptions(value) ?? ''}>
             <span>{getDesciptions(value) ?? ''}</span>
           </div>
         );
@@ -68,12 +71,15 @@ export const ComparativeSection = ({
     {
       id: 'collateral',
       header: <div className="px-2 py-4">Collateral</div>,
-      className: 'border-r border-neutral-300 min-w-[200px]',
+      style: {
+        headerClassName: 'border-r border-neutral-300 min-w-[200px]',
+        bodyClassName: 'border-r border-neutral-300 h-[56px]',
+      },
       field: 'collateral',
       render: ({ row }) => {
         const propertyValue = getPropertyValueByFactorCode(row['factorCode']) ?? '';
         return (
-          <div className="w-full truncate" title={propertyValue ?? ''}>
+          <div className="w-full truncate p-2" title={propertyValue ?? ''}>
             {propertyValue ?? ''}
           </div>
         );
@@ -88,13 +94,16 @@ export const ComparativeSection = ({
       ...comparativeSurveys.map((data, index) => ({
         id: `surveys${index}`,
         header: <div className="px-2 py-4">Survey {index + 1}</div>,
-        className: 'border-r border-neutral-300 min-w-[200px]',
+        style: {
+          headerClassName: 'border-r border-neutral-300 min-w-[200px]',
+          bodyClassName: 'border-r border-neutral-300 h-[56px]',
+        },
         field: `surveys.${index}.value`,
         render: ({ row, ctx }) => {
           const surveys =
             ctx.surveys[index].factors.find(factor => factor.id === row['factorCode'])?.value ?? '';
           return (
-            <div className="w-full truncate" title={surveys ?? ''}>
+            <div className="w-full truncate p-2" title={surveys ?? ''}>
               {surveys ?? ''}
             </div>
           );
@@ -109,7 +118,9 @@ export const ComparativeSection = ({
     {
       id: 'action',
       header: <div className="px-2 py-4"></div>,
-      className: 'w-16',
+      style: {
+        headerClassName: 'w-16',
+      },
       render: ({ rowIndex, ctx, actions: { removeColumn } }) => {
         /*
           factor which was set from template not allow to change

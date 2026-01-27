@@ -1,5 +1,5 @@
 import Button from '@/shared/components/Button';
-import { getDesciptions } from '../WQSSection';
+import { getDesciptions } from '../features/wqs/WQSSection';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 

@@ -4,21 +4,23 @@ const WQSCalculation = z
   .object({
     marketId: z.string(),
     offeringPrice: z.number(),
-    offeringPriceMeasurementUnit: z.string(),
-    offeringPriceAdjustmentPct: z.number(),
-    offeringPriceAdjustmentAmt: z.number(),
+    offeringPriceMeasurementUnit: z.string().nullable(),
+    offeringPriceAdjustmentPct: z.number().nullable(),
+    offeringPriceAdjustmentAmt: z.number().nullable(),
     sellingPrice: z.number(),
-    sellingPriceMeasurementUnit: z.string(),
+    sellingPriceMeasurementUnit: z.string().nullable(),
     sellingDate: z.date(),
-    sellingPriceAdjustmentYear: z.number(),
+    sellingPriceAdjustmentYear: z.number().nullable(),
     numberOfYears: z.number(),
   })
   .passthrough();
 
-const WQSSurveyScore = z.object({
-  marketId: z.string(),
-  surveyScore: z.number(),
-});
+const WQSSurveyScore = z
+  .object({
+    marketId: z.string(),
+    surveyScore: z.number(),
+  })
+  .passthrough();
 
 const WQSScore = z
   .object({
@@ -28,7 +30,7 @@ const WQSScore = z
     surveys: z.array(WQSSurveyScore),
     collateral: z.number(),
   })
-  .passthrough();
+  .partial();
 
 const ComparativeFactors = z
   .object({
@@ -51,6 +53,7 @@ const WQSFinalValue = z
     hasBuildingCost: z.boolean().nullable(),
     includeLandArea: z.boolean().nullable(),
     landArea: z.number().nullable(),
+    appraisalPrice: z.number(),
     appraisalPriceRounded: z.number(),
   })
   .passthrough();
@@ -60,7 +63,6 @@ export const WQSDto = z
     methodId: z.string(),
     collateralType: z.string(),
     pricingTemplateCode: z.string(),
-    finalValue: z.number(),
     comparativeSurveys: z.array(ComparativeSurveys),
     comparativeFactors: z.array(ComparativeFactors),
     WQSScores: z.array(WQSScore),

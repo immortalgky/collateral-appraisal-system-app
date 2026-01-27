@@ -7,7 +7,8 @@ import type {
   GridColumn,
   GridRow,
 } from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
-import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/features/wqs/components/RHFInputCell.tsx';
+import { RHFInputCell } from '@/features/appraisal/components/priceAnalysis/components/table/RHFInputCell';
+import clsx from 'clsx';
 
 // === HORIZONTAL GRID BUILDER ===
 
@@ -40,7 +41,11 @@ export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
   const gridCols: GridColumn<Row, Ctx>[] = columns.map(col => ({
     id: col.id,
     header: col.header,
-    className: col.className,
+    style: {
+      headerClassName: col.style?.headerClassName,
+      bodyClassName: col.style?.bodyClassName,
+      footerClassName: col.style?.footerClassName,
+    },
     align: col.align,
 
     renderCell: ({ row, rowIndex, ctx, actions: { onAdd, onRemove } }) => {
@@ -96,16 +101,20 @@ interface buildVerticalGridProps<ColumnItem extends Record<string, any>, Ctx> {
   rowDefs: RHFVerticalRowDef<ColumnItem, Ctx>[]; // config becomes rows
   ctx: Ctx;
 
-  leftHeaderClassName?: string;
-  getColClassName?: (colIndex: number) => string;
+  topHeader?: React.ReactNode[];
+  style?: {
+    headerClassName?: string;
+    bodyClassName?: (colIndex: number) => string;
+    footerClassName?: string;
+  };
 }
 export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
   arrayName,
   items,
   rowDefs,
   ctx,
-  leftHeaderClassName = 'sticky left-0 z-30 bg-neutral-400 text-white',
-  getColClassName,
+  style,
+  topHeader = [],
 }: buildVerticalGridProps<ColumnItem, Ctx>): {
   gridRows: GridRow<RHFVerticalRowDef<ColumnItem, Ctx>>[];
   gridCols: GridColumn<RHFVerticalRowDef<ColumnItem, Ctx>, Ctx>[];
@@ -119,16 +128,24 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
   const headerCol: GridColumn<RHFVerticalRowDef<ColumnItem, Ctx>, Ctx> = {
     id: '__rowHeader',
     header: '',
-    className: leftHeaderClassName,
-    renderCell: ({ row }) => <div className="truncate">{row.raw.header ?? ''}</div>,
+    style: {
+      headerClassName: style?.headerClassName,
+      bodyClassName: 'sticky left-0 z-20 bg-white border-r border-neutral-300 p-2',
+    },
+    renderCell: ({ row }) => row.raw.header ?? <div className={'truncate'}></div>,
   };
 
   // items: [ { id: string; value: {...calculation }}, { id: string; value: {...calculation }}]; column data
   const dataCols: GridColumn<RHFVerticalRowDef<ColumnItem, Ctx>, Ctx>[] = items.map(
     (item, columnIndex) => ({
       id: item.id,
-      header: '', // optionally label columnIndex+1 here
-      className: getColClassName?.(columnIndex) ?? '',
+      header: topHeader?.[columnIndex] ?? '', // optionally label columnIndex+1 here
+
+      style: {
+        headerClassName: style?.headerClassName,
+        bodyClassName: style?.bodyClassName?.(columnIndex),
+        footerClassName: style?.footerClassName,
+      },
 
       renderCell: ({ row, ctx }) => {
         const rowDef = row.raw;
@@ -164,8 +181,6 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
 
         return <span>{value ?? ''}</span>;
       },
-
-      // derived:
     }),
   );
 

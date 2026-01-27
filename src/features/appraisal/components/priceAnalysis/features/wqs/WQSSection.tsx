@@ -1,7 +1,7 @@
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WQSDto, type WQSRequestType } from './form';
+import { WQSDto, type WQSRequestType } from '../../schemas/form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { ComparativeSection } from './ComparativeSection';
 import { CalculationSection } from './CalculationSection';
@@ -106,6 +106,7 @@ export const WQSSection = () => {
   // ===== implement =====
 
   const methods = useForm<WQSRequestType>({
+    mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
   });
   const { handleSubmit, getValues, reset, setValue } = methods;
@@ -130,8 +131,6 @@ export const WQSSection = () => {
         methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
         collateralType: collateralTypeId,
         pricingTemplateCode: pricingTemplateCode,
-        finalValue: 0,
-        roundedFinalValue: 0,
         comparativeSurveys: [],
         comparativeFactors: template.comparativeFactors.map(compFact => ({
           factorCode: compFact.factorId,
@@ -143,11 +142,7 @@ export const WQSSection = () => {
           surveys: [],
           collateral: 0,
         })),
-        WQSCalculations: [
-          {
-            id: 'collateral',
-          },
-        ],
+        WQSCalculations: [],
         WQSFinalValue: {
           finalValue: 0,
           finalValueRounded: 0,
@@ -162,7 +157,7 @@ export const WQSSection = () => {
       });
       setOnLoading(false);
     }, 1000);
-  }, [template]);
+  }, [collateralTypeId, pricingTemplateCode, reset, template]);
 
   useEffect(() => {
     setValue(
@@ -170,6 +165,13 @@ export const WQSSection = () => {
       comparativeSurveys.map(survey => ({
         surveyId: survey.id,
       })),
+    );
+    setValue(
+      'WQSScores',
+      getValues('WQSScores')?.map(score => ({
+        ...score,
+        surveys: comparativeSurveys.map(survey => ({ marketId: survey.id, surveyScore: 0 })),
+      })) ?? [],
     );
     setValue('WQSCalculations', [
       ...comparativeSurveys.map(survey => {
@@ -179,7 +181,7 @@ export const WQSSection = () => {
           offeringPrice: surveyMap.get('17') ?? 0,
           offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
           offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-          offeringPriceAdjustmentAmt: surveyMap.get('19') ?? undefined,
+          offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
           sellingPrice: surveyMap.get('21') ?? 0,
           sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
           sellingDate: surveyMap.get('22') ?? '',
@@ -208,12 +210,12 @@ export const WQSSection = () => {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 gap-4 mt-4">
+    <div className="flex flex-col h-full min-h-0 gap-4">
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(handleOnSave)} className="flex-1 min-h-0 flex flex-col">
           <div
             id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4 py-4"
           >
             <div className="flex flex-row gap-2">
               <div className="text-2xl">
@@ -279,25 +281,31 @@ export const WQSSection = () => {
                     />
                   </div>
                 </div>
-                <div>
-                  <div className="text-lg border-b border-neutral-300 py-2">
-                    Calculation of Appraisal Value
+                {comparativeSurveys?.length > 0 && (
+                  <div>
+                    <div>
+                      <div className="text-lg border-b border-neutral-300 py-2">
+                        Calculation of Appraisal Value
+                      </div>
+                      <div className="px-4 mt-4">
+                        <CalculationSection
+                          comparativeSurveys={comparativeSurveys}
+                          template={template}
+                          allFactors={allFactors}
+                          property={property}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-lg border-b border-neutral-300 py-2">
+                        Adjust Final Value
+                      </div>
+                      <div className="px-4 mt-4">
+                        <AdjustFinalValueSection property={property} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="px-4 mt-4">
-                    <CalculationSection
-                      comparativeSurveys={comparativeSurveys}
-                      template={template}
-                      allFactors={allFactors}
-                      property={property}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
-                  <div className="px-4 mt-4">
-                    <AdjustFinalValueSection property={property} />
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
