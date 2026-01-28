@@ -151,7 +151,7 @@ export const CalculationSection = ({
 
   return (
     <div className="flex flex-col rounded-lg border border-gray-300 border-spacing border-spacing-0 overflow-hidden">
-      <div>
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <RHFHorizontalArrayTable
           name="WQSScores"
           columns={scoreConfigurations}
@@ -176,10 +176,10 @@ export const CalculationSection = ({
           hasFooter={true}
         />
       </div>
-      <div className="flex justify-center h-14 text-sm items-center">
+      <div className="min-w-0 min-h-0 flex flex-row justify-center px-3 py-4 text-sm items-center">
         {`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}
       </div>
-      <div>
+      <div className="flex-1 min-w-0 min-h-0 flex-col">
         <RHFVerticalArrayTable
           name="WQSCalculations"
           rowDefs={calculationConfigurations}
@@ -213,34 +213,33 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
       header: <div className="flex items-center justify-center">Factor</div>,
       field: 'factorCode',
       style: {
-        headerClassName: 'border-r border-gray-300 left-0 bg-gray-50 z-30 sticky h-14 w-[200px]',
+        headerClassName: 'border-r border-gray-300 left-0 bg-gray-50 z-40 sticky h-14 w-[200px]',
         bodyClassName:
-          'border-r border-gray-300 sticky left-0 z-30 bg-white w-[200px] border-b border-gray-300',
-        footerClassName: 'sticky left-0 bg-white z-30 h-14 w-[200px]',
+          'border-r border-gray-300 sticky left-0 z-40 bg-white w-[200px] border-b border-gray-300',
+        footerClassName: 'sticky left-0 bg-white z-40 h-14 w-[200px]',
       },
       render: ({ fieldPath, ctx, rowIndex, value }) => {
-        if (rowIndex > ctx.template.calculationFactors.length - 1) {
+        const calculationFactors = ctx.template?.calculationFactors ?? []; // In case that no template, systen still allow to add factors
+        if (rowIndex > calculationFactors.length - 1) {
           const comparativeFactors =
             (ctx.comparativeFactors ?? [])
               ?.filter(
                 compFact =>
-                  !ctx.template.calculationFactors.some(
-                    calFact => calFact.factorId === compFact.factorCode,
-                  ),
+                  !calculationFactors.some(calFact => calFact.factorId === compFact.factorCode),
               )
               .map(compFact => ({
                 label: getDesciptions(compFact.factorCode),
                 value: compFact.factorCode,
               })) ?? [];
           return (
-            <div className="flex flex-row w-[190px] items-center h-12 truncate">
+            <div className="flex-1 flex-row min-w-0 min-h-0 items-center h-12 truncate w-[190px]">
               <RHFInputCell fieldName={fieldPath} inputType="select" options={comparativeFactors} />
             </div>
           );
         }
         return (
           <div
-            className="flex flex-row items-center justify-start truncate h-12 w-[190px]"
+            className="flex-1 flex-row min-w-0 min-h-0 items-center justify-start truncate h-12 w-[190px]"
             title={getDesciptions(value) ?? ''}
           >
             {getDesciptions(value) ?? ''}
@@ -476,7 +475,8 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
         /*
         factor which was set from template not allow to change
         */
-        if (rowIndex >= ctx.template.calculationFactors.length)
+        const calculationFactors = ctx.template?.calculationFactors ?? []; // In case that no template, systen still allow to add factors
+        if (rowIndex >= calculationFactors.length)
           return (
             <div className="flex justify-center items-center bg-white w-full h-full">
               <button

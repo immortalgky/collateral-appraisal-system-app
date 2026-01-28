@@ -45,8 +45,8 @@ export const ComparativeSection = ({
       },
       field: 'factorCode',
       render: ({ row, rowIndex, fieldPath, ctx, value }) => {
-        const totalTemplateFactors = ctx.template?.comparativeFactors?.length ?? 0;
-        if (rowIndex >= totalTemplateFactors) {
+        const templateFactors = ctx.template?.comparativeFactors ?? []; // In case that no template, systen still allow to add factors
+        if (rowIndex >= templateFactors.length) {
           return (
             <div className="w-[200px]">
               <RHFInputCell
@@ -126,7 +126,8 @@ export const ComparativeSection = ({
         /*
           factor which was set from template not allow to change
          */
-        if (rowIndex >= ctx.template.comparativeFactors.length)
+        const templateFactors = ctx.template?.comparativeFactors ?? []; // In case that no template, systen still allow to add factors
+        if (rowIndex >= templateFactors.length - 1)
           return (
             <div className="flex justify-center items-center">
               <button

@@ -27,6 +27,7 @@ export const AdjustFinalValueSection = ({ property }) => {
     slopeResult,
     lowestEstimate,
     highestEstimate,
+    appraisalPrice,
   } = useMemo(() => {
     // WQS score section
     const known_xs = (WQSScores ?? [])
@@ -85,7 +86,9 @@ export const AdjustFinalValueSection = ({ property }) => {
     const highestEstimate = Number.isFinite(finalValueRounded)
       ? finalValueRounded + stdErrorResult
       : 0;
-
+    const appraisalPrice = Number.isFinite(WQSFinalValue.appraisalPrice)
+      ? WQSFinalValue.appraisalPrice
+      : 0;
     return {
       finalValue,
       finalValueRounded,
@@ -95,6 +98,7 @@ export const AdjustFinalValueSection = ({ property }) => {
       slopeResult,
       lowestEstimate,
       highestEstimate,
+      appraisalPrice,
     };
   }, [WQSScores, WQSCalculations, WQSFinalValue]);
 
@@ -140,6 +144,16 @@ export const AdjustFinalValueSection = ({ property }) => {
           return parseFloat(finalValueRounded.toFixed(2));
         },
       },
+      {
+        targetPath: 'WQSFinalValue.appraisalPriceRounded',
+        deps: ['WQSScores', 'WQSCalculations'],
+        compute: () => {
+          if (property.collateralType === 'L') {
+            return parseFloat(appraisalPrice.toFixed(2));
+          }
+          return parseFloat(appraisalPrice.toFixed(2));
+        },
+      },
     ],
     ctx: {},
   });
@@ -151,7 +165,7 @@ export const AdjustFinalValueSection = ({ property }) => {
         <div className={clsx('col-span-9')}>{finalValue ?? 0}</div>
       </div>
       <div className="grid grid-cols-12">
-        <div className="col-span-3">{'Appraisal Price (rounded)'}</div>
+        <div className="col-span-3 flex items-center">{'Appraisal Price (rounded)'}</div>
         <div className="col-span-9">
           <NumberInput
             {...finalValueRoundedField}
@@ -206,7 +220,11 @@ export const AdjustFinalValueSection = ({ property }) => {
         </div>
       </div>
       <div className="grid grid-cols-12">
-        <div className="col-span-3">{'Appraisal Price (rounded)'}</div>
+        <div className="col-span-3">Appraisal Price</div>
+        <div className="col-span-9">{WQSFinalValue.appraisalPriceRounded - appraisalPrice}</div>
+      </div>
+      <div className="grid grid-cols-12">
+        <div className="col-span-3 flex items-center">{'Appraisal Price (rounded)'}</div>
         <div className="col-span-9">
           <NumberInput
             {...appraisalPriceRoundedField}

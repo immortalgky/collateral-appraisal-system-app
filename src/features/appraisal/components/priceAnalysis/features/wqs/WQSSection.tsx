@@ -70,10 +70,12 @@ export const WQSSection = () => {
    * - in selection market survey screen, system will display in map ***
    * - factor from template setting cannot change/ remove
    * - user can add more factor from all parameter
+   * - in case that no template, user still select factor by themself
    * section (2)
    * - factor from template setting cannot change/ remove
    * - user can add more factor from section (1), these factors can change or remove
    * - if total intensity > 100, system will show red color
+   * - in case that no template, no factor initail from section (1). but user still choose factor from section (1) to key in score
    * section (3)
    * - market survey data will deliver either offering price or selling price
    * - if offering price has value, user can adjust value by either percentage or amount. but default percentage 5%
@@ -124,13 +126,40 @@ export const WQSSection = () => {
   console.log('WQS form errors: ', errors);
 
   const handleOnGenerate = () => {
-    if (!pricingTemplateCode) return;
+    // if (!pricingTemplateCode) return;
     // load template configuration
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
+    initialState();
   };
 
-  useEffect(() => {
-    if (!template) return;
+  const initialState = () => {
+    if (!template) {
+      setTimeout(() => {
+        setOnLoading(true);
+        reset({
+          methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
+          collateralType: collateralTypeId,
+          pricingTemplateCode: '',
+          comparativeSurveys: [],
+          comparativeFactors: [],
+          WQSScores: [],
+          WQSCalculations: [],
+          WQSFinalValue: {
+            finalValue: 0,
+            finalValueRounded: 0,
+            coefficientOfDecision: 0,
+            standardError: 0,
+            intersectionPoint: 0,
+            slope: 0,
+            lowestEstimate: 0,
+            highestEstimate: 0,
+            appraisalPriceRounded: 0,
+          },
+        });
+        setOnLoading(false);
+      }, 1000);
+      return;
+    }
 
     // initial data
     setTimeout(() => {
@@ -165,7 +194,7 @@ export const WQSSection = () => {
       });
       setOnLoading(false);
     }, 1000);
-  }, [collateralTypeId, pricingTemplateCode, reset, template]);
+  };
 
   useEffect(() => {
     setValue(

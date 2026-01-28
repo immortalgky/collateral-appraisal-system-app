@@ -118,7 +118,7 @@ export function DataGrid<Row, Ctx>({
                       <td
                         key={col.id}
                         className={clsx(
-                          ' whitespace-nowrap truncate text-sm',
+                          ' whitespace-nowrap truncate text-sm border-b border-gray-300',
                           col.style?.bodyClassName ?? '',
                         )}
                       >
