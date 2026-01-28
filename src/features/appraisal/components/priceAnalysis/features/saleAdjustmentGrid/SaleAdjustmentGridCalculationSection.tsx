@@ -1,5 +1,6 @@
 import { RHFHorizontalArrayTable } from '../../adapters/rhf-table/RHFArrayTable';
 import type { RHFHorizontalColumn } from '../../adapters/rhf-table/spec';
+import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
 
 interface SaleAdjustmentGridCalculationSectionProps {
   property: Record<string, any>;
@@ -8,7 +9,7 @@ interface SaleAdjustmentGridCalculationSectionProps {
 
 export const SaleAdjustmentGridCalculationSection = ({
   property,
-  surveys = [],
+  surveys = MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND,
 }: SaleAdjustmentGridCalculationSectionProps) => {
   const saleAdjustmentGridQualitativesColumns: RHFHorizontalColumn<Record<string, any>, any>[] = [
     {
