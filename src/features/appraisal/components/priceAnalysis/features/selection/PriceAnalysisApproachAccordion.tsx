@@ -7,12 +7,14 @@ interface PriceAnalysisApproachAccordian {
   viewMode: 'editing' | 'summary';
   approach: any;
   onSelectMethod: (approachId: string, methodId: string) => void;
+  onSelectCalculationMethod?: (methodId: string) => void;
 }
 
 export const PriceAnalysisApproachAccordion = ({
   viewMode,
   approach,
   onSelectMethod,
+  onSelectCalculationMethod,
 }: PriceAnalysisApproachAccordian) => {
   const { isOpen: isApproachAccordianOpen, onToggle: onApproachAccordianChange } = useDisclosure();
 
@@ -68,6 +70,7 @@ export const PriceAnalysisApproachAccordion = ({
             approachId={approach.id}
             method={method}
             onSelectMethod={onSelectMethod}
+            onSelectCalculationMethod={onSelectCalculationMethod}
           />
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { Toggle } from '@/shared/components';
-import { useSelectionDispatch, useSelectionState } from './PriceAnalysisAccordion';
 import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
+import { useSelectionDispatch, useSelectionState } from './selectionContext';
 
 export interface Method {
   id: string;
@@ -26,6 +26,7 @@ interface PriceAnalysisApproachMethodSelectorProps {
   onEditModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
   onSummaryModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
   onSelectMethod: (approachId: string, methodId: string) => void;
+  onSelectCalculationMethod: (methodId: string) => void;
 }
 
 export const PriceAnalysisApproachMethodSelector = ({
@@ -35,6 +36,7 @@ export const PriceAnalysisApproachMethodSelector = ({
   onSummaryModeSave,
 
   onSelectMethod,
+  onSelectCalculationMethod,
 }: PriceAnalysisApproachMethodSelectorProps) => {
   const { viewMode, editDraft, summarySelected } = useSelectionState();
   const dispatch = useSelectionDispatch();
@@ -109,6 +111,7 @@ export const PriceAnalysisApproachMethodSelector = ({
                       methods: appr.methods.filter(method => method.isSelected),
                     }}
                     onSelectMethod={onSelectMethod}
+                    onSelectCalculationMethod={onSelectCalculationMethod}
                   />
                 ))}
               </div>

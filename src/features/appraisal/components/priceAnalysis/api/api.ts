@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import type { PriceAnalysisApproachRequest } from '../features/selection/type';
+import { MOC_SURVEY_DATA, PROPERTIES } from '../data/data';
 
 /**
  * initialize approach and method choices
@@ -10,21 +11,21 @@ import type { PriceAnalysisApproachRequest } from '../features/selection/type';
 // onload
 
 const APPROACHES_MOC: PriceAnalysisApproachRequest[] = [
-  {
-    id: 'MARAPPR',
-    appraisalValue: 1000000000,
-    isCandidated: true,
-    methods: [
-      { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
-      { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
-    ],
-  },
-  {
-    id: 'COSTAPPR',
-    appraisalValue: 1000000,
-    isCandidated: false,
-    methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
-  },
+  // {
+  //   id: 'MARAPPR',
+  //   appraisalValue: 1000000000,
+  //   isCandidated: true,
+  //   methods: [
+  //     { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
+  //     { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
+  //   ],
+  // },
+  // {
+  //   id: 'COSTAPPR',
+  //   appraisalValue: 1000000,
+  //   isCandidated: false,
+  //   methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
+  // },
 ];
 
 /**
@@ -98,4 +99,61 @@ export const useSelectPriceAnalysisApproachMethod = () => {
       return response;
     },
   });
+};
+
+/**
+ *
+ * @param groupId
+ * @returns
+ */
+export const useGetProperty = (groupId: string = '') => {
+  const queryKey = [];
+
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<any> => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const properties = [...getMockProperties()];
+
+      // filter property to under this group
+
+      return {
+        result: {
+          items: properties,
+        },
+      };
+    },
+    staleTime: 30 * 1000, // Cache later
+  });
+};
+
+const getMockProperties = () => {
+  return PROPERTIES;
+};
+
+export const useGetMarketSurvey = (groupId: string = '') => {
+  const queryKey = [];
+
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<any> => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const marketSurveys = [...getMockMarketSurveys()];
+
+      // filter property to under this group
+
+      return {
+        result: {
+          items: marketSurveys,
+        },
+      };
+    },
+    staleTime: 30 * 1000, // Cache later
+  });
+};
+
+const getMockMarketSurveys = () => {
+  return MOC_SURVEY_DATA;
 };

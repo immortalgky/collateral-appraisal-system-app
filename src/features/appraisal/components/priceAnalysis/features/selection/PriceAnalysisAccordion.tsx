@@ -1,6 +1,14 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import {
   PriceAnalysisApproachMethodSelector,
@@ -23,6 +31,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { usePropertyStore } from '../../../../store';
 import { PropertyCard } from '../../../PropertyCard';
+import { DispatchCtx, StateCtx } from './selectionContext';
 
 const createInitialState = (
   approachConfig: any,
@@ -57,28 +66,17 @@ const createInitialState = (
   return approaches;
 };
 
-const StateCtx = createContext<PriceAnalysisSelectorState | null>(null);
-const DispatchCtx = createContext<React.Dispatch<PriceAnalysisSelectorAction> | null>(null);
-
-export function useSelectionState() {
-  const v = useContext(StateCtx);
-  if (!v) throw new Error('useSelectionState must be used within SelectionProvider');
-  return v;
-}
-
-export function useSelectionDispatch() {
-  const v = useContext(DispatchCtx);
-  if (!v) throw new Error('useSelectionDispatch must be used within SelectionProvider');
-  return v;
-}
-
 export type PriceAnalysisSelectorMode = 'editing' | 'summary';
 
 interface PriceAnalysisAccordionProps {
   groupId: string;
+  onSelectCalculationMethod: (methodId: string) => void;
 }
 
-export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps) => {
+export const PriceAnalysisAccordion = ({
+  groupId,
+  onSelectCalculationMethod,
+}: PriceAnalysisAccordionProps) => {
   /* Server state: fetch property data by groupId && fetch approach and method by groupId */
   const { data, isLoading, isError, error } = usePriceAnalysisQuery();
   const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
@@ -106,7 +104,6 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
 
   useEffect(() => {
     if (isLoading) return;
-
     const approaches = createInitialState(data?.approaches, approachesMoc);
 
     dispatch({ type: 'INIT', payload: { approaches } });
@@ -116,7 +113,10 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
   /* Local state:  */
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
     useDisclosure({ defaultIsOpen: false });
+
+  // fire api to save selected methods
   const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
+  // fire api to save candidate approach & methods
   const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
   const {
@@ -194,10 +194,32 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
     onConfirmDeselectedMethodClose();
   };
 
+  const detailInnerRef = useRef<HTMLDivElement>(null);
+  const [detailMaxHeight, setDetailMaxHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = detailInnerRef.current;
+    if (!el) return;
+
+    const measure = () => setDetailMaxHeight(el.scrollHeight);
+
+    // measure once now (and after layout settles)
+    const raf = requestAnimationFrame(measure);
+
+    // keep it correct if content changes size (data loads, resizing panels, etc.)
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, []);
+
   return (
     <StateCtx.Provider value={state}>
       <DispatchCtx.Provider value={dispatch}>
-        <div className="flex flex-col border border-base-300 rounded-xl px-4 py-2 min-h-0 max-h-[70vh]">
+        <div className="rounded-xl border border-gray-200 bg-white px-2">
           {/* header */}
           <div className="grid grid-cols-12 justify-between items-center h-12">
             <div className="col-span-8">
@@ -220,6 +242,7 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
                 type="button"
                 onClick={onPriceAnalysisAccordionChange}
                 className="btn btn-ghost btn-sm"
+                aria-expanded={isPriceAnalysisAccordionOpen}
               >
                 <Icon
                   name="chevron-down"
@@ -235,57 +258,60 @@ export const PriceAnalysisAccordion = ({ groupId }: PriceAnalysisAccordionProps)
 
           {/* detail */}
           <div
-            className={clsx(
-              'transition-all ease-in-out duration-300 overflow-hidden',
-              isPriceAnalysisAccordionOpen
-                ? 'flex-1 min-h-0 flex flex-col opacity-100'
-                : 'max-h-0 opacity-0',
-            )}
+            className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+            style={{ maxHeight: isPriceAnalysisAccordionOpen ? detailMaxHeight : 0 }}
           >
-            <Group className="flex-1 min-h-0 h-full gap-4">
-              <Panel className="h-full min-h-0" minSize="20%" maxSize="40%">
-                {group && (
-                  <SortableContext
-                    items={group.items.map(item => item.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="h-full min-h-0 overflow-y-auto space-y-2">
-                      {group.items.map(property => (
-                        <PropertyCard
-                          key={property.id}
-                          property={property}
-                          groupId={group.id}
-                          onContextMenu={contextMenu}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                )}
-              </Panel>
-              <Separator>
-                <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
-                  <Icon name="grip-vertical" className="text-gray-400" />
-                </div>
-              </Separator>
-              <Panel className="h-full min-h-0">
-                <div className="h-full min-h-0">
-                  <PriceAnalysisApproachMethodSelector
-                    isSystemCalculation={isSystemCalculation}
-                    onSystemCalculationChange={handleOnSystemCalculationChange}
-                    onEditModeSave={handleOnEditModeSave}
-                    onSummaryModeSave={handleOnSummaryModeSave}
-                    onSelectMethod={handleOnSelectMethod}
-                  />
-                </div>
-              </Panel>
-            </Group>
+            <div
+              ref={detailInnerRef}
+              className={clsx(
+                'px-4 pb-4 text-gray-700 transition-opacity duration-200',
+                isPriceAnalysisAccordionOpen
+                  ? 'opacity-100 pointer-events-auto'
+                  : 'opacity-0 pointer-events-none',
+              )}
+            >
+              <Group className="flex-1 min-h-0 h-full gap-4">
+                <Panel className="h-full min-h-0" minSize="20%" maxSize="40%">
+                  {group && (
+                    <SortableContext
+                      items={group.items.map(item => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="h-full min-h-0 overflow-y-auto space-y-2">
+                        {group.items.map(property => (
+                          <PropertyCard
+                            key={property.id}
+                            property={property}
+                            groupId={group.id}
+                            onContextMenu={contextMenu}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  )}
+                </Panel>
+
+                <Separator>
+                  <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
+                    <Icon name="grip-vertical" className="text-gray-400" />
+                  </div>
+                </Separator>
+
+                <Panel className="h-full min-h-0">
+                  <div className="h-full min-h-0">
+                    <PriceAnalysisApproachMethodSelector
+                      isSystemCalculation={isSystemCalculation}
+                      onSystemCalculationChange={handleOnSystemCalculationChange}
+                      onEditModeSave={handleOnEditModeSave}
+                      onSummaryModeSave={handleOnSummaryModeSave}
+                      onSelectMethod={handleOnSelectMethod}
+                      onSelectCalculationMethod={onSelectCalculationMethod}
+                    />
+                  </div>
+                </Panel>
+              </Group>
+            </div>
           </div>
-          <ConfirmDialog
-            isOpen={isConfirmDeselectedMethodOpen}
-            onClose={handleOnCancelDeselectMethod}
-            onConfirm={handleOnConfirmDeselectMethod}
-            message={`Are you sure? If you confirm the appraisal value of this method will be removed.`}
-          />
         </div>
       </DispatchCtx.Provider>
     </StateCtx.Provider>

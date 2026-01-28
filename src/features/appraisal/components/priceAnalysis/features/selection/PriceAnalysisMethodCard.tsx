@@ -1,12 +1,13 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useSelectionDispatch } from './PriceAnalysisAccordion';
+import { useSelectionDispatch } from './selectionContext';
 
 interface PriceAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';
   approachId: string;
   method: any;
   onSelectMethod: (approachId: string, methodId: string) => void;
+  onSelectCalculationMethod?: (methodId: string) => void;
 }
 
 export const PriceAnalysisMethodCard = ({
@@ -14,6 +15,7 @@ export const PriceAnalysisMethodCard = ({
   approachId,
   method,
   onSelectMethod,
+  onSelectCalculationMethod,
 }: PriceAnalysisMethodCardProps) => {
   const dispatch = useSelectionDispatch();
   if (viewMode === 'editing') {
@@ -90,7 +92,7 @@ export const PriceAnalysisMethodCard = ({
       <div className="col-span-1 flex items-center justify-end">
         <button
           type="button"
-          onClick={() => null}
+          onClick={() => onSelectCalculationMethod(method.id)}
           className="cursor-pointer items-center justify-end"
         >
           <Icon

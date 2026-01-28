@@ -23,7 +23,7 @@ export type PriceAnalysisConfig = z.infer<typeof PriceAnalysisConfigSchema>;
 
 export async function fetchPriceAnalysisConfig(): Promise<PriceAnalysisConfig> {
   const res = await fetch(
-    '/src/features/appraisal/components/priceAnalysis/priceAnalysis.config.json', // Is this secure?
+    '/src/features/appraisal/components/priceAnalysis/data/priceAnalysis.config.json', // Is this secure?
     { cache: 'no-cache' },
   );
   if (!res.ok) throw new Error(`Config fetch failed (${res.status})`);

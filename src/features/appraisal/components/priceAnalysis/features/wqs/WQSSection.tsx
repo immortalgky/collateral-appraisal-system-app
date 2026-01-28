@@ -39,7 +39,11 @@ export const getPropertyValueByFactorCode = (id: string, property: Record<string
   return value[field] ?? '';
 };
 
-export const WQSSection = () => {
+interface WQSSectionProps {
+  property: Record<string, any>;
+  surveys: Record<string, any>[];
+}
+export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
   /**
    * => default collateral type, template => generate => query factors in template
    * =>
@@ -88,10 +92,10 @@ export const WQSSection = () => {
    */
 
   // stage (1): moc data
-  const [property, setProperty] = useState<Record<string, any>>(PROPERTIES[1]);
-  const [surveys, setSurvey] = useState<Record<string, any>[]>(
-    MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND,
-  );
+  // const [property, setProperty] = useState<Record<string, any>>(PROPERTIES[1]);
+  // const [surveys, setSurvey] = useState<Record<string, any>[]>(
+  //   MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND,
+  // );
 
   // stage (2): moc data
   const [allFactors, setAllFactors] =

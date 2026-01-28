@@ -7,19 +7,19 @@
       "appraisalValue": 0,
       "methods": [
         {
-          "id": "WQS",
+          "id": "WQS_MARKET",
           "icon": "scale-balanced",
           "appraisalValue": 0,
           "label": "Weighted Quality Score (WQS)"
         },
         {
-          "id": "SAG",
+          "id": "SAG_MARKET",
           "icon": "table",
           "appraisalValue": 0,
           "label": "Sales Adjustment Grid"
         },
         {
-          "id": "DC",
+          "id": "DC_MARKET",
           "icon": "house-building",
           "appraisalValue": 0,
           "label": "Direct Comparison"
@@ -33,19 +33,19 @@
       "appraisalValue": 0,
       "methods": [
         {
-          "id": "WQS",
+          "id": "WQS_COST",
           "icon": "scale-balanced",
           "appraisalValue": 0,
           "label": "Weighted Quality Score (WQS)"
         },
         {
-          "id": "SAG",
+          "id": "SAG_COST",
           "icon": "table",
           "appraisalValue": 0,
           "label": "Sales Adjustment Grid"
         },
         {
-          "id": "DC",
+          "id": "DC_COST",
           "icon": "house-building",
           "appraisalValue": 0,
           "label": "Direct Comparison"
