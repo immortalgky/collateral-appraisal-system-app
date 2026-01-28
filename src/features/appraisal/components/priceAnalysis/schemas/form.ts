@@ -9,7 +9,7 @@ const WQSCalculation = z
     offeringPriceAdjustmentAmt: z.number().nullable(),
     sellingPrice: z.number().nullable(),
     sellingPriceMeasurementUnit: z.string().nullable(),
-    // sellingDate: z.date(),
+    // sellingDate: z.date(), TODO
     sellingPriceAdjustmentYear: z.number().nullable(),
     numberOfYears: z.number().nullable(),
   })

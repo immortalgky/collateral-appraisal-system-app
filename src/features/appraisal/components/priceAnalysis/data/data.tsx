@@ -183,6 +183,84 @@ export const WQS_TEMPLATES: WQSTemplate[] = [
   },
 ];
 
+export type SaleAdjustmentGridTemplate = {
+  templateCode: string;
+  templateName: string;
+  collateralTypeId: string;
+  comparativeFactors: { factorId: string }[];
+  calculationFactors: { factorId: string; weight: number; intensity: number }[];
+};
+export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
+  {
+    templateCode: 'L01',
+    templateName: 'LAND_01',
+    collateralTypeId: 'L',
+    comparativeFactors: [
+      { factorId: '01' },
+      { factorId: '02' },
+      { factorId: '03' },
+      { factorId: '04' },
+      { factorId: '05' },
+      { factorId: '06' },
+      { factorId: '20' },
+      { factorId: '17' },
+      { factorId: '21' },
+    ],
+    calculationFactors: [
+      { factorId: '01', weight: 1, intensity: 10 },
+      { factorId: '02', weight: 2, intensity: 10 },
+      { factorId: '03', weight: 1, intensity: 10 },
+      { factorId: '04', weight: 1, intensity: 10 },
+      { factorId: '05', weight: 1, intensity: 10 },
+      { factorId: '06', weight: 1, intensity: 10 },
+    ],
+  },
+  {
+    templateCode: 'LB01',
+    templateName: 'LB_01',
+    collateralTypeId: 'LB',
+    comparativeFactors: [
+      { factorId: '02' },
+      { factorId: '05' },
+      { factorId: '08' },
+      { factorId: '09' },
+      { factorId: '10' },
+      { factorId: '11' },
+      { factorId: '12' },
+      { factorId: '13' },
+    ],
+    calculationFactors: [
+      { factorId: '02', weight: 1, intensity: 10 },
+      { factorId: '05', weight: 1, intensity: 10 },
+      { factorId: '08', weight: 2, intensity: 10 },
+      { factorId: '09', weight: 2, intensity: 10 },
+      { factorId: '10', weight: 1, intensity: 10 },
+      { factorId: '11', weight: 1, intensity: 10 },
+    ],
+  },
+  {
+    templateCode: 'C01',
+    templateName: 'CONDO_01',
+    collateralTypeId: 'C',
+    comparativeFactors: [
+      { factorId: '15' },
+      { factorId: '10' },
+      { factorId: '03' },
+      { factorId: '14' },
+      { factorId: '10' },
+      { factorId: '11' },
+    ],
+    calculationFactors: [
+      { factorId: '15', weight: 1, intensity: 10 },
+      { factorId: '10', weight: 1, intensity: 10 },
+      { factorId: '03', weight: 2, intensity: 10 },
+      { factorId: '14', weight: 2, intensity: 10 },
+      { factorId: '10', weight: 1, intensity: 10 },
+      { factorId: '11', weight: 1, intensity: 10 },
+    ],
+  },
+];
+
 export const MOC_SURVEY_DATA = [
   {
     id: 'SURVEY_01',

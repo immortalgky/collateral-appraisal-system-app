@@ -42,7 +42,7 @@ export function PriceAnalysisTab(): JSX.Element {
     }, 500);
   }, [isLoadingProperty, isLoadingMarketSurvey]);
 
-  const [methodId, setMethodId] = useState<string | undefined>(undefined);
+  const [methodId, setMethodId] = useState<string | undefined>('SAG_MARKET');
 
   const handleOnSetMethodId = (methodId: string) => {
     setMethodId(methodId);
