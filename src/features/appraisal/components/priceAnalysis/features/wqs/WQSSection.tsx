@@ -12,6 +12,7 @@ import {
   MAPPING_FACTORS_PROPERTIES_FIELDS,
   PROPERTIES,
   WQS_TEMPLATES,
+  type WQSTemplate,
 } from '../../data/data';
 import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
 
@@ -129,10 +130,12 @@ export const WQSSection = () => {
     // if (!pricingTemplateCode) return;
     // load template configuration
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
-    initialState();
+    setOnLoading(false);
   };
 
-  const initialState = () => {
+  useEffect(() => {
+    if (onLoading) return;
+
     if (!template) {
       setTimeout(() => {
         setOnLoading(true);
@@ -194,7 +197,7 @@ export const WQSSection = () => {
       });
       setOnLoading(false);
     }, 1000);
-  };
+  }, [collateralTypeId, pricingTemplateCode, reset, template]);
 
   useEffect(() => {
     setValue(

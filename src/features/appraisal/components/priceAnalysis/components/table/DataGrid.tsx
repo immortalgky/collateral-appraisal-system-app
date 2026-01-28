@@ -83,7 +83,7 @@ export function DataGrid<Row, Ctx>({
                           key={col.id}
                           className={clsx(
                             'font-medium text-gray-600 px-3 py-2.5',
-                            col.style?.headerClassName ?? col.className,
+                            col.style?.headerClassName ?? '',
                           )}
                         >
                           {col.header}
@@ -98,7 +98,7 @@ export function DataGrid<Row, Ctx>({
                       key={col.id}
                       className={clsx(
                         'font-medium text-gray-600 px-3 py-2.5',
-                        col.style?.headerClassName ?? col.className,
+                        col.style?.headerClassName ?? '',
                       )}
                     >
                       {col.header}

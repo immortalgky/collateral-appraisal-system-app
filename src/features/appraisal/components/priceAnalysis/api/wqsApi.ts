@@ -2,6 +2,10 @@ import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 
 /**
+ * Hook for pricing master to collect collateral type & selected template
+ */
+
+/**
  * Hook for add market survey which selected in pricing market comparison section
  * POST /appraisal/ ...
  * @returns
@@ -16,7 +20,7 @@ export const useAddPricingMarketComparison = () => {
    */
   return useMutation({
     mutationFn: async ({ groupId, data }: { groupId: string; data: any }) => {
-      const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
+      const { data: response } = await axios.post(`/appraisal/${groupId}/wqs`, data);
       return response;
     },
   });
@@ -37,7 +41,7 @@ export const useAddPricingWQSScore = () => {
    */
   return useMutation({
     mutationFn: async ({ groupId, data }: { groupId: string; data: any }) => {
-      const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
+      const { data: response } = await axios.post(`/appraisal/${groupId}/wqs`, data);
       return response;
     },
   });
@@ -57,7 +61,7 @@ export const useAddPricingWQSCalculation = () => {
    */
   return useMutation({
     mutationFn: async ({ groupId, data }: { groupId: string; data: any }) => {
-      const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
+      const { data: response } = await axios.post(`/appraisal/${groupId}/wqs`, data);
       return response;
     },
   });
@@ -77,7 +81,7 @@ export const useAddPricingWQSFinalValue = () => {
    */
   return useMutation({
     mutationFn: async ({ groupId, data }: { groupId: string; data: any }) => {
-      const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
+      const { data: response } = await axios.post(`/appraisal/${groupId}/wqs`, data);
       return response;
     },
   });

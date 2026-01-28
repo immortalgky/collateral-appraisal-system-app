@@ -41,14 +41,14 @@ export const ComparativeSection = ({
       header: <div className="">Factor</div>,
       style: {
         headerClassName: 'border-r border-neutral-300 w-[200px]',
-        bodyClassName: 'border-r border-neutral-300 h-[56px] border-b border-gray-300',
+        bodyClassName: 'border-r border-neutral-300 h-[56px] border-b border-gray-300 w-[200px]',
       },
       field: 'factorCode',
       render: ({ row, rowIndex, fieldPath, ctx, value }) => {
         const templateFactors = ctx.template?.comparativeFactors ?? []; // In case that no template, systen still allow to add factors
-        if (rowIndex >= templateFactors.length) {
+        if (rowIndex > templateFactors.length - 1) {
           return (
-            <div className="w-[200px]">
+            <div className="flex flex-row min-w-0 min-h-0 items-center h-12 w-[170px] overflow-hidden">
               <RHFInputCell
                 fieldName={fieldPath}
                 inputType="select"
@@ -61,8 +61,11 @@ export const ComparativeSection = ({
           );
         }
         return (
-          <div className="w-[200px] p-2 truncate" title={getDesciptions(value) ?? ''}>
-            <span>{getDesciptions(value) ?? ''}</span>
+          <div
+            className="flex flex-row min-w-0 min-h-0 items-center w-[170px]"
+            title={getDesciptions(value) ?? ''}
+          >
+            <span className="w-full truncate">{getDesciptions(value) ?? ''}</span>
           </div>
         );
       },
@@ -72,8 +75,8 @@ export const ComparativeSection = ({
       id: 'collateral',
       header: <div className="">Collateral</div>,
       style: {
-        headerClassName: 'border-r border-neutral-300 min-w-[200px]',
-        bodyClassName: 'border-r border-neutral-300 h-[56px]  border-b border-gray-300',
+        headerClassName: 'border-r border-neutral-300 w-[200px]',
+        bodyClassName: 'border-r border-neutral-300 h-[56px] w-[200px] border-b border-gray-300',
       },
       field: 'collateral',
       render: ({ row }) => {
@@ -119,7 +122,7 @@ export const ComparativeSection = ({
       id: 'action',
       header: <div className="px-2 py-4"></div>,
       style: {
-        headerClassName: 'w-16',
+        headerClassName: 'min-w-16',
         bodyClassName: ' border-b border-gray-300',
       },
       render: ({ rowIndex, ctx, actions: { removeColumn } }) => {
@@ -127,7 +130,7 @@ export const ComparativeSection = ({
           factor which was set from template not allow to change
          */
         const templateFactors = ctx.template?.comparativeFactors ?? []; // In case that no template, systen still allow to add factors
-        if (rowIndex >= templateFactors.length - 1)
+        if (rowIndex > templateFactors.length - 1)
           return (
             <div className="flex justify-center items-center">
               <button

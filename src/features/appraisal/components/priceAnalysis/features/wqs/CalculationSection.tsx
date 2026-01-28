@@ -232,17 +232,17 @@ const getWQSScoreConfigurations = (comparativeSurveys: Record<string, any>[]) =>
                 value: compFact.factorCode,
               })) ?? [];
           return (
-            <div className="flex-1 flex-row min-w-0 min-h-0 items-center h-12 truncate w-[190px]">
+            <div className="flex flex-row min-w-0 min-h-0 items-center h-12 w-[170px] overflow-hidden">
               <RHFInputCell fieldName={fieldPath} inputType="select" options={comparativeFactors} />
             </div>
           );
         }
         return (
           <div
-            className="flex-1 flex-row min-w-0 min-h-0 items-center justify-start truncate h-12 w-[190px]"
+            className="flex flex-row min-w-0 min-h-0 items-center justify-start truncate h-12 w-[170px]"
             title={getDesciptions(value) ?? ''}
           >
-            {getDesciptions(value) ?? ''}
+            <span className="w-full truncate">{getDesciptions(value) ?? ''}</span>
           </div>
         );
       },
