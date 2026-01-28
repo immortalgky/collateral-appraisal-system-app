@@ -177,8 +177,11 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Coefficient of decision</div>
-        <div className={(clsx('col-span-9'), RSQResult < 0.85 ? 'text-danger' : '')}>
-          {RSQResult.toFixed(5) ?? 0}
+        <div
+          className={clsx('col-span-9 flex flex-row gap-4', RSQResult < 0.85 ? 'text-danger' : '')}
+        >
+          <span>{RSQResult.toFixed(5) ?? 0}</span>
+          <span>{RSQResult < 0.85 ? 'Consider for the market survey data' : ''}</span>
         </div>
       </div>
       <div className="grid grid-cols-12">
