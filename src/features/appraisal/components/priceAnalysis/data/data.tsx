@@ -188,7 +188,7 @@ export type SaleAdjustmentGridTemplate = {
   templateName: string;
   collateralTypeId: string;
   comparativeFactors: { factorId: string }[];
-  calculationFactors: { factorId: string; weight: number; intensity: number }[];
+  qualitativeFactors: { factorId: string; qualitativeLevel: string }[];
 };
 export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
   {
@@ -206,13 +206,13 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '17' },
       { factorId: '21' },
     ],
-    calculationFactors: [
-      { factorId: '01', weight: 1, intensity: 10 },
-      { factorId: '02', weight: 2, intensity: 10 },
-      { factorId: '03', weight: 1, intensity: 10 },
-      { factorId: '04', weight: 1, intensity: 10 },
-      { factorId: '05', weight: 1, intensity: 10 },
-      { factorId: '06', weight: 1, intensity: 10 },
+    qualitativeFactors: [
+      { factorId: '01', qualitativeLevel: 'E' },
+      { factorId: '02', qualitativeLevel: 'E' },
+      { factorId: '03', qualitativeLevel: 'E' },
+      { factorId: '04', qualitativeLevel: 'E' },
+      { factorId: '05', qualitativeLevel: 'E' },
+      { factorId: '06', qualitativeLevel: 'E' },
     ],
   },
   {
@@ -229,13 +229,13 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '12' },
       { factorId: '13' },
     ],
-    calculationFactors: [
-      { factorId: '02', weight: 1, intensity: 10 },
-      { factorId: '05', weight: 1, intensity: 10 },
-      { factorId: '08', weight: 2, intensity: 10 },
-      { factorId: '09', weight: 2, intensity: 10 },
-      { factorId: '10', weight: 1, intensity: 10 },
-      { factorId: '11', weight: 1, intensity: 10 },
+    qualitativeFactors: [
+      { factorId: '02', qualitativeLevel: 'E' },
+      { factorId: '05', qualitativeLevel: 'E' },
+      { factorId: '08', qualitativeLevel: 'E' },
+      { factorId: '09', qualitativeLevel: 'E' },
+      { factorId: '10', qualitativeLevel: 'E' },
+      { factorId: '11', qualitativeLevel: 'E' },
     ],
   },
   {
@@ -250,13 +250,13 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '10' },
       { factorId: '11' },
     ],
-    calculationFactors: [
-      { factorId: '15', weight: 1, intensity: 10 },
-      { factorId: '10', weight: 1, intensity: 10 },
-      { factorId: '03', weight: 2, intensity: 10 },
-      { factorId: '14', weight: 2, intensity: 10 },
-      { factorId: '10', weight: 1, intensity: 10 },
-      { factorId: '11', weight: 1, intensity: 10 },
+    qualitativeFactors: [
+      { factorId: '15', qualitativeLevel: 'E' },
+      { factorId: '10', qualitativeLevel: 'E' },
+      { factorId: '03', qualitativeLevel: 'E' },
+      { factorId: '14', qualitativeLevel: 'E' },
+      { factorId: '10', qualitativeLevel: 'E' },
+      { factorId: '11', qualitativeLevel: 'E' },
     ],
   },
 ];
@@ -290,6 +290,20 @@ export const MOC_SURVEY_DATA = [
   },
   {
     id: 'SURVEY_03',
+    factors: [
+      { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
+      { id: '02', value: 'แปลงกลาง' },
+      { id: '03', value: 'รูปหลายเหลี่ยม' },
+      { id: '04', value: 'ถมแล้ว' },
+      { id: '05', value: 3328.2 },
+      { id: '06', value: 175 },
+      { id: '21', value: 21500 },
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Wa' },
+    ],
+  },
+  {
+    id: 'SURVEY_04',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
       { id: '02', value: 'แปลงกลาง' },

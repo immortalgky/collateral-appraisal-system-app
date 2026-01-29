@@ -148,7 +148,7 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
         footerClassName: style?.footerClassName,
       },
 
-      renderCell: ({ row, ctx }) => {
+      renderCell: ({ row, ctx, actions }) => {
         const rowDef = row.raw;
         const colItem = item.value;
 
@@ -166,7 +166,7 @@ export function buildVerticalGrid<ColumnItem extends Record<string, any>, Ctx>({
             columnIndex,
             ctx,
             value,
-            actions: {},
+            actions: { addColumn: actions.onAdd, removeColumn: actions.onRemove },
           });
         }
 

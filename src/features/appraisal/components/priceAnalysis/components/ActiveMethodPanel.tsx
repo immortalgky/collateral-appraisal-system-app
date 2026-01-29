@@ -1,3 +1,4 @@
+import { MOC_SURVEY_DATA, PROPERTIES } from '../data/data';
 import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/SaleAdjustmentGridSection';
 import { WQSSection } from '../features/wqs/WQSSection';
 
@@ -16,12 +17,15 @@ export const ActiveMethodPanel = ({
    * (2) pass config into method components
    */
 
+  const property = PROPERTIES[0];
+  const surveys = MOC_SURVEY_DATA;
+
   const value = methodId;
   switch (value) {
     case 'WQS_MARKET':
       return <WQSSection property={properties} surveys={marketSurveys} />;
     case 'SAG_MARKET':
-      return <SaleAdjustmentGridSection property={properties} surveys={marketSurveys} />;
+      return <SaleAdjustmentGridSection property={property} surveys={surveys} />;
     case 'DIRECTCOMPARE':
       return <div></div>;
     default:

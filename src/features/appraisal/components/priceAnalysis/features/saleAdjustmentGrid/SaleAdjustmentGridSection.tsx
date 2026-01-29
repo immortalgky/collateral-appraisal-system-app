@@ -7,6 +7,7 @@ import {
 } from '../../schemas/saleAdjustmentGridForm';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
+import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, any>;
@@ -22,7 +23,9 @@ export const SaleAdjustmentGridSection = ({
   const [collateralTypes, setCollateralTypes] =
     useState<{ value: string; label: string }[]>(COLLATERAL_TYPE);
 
-  const [templateQuery, setTemplateQuery] = useState<WQSTemplate | undefined>(undefined); // template will be initial when user click generate
+  const [templateQuery, setTemplateQuery] = useState<SaleAdjustmentGridTemplate | undefined>(
+    undefined,
+  ); // template will be initial when user click generate
   const template = useMemo(() => {
     return templateQuery;
   }, [templateQuery]);
@@ -41,7 +44,7 @@ export const SaleAdjustmentGridSection = ({
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
   const [pricingTemplateCode, setPricingTemplateCode] = useState<string>('');
   const [onLoading, setOnLoading] = useState<boolean>(true);
-  const [comparativeSurveys, setComparativeSurveys] = useState<any>([]); // market survey will be initial when user choose market survey data in application
+  const [comparativeSurveys, setComparativeSurveys] = useState<any>([...surveys]); // market survey will be initial when user choose market survey data in application
 
   console.log('Sale adjustment grid form errors: ', errors);
 
@@ -59,23 +62,16 @@ export const SaleAdjustmentGridSection = ({
       setTimeout(() => {
         setOnLoading(true);
         reset({
-          methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
+          methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
           collateralType: collateralTypeId,
           pricingTemplateCode: '',
           comparativeSurveys: [],
           comparativeFactors: [],
-          WQSScores: [],
-          WQSCalculations: [],
-          WQSFinalValue: {
+          saleAdjustmentGridCalculations: [],
+          saleAdjustmentGridAdjustmentFactors: [],
+          saleAdjustmentGridFinalValue: {
             finalValue: 0,
             finalValueRounded: 0,
-            coefficientOfDecision: 0,
-            standardError: 0,
-            intersectionPoint: 0,
-            slope: 0,
-            lowestEstimate: 0,
-            highestEstimate: 0,
-            appraisalPriceRounded: 0,
           },
         });
         setOnLoading(false);
@@ -87,15 +83,34 @@ export const SaleAdjustmentGridSection = ({
     setTimeout(() => {
       setOnLoading(true);
       reset({
-        methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
+        methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
         collateralType: collateralTypeId,
         pricingTemplateCode: pricingTemplateCode,
         comparativeSurveys: [],
         comparativeFactors: template.comparativeFactors.map(compFact => ({
           factorCode: compFact.factorId,
         })),
-        saleAdjustmentGridQualitatives: [],
-        saleAdjustmentGridCalculations: [],
+        saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
+          factorCode: q.factorId,
+          qualitativeLevel: [],
+        })),
+        saleAdjustmentGridCalculations: [
+          ...comparativeSurveys.map(survey => {
+            const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+            return {
+              marketId: survey.id,
+              offeringPrice: surveyMap.get('17') ?? 0,
+              offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+              offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+              offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+              sellingPrice: surveyMap.get('21') ?? 0,
+              sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+              sellingDate: surveyMap.get('22') ?? '',
+              sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+              numberOfYears: 10, // TODO: convert selling date to number of year
+            };
+          }),
+        ],
         saleAdjustmentGridAdjustmentFactors: [],
         saleAdjustmentGridFinalValue: {
           finalValue: 0,
@@ -104,7 +119,7 @@ export const SaleAdjustmentGridSection = ({
       });
       setOnLoading(false);
     }, 1000);
-  }, [collateralTypeId, pricingTemplateCode, reset, template]);
+  }, [collateralTypeId, comparativeSurveys, onLoading, pricingTemplateCode, reset, template]);
 
   const handleOnSave = data => {
     console.log(data);
@@ -169,7 +184,11 @@ export const SaleAdjustmentGridSection = ({
                 </button>
               </div>
             </div>
-            {!onLoading && <div className="flex flex-col gap-4"></div>}
+            {!onLoading && (
+              <div className="flex flex-col gap-4">
+                <SaleAdjustmentGridCalculationSection property={property} surveys={surveys} />
+              </div>
+            )}
           </div>
           {!onLoading && (
             <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">

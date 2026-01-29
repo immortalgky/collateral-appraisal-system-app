@@ -20,6 +20,12 @@ const SaleAdjustmentGridQualitative = z.object({
   surveys: z.array(SaleAdjustmentGridQualitativeSurvey),
 });
 
+const adjustValue = z.object({
+  factorCode: z.string(),
+  factorDiffPct: z.number(),
+  factorDiffAmt: z.number(),
+  totalAdjValue: z.number(),
+});
 const SaleAdjustmentGridCalculation = z
   .object({
     marketId: z.string(),
@@ -46,10 +52,12 @@ const SaleAdjustmentGridCalculation = z
     buildingValueIncreaserDecrease: z.number().nullable(),
     totalSecondRevision: z.number().nullable(),
 
+    // adjust value
+    adjustValues: z.array(adjustValue),
+
     // adjust weight
-    factorDiffPct: z.number(),
-    facorDiffAmt: z.number(),
-    totalAdjValue: z.number(),
+    weight: z.number(),
+    weightedAdjValue: z.number(),
   })
   .passthrough();
 

@@ -14,6 +14,7 @@ import type {
   RHFHorizontalColumn,
   RHFVerticalRowDef,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/spec.ts';
+import { verticalBuilder } from './verticalBuilder';
 
 export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   name,
@@ -111,6 +112,8 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
   // const watched = useWatch({ control, name, defaultValue: [] }) as ColumnItem[];
   const watched = getValues(name) as ColumnItem[];
 
+  console.log(rowDefs);
+
   const {
     gridRows,
     gridCols,
@@ -137,6 +140,66 @@ export const RHFVerticalArrayTable = <ColumnItem extends Record<string, any>, Ct
         hasHeader={true}
         hasBody={true}
         hasFooter={false}
+      />
+
+      {/* optional add button */}
+      {/* <div className="flex flex-row items-center justify-center p-2 border-t border-neutral-300">
+        <button
+          type="button"
+          onClick={() => append(defaultColumn)}
+          className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer"
+        >
+          + Add row
+        </button>
+      </div> */}
+    </div>
+  );
+};
+
+export const RHFVerticalArrayTable2 = <ColumnItem extends Record<string, any>, Ctx>({
+  name,
+  rowDefs,
+  columnDefs,
+  ctx,
+  defaultColumn,
+}: {
+  name: string;
+  rowDefs: RHFVerticalRowDef<ColumnItem, Ctx>[];
+  columnDefs: RHFHorizontalColumn<Row, Ctx>[];
+  ctx: Ctx;
+  defaultColumn: ColumnItem;
+}) => {
+  const { control, getValues } = useFormContext();
+  const { fields, append, remove } = useFieldArray({ control, name });
+  // const watched = useWatch({ control, name, defaultValue: [] }) as ColumnItem[];
+  const watched = getValues(name) as ColumnItem[];
+
+  const {
+    gridRows,
+    gridCols,
+  }: {
+    gridRows: any;
+    gridCols: any;
+  } = useMemo(() => {
+    return verticalBuilder<ColumnItem, Ctx>({
+      arrayName: name,
+      items: fields.map((f, i) => ({ value: watched?.[i] ?? {}, id: f.id })),
+      rowDefs: rowDefs,
+      columnDefs: columnDefs,
+    });
+  }, [name, fields, rowDefs, columnDefs, watched]);
+
+  return (
+    <div className="border border-gray-300 overflow-clip">
+      <DataGrid
+        rows={gridRows}
+        columns={gridCols}
+        ctx={ctx}
+        hasHeader={true}
+        hasBody={true}
+        hasFooter={false}
+        onAdd={append}
+        onRemove={remove}
       />
 
       {/* optional add button */}

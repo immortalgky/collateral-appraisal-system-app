@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { GridColumn, GridGroup } from './types';
+import type { GridColumn, GridGroup, GridRow } from './types';
 
 export function DataGrid<Row, Ctx>({
   rows,
@@ -13,7 +13,7 @@ export function DataGrid<Row, Ctx>({
   onRemove,
   onAdd,
 }: {
-  rows: Row[];
+  rows: GridRow<Row>[];
   columns: GridColumn<Row, Ctx>[];
   ctx: Ctx;
   groups?: GridGroup[];

@@ -44,6 +44,11 @@ export type RHFVerticalRowDef<ColumnItem, Ctx> = {
   id: string;
   header?: React.ReactNode;
   className?: string;
+  style?: {
+    headerClassName?: string;
+    bodyClassName?: string;
+    footerClassName?: string;
+  };
   align?: 'left' | 'center' | 'right';
 
   /** field name inside the column item: e.g. "offeringPriceAdjustmentPct" */
