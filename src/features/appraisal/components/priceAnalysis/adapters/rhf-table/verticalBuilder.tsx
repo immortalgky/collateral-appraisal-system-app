@@ -154,7 +154,8 @@ export const verticalBuilder = ({
   // construct column definition by passing data under table, and passing row definition here
   const gridRows: any[] = rowDefs.map(def => ({
     id: def.id,
-    raw: { items, rowDef: def },
+    value: items,
+    rowDef: def,
   }));
 
   console.log(gridCols);
