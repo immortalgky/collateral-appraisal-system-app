@@ -62,31 +62,40 @@ export function useGetSaleAdjustmentGridCalculationConfig({
           return {
             id: survey.id,
             header: `survey ${index + 1}`,
+            field: `qualitatives.${index}.qualitativeLevel`,
             style: {
               headerClassName: 'border-r border-gray-300',
               bodyClassName: 'border-r border-gray-300',
             },
-            render: ({ row, fieldPath, ctx, rowIndex, columnIndex, value }) => {
-              if (row.rowDef?.id === 'addRow') return null;
-              return (
-                <div className="flex flex-row gap-3 justify-between items-center">
-                  <div className="w-[150px]">
-                    <RHFInputCell
-                      fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${index}.qualitativeLevel`}
-                      inputType="select"
-                      options={[
-                        { label: 'Equal', value: 'E' },
-                        { label: 'Inferior', value: 'I' },
-                        { label: 'Better', value: 'B' },
-                      ]}
-                    />
-                  </div>
-                  <span>
-                    {survey.factors?.find(s => s.id === row.value?.factorCode)?.value ?? ''}
-                  </span>
-                </div>
-              );
+            rhf: {
+              inputType: 'select',
+              options: [
+                { label: 'Equal', value: 'E' },
+                { label: 'Inferior', value: 'I' },
+                { label: 'Better', value: 'B' },
+              ],
             },
+            // render: ({ row, fieldPath, ctx, rowIndex, columnIndex, value }) => {
+            //   if (row.rowDef?.id === 'addRow') return null;
+            //   return (
+            //     <div className="flex flex-row gap-3 justify-between items-center">
+            //       <div className="w-[150px]">
+            //         <RHFInputCell
+            //           fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${index}.qualitativeLevel`}
+            //           inputType="select"
+            //           options={[
+            //             { label: 'Equal', value: 'E' },
+            //             { label: 'Inferior', value: 'I' },
+            //             { label: 'Better', value: 'B' },
+            //           ]}
+            //         />
+            //       </div>
+            //       <span>
+            //         {survey.factors?.find(s => s.id === row.value?.factorCode)?.value ?? ''}
+            //       </span>
+            //     </div>
+            //   );
+            // },
           };
         }),
 
@@ -129,7 +138,6 @@ export function useGetSaleAdjustmentGridCalculationConfig({
                     type="button"
                     onClick={() => {
                       remove(rowIndex);
-                      console.log(getValues('saleAdjustmentGridQualitatives'));
                     }}
                     className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
                     title="Delete"
@@ -151,11 +159,10 @@ export function useGetSaleAdjustmentGridCalculationConfig({
           header: ({ actions: { onAppend } }) => (
             <button
               type="button"
-              // onClick={() => onAppend({ factorCode: '', surveys: [] })}
               onClick={() =>
-                append({
+                onAppend({
                   factorCode: '',
-                  qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: '' })),
+                  qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: 'E' })),
                 })
               }
               className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
@@ -200,127 +207,127 @@ export function useGetSaleAdjustmentGridCalculationConfig({
           },
         })) ?? [];
 
-      const saleAdjustmentGridCalculationRowConfig = [
-        {
-          id: 'offeringPrice',
-          field: 'offeringPrice',
-          rowHeader: () => {
-            return <span>Offering price</span>;
-          },
-        },
-        {
-          id: 'offeringPriceAdjustmentPct',
-          field: 'offeringPriceAdjustmentPct',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return (
-              <div className="flex flex-row justify-between items-center">
-                <span>Adjustment of offering price</span>
-                <span>{'(%)'}</span>
-              </div>
-            );
-          },
-          render: ({ value, columnIndex }) => {
-            return (
-              <div>
-                <RHFInputCell
-                  fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentPct`}
-                  inputType="number"
-                />
-              </div>
-            );
-          },
-        },
-        {
-          id: 'offeringPriceAdjustmentAmt',
-          field: 'offeringPriceAdjustmentAmt',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return (
-              <div className="flex flex-row justify-between items-center">
-                <span>Adjustment of offering price</span>
-                <span>{'(Amount)'}</span>
-              </div>
-            );
-          },
-          render: ({ value, columnIndex }) => {
-            return (
-              <div>
-                <RHFInputCell
-                  fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`}
-                  inputType="number"
-                />
-              </div>
-            );
-          },
-        },
-        {
-          id: 'sellingPrice',
-          field: 'sellingPrice',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return <span>Selling price</span>;
-          },
-        },
-        {
-          id: 'numberOfYears',
-          field: 'numberOfYears',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return <span>Number of years</span>;
-          },
-        },
-        {
-          id: 'sellingPriceAdjustmentYear',
-          field: 'sellingPriceAdjustmentYear',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return (
-              <div className="flex flex-row justify-between items-center">
-                <span>Adjustment of period</span>
-                <span>{'(%)'}</span>
-              </div>
-            );
-          },
-        },
-        {
-          id: 'cumulativeAdjustedPeriod',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return (
-              <div className="flex flex-row justify-between items-center">
-                <span>Cumulative of period</span>
-                <span>{'(%)'}</span>
-              </div>
-            );
-          },
-        },
-        {
-          id: 'cumulativeAdjustedPeriod',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return (
-              <div className="flex flex-row justify-between items-center">
-                <span>Total of initial price</span>
-                <span>{'(%)'}</span>
-              </div>
-            );
-          },
-        },
-        {
-          id: 'adjustedValue',
-          field: 'adjustedValue',
-          rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
-            return <span>Adjusted price</span>;
-          },
-        },
-      ];
+      // const saleAdjustmentGridCalculationRowConfig = [
+      //   {
+      //     id: 'offeringPrice',
+      //     field: 'offeringPrice',
+      //     rowHeader: () => {
+      //       return <span>Offering price</span>;
+      //     },
+      //   },
+      //   {
+      //     id: 'offeringPriceAdjustmentPct',
+      //     field: 'offeringPriceAdjustmentPct',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return (
+      //         <div className="flex flex-row justify-between items-center">
+      //           <span>Adjustment of offering price</span>
+      //           <span>{'(%)'}</span>
+      //         </div>
+      //       );
+      //     },
+      //     render: ({ value, columnIndex }) => {
+      //       return (
+      //         <div>
+      //           <RHFInputCell
+      //             fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentPct`}
+      //             inputType="number"
+      //           />
+      //         </div>
+      //       );
+      //     },
+      //   },
+      //   {
+      //     id: 'offeringPriceAdjustmentAmt',
+      //     field: 'offeringPriceAdjustmentAmt',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return (
+      //         <div className="flex flex-row justify-between items-center">
+      //           <span>Adjustment of offering price</span>
+      //           <span>{'(Amount)'}</span>
+      //         </div>
+      //       );
+      //     },
+      //     render: ({ value, columnIndex }) => {
+      //       return (
+      //         <div>
+      //           <RHFInputCell
+      //             fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`}
+      //             inputType="number"
+      //           />
+      //         </div>
+      //       );
+      //     },
+      //   },
+      //   {
+      //     id: 'sellingPrice',
+      //     field: 'sellingPrice',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return <span>Selling price</span>;
+      //     },
+      //   },
+      //   {
+      //     id: 'numberOfYears',
+      //     field: 'numberOfYears',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return <span>Number of years</span>;
+      //     },
+      //   },
+      //   {
+      //     id: 'sellingPriceAdjustmentYear',
+      //     field: 'sellingPriceAdjustmentYear',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return (
+      //         <div className="flex flex-row justify-between items-center">
+      //           <span>Adjustment of period</span>
+      //           <span>{'(%)'}</span>
+      //         </div>
+      //       );
+      //     },
+      //   },
+      //   {
+      //     id: 'cumulativeAdjustedPeriod',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return (
+      //         <div className="flex flex-row justify-between items-center">
+      //           <span>Cumulative of period</span>
+      //           <span>{'(%)'}</span>
+      //         </div>
+      //       );
+      //     },
+      //   },
+      //   {
+      //     id: 'cumulativeAdjustedPeriod',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return (
+      //         <div className="flex flex-row justify-between items-center">
+      //           <span>Total of initial price</span>
+      //           <span>{'(%)'}</span>
+      //         </div>
+      //       );
+      //     },
+      //   },
+      //   {
+      //     id: 'adjustedValue',
+      //     field: 'adjustedValue',
+      //     rowHeader: ({ fieldPath, columnItem, columnIndex }) => {
+      //       return <span>Adjusted price</span>;
+      //     },
+      //   },
+      // ];
 
       saleAdjustmentGridQualitativeRowConfig = [
         ...factorRows,
         ...saleAdjustmentGridQualitativeRowConfig,
-        ...saleAdjustmentGridCalculationRowConfig,
+        // ...saleAdjustmentGridCalculationRowConfig,
       ];
 
       return { saleAdjustmentGridQualitativeColumnConfig, saleAdjustmentGridQualitativeRowConfig };
     }, [
       append,
       comparativeSurveys,
-      qualitatives,
-      remove,
+      // qualitatives,
+      // remove,
       saleAdjustmentGridQualitatives?.length,
       template.qualitativeFactors.length,
     ]);

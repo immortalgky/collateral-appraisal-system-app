@@ -1,3 +1,5 @@
+import type { ListBoxItem } from '@shared/components';
+
 export type Align = 'left' | 'center' | 'right';
 
 export type GridRow<Row extends Record<string, any>, Value = any> = {
@@ -21,6 +23,11 @@ export type GridColumn<RawRow, Ctx> = {
     footerClassName?: string;
   };
   align?: Align;
+
+  rhf?: {
+    inputType?: 'number' | 'select' | 'text' | 'display';
+    options?: ListBoxItem[];
+  };
 
   renderCell: (cell: GridCellCtx<RawRow, Ctx>) => React.ReactNode;
 

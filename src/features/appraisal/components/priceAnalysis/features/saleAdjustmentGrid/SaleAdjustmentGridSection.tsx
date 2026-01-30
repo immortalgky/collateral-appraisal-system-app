@@ -93,7 +93,7 @@ export const SaleAdjustmentGridSection = ({
 
         saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
           factorCode: q.factorId,
-          qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: '' })),
+          qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
         })),
 
         saleAdjustmentGridCalculations: [

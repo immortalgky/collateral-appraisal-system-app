@@ -31,7 +31,7 @@ export interface RHFColumnDef<ColumnItem extends Record<string, any>, Ctx> {
   /** optional custom cell */
   render?: (args: {
     fieldPath: string; // e.g. "WQSScores.2.weight"
-    row: GridRow<RHFRowDef<ColumnItem, Ctx>>; // { id, value, rowDef }
+    row: any; // { id, value, rowDef }
     rowIndex: number;
     columnIndex: number;
     ctx: Ctx;
@@ -42,9 +42,9 @@ export interface RHFColumnDef<ColumnItem extends Record<string, any>, Ctx> {
     };
   }) => React.ReactNode;
 
-  accessor?: (args: { row: Row; rowIndex: number; ctx: Ctx }) => any;
+  accessor?: (args: { row: any; rowIndex: number; ctx: Ctx }) => any;
 
-  footer?: (args: { rows: Row[]; ctx: Ctx }) => React.ReactNode;
+  footer?: (args: { rows: any[]; ctx: Ctx }) => React.ReactNode;
 }
 
 export interface RHFRowDef<ColumnItem extends Record<string, any>, Ctx> {
@@ -80,13 +80,20 @@ export interface RHFRowDef<ColumnItem extends Record<string, any>, Ctx> {
       removeColumn: (columnIndex: number) => void; // pending
     };
   }) => React.ReactNode;
+
+  getFieldPath?: (args: {
+    arrayName: string;
+    columnIndex: number;
+    rowIndex: number;
+    ctx: Ctx;
+  }) => string;
 }
 
 interface builderProps<ColumnItem extends Record<string, any>, Ctx> {
   arrayName: string;
   items: { id: string; value: ColumnItem }[];
-  columnDefs: ColumDef[];
-  rowDefs: RowDef[];
+  columnDefs: RHFColumnDef<ColumnItem, Ctx>[];
+  rowDefs: RHFRowDef<ColumnItem, Ctx>[];
 
   onRemove: any; // don't know exactly type
   onAppend: any; // don't know exactly type
@@ -99,6 +106,8 @@ export function builder<ColumnItem extends Record<string, any>, Ctx>({
 
   onRemove,
   onAppend,
+
+  getFieldPath,
 }: builderProps<ColumnItem, Ctx>): {
   gridRows: GridRow<RHFRowDef<ColumnItem, Ctx>>[];
   gridCols: GridColumn<RHFColumnDef<ColumnItem, Ctx>, Ctx>[];
@@ -116,16 +125,19 @@ export function builder<ColumnItem extends Record<string, any>, Ctx>({
       align: col.align,
 
       renderCell: ({ row, rowIndex, ctx }) => {
-        const rawRow = row.value ?? null; // form'object under this table (useWatch)
+        const value =
+          col.accessor?.({ row: row, rowIndex, ctx }) ??
+          col.field ??
+          row[col.field as any] ??
+          row[col.id as any];
 
-        // const value =
-        //   col.accessor?.({ row: rawRow, rowIndex, ctx }) ??
-        //   (col.field ? rawRow[col.field as any] ?? rawRow[col.id as any]);
+        // const value = null;
 
-        const value = null;
+        const fieldPath = getFieldPath
+          ? getFieldPath({ arrayName, columnIndex: colIndex, rowIndex, ctx })
+          : `${arrayName}.${rowIndex}.${col.field}`;
 
-        const field = col.field ?? row.rowDef?.field ?? col.id ?? row.id;
-        const fieldPath = buildFieldPath(arrayName, colIndex, field) ?? '';
+        console.log(fieldPath);
 
         // custom column cell
         if (col.render) {
@@ -145,15 +157,15 @@ export function builder<ColumnItem extends Record<string, any>, Ctx>({
         }
 
         // built-in component
-        // if (col.rhf && col.field) {
-        //   return (
-        //     <RHFInputCell
-        //       fieldName={fieldPath}
-        //       inputType={col.rhf.inputType}
-        //       options={col.rhf.options}
-        //     />
-        //   );
-        // }
+        if (col.rhf && col.field) {
+          return (
+            <RHFInputCell
+              fieldName={fieldPath}
+              inputType={col.rhf.inputType}
+              options={col.rhf.options}
+            />
+          );
+        }
 
         return <span>{value ?? ''}</span>;
       },
