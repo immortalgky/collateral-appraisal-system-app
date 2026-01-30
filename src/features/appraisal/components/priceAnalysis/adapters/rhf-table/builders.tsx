@@ -9,6 +9,7 @@ import type {
 } from '@features/appraisal/components/priceAnalysis/components/table/types.ts';
 import { RHFInputCell } from '@/features/appraisal/components/priceAnalysis/components/table/RHFInputCell';
 import clsx from 'clsx';
+import type { FieldValues, UseFieldArrayAppend } from 'react-hook-form';
 
 // === HORIZONTAL GRID BUILDER ===
 
@@ -19,16 +20,23 @@ interface buildHorizontalGridProps<Row extends Record<string, any>, Ctx> {
   ctx: Ctx;
 
   handleOnAdd?: () => void;
-  onAdd?: () => void;
+  onAdd?: UseFieldArrayAppend<FieldValues, string>;
 
   handleOnRemove?: (index: number) => void;
   onRemove?: (index: number) => void;
+
+  defaultRow: Row;
 }
 export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
   arrayName,
   items,
   columns,
   ctx,
+
+  onAdd,
+  onRemove,
+
+  defaultRow,
 }: buildHorizontalGridProps<Row, Ctx>): {
   gridRows: GridRow<Row>[];
   gridCols: GridColumn<Row, Ctx>[];
@@ -48,7 +56,7 @@ export function buildHorizontalGrid<Row extends Record<string, any>, Ctx>({
     },
     align: col.align,
 
-    renderCell: ({ row, rowIndex, ctx, actions: { onAdd, onRemove } }) => {
+    renderCell: ({ row, rowIndex, ctx }) => {
       const rawRow = row.raw;
 
       const value =

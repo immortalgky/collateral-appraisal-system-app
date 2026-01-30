@@ -33,7 +33,7 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
   }
 
   if (inputType === 'select') {
-    return <Dropdown {...field} options={options} error={error?.message} />; // TODO error message on validation
+    return <Dropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
   }
 
   // text default

@@ -14,7 +14,6 @@ import type {
   RHFHorizontalColumn,
   RHFVerticalRowDef,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/spec.ts';
-import { verticalBuilder } from './verticalBuilder';
 
 export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
   name,
@@ -55,6 +54,9 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
       items: fields.map((f, i) => ({ value: watched?.[i] ?? {}, id: f.id })),
       columns,
       ctx,
+      onAdd: append,
+      defaultRow,
+      onRemove: remove,
     });
   }, [columns, name, ctx, fields, watched]);
 
@@ -68,8 +70,6 @@ export const RHFHorizontalArrayTable = <Row extends Record<string, any>, Ctx>({
         hasHeader={hasHeader}
         hasBody={hasBody}
         hasFooter={hasFooter}
-        onAdd={append}
-        onRemove={remove}
       />
 
       {/* optional add button */}

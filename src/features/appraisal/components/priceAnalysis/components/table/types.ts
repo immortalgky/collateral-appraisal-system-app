@@ -1,18 +1,15 @@
 export type Align = 'left' | 'center' | 'right';
 
-export type GridRow<Raw = any> = {
+export type GridRow<Row extends Record<string, any>, Value = any> = {
   id: string; // stable key
-  raw: Raw; // original row object
+  value: Value; // original row object
+  rowDef?: Row; // row definition
 };
 
 export type GridCellCtx<RawRow, Ctx> = {
   row: GridRow<RawRow>;
   rowIndex: number;
   ctx: Ctx;
-  actions: {
-    onAdd: any; // TODO
-    onRemove: any; // TODO
-  };
 };
 
 export type GridColumn<RawRow, Ctx> = {

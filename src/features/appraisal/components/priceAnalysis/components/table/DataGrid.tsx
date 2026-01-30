@@ -9,9 +9,6 @@ export function DataGrid<Row, Ctx>({
   hasHeader = true,
   hasFooter = false,
   hasBody = true,
-
-  onRemove,
-  onAdd,
 }: {
   rows: GridRow<Row>[];
   columns: GridColumn<Row, Ctx>[];
@@ -20,9 +17,6 @@ export function DataGrid<Row, Ctx>({
   hasHeader?: boolean;
   hasFooter?: boolean;
   hasBody?: boolean;
-
-  onRemove?: any;
-  onAdd?: any;
 }) {
   const isEmpty = rows.length === 0;
 
@@ -113,7 +107,7 @@ export function DataGrid<Row, Ctx>({
             <tbody className="divide-y divide-gray-100">
               {!isEmpty ? (
                 rows.map((row, rowIndex) => (
-                  <tr key={(row as any).__id ?? rowIndex} className="border-b border-gray-300">
+                  <tr key={(row as any).__id ?? row.id} className="border-b border-gray-300">
                     {columns.map(col => (
                       <td
                         key={col.id}
@@ -126,7 +120,6 @@ export function DataGrid<Row, Ctx>({
                           row,
                           rowIndex,
                           ctx,
-                          actions: { onAdd, onRemove },
                         })}
                       </td>
                     ))}

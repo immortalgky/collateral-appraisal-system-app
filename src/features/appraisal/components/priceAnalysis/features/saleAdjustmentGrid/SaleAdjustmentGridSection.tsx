@@ -186,7 +186,11 @@ export const SaleAdjustmentGridSection = ({
             </div>
             {!onLoading && (
               <div className="flex flex-col gap-4">
-                <SaleAdjustmentGridCalculationSection property={property} surveys={surveys} />
+                <SaleAdjustmentGridCalculationSection
+                  property={property}
+                  surveys={surveys}
+                  template={template}
+                />
               </div>
             )}
           </div>
