@@ -17,7 +17,7 @@ const SaleAdjustmentGridQualitativeSurvey = z
 
 const SaleAdjustmentGridQualitative = z.object({
   factorCode: z.string(),
-  surveys: z.array(SaleAdjustmentGridQualitativeSurvey),
+  qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey),
 });
 
 const adjustValue = z.object({

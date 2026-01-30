@@ -19,7 +19,7 @@ export const SaleAdjustmentGridSection = ({
 }: SaleAdjustmentGridSectionProps) => {
   const [allFactors, setAllFactors] =
     useState<{ value: string; description: string }[]>(ALL_FACTORS);
-  const [templates, setTemplates] = useState<WQSTemplate[]>(SALE_GRID_TEMPLATES);
+  const [templates, setTemplates] = useState<SaleAdjustmentGridTemplate[]>(SALE_GRID_TEMPLATES);
   const [collateralTypes, setCollateralTypes] =
     useState<{ value: string; label: string }[]>(COLLATERAL_TYPE);
 
@@ -46,7 +46,7 @@ export const SaleAdjustmentGridSection = ({
   const [onLoading, setOnLoading] = useState<boolean>(true);
   const [comparativeSurveys, setComparativeSurveys] = useState<any>([...surveys]); // market survey will be initial when user choose market survey data in application
 
-  console.log('Sale adjustment grid form errors: ', errors);
+  // console.log('Sale adjustment grid form errors: ', errors);
 
   const handleOnGenerate = () => {
     // if (!pricingTemplateCode) return;
@@ -59,24 +59,24 @@ export const SaleAdjustmentGridSection = ({
     if (onLoading) return;
 
     if (!template) {
-      setTimeout(() => {
-        setOnLoading(true);
-        reset({
-          methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
-          collateralType: collateralTypeId,
-          pricingTemplateCode: '',
-          comparativeSurveys: [],
-          comparativeFactors: [],
-          saleAdjustmentGridCalculations: [],
-          saleAdjustmentGridAdjustmentFactors: [],
-          saleAdjustmentGridFinalValue: {
-            finalValue: 0,
-            finalValueRounded: 0,
-          },
-        });
-        setOnLoading(false);
-      }, 1000);
-      return;
+      // setTimeout(() => {
+      //   setOnLoading(true);
+      //   reset({
+      //     methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+      //     collateralType: collateralTypeId,
+      //     pricingTemplateCode: '',
+      //     comparativeSurveys: [],
+      //     comparativeFactors: [],
+      //     saleAdjustmentGridCalculations: [],
+      //     saleAdjustmentGridAdjustmentFactors: [],
+      //     saleAdjustmentGridFinalValue: {
+      //       finalValue: 0,
+      //       finalValueRounded: 0,
+      //     },
+      //   });
+      //   setOnLoading(false);
+      // }, 1000);
+      // return;
     }
 
     // initial data
@@ -86,14 +86,16 @@ export const SaleAdjustmentGridSection = ({
         methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
         collateralType: collateralTypeId,
         pricingTemplateCode: pricingTemplateCode,
-        comparativeSurveys: [],
+        comparativeSurveys: [...surveys],
         comparativeFactors: template.comparativeFactors.map(compFact => ({
           factorCode: compFact.factorId,
         })),
+
         saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
           factorCode: q.factorId,
-          qualitativeLevel: [],
+          qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: '' })),
         })),
+
         saleAdjustmentGridCalculations: [
           ...comparativeSurveys.map(survey => {
             const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
@@ -119,7 +121,15 @@ export const SaleAdjustmentGridSection = ({
       });
       setOnLoading(false);
     }, 1000);
-  }, [collateralTypeId, comparativeSurveys, onLoading, pricingTemplateCode, reset, template]);
+  }, [
+    collateralTypeId,
+    comparativeSurveys,
+    onLoading,
+    pricingTemplateCode,
+    reset,
+    surveys,
+    template,
+  ]);
 
   const handleOnSave = data => {
     console.log(data);
@@ -186,11 +196,7 @@ export const SaleAdjustmentGridSection = ({
             </div>
             {!onLoading && (
               <div className="flex flex-col gap-4">
-                <SaleAdjustmentGridCalculationSection
-                  property={property}
-                  surveys={surveys}
-                  template={template}
-                />
+                <SaleAdjustmentGridCalculationSection property={property} template={template} />
               </div>
             )}
           </div>

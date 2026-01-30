@@ -116,11 +116,13 @@ export function builder<ColumnItem extends Record<string, any>, Ctx>({
       align: col.align,
 
       renderCell: ({ row, rowIndex, ctx }) => {
-        const rawRow = row.value; // form'object under this table (useWatch)
+        const rawRow = row.value ?? null; // form'object under this table (useWatch)
 
-        const value =
-          col.accessor?.({ row: rawRow, rowIndex, ctx }) ??
-          (col.field ? rawRow[col.field as any] : rawRow[col.id as any]);
+        // const value =
+        //   col.accessor?.({ row: rawRow, rowIndex, ctx }) ??
+        //   (col.field ? rawRow[col.field as any] ?? rawRow[col.id as any]);
+
+        const value = null;
 
         const field = col.field ?? row.rowDef?.field ?? col.id ?? row.id;
         const fieldPath = buildFieldPath(arrayName, colIndex, field) ?? '';
@@ -143,15 +145,15 @@ export function builder<ColumnItem extends Record<string, any>, Ctx>({
         }
 
         // built-in component
-        if (col.rhf && col.field) {
-          return (
-            <RHFInputCell
-              fieldName={fieldPath}
-              inputType={col.rhf.inputType}
-              options={col.rhf.options}
-            />
-          );
-        }
+        // if (col.rhf && col.field) {
+        //   return (
+        //     <RHFInputCell
+        //       fieldName={fieldPath}
+        //       inputType={col.rhf.inputType}
+        //       options={col.rhf.options}
+        //     />
+        //   );
+        // }
 
         return <span>{value ?? ''}</span>;
       },
@@ -164,9 +166,9 @@ export function builder<ColumnItem extends Record<string, any>, Ctx>({
 
   // construct column definition by passing data under table, and passing row definition here
   const gridRows: GridRow<RHFRowDef<ColumnItem, Ctx>>[] =
-    rowDefs?.map(def => ({
-      id: def.id,
-      value: items,
+    rowDefs?.map((def, i) => ({
+      id: items[i]?.id ?? def.id,
+      value: items[i]?.value,
       rowDef: def,
     })) ?? items.map(item => ({ id: item.id, value: item }));
 

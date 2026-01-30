@@ -107,7 +107,7 @@ export function DataGrid<Row, Ctx>({
             <tbody className="divide-y divide-gray-100">
               {!isEmpty ? (
                 rows.map((row, rowIndex) => (
-                  <tr key={(row as any).__id ?? row.id} className="border-b border-gray-300">
+                  <tr key={row.id} className="border-b border-gray-300">
                     {columns.map(col => (
                       <td
                         key={col.id}

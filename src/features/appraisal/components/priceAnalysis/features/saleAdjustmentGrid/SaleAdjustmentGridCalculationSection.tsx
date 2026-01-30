@@ -1,23 +1,27 @@
-import { useWatch } from 'react-hook-form';
+import { useForm, useFormContext, useWatch } from 'react-hook-form';
 import { RHFTable } from '../../adapters/rhf-table/RHFTable';
 import { useGetSaleAdjustmentGridCalculationConfig } from './useGetSaleAdjustmentGridCalculationConfig';
 import type { SaleAdjustmentGridTemplate } from '../../data/data';
-import { useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import { RHFInputCell } from '../../components/table/RHFInputCell';
+import { Icon } from '@/shared/components';
+import { getFactorDesciption } from '../../domain/getFactorDescription';
+import { getDesciptions } from '../wqs/WQSSection';
+import { QualitativeTable } from '../../components/QualitativeTable';
 
 interface SaleAdjustmentGridCalculationSectionProps {
   property: Record<string, any>;
-  surveys: Record<string, any>[];
   template: SaleAdjustmentGridTemplate;
 }
 
 export const SaleAdjustmentGridCalculationSection = ({
   property,
-  surveys,
   template,
 }: SaleAdjustmentGridCalculationSectionProps) => {
+  const { getValues } = useFormContext();
   const saleAdjustmentGridQualitatives = useWatch({ name: 'saleAdjustmentGridQualitatives' });
   const comparativeFactors = useWatch({ name: 'comparativeFactors' });
+  const comparativeSurveys = useWatch({ name: 'comparativeSurveys' });
 
   useEffect(() => {
     console.log('qualitatives snapshot', structuredClone(saleAdjustmentGridQualitatives ?? []));
@@ -28,7 +32,7 @@ export const SaleAdjustmentGridCalculationSection = ({
     saleAdjustmentGridQualitativeRowConfig,
     saleAdjustmentGridQualitativeColumnGroupConfig,
   } = useGetSaleAdjustmentGridCalculationConfig({
-    surveys,
+    comparativeSurveys,
     saleAdjustmentGridQualitatives,
     template,
     comparativeFactors,
@@ -56,11 +60,18 @@ export const SaleAdjustmentGridCalculationSection = ({
           template: template,
           comparativeFactors: comparativeFactors,
           qualitatives: saleAdjustmentGridQualitatives,
+          property: property,
         }}
         columnDefs={saleAdjustmentGridQualitativeColumnConfig}
         columnGroups={saleAdjustmentGridQualitativeColumnGroupConfig}
         defaultColumn={null}
       />
+      {/* <QualitativeTable
+        comparativeSurveys={comparativeSurveys}
+        qualitativeFactors={saleAdjustmentGridQualitatives}
+        comparativeFactors={comparativeFactors}
+        isLoading={false}
+      /> */}
     </div>
   );
 };

@@ -188,7 +188,7 @@ export type SaleAdjustmentGridTemplate = {
   templateName: string;
   collateralTypeId: string;
   comparativeFactors: { factorId: string }[];
-  qualitativeFactors: { factorId: string; qualitativeLevel: string }[];
+  qualitativeFactors: { factorId: string }[];
 };
 export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
   {
@@ -207,12 +207,12 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '21' },
     ],
     qualitativeFactors: [
-      { factorId: '01', qualitativeLevel: 'E' },
-      { factorId: '02', qualitativeLevel: 'E' },
-      { factorId: '03', qualitativeLevel: 'E' },
-      { factorId: '04', qualitativeLevel: 'E' },
-      { factorId: '05', qualitativeLevel: 'E' },
-      { factorId: '06', qualitativeLevel: 'E' },
+      { factorId: '01' },
+      { factorId: '02' },
+      { factorId: '03' },
+      { factorId: '04' },
+      { factorId: '05' },
+      { factorId: '06' },
     ],
   },
   {
@@ -230,12 +230,12 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '13' },
     ],
     qualitativeFactors: [
-      { factorId: '02', qualitativeLevel: 'E' },
-      { factorId: '05', qualitativeLevel: 'E' },
-      { factorId: '08', qualitativeLevel: 'E' },
-      { factorId: '09', qualitativeLevel: 'E' },
-      { factorId: '10', qualitativeLevel: 'E' },
-      { factorId: '11', qualitativeLevel: 'E' },
+      { factorId: '02' },
+      { factorId: '05' },
+      { factorId: '08' },
+      { factorId: '09' },
+      { factorId: '10' },
+      { factorId: '11' },
     ],
   },
   {
@@ -251,12 +251,12 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '11' },
     ],
     qualitativeFactors: [
-      { factorId: '15', qualitativeLevel: 'E' },
-      { factorId: '10', qualitativeLevel: 'E' },
-      { factorId: '03', qualitativeLevel: 'E' },
-      { factorId: '14', qualitativeLevel: 'E' },
-      { factorId: '10', qualitativeLevel: 'E' },
-      { factorId: '11', qualitativeLevel: 'E' },
+      { factorId: '15' },
+      { factorId: '10' },
+      { factorId: '03' },
+      { factorId: '14' },
+      { factorId: '10' },
+      { factorId: '11' },
     ],
   },
 ];
