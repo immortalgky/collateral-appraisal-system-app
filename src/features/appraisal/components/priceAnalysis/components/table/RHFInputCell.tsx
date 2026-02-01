@@ -11,8 +11,9 @@ interface RHFInputCellProps {
   fieldName: string;
   inputType?: 'number' | 'select' | 'text' | 'display';
   options?: ListBoxItem[];
+  compute?: (value: number) => number;
 }
-export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProps) => {
+export const RHFInputCell = ({ fieldName, inputType, options, compute }: RHFInputCellProps) => {
   const { control, getValues } = useFormContext();
   const {
     field,
@@ -24,7 +25,10 @@ export const RHFInputCell = ({ fieldName, inputType, options }: RHFInputCellProp
       <NumberInput
         {...field}
         value={field.value ?? ''}
-        onChange={e => field.onChange(toNumber(e.target.value))}
+        onChange={e => {
+          const value = compute ? compute(toNumber(e.target.value)) : toNumber(e.target.value);
+          field.onChange(value);
+        }}
         error={error?.message}
         inputMode="numeric"
         className="w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth"

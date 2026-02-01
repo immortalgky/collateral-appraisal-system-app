@@ -5,6 +5,10 @@ import { RHFInputCell } from './table/RHFInputCell';
 import { useEffect, useMemo } from 'react';
 import { Icon } from '@/shared/components';
 import { useDerivedFieldArray, type DerivedRule } from '../../BuildingTable/useDerivedFieldArray';
+import {
+  type DerivedFieldRule,
+  useDerivedFields,
+} from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
@@ -19,42 +23,58 @@ export const QualitativeTable = ({
   isLoading = true,
 }: QualitativeTableProps) => {
   const { control, getValues } = useFormContext();
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: qualitativeFactors,
+    append: appendQualitativeFactor,
+    remove: removeQualitativeFactor,
+  } = useFieldArray({
     control,
     name: 'saleAdjustmentGridQualitatives',
   });
-  useEffect(() => {
-    console.log(getValues('saleAdjustmentGridQualitatives'));
-  }, [fields, getValues]);
+
+  const { fields: adjustmentFactors } = useFieldArray({
+    control,
+    name: 'saleAdjustmentGridAdjustmentFactors',
+  });
 
   const qualitatives = useMemo(() => {
-    return structuredClone(fields);
-  }, [fields.length]);
+    return structuredClone(qualitativeFactors);
+  }, [qualitativeFactors.length]);
 
-  const derivedRules: DerivedRule[] = qualitatives
-    .map((f, rowIndex) => {
-      return comparativeSurveys.map((s, columnIndex) => {
-        return {
-          targetKey: `adjustValues.${columnIndex}.factorDiffPct`,
-          compute: ctx => {
-            const qualitativeLevel =
-              ctx.getValues(
-                `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
-              ) ?? '';
-            console.log(qualitativeLevel);
-            if (qualitativeLevel === 'E') return 0;
-            if (qualitativeLevel === 'I') return 5;
-            if (qualitativeLevel === 'b') return -5;
-            return null;
+  const derivedRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return qualitatives
+      .map((f, rowIndex) => {
+        return [
+          {
+            targetPath: `saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorCode`,
+            compute: () => f.factorCode ?? '',
           },
-        };
-      });
-    })
-    .flat();
+          ...comparativeSurveys.map((s, columnIndex) => {
+            return {
+              targetPath: `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
+              deps: [
+                `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
+              ],
+              compute: ({ getValues }) => {
+                const qualitativeLevel =
+                  getValues(
+                    `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
+                  ) ?? '';
+                console.log(qualitativeLevel);
+                if (qualitativeLevel === 'E') return 0;
+                if (qualitativeLevel === 'I') return 5;
+                if (qualitativeLevel === 'B') return -5;
+                return 0;
+              },
+            };
+          }),
+        ];
+      })
+      .flat();
+  }, [qualitativeFactors.length]);
 
-  useDerivedFieldArray({ arrayName: 'saleAdjustmentGridCalculations', rules: derivedRules });
+  useDerivedFields({ rules: derivedRules });
 
-  console.log(derivedRules);
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
@@ -98,21 +118,24 @@ export const QualitativeTable = ({
                 const fieldName = `saleAdjustmentGridQualitatives.${rowIndex}.factorCode`;
                 return (
                   <tr key={f.id}>
-                    <td className={'font-medium text-gray-600 px-3 py-2.5'}>
+                    <td
+                      className={'font-medium text-gray-600 px-3 py-2.5 border-b border-gray-300'}
+                    >
                       <RHFInputCell
                         fieldName={fieldName}
                         inputType="select"
                         options={qualitativeFactors}
                       />
                     </td>
-                    {/* <td>{getFactorDesciption(f.factorCode)}</td> */}
 
                     {comparativeSurveys.map((col, columnIndex) => {
-                      // console.log(
-                      //   `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
-                      // );
                       return (
-                        <td key={columnIndex} className={'font-medium text-gray-600 px-3 py-2.5'}>
+                        <td
+                          key={columnIndex}
+                          className={
+                            'font-medium text-gray-600 px-3 py-2.5 border-b border-gray-300'
+                          }
+                        >
                           <RHFInputCell
                             fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`}
                             inputType="select"
@@ -126,15 +149,15 @@ export const QualitativeTable = ({
                       );
                     })}
 
-                    <td>Collateral</td>
-                    <td>
+                    <td className="border-b border-gray-300">Collateral</td>
+                    <td className="border-b border-gray-300">
                       <button
                         type="button"
                         onClick={() => {
-                          remove(rowIndex);
+                          removeQualitativeFactor(rowIndex);
                           console.log(getValues('saleAdjustmentGridQualitatives'));
                         }}
-                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
                         title="Delete"
                       >
                         <Icon style="solid" name="trash" className="size-3.5" />
@@ -148,9 +171,8 @@ export const QualitativeTable = ({
               <td>
                 <button
                   type="button"
-                  // onClick={() => onAppend({ factorCode: '', surveys: [] })}
                   onClick={() =>
-                    append({
+                    appendQualitativeFactor({
                       factorCode: '',
                       qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: '' })),
                     })
@@ -161,17 +183,120 @@ export const QualitativeTable = ({
                 </button>
               </td>
             </tr>
-            <tr></tr>
+            <tr>
+              <td></td>
+            </tr>
+
+            <tr>
+              <td className={'border-b border-gray-300'}>
+                <span>Offering Price</span>
+              </td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                const offeringPrice = s.factors.find(f => f.id === '17')?.value ?? '';
+                return <td className={'border-b border-gray-300'}>{offeringPrice}</td>;
+              })}
+              <td className={'border-b border-gray-300'}></td>
+              <td className={'border-b border-gray-300'}></td>
+            </tr>
+            <tr>
+              <td className={'border-b border-gray-300'}>
+                <span>Adjusted Offering Price</span>
+                <span>(%)</span>
+              </td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                const offeringPrice = s.factors.find(f => f.id === '17')?.value ?? '';
+                if (!offeringPrice) return <td className={'border-b border-gray-300'}></td>;
+                return (
+                  <td className={'border-b border-gray-300'}>
+                    <RHFInputCell
+                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentPct`}
+                      inputType="number"
+                    />
+                  </td>
+                );
+              })}
+              <td className={'border-b border-gray-300'}></td>
+              <td className={'border-b border-gray-300'}></td>
+            </tr>
+            <tr>
+              <td className={'border-b border-gray-300'}>
+                <span>Adjusted Offering Price</span>
+                <span>(Amount)</span>
+              </td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                const offeringPrice = s.factors.find(f => f.id === '17')?.value ?? '';
+                if (!offeringPrice) return <td className={'border-b border-gray-300'}></td>;
+                return (
+                  <td className={'border-b border-gray-300'}>
+                    <RHFInputCell
+                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`}
+                      inputType="number"
+                    />
+                  </td>
+                );
+              })}
+              <td className={'border-b border-gray-300'}></td>
+              <td className={'border-b border-gray-300'}></td>
+            </tr>
+            <tr>
+              <td className={'border-b border-gray-300'}>
+                <span>Selling Price</span>
+              </td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                const sellingPrice = s.factors.find(f => f.id === '21')?.value ?? '';
+                if (!sellingPrice) return <td className={'border-b border-gray-300'}></td>;
+                return <td className={'border-b border-gray-300'}>{sellingPrice}</td>;
+              })}
+              <td className={'border-b border-gray-300'}></td>
+              <td className={'border-b border-gray-300'}></td>
+            </tr>
+            <tr>
+              <td className={'border-b border-gray-300'}>Number of Years</td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                return <td className={'border-b border-gray-300'}></td>;
+              })}
+              <td className={'border-b border-gray-300'}></td>
+              <td className={'border-b border-gray-300'}></td>
+            </tr>
+            <tr>
+              <td className={'border-b border-gray-300'}>Adjusted Selling Price</td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                const sellingPrice = s.factors.find(f => f.id === '21')?.value ?? '';
+                if (!sellingPrice) return <td className={'border-b border-gray-300'}></td>;
+                return (
+                  <td className={'border-b border-gray-300'}>
+                    <RHFInputCell
+                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`}
+                      inputType="number"
+                    />
+                  </td>
+                );
+              })}
+              <td className={'border-b border-gray-300'}></td>
+              <td className={'border-b border-gray-300'}></td>
+            </tr>
+
+            {/* adjust factors */}
             {qualitatives.map((f, rowIndex) => {
               return (
                 <tr key={f.id}>
+                  <td className={'font-medium text-gray-600 px-3 py-2.5 border-b border-gray-300'}>
+                    {getFactorDesciption(
+                      getValues(`saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorCode`) ?? '',
+                    )}
+                  </td>
                   {comparativeSurveys.map((col, columnIndex) => {
                     return (
-                      <td>
-                        <RHFInputCell fieldName="" inputType="number" />
+                      <td className={'border-b border-gray-300'}>
+                        <RHFInputCell
+                          fieldName={`saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`}
+                          inputType="number"
+                        />
                       </td>
                     );
                   })}
+                  <td className={`border-b border-gray-300`}></td>
+                  <td className={`border-b border-gray-300`}></td>
                 </tr>
               );
             })}

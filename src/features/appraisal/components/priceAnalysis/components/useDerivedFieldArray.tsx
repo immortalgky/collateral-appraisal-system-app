@@ -18,7 +18,7 @@ export function useDerivedFields<Ctx = Record<string, any>>({
   ctx,
 }: {
   rules: DerivedFieldRule<Ctx>[];
-  ctx: Ctx;
+  ctx?: Ctx;
 }) {
   const { control, register, setValue, getValues } = useFormContext();
 
@@ -27,8 +27,11 @@ export function useDerivedFields<Ctx = Record<string, any>>({
     return Array.from(new Set(all));
   }, [rules]);
 
-  // trigger recompute when deps change
-  useWatch({ control, name: depNames as any, defaultValue: [] });
+  // Watch deps; this value changes whenever any dep changes.
+  const depValues = useWatch({
+    control,
+    name: depNames.length ? (depNames as any) : undefined,
+  });
 
   // register target paths once
   useEffect(() => {
@@ -52,5 +55,5 @@ export function useDerivedFields<Ctx = Record<string, any>>({
         });
       }
     }
-  }, [rules, ctx, getValues, setValue]);
+  }, [rules, ctx, getValues, setValue, depValues]);
 }

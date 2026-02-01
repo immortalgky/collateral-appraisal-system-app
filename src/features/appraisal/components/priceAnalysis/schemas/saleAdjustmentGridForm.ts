@@ -30,11 +30,11 @@ const SaleAdjustmentGridCalculation = z
   .object({
     marketId: z.string(),
     offeringPrice: z.number().nullable(),
-    offeringPriceMeasurementUnit: z.string().nullable(),
+    // offeringPriceMeasurementUnit: z.string().nullable(),
     offeringPriceAdjustmentPct: z.number().nullable(),
     offeringPriceAdjustmentAmt: z.number().nullable(),
     sellingPrice: z.number().nullable(),
-    sellingPriceMeasurementUnit: z.string().nullable(),
+    // sellingPriceMeasurementUnit: z.string().nullable(),
     // sellingDate: z.date(), TODO
     sellingPriceAdjustmentYear: z.number().nullable(),
     numberOfYears: z.number().nullable(),
@@ -51,9 +51,6 @@ const SaleAdjustmentGridCalculation = z
     usableAreaPriceMeasureUnit: z.number().nullable(),
     buildingValueIncreaserDecrease: z.number().nullable(),
     totalSecondRevision: z.number().nullable(),
-
-    // adjust value
-    adjustValues: z.array(adjustValue),
 
     // adjust weight
     weight: z.number(),
