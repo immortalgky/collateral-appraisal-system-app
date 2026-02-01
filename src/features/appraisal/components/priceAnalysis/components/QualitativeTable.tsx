@@ -3,6 +3,8 @@ import { getFactorDesciption } from '../domain/getFactorDescription';
 import { getDesciptions } from '../features/wqs/WQSSection';
 import { RHFInputCell } from './table/RHFInputCell';
 import { useEffect, useMemo } from 'react';
+import { Icon } from '@/shared/components';
+import { useDerivedFieldArray, type DerivedRule } from '../../BuildingTable/useDerivedFieldArray';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
@@ -29,6 +31,30 @@ export const QualitativeTable = ({
     return structuredClone(fields);
   }, [fields.length]);
 
+  const derivedRules: DerivedRule[] = qualitatives
+    .map((f, rowIndex) => {
+      return comparativeSurveys.map((s, columnIndex) => {
+        return {
+          targetKey: `adjustValues.${columnIndex}.factorDiffPct`,
+          compute: ctx => {
+            const qualitativeLevel =
+              ctx.getValues(
+                `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
+              ) ?? '';
+            console.log(qualitativeLevel);
+            if (qualitativeLevel === 'E') return 0;
+            if (qualitativeLevel === 'I') return 5;
+            if (qualitativeLevel === 'b') return -5;
+            return null;
+          },
+        };
+      });
+    })
+    .flat();
+
+  useDerivedFieldArray({ arrayName: 'saleAdjustmentGridCalculations', rules: derivedRules });
+
+  console.log(derivedRules);
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
@@ -71,7 +97,7 @@ export const QualitativeTable = ({
                   }));
                 const fieldName = `saleAdjustmentGridQualitatives.${rowIndex}.factorCode`;
                 return (
-                  <tr key={rowIndex}>
+                  <tr key={f.id}>
                     <td className={'font-medium text-gray-600 px-3 py-2.5'}>
                       <RHFInputCell
                         fieldName={fieldName}
@@ -101,34 +127,54 @@ export const QualitativeTable = ({
                     })}
 
                     <td>Collateral</td>
-                    <td></td>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          remove(rowIndex);
+                          console.log(getValues('saleAdjustmentGridQualitatives'));
+                        }}
+                        className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                        title="Delete"
+                      >
+                        <Icon style="solid" name="trash" className="size-3.5" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })
             )}
-            {/* {!isEmpty ? (
-              rows.map((row, rowIndex) => (
-                <tr key={row.id} className="border-b border-gray-300">
-                  {columns.map(col => (
-                    <td
-                      key={col.id}
-                      className={clsx(
-                        ' whitespace-nowrap truncate text-sm border-b border-gray-300',
-                        col.style?.bodyClassName ?? '',
-                      )}
-                    >
-                      {col.renderCell({
-                        row,
-                        rowIndex,
-                        ctx,
-                      })}
-                    </td>
-                  ))}
+            <tr>
+              <td>
+                <button
+                  type="button"
+                  // onClick={() => onAppend({ factorCode: '', surveys: [] })}
+                  onClick={() =>
+                    append({
+                      factorCode: '',
+                      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: '' })),
+                    })
+                  }
+                  className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                >
+                  + Add More Factors
+                </button>
+              </td>
+            </tr>
+            <tr></tr>
+            {qualitatives.map((f, rowIndex) => {
+              return (
+                <tr key={f.id}>
+                  {comparativeSurveys.map((col, columnIndex) => {
+                    return (
+                      <td>
+                        <RHFInputCell fieldName="" inputType="number" />
+                      </td>
+                    );
+                  })}
                 </tr>
-              ))
-            ) : (
-              <tr />
-            )} */}
+              );
+            })}
           </tbody>
         </table>
       </div>

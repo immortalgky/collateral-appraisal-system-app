@@ -53,7 +53,7 @@ export const SaleAdjustmentGridCalculationSection = ({
         ctx={null}
         defaultRow={{}}
       /> */}
-      <RHFTable
+      {/* <RHFTable
         name="saleAdjustmentGridQualitatives"
         rowDefs={saleAdjustmentGridQualitativeRowConfig}
         ctx={{
@@ -65,13 +65,13 @@ export const SaleAdjustmentGridCalculationSection = ({
         columnDefs={saleAdjustmentGridQualitativeColumnConfig}
         columnGroups={saleAdjustmentGridQualitativeColumnGroupConfig}
         defaultColumn={null}
-      />
-      {/* <QualitativeTable
+      /> */}
+      <QualitativeTable
         comparativeSurveys={comparativeSurveys}
         qualitativeFactors={saleAdjustmentGridQualitatives}
         comparativeFactors={comparativeFactors}
         isLoading={false}
-      /> */}
+      />
     </div>
   );
 };
