@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 
 export type DerivedFieldRule<Ctx = Record<string, any>> = {
   targetPath: string;
   deps: string[];
-  compute: (args: { getValues: any; ctx: Ctx }) => any;
 
-  // NEW: if false -> skip setting (don’t overwrite user/manual values)
-  when?: (args: { getValues: any; ctx: Ctx }) => boolean;
+  // compute the next value for targetPath
+  compute: (args: { getValues: any; getFieldState: any; formState: any; ctx: Ctx }) => any;
+
+  // if returns false -> skip setting (don’t overwrite user/manual values)
+  when?: (args: { getValues: any; getFieldState: any; formState: any; ctx: Ctx }) => boolean;
 
   // optional
   normalize?: (v: any) => any;
@@ -28,7 +30,10 @@ export function useDerivedFields<Ctx = Record<string, any>>({
   rules: DerivedFieldRule<Ctx>[];
   ctx?: Ctx;
 }) {
-  const { control, register, setValue, getValues } = useFormContext();
+  const { control, register, setValue, getValues, getFieldState } = useFormContext();
+  const formState = useFormState({ control });
+  // Accessing dirtyFields ensures RHF subscribes to dirtiness updates (required for getFieldState(...).isDirty)
+  void formState.dirtyFields;
 
   const depNames = useMemo(() => {
     const all = rules.flatMap(r => r.deps);
@@ -60,10 +65,12 @@ export function useDerivedFields<Ctx = Record<string, any>>({
       let didAnyUpdate = false;
 
       for (const r of rules) {
-        const shouldRun = r.when ? r.when({ getValues, ctx: ctx as Ctx }) : true;
+        const shouldRun = r.when
+          ? r.when({ getValues, getFieldState, formState, ctx: ctx as Ctx })
+          : true;
         if (!shouldRun) continue;
 
-        let next = r.compute({ getValues, ctx: ctx as Ctx });
+        let next = r.compute({ getValues, getFieldState, formState, ctx: ctx as Ctx });
 
         if (next == null || Number.isNaN(next)) {
           next = r.defaultValue ?? 0;

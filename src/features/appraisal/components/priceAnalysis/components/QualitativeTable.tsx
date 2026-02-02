@@ -10,6 +10,8 @@ import {
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
+import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/domain/shouldAutoDefault.ts';
+import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/domain/qualitativeDefault.ts';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
@@ -55,27 +57,25 @@ export const QualitativeTable = ({
                 targetPath: `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
                 deps: [
                   `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
+                  `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
                 ],
+                when: ({ getValues, getFieldState, formState }) => {
+                  const target = `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`;
+                  const curr = getValues(target);
+                  const { isDirty } = getFieldState(target, formState);
+                  return shouldAutoDefault({ value: curr, isDirty });
+                },
                 compute: ({ getValues }) => {
-                  const curr = getValues(
-                    `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
-                  );
-                  // const qualitativeLevel =
-                  //   getValues(
-                  //     `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
-                  //   ) ?? '';
-                  return curr;
-
-                  // condition
-
-                  const qualitativeLevel =
+                  const level =
                     getValues(
                       `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
                     ) ?? '';
-                  if (qualitativeLevel === 'E') return 0;
-                  if (qualitativeLevel === 'I') return 5;
-                  if (qualitativeLevel === 'B') return -5;
-                  return 0;
+                  return qualitativeDefaultPercent(level);
+                },
+                setValueOptions: {
+                  shouldDirty: false,
+                  shouldTouch: false,
+                  shouldValidate: false,
                 },
               },
               {
@@ -225,7 +225,7 @@ export const QualitativeTable = ({
             },
             {
               targetPath: `saleAdjustmentGridCalculations.${columnIndex}.factorDiffPct`,
-              deps: `saleAdjustmentGridAdjustmentFactors`,
+              deps: ['saleAdjustmentGridAdjustmentFactors'],
               compute: ({ getValues }) => {
                 const saleAdjustmentGridAdjustmentFactors =
                   getValues('saleAdjustmentGridAdjustmentFactors') ?? [];
@@ -238,7 +238,7 @@ export const QualitativeTable = ({
             },
             {
               targetPath: `saleAdjustmentGridCalculations.${columnIndex}.factorDiffAmt`,
-              deps: `saleAdjustmentGridAdjustmentFactors`,
+              deps: ['saleAdjustmentGridAdjustmentFactors'],
               compute: ({ getValues }) => {
                 const saleAdjustmentGridAdjustmentFactors =
                   getValues('saleAdjustmentGridAdjustmentFactors') ?? [];
@@ -251,7 +251,7 @@ export const QualitativeTable = ({
             },
             {
               targetPath: `saleAdjustmentGridCalculations.${columnIndex}.totalAdjustValue`,
-              deps: `saleAdjustmentGridAdjustmentFactors`,
+              deps: ['saleAdjustmentGridAdjustmentFactors'],
               compute: ({ getValues }) => {
                 const totalDiffAmt =
                   getValues(`saleAdjustmentGridCalculations.${columnIndex}.factorDiffAmt`) ?? 0;
@@ -267,6 +267,12 @@ export const QualitativeTable = ({
             },
             {
               targetPath: `saleAdjustmentGridCalculations.${columnIndex}.weight`,
+              when: ({ getValues, getFieldState, formState }) => {
+                const target = `saleAdjustmentGridCalculations.${columnIndex}.weight`;
+                const curr = getValues(target);
+                const { isDirty } = getFieldState(target, formState);
+                return shouldAutoDefault({ value: curr, isDirty });
+              },
               compute: () => {
                 const numberOfSurveys = comparativeSurveys.length ?? 0;
                 return 100 / numberOfSurveys;

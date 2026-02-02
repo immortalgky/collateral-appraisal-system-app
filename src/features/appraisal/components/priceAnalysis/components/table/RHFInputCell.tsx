@@ -11,14 +11,14 @@ interface RHFInputCellProps {
   fieldName: string;
   inputType?: 'number' | 'select' | 'text' | 'display';
   options?: ListBoxItem[];
-  compute?: (value: number) => number;
+  onUserChange?: (value: number) => number;
   accessor?: (value: number | string) => string;
 }
 export const RHFInputCell = ({
   fieldName,
   inputType,
   options,
-  compute,
+  onUserChange,
   accessor,
 }: RHFInputCellProps) => {
   const { control, getValues } = useFormContext();
@@ -33,7 +33,9 @@ export const RHFInputCell = ({
         {...field}
         value={field.value ?? ''}
         onChange={e => {
-          const value = compute ? compute(toNumber(e.target.value)) : toNumber(e.target.value);
+          const value = onUserChange
+            ? onUserChange(toNumber(e.target.value))
+            : toNumber(e.target.value);
           field.onChange(value);
         }}
         allowNegative={true}
