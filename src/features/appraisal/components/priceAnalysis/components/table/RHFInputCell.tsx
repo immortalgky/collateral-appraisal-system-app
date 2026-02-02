@@ -12,8 +12,15 @@ interface RHFInputCellProps {
   inputType?: 'number' | 'select' | 'text' | 'display';
   options?: ListBoxItem[];
   compute?: (value: number) => number;
+  accessor?: (value: number | string) => string;
 }
-export const RHFInputCell = ({ fieldName, inputType, options, compute }: RHFInputCellProps) => {
+export const RHFInputCell = ({
+  fieldName,
+  inputType,
+  options,
+  compute,
+  accessor,
+}: RHFInputCellProps) => {
   const { control, getValues } = useFormContext();
   const {
     field,
@@ -29,6 +36,7 @@ export const RHFInputCell = ({ fieldName, inputType, options, compute }: RHFInpu
           const value = compute ? compute(toNumber(e.target.value)) : toNumber(e.target.value);
           field.onChange(value);
         }}
+        allowNegative={true}
         error={error?.message}
         inputMode="numeric"
         className="w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth"
@@ -46,9 +54,11 @@ export const RHFInputCell = ({ fieldName, inputType, options, compute }: RHFInpu
   }
 
   if (inputType === 'display') {
+    const value = getValues(fieldName) ?? '';
+    console.log(value);
     return (
       <div className="flex truncate" title={getValues(fieldName)}>
-        {getValues(fieldName) ?? ''}
+        {accessor ? accessor(value) : value}
       </div>
     );
   }

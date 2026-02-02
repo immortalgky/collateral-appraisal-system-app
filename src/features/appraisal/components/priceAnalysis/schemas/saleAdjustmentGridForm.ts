@@ -38,23 +38,29 @@ const SaleAdjustmentGridCalculation = z
     // sellingDate: z.date(), TODO
     sellingPriceAdjustmentYear: z.number().nullable(),
     numberOfYears: z.number().nullable(),
+    adjustedValue: z.number(),
 
     // 2nd revision
     landAreaOfDeficient: z.number().nullable(),
     landAreaOfDeficientMeasureUnit: z.number().nullable(),
     landPrice: z.number().nullable(),
     landPriceMeasureUnit: z.number().nullable(),
-    landValueIncreaserDecrease: z.number().nullable(),
+    landValueIncreaseDecrease: z.number().nullable(),
     usableAreaOfDeficient: z.number().nullable(),
     usableAreaOfDeficientMeasureUnit: z.number().nullable(),
     usableAreaPrice: z.number().nullable(),
     usableAreaPriceMeasureUnit: z.number().nullable(),
-    buildingValueIncreaserDecrease: z.number().nullable(),
+    buildingValueIncreaseDecrease: z.number().nullable(),
     totalSecondRevision: z.number().nullable(),
+
+    // adjusted value
+    factorDiffPct: z.number(),
+    factorDiffAmt: z.number(),
+    totalAdjustValue: z.number(),
 
     // adjust weight
     weight: z.number(),
-    weightedAdjValue: z.number(),
+    weightedAdjustValue: z.number(),
   })
   .passthrough();
 
@@ -69,6 +75,7 @@ const SaleAdjustmentGridAdjustmentPct = z
   .object({
     marketId: z.string(),
     adjustPercent: z.number(),
+    adjustAmount: z.number(),
   })
   .passthrough();
 

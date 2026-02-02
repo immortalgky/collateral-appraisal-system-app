@@ -1,10 +1,15 @@
+import { MAPPING_FACTORS_PROPERTIES_FIELDS } from '../data/data';
+
 export const getPropertyValueByFactorCode = (id: string, property: Record<string, any>) => {
-  const mapping = new Map(property.map(factor => [factor.id, factor.value]));
+  if (!property) return '';
 
-  const field = mapping.get(id);
+  const mapping = MAPPING_FACTORS_PROPERTIES_FIELDS.find(f => f.id === id)?.value ?? null;
 
-  if (!field) return '';
+  if (!mapping) return '';
 
-  const value = property;
-  return value[field] ?? '';
+  const propertyValue = property[mapping] ?? null;
+
+  if (!propertyValue) return '';
+
+  return propertyValue;
 };

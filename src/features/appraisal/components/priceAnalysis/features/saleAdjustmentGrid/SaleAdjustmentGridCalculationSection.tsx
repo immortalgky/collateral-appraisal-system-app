@@ -70,6 +70,7 @@ export const SaleAdjustmentGridCalculationSection = ({
         comparativeSurveys={comparativeSurveys}
         qualitativeFactors={saleAdjustmentGridQualitatives}
         comparativeFactors={comparativeFactors}
+        property={property}
         isLoading={false}
       />
     </div>
