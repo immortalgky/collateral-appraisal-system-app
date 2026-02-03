@@ -133,17 +133,11 @@ export const SaleAdjustmentGridSection = ({
       });
       setOnLoading(false);
     }, 1000);
-  }, [
-    collateralTypeId,
-    comparativeSurveys,
-    onLoading,
-    pricingTemplateCode,
-    reset,
-    surveys,
-    template,
-  ]);
+  }, [collateralTypeId, onLoading, pricingTemplateCode, reset, surveys, template]);
 
   useEffect(() => {
+    const qualitativeFactors = getValues('saleAdjustmentGridQualitatives') ?? [];
+
     setValue(
       'comparativeSurveys',
       comparativeSurveys.map((survey, index) => ({
@@ -151,13 +145,17 @@ export const SaleAdjustmentGridSection = ({
         displaySeq: index + 1,
       })),
     );
-    // setValue(
-    //   'WQSScores',
-    //   getValues('WQSScores')?.map(score => ({
-    //     ...score,
-    //     surveys: comparativeSurveys.map(survey => ({ marketId: survey.id, surveyScore: 0 })),
-    //   })) ?? [],
-    // );
+
+    setValue('saleAdjustmentGridQualitatives', [
+      ...qualitativeFactors.map(f => ({
+        ...f,
+        qualitatives: comparativeSurveys.map(survey => ({
+          marketId: survey.id,
+          qualitativeLevel: 'E', // TODO: can config
+        })),
+      })),
+    ]);
+
     setValue('saleAdjustmentGridCalculations', [
       ...comparativeSurveys.map(survey => {
         const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
@@ -173,8 +171,20 @@ export const SaleAdjustmentGridSection = ({
           sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
           numberOfYears: 10, // TODO: convert selling date to number of year
           adjustedValue: 0,
+          weight: 0,
         };
       }),
+    ]);
+
+    setValue('saleAdjustmentGridAdjustmentFactors', [
+      ...qualitativeFactors.map(f => ({
+        factorCode: f.factorCode,
+        surveys: comparativeSurveys.map(survey => ({
+          marketId: survey.id,
+          adjustPercent: 0,
+          adjustAmount: 0,
+        })),
+      })),
     ]);
   }, [comparativeSurveys, setValue]);
 

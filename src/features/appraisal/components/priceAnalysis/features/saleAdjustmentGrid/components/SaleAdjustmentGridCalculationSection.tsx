@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { SaleAdjustmentGridTemplate } from '../../../data/data';
 import { useEffect } from 'react';
-import { QualitativeTable } from '../../../components/QualitativeTable';
+import { QualitativeTable } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/QualitativeTable.tsx';
 
 interface SaleAdjustmentGridCalculationSectionProps {
   property: Record<string, any>;

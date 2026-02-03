@@ -1,20 +1,21 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { getFactorDesciption } from '../domain/getFactorDescription';
-import { getDesciptions } from '../features/wqs/WQSSection';
-import { RHFInputCell } from './table/RHFInputCell';
 import { useMemo } from 'react';
 import { Icon } from '@/shared/components';
 import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
+import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
+import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
 import {
   buildSaleGridAdjustmentFactorRules,
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
-} from '../adapters/rhf-table/buildDerivedRules';
+} from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/buildDerivedRules.ts';
+import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
+import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
+import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
@@ -51,10 +52,17 @@ export const QualitativeTable = ({
     name: 'saleAdjustmentGridAdjustmentFactors',
   });
 
+  const {
+    qualitativeLevel: qualitativeLevelPath,
+    adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
+    adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
+    calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+  } = saleGridFieldPath;
+
   const handleAddRow = () => {
     appendQualitativeFactor({
       factorCode: '',
-      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: '' })),
+      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: 'E' })), // TODO: default value
     });
 
     appendAdjustmentFactor({
@@ -71,6 +79,7 @@ export const QualitativeTable = ({
     removeAdjustmentFactor(rowIndex);
   };
 
+  /** TODO: avoid using effects to create “derived state” when possible. re-create as needed */
   const derivedRules: DerivedFieldRule<any>[] = useMemo(() => {
     /** Adjustment factors which initial by Qualitative part */
     let rules = buildSaleGridQualitativeDerivedRules({
@@ -101,7 +110,7 @@ export const QualitativeTable = ({
             <tr className="border-b border-gray-300">
               <th
                 rowSpan={2}
-                className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
+                className="border-r border-b border-gray-300 text-center sticky top-0 left-0 z-30 bg-gray-50"
               >
                 <div>Factors</div>
               </th>
@@ -115,13 +124,13 @@ export const QualitativeTable = ({
               )}
               <th
                 rowSpan={2}
-                className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
+                className="border-b border-r border-gray-300 bg-gray-50 sticky z-30 top-0 right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"
               >
                 <div>Collateral</div>
               </th>
               <th
                 rowSpan={2}
-                className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
+                className="border-r border-b border-gray-300 text-center sticky z-30 top-0 right-0  bg-gray-50 w-[50px] min-w-[70px] max-w-[70px]"
               >
                 <div>Action</div>
               </th>
@@ -165,7 +174,7 @@ export const QualitativeTable = ({
                   <tr key={f.id}>
                     <td
                       className={
-                        'font-medium text-gray-600 px-3 py-2.5 border-b border-r border-gray-300'
+                        'font-medium text-gray-600 px-3 py-2.5 border-b border-r border-gray-300 sticky left-0 z-20 bg-white'
                       }
                     >
                       <div className="truncate">
@@ -217,7 +226,7 @@ export const QualitativeTable = ({
                       );
                     })}
 
-                    <td className="border-b border-r border-gray-300">
+                    <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md">
                       <RHFInputCell
                         fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
                         inputType="display"
@@ -226,10 +235,10 @@ export const QualitativeTable = ({
                         }
                       />
                     </td>
-                    <td className="border-b border-r border-gray-300">
+                    <td className="border-b border-r border-gray-300 sticky right-0 z-40 bg-white w-[50px] min-w-[70px] max-w-[70px]">
                       {/* if rowIndex > template factors length, show delete button */}
                       {!template.qualitativeFactors.find(t => t.factorId === f.factorCode) && (
-                        <div className="flex flex-row justify-center items-center">
+                        <div className="flex flex-row justify-center items-center w-[50px]">
                           <button
                             type="button"
                             onClick={() => {
@@ -260,16 +269,16 @@ export const QualitativeTable = ({
               {comparativeSurveys.map((col, columnIndex) => {
                 return <td key={col.id} className="border-b border-r border-gray-300"></td>;
               })}
-              <td className="border-b border-r border-gray-300"></td>
-              <td className="border-b border-r border-gray-300"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 w-[50px] sticky right-0 bg-white min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="border-b border-gray-300  bg-gray-200 h-[30px]">Initial Price</td>
               {comparativeSurveys.map((col, columnIndex) => {
                 return <td key={col.id} className="border-b border-gray-300 bg-gray-200 "></td>;
               })}
-              <td className="border-b border-gray-300 bg-gray-200 "></td>
-              <td className="border-b border-gray-300 bg-gray-200 "></td>
+              <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-gray-300 bg-gray-200 sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* saleAdjustmentGridFinalValue */}
@@ -285,8 +294,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -306,8 +315,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -327,8 +336,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -344,8 +353,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>Number of Years</td>
@@ -358,8 +367,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -378,8 +387,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -395,18 +404,18 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* 2nd revision */}
             <tr>
-              <td
-                colSpan={comparativeSurveys.length + 3}
-                className=" border-b border-r border-gray-300 bg-gray-200"
-              >
-                2nd Revision
-              </td>
+              <td className=" border-b border-gray-300 bg-gray-200">2nd Revision</td>
+              {comparativeSurveys.map((col, columnIndex) => {
+                return <td key={col.id} className="border-b border-gray-300 bg-gray-200"></td>;
+              })}
+              <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-gray-300 w-[50px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -430,8 +439,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -456,8 +465,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -479,8 +488,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -502,8 +511,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -526,8 +535,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -549,8 +558,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -569,18 +578,18 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={'border-b border-r border-gray-300'}></td>
-              <td className={'border-b border-r border-gray-300'}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* adjust factors */}
             <tr>
-              <td
-                colSpan={(comparativeSurveys.length ?? 0) + 3}
-                className="border-b border-gray-300 bg-gray-200"
-              >
-                Adjusted Value
-              </td>
+              <td className="border-b border-gray-300 bg-gray-200">Adjusted Value</td>
+              {comparativeSurveys.map((col, columnIndex) => {
+                return <td key={col.id} className="border-b border-gray-300 bg-gray-200"></td>;
+              })}
+              <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-gray-300 w-[50px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
             {qualitativeFactors.map((f, rowIndex) => {
               return (
@@ -613,14 +622,17 @@ export const QualitativeTable = ({
                               fieldName={`saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustAmount`}
                               inputType="display"
                               accessor={({ value, formState, getFieldState }) => {
-                                const { isDirty } = getFieldState(
-                                  `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
-                                  formState,
-                                );
-                                return isDirty ? (
-                                  <div className="text-danger">{value}</div>
-                                ) : (
+                                return qualitativeDefault.includes(
+                                  getValues(
+                                    adjustmentFactorAdjustPercentPath({
+                                      row: rowIndex,
+                                      column: columnIndex,
+                                    }),
+                                  ),
+                                ) ? (
                                   <div>{value}</div>
+                                ) : (
+                                  <div className="text-danger">{value}</div>
                                 );
                               }}
                             />
@@ -629,8 +641,8 @@ export const QualitativeTable = ({
                       </td>
                     );
                   })}
-                  <td className={`border-b border-r border-gray-300`}></td>
-                  <td className={`border-b border-r border-gray-300`}></td>
+                  <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+                  <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
                 </tr>
               );
             })}
@@ -661,8 +673,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={`border-b border-r border-gray-300`}></td>
-              <td className={`border-b border-r border-gray-300`}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="border-b border-r border-gray-300 h-[60px]">
@@ -687,18 +699,18 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={`border-b border-r border-gray-300`}></td>
-              <td className={`border-b border-r border-gray-300`}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* adjust weighted */}
             <tr>
-              <td
-                colSpan={comparativeSurveys.length + 3}
-                className="border-b border-r border-gray-300 bg-gray-200"
-              >
-                Adjust Weight
-              </td>
+              <td className="border-b border-r border-gray-300 bg-gray-200">Adjust Weight</td>
+              {comparativeSurveys.map((col, columnIndex) => {
+                return <td key={col.id} className="border-b border-gray-300 bg-gray-200"></td>;
+              })}
+              <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-gray-300 w-[50px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="h-[60px] border-b border-r border-gray-300">
@@ -716,8 +728,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={`border-b border-r border-gray-300`}></td>
-              <td className={`border-b border-r border-gray-300`}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="h-[60px] border-b border-r border-gray-300">
@@ -738,8 +750,8 @@ export const QualitativeTable = ({
                   </td>
                 );
               })}
-              <td className={`border-b border-r border-gray-300`}></td>
-              <td className={`border-b border-r border-gray-300`}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="border-b border-r border-gray-300 h-[60px]">
@@ -750,8 +762,8 @@ export const QualitativeTable = ({
               {comparativeSurveys.map((s, columnIndex) => {
                 return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
               })}
-              <td className={`border-b border-r border-gray-300`}></td>
-              <td className={`border-b border-r border-gray-300`}></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* final value */}
@@ -760,7 +772,7 @@ export const QualitativeTable = ({
               {comparativeSurveys.map((s, columnIndex) => {
                 return <td key={s.id} className="border-b border-gray-300 bg-gray-200"></td>;
               })}
-              <td className="border-b border-gray-300 bg-gray-200">
+              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md">
                 <div>
                   <RHFInputCell
                     fieldName="saleAdjustmentGridFinalValue.finalValue"
@@ -771,14 +783,14 @@ export const QualitativeTable = ({
                   />
                 </div>
               </td>
-              <td className="border-b border-gray-300 bg-gray-200"></td>
+              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="bg-gray-200 h-[30px]">{'Final Value (Rounded)'}</td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return <td key={s.id} className="bg-gray-200"></td>;
               })}
-              <td className="bg-gray-200">
+              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md">
                 <div>
                   <RHFInputCell
                     fieldName="saleAdjustmentGridFinalValue.finalValueRounded"
@@ -786,7 +798,7 @@ export const QualitativeTable = ({
                   />
                 </div>
               </td>
-              <td className="bg-gray-200"></td>
+              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
             </tr>
           </tbody>
         </table>
