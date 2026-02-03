@@ -2,22 +2,26 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import { getFactorDesciption } from '../domain/getFactorDescription';
 import { getDesciptions } from '../features/wqs/WQSSection';
 import { RHFInputCell } from './table/RHFInputCell';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Icon } from '@/shared/components';
-import { useDerivedFieldArray, type DerivedRule } from '../../BuildingTable/useDerivedFieldArray';
 import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
-import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/domain/shouldAutoDefault.ts';
-import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/domain/qualitativeDefault.ts';
+import {
+  buildSaleGridAdjustmentFactorRules,
+  buildSaleGridCalculationDerivedRules,
+  buildSaleGridFinalValueRules,
+  buildSaleGridQualitativeDerivedRules,
+} from '../adapters/rhf-table/buildDerivedRules';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
   comparativeFactors: Record<string, any>[];
   comparativeSurveys: Record<string, any>[];
   property: Record<string, any>;
+  template: Record<string, any>;
   isLoading: boolean;
 }
 export const QualitativeTable = ({
@@ -25,6 +29,7 @@ export const QualitativeTable = ({
   comparativeFactors = [],
   comparativeSurveys = [],
   property,
+  template,
   isLoading = true,
 }: QualitativeTableProps) => {
   const { control, getValues } = useFormContext();
@@ -37,289 +42,54 @@ export const QualitativeTable = ({
     name: 'saleAdjustmentGridQualitatives',
   });
 
-  const { fields: adjustmentFactors } = useFieldArray({
+  const {
+    fields: adjustmentFactors,
+    append: appendAdjustmentFactor,
+    remove: removeAdjustmentFactor,
+  } = useFieldArray({
     control,
     name: 'saleAdjustmentGridAdjustmentFactors',
   });
 
+  const handleAddRow = () => {
+    appendQualitativeFactor({
+      factorCode: '',
+      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: '' })),
+    });
+
+    appendAdjustmentFactor({
+      factorCode: '',
+      surveys: comparativeSurveys.map(() => ({
+        adjustPercent: 0,
+        adjustAmount: 0,
+      })),
+    });
+  };
+
+  const handleRemoveRow = (rowIndex: number) => {
+    removeQualitativeFactor(rowIndex);
+    removeAdjustmentFactor(rowIndex);
+  };
+
   const derivedRules: DerivedFieldRule<any>[] = useMemo(() => {
     /** Adjustment factors which initial by Qualitative part */
-    let rules = qualitativeFactors
-      .map((f, rowIndex) => {
-        return [
-          {
-            targetPath: `saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorCode`,
-            compute: () => f.factorCode ?? '',
-          },
-          ...comparativeSurveys.map((s, columnIndex) => {
-            return [
-              {
-                targetPath: `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
-                deps: [
-                  `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
-                  `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
-                ],
-                when: ({ getValues, getFieldState, formState }) => {
-                  const target = `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`;
-                  const curr = getValues(target);
-                  const { isDirty } = getFieldState(target, formState);
-                  return shouldAutoDefault({ value: curr, isDirty });
-                },
-                compute: ({ getValues }) => {
-                  const level =
-                    getValues(
-                      `saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`,
-                    ) ?? '';
-                  return qualitativeDefaultPercent(level);
-                },
-                setValueOptions: {
-                  shouldDirty: false,
-                  shouldTouch: false,
-                  shouldValidate: false,
-                },
-              },
-              {
-                targetPath: `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustAmount`,
-                deps: [
-                  `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
-                  `saleAdjustmentGridCalculations.${columnIndex}.totalSecondRevision`,
-                ],
-                compute: ({ getValues }) => {
-                  const totalSecondRevision =
-                    getValues(
-                      `saleAdjustmentGridCalculations.${columnIndex}.totalSecondRevision`,
-                    ) ?? 0;
-                  const adjustPercent =
-                    getValues(
-                      `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
-                    ) ?? 0;
-
-                  const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
-                  return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
-                },
-              },
-            ];
-          }),
-        ];
-      })
-      .flat(2);
-
-    /** Calculation section */
-    rules = [
-      ...rules,
-      ...comparativeSurveys
-        .map((s, columnIndex) => {
-          return [
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.adjustedValue`,
-              deps: [
-                `saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentPct`,
-                `saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`,
-                `saleAdjustmentGridCalculations.${columnIndex}.sellingPriceAdjustmentYear`,
-              ],
-              compute: ({ getValues }) => {
-                const offeringPrice = s.factors?.find(f => f.id === '17')?.value;
-                console.log(offeringPrice);
-                if (offeringPrice) {
-                  const offeringPriceAdjustmentPct =
-                    getValues(
-                      `saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentPct`,
-                    ) ?? 0;
-                  const offeringPriceAdjustmentAmt =
-                    getValues(
-                      `saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`,
-                    ) ?? 0;
-                  console.log(offeringPriceAdjustmentPct, offeringPriceAdjustmentAmt);
-                  return offeringPriceAdjustmentPct > 0
-                    ? offeringPrice - (offeringPrice * offeringPriceAdjustmentPct) / 100
-                    : offeringPriceAdjustmentAmt > 0
-                      ? offeringPriceAdjustmentAmt
-                      : offeringPrice;
-                }
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value;
-                if (sellingPrice) {
-                  console.log(sellingPrice);
-                  const numberOfYears = 5; // TODO: replcing by number of from selling date to current date, if month > 6, round up
-                  const sellingPriceAdjustmentYear = getValues(
-                    `saleAdjustmentGridCalculations.${columnIndex}.sellingPriceAdjustmentYear`,
-                  );
-                  return (
-                    sellingPrice + (sellingPrice * numberOfYears * sellingPriceAdjustmentYear) / 100
-                  );
-                }
-                return 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.landAreaOfDeficient`,
-              compute: () => {
-                const propertyLandArea = getPropertyValueByFactorCode('05', property) ?? 0;
-                const surveyLandArea = s.factors.find(f => f.id === '05')?.value ?? 0;
-                const landDiff = propertyLandArea - surveyLandArea;
-
-                return Number.isFinite(landDiff) ? parseFloat(landDiff.toFixed(2)) : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.landValueIncreaseDecrease`,
-              deps: ['landPrice'],
-              compute: ({ getValues }) => {
-                const landPrice = getValues('landPrice') ?? 0;
-                const landDiff =
-                  getValues(`saleAdjustmentGridCalculations.${columnIndex}.landAreaOfDeficient`) ??
-                  0;
-                const landValueIncreaseDecrease = landPrice * landDiff;
-                return Number.isFinite(landValueIncreaseDecrease)
-                  ? parseFloat(landValueIncreaseDecrease.toFixed(2))
-                  : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.usableAreaOfDeficient`,
-              compute: () => {
-                const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
-                const surveyUsableArea = s.factors.find(f => f.id === '12')?.value ?? 0;
-                const usableAreaDiff = propertyUsableArea - surveyUsableArea;
-
-                return Number.isFinite(usableAreaDiff) ? parseFloat(usableAreaDiff.toFixed(2)) : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.buildingValueIncreaseDecrease`,
-              deps: ['usableAreaPrice'],
-              compute: ({ getValues }) => {
-                const usableAreaPrice = getValues('usableAreaPrice') ?? 0;
-                const usableAreaDiff =
-                  getValues(
-                    `saleAdjustmentGridCalculations.${columnIndex}.usableAreaOfDeficient`,
-                  ) ?? 0;
-                const buildingValueIncreaseDecrease = usableAreaPrice * usableAreaDiff;
-                return Number.isFinite(buildingValueIncreaseDecrease)
-                  ? parseFloat(buildingValueIncreaseDecrease.toFixed(2))
-                  : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.totalSecondRevision`,
-              deps: [
-                `saleAdjustmentGridCalculations.${columnIndex}.buildingValueIncreaseDecrease`,
-                `saleAdjustmentGridCalculations.${columnIndex}.landValueIncreaseDecrease`,
-                `saleAdjustmentGridCalculations.${columnIndex}.adjustedValue`,
-              ],
-              compute: ({ getValues }) => {
-                const adjustedValue =
-                  getValues(`saleAdjustmentGridCalculations.${columnIndex}.adjustedValue`) ?? 0;
-                const buildingValueIncreaseDecrease =
-                  getValues(
-                    `saleAdjustmentGridCalculations.${columnIndex}.buildingValueIncreaseDecrease`,
-                  ) ?? 0;
-                const landValueIncreaseDecrease = getValues(
-                  `saleAdjustmentGridCalculations.${columnIndex}.landValueIncreaseDecrease`,
-                );
-                const totalSecondRevision =
-                  adjustedValue + buildingValueIncreaseDecrease + landValueIncreaseDecrease;
-                return Number.isFinite(totalSecondRevision)
-                  ? parseFloat(totalSecondRevision.toFixed(2))
-                  : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.factorDiffPct`,
-              deps: ['saleAdjustmentGridAdjustmentFactors'],
-              compute: ({ getValues }) => {
-                const saleAdjustmentGridAdjustmentFactors =
-                  getValues('saleAdjustmentGridAdjustmentFactors') ?? [];
-                const totalDiffPct = saleAdjustmentGridAdjustmentFactors.reduce((acc, curr) => {
-                  const adjustPercent = curr.surveys[columnIndex]?.adjustPercent ?? 0;
-                  return acc + adjustPercent;
-                }, 0);
-                return Number.isFinite(totalDiffPct) ? parseFloat(totalDiffPct.toFixed(2)) : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.factorDiffAmt`,
-              deps: ['saleAdjustmentGridAdjustmentFactors'],
-              compute: ({ getValues }) => {
-                const saleAdjustmentGridAdjustmentFactors =
-                  getValues('saleAdjustmentGridAdjustmentFactors') ?? [];
-                const totalDiffAmt = saleAdjustmentGridAdjustmentFactors.reduce((acc, curr) => {
-                  const adjustAmount = curr.surveys[columnIndex]?.adjustAmount ?? 0;
-                  return acc + adjustAmount;
-                }, 0);
-                return Number.isFinite(totalDiffAmt) ? parseFloat(totalDiffAmt.toFixed(2)) : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.totalAdjustValue`,
-              deps: ['saleAdjustmentGridAdjustmentFactors'],
-              compute: ({ getValues }) => {
-                const totalDiffAmt =
-                  getValues(`saleAdjustmentGridCalculations.${columnIndex}.factorDiffAmt`) ?? 0;
-                const totalSecondRevision =
-                  getValues(`saleAdjustmentGridCalculations.${columnIndex}.totalSecondRevision`) ??
-                  0;
-                const totalAdjustValue = totalSecondRevision - totalDiffAmt;
-                console.log(totalDiffAmt, totalSecondRevision);
-                return Number.isFinite(totalAdjustValue)
-                  ? parseFloat(totalAdjustValue.toFixed(2))
-                  : 0;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.weight`,
-              when: ({ getValues, getFieldState, formState }) => {
-                const target = `saleAdjustmentGridCalculations.${columnIndex}.weight`;
-                const curr = getValues(target);
-                const { isDirty } = getFieldState(target, formState);
-                return shouldAutoDefault({ value: curr, isDirty });
-              },
-              compute: () => {
-                const numberOfSurveys = comparativeSurveys.length ?? 0;
-                return 100 / numberOfSurveys;
-              },
-            },
-            {
-              targetPath: `saleAdjustmentGridCalculations.${columnIndex}.weightedAdjustValue`,
-              deps: [
-                `saleAdjustmentGridCalculations.${columnIndex}.totalAdjustValue`,
-                `saleAdjustmentGridCalculations.${columnIndex}.weight`,
-              ],
-              compute: ({ getValues }) => {
-                const totalAdjustValue =
-                  getValues(`saleAdjustmentGridCalculations.${columnIndex}.totalAdjustValue`) ?? 0;
-                const weight =
-                  getValues(`saleAdjustmentGridCalculations.${columnIndex}.weight`) ?? 0;
-                const weightedAdjustValue = totalAdjustValue * weight;
-                return Number.isFinite(weightedAdjustValue)
-                  ? parseFloat(weightedAdjustValue.toFixed(2))
-                  : 0;
-              },
-            },
-          ];
-        })
-        .flat(),
-    ];
+    let rules = buildSaleGridQualitativeDerivedRules({
+      surveys: comparativeSurveys,
+      qualitativeRows: saleAdjustmentGridQualitatives,
+    });
 
     rules = [
       ...rules,
-      {
-        targetPath: 'saleAdjustmentGridFinalValue.finalValue',
-        deps: [],
-        compute: ({ getValues }) => {
-          const totalWeightedAdjustValue = comparativeSurveys.reduce((acc, curr, columnIndex) => {
-            const weightedAdjustValue =
-              getValues(`saleAdjustmentGridCalculations.${columnIndex}.weightedAdjustValue`) ?? 0;
-            return acc + weightedAdjustValue;
-          }, 0);
-          return Number.isFinite(totalWeightedAdjustValue)
-            ? parseFloat(totalWeightedAdjustValue.toFixed(2))
-            : 0;
-        },
-      },
+      ...buildSaleGridCalculationDerivedRules({ surveys: comparativeSurveys, property: property }),
+      ...buildSaleGridAdjustmentFactorRules({
+        surveys: comparativeSurveys,
+        qualitativeRows: saleAdjustmentGridQualitatives,
+      }),
+      ...buildSaleGridFinalValueRules({ surveys: comparativeSurveys }),
     ];
 
     return rules;
-  }, [comparativeSurveys, property, qualitativeFactors]);
+  }, [comparativeSurveys, property, saleAdjustmentGridQualitatives]);
 
   useDerivedFields({ rules: derivedRules });
 
@@ -329,20 +99,31 @@ export const QualitativeTable = ({
         <table className="table table-sm min-w-max border-separate border-spacing-0">
           <thead className="sticky top-0 z-20 bg-neutral-50">
             <tr className="border-b border-gray-300">
-              <th rowSpan={2} className="border-r border-gray-300 text-center">
-                Factors
+              <th
+                rowSpan={2}
+                className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
+              >
+                <div>Factors</div>
+              </th>
+              {comparativeSurveys.length > 0 && (
+                <th
+                  colSpan={comparativeSurveys.length}
+                  className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
+                >
+                  <div>Comparative Data</div>
+                </th>
+              )}
+              <th
+                rowSpan={2}
+                className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
+              >
+                <div>Collateral</div>
               </th>
               <th
-                colSpan={comparativeSurveys.length}
-                className="border-r border-b border-gray-300 text-center"
+                rowSpan={2}
+                className="border-r border-b border-gray-300 text-center sticky top-0 z-20"
               >
-                Comparative Data
-              </th>
-              <th rowSpan={2} className="border-r border-gray-300 text-center">
-                Collateral
-              </th>
-              <th rowSpan={2} className="border-r border-gray-300 text-center">
-                Action
+                <div>Action</div>
               </th>
             </tr>
             <tr className="border-b border-gray-300">
@@ -351,10 +132,10 @@ export const QualitativeTable = ({
                   <th
                     key={col.id}
                     className={
-                      'font-medium text-gray-600 px-3 py-2.5 border-r border-gray-300 text-center'
+                      'font-medium text-gray-600 px-3 py-2.5 border-r border-b border-gray-300 text-center sticky top-0 z-20'
                     }
                   >
-                    survey {index}
+                    <div>survey {index + 1}</div>
                   </th>
                 );
               })}
@@ -388,18 +169,26 @@ export const QualitativeTable = ({
                       }
                     >
                       <div className="truncate">
-                        <RHFInputCell
-                          fieldName={fieldName}
-                          inputType="select"
-                          options={qualitativeFactors}
-                        />
+                        {template.qualitativeFactors.find(t => t.factorId === f.factorCode) ? (
+                          <RHFInputCell
+                            fieldName={fieldName}
+                            inputType="display"
+                            accessor={({ value }) => getDesciptions(value)}
+                          />
+                        ) : (
+                          <RHFInputCell
+                            fieldName={fieldName}
+                            inputType="select"
+                            options={qualitativeFactors}
+                          />
+                        )}
                       </div>
                     </td>
 
                     {comparativeSurveys.map((col, columnIndex) => {
                       return (
                         <td
-                          key={columnIndex}
+                          key={col.id}
                           className={
                             'font-medium text-gray-600 px-3 py-2.5 border-b border-r border-gray-300'
                           }
@@ -419,7 +208,9 @@ export const QualitativeTable = ({
                             <RHFInputCell
                               fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
                               inputType="display"
-                              accessor={value => col.factors.find(f => f.id === value)?.value ?? ''}
+                              accessor={({ value }) =>
+                                col.factors?.find(f => f.id === value)?.value ?? ''
+                              }
                             />
                           </div>
                         </td>
@@ -430,24 +221,27 @@ export const QualitativeTable = ({
                       <RHFInputCell
                         fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
                         inputType="display"
-                        accessor={value => getPropertyValueByFactorCode(value, property) ?? ''}
+                        accessor={({ value }) =>
+                          getPropertyValueByFactorCode(value, property) ?? ''
+                        }
                       />
                     </td>
                     <td className="border-b border-r border-gray-300">
                       {/* if rowIndex > template factors length, show delete button */}
-                      <div className="flex flex-row justify-center items-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            removeQualitativeFactor(rowIndex);
-                            console.log(getValues('saleAdjustmentGridQualitatives'));
-                          }}
-                          className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-3.5" />
-                        </button>
-                      </div>
+                      {!template.qualitativeFactors.find(t => t.factorId === f.factorCode) && (
+                        <div className="flex flex-row justify-center items-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleRemoveRow(rowIndex);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -457,12 +251,7 @@ export const QualitativeTable = ({
               <td className="border-b border-r border-gray-300">
                 <button
                   type="button"
-                  onClick={() =>
-                    appendQualitativeFactor({
-                      factorCode: '',
-                      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: '' })),
-                    })
-                  }
+                  onClick={() => handleAddRow()}
                   className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                 >
                   + Add More Factors
@@ -489,7 +278,7 @@ export const QualitativeTable = ({
                 <span>Offering Price</span>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors.find(f => f.id === '17')?.value ?? '';
+                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
                 return (
                   <td key={s.id} className={'border-b border-r border-gray-300'}>
                     {offeringPrice}
@@ -505,7 +294,7 @@ export const QualitativeTable = ({
                 <span>(%)</span>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors.find(f => f.id === '17')?.value ?? '';
+                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
                 if (!offeringPrice)
                   return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -526,7 +315,7 @@ export const QualitativeTable = ({
                 <span>(Amount)</span>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors.find(f => f.id === '17')?.value ?? '';
+                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
                 if (!offeringPrice)
                   return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -546,7 +335,7 @@ export const QualitativeTable = ({
                 <span>Selling Price</span>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
-                const sellingPrice = s.factors.find(f => f.id === '21')?.value ?? '';
+                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
                 if (!sellingPrice)
                   return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -577,7 +366,7 @@ export const QualitativeTable = ({
                 Adjusted Selling Price
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
-                const sellingPrice = s.factors.find(f => f.id === '21')?.value ?? '';
+                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
                 if (!sellingPrice)
                   return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -633,7 +422,7 @@ export const QualitativeTable = ({
                       <RHFInputCell
                         fieldName={`saleAdjustmentGridCalculations.${columnIndex}.landAreaOfDeficient`}
                         inputType="display"
-                        accessor={value => {
+                        accessor={({ value }) => {
                           return value ? value.toLocaleString() : value;
                         }}
                       />
@@ -660,7 +449,7 @@ export const QualitativeTable = ({
                     <RHFInputCell
                       fieldName={`landPrice`}
                       inputType="display"
-                      accessor={value => {
+                      accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
                       }}
                     />
@@ -683,7 +472,7 @@ export const QualitativeTable = ({
                     <RHFInputCell
                       fieldName={`saleAdjustmentGridCalculations.${columnIndex}.landValueIncreaseDecrease`}
                       inputType="display"
-                      accessor={value => {
+                      accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
                       }}
                     />
@@ -706,7 +495,7 @@ export const QualitativeTable = ({
                     <RHFInputCell
                       fieldName={`saleAdjustmentGridCalculations.${columnIndex}.usableAreaOfDeficient`}
                       inputType="display"
-                      accessor={value => {
+                      accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
                       }}
                     />
@@ -732,7 +521,7 @@ export const QualitativeTable = ({
                     <RHFInputCell
                       fieldName={`usableAreaPrice`}
                       inputType="display"
-                      accessor={value => value?.toLocaleString()}
+                      accessor={({ value }) => value?.toLocaleString()}
                     />
                   </td>
                 );
@@ -753,7 +542,7 @@ export const QualitativeTable = ({
                     <RHFInputCell
                       fieldName={`saleAdjustmentGridCalculations.${columnIndex}.buildingValueIncreaseDecrease`}
                       inputType="display"
-                      accessor={value => {
+                      accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
                       }}
                     />
@@ -773,7 +562,7 @@ export const QualitativeTable = ({
                     <RHFInputCell
                       fieldName={`saleAdjustmentGridCalculations.${columnIndex}.totalSecondRevision`}
                       inputType="display"
-                      accessor={value => {
+                      accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
                       }}
                     />
@@ -805,7 +594,7 @@ export const QualitativeTable = ({
                       <RHFInputCell
                         fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
                         inputType="display"
-                        accessor={value => getFactorDesciption(value) ?? ''}
+                        accessor={({ value }) => getFactorDesciption(value) ?? ''}
                       />
                     }
                   </td>
@@ -823,6 +612,17 @@ export const QualitativeTable = ({
                             <RHFInputCell
                               fieldName={`saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustAmount`}
                               inputType="display"
+                              accessor={({ value, formState, getFieldState }) => {
+                                const { isDirty } = getFieldState(
+                                  `saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`,
+                                  formState,
+                                );
+                                return isDirty ? (
+                                  <div className="text-danger">{value}</div>
+                                ) : (
+                                  <div>{value}</div>
+                                );
+                              }}
                             />
                           </div>
                         </div>
@@ -878,7 +678,7 @@ export const QualitativeTable = ({
                         <RHFInputCell
                           fieldName={`saleAdjustmentGridCalculations.${columnIndex}.totalAdjustValue`}
                           inputType="display"
-                          accessor={value => {
+                          accessor={({ value }) => {
                             return value ? value.toLocaleString() : value;
                           }}
                         />
@@ -930,7 +730,7 @@ export const QualitativeTable = ({
                       <RHFInputCell
                         fieldName={`saleAdjustmentGridCalculations.${columnIndex}.weightedAdjustValue`}
                         inputType="display"
-                        accessor={value => {
+                        accessor={({ value }) => {
                           return value ? value.toLocaleString() : value;
                         }}
                       />
@@ -956,18 +756,33 @@ export const QualitativeTable = ({
 
             {/* final value */}
             <tr>
-              <td className="bg-gray-200 h-[30px]">Final Value</td>
+              <td className="border-b border-gray-300 bg-gray-200 h-[60px]">Final Value</td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                return <td key={s.id} className="border-b border-gray-300 bg-gray-200"></td>;
+              })}
+              <td className="border-b border-gray-300 bg-gray-200">
+                <div>
+                  <RHFInputCell
+                    fieldName="saleAdjustmentGridFinalValue.finalValue"
+                    inputType="display"
+                    accessor={({ value }) => {
+                      return value ? value.toLocaleString() : value;
+                    }}
+                  />
+                </div>
+              </td>
+              <td className="border-b border-gray-300 bg-gray-200"></td>
+            </tr>
+            <tr>
+              <td className="bg-gray-200 h-[30px]">{'Final Value (Rounded)'}</td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return <td key={s.id} className="bg-gray-200"></td>;
               })}
               <td className="bg-gray-200">
                 <div>
                   <RHFInputCell
-                    fieldName="saleAdjustmentGridFinalValue.finalValue"
-                    inputType="display"
-                    accessor={value => {
-                      return value ? value.toLocaleString() : value;
-                    }}
+                    fieldName="saleAdjustmentGridFinalValue.finalValueRounded"
+                    inputType="number"
                   />
                 </div>
               </td>

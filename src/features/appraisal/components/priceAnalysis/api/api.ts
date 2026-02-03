@@ -133,7 +133,7 @@ const getMockProperties = () => {
 };
 
 export const useGetMarketSurvey = (groupId: string = '') => {
-  const queryKey = [];
+  const queryKey = ['marketSurvey'];
 
   return useQuery({
     queryKey,

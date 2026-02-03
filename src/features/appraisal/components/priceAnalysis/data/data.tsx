@@ -273,6 +273,7 @@ export const MOC_SURVEY_DATA = [
       { id: '06', value: 90 },
       { id: '17', value: 22750 },
       { id: '20', value: 'Baht/ Sq.Wa' },
+      { id: '07', value: 'เยี่ยม' },
     ],
   },
   {

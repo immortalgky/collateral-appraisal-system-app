@@ -31,8 +31,9 @@ export function PriceAnalysisTab(): JSX.Element {
     isError: isMarketSurveyError,
     error: marketSurveyError,
   } = useGetMarketSurvey(groupId);
-  const marketSurveyQueryResult = propertyData?.result ?? propertyData;
+  const marketSurveyQueryResult = marketSurveyData?.result ?? marketSurveyData;
   const marketSurveys = marketSurveyQueryResult?.items ?? [];
+  console.log(marketSurveyData?.result);
 
   const [isCurrentLoading, setIsCurrentLoading] = useState<boolean>(true);
   useEffect(() => {

@@ -41,16 +41,16 @@ const SaleAdjustmentGridCalculation = z
     adjustedValue: z.number(),
 
     // 2nd revision
-    landAreaOfDeficient: z.number().nullable(),
-    landAreaOfDeficientMeasureUnit: z.number().nullable(),
-    landPrice: z.number().nullable(),
-    landPriceMeasureUnit: z.number().nullable(),
-    landValueIncreaseDecrease: z.number().nullable(),
-    usableAreaOfDeficient: z.number().nullable(),
-    usableAreaOfDeficientMeasureUnit: z.number().nullable(),
-    usableAreaPrice: z.number().nullable(),
-    usableAreaPriceMeasureUnit: z.number().nullable(),
-    buildingValueIncreaseDecrease: z.number().nullable(),
+    landAreaOfDeficient: z.number().nullable().optional(),
+    // landAreaOfDeficientMeasureUnit: z.number().nullable(),
+    landPrice: z.number().nullable().optional(),
+    landPriceMeasureUnit: z.number().nullable().optional(),
+    landValueIncreaseDecrease: z.number().nullable().optional(),
+    usableAreaOfDeficient: z.number().nullable().optional(),
+    // usableAreaOfDeficientMeasureUnit: z.number().nullable(),
+    usableAreaPrice: z.number().nullable().optional(),
+    usableAreaPriceMeasureUnit: z.number().nullable().optional(),
+    buildingValueIncreaseDecrease: z.number().nullable().optional(),
     totalSecondRevision: z.number().nullable(),
 
     // adjusted value
@@ -93,9 +93,13 @@ export const SaleAdjustmentGridDto = z
     pricingTemplateCode: z.string(),
     comparativeSurveys: z.array(ComparativeSurveys),
     comparativeFactors: z.array(ComparativeFactors),
+    /** Qualitative section */
     saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative),
+    /** Calculation section */
     saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation),
+    /** Adjustment Factors (adjust percentage) section */
     saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor),
+    /** Final value section */
     saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue,
   })
   .passthrough();

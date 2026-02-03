@@ -1,6 +1,7 @@
 import { Dropdown, NumberInput, type ListBoxItem } from '@/shared/components';
 import { Input } from '@headlessui/react';
-import { useController, useFormContext } from 'react-hook-form';
+import clsx from 'clsx';
+import { useController, useFormContext, useFormState } from 'react-hook-form';
 
 export function toNumber(v: any) {
   const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(/,/g, ''));
@@ -12,7 +13,12 @@ interface RHFInputCellProps {
   inputType?: 'number' | 'select' | 'text' | 'display';
   options?: ListBoxItem[];
   onUserChange?: (value: number) => number;
-  accessor?: (value: number | string) => string;
+  accessor?: (args: {
+    value: number | string;
+    getValues: any;
+    getFieldState: any;
+    formState: any;
+  }) => React.ReactNode;
 }
 export const RHFInputCell = ({
   fieldName,
@@ -21,11 +27,12 @@ export const RHFInputCell = ({
   onUserChange,
   accessor,
 }: RHFInputCellProps) => {
-  const { control, getValues } = useFormContext();
+  const { control, getValues, getFieldState } = useFormContext();
   const {
     field,
     fieldState: { error },
   } = useController({ control, name: fieldName });
+  const formState = useFormState({ control });
 
   if (inputType === 'number') {
     return (
@@ -41,7 +48,7 @@ export const RHFInputCell = ({
         allowNegative={true}
         error={error?.message}
         inputMode="numeric"
-        className="w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth"
+        className={clsx('w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth')}
       />
     );
   }
@@ -57,11 +64,6 @@ export const RHFInputCell = ({
 
   if (inputType === 'display') {
     const value = getValues(fieldName) ?? '';
-    console.log(value);
-    return (
-      <div className="flex truncate" title={getValues(fieldName)}>
-        {accessor ? accessor(value) : value}
-      </div>
-    );
+    return accessor ? accessor({ value, getValues, getFieldState, formState }) : value;
   }
 };

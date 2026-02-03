@@ -4,7 +4,6 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 
 interface MarketSurveySelectionModalProps {
-  allFactors: Record<string, any>[];
   surveys: Record<string, any>[];
   comparativeSurveys: Record<string, any>[];
   onSelect: (survey: Record<string, any>) => void;
@@ -12,7 +11,6 @@ interface MarketSurveySelectionModalProps {
 }
 
 export const MarketSurveySelectionModal = ({
-  allFactors,
   surveys,
   comparativeSurveys,
   onSelect,
@@ -47,12 +45,12 @@ export const MarketSurveySelectionModal = ({
                       )}
                     />
                   </div>
-                  {survey.factors.map(f => (
+                  {survey.factors?.map(f => (
                     <div key={f.id} className="text-sm w-60">
                       <span className="font-semibold capitalize">{getDesciptions(f.id)}:</span>{' '}
                       {f.value ?? '-'}
                     </div>
-                  ))}
+                  )) ?? <></>}
                 </div>
               </button>
             );
