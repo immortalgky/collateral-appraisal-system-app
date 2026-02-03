@@ -130,7 +130,7 @@ export const QualitativeTable = ({
               </th>
               <th
                 rowSpan={2}
-                className="border-r border-b border-gray-300 text-center sticky z-30 top-0 right-0  bg-gray-50 w-[50px] min-w-[70px] max-w-[70px]"
+                className="border-r border-b border-gray-300 text-center sticky z-30 top-0 right-0  bg-gray-50 w-[70px] min-w-[70px] max-w-[70px]"
               >
                 <div>Action</div>
               </th>
@@ -235,10 +235,10 @@ export const QualitativeTable = ({
                         }
                       />
                     </td>
-                    <td className="border-b border-r border-gray-300 sticky right-0 z-40 bg-white w-[50px] min-w-[70px] max-w-[70px]">
+                    <td className="border-b border-r border-gray-300 sticky right-0 z-40 bg-white w-[70px] min-w-[70px] max-w-[70px]">
                       {/* if rowIndex > template factors length, show delete button */}
                       {!template.qualitativeFactors.find(t => t.factorId === f.factorCode) && (
-                        <div className="flex flex-row justify-center items-center w-[50px]">
+                        <div className="flex flex-row justify-center items-center">
                           <button
                             type="button"
                             onClick={() => {
@@ -270,7 +270,7 @@ export const QualitativeTable = ({
                 return <td key={col.id} className="border-b border-r border-gray-300"></td>;
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 w-[50px] sticky right-0 bg-white min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 w-[70px] sticky right-0 bg-white min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="border-b border-gray-300  bg-gray-200 h-[30px]">Initial Price</td>
@@ -278,7 +278,7 @@ export const QualitativeTable = ({
                 return <td key={col.id} className="border-b border-gray-300 bg-gray-200 "></td>;
               })}
               <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-gray-300 bg-gray-200 sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-gray-300 bg-gray-200 sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* saleAdjustmentGridFinalValue */}
@@ -295,7 +295,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -316,7 +316,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -337,7 +337,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -354,7 +354,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>Number of Years</td>
@@ -368,7 +368,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -388,7 +388,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -405,7 +405,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* 2nd revision */}
@@ -415,7 +415,7 @@ export const QualitativeTable = ({
                 return <td key={col.id} className="border-b border-gray-300 bg-gray-200"></td>;
               })}
               <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-gray-300 w-[50px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-gray-300 w-[70px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -440,7 +440,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -466,7 +466,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -489,7 +489,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -512,7 +512,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -536,7 +536,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -559,7 +559,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className={'border-b border-r border-gray-300 h-[60px]'}>
@@ -579,7 +579,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* adjust factors */}
@@ -589,7 +589,7 @@ export const QualitativeTable = ({
                 return <td key={col.id} className="border-b border-gray-300 bg-gray-200"></td>;
               })}
               <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-gray-300 w-[50px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-gray-300 w-[70px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
             {qualitativeFactors.map((f, rowIndex) => {
               return (
@@ -642,7 +642,7 @@ export const QualitativeTable = ({
                     );
                   })}
                   <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-                  <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+                  <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
                 </tr>
               );
             })}
@@ -674,7 +674,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="border-b border-r border-gray-300 h-[60px]">
@@ -700,7 +700,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* adjust weighted */}
@@ -710,7 +710,7 @@ export const QualitativeTable = ({
                 return <td key={col.id} className="border-b border-gray-300 bg-gray-200"></td>;
               })}
               <td className="border-b border-gray-300 bg-gray-200 sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-gray-300 w-[50px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-gray-300 w-[70px] sticky right-0 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="h-[60px] border-b border-r border-gray-300">
@@ -729,7 +729,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="h-[60px] border-b border-r border-gray-300">
@@ -751,7 +751,7 @@ export const QualitativeTable = ({
                 );
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="border-b border-r border-gray-300 h-[60px]">
@@ -763,7 +763,7 @@ export const QualitativeTable = ({
                 return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
               })}
               <td className="border-b border-r border-gray-300 bg-white sticky right-[70px] w-[250px] min-w-[250px] max-w-[250px] shadow-md"></td>
-              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-white sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* final value */}
@@ -783,7 +783,7 @@ export const QualitativeTable = ({
                   />
                 </div>
               </td>
-              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
             <tr>
               <td className="bg-gray-200 h-[30px]">{'Final Value (Rounded)'}</td>
@@ -798,7 +798,7 @@ export const QualitativeTable = ({
                   />
                 </div>
               </td>
-              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-0 w-[50px] min-w-[70px] max-w-[70px]"></td>
+              <td className="border-b border-r border-gray-300 bg-gray-200 sticky right-0 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
           </tbody>
         </table>
