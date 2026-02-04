@@ -20,6 +20,19 @@ interface SaleAdjustmentGridSectionProps {
   property: Record<string, any>;
   surveys: Record<string, any>[];
 }
+
+/**
+ * NOTE:
+ *
+ * Workflow:
+ * (1) System retrive method value from database to check whether has value or not
+ * (1.1) In case that has value
+ * - System can show retrieved value.
+ * (1.2) In case that has no value
+ * - System can initial value to prepared stages before user take action.
+ *
+ *
+ */
 export const SaleAdjustmentGridSection = ({
   property,
   surveys,
@@ -59,7 +72,12 @@ export const SaleAdjustmentGridSection = ({
   const handleOnGenerate = () => {
     // if (!pricingTemplateCode) return;
     // load template configuration
+    reset({});
+    setComparativeSurveys([]);
+
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
+
+    // reset template and data on generate
     setOnLoading(false);
   };
 

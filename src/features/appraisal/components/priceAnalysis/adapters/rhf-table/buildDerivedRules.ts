@@ -255,10 +255,11 @@ export function buildSaleGridAdjustmentFactorRules(args: {
             targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
             deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
             when: ({ getValues }) => {
-              const target = adjustmentFactorAdjustPercentPath({
-                row: rowIndex,
-                column: columnIndex,
-              });
+              console.log(
+                getValues(
+                  adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+                ),
+              );
 
               return qualitativeDefault.includes(
                 getValues(

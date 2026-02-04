@@ -106,32 +106,32 @@ export const QualitativeTable = ({
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col border border-gray-300 rounded-xl">
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="table table-sm min-w-max border-separate border-spacing-0">
+        <table className="table table-sm min-w-max">
           <thead className="bg-neutral-50">
             <tr className="border-b border-gray-300">
               <th
                 rowSpan={2}
-                className="bg-gray-50 border-r border-b border-gray-300 text-center sticky top-0 left-0 z-25 w-[250px] min-w-[250px] max-w-[250px]"
+                className="bg-gray-50 border-r border-b border-gray-300 text-center sticky top-0 left-0 z-25 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap"
               >
                 <div>Factors</div>
               </th>
               {comparativeSurveys.length > 0 && (
                 <th
                   colSpan={comparativeSurveys.length}
-                  className="bg-gray-50 border-b border-r border-gray-300 text-center sticky top-0 z-23 h-[40px] min-h-[40px] max-h-[40px]"
+                  className="bg-gray-50 border-b border-r border-gray-300 text-center font-medium sticky top-0 z-23 h-[40px] min-h-[40px] max-h-[40px] whitespace-nowrap"
                 >
                   <div>Comparative Data</div>
                 </th>
               )}
               <th
                 rowSpan={2}
-                className="bg-gray-50 border-b border-r border-gray-300 sticky top-0 right-[70px] z-25 w-[250px] min-w-[250px] max-w-[250px] shadow-md"
+                className="bg-gray-50 border-b border-r border-gray-300 sticky top-0 right-[70px] z-25 w-[250px] min-w-[250px] max-w-[250px] shadow-md whitespace-nowrap"
               >
                 <div>Collateral</div>
               </th>
               <th
                 rowSpan={2}
-                className="bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"
+                className="bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-25 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap"
               >
                 <div>Action</div>
               </th>
@@ -142,7 +142,7 @@ export const QualitativeTable = ({
                   <th
                     key={col.id}
                     className={
-                      'bg-gray-50 font-medium text-gray-600 px-3 py-2.5 border-r border-b border-gray-300 text-center sticky top-[40px] h-[45px] min-h-[45px] max-h-[45px] z-23'
+                      'bg-gray-50 font-medium text-gray-600 px-3 py-2.5 border-r border-b border-gray-300 text-center sticky top-[40px] h-[45px] min-h-[45px] max-h-[45px] z-23 whitespace-nowrap'
                     }
                   >
                     <div>survey {index + 1}</div>
@@ -175,7 +175,7 @@ export const QualitativeTable = ({
                   <tr key={f.id}>
                     <td
                       className={
-                        'bg-white border-b border-r border-gray-300 font-medium text-gray-600 px-3 py-2.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] shadow-md'
+                        'bg-white border-b border-r border-gray-300 font-medium text-gray-600 px-3 py-2.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] shadow-md  whitespace-nowrap'
                       }
                     >
                       <div className="truncate">

@@ -262,6 +262,7 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
 ];
 
 export const MOC_SURVEY_DATA = [
+  // survey for land
   {
     id: 'SURVEY_01',
     factors: [
@@ -303,18 +304,48 @@ export const MOC_SURVEY_DATA = [
       { id: '20', value: 'Baht/ Sq.Wa' },
     ],
   },
-  // {
-  //   id: 'SURVEY_04',
-  //   factors: [
-  //     { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
-  //     { id: '02', value: 'แปลงกลาง' },
-  //     { id: '03', value: 'รูปหลายเหลี่ยม' },
-  //     { id: '04', value: 'ถมแล้ว' },
-  //     { id: '05', value: 3328.2 },
-  //     { id: '06', value: 175 },
-  //     { id: '21', value: 21500 },
-  //     { id: '22', value: '2000-01-01' },
-  //     { id: '20', value: 'Baht/ Sq.Wa' },
-  //   ],
-  // },
+
+  // survey for land and building
+  {
+    id: 'SURVEY_04',
+    factors: [
+      { id: '02', value: 'แปลงกลาง' },
+      { id: '03', value: 'รูปหลายเหลี่ยม' },
+      { id: '10', value: 'ดี' },
+      { id: '05', value: 71 }, // land area
+      { id: '09', value: 'ถนนภายในโครงการ' },
+      { id: '12', value: 206 }, // usable area
+      { id: '17', value: 4900000 }, // offering price
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Wa' },
+    ],
+  },
+  {
+    id: 'SURVEY_05',
+    factors: [
+      { id: '02', value: 'แปลงมุม' },
+      { id: '03', value: 'รูปหลายเหลี่ยม' },
+      { id: '10', value: 'แย่' },
+      { id: '05', value: 65 }, // land area
+      { id: '09', value: 'ถนนภายในโครงการ' },
+      { id: '12', value: 207 }, // usable area
+      { id: '17', value: 4700000 }, // offering price
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Wa' },
+    ],
+  },
+  {
+    id: 'SURVEY_06',
+    factors: [
+      { id: '02', value: 'แปลงกลาง' },
+      { id: '03', value: 'รูปหลายเหลี่ยม' },
+      { id: '10', value: 'ปานกลาง' },
+      { id: '05', value: 73 }, // land area
+      { id: '09', value: 'ถนนภายในโครงการ' },
+      { id: '12', value: 206 }, // usable area
+      { id: '21', value: 4900000 }, // selling price
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Wa' },
+    ],
+  },
 ];
