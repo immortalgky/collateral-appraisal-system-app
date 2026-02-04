@@ -35,7 +35,7 @@ const ListMarketSurveyPage = () => {
   };
   // Handle selection of market survey for editing
   const handleEditSelect = (item: any) => {
-    navigate(`/market-survey/detail?id=${item.id}`, {
+    navigate(`/market-comparable/detail?id=${item.id}`, {
       state: {
         market: item,
       },
@@ -44,7 +44,7 @@ const ListMarketSurveyPage = () => {
 
   // Handle selection of collateral type for creating new market survey
   const handleCreateSelect = (item: any) => {
-    navigate(`/market-survey/detail?collateralType=${item.description}`);
+    navigate(`/market-comparable/detail?propertyType=${item.code}`);
     setIsOpenModal(false);
   };
 
@@ -64,7 +64,7 @@ const ListMarketSurveyPage = () => {
           closedWidth="w-1/50"
         >
           <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden pt-3">
-            <div className="flex-auto flex flex-col gap-6 ">
+            <div className="flex-auto flex flex-col gap-6">
               <Section anchor className="flex flex-col gap-6">
                 <MarketSurveyTable
                   headers={headers}
@@ -77,7 +77,7 @@ const ListMarketSurveyPage = () => {
               <button
                 type="button"
                 onClick={handleOpenModal}
-                className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium 
+                className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
                     border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1 
                     transition-colors rounded-lg"
               >
@@ -89,7 +89,7 @@ const ListMarketSurveyPage = () => {
             </div>
             {isOpenModal && (
               <CollateralSelectModal
-                items={getParameterValues(parameter, 'collateralType')}
+                items={getParameterValues(parameter, 'propertyType')}
                 position={modalPosition || { x: 0, y: 0 }}
                 onSelect={handleCreateSelect}
                 onCancel={() => setIsOpenModal(false)}
@@ -105,8 +105,8 @@ const ListMarketSurveyPage = () => {
 const headers = [
   { name: 'surveyNumber', label: 'Survey No.' },
   { name: 'surveyName', label: 'Survey Name' },
-  { name: 'surveyTemplateCode', label: 'Template' },
-  { name: 'collateralType', label: 'Property Type' },
+  { name: 'propertyType', label: 'Property Type' },
+  { name: 'createdOn', label: 'Create On' },
 ];
 
 export default ListMarketSurveyPage;

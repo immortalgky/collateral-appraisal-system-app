@@ -14,7 +14,7 @@ import type {
   CreateLandBuildingResponseType,
 } from '../../shared/forms/typeLandBuilding';
 import type { CreateCondoRequestType, CreateCondoResponseType } from '../../shared/forms/typeCondo';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AppraisalData } from './context/AppraisalContext';
 import { schema } from '@/shared/forms/marketSurvey.ts';
@@ -114,12 +114,13 @@ export const useCreateMarketSurveyRequest = () => {
       request: CreateMarketSurveyRequestType,
     ): Promise<CreateMarketSurveyResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/market-survey', request);
+      const { data } = await axios.post('https://localhost:7111/market-comparables', request);
+      await axios.put(`https://localhost:7111/market-comparables/${data.id}/factor-data`, request);
       return data;
     },
     onSuccess: data => {
+      queryClient.invalidateQueries({ queryKey: ['market-comparables'] });
       console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['market-survey'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -135,12 +136,19 @@ export const useUpdateMarketSurveyRequest = () => {
       request: UpdateMarketSurveyRequestType,
     ): Promise<UpdateMarketSurveyResponseType> => {
       console.log(request);
-      const { data } = await axios.put('https://localhost:7111/market-survey', request);
+      const { data } = await axios.put(
+        `https://localhost:7111/market-comparables/${request.id}`,
+        request,
+      );
+      await axios.put(
+        `https://localhost:7111/market-comparables/${request.id}/factor-data`,
+        request,
+      );
       return data;
     },
     onSuccess: data => {
       console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['market-survey'] });
+      queryClient.invalidateQueries({ queryKey: ['market-comparables'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -148,251 +156,93 @@ export const useUpdateMarketSurveyRequest = () => {
   });
 };
 
-export const useGetMarketSurveyTemplate = (collateralType?: string) => {
+export const useGetMarketSurveyTemplateByPropertyType = (propertyType?: string) => {
   return useQuery({
-    queryKey: ['market-survey-template', collateralType],
-    enabled: !!collateralType,
+    queryKey: ['market-comparable-template', propertyType],
+    enabled: !!propertyType,
     queryFn: async () => {
-      return template;
+      const { data } = await axios.get(
+        `https://localhost:7111/market-comparable-templates?propertyType=${propertyType}`,
+      );
+      return data;
     },
   });
 };
 
-const template = [
-  {
-    surveyTemplateId: 1,
-    surveyTemplateCode: 'LD1',
-    templateDesc: 'Survey Template for Commercial Land',
-    factor: [
-      {
-        factorCode: 'F007',
-        factorDesc: 'Building Type',
-        fieldName: 'buildingType',
-        dataType: 'radio-group',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'BuildingType',
-        active: 'Y',
-      },
-      {
-        factorCode: 'F002',
-        factorDesc: 'Land Area',
-        fieldName: 'landArea',
-        dataType: 'number-input',
-        fieldLength: 3,
-        fieldDecimal: 2,
-        parameterGroup: '',
-      },
-
-      {
-        factorCode: 'F005',
-        factorDesc: 'Building Condition',
-        fieldName: 'buildingCondition',
-        dataType: 'dropdown',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'BuildingCondition',
-      },
-      {
-        factorCode: 'F009',
-        factorDesc: 'Plot Location',
-        fieldName: 'plotLocation',
-        dataType: 'checkbox-group',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'PlotLocation',
-      },
-    ],
-  },
-  {
-    surveyTemplateId: 2,
-    surveyTemplateCode: 'LD2',
-    templateDesc: 'Survey Template for Industrial Land',
-    factor: [
-      {
-        factorCode: 'F007',
-        factorDesc: 'Building Type',
-        fieldName: 'buildingType',
-        dataType: 'radio-group',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'BuildingType',
-        active: 'Y',
-      },
-      {
-        factorCode: 'F002',
-        factorDesc: 'Land Area',
-        fieldName: 'landArea',
-        dataType: 'number-input',
-        fieldLength: 3,
-        fieldDecimal: 2,
-        parameterGroup: '',
-      },
-
-      {
-        factorCode: 'F005',
-        factorDesc: 'Building Condition',
-        fieldName: 'buildingCondition',
-        dataType: 'dropdown',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'BuildingCondition',
-      },
-    ],
-  },
-  {
-    surveyTemplateId: 3,
-    surveyTemplateCode: 'LD3',
-    templateDesc: 'Survey Template for Agricultural Land',
-    factor: [
-      {
-        factorCode: 'F007',
-        factorDesc: 'Building Type',
-        fieldName: 'buildingType',
-        dataType: 'radio-group',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'BuildingType',
-        active: 'Y',
-      },
-      {
-        factorCode: 'F002',
-        factorDesc: 'Land Area',
-        fieldName: 'landArea',
-        dataType: 'number-input',
-        fieldLength: 3,
-        fieldDecimal: 2,
-        parameterGroup: '',
-      },
-    ],
-  },
-  {
-    surveyTemplateId: 4,
-    surveyTemplateCode: 'LB1',
-    templateDesc: 'Survey Template for Residential Land',
-    factor: [
-      {
-        factorCode: 'F007',
-        factorDesc: 'Building Type',
-        fieldName: 'buildingType',
-        dataType: 'radio-group',
-        fieldLength: null,
-        fieldDecimal: null,
-        parameterGroup: 'BuildingType',
-        active: 'Y',
-      },
-    ],
-  },
-];
+export const useGetMarketSurveyTemplateById = (templateId?: string) => {
+  return useQuery({
+    queryKey: ['market-survey-template', templateId],
+    enabled: !!templateId,
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `https://localhost:7111/market-comparable-templates/${templateId}`,
+      );
+      return data;
+    },
+  });
+};
 
 export const useGetMarketSurvey = (appraisalId?: string) => {
   return useQuery({
     queryKey: ['market-survey', appraisalId],
     enabled: !!appraisalId,
     queryFn: async () => {
+      // const { data } = await axios.get(
+      //   `https://localhost:7111/market-comparables/${appraisalId}`,
+      // );
       return market;
     },
   });
 };
 const market = [
   {
-    id: 1,
-    surveyNumber: 1,
+    id: '512546f4-99af-47c6-9b6e-01db9bcf59b2',
+    comparableNumber: 'MC-2026-004',
     surveyName: 'Townhouse',
-    templateCode: 'LD1',
-    templateDesc: 'Survey Template for Townhouse',
-    collateralCode: 'LB',
-    collateralDesc: 'LB-Land & Building',
+    propertyType: 'Land',
+    infoDateTime: '2026-02-03T17:00:00',
+    sourceInfo: 'Some Website',
+    createdOn: '2026-02-03T11:38:06.1612285',
   },
   {
-    id: 2,
-    surveyNumber: 2,
-    surveyName: 'Condo',
-    templateCode: 'LD3',
-    templateDesc: 'Survey Template for Luxury Condominium',
-    collateralCode: 'U',
-    collateralDesc: 'CD-Condominium',
+    id: '026d8f18-47ec-46ce-88fc-778097563091',
+    comparableNumber: 'MC-2026-003',
+    surveyName: 'Land Survey Co., Ltd.',
+    propertyType: 'Land',
+    infoDateTime: '2026-02-03T17:00:00',
+    sourceInfo: 'Some Website',
+    createdOn: '2026-02-03T11:38:06.1612285',
   },
   {
-    id: 3,
-    surveyNumber: 3,
-    surveyName: 'Baan',
-    templateCode: 'LD1',
-    templateDesc: 'Survey Template for Townhouse',
-    collateralCode: 'LB',
-    collateralDesc: 'LB-Land & Building',
+    id: 'a52ad9bf-48c9-4451-ac5c-0c1f4e1de57e',
+    comparableNumber: 'MC-2026-002',
+    surveyName: 'Urban Property Surveys',
+    propertyType: 'Building',
+    infoDateTime: '2026-02-03T17:00:00',
+    sourceInfo: 'Some Website',
+    createdOn: '2026-02-03T11:38:06.1612285',
+  },
+  {
+    id: '7ab67bda-ddf0-4576-ac36-284979c33bcf',
+    comparableNumber: 'MC-2026-001',
+    surveyName: 'Land Survey Co., Ltd.',
+    propertyType: 'Land',
+    infoDateTime: '2026-02-03T17:00:00',
+    sourceInfo: 'Some Website',
+    notes: 'Verified through land office records',
+    createdOn: '2026-02-03T11:38:06.1612285',
   },
 ];
 
-export const useGetMarketSurveyById = (marketId: string) => {
+export const useGetMarketSurveyById = (marketId?: string) => {
   return useQuery({
     queryKey: ['market-survey', marketId],
     enabled: !!marketId,
     queryFn: async () => {
-      console.log(marketById);
-      return marketById;
+      const { data } = await axios.get(`https://localhost:7111/market-comparables/${marketId}`);
+      return data;
     },
   });
-};
-
-const marketById = {
-  id: 1,
-  surveyNumber: 1,
-  surveyName: 'Townhouse',
-  templateCode: 'LD1',
-  templateDesc: 'Survey Template for Townhouse',
-  collateralCode: 'LB',
-  collateralDesc: 'LB-Land & Building',
-  marketSurveyData: [
-    {
-      marketSurveyId: 1,
-      factorCode: 'F007',
-      value: 'TWH',
-      measurementUnit: '',
-      otherRemark: '',
-      factorDesc: 'Building Type',
-      fieldName: 'buildingType',
-      dataType: 'radio-group',
-      fieldLength: null,
-      fieldDecimal: null,
-      parameterGroup: 'BuildingType',
-    },
-    {
-      marketSurveyId: 1,
-      factorCode: 'F002',
-      value: 111.25,
-      measurementUnit: '',
-      otherRemark: '',
-      factorDesc: 'Land Area',
-      fieldName: 'landArea',
-      dataType: 'number-input',
-      fieldLength: 3,
-      fieldDecimal: 2,
-      parameterGroup: '',
-    },
-    {
-      marketSurveyId: 1,
-      factorCode: 'F005',
-      value: 'NEW',
-      measurementUnit: '',
-      otherRemark: '',
-      factorDesc: 'Building Condition',
-      fieldName: 'buildingCondition',
-      dataType: 'dropdown',
-      parameterGroup: 'BuildingCondition',
-    },
-    {
-      marketSurveyId: 1,
-      factorCode: 'F009',
-      value: ['ShowHouse', 'NearClubhouse'],
-      measurementUnit: '',
-      otherRemark: '',
-      factorDesc: 'Plot Location',
-      fieldName: 'plotLocation',
-      dataType: 'checkbox-group',
-      parameterGroup: 'PlotLocation',
-    },
-  ],
 };
 
 export const useGetParameter = (parameterGroup?: string) => {
@@ -406,13 +256,13 @@ export const useGetParameter = (parameterGroup?: string) => {
 
 const parameters = [
   {
-    parameterGroup: 'collateralType',
+    parameterGroup: 'propertyType',
     values: [
-      { code: 'L', description: 'Lands' },
-      { code: 'B', description: 'Building' },
-      { code: 'LB', description: 'Land and Building' },
-      { code: 'U', description: 'Condominium' },
-      { code: 'MC', description: 'Machinery' },
+      { code: 'Land', description: 'Land' },
+      { code: 'Building', description: 'Building' },
+      { code: 'LandAndBuilding', description: 'Land and Building' },
+      { code: 'Condo', description: 'Condominium' },
+      { code: 'Machine', description: 'Machinery' },
       { code: 'LS', description: 'Lease Agreement Lands' },
       { code: 'BS', description: 'Lease Agreement Building' },
       { code: 'LBS', description: 'Lease Agreement Land and Building' },
@@ -438,7 +288,7 @@ export const useDeleteMarketSurvey = () => {
 
   return useMutation({
     mutationFn: async (marketId: string): Promise<DeleteMarketSurveyResponseType> => {
-      const { data } = await axios.delete(`/market-survey/${marketId}`);
+      const { data } = await axios.delete(`/market-comparable/${marketId}`);
       return data;
     },
     onSuccess: () => {

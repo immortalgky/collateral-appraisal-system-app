@@ -1,44 +1,52 @@
 import { z } from 'zod';
 
-export const MarketSurveyDataDto = z
+export const factorDataDto = z
   .object({
-    marketSurveyId: z.coerce.number().int(),
-    factorCode: z.string(),
-    value: z.string(),
-    measurementUnit: z.string(),
-    otherRemark: z.string(),
-    factorDesc: z.string(),
-    fieldName: z.string(),
-    dataType: z.string(),
-    fieldLength: z.coerce.number(),
-    fieldDecimal: z.coerce.number(),
-    parameterGroup: z.string(),
-    mandatory: z.string(),
-    displaySeq: z.coerce.number().int(),
+    factorId: z.string().uuid().nullable().optional(),
+    factorCode: z.string().nullable().optional(),
+    value: z.string().nullable().optional(),
+    otherRemarks: z.string().nullable().optional(),
+    factorName: z.string().nullable().optional(),
+    fieldName: z.string().nullable().optional(),
+    dataType: z.string().nullable().optional(),
+    fieldLength: z.coerce.number().nullable().optional(),
+    fieldDecimal: z.coerce.number().nullable().optional(),
+    parameterGroup: z.string().nullable().optional(),
+    isActive: z.boolean().nullable().optional(),
+    displaySeq: z.coerce.number().int().nullable().optional(),
   })
   .passthrough();
 
 export const CreateMarketSurveyRequest = z
   .object({
-    marketSurveyData: z.array(MarketSurveyDataDto),
+    factorData: z.array(factorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
     surveyName: z.string(),
-    surveyTemplateCode: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
   })
   .passthrough();
 
 export const UpdateMarketSurveyRequest = z
   .object({
-    marketSurveyData: z.array(MarketSurveyDataDto),
+    factorData: z.array(factorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
     surveyName: z.string(),
-    surveyTemplateCode: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
   })
   .passthrough();
 
 export const GetMarketSurveyResponse = z
   .object({
-    marketSurveyData: z.array(MarketSurveyDataDto),
+    factorData: z.array(factorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
     surveyName: z.string(),
-    surveyTemplateCode: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
   })
   .passthrough();
 
@@ -46,16 +54,18 @@ const DeleteMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthro
 
 export const GetMarketSurveyTemplateFactorResponse = z
   .object({
-    marketSurveyId: z.coerce.number().int(),
+    factorId: z.string().uuid(),
     factorCode: z.string(),
-    factorDesc: z.string(),
-    value: z.string(),
+    value: z.any(),
+    otherRemarks: z.string(),
+    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.coerce.number(),
     fieldDecimal: z.coerce.number(),
     parameterGroup: z.string(),
-    active: z.string(),
+    isActive: z.boolean(),
+    displaySeq: z.coerce.number().int(),
   })
   .passthrough();
 
@@ -63,7 +73,7 @@ export const UpdateMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).p
 export const CreateMarketSurveyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schema = {
-  MarketSurveyDataDto,
+  factorDataDto,
   CreateMarketSurveyRequest,
   DeleteMarketSurveyResponse,
 };

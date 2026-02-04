@@ -1,18 +1,19 @@
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { FormProvider, useForm, useWatch, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   useCreateMarketSurveyRequest,
   useGetMarketSurveyById,
+  useGetMarketSurveyTemplateById,
   useUpdateMarketSurveyRequest,
 } from '../api';
 import MarketSurveyForm from '../forms/MarketSurveyForm';
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   createMarketSurveyForm,
   createMarketSurveyFormDefault,
@@ -20,38 +21,20 @@ import {
 } from '../schemas/form';
 import toast from 'react-hot-toast';
 
-// Define collateral types
-type CollateralCode = 'L' | 'LB' | 'B' | 'U' | 'LS' | 'BS' | 'LBS' | 'MC';
-interface Collateral {
-  code: CollateralCode;
-  description: string;
-}
-// List of collateral types
-const Collateral: Collateral[] = [
-  { code: 'L', description: 'Lands' },
-  { code: 'LB', description: 'Land and Building' },
-  { code: 'B', description: 'Building' },
-  { code: 'U', description: 'Condominium' },
-  { code: 'LS', description: 'Lease Agreement Lands' },
-  { code: 'BS', description: 'Lease Agreement Building' },
-  { code: 'LBS', description: 'Lease Agreement Land and Building' },
-  { code: 'MC', description: 'Machinery' },
-];
-// Helper to get collateral code by description
-const getCollateralCodeByDescription = (description?: string): CollateralCode | undefined => {
-  return Collateral.find(c => c.description === description)?.code;
-};
-
 const CreateMarketSurveyPage = () => {
+  const navigate = useNavigate();
   // Get search params for edit mode and collateral type
   const [searchParams] = useSearchParams();
   // Wacth for marketId and collateralType in URL
   const marketId = searchParams.get('id');
-  const collateralType = searchParams.get('collateralType');
+
   // if got marketId, will define isEditMode as true
   const isEditMode = !!marketId;
   // Fetch market survey data if got marketId
-  const { data: marketSurvey } = useGetMarketSurveyById(isEditMode ? marketId : undefined);
+  const { data: marketComparable } = useGetMarketSurveyById(isEditMode ? marketId : undefined);
+  const { data: template } = useGetMarketSurveyTemplateById(
+    isEditMode ? marketComparable?.marketComparable.templateId : undefined,
+  );
 
   const { mutate: createMarketSurvey, isPending: isCreating } = useCreateMarketSurveyRequest();
   const { mutate: updateMarketSurvey, isPending: isUpdating } = useUpdateMarketSurveyRequest();
@@ -64,27 +47,46 @@ const CreateMarketSurveyPage = () => {
     resolver: zodResolver(createMarketSurveyForm),
   });
 
+  const { handleSubmit } = methods;
+
   // Populate form for edit
   useEffect(() => {
-    if (!isEditMode || !marketSurvey) return;
+    if (!isEditMode || !marketComparable || !template) return;
+
+    const factorDataValue = template.template.factors.map((factor: any) => {
+      const existing = marketComparable.marketComparable.factorData.find(
+        (ed: any) => ed.factorId === factor.factorId,
+      );
+      return existing;
+    });
 
     methods.reset({
-      surveyName: marketSurvey.surveyName,
-      collateralType: marketSurvey.collateralCode,
-      surveyTemplateCode: marketSurvey.templateCode,
-      marketSurveyData: marketSurvey.marketSurveyData,
+      surveyName: marketComparable.marketComparable.surveyName,
+      propertyType: marketComparable.marketComparable.propertyType,
+      templateCode: template?.template.templateCode,
+      infoDateTime: marketComparable.marketComparable.infoDateTime,
+      note: marketComparable.marketComparable.note,
+      sourceInfo: marketComparable.marketComparable.sourceInfo,
+      templateId: marketComparable.marketComparable.templateId,
+      factorData: factorDataValue,
     });
-  }, [isEditMode, marketSurvey]);
-
-  const { handleSubmit, getValues, setValue } = methods;
-
-  const { mutate } = useCreateMarketSurveyRequest();
+  }, [isEditMode, marketComparable, template]);
 
   const onSubmit: SubmitHandler<createMarketSurveyFormType> = data => {
+    // Convert factorData values to string
+    const payload = {
+      ...data,
+      factorData: data.factorData.map(factor => ({
+        ...factor,
+        value: factor.value === null || factor.value === undefined ? '' : String(factor.value),
+      })),
+    };
+
     if (isEditMode && marketId) {
       updateMarketSurvey(
         {
-          data,
+          id: marketId,
+          ...payload,
         } as any,
         {
           onSuccess: () => {
@@ -100,11 +102,13 @@ const CreateMarketSurveyPage = () => {
     } else {
       createMarketSurvey(
         {
-          data,
+          ...payload,
+          comparableNumber: 'MC-2026-005',
         } as any,
         {
           onSuccess: response => {
             toast.success('Market survey created successfully');
+            navigate(`/market-comparable/detail?id=${response.id}`);
           },
           onError: (error: any) => {
             toast.error(
@@ -118,23 +122,8 @@ const CreateMarketSurveyPage = () => {
 
   const { isOpen, onToggle } = useDisclosure();
 
-  const handleSaveDraft = () => {
-    const data = getValues();
-    mutate(data);
-  };
-
-  // Set collateral type in form when got collateralType in URL
-  useEffect(() => {
-    if (!collateralType) return;
-
-    const code = getCollateralCodeByDescription(collateralType);
-    if (code) {
-      setValue('collateralType', code);
-    }
-  }, [collateralType, setValue]);
-
   return (
-    <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
+    <div className="flex flex-col gap-6 overflow-y-auto h-full min-h-0 scroll-smooth">
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <ResizableSidebar
@@ -161,10 +150,9 @@ const CreateMarketSurveyPage = () => {
               <div className="h-6 w-px bg-gray-200" />
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" type="button" onClick={handleSaveDraft}>
-                Save draft
+              <Button type="submit" disabled={isPending}>
+                Save
               </Button>
-              <Button type="submit">Save</Button>
             </div>
           </div>
         </form>

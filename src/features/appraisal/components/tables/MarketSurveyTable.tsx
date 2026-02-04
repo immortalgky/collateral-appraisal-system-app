@@ -5,26 +5,14 @@ import toast from 'react-hot-toast';
 import { useDeleteMarketSurvey } from '../../api';
 
 interface MarketSurveyItem {
-  id: string | number;
-  surveyNumber: string;
+  id: string;
+  comparableNumber: string;
   surveyName: string;
-  templateDesc: string;
-  collateralCode: string;
-  collateralDesc: string;
-  marketSurveyData: MarketSurveyData[];
-}
-
-interface MarketSurveyData {
-  factorCode: string;
-  value: string;
-  measurementUnit: string;
-  otherRemark: string;
-  factorDesc: string;
-  fieldName: string;
-  dataType: string;
-  fieldLength?: number;
-  fieldDecimal?: number;
-  parameterGroup?: string;
+  propertyType: string;
+  infoDateTime: string;
+  sourceInfo: string;
+  notes: string;
+  createdOn: string;
 }
 
 interface MarketSurveyTableProps {
@@ -94,10 +82,10 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
                   onDoubleClick={() => onSelect(item)}
                   className=" hover:bg-gray-50"
                 >
-                  <td className="px-4 py-3">{item.surveyNumber}</td>
+                  <td className="px-4 py-3">{item.comparableNumber}</td>
                   <td className="px-4 py-3">{item.surveyName}</td>
-                  <td className="px-4 py-3">{item.templateDesc}</td>
-                  <td className="px-4 py-3">{item.collateralDesc}</td>
+                  <td className="px-4 py-3">{item.propertyType}</td>
+                  <td className="px-4 py-3"> {new Date(item.createdOn).toLocaleString('th-TH')}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1 justify-end">
                       <button
@@ -128,8 +116,8 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
         onConfirm={handleConfirmDelete}
-        title="Delete Market Survey"
-        message="Are you sure you want to delete this market survey? This action cannot be undone."
+        title="Delete Market Comparable"
+        message="Are you sure you want to delete this market comparable? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"

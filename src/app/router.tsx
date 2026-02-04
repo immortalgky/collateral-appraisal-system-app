@@ -92,11 +92,11 @@ export const router = createBrowserRouter([
       },
       // Market Survey Routes
       {
-        path: 'market-survey',
+        path: 'market-comparables',
         element: <ListMarketSurveyPage />,
       },
       {
-        path: 'market-survey/detail',
+        path: 'market-comparable/detail',
         element: <CreateMarketSurveyPage />,
       },
       // Collateral Appraisal Routes
