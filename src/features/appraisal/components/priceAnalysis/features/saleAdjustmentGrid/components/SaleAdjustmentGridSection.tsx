@@ -15,6 +15,7 @@ import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
+import toast from 'react-hot-toast';
 
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, any>;
@@ -59,7 +60,7 @@ export const SaleAdjustmentGridSection = ({
     getValues,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = methods;
 
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
@@ -235,8 +236,31 @@ export const SaleAdjustmentGridSection = ({
     console.log(data);
   };
 
-  const handleOnSaveDraft = () => {
-    console.log(getValues());
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleOnSaveDraft = async () => {
+    try {
+      const data = getValues();
+      console.log('Save draft: ', data);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success('Draft saved successfully');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+      console.error('Save draft error:', error);
+    } finally {
+      console.log('Completed!');
+    }
   };
 
   const handleOnSelectMarketSurvey = (survey: Record<string, any>) => {
