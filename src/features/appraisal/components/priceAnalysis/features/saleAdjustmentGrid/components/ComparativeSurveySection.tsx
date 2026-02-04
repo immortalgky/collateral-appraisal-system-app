@@ -62,7 +62,7 @@ export function ComparativeSurveySection({
                 .filter(
                   f =>
                     f.factorCode === selected ||
-                    !template.comparativeFactors.some(q => q.factorId === f.value),
+                    !template?.comparativeFactors.some(q => q.factorId === f.value),
                 )
                 .map(f => ({
                   label: f.description ?? '',
@@ -76,7 +76,7 @@ export function ComparativeSurveySection({
                       className="truncate max-w-[200px]"
                       title={getFactorDesciption(f.factorCode) ?? ''}
                     >
-                      {template.comparativeFactors.find(t => t.factorId === f.factorCode) ? (
+                      {template?.comparativeFactors.find(t => t.factorId === f.factorCode) ? (
                         <RHFInputCell
                           fieldName={fieldName}
                           inputType="display"
@@ -110,7 +110,7 @@ export function ComparativeSurveySection({
                     {getPropertyValueByFactorCode(f.factorCode, property) ?? ''}
                   </td>
                   <td className="border-b border-r h-[60px] border-gray-300">
-                    {!template.comparativeFactors.find(t => t.factorId === f.factorCode) && (
+                    {!template?.comparativeFactors.find(t => t.factorId === f.factorCode) && (
                       <div className="flex flex-row justify-center items-center">
                         <button
                           type="button"

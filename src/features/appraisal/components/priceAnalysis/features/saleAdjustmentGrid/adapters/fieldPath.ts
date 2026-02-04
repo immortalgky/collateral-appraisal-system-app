@@ -11,6 +11,8 @@ export const saleGridFieldPath = {
   /** calculation section */
   calculationAdjustedValue: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.adjustedValue`,
+  calculationOfferingPrice: (arg: { column: number }) =>
+    `saleAdjustmentGridCalculations.${arg.column}.offeringPrice`,
   calculationOfferingPriceAdjustmentPct: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.offeringPriceAdjustmentPct`,
   calculationOfferingPriceAdjustmentAmt: (arg: { column: number }) =>

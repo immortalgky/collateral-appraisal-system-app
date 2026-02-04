@@ -48,6 +48,7 @@ export const SaleAdjustmentGridSection = ({
     setValue,
     formState: { errors },
   } = methods;
+
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
   const [pricingTemplateCode, setPricingTemplateCode] = useState<string>('');
   const [onLoading, setOnLoading] = useState<boolean>(true);
@@ -66,24 +67,48 @@ export const SaleAdjustmentGridSection = ({
     if (onLoading) return;
 
     if (!template) {
-      // setTimeout(() => {
-      //   setOnLoading(true);
-      //   reset({
-      //     methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
-      //     collateralType: collateralTypeId,
-      //     pricingTemplateCode: '',
-      //     comparativeSurveys: [],
-      //     comparativeFactors: [],
-      //     saleAdjustmentGridCalculations: [],
-      //     saleAdjustmentGridAdjustmentFactors: [],
-      //     saleAdjustmentGridFinalValue: {
-      //       finalValue: 0,
-      //       finalValueRounded: 0,
-      //     },
-      //   });
-      //   setOnLoading(false);
-      // }, 1000);
-      // return;
+      setTimeout(() => {
+        setOnLoading(true);
+        reset({
+          methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+          collateralType: collateralTypeId,
+          pricingTemplateCode: pricingTemplateCode,
+          comparativeSurveys: [
+            ...comparativeSurveys.map((survey, columnIndex) => ({
+              marketId: survey.id,
+              displaySeq: columnIndex + 1,
+            })),
+          ],
+          comparativeFactors: [],
+
+          saleAdjustmentGridQualitatives: [],
+
+          saleAdjustmentGridCalculations: [
+            ...comparativeSurveys.map(survey => {
+              const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+              return {
+                marketId: survey.id,
+                offeringPrice: surveyMap.get('17') ?? 0,
+                offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+                offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+                offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+                sellingPrice: surveyMap.get('21') ?? 0,
+                sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+                sellingDate: surveyMap.get('22') ?? '',
+                sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+                numberOfYears: 10, // TODO: convert selling date to number of year
+              };
+            }),
+          ],
+          saleAdjustmentGridAdjustmentFactors: [],
+          saleAdjustmentGridFinalValue: {
+            finalValue: 0,
+            finalValueRounded: 0,
+          },
+        });
+        setOnLoading(false);
+      }, 1000);
+      return;
     }
 
     // initial data
@@ -264,27 +289,29 @@ export const SaleAdjustmentGridSection = ({
             </div>
             {!onLoading && (
               <div className="flex flex-col gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowMarketSurveySelection(true)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg cursor-pointer"
-                >
-                  Add Comparative Data
-                </button>
-                {showMarketSurveySelection && (
-                  <MarketSurveySelectionModal
-                    surveys={surveys}
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowMarketSurveySelection(true)}
+                    className="w-[200px] border border-dashed border-primary text-primary hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
+                  >
+                    Add Comparative Data
+                  </button>
+                  {showMarketSurveySelection && (
+                    <MarketSurveySelectionModal
+                      surveys={surveys}
+                      comparativeSurveys={comparativeSurveys}
+                      onSelect={handleOnSelectMarketSurvey}
+                      onCancel={() => setShowMarketSurveySelection(false)}
+                    />
+                  )}
+                  <ComparativeSurveySection
                     comparativeSurveys={comparativeSurveys}
-                    onSelect={handleOnSelectMarketSurvey}
-                    onCancel={() => setShowMarketSurveySelection(false)}
+                    property={property}
+                    allFactors={allFactors}
+                    template={template}
                   />
-                )}
-                <ComparativeSurveySection
-                  comparativeSurveys={comparativeSurveys}
-                  property={property}
-                  allFactors={allFactors}
-                  template={template}
-                />
+                </div>
                 <SaleAdjustmentGridCalculationSection
                   property={property}
                   template={template}
