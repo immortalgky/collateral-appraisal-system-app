@@ -29,7 +29,7 @@ export const createLandForm = z.object({
   landZoneType: z.array(z.string()).nullable().optional(),
   plotLocationType: z.array(z.string()).nullable().optional(),
   plotLocationTypeOther: z.string().nullable().optional(),
-  landFillType: z.array(z.string()).nullable().optional(),
+  landFillType: z.string().nullable().optional(),
   landFillTypeOther: z.string().nullable().optional(),
   landFillPercent: z.coerce.number().nullable().optional(),
   soilLevel: z.coerce.number().nullable().optional(),
@@ -245,7 +245,7 @@ export const createLandAndBuildingForm = z.object({
   landZoneType: z.array(z.string()).nullable().optional(),
   plotLocationType: z.array(z.string()).nullable().optional(),
   plotLocationTypeOther: z.string().nullable().optional(),
-  landFillType: z.array(z.string()).nullable().optional(),
+  landFillType: z.string().nullable().optional(),
   landFillTypeOther: z.string().nullable().optional(),
   landFillPercent: z.coerce.number().nullable().optional(),
   soilLevel: z.coerce.number().nullable().optional(),
@@ -345,10 +345,51 @@ export const createLandAndBuildingForm = z.object({
   remark: z.string().nullable(),
 });
 
+export const landAndBuildingPMAForm = z.object({
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  sellingPrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+  titleNo: z.string().nullable().optional(),
+  rawang: z.string().nullable().optional(),
+  landNo: z.string().nullable().optional(),
+  surveyNo: z.string().nullable().optional(),
+  bookNumber: z.string().nullable().optional(),
+  pageNumber: z.string().nullable().optional(),
+  areaRai: z.number().int().nullable().optional(),
+  areaNgan: z.number().int().nullable().optional(),
+  areaSquareWa: z.number().nullable().optional(),
+  subDistrict: z.string().min(1, 'Sub district is required.'),
+  subDistrictName: z.string().nullable(),
+  district: z.string().min(1, 'District is required.'),
+  districtName: z.string().nullable(),
+  province: z.string().min(1, 'Province is required.'),
+  provinceName: z.string().nullable(),
+});
+
+export const condoPMAForm = z.object({
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  sellingPrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+  builtOnTitleNumber: z.string().min(1, 'Built on title number is required.'),
+  condoRegistrationNumber: z.string().min(1, 'Condo registration number is required.'),
+  roomNumber: z.string().min(1, 'Room number is required.'),
+  floorNumber: z.coerce.number(),
+  buildingNumber: z.string().min(1, 'Building number is required.'),
+  condoName: z.string().min(1, 'Condo name is required.'),
+  subDistrict: z.string().min(1, 'Sub district is required.'),
+  subDistrictName: z.string().nullable(),
+  district: z.string().min(1, 'District is required.'),
+  districtName: z.string().nullable(),
+  province: z.string().min(1, 'Province is required.'),
+  provinceName: z.string().nullable(),
+});
+
 export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;
 export type createLandFormType = z.infer<typeof createLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
+export type landAndBuildingPMAFormType = z.infer<typeof landAndBuildingPMAForm>;
+export type condoPMAFormType = z.infer<typeof condoPMAForm>;
 
 //===============================================================
 
@@ -381,7 +422,7 @@ export const createLandFormDefault: createLandFormType = {
   landZoneType: [],
   plotLocationType: [],
   plotLocationTypeOther: '',
-  landFillType: [],
+  landFillType: '',
   landFillTypeOther: '',
   landFillPercent: 0,
   soilLevel: 0,
@@ -585,7 +626,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   landZoneType: [],
   plotLocationType: [],
   plotLocationTypeOther: '',
-  landFillType: [],
+  landFillType: '',
   landFillTypeOther: '',
   landFillPercent: 0,
   soilLevel: 0,
@@ -684,4 +725,43 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',
+};
+
+export const landAndBuildingPMAFormDefault: landAndBuildingPMAFormType = {
+  buildingInsurancePrice: 0,
+  sellingPrice: 0,
+  forcedSalePrice: 0,
+  titleNo: '',
+  rawang: '',
+  landNo: '',
+  surveyNo: '',
+  bookNumber: '',
+  pageNumber: '',
+  areaRai: 0,
+  areaNgan: 0,
+  areaSquareWa: 0,
+  subDistrict: '',
+  subDistrictName: '',
+  district: '',
+  districtName: '',
+  province: '',
+  provinceName: '',
+};
+
+export const condoPMAFormDefault: condoPMAFormType = {
+  buildingInsurancePrice: 0,
+  sellingPrice: 0,
+  forcedSalePrice: 0,
+  builtOnTitleNumber: '',
+  condoRegistrationNumber: '',
+  roomNumber: '',
+  floorNumber: 0,
+  buildingNumber: '',
+  condoName: '',
+  subDistrict: '',
+  subDistrictName: '',
+  district: '',
+  districtName: '',
+  province: '',
+  provinceName: '',
 };

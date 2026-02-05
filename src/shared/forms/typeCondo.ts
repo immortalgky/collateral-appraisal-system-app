@@ -252,12 +252,52 @@ export const GetCondoPropertyByIdResult = z
   })
   .passthrough();
 
+export const GetCondoPMAPropertyByIdResult = z.object({
+  buildingInsurancePrice: z.coerce.number(),
+  sellingPrice: z.coerce.number(),
+  forcedSalePrice: z.coerce.number(),
+  builtOnTitleNumber: z.string(),
+  condoRegistrationNumber: z.string(),
+  roomNumber: z.string(),
+  floorNumber: z.coerce.number(),
+  buildingNumber: z.string(),
+  condoName: z.string(),
+  subDistrict: z.string(),
+  subDistrictName: z.string(),
+  district: z.string(),
+  districtName: z.string(),
+  province: z.string(),
+  provinceName: z.string(),
+});
+
+export const UpdateCondoPMARequest = z.object({
+  buildingInsurancePrice: z.coerce.number(),
+  sellingPrice: z.coerce.number(),
+  forcedSalePrice: z.coerce.number(),
+  builtOnTitleNumber: z.string(),
+  condoRegistrationNumber: z.string(),
+  roomNumber: z.string(),
+  floorNumber: z.coerce.number(),
+  buildingNumber: z.string(),
+  condoName: z.string(),
+  subDistrict: z.string(),
+  subDistrictName: z.string(),
+  district: z.string(),
+  districtName: z.string(),
+  province: z.string(),
+  provinceName: z.string(),
+});
+
 export const CreateCondoResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 export const UpdateCondoResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+export const UpdateCondoPMAResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export type CreateCondoResponseType = z.infer<typeof CreateCondoResponse>;
 export type CreateCondoRequestType = z.infer<typeof CreateCondoRequest>;
 export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
 export type UpdateCondoRequestType = z.infer<typeof UpdateCondoRequest>;
 export type UpdateCondoResponseType = z.infer<typeof UpdateCondoResponse>;
+export type UpdateCondoPMARequestType = z.infer<typeof UpdateCondoPMARequest>;
+export type UpdateCondoPMAResponseType = z.infer<typeof UpdateCondoPMAResponse>;
 export type GetCondoPropertyByIdResultType = z.infer<typeof GetCondoPropertyByIdResult>;
+export type GetCondoPMAPropertyByIdResultType = z.infer<typeof GetCondoPMAPropertyByIdResult>;

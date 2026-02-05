@@ -1,13 +1,21 @@
 import type {
+  condoPMAFormType,
   createBuildingFormType,
   createCondoFormType,
   createLandAndBuildingFormType,
   createLandFormType,
+  landAndBuildingPMAFormType,
 } from '@/features/appraisal/schemas/form';
 import type { GetLandPropertyByIdResultType } from '@/features/appraisal/api';
 import type { GetBuildingPropertyByIdResultType } from '@/shared/forms/typeBuilding';
-import type { GetCondoPropertyByIdResultType } from '@/shared/forms/typeCondo';
-import type { GetLandAndBuildingPropertyByIdResultType } from '@/shared/forms/typeLandBuilding';
+import type {
+  GetCondoPMAPropertyByIdResultType,
+  GetCondoPropertyByIdResultType,
+} from '@/shared/forms/typeCondo';
+import type {
+  GetLandAndBuildingPMAPropertyByIdResultType,
+  GetLandAndBuildingPropertyByIdResultType,
+} from '@/shared/forms/typeLandBuilding';
 
 export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyByIdResultType,
@@ -41,7 +49,7 @@ export const mapLandPropertyResponseToForm = (
     landZoneType: response.landZoneType ?? [],
     plotLocationType: response.plotLocationType ?? [],
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
-    landFillType: response.landFillType ?? [],
+    landFillType: response.landFillType ?? '',
     landFillTypeOther: response.landFillTypeOther ?? '',
     landFillPercent: response.landFillPercent ?? 0,
     soilLevel: response.soilLevel ?? 0,
@@ -367,5 +375,52 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
     remark: response.remark ?? '',
+  };
+};
+
+export const mapLandAndBuildingPMAPropertyResponseToForm = (
+  response: GetLandAndBuildingPMAPropertyByIdResultType,
+): landAndBuildingPMAFormType => {
+  return {
+    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    sellingPrice: response.sellingPrice ?? 0,
+    forcedSalePrice: response.forcedSalePrice ?? 0,
+    titleNo: response.titleNo ?? '',
+    rawang: response.rawang ?? '',
+    landNo: response.landNo ?? '',
+    surveyNo: response.surveyNo ?? '',
+    bookNumber: response.bookNumber ?? '',
+    pageNumber: response.pageNumber ?? '',
+    areaRai: response.areaRai ?? 0,
+    areaNgan: response.areaNgan ?? 0,
+    areaSquareWa: response.areaSquareWa ?? 0,
+    subDistrict: response.subDistrict ?? '',
+    subDistrictName: '',
+    district: response.district ?? '',
+    districtName: '',
+    province: response.province ?? '',
+    provinceName: '',
+  };
+};
+
+export const mapCondoPMAPropertyResponseToForm = (
+  response: GetCondoPMAPropertyByIdResultType,
+): condoPMAFormType => {
+  return {
+    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    sellingPrice: response.sellingPrice ?? 0,
+    forcedSalePrice: response.forcedSalePrice ?? 0,
+    builtOnTitleNumber: response.builtOnTitleNumber ?? '',
+    condoRegistrationNumber: response.condoRegistrationNumber ?? '',
+    roomNumber: response.roomNumber ?? '',
+    floorNumber: response.floorNumber ?? 0,
+    buildingNumber: response.buildingNumber ?? '',
+    condoName: response.condoName ?? '',
+    subDistrict: response.subDistrict ?? '',
+    subDistrictName: '',
+    district: response.district ?? '',
+    districtName: '',
+    province: response.province ?? '',
+    provinceName: '',
   };
 };

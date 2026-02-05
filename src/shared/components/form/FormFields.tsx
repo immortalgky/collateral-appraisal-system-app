@@ -318,6 +318,7 @@ function FieldRenderer({
     disableWhen: _dw,
     enableWhen: _ew,
     disabled: _d,
+    disabledValue: _dv,
     ...passedField
   } = field;
 

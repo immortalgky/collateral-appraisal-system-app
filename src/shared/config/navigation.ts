@@ -75,13 +75,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'folder-open',
     iconColor: 'text-emerald-500',
     iconStyle: 'solid',
-    allowedRoles: [
-      'admin',
-      'request_creator',
-      'request_approver',
-      'task_assigner',
-      'viewer',
-    ],
+    allowedRoles: ['admin', 'request_creator', 'request_approver', 'task_assigner', 'viewer'],
     children: [
       {
         name: 'Request Listing',
@@ -271,6 +265,20 @@ export const navigationConfig: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Land and Building PMA',
+        href: '/land-building-pma',
+        icon: 'house',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
+      {
+        name: 'Condominium PMA',
+        href: '/condo-pma',
+        icon: 'house',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];
@@ -280,26 +288,33 @@ export const navigationConfig: NavItem[] = [
  */
 export function getNavigationByRole(role: WorkflowActivity): NavItem[] {
   const filterItems = (items: NavItem[]): NavItem[] => {
-    return items
-      .filter(item => {
-        // Check if explicitly denied
-        if (item.deniedRoles?.includes(role)) {
-          return false;
-        }
-        // If no allowedRoles specified, allow all
-        if (!item.allowedRoles || item.allowedRoles.length === 0) {
-          return true;
-        }
-        // Check if role is in allowedRoles
-        return item.allowedRoles.includes(role);
-      })
-      .map(item => ({
-        ...item,
-        // Recursively filter children
-        children: item.children ? filterItems(item.children) : undefined,
-      }))
-      // Remove items whose children are all filtered out (if they had children)
-      .filter(item => !item.children || item.children.length > 0 || !navigationConfig.find(n => n.href === item.href)?.children);
+    return (
+      items
+        .filter(item => {
+          // Check if explicitly denied
+          if (item.deniedRoles?.includes(role)) {
+            return false;
+          }
+          // If no allowedRoles specified, allow all
+          if (!item.allowedRoles || item.allowedRoles.length === 0) {
+            return true;
+          }
+          // Check if role is in allowedRoles
+          return item.allowedRoles.includes(role);
+        })
+        .map(item => ({
+          ...item,
+          // Recursively filter children
+          children: item.children ? filterItems(item.children) : undefined,
+        }))
+        // Remove items whose children are all filtered out (if they had children)
+        .filter(
+          item =>
+            !item.children ||
+            item.children.length > 0 ||
+            !navigationConfig.find(n => n.href === item.href)?.children,
+        )
+    );
   };
 
   return filterItems(navigationConfig);

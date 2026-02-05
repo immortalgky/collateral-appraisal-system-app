@@ -30,7 +30,7 @@ export const CreateLandAndBuildingRequest = z
     landZoneType: z.array(z.string()),
     plotLocationType: z.array(z.string()),
     plotLocationTypeOther: z.string(),
-    landFillType: z.array(z.string()),
+    landFillType: z.string(),
     landFillTypeOther: z.string(),
     landFillPercent: z.coerce.number(),
     soilLevel: z.coerce.number(),
@@ -161,7 +161,7 @@ export const UpdateLandAndBuildingRequest = z
     landZoneType: z.array(z.string()),
     plotLocationType: z.array(z.string()),
     plotLocationTypeOther: z.string(),
-    landFillType: z.array(z.string()),
+    landFillType: z.string(),
     landFillTypeOther: z.string(),
     landFillPercent: z.coerce.number(),
     soilLevel: z.coerce.number(),
@@ -292,7 +292,7 @@ export const GetLandAndBuildingPropertyByIdResult = z
     landZoneType: z.array(z.string()),
     plotLocationType: z.array(z.string()),
     plotLocationTypeOther: z.string(),
-    landFillType: z.array(z.string()),
+    landFillType: z.string(),
     landFillTypeOther: z.string(),
     landFillPercent: z.coerce.number(),
     soilLevel: z.coerce.number(),
@@ -393,13 +393,61 @@ export const GetLandAndBuildingPropertyByIdResult = z
   })
   .passthrough();
 
+export const GetLandAndBuildingPMAPropertyByIdResult = z.object({
+  buildingInsurancePrice: z.coerce.number(),
+  sellingPrice: z.coerce.number(),
+  forcedSalePrice: z.coerce.number(),
+  titleNo: z.string(),
+  rawang: z.string(),
+  landNo: z.string(),
+  surveyNo: z.string(),
+  bookNumber: z.string(),
+  pageNumber: z.string(),
+  areaRai: z.number().int(),
+  areaNgan: z.number().int(),
+  areaSquareWa: z.number(),
+  subDistrict: z.string(),
+  subDistrictName: z.string(),
+  district: z.string(),
+  districtName: z.string(),
+  province: z.string(),
+  provinceName: z.string(),
+});
+
+export const UpdateLandAndBuildingPMARequest = z.object({
+  buildingInsurancePrice: z.coerce.number(),
+  sellingPrice: z.coerce.number(),
+  forcedSalePrice: z.coerce.number(),
+  titleNo: z.string(),
+  rawang: z.string(),
+  landNo: z.string(),
+  surveyNo: z.string(),
+  bookNumber: z.string(),
+  pageNumber: z.string(),
+  areaRai: z.number().int(),
+  areaNgan: z.number().int(),
+  areaSquareWa: z.number(),
+  subDistrict: z.string(),
+  subDistrictName: z.string(),
+  district: z.string(),
+  districtName: z.string(),
+  province: z.string(),
+  provinceName: z.string(),
+});
+
 export const CreateLandAndBuildingResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 export const UpdateLandAndBuildingResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+export const UpdateLandAndBuildingPMAResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export type CreateLandAndBuildingRequestType = z.infer<typeof CreateLandAndBuildingRequest>;
 export type CreateLandAndBuildingResponseType = z.infer<typeof CreateLandAndBuildingResponse>;
 export type UpdateLandAndBuildingRequestType = z.infer<typeof UpdateLandAndBuildingRequest>;
 export type UpdateLandAndBuildingResponseType = z.infer<typeof UpdateLandAndBuildingResponse>;
+export type UpdateLandAndBuildingPMARequestType = z.infer<typeof UpdateLandAndBuildingPMARequest>;
+export type UpdateLandAndBuildingPMAResponseType = z.infer<typeof UpdateLandAndBuildingPMAResponse>;
 export type GetLandAndBuildingPropertyByIdResultType = z.infer<
   typeof GetLandAndBuildingPropertyByIdResult
+>;
+export type GetLandAndBuildingPMAPropertyByIdResultType = z.infer<
+  typeof GetLandAndBuildingPMAPropertyByIdResult
 >;
