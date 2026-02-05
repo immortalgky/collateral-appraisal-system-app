@@ -45,11 +45,6 @@ const MarketSurveyForm = () => {
   });
   const isEditMode = !!factorData?.length;
 
-  const useTemplateFactor = !isEditMode || isTemplateChanged;
-
-  // Determine which factors to display
-  const displayFactors = useTemplateFactor ? factors : factorData;
-
   // Initialize market surveytemplate code
   useEffect(() => {
     if (isEditMode) return;
@@ -76,17 +71,17 @@ const MarketSurveyForm = () => {
   // Initialize market survey data field
   useEffect(() => {
     if (!templateCode) return;
-    if (!displayFactors.length) return;
+    if (!factors.length) return;
 
     // edit mode + haven't change template
     if (isEditMode && !isTemplateChanged) return;
 
     const oldData = getValues('factorData') ?? [];
 
-    const defaultData = defaultMarketSurveyData(displayFactors, oldData);
+    const defaultData = defaultMarketSurveyData(factors, oldData);
 
     setValue('factorData', defaultData, { shouldDirty: true });
-  }, [templateCode, displayFactors, isEditMode, isTemplateChanged, getValues, setValue]);
+  }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue]);
 
   useEffect(() => {
     if (!templateCode) return;
@@ -185,7 +180,7 @@ const MarketSurveyForm = () => {
         </div>
       ) : (
         <div>
-          {displayFactors.map((fac: any, index: number) => {
+          {factors.map((fac: any, index: number) => {
             const fields: FormField[] = [buildFormField(fac, index, parameterOptions)];
             return (
               <div key={fac.factorCode} className="grid grid-cols-4 gap-6 mb-6">
