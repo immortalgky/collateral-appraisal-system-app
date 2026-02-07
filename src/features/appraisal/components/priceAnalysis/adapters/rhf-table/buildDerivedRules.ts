@@ -44,6 +44,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
+    calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationLandAreaDiff: calculationLandAreaDiffPath,
     calculationLandValueIncreaseDecrease: calculationLandValueIncreaseDecreasePath,
     calculationUsableAreaDiff: calculationUsableAreaDiffPath,
@@ -80,7 +81,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
             }
             const sellingPrice = s.factors?.find(f => f.id === '21')?.value;
             if (sellingPrice) {
-              const numberOfYears = 5; // TODO: replacing by number of from selling date to current date, if month > 6, round up
+              const numberOfYears =
+                getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
@@ -256,11 +258,16 @@ export function buildSaleGridAdjustmentFactorRules(args: {
             deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
             when: ({ getValues }) => {
               console.log(
-                getValues(
-                  adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+                `row ${rowIndex}:`,
+                qualitativeDefault.includes(
+                  getValues(
+                    adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+                  ),
                 ),
+                `value: ${getValues(
+                  adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+                )}`,
               );
-
               return qualitativeDefault.includes(
                 getValues(
                   adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
@@ -269,10 +276,27 @@ export function buildSaleGridAdjustmentFactorRules(args: {
             },
             compute: ({ getValues }) => {
               const level =
-                getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? '';
-              return qualitativeDefaultPercent(level);
+                getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
+              return qualitativeDefaultPercent(level) ?? null;
             },
           },
+          // {
+          //   targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+          //   deps: [adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex })],
+          //   compute: ({ getValues }) => {
+          //     const level =
+          //       getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? '';
+          //     const value =
+          //       getValues(
+          //         adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+          //       ) ?? 0;
+          //     console.log(`adjust: ${qualitativeDefaultPercent(level)}, ${value}`);
+          //     if (qualitativeDefaultPercent(level) > 0 && value < 0) return Math.abs(value);
+          //     if (qualitativeDefaultPercent(level) < 0 && value > 0) return -value;
+          //     return null;
+          //   },
+          //   equals: (a: unknown, b: unknown) => a == b,
+          // },
           {
             targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
             deps: [

@@ -24,14 +24,16 @@ export const SaleAdjustmentGridCalculationSection = ({
 
   return (
     <div>
-      <QualitativeTable
-        comparativeSurveys={comparativeSurveys}
-        saleAdjustmentGridQualitatives={saleAdjustmentGridQualitatives}
-        comparativeFactors={comparativeFactors}
-        property={property}
-        template={template}
-        isLoading={false}
-      />
+      {comparativeSurveys.length > 0 && (
+        <QualitativeTable
+          comparativeSurveys={comparativeSurveys}
+          saleAdjustmentGridQualitatives={saleAdjustmentGridQualitatives}
+          comparativeFactors={comparativeFactors}
+          property={property}
+          template={template}
+          isLoading={false}
+        />
+      )}
     </div>
   );
 };

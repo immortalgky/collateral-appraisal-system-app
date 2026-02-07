@@ -79,6 +79,12 @@ export type DerivedFieldRule<
   /**
    * Optional equality comparator after normalization.
    * Defaults to `Object.is`.
+   *
+   * NOTE:
+   * Object.is(a, b) checks “same value” (no type 'coercion', e.g. Object.is(1, "1") eqaul to false), similar to ===
+   * but with 2 key differences:
+   * 1) Object.is(NaN, NaN) === true   (where NaN === NaN is false)
+   * 2) Object.is(-0, 0) === false     (where -0 === 0 is true)
    */
   equals?: (a: unknown, b: unknown) => boolean;
   /** Fallback value if compute returns null/undefined/NaN. Defaults to 0. */
@@ -184,6 +190,7 @@ export function useDerivedFields<
         const nextNorm = normalize(next);
 
         if (!equals(curr, nextNorm)) {
+          console.log(curr, nextNorm);
           setValue(r.targetPath as any, nextNorm as any, {
             shouldDirty: r.setValueOptions?.shouldDirty ?? false,
             shouldTouch: r.setValueOptions?.shouldTouch ?? false,

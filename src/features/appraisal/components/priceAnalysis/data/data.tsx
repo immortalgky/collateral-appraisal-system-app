@@ -235,7 +235,6 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
       { factorId: '08' },
       { factorId: '09' },
       { factorId: '10' },
-      { factorId: '11' },
     ],
   },
   {
@@ -265,6 +264,7 @@ export const MOC_SURVEY_DATA = [
   // survey for land
   {
     id: 'SURVEY_01',
+    surveyName: 'Survey 1',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
       { id: '02', value: 'แปลงมุม' },
@@ -279,6 +279,7 @@ export const MOC_SURVEY_DATA = [
   },
   {
     id: 'SURVEY_02',
+    surveyName: 'Survey 2',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
       { id: '02', value: 'แปลงกลาง' },
@@ -292,6 +293,7 @@ export const MOC_SURVEY_DATA = [
   },
   {
     id: 'SURVEY_03',
+    surveyName: 'Survey 3',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
       { id: '02', value: 'แปลงกลาง' },
@@ -308,6 +310,7 @@ export const MOC_SURVEY_DATA = [
   // survey for land and building
   {
     id: 'SURVEY_04',
+    surveyName: 'Survey 4',
     factors: [
       { id: '02', value: 'แปลงกลาง' },
       { id: '03', value: 'รูปหลายเหลี่ยม' },
@@ -322,6 +325,7 @@ export const MOC_SURVEY_DATA = [
   },
   {
     id: 'SURVEY_05',
+    surveyName: 'Survey 5',
     factors: [
       { id: '02', value: 'แปลงมุม' },
       { id: '03', value: 'รูปหลายเหลี่ยม' },
@@ -336,6 +340,7 @@ export const MOC_SURVEY_DATA = [
   },
   {
     id: 'SURVEY_06',
+    surveyName: 'Survey 6',
     factors: [
       { id: '02', value: 'แปลงกลาง' },
       { id: '03', value: 'รูปหลายเหลี่ยม' },

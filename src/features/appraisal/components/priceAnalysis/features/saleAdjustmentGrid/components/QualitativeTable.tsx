@@ -53,12 +53,41 @@ export const QualitativeTable = ({
     name: 'saleAdjustmentGridAdjustmentFactors',
   });
 
+  /** field path */
   const {
+    /** qualitative */
     qualitativeLevel: qualitativeLevelPath,
-    adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
-    adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
-    calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+    qualitativeFactorCode: qualitativeFactorCodePath,
+
+    /** initial value */
     calculationOfferingPrice: calculationOfferingPricePath,
+    calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
+    calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
+    calculationNumberOfYears: calculationNumberOfYearsPath,
+    calculationAdjustmentYear: calculationAdjustmentYearPath,
+
+    /** 2nd revision */
+    calculationLandAreaDiff: calculationLandAreaDiffPath,
+    calculationLandPrice: calculationLandPricePath,
+    calculationAdjustedValue: calculationAdjustedValuePath,
+    calculationLandValueIncreaseDecrease: calculationLandValueIncreaseDecreasePath,
+    calculationUsableAreaPrice: calculationUsableAreaPricePath,
+    calculationUsableAreaDiff: calculationUsableAreaDiffPath,
+    calculationBuildingValueIncreaseDecrease: calculationBuildingValueIncreaseDecreasePath,
+    calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+    calculationSumFactorPct: calculationSumFactorPctPath,
+    calculationSumFactorAmt: calculationSumFactorAmtPath,
+    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
+    calculationWeight: calculationWeightPath,
+    calculationWeightAdjustValue: calculationWeightAdjustValuePath,
+
+    /** adjust percent */
+    adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
+    adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
+
+    /** final value */
+    finalValue: finalValuePath,
+    finalValueRounded: finalValueRoundedPath,
   } = saleGridFieldPath;
 
   const handleAddRow = () => {
@@ -112,12 +141,12 @@ export const QualitativeTable = ({
     'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
   const rightColumnBody =
     'border-b border-gray-300 text-left font-medium sticky right-[70px] z-25 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap';
-  const surveyStyle = 'px-3 py-2.5 border-b border-gray-300';
+  const surveyStyle = 'px-3 py-2.5 border-b border-r border-gray-300';
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col border border-gray-300 rounded-xl">
-      <div className="flex-1 min-h-0 overflow-auto">
-        <table className="table table-sm min-w-max border-separate border-spacing-0">
+      <div className="flex-1 min-h-0 overflow-auto border-separate border-spacing-0">
+        <table className="table table-sm min-w-max">
           <thead className="bg-neutral-50">
             <tr className="border-b border-gray-300">
               <th
@@ -144,7 +173,7 @@ export const QualitativeTable = ({
                 rowSpan={2}
                 className="bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-25 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap"
               >
-                <div>Action</div>
+                <div></div>
               </th>
             </tr>
             <tr className="border-b border-gray-300">
@@ -153,10 +182,10 @@ export const QualitativeTable = ({
                   <th
                     key={col.id}
                     className={
-                      'bg-gray-50 font-medium text-gray-600 px-3 py-2.5 border-r border-b border-gray-300 text-center sticky top-[40px] h-[45px] min-h-[45px] max-h-[45px] z-23 whitespace-nowrap'
+                      'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[40px] h-[45px] min-h-[45px] max-h-[45px] z-23 whitespace-nowrap'
                     }
                   >
-                    <div>survey {index + 1}</div>
+                    <div>{col.surveyName}</div>
                   </th>
                 );
               })}
@@ -181,20 +210,19 @@ export const QualitativeTable = ({
                     label: getDesciptions(f.factorCode) ?? '',
                     value: f.factorCode,
                   }));
-                const fieldName = `saleAdjustmentGridQualitatives.${rowIndex}.factorCode`;
                 return (
                   <tr key={f.id}>
                     <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                       <div className="truncate">
                         {template?.qualitativeFactors.find(t => t.factorId === f.factorCode) ? (
                           <RHFInputCell
-                            fieldName={fieldName}
+                            fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) => getDesciptions(value)}
                           />
                         ) : (
                           <RHFInputCell
-                            fieldName={fieldName}
+                            fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                             inputType="select"
                             options={qualitativeFactors}
                           />
@@ -208,8 +236,12 @@ export const QualitativeTable = ({
                           <div className="flex flex-row justitfy-between items-center gap-2">
                             <div className="w-[150px]">
                               <RHFInputCell
-                                fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.qualitatives.${columnIndex}.qualitativeLevel`}
+                                fieldName={qualitativeLevelPath({
+                                  row: rowIndex,
+                                  column: columnIndex,
+                                })}
                                 inputType="select"
+                                // can config
                                 options={[
                                   { label: 'Equal', value: 'E' },
                                   { label: 'Inferior', value: 'I' },
@@ -218,7 +250,7 @@ export const QualitativeTable = ({
                               />
                             </div>
                             <RHFInputCell
-                              fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
+                              fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                               inputType="display"
                               accessor={({ value }) =>
                                 col.factors?.find(f => f.id === value)?.value ?? ''
@@ -231,11 +263,11 @@ export const QualitativeTable = ({
 
                     <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}>
                       <RHFInputCell
-                        fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
+                        fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
-                        accessor={({ value }) =>
-                          getPropertyValueByFactorCode(value, property) ?? ''
-                        }
+                        accessor={({ value }) => {
+                          return getPropertyValueByFactorCode(value, property) ?? '';
+                        }}
                       />
                     </td>
                     <td className="border-b border-gray-300 sticky right-0 z-25 bg-white w-[70px] min-w-[70px] max-w-[70px]">
@@ -276,11 +308,11 @@ export const QualitativeTable = ({
               <td className="border-b border-gray-300 sticky right-0 z-25 bg-white w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
 
-            {/* saleAdjustmentGridFinalValue */}
+            {/* initial value */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Initial Price</td>
               {comparativeSurveys.map((col, columnIndex) => {
-                return <td key={col.id} className={clsx(surveyStyle)}></td>;
+                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
               <td className="border-b border-gray-300 bg-gray-200 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
@@ -291,7 +323,7 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -315,7 +347,7 @@ export const QualitativeTable = ({
                 return (
                   <td key={s.id} className={'border-b border-r border-gray-300'}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentPct`}
+                      fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
                       inputType="number"
                     />
                   </td>
@@ -336,7 +368,7 @@ export const QualitativeTable = ({
                 return (
                   <td key={s.id} className={clsx(surveyStyle)}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.offeringPriceAdjustmentAmt`}
+                      fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
                       inputType="number"
                     />
                   </td>
@@ -353,8 +385,8 @@ export const QualitativeTable = ({
                 const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
                 if (!sellingPrice) return <td key={s.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
-                    {sellingPrice}
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                    {sellingPrice.toLocaleString()}
                   </td>
                 );
               })}
@@ -367,7 +399,8 @@ export const QualitativeTable = ({
                 return (
                   <td key={s.id} className={clsx(surveyStyle)}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.numberOfYears`}
+                      fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
+                      inputType="display"
                     />
                   </td>
                 );
@@ -385,7 +418,7 @@ export const QualitativeTable = ({
                 return (
                   <td key={s.id} className={clsx(surveyStyle)}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.sellingPriceAdjustmentYear`}
+                      fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
                       inputType="number"
                     />
                   </td>
@@ -402,8 +435,11 @@ export const QualitativeTable = ({
                 return (
                   <td key={s.id} className={'border-b border-r border-gray-300'}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.adjustedValue`}
+                      fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
+                      accessor={({ value }) => {
+                        return value ? value.toLocaleString() : 0;
+                      }}
                     />
                   </td>
                 );
@@ -416,7 +452,7 @@ export const QualitativeTable = ({
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>2nd Revision</td>
               {comparativeSurveys.map((col, columnIndex) => {
-                return <td key={col.id} className={clsx(surveyStyle)}></td>;
+                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
               <td className="border-b border-gray-300 w-[70px] sticky right-0 z-25 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
@@ -433,7 +469,7 @@ export const QualitativeTable = ({
                   <td key={s.id} className={clsx(surveyStyle)}>
                     <div className="flex flex-row justify-end">
                       <RHFInputCell
-                        fieldName={`saleAdjustmentGridCalculations.${columnIndex}.landAreaOfDeficient`}
+                        fieldName={calculationLandAreaDiffPath({ column: columnIndex })}
                         inputType="display"
                         accessor={({ value }) => {
                           return value ? value.toLocaleString() : value;
@@ -448,22 +484,24 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center">
+                <div className="flex flex-row justify-between items-center gap-2">
                   <span>Land Price</span>
-                  <div className="flex flex-row justitfy items-center gap-2 w-[180px]">
-                    <RHFInputCell fieldName="landPrice" inputType="number" />
+                  <div className="flex flex-row justitfy items-center gap-1">
+                    <div className="w-24">
+                      <RHFInputCell fieldName={calculationLandPricePath()} inputType="number" />
+                    </div>
                     <span>Baht/ Sq. Wa</span>
                   </div>
                 </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
-                      fieldName={`landPrice`}
+                      fieldName={calculationLandPricePath()}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : value;
+                        return value ? value.toLocaleString() : 0;
                       }}
                     />
                   </td>
@@ -481,12 +519,12 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.landValueIncreaseDecrease`}
+                      fieldName={calculationLandValueIncreaseDecreasePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : value;
+                        return value ? value.toLocaleString() : 0;
                       }}
                     />
                   </td>
@@ -504,12 +542,12 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.usableAreaOfDeficient`}
+                      fieldName={calculationUsableAreaDiffPath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : value;
+                        return value ? value.toLocaleString() : 0;
                       }}
                     />
                   </td>
@@ -520,21 +558,26 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center">
+                <div className="flex flex-row justify-between items-center gap-2">
                   <span>Usable area price</span>
-                  <div className="flex flex-row justitfy items-center gap-2 w-[180px]">
-                    <RHFInputCell fieldName="usableAreaPrice" inputType="number" />
+                  <div className="flex flex-row justitfy items-center gap-1">
+                    <div className="w-24">
+                      <RHFInputCell
+                        fieldName={calculationUsableAreaPricePath()}
+                        inputType="number"
+                      />
+                    </div>
                     <span>Baht/ Sq. Meter</span>
                   </div>
                 </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
                       fieldName={`usableAreaPrice`}
                       inputType="display"
-                      accessor={({ value }) => value?.toLocaleString()}
+                      accessor={({ value }) => (value ? value.toLocaleString() : 0)}
                     />
                   </td>
                 );
@@ -551,9 +594,11 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.buildingValueIncreaseDecrease`}
+                      fieldName={calculationBuildingValueIncreaseDecreasePath({
+                        column: columnIndex,
+                      })}
                       inputType="display"
                       accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
@@ -571,9 +616,9 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
-                      fieldName={`saleAdjustmentGridCalculations.${columnIndex}.totalSecondRevision`}
+                      fieldName={calculationTotalSecondRevisionPath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
                         return value ? value.toLocaleString() : value;
@@ -590,7 +635,7 @@ export const QualitativeTable = ({
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjusted Value</td>
               {comparativeSurveys.map((col, columnIndex) => {
-                return <td key={col.id} className={clsx(surveyStyle)}></td>;
+                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
               <td className="border-b border-gray-300 w-[70px] sticky right-0 z-25 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
@@ -601,7 +646,7 @@ export const QualitativeTable = ({
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     {
                       <RHFInputCell
-                        fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.factorCode`}
+                        fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
                         accessor={({ value }) => getFactorDesciption(value) ?? ''}
                       />
@@ -611,15 +656,33 @@ export const QualitativeTable = ({
                     return (
                       <td key={s.id} className={clsx(surveyStyle)}>
                         <div className="flex flex-row justify-between items-center">
-                          <div className="w-[150px]">
-                            <RHFInputCell
-                              fieldName={`saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustPercent`}
-                              inputType="number"
-                            />
+                          <div className="w-[100px]">
+                            {getValues(
+                              qualitativeLevelPath({ row: rowIndex, column: columnIndex }),
+                            ) == 'E' ? (
+                              <RHFInputCell
+                                fieldName={adjustmentFactorAdjustPercentPath({
+                                  row: rowIndex,
+                                  column: columnIndex,
+                                })}
+                                inputType="display"
+                              />
+                            ) : (
+                              <RHFInputCell
+                                fieldName={adjustmentFactorAdjustPercentPath({
+                                  row: rowIndex,
+                                  column: columnIndex,
+                                })}
+                                inputType="number"
+                              />
+                            )}
                           </div>
                           <div>
                             <RHFInputCell
-                              fieldName={`saleAdjustmentGridAdjustmentFactors.${rowIndex}.surveys.${columnIndex}.adjustAmount`}
+                              fieldName={adjustmentFactorAdjustAmountPath({
+                                row: rowIndex,
+                                column: columnIndex,
+                              })}
                               inputType="display"
                               accessor={({ value, formState, getFieldState }) => {
                                 return qualitativeDefault.includes(
@@ -655,17 +718,17 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
                     <div className="flex flex-row justify-between items-center">
                       <div>
                         <RHFInputCell
-                          fieldName={`saleAdjustmentGridCalculations.${columnIndex}.factorDiffPct`}
+                          fieldName={calculationSumFactorPctPath({ column: columnIndex })}
                           inputType="display"
                         />
                       </div>
                       <div>
                         <RHFInputCell
-                          fieldName={`saleAdjustmentGridCalculations.${columnIndex}.factorDiffAmt`}
+                          fieldName={calculationSumFactorAmtPath({ column: columnIndex })}
                           inputType="display"
                         />
                       </div>
@@ -684,18 +747,14 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
-                    <div className="flex flex-row justify-between items-center">
-                      <div>
-                        <RHFInputCell
-                          fieldName={`saleAdjustmentGridCalculations.${columnIndex}.totalAdjustValue`}
-                          inputType="display"
-                          accessor={({ value }) => {
-                            return value ? value.toLocaleString() : value;
-                          }}
-                        />
-                      </div>
-                    </div>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                    <RHFInputCell
+                      fieldName={calculationTotalAdjustValuePath({ column: columnIndex })}
+                      inputType="display"
+                      accessor={({ value }) => {
+                        return value ? value.toLocaleString() : value;
+                      }}
+                    />
                   </td>
                 );
               })}
@@ -707,7 +766,7 @@ export const QualitativeTable = ({
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjust Weight</td>
               {comparativeSurveys.map((col, columnIndex) => {
-                return <td key={col.id} className={clsx(surveyStyle)}></td>;
+                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
               <td className="border-b border-gray-300 w-[70px] sticky right-0 z-25 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
@@ -721,7 +780,7 @@ export const QualitativeTable = ({
                   <td key={s.id} className={clsx(surveyStyle)}>
                     <div className="flex flex-row justify-between items-center">
                       <RHFInputCell
-                        fieldName={`saleAdjustmentGridCalculations.${columnIndex}.weight`}
+                        fieldName={calculationWeightPath({ column: columnIndex })}
                         inputType="number"
                       />
                     </div>
@@ -737,30 +796,16 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
-                    <div className="flex flex-row justify-between items-center">
-                      <RHFInputCell
-                        fieldName={`saleAdjustmentGridCalculations.${columnIndex}.weightedAdjustValue`}
-                        inputType="display"
-                        accessor={({ value }) => {
-                          return value ? value.toLocaleString() : value;
-                        }}
-                      />
-                    </div>
+                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                    <RHFInputCell
+                      fieldName={calculationWeightAdjustValuePath({ column: columnIndex })}
+                      inputType="display"
+                      accessor={({ value }) => {
+                        return value ? value.toLocaleString() : value;
+                      }}
+                    />
                   </td>
                 );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-col">
-                  <span>Total of Adjusted Value</span>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return <td key={s.id} className={clsx(surveyStyle)}></td>;
               })}
               <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
               <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
@@ -770,15 +815,15 @@ export const QualitativeTable = ({
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Final Value</td>
               {comparativeSurveys.map((s, columnIndex) => {
-                return <td key={s.id} className={clsx(surveyStyle)}></td>;
+                return <td key={s.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
-              <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}>
+              <td className={clsx('bg-gray-200 text-right', rightColumnBody, bgGradientLeft)}>
                 <div>
                   <RHFInputCell
-                    fieldName="saleAdjustmentGridFinalValue.finalValue"
+                    fieldName={finalValuePath()}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : value;
+                      return value ? value.toLocaleString() : 0;
                     }}
                   />
                 </div>
@@ -790,15 +835,10 @@ export const QualitativeTable = ({
                 {'Final Value (Rounded)'}
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
-                return <td key={s.id} className={clsx(surveyStyle)}></td>;
+                return <td key={s.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}>
-                <div>
-                  <RHFInputCell
-                    fieldName="saleAdjustmentGridFinalValue.finalValueRounded"
-                    inputType="number"
-                  />
-                </div>
+                <RHFInputCell fieldName={finalValueRoundedPath()} inputType="number" />
               </td>
               <td className="border-b border-gray-300 bg-gray-200 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
             </tr>
