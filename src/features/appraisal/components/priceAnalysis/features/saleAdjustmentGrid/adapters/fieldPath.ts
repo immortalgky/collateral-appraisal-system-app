@@ -27,8 +27,8 @@ export const saleGridFieldPath = {
   /** second revision */
   calculationLandAreaDiff: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.landAreaOfDeficient`,
-  calculationLandPrice: () => 'landPrice',
   // land price
+  calculationLandPrice: () => 'landPrice',
   calculationLandValueIncreaseDecrease: (
     arg: { column: number }, // TODO: change to proper name
   ) => `saleAdjustmentGridCalculations.${arg.column}.landValueIncreaseDecrease`,

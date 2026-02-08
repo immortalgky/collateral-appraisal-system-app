@@ -1,4 +1,4 @@
-export const qualitativeDefault = [-5, 5]; // remove 0 because when we input first letter '-' minus, value will be
+export const qualitativeDefault = [-5, 0, 5]; // remove 0 because when we input first letter '-' minus, value will be
 export type QualitativeLevel = 'E' | 'I' | 'B' | '';
 export const qualitativeDefaultPercent = (level: QualitativeLevel): number => {
   if (level === 'E') return 0;

@@ -81,7 +81,6 @@ export function ComparativeSurveySection({
                   label: f.description ?? '',
                   value: f.value,
                 }));
-              console.log(selected.factorCode, comparativeFactors);
               return (
                 <tr key={f.id} className="hover:bg-gray-50 cursor-default transition-colors">
                   <td

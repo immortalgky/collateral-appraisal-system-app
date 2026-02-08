@@ -149,7 +149,7 @@ export function useDerivedFields<
 
   const depValues = useWatch({
     control,
-    name: depNames.length ? (depNames as any) : undefined,
+    name: depNames as any,
   });
 
   // Register target paths only once (avoids re-register churn)
@@ -164,6 +164,8 @@ export function useDerivedFields<
   }, [register, rules]);
 
   useEffect(() => {
+    if (depNames.length === 0) return;
+
     // If you ever return arrays/objects, supply r.equals or r.normalize to stable primitives
     const defaultEquals = (a: any, b: any) => Object.is(a, b);
 

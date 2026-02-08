@@ -4,6 +4,10 @@ export function round2(n: unknown): number {
   return Math.round(x * 100) / 100;
 }
 
+export function floorToTenThousands(num) {
+  return Math.floor(num / 10000) * 10000;
+}
+
 /**
  * NOTE:
  * - pct > 0 => offeringPrice - offeringPrice * pct/100
@@ -69,6 +73,12 @@ export function calcSum(values: unknown): number {
   return round2(nums.reduce((acc, n) => acc + n, 0));
 }
 
+export function calcTotalAdjustValue(totalDiffAmt: unknown, totalSecondRevision: unknown): number {
+  const td = Number(totalDiffAmt) || 0;
+  const ts = Number(totalSecondRevision) || 0;
+  return round2(td + ts);
+}
+
 /**
  * NOTE:
  * Weight is percent by input, so no need to (weight / 100).
@@ -77,4 +87,9 @@ export function calcWeightedAdjustValue(totalAdjustValue: unknown, weight: unkno
   const v = Number(totalAdjustValue) || 0;
   const w = Number(weight) || 0;
   return round2(v * w);
+}
+
+export function calcFinalValueRoundedValue(finalValue: unknown): number {
+  const v = Number(finalValue) || 0;
+  return floorToTenThousands(v);
 }

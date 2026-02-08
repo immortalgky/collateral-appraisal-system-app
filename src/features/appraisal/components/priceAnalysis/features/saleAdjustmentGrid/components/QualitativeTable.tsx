@@ -120,7 +120,6 @@ export const QualitativeTable = ({
 
     rules = [
       ...rules,
-      ...buildSaleGridCalculationDerivedRules({ surveys: comparativeSurveys, property: property }),
       ...buildSaleGridAdjustmentFactorRules({
         surveys: comparativeSurveys,
         qualitativeRows: saleAdjustmentGridQualitatives,
@@ -129,9 +128,29 @@ export const QualitativeTable = ({
     ];
 
     return rules;
-  }, [comparativeSurveys, property, saleAdjustmentGridQualitatives]);
+  }, [comparativeSurveys.length, property, qualitativeFactors.length]);
+
+  const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
+    const rules = buildSaleGridCalculationDerivedRules({
+      surveys: comparativeSurveys,
+      property: property,
+    });
+
+    return rules;
+  }, [comparativeSurveys.length, property]);
+
+  const adjustFactorRules: DerivedFieldRule<any>[] = useMemo(() => {
+    const rules = buildSaleGridAdjustmentFactorRules({
+      surveys: comparativeSurveys,
+      qualitativeRows: saleAdjustmentGridQualitatives,
+    });
+
+    return rules;
+  }, [comparativeSurveys.length, property]);
 
   useDerivedFields({ rules: derivedRules });
+  useDerivedFields({ rules: calculationRules });
+  useDerivedFields({ rules: adjustFactorRules });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
@@ -693,9 +712,11 @@ export const QualitativeTable = ({
                                     }),
                                   ),
                                 ) ? (
-                                  <div>{value}</div>
+                                  <div>{value.toLocaleString() ?? 'error'}</div>
                                 ) : (
-                                  <div className="text-danger">{value}</div>
+                                  <div className="text-danger">
+                                    {value.toLocaleString() ?? 'error'}
+                                  </div>
                                 );
                               }}
                             />
@@ -724,12 +745,14 @@ export const QualitativeTable = ({
                         <RHFInputCell
                           fieldName={calculationSumFactorPctPath({ column: columnIndex })}
                           inputType="display"
+                          accessor={({ value }) => (value ? value.toLocaleString() : 0)}
                         />
                       </div>
                       <div>
                         <RHFInputCell
                           fieldName={calculationSumFactorAmtPath({ column: columnIndex })}
                           inputType="display"
+                          accessor={({ value }) => (value ? value.toLocaleString() : 0)}
                         />
                       </div>
                     </div>
