@@ -1,14 +1,6 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useReducer,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import {
   PriceAnalysisApproachMethodSelector,
@@ -27,7 +19,6 @@ import {
 import type { PriceAnalysisApproachRequest } from './type';
 import { usePriceAnalysisQuery } from '../../domain/usePriceAnalysisQuery';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { usePropertyStore } from '../../../../store';
 import { PropertyCard } from '../../../PropertyCard';
@@ -37,7 +28,7 @@ const createInitialState = (
   approachConfig: any,
   approachData: PriceAnalysisApproachRequest[],
 ): Approach[] => {
-  const approaches = approachConfig.map(appr => {
+  const approaches = approachConfig?.map(appr => {
     const apprData = approachData.find(data => data.id === appr.id);
     return {
       id: appr.id,

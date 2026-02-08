@@ -58,7 +58,7 @@ export function ComparativeSurveySection({
               })}
               <th
                 className={clsx(
-                  'text-left font-medium text-gray-600 px-3 py-2.5 w-16 min-w-16 max-w-16 hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky right-0 z-10 ',
+                  'text-left font-medium text-gray-600 px-3 py-2.5 w-16 min-w-16 max-w-16 whitespace-nowrap bg-gray-50 sticky right-0 z-10 ',
                   comparativeSurveys.length > 0 &&
                     'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
                 )}

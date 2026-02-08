@@ -1,4 +1,4 @@
-import { type DerivedFieldRule, useDerivedFields } from '../../components/useDerivedFieldArray';
+import { type DerivedFieldRule } from '../../components/useDerivedFieldArray';
 import { getPropertyValueByFactorCode } from '../../domain/getPropertyValueByFactorCode';
 import { saleGridFieldPath } from '../../features/saleAdjustmentGrid/adapters/fieldPath';
 import {
@@ -7,8 +7,9 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
 import { shouldAutoDefault } from '../../features/saleAdjustmentGrid/domain/shouldAutoDefault';
 import {
-  calcAdjustedValueFromOfferingPrice,
+  calcAdjustedValue,
   calcAdjustedValueFromSellingPrice,
+  calcAdjustValueFromSellingPrice,
   calcDiff,
   calcFinalValueRoundedValue,
   calcIncreaseDecrease,
@@ -42,6 +43,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
   const {
     adjustmentFactors: adjustmentFactorsPath,
     calculationAdjustedValue: calculationAdjustedValuePath,
+    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
@@ -54,7 +56,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculationBuildingValueIncreaseDecrease: calculationBuildingValueIncreaseDecreasePath,
     calculationSumFactorPct: calculationSumFactorPctPath,
     calculationSumFactorAmt: calculationSumFactorAmtPath,
-    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
+    calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
     calculationWeight: calculationWeightPath,
     calculationWeightAdjustValue: calculationWeightAdjustValuePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
@@ -77,7 +79,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
-              return calcAdjustedValueFromOfferingPrice(
+              return calcAdjustedValue(
                 offeringPrice,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
@@ -96,6 +98,20 @@ export function buildSaleGridCalculationDerivedRules(args: {
               );
             }
             return 0;
+          },
+        },
+        {
+          targetPath: calculationTotalAdjustedSellingPricePath({ column: columnIndex }),
+          compute: ({ getValues }) => {
+            const calculationNumberOfYears =
+              getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
+            const adjustPercent =
+              getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
+            const totalAdjustSellingPricePercent = calcAdjustValueFromSellingPrice(
+              calculationNumberOfYears,
+              adjustPercent,
+            );
+            return totalAdjustSellingPricePercent;
           },
         },
         {
@@ -238,59 +254,59 @@ export function buildSaleGridCalculationDerivedRules(args: {
   return rules;
 }
 
-export function buildSaleGridAdjustmentFactorRules(args: {
-  surveys: Survey[];
-  qualitativeRows: any[];
-}): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
-
-  const {
-    qualitativeLevel: qualitativeLevelPath,
-    adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
-    adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
-    calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
-  } = saleGridFieldPath;
-
-  /** Adjustment factors which initial by Qualitative part */
-  const rules: DerivedFieldRule[] = qualitativeRows
-    .map((f, rowIndex) => {
-      return surveys.map((_, columnIndex) => {
-        /** set adjustment factors section to be 1:1 with a qualitative section */
-        return [
-          {
-            targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-            deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
-            compute: ({ getValues }) => {
-              const level =
-                getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
-              return qualitativeDefaultPercent(level) ?? null;
-            },
-          },
-          {
-            targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
-            deps: [
-              adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-              calculationTotalSecondRevisionPath({ column: columnIndex }),
-            ],
-            compute: ({ getValues }) => {
-              const totalSecondRevision =
-                getValues(calculationTotalSecondRevisionPath({ column: columnIndex })) ?? 0;
-              const adjustPercent =
-                getValues(
-                  adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-                ) ?? 0;
-
-              const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
-              return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
-            },
-          },
-        ];
-      });
-    })
-    .flat(2);
-
-  return rules;
-}
+// export function buildSaleGridAdjustmentFactorRules(args: {
+//   surveys: Survey[];
+//   qualitativeRows: any[];
+// }): DerivedFieldRule[] {
+//   const { surveys = [], qualitativeRows } = args;
+//
+//   const {
+//     qualitativeLevel: qualitativeLevelPath,
+//     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
+//     adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
+//     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+//   } = saleGridFieldPath;
+//
+//   /** Adjustment factors which initial by Qualitative part */
+//   const rules: DerivedFieldRule[] = qualitativeRows
+//     .map((f, rowIndex) => {
+//       return surveys.map((_, columnIndex) => {
+//         /** set adjustment factors section to be 1:1 with a qualitative section */
+//         return [
+//           {
+//             targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+//             deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
+//             compute: ({ getValues }) => {
+//               const level =
+//                 getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
+//               return qualitativeDefaultPercent(level) ?? null;
+//             },
+//           },
+//           {
+//             targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
+//             deps: [
+//               adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+//               calculationTotalSecondRevisionPath({ column: columnIndex }),
+//             ],
+//             compute: ({ getValues }) => {
+//               const totalSecondRevision =
+//                 getValues(calculationTotalSecondRevisionPath({ column: columnIndex })) ?? 0;
+//               const adjustPercent =
+//                 getValues(
+//                   adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+//                 ) ?? 0;
+//
+//               const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
+//               return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
+//             },
+//           },
+//         ];
+//       });
+//     })
+//     .flat(2);
+//
+//   return rules;
+// }
 
 export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   surveys: Survey[];

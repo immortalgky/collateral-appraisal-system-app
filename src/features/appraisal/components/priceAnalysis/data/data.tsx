@@ -353,4 +353,48 @@ export const MOC_SURVEY_DATA = [
       { id: '20', value: 'Baht/ Sq.Wa' },
     ],
   },
+
+  //   surveys for condo
+  {
+    id: 'SURVEY_07',
+    surveyName: 'Survey 7',
+    factors: [
+      { id: '02', value: 'แปลงกลาง' },
+      { id: '15', value: 2 },
+      { id: '10', value: 'ดี' },
+      { id: '11', value: 'สระว่ายน้ำ ห้องฟิตเนส' },
+      { id: '12', value: 73 }, // usable area
+      { id: '17', value: 102466 }, // offering price
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Meter' },
+    ],
+  },
+  {
+    id: 'SURVEY_08',
+    surveyName: 'Survey 8',
+    factors: [
+      { id: '02', value: 'แปลงมุม' },
+      { id: '15', value: 5 },
+      { id: '10', value: 'แย่' },
+      { id: '11', value: 'สระว่ายน้ำ ห้องฟิตเนส' },
+      { id: '12', value: 73 }, // usable area
+      { id: '17', value: 104110 }, // offering price
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Meter' },
+    ],
+  },
+  {
+    id: 'SURVEY_09',
+    surveyName: 'Survey 9',
+    factors: [
+      { id: '02', value: 'แปลงกลาง' },
+      { id: '15', value: 7 },
+      { id: '10', value: 'ปานกลาง' },
+      { id: '11', value: 'สระว่ายน้ำ ห้องฟิตเนส' },
+      { id: '12', value: 98 }, // usable area
+      { id: '21', value: 104110 }, // selling price
+      { id: '22', value: '2000-01-01' },
+      { id: '20', value: 'Baht/ Sq.Meter' },
+    ],
+  },
 ];

@@ -66,13 +66,13 @@ export type PriceAnalysisSelectorAction =
   | { type: 'SUMMARY_SELECT_APPROACH'; payload: { apprId: string } }
   | { type: 'SUMMARY_SAVE' };
 
-const getVisibleApproach = (approaches: Approach[]) => {
+const getVisibleApproach = (approaches: Approach[] = []) => {
   return approaches
     .filter(appr => appr.methods.some(method => method.isSelected))
     .map(appr => ({ ...appr, methods: appr.methods.filter(method => method.isSelected) }));
 };
 
-const selectionKey = (approaches: approach[]) => {
+const selectionKey = (approaches: Approach[] = []) => {
   return getVisibleApproach(approaches)
     .map(appr => {
       const methodIds = appr.methods

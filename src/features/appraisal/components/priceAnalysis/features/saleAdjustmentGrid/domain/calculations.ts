@@ -15,7 +15,7 @@ export function floorToTenThousands(num) {
  * - else => offeringPrice
  *
  */
-export function calcAdjustedValueFromOfferingPrice(
+export function calcAdjustedValue(
   offeringPrice: unknown,
   offeringPriceAdjustmentPct: unknown,
   offeringPriceAdjustmentAmt: unknown,
@@ -29,6 +29,18 @@ export function calcAdjustedValueFromOfferingPrice(
   if (pct > 0) return round2(price - (price * pct) / 100);
   if (amt > 0) return round2(amt); // keeping your current logic
   return round2(price);
+}
+
+export function calcAdjustValueFromSellingPrice(
+  sellingPriceAdjustmentPct: unknown,
+  totalNumberOfYear: unknown,
+): number {
+  const price = Number(sellingPriceAdjustmentPct);
+  if (!Number.isFinite(price) || price === 0) return 0;
+
+  const totalYear = Number(totalNumberOfYear) || 0;
+
+  return round2(price * totalYear);
 }
 
 export function calcAdjustedValueFromSellingPrice(

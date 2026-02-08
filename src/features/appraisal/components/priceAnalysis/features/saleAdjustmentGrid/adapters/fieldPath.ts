@@ -21,6 +21,8 @@ export const saleGridFieldPath = {
     `saleAdjustmentGridCalculations.${arg.column}.numberOfYears`,
   calculationAdjustmentYear: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.sellingPriceAdjustmentYear`,
+  calculationTotalAdjustedSellingPrice: (arg: { column: number }) =>
+    `saleAdjustmentGridCalculations.${arg.column}.totalAdjustedSellingPrice`,
   calculationAdjustedValue: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.adjustedValue`,
 
@@ -68,4 +70,6 @@ export const saleGridFieldPath = {
   /** Final value section */
   finalValue: () => 'saleAdjustmentGridFinalValue.finalValue',
   finalValueRounded: () => 'saleAdjustmentGridFinalValue.finalValueRounded',
+
+  /** Appraisal price */
 };

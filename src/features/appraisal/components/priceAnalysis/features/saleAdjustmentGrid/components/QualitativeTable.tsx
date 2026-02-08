@@ -11,16 +11,17 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
 import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
 import {
-  buildSaleGridAdjustmentFactorRules,
+  buildSaleGridAdjustmentFactorAmountRules,
+  buildSaleGridAdjustmentFactorDefaultPercentRules,
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
-  derivedSaleGridAdjustmentFactor,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/buildDerivedRules.ts';
 import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import clsx from 'clsx';
+import { SecondRevision } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SecondRevision.tsx';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
@@ -57,7 +58,7 @@ export const QualitativeTable = ({
     name: 'saleAdjustmentGridAdjustmentFactors',
   });
 
-  /** field path */
+  /** field paths */
   const {
     /** qualitative */
     qualitativeLevel: qualitativeLevelPath,
@@ -69,6 +70,7 @@ export const QualitativeTable = ({
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
+    calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
 
     /** 2nd revision */
     calculationLandAreaDiff: calculationLandAreaDiffPath,
@@ -122,17 +124,10 @@ export const QualitativeTable = ({
       qualitativeRows: saleAdjustmentGridQualitatives,
     });
 
-    rules = [
-      ...rules,
-      ...buildSaleGridAdjustmentFactorRules({
-        surveys: comparativeSurveys,
-        qualitativeRows: saleAdjustmentGridQualitatives,
-      }),
-      ...buildSaleGridFinalValueRules({ surveys: comparativeSurveys }),
-    ];
+    rules = [...rules, ...buildSaleGridFinalValueRules({ surveys: comparativeSurveys })];
 
     return rules;
-  }, [comparativeSurveys.length, property, qualitativeFactors.length]);
+  }, [comparativeSurveys.length, qualitativeFactors.length]);
 
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
     const rules = buildSaleGridCalculationDerivedRules({
@@ -143,23 +138,24 @@ export const QualitativeTable = ({
     return rules;
   }, [comparativeSurveys.length, property]);
 
-  const adjustFactorRules: DerivedFieldRule<any>[] = useMemo(() => {
-    const rules = buildSaleGridAdjustmentFactorRules({
+  const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildSaleGridAdjustmentFactorDefaultPercentRules({
       surveys: comparativeSurveys,
       qualitativeRows: saleAdjustmentGridQualitatives,
     });
+  }, [comparativeSurveys.length, qualitativeFactors.length]);
 
-    return rules;
-  }, [comparativeSurveys.length, property]);
+  const adjustAmountRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildSaleGridAdjustmentFactorAmountRules({
+      surveys: comparativeSurveys,
+      qualitativeRows: saleAdjustmentGridQualitatives,
+    });
+  }, [comparativeSurveys.length, qualitativeFactors.length, property]);
 
   useDerivedFields({ rules: derivedRules });
   useDerivedFields({ rules: calculationRules });
-  // useDerivedFields({ rules: adjustFactorRules });
-
-  derivedSaleGridAdjustmentFactor({
-    surveys: comparativeSurveys,
-    qualitativeRows: saleAdjustmentGridQualitatives,
-  });
+  useDerivedFields({ rules: adjustPercentDefaultRules });
+  useDerivedFields({ rules: adjustAmountRules });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
@@ -205,7 +201,7 @@ export const QualitativeTable = ({
               </th>
             </tr>
             <tr className="border-b border-gray-300">
-              {comparativeSurveys.map((col, index) => {
+              {comparativeSurveys.map(col => {
                 return (
                   <th
                     key={col.id}
@@ -329,7 +325,7 @@ export const QualitativeTable = ({
                   + Add More Factors
                 </button>
               </td>
-              {comparativeSurveys.map((col, columnIndex) => {
+              {comparativeSurveys.map(col => {
                 return <td key={col.id} className={clsx(surveyStyle)}></td>;
               })}
               <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
@@ -339,7 +335,7 @@ export const QualitativeTable = ({
             {/* initial value */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Initial Price</td>
-              {comparativeSurveys.map((col, columnIndex) => {
+              {comparativeSurveys.map(col => {
                 return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
@@ -409,7 +405,7 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Selling Price</span>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map(s => {
                 const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
                 if (!sellingPrice) return <td key={s.id} className={clsx(surveyStyle)}></td>;
                 return (
@@ -425,7 +421,7 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={s.id} className={clsx('text-right', surveyStyle)}>
                     <RHFInputCell
                       fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
                       inputType="display"
@@ -457,6 +453,27 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+                <span>Total difference, factors affecting property value</span>
+                <span>(%)</span>
+              </td>
+              {comparativeSurveys.map((s, columnIndex) => {
+                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
+                if (!sellingPrice) return <td key={s.id} className={clsx(surveyStyle)}></td>;
+                return (
+                  <td key={s.id} className={clsx('text-right', surveyStyle)}>
+                    <RHFInputCell
+                      fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
+                      inputType="display"
+                      accessor={({ value }) => value.toLocaleString() ?? 0}
+                    />
+                  </td>
+                );
+              })}
+              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
+              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
+            </tr>
+            <tr>
+              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Adjusted Value</span>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
@@ -477,192 +494,14 @@ export const QualitativeTable = ({
             </tr>
 
             {/* 2nd revision */}
-            <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>2nd Revision</td>
-              {comparativeSurveys.map((col, columnIndex) => {
-                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
-              })}
-              <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 w-[70px] sticky right-0 z-25 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center">
-                  <span>Land Area of the deficient - excess</span>
-                  <span>{'(Sq. Wa)'}</span>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
-                    <div className="flex flex-row justify-end">
-                      <RHFInputCell
-                        fieldName={calculationLandAreaDiffPath({ column: columnIndex })}
-                        inputType="display"
-                        accessor={({ value }) => {
-                          return value ? value.toLocaleString() : value;
-                        }}
-                      />
-                    </div>
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center gap-2">
-                  <span>Land Price</span>
-                  <div className="flex flex-row justitfy items-center gap-1">
-                    <div className="w-24">
-                      <RHFInputCell fieldName={calculationLandPricePath()} inputType="number" />
-                    </div>
-                    <span>Baht/ Sq. Wa</span>
-                  </div>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
-                    <RHFInputCell
-                      fieldName={calculationLandPricePath()}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : 0;
-                      }}
-                    />
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center">
-                  <span>Land value compensation increase - decrease</span>
-                  <span>{'(Baht)'}</span>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
-                    <RHFInputCell
-                      fieldName={calculationLandValueIncreaseDecreasePath({ column: columnIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : 0;
-                      }}
-                    />
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center">
-                  <span>Usable area of the deficit - excess</span>
-                  <span>{'(Sq. Meter)'}</span>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
-                    <RHFInputCell
-                      fieldName={calculationUsableAreaDiffPath({ column: columnIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : 0;
-                      }}
-                    />
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center gap-2">
-                  <span>Usable area price</span>
-                  <div className="flex flex-row justitfy items-center gap-1">
-                    <div className="w-24">
-                      <RHFInputCell
-                        fieldName={calculationUsableAreaPricePath()}
-                        inputType="number"
-                      />
-                    </div>
-                    <span>Baht/ Sq. Meter</span>
-                  </div>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
-                    <RHFInputCell
-                      fieldName={`usableAreaPrice`}
-                      inputType="display"
-                      accessor={({ value }) => (value ? value.toLocaleString() : 0)}
-                    />
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className="flex flex-row justify-between items-center">
-                  <span>Building value compensation increase - decrease</span>
-                  <span>{'(Baht)'}</span>
-                </div>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
-                    <RHFInputCell
-                      fieldName={calculationBuildingValueIncreaseDecreasePath({
-                        column: columnIndex,
-                      })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : value;
-                      }}
-                    />
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-            <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <span>Total of 2nd Revision</span>
-              </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
-                    <RHFInputCell
-                      fieldName={calculationTotalSecondRevisionPath({ column: columnIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : value;
-                      }}
-                    />
-                  </td>
-                );
-              })}
-              <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
+            {(property.collateralType === 'LB' || property.collateralType === 'C') && (
+              <SecondRevision comparativeSurveys={comparativeSurveys} />
+            )}
 
             {/* adjust factors */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjusted Value</td>
-              {comparativeSurveys.map((col, columnIndex) => {
+              {comparativeSurveys.map(col => {
                 return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
@@ -723,7 +562,7 @@ export const QualitativeTable = ({
                                 column: columnIndex,
                               })}
                               inputType="display"
-                              accessor={({ value, formState, getFieldState }) => {
+                              accessor={({ value }) => {
                                 return qualitativeDefault.includes(
                                   getValues(
                                     adjustmentFactorAdjustPercentPath({
@@ -808,7 +647,7 @@ export const QualitativeTable = ({
             {/* adjust weighted */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjust Weight</td>
-              {comparativeSurveys.map((col, columnIndex) => {
+              {comparativeSurveys.map(col => {
                 return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
@@ -857,7 +696,7 @@ export const QualitativeTable = ({
             {/* final value */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Final Value</td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map(s => {
                 return <td key={s.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200 text-right', rightColumnBody, bgGradientLeft)}>
@@ -877,7 +716,7 @@ export const QualitativeTable = ({
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>
                 {'Final Value (Rounded)'}
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map(s => {
                 return <td key={s.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}>
