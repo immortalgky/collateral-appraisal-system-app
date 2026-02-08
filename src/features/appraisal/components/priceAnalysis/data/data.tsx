@@ -260,6 +260,83 @@ export const SALE_GRID_TEMPLATES: SaleAdjustmentGridTemplate[] = [
   },
 ];
 
+export type DirectComparisonTemplate = {
+  templateCode: string;
+  templateName: string;
+  collateralTypeId: string;
+  comparativeFactors: { factorId: string }[];
+  qualitativeFactors: { factorId: string }[];
+};
+export const DIRECT_COMPARISON_TEMPLATE: DirectComparisonTemplate[] = [
+  {
+    templateCode: 'L01',
+    templateName: 'LAND_01',
+    collateralTypeId: 'L',
+    comparativeFactors: [
+      { factorId: '01' },
+      { factorId: '02' },
+      { factorId: '03' },
+      { factorId: '04' },
+      { factorId: '05' },
+      { factorId: '06' },
+      { factorId: '20' },
+      { factorId: '17' },
+      { factorId: '21' },
+    ],
+    qualitativeFactors: [
+      { factorId: '01' },
+      { factorId: '02' },
+      { factorId: '03' },
+      { factorId: '04' },
+      { factorId: '05' },
+      { factorId: '06' },
+    ],
+  },
+  {
+    templateCode: 'LB01',
+    templateName: 'LB_01',
+    collateralTypeId: 'LB',
+    comparativeFactors: [
+      { factorId: '02' },
+      { factorId: '05' },
+      { factorId: '08' },
+      { factorId: '09' },
+      { factorId: '10' },
+      { factorId: '11' },
+      { factorId: '12' },
+      { factorId: '13' },
+    ],
+    qualitativeFactors: [
+      { factorId: '02' },
+      { factorId: '05' },
+      { factorId: '08' },
+      { factorId: '09' },
+      { factorId: '10' },
+    ],
+  },
+  {
+    templateCode: 'C01',
+    templateName: 'CONDO_01',
+    collateralTypeId: 'C',
+    comparativeFactors: [
+      { factorId: '15' },
+      { factorId: '10' },
+      { factorId: '03' },
+      { factorId: '14' },
+      { factorId: '10' },
+      { factorId: '11' },
+    ],
+    qualitativeFactors: [
+      { factorId: '15' },
+      { factorId: '10' },
+      { factorId: '03' },
+      { factorId: '14' },
+      { factorId: '10' },
+      { factorId: '11' },
+    ],
+  },
+];
+
 export const MOC_SURVEY_DATA = [
   // survey for land
   {
