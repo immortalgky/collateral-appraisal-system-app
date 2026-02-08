@@ -3,16 +3,24 @@ import { Input } from '@headlessui/react';
 import clsx from 'clsx';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 
-export function toNumber(v: any) {
-  const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
+export function toNumber(v: any): number | null {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+
+  const raw = String(v ?? '')
+    .replace(/,/g, '')
+    .trim();
+  if (raw === '' || raw === '-') return null;
+
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
 }
 
 interface RHFInputCellProps {
   fieldName: string;
   inputType?: 'number' | 'select' | 'text' | 'display';
   options?: ListBoxItem[];
-  onUserChange?: (value: number) => number;
+  onUserChange?: (value: number | null) => number | null;
   accessor?: (args: {
     value: number | string;
     getValues: any;
@@ -40,10 +48,9 @@ export const RHFInputCell = ({
         {...field}
         value={field.value ?? ''}
         onChange={e => {
-          const value = onUserChange
-            ? onUserChange(toNumber(e.target.value))
-            : toNumber(e.target.value);
-          field.onChange(value);
+          const parsed = toNumber(e.target.value);
+          const next = onUserChange ? onUserChange(parsed as any) : parsed;
+          field.onChange(next);
         }}
         allowNegative={true}
         error={error?.message}

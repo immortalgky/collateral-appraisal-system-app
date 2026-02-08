@@ -1,4 +1,4 @@
-import type { DerivedFieldRule } from '../../components/useDerivedFieldArray';
+import { type DerivedFieldRule, useDerivedFields } from '../../components/useDerivedFieldArray';
 import { getPropertyValueByFactorCode } from '../../domain/getPropertyValueByFactorCode';
 import { saleGridFieldPath } from '../../features/saleAdjustmentGrid/adapters/fieldPath';
 import {
@@ -260,38 +260,12 @@ export function buildSaleGridAdjustmentFactorRules(args: {
           {
             targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
             deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
-            when: ({ getValues }) => {
-              return qualitativeDefault.includes(
-                getValues(
-                  adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-                ),
-              );
-            },
             compute: ({ getValues }) => {
               const level =
                 getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
               return qualitativeDefaultPercent(level) ?? null;
             },
           },
-          // {
-          //   targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-          //   deps: [adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex })],
-          //   compute: ({ getValues }) => {
-          //     const level =
-          //       qualitativeDefaultPercent(
-          //         getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? '',
-          //       ) ?? 0;
-          //     const value =
-          //       getValues(
-          //         adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-          //       ) ?? 0;
-          //     if (level > 0 == value > 0) return;
-
-          //     if (level > 0) return Math.abs(value);
-          //     if (level < 0) return -value;
-          //     return;
-          //   },
-          // },
           {
             targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
             deps: [
@@ -316,6 +290,67 @@ export function buildSaleGridAdjustmentFactorRules(args: {
     .flat(2);
 
   return rules;
+}
+
+export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
+  surveys: Survey[];
+  qualitativeRows: any[];
+}): DerivedFieldRule[] {
+  const { surveys = [], qualitativeRows } = args;
+
+  const {
+    qualitativeLevel: qualitativeLevelPath,
+    adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
+  } = saleGridFieldPath;
+
+  return qualitativeRows
+    .map((_, rowIndex) =>
+      surveys.map((_, columnIndex) => ({
+        targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+        deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
+        compute: ({ getValues }) => {
+          const level =
+            getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
+          return qualitativeDefaultPercent(level) ?? null;
+        },
+      })),
+    )
+    .flat();
+}
+
+export function buildSaleGridAdjustmentFactorAmountRules(args: {
+  surveys: Survey[];
+  qualitativeRows: any[];
+}): DerivedFieldRule[] {
+  const { surveys = [], qualitativeRows } = args;
+
+  const {
+    adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
+    adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
+    calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+  } = saleGridFieldPath;
+
+  return qualitativeRows
+    .map((_, rowIndex) =>
+      surveys.map((_, columnIndex) => ({
+        targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
+        deps: [
+          adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+          calculationTotalSecondRevisionPath({ column: columnIndex }),
+        ],
+        compute: ({ getValues }) => {
+          const totalSecondRevision =
+            getValues(calculationTotalSecondRevisionPath({ column: columnIndex })) ?? 0;
+          const adjustPercent =
+            getValues(adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex })) ??
+            0;
+
+          const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
+          return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
+        },
+      })),
+    )
+    .flat();
 }
 
 export function buildSaleGridFinalValueRules(arg: { surveys: Survey[] }): DerivedFieldRule[] {

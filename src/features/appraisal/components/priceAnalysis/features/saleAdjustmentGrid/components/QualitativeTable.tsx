@@ -5,13 +5,17 @@ import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
+import {
+  qualitativeDefault,
+  qualitativeDefaultPercent,
+} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
 import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
 import {
   buildSaleGridAdjustmentFactorRules,
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
+  derivedSaleGridAdjustmentFactor,
 } from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/buildDerivedRules.ts';
 import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
@@ -150,7 +154,12 @@ export const QualitativeTable = ({
 
   useDerivedFields({ rules: derivedRules });
   useDerivedFields({ rules: calculationRules });
-  useDerivedFields({ rules: adjustFactorRules });
+  // useDerivedFields({ rules: adjustFactorRules });
+
+  derivedSaleGridAdjustmentFactor({
+    surveys: comparativeSurveys,
+    qualitativeRows: saleAdjustmentGridQualitatives,
+  });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
@@ -693,6 +702,17 @@ export const QualitativeTable = ({
                                   column: columnIndex,
                                 })}
                                 inputType="number"
+                                onUserChange={v => {
+                                  if (v == null) return null;
+                                  const level =
+                                    getValues(
+                                      qualitativeLevelPath({ row: rowIndex, column: columnIndex }),
+                                    ) ?? '';
+                                  if (level === 'B') return -Math.abs(v);
+                                  if (level === 'I') return Math.abs(v);
+                                  if (level === 'E') return 0;
+                                  return v;
+                                }}
                               />
                             )}
                           </div>
