@@ -49,9 +49,6 @@ export const directComparisonPath = {
   calculationSumFactorAmt: (arg: { column: number }) =>
     `directComparisonCalculations.${arg.column}.factorDiffAmt`,
 
-  calculationTotalAdjustValue: (arg: { column: number }) =>
-    `directComparisonCalculations.${arg.column}.totalAdjustValue`,
-
   /** adjust factors section */
   adjustmentFactors: () => 'directComparisonAdjustmentFactors',
   adjustmentFactorMarketId: (arg: { row: number; column: number }) =>
@@ -62,6 +59,9 @@ export const directComparisonPath = {
     `directComparisonAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustAmount`,
   adjustmentFactorAdjustPercent: (arg: { row: number; column: number }) =>
     `directComparisonAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustPercent`,
+
+  calculationTotalAdjustValue: (arg: { column: number }) =>
+    `directComparisonCalculations.${arg.column}.totalAdjustValue`,
 
   /** Final value section */
   finalValue: () => 'directComparisonFinalValue.finalValue',

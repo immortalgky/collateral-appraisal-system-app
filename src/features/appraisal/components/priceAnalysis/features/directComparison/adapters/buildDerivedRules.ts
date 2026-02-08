@@ -277,7 +277,7 @@ export function buildDirectComparisonFinalValueRules(arg: {
   const {
     finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
-    calculationWeightAdjustValue: calculationWeightAdjustValuePath,
+    calculationSumFactorPct: calculationSumFactorPctPath,
   } = directComparisonPath;
   const { surveys = [] } = arg;
 
@@ -285,9 +285,7 @@ export function buildDirectComparisonFinalValueRules(arg: {
     {
       targetPath: finalValuePath(),
       deps: [
-        ...surveys.map((s, columnIndex) =>
-          calculationWeightAdjustValuePath({ column: columnIndex }),
-        ),
+        ...surveys.map((s, columnIndex) => calculationSumFactorPctPath({ column: columnIndex })),
       ],
       compute: ({ getValues }) => {
         const totalWeightedAdjustValue = surveys.reduce((acc, curr, columnIndex) => {
