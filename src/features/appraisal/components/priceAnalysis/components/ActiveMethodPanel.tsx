@@ -17,7 +17,7 @@ export const ActiveMethodPanel = ({
    * (2) pass config into method components
    */
 
-  const property = PROPERTIES[2];
+  const property = PROPERTIES[0];
   // const surveys = MOC_SURVEY_DATA;
 
   const value = methodId;

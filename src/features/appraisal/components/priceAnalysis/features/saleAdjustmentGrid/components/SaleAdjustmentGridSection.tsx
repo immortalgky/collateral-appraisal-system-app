@@ -16,6 +16,7 @@ import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalcul
 import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import toast from 'react-hot-toast';
+import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
 
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, any>;
@@ -354,11 +355,16 @@ export const SaleAdjustmentGridSection = ({
                     template={template}
                   />
                 </div>
-                <SaleAdjustmentGridCalculationSection
-                  property={property}
-                  template={template}
-                  comparativeSurveys={comparativeSurveys}
-                />
+                {comparativeSurveys.length > 0 && (
+                  <>
+                    <SaleAdjustmentGridCalculationSection
+                      property={property}
+                      template={template}
+                      comparativeSurveys={comparativeSurveys}
+                    />
+                    <SaleAdjustmentGridAdjustAppraisalPriceSection property={property} />
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -1,11 +1,4 @@
-import { type DerivedFieldRule } from '../../components/useDerivedFieldArray';
-import { getPropertyValueByFactorCode } from '../../domain/getPropertyValueByFactorCode';
-import { saleGridFieldPath } from '../../features/saleAdjustmentGrid/adapters/fieldPath';
-import {
-  qualitativeDefault,
-  qualitativeDefaultPercent,
-} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
-import { shouldAutoDefault } from '../../features/saleAdjustmentGrid/domain/shouldAutoDefault';
+import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
 import {
   calcAdjustedValue,
   calcAdjustedValueFromSellingPrice,
@@ -18,6 +11,10 @@ import {
   calcTotalSecondRevision,
   calcWeightedAdjustValue,
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/calculations.ts';
+import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/features/wqs/WQSSection.tsx';
+import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
+import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
+import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
 type SurveyFactor = { id: string; value?: number | string | null };
 type Survey = { factors?: SurveyFactor[] };
 
@@ -227,7 +224,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
             const weight = getValues(calculationWeightPath({ column: columnIndex })) ?? 0;
             const curr = getValues(target);
             const { isDirty } = getFieldState(target, formState);
-            return shouldAutoDefault({ value: curr, isDirty }) || weight > 1;
+            return shouldAutoDefault({ value: curr, isDirty }) || weight > 1 || weight < 0;
           },
           compute: () => {
             const numberOfSurveys = surveys.length ?? 0;
@@ -321,17 +318,21 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
 
   return qualitativeRows
     .map((_, rowIndex) =>
-      surveys.map((_, columnIndex) => ({
-        targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-        deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
-        compute: ({ getValues }) => {
-          const level =
-            getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
-          return qualitativeDefaultPercent(level) ?? null;
-        },
-      })),
+      surveys.map((_, columnIndex) => {
+        console.log(adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }));
+        return {
+          targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+          deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
+          compute: ({ getValues }) => {
+            const level =
+              getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
+            console.log(level);
+            return qualitativeDefaultPercent(level) ?? null;
+          },
+        };
+      }),
     )
-    .flat();
+    .flat(2);
 }
 
 export function buildSaleGridAdjustmentFactorAmountRules(args: {
@@ -380,7 +381,11 @@ export function buildSaleGridFinalValueRules(arg: { surveys: Survey[] }): Derive
   const rules: DerivedFieldRule[] = [
     {
       targetPath: finalValuePath(),
-      deps: [],
+      deps: [
+        ...surveys.map((s, columnIndex) =>
+          calculationWeightAdjustValuePath({ column: columnIndex }),
+        ),
+      ],
       compute: ({ getValues }) => {
         const totalWeightedAdjustValue = surveys.reduce((acc, curr, columnIndex) => {
           const weightedAdjustValue =

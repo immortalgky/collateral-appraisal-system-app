@@ -39,7 +39,7 @@ export function ComparativeSurveySection({
             <tr className="">
               <th
                 className={clsx(
-                  'text-left font-medium text-gray-600 px-3 py-2.5 w-[350px] hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                  'bg-gray-50 sticky left-0 z-10 h-[55px] w-[350px] after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
                 )}
               >
                 Factors
@@ -58,14 +58,13 @@ export function ComparativeSurveySection({
               })}
               <th
                 className={clsx(
-                  'text-left font-medium text-gray-600 px-3 py-2.5 w-16 min-w-16 max-w-16 whitespace-nowrap bg-gray-50 sticky right-0 z-10 ',
-                  comparativeSurveys.length > 0 &&
-                    'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
+                  'text-left font-medium text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap bg-gray-50 sticky right-[70px] z-20 ',
+                  'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
                 )}
               >
                 Collateral
               </th>
-              <th className="w-16 max-w-15 min-w-16"></th>
+              <th className="w-[70px] max-w-[70px] min-w-[70px]"></th>
             </tr>
           </thead>
           <tbody>
@@ -85,7 +84,7 @@ export function ComparativeSurveySection({
                 <tr key={f.id} className="hover:bg-gray-50 cursor-default transition-colors">
                   <td
                     className={clsx(
-                      'bg-white sticky left-0 z-10 h-[55px] after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                      'bg-white font-medium text-gray-600 sticky left-0 z-10 h-[55px] after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
                     )}
                   >
                     <div className="truncate" title={getFactorDesciption(f.factorCode) ?? ''}>
@@ -106,9 +105,9 @@ export function ComparativeSurveySection({
                       )}
                     </div>
                   </td>
-                  {comparativeSurveys.map((s, columnIndex) => {
+                  {comparativeSurveys.map(s => {
                     return (
-                      <td key={s.id} className="px-3 py-2.5 text-gray-600">
+                      <td key={s.id} className="px-3 py-2.5 font-light text-gray-600">
                         {
                           <RHFInputCell
                             fieldName={comparativeFactorsPath({ row: rowIndex })}
@@ -123,9 +122,8 @@ export function ComparativeSurveySection({
                   })}
                   <td
                     className={clsx(
-                      'bg-whtie text-left font-medium text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap sticky right-0 z-10',
-                      comparativeSurveys.length > 0 &&
-                        'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
+                      'bg-white text-left font-light text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap sticky right-[70px] z-20',
+                      'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
                     )}
                   >
                     <RHFInputCell
@@ -134,7 +132,7 @@ export function ComparativeSurveySection({
                       accessor={({ value }) => getPropertyValueByFactorCode(value, property) ?? ''}
                     />
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="bg-white px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0">
                     {!template?.comparativeFactors.find(t => t.factorId === f.factorCode) && (
                       <div className="flex flex-row justify-center items-center">
                         <button
@@ -172,12 +170,11 @@ export function ComparativeSurveySection({
               })}
               <td
                 className={clsx(
-                  'bg-whtie text-left font-medium text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap sticky right-0 z-10',
-                  comparativeSurveys.length > 0 &&
-                    'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
+                  'bg-white text-left font-medium text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap sticky right-[70px] z-10',
+                  'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
                 )}
               ></td>
-              <td className="text-center font-medium text-gray-600 px-3 py-2.5 w-16 min-w-16 max-w-16 "></td>
+              <td className="text-center font-medium text-gray-600 px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0 z-20"></td>
             </tr>
           </tbody>
         </table>

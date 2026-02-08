@@ -5,10 +5,7 @@ import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import {
-  qualitativeDefault,
-  qualitativeDefaultPercent,
-} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
+import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
 import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
 import {
   buildSaleGridAdjustmentFactorAmountRules,
@@ -16,7 +13,7 @@ import {
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
-} from '@features/appraisal/components/priceAnalysis/adapters/rhf-table/buildDerivedRules.ts';
+} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildDerivedRules.ts';
 import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
@@ -141,14 +138,14 @@ export const QualitativeTable = ({
   const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorDefaultPercentRules({
       surveys: comparativeSurveys,
-      qualitativeRows: saleAdjustmentGridQualitatives,
+      qualitativeRows: qualitativeFactors,
     });
   }, [comparativeSurveys.length, qualitativeFactors.length]);
 
   const adjustAmountRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorAmountRules({
       surveys: comparativeSurveys,
-      qualitativeRows: saleAdjustmentGridQualitatives,
+      qualitativeRows: qualitativeFactors,
     });
   }, [comparativeSurveys.length, qualitativeFactors.length, property]);
 

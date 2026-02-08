@@ -72,4 +72,6 @@ export const saleGridFieldPath = {
   finalValueRounded: () => 'saleAdjustmentGridFinalValue.finalValueRounded',
 
   /** Appraisal price */
+  appraisalPrice: () => 'saleAdjustmentGridAppraisalPrice.appraisalPrice',
+  appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded',
 };

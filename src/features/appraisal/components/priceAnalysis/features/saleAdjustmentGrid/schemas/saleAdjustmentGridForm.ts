@@ -101,6 +101,11 @@ export const SaleAdjustmentGridDto = z
     saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor),
     /** Final value section */
     saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue,
+    /** Apprisal price section */
+    saleAdjustmentGridAppraisalPrice: z.object({
+      appraisalPrice: z.number(),
+      appraisalPriceRounded: z.number(),
+    }),
   })
   .passthrough();
 
