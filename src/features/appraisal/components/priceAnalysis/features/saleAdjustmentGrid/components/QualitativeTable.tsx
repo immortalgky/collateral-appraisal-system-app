@@ -358,8 +358,10 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <span>Adjusted Offering Price</span>
-                <span>(%)</span>
+                <div className={'flex flex-rows justify-between items-center'}>
+                  <span>Adjusted Offering Price</span>
+                  <span>(%)</span>
+                </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
@@ -379,8 +381,10 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <span>Adjusted Offering Price</span>
-                <span>(Amount)</span>
+                <div className={'flex flex-rows justify-between items-center'}>
+                  <span>Adjusted Offering Price</span>
+                  <span>(Amount)</span>
+                </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
@@ -450,8 +454,10 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <span>Total difference, factors affecting property value</span>
-                <span>(%)</span>
+                <div className="flex flex-rows justify-between items-center">
+                  <span>Cumulative Adjusted Period</span>
+                  <span>(%)</span>
+                </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
@@ -475,7 +481,7 @@ export const QualitativeTable = ({
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 return (
-                  <td key={s.id} className={'border-b border-r border-gray-300'}>
+                  <td key={s.id} className={'border-b border-r border-gray-300 text-right'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"

@@ -39,6 +39,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
   const { surveys = [], property } = args;
   const {
     adjustmentFactors: adjustmentFactorsPath,
+    calculation: calculationPath,
     calculationAdjustedValue: calculationAdjustedValuePath,
     calculationTotalAdjustValue: calculationTotalAdjustValuePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
@@ -206,7 +207,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
         },
         {
           targetPath: calculationTotalAdjustValuePath({ column: columnIndex }),
-          deps: [adjustmentFactorsPath()],
+          deps: [adjustmentFactorsPath(), calculationPath({ column: columnIndex })],
           compute: ({ getValues }) => {
             const totalDiffAmt =
               getValues(calculationSumFactorAmtPath({ column: columnIndex })) ?? 0;

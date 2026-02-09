@@ -11,6 +11,8 @@ export const saleGridFieldPath = {
     `saleAdjustmentGridQualitatives.${arg.row}.qualitatives.${arg.column}.marketId` as const,
 
   /** calculation section */
+  calculations: () => `saleAdjustmentGridCalculations`,
+  calculation: (arg: { column: number }) => `saleAdjustmentGridCalculations.${arg.column}`,
   calculationOfferingPrice: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.offeringPrice`,
   calculationOfferingPriceAdjustmentPct: (arg: { column: number }) =>
