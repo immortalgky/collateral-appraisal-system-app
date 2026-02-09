@@ -378,9 +378,8 @@ export function buildWQSFinalValueDerivedRules(args: {
             return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
           }),
         );
-        console.log(surveyScores, surveyCalculate);
         const coefficient = RSQ(surveyScores, surveyCalculate) ?? 0;
-        return toFiniteNumber(coefficient);
+        return toFiniteNumber(coefficient).toFixed(4);
       },
     },
     {

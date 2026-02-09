@@ -51,23 +51,25 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Coefficient of decision</div>
-        <RHFInputCell
-          fieldName={finalValueCoefficientOfDecisionPath()}
-          inputType="display"
-          accessor={({ value }) => {
-            const coeff = toFiniteNumber(value);
-            return coeff < 0.85 ? (
-              <div className="text-danger">
-                <span>{value}</span>
-                <span>{'Consider for the market survey data'}</span>
-              </div>
-            ) : (
-              <div>
-                <span>{value}</span>
-              </div>
-            );
-          }}
-        />
+        <div className="col-span-9">
+          <RHFInputCell
+            fieldName={finalValueCoefficientOfDecisionPath()}
+            inputType="display"
+            accessor={({ value }) => {
+              const coeff = toFiniteNumber(value);
+              return coeff < 0.85 ? (
+                <div className="flex flex-rows justify-between items-center text-danger">
+                  <span>{value}</span>
+                  <span>{'Consider for the market survey data'}</span>
+                </div>
+              ) : (
+                <div>
+                  <span>{value}</span>
+                </div>
+              );
+            }}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Standard error</div>
