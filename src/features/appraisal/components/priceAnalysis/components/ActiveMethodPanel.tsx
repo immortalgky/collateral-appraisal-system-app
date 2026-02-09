@@ -1,6 +1,7 @@
 import { MOC_SURVEY_DATA, PROPERTIES } from '../data/data';
 import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/components/SaleAdjustmentGridSection';
 import { WQSSection } from '../features/wqs/WQSSection';
+import { DirectComparisonSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonSection.tsx';
 
 export const ActiveMethodPanel = ({
   methodId,
@@ -26,8 +27,8 @@ export const ActiveMethodPanel = ({
       return <WQSSection property={properties} surveys={marketSurveys} />;
     case 'SAG_MARKET':
       return <SaleAdjustmentGridSection property={property} surveys={marketSurveys} />;
-    case 'DIRECTCOMPARE':
-      return <div></div>;
+    case 'DC_MARKET':
+      return <DirectComparisonSection property={property} surveys={marketSurveys} />;
     default:
       return <></>;
   }
