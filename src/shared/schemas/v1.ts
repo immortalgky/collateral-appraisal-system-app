@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AreaDetailDto } from './typeCondo';
 
 const AddressDto = z
   .object({
@@ -572,6 +573,492 @@ const SimulateTransitionCompletedRequest = z
   })
   .partial()
   .passthrough();
+const LandAndBuildingDetailDto = {
+  propertyName: z.string().nullable(),
+  latitude: z.coerce.number().nullable(),
+  longitude: z.coerce.number().nullable(),
+  subDistrict: z.string().nullable(),
+  subDistrictName: z.string().nullable(),
+  district: z.string().nullable(),
+  districtName: z.string().nullable(),
+  province: z.string().nullable(),
+  provinceName: z.string().nullable(),
+  landOffice: z.string().nullable(),
+  landDescription: z.string().nullable(),
+  isOwnerVerified: z.boolean().nullable(),
+  ownerName: z.string().nullable(),
+  hasObligation: z.boolean().nullable(),
+  obligationDetails: z.string().nullable(),
+  isLandLocationVerified: z.boolean().nullable(),
+  landCheckMethodType: z.string().nullable(),
+  landCheckMethodTypeOther: z.string().nullable(),
+  street: z.string().nullable(),
+  soi: z.string().nullable(),
+  distanceFromMainRoad: z.coerce.number().nullable(),
+  village: z.string().nullable(),
+  addressLocation: z.string().nullable(),
+  landShapeType: z.string().nullable(),
+  urbanPlanningType: z.string().nullable(),
+  landZoneType: z.array(z.string()).nullable(),
+  plotLocationType: z.array(z.string()).nullable(),
+  plotLocationTypeOther: z.string().nullable(),
+  landFillType: z.string().nullable(),
+  landFillTypeOther: z.string().nullable(),
+  landFillPercent: z.coerce.number().nullable(),
+  soilLevel: z.coerce.number().nullable(),
+  accessRoadWidth: z.coerce.number().nullable(),
+  rightOfWay: z.coerce.number().nullable(),
+  roadFrontage: z.coerce.number().nullable(),
+  numberOfSidesFacingRoad: z.coerce.number().nullable(),
+  roadPassInFrontOfLand: z.string().nullable(),
+  landAccessibilityType: z.string().nullable(),
+  landAccessibilityRemark: z.string().nullable(),
+  roadSurfaceType: z.string().nullable(),
+  roadSurfaceTypeOther: z.string().nullable(),
+  publicUtilityType: z.array(z.string()).nullable(),
+  publicUtilityTypeOther: z.string().nullable(),
+  landUseType: z.array(z.string()).nullable(),
+  landUseTypeOther: z.string().nullable(),
+  landEntranceExitType: z.array(z.string()).nullable(),
+  landEntranceExitTypeOther: z.string().nullable(),
+  transportationAccessType: z.array(z.string()).nullable(),
+  transportationAccessTypeOther: z.string().nullable(),
+  propertyAnticipationType: z.string().nullable(),
+  isExpropriated: z.boolean().nullable(),
+  expropriationRemark: z.string().nullable(),
+  isInExpropriationLine: z.boolean().nullable(),
+  expropriationLineRemark: z.string().nullable(),
+  royalDecree: z.string().nullable(),
+  isEncroached: z.boolean().nullable(),
+  encroachmentRemark: z.string().nullable(),
+  encroachmentArea: z.coerce.number().nullable(),
+  hasElectricity: z.boolean().nullable(),
+  electricityDistance: z.coerce.number().nullable(),
+  isLandlocked: z.boolean().nullable(),
+  landlockedRemark: z.string().nullable(),
+  isForestBoundary: z.boolean().nullable(),
+  forestBoundaryRemark: z.string().nullable(),
+  otherLegalLimitations: z.string().nullable(),
+  evictionType: z.array(z.string()).nullable(),
+  evictionTypeOther: z.string().nullable(),
+  allocationType: z.string().nullable(),
+  northAdjacentArea: z.string().nullable(),
+  northBoundaryLength: z.coerce.number().nullable(),
+  southAdjacentArea: z.string().nullable(),
+  southBoundaryLength: z.coerce.number().nullable(),
+  eastAdjacentArea: z.string().nullable(),
+  eastBoundaryLength: z.coerce.number().nullable(),
+  westAdjacentArea: z.string().nullable(),
+  westBoundaryLength: z.coerce.number().nullable(),
+  pondArea: z.coerce.number().nullable(),
+  pondDepth: z.coerce.number().nullable(),
+  //Building
+  buildingNumber: z.string().nullable(),
+  modelName: z.string().nullable(),
+  builtOnTitleNumber: z.string().nullable(),
+  houseNumber: z.string().nullable(),
+  buildingConditionType: z.string().nullable(),
+  isUnderConstruction: z.boolean().nullable(),
+  constructionCompletionPercent: z.coerce.number().nullable(),
+  constructionLicenseExpirationDate: z.string().datetime({ offset: true }).nullable(),
+  isAppraisable: z.boolean().nullable(),
+  buildingType: z.string().nullable(),
+  buildingTypeOther: z.string().nullable(),
+  numberOfFloors: z.coerce.number().nullable(),
+  decorationType: z.string().nullable(),
+  decorationTypeOther: z.string().nullable(),
+  isEncroachingOthers: z.boolean().nullable(),
+  encroachingOthersRemark: z.string().nullable(),
+  encroachingOthersArea: z.coerce.number().nullable(),
+  buildingMaterialType: z.string().nullable(),
+  buildingStyleType: z.string().nullable(),
+  isResidential: z.boolean().nullable(),
+  buildingAge: z.coerce.number().nullable(),
+  residentialRemark: z.string().nullable(),
+  constructionStyleRemark: z.string().nullable(),
+  constructionStyleType: z.string().nullable(),
+  structureType: z.array(z.string()).nullable(),
+  structureTypeOther: z.string().nullable(),
+  roofFrameType: z.array(z.string()).nullable(),
+  roofFrameTypeOther: z.string().nullable(),
+  roofType: z.array(z.string()).nullable(),
+  roofTypeOther: z.string().nullable(),
+  ceilingType: z.array(z.string()).nullable(),
+  ceilingTypeOther: z.string().nullable(),
+  interiorWallType: z.array(z.string()).nullable(),
+  interiorWallTypeOther: z.string().nullable(),
+  exteriorWallType: z.array(z.string()).nullable(),
+  exteriorWallTypeOther: z.string().nullable(),
+  fenceType: z.array(z.string()).nullable(),
+  fenceTypeOther: z.string().nullable(),
+  constructionType: z.string().nullable(),
+  constructionTypeOther: z.string().nullable(),
+  utilizationType: z.string().nullable(),
+  utilizationTypeOther: z.string().nullable(),
+  totalBuildingArea: z.coerce.number().nullable(),
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  sellingPrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+  remark: z.string().nullable(),
+};
+const CreateLandAndBuildingPropertyRequest = z
+  .object({
+    ...LandAndBuildingDetailDto,
+  })
+  .partial()
+  .passthrough();
+const UpdateLandAndBuildingPropertyRequest = z
+  .object({
+    ...LandAndBuildingDetailDto,
+  })
+  .partial()
+  .passthrough();
+const GetLandAndBuildingPropertyByIdResult = z
+  .object({
+    ...LandAndBuildingDetailDto,
+  })
+  .partial()
+  .passthrough();
+const CreateLandAndBuildingPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const UpdateLandAndBuildingPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const LandTitleDto = z
+  .object({
+    titleDeedNo: z.string(),
+    bookNo: z.string(),
+    pageNo: z.string(),
+    landNo: z.string(),
+    surveyNo: z.string(),
+    sheetNo: z.string(),
+    rai: z.coerce.number(),
+    ngan: z.coerce.number(),
+    wa: z.coerce.number(),
+    totalSqWa: z.coerce.number(),
+    documentType: z.string(),
+    rawang: z.string(),
+    aerialPhotoNo: z.string(),
+    aerialPhotoName: z.string(),
+    boundaryMarker: z.string().nullable(),
+    boundartMakerOther: z.string().nullable(),
+    docValidate: z.string(),
+    isMissedOutSurvey: z.boolean(),
+    pricePerSquareWa: z.coerce.number(),
+    governmentPrice: z.coerce.number(),
+  })
+  .passthrough();
+const LandDetailDto = {
+  landTitle: z.array(LandTitleDto),
+  propertyName: z.string().nullable(),
+  latitude: z.coerce.number().nullable(),
+  longitude: z.coerce.number().nullable(),
+  subDistrict: z.string().nullable(),
+  district: z.string().nullable(),
+  province: z.string().nullable(),
+  landOffice: z.string().nullable(),
+  landDescription: z.string().nullable(),
+  isOwnerVerified: z.boolean().nullable(),
+  ownerName: z.string().nullable(),
+  hasObligation: z.boolean().nullable(),
+  obligationDetails: z.string().nullable(),
+  isLandLocationVerified: z.boolean().nullable(),
+  landCheckMethodType: z.string().nullable(),
+  landCheckMethodTypeOther: z.string().nullable(),
+  street: z.string().nullable(),
+  soi: z.string().nullable(),
+  distanceFromMainRoad: z.coerce.number().nullable(),
+  village: z.string().nullable(),
+  addressLocation: z.string().nullable(),
+  landShapeType: z.string().nullable(),
+  urbanPlanningType: z.string().nullable(),
+  landZoneType: z.array(z.string()).nullable(),
+  plotLocationType: z.array(z.string()).nullable(),
+  plotLocationTypeOther: z.string().nullable(),
+  landFillType: z.string().nullable(),
+  landFillTypeOther: z.string().nullable(),
+  landFillPercent: z.coerce.number().nullable(),
+  soilLevel: z.coerce.number().nullable(),
+  accessRoadWidth: z.coerce.number().nullable(),
+  rightOfWay: z.coerce.number().nullable(),
+  roadFrontage: z.coerce.number().nullable(),
+  numberOfSidesFacingRoad: z.coerce.number().nullable(),
+  roadPassInFrontOfLand: z.string().nullable(),
+  landAccessibilityType: z.string().nullable(),
+  landAccessibilityRemark: z.string().nullable(),
+  roadSurfaceType: z.string().nullable(),
+  roadSurfaceTypeOther: z.string().nullable(),
+  publicUtilityType: z.array(z.string()).nullable(),
+  publicUtilityTypeOther: z.string().nullable(),
+  landUseType: z.array(z.string()).nullable(),
+  landUseTypeOther: z.string().nullable(),
+  landEntranceExitType: z.array(z.string()).nullable(),
+  landEntranceExitTypeOther: z.string().nullable(),
+  transportationAccessType: z.array(z.string()).nullable(),
+  transportationAccessTypeOther: z.string().nullable(),
+  propertyAnticipationType: z.string().nullable(),
+  isExpropriated: z.boolean().nullable(),
+  expropriationRemark: z.string().nullable(),
+  isInExpropriationLine: z.boolean().nullable(),
+  expropriationLineRemark: z.string().nullable(),
+  royalDecree: z.string().nullable(),
+  isEncroached: z.boolean().nullable(),
+  encroachmentRemark: z.string().nullable(),
+  encroachmentArea: z.coerce.number().nullable(),
+  hasElectricity: z.boolean().nullable(),
+  electricityDistance: z.coerce.number().nullable(),
+  isLandlocked: z.boolean().nullable(),
+  landlockedRemark: z.string().nullable(),
+  isForestBoundary: z.boolean().nullable(),
+  forestBoundaryRemark: z.string().nullable(),
+  otherLegalLimitations: z.string().nullable(),
+  evictionType: z.array(z.string()).nullable(),
+  evictionTypeOther: z.string().nullable(),
+  allocationType: z.string().nullable(),
+  northAdjacentArea: z.string().nullable(),
+  northBoundaryLength: z.coerce.number().nullable(),
+  southAdjacentArea: z.string().nullable(),
+  southBoundaryLength: z.coerce.number().nullable(),
+  eastAdjacentArea: z.string().nullable(),
+  eastBoundaryLength: z.coerce.number().nullable(),
+  westAdjacentArea: z.string().nullable(),
+  westBoundaryLength: z.coerce.number().nullable(),
+  pondArea: z.coerce.number().nullable(),
+  pondDepth: z.coerce.number().nullable(),
+  hasBuilding: z.boolean().nullable(),
+  hasBuildingOther: z.string().nullable(),
+  remark: z.string().nullable(),
+};
+const CreateLandPropertyRequest = z
+  .object({
+    ...LandDetailDto,
+  })
+  .partial()
+  .passthrough();
+const UpdateLandPropertyRequest = z
+  .object({
+    ...LandDetailDto,
+  })
+  .partial()
+  .passthrough();
+const GetLandPropertyByIdResult = z
+  .object({
+    ...LandDetailDto,
+  })
+  .partial()
+  .passthrough();
+const CreateLandPropertyResponse = z.object({ id: z.coerce.number().int() }).passthrough();
+const UpdateLandPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const DeletePropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const SurfaceDto = z.object({
+  fromFloorNumber: z.coerce.number(),
+  toFloorNumber: z.coerce.number(),
+  floorType: z.string(),
+  floorStructure: z.string(),
+  floorSurface: z.string(),
+});
+const BuildingDepreciationMethodDto = z.object({
+  fromYear: z.coerce.number().max(30, { message: 'Max value must not exceed 30' }),
+  toYear: z.coerce.number(),
+  depreciationPercentPerYear: z.coerce.number(),
+  totalDepreciationPercent: z.coerce.number(),
+  depreciationPrice: z.coerce.number(),
+});
+const BuildingDepreciationDetail = z.object({
+  seq: z.coerce.number(),
+  areaDescription: z.string().nullable(),
+  area: z.coerce.number(),
+  isBuilding: z.boolean(),
+  pricePerSqMeterBeforeDepreciation: z.coerce.number(),
+  totalPriceBeforeDepreciation: z.coerce.number(),
+  year: z.coerce.number(),
+  totalDepreciationPercentPerYear: z.coerce.number(),
+  totalDepreciationPercent: z.coerce.number(),
+  depreciationMethod: z.string(),
+  totalDepreciationPrice: z.coerce.number(),
+  pricePerSqMeterAfterDepreciation: z.coerce.number(),
+  totalPriceAfterDepreciation: z.coerce.number(),
+  buildingDepreciationMethods: z.array(BuildingDepreciationMethodDto),
+});
+const BuildingDetailDto = {
+  ownerName: z.string().nullable(),
+
+  propertyName: z.string().nullable(),
+  buildingNumber: z.string().nullable(),
+  modelName: z.string().nullable(),
+  builtOnTitleNumber: z.string().nullable(),
+
+  isOwnerVerified: z.boolean(),
+  houseNumber: z.string().nullable(),
+
+  buildingConditionType: z.string().nullable(),
+  isUnderConstruction: z.boolean(),
+  constructionCompletionPercent: z.coerce.number().nullable(),
+  constructionLicenseExpirationDate: z.string().datetime({ offset: true }).nullable(),
+  isAppraisable: z.boolean(),
+  hasObligation: z.boolean(),
+  obligationDetails: z.string().nullable(),
+
+  buildingType: z.string().nullable(),
+  buildingTypeOther: z.string().nullable(),
+  numberOfFloors: z.coerce.number().nullable(),
+  decorationType: z.string().nullable(),
+  decorationtypeOther: z.string().nullable(),
+  isEncroachingOthers: z.boolean(),
+  encroachingOthersRemark: z.string().nullable(),
+  encroachingOthersArea: z.coerce.number().nullable(),
+
+  buildingMaterialType: z.string().nullable(),
+  buildingStyleType: z.string().nullable(),
+  isResidential: z.boolean(),
+  buildingAge: z.coerce.number().nullable(),
+  residentialRemark: z.string().nullable(),
+  constructionStyleRemark: z.string().nullable(),
+  constructionStyleType: z.string().nullable(),
+
+  structureType: z.array(z.string()).nullable(),
+  structureTypeOther: z.string().nullable(),
+  roofFrameType: z.array(z.string()).nullable(),
+  roofFrameTypeOther: z.string().nullable(),
+  roofType: z.array(z.string()).nullable(),
+  roofTypeOther: z.string().nullable(),
+  ceilingType: z.array(z.string()).nullable(),
+  ceilingTypeOther: z.string().nullable(),
+  interiorWallType: z.array(z.string()).nullable(),
+  interiorWallTypeOther: z.string().nullable(),
+  exteriorWallType: z.array(z.string()).nullable(),
+  exteriorWallTypeOther: z.string().nullable(),
+  surface: SurfaceDto.nullable().nullable(),
+  fenceType: z.array(z.string()).nullable(),
+  fenceTypeOther: z.string().nullable(),
+  constructionType: z.string().nullable(),
+  constructionTypeOther: z.string().nullable(),
+
+  utilizationType: z.string().nullable(),
+  utilizationTypeOther: z.string().nullable(),
+
+  buildingDepreciationDetails: z.array(BuildingDepreciationDetail),
+
+  totalBuildingArea: z.coerce.number().nullable(),
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  sellingPrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+
+  remark: z.string().nullable(),
+};
+const CreateBuildingPropertyRequest = z
+  .object({
+    ...BuildingDetailDto,
+  })
+  .partial()
+  .passthrough();
+const UpdateBuildingPropertyRequest = z
+  .object({
+    ...BuildingDetailDto,
+  })
+  .partial()
+  .passthrough();
+const GetBuildingPropertyByIdResult = z
+  .object({
+    ...BuildingDetailDto,
+  })
+  .partial()
+  .passthrough();
+const CreateBuildingPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const UpdateBuildingPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const CondoDetailDto = {
+  ownerName: z.string().nullable(),
+
+  propertyName: z.string().nullable(),
+  condoName: z.string().nullable(),
+  buildingNumber: z.string().nullable(),
+  modelName: z.string().nullable(),
+  builtOnTitleNumber: z.string().nullable(),
+  condoRegistrationNumber: z.string().nullable(),
+  roomNumber: z.string().nullable(),
+  floorNumber: z.coerce.number().nullable(),
+  usableArea: z.coerce.number().nullable(),
+
+  latitude: z.coerce.number().nullable(),
+  longitude: z.coerce.number().nullable(),
+
+  subDistrict: z.string().nullable(),
+  district: z.string().nullable(),
+  province: z.string().nullable(),
+  landOffice: z.string().nullable(),
+
+  isOwnerVerified: z.boolean().nullable(),
+  buildingConditionType: z.string().nullable(),
+  hasObligation: z.boolean().nullable(),
+  obligationDetails: z.string().nullable(),
+  isDocumentValidated: z.boolean().nullable(),
+
+  locationType: z.string().nullable(),
+  street: z.string().nullable(),
+  soi: z.string().nullable(),
+  distanceFromMainRoad: z.coerce.number().nullable(),
+  accessRoadWidth: z.coerce.number().nullable(),
+  rightOfWay: z.coerce.number().nullable(),
+  roadSurfaceType: z.string().nullable(),
+  publicUtilityType: z.array(z.string()).nullable(),
+  publicUtilityTypeOther: z.string().nullable(),
+
+  decorationType: z.string().nullable(),
+  decorationTypeOther: z.string().nullable(),
+  buildingAge: z.coerce.number().nullable(),
+  numberOfFloors: z.coerce.number().nullable(),
+  buildingFormType: z.string().nullable(),
+  constructionMaterialType: z.string().nullable(),
+
+  roomLayoutType: z.string().nullable(),
+  roomLayoutTypeOther: z.string().nullable(),
+  locationViewType: z.array(z.string()).nullable(),
+  groundFloorMaterialType: z.string().nullable(),
+  groundFloorMaterialTypeOther: z.string().nullable(),
+  upperFloorMaterialType: z.string().nullable(),
+  upperFloorMaterialTypeOther: z.string().nullable(),
+  bathroomFloorMaterialType: z.string().nullable(),
+  bathroomFloorMaterialTypeOther: z.string().nullable(),
+  roofType: z.string().nullable(),
+  roofTypeOther: z.string().nullable(),
+
+  totalBuildingArea: z.coerce.number().nullable(),
+
+  isExpropriated: z.boolean().nullable(),
+  expropriationRemark: z.string().nullable(),
+  isInExpropriationLine: z.boolean().nullable(),
+  expropriationLineRemark: z.string().nullable(),
+  royalDecree: z.string().nullable(),
+  isForestBoundary: z.boolean().nullable(),
+  forestBoundaryRemark: z.string().nullable(),
+
+  facilityType: z.array(z.string()).nullable(),
+  facilityTypeOther: z.string().nullable(),
+  environmentType: z.array(z.string()).nullable(),
+
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  sellingPrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+
+  remark: z.string().nullable(),
+};
+const CreateCondoPropertyRequest = z
+  .object({
+    ...CondoDetailDto,
+  })
+  .partial()
+  .passthrough();
+const UpdateCondoPropertyRequest = z
+  .object({
+    ...CondoDetailDto,
+  })
+  .partial()
+  .passthrough();
+const GetCondoPropertyByIdResult = z
+  .object({
+    ...CondoDetailDto,
+  })
+  .partial()
+  .passthrough();
+export const CreateCondoPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+export const UpdateCondoPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schemas = {
   AddressDto,
@@ -649,7 +1136,62 @@ export const schemas = {
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
+  CreateLandAndBuildingPropertyRequest,
+  UpdateLandAndBuildingPropertyRequest,
+  GetLandAndBuildingPropertyByIdResult,
+  CreateLandAndBuildingPropertyResponse,
+  UpdateLandAndBuildingPropertyResponse,
+  CreateLandPropertyRequest,
+  CreateLandPropertyResponse,
+  LandTitleDto,
+  DeletePropertyResponse,
+  GetLandPropertyByIdResult,
+  UpdateLandPropertyRequest,
+  UpdateLandPropertyResponse,
+  CreateBuildingPropertyRequest,
+  UpdateBuildingPropertyRequest,
+  GetBuildingPropertyByIdResult,
+  CreateBuildingPropertyResponse,
+  UpdateBuildingPropertyResponse,
+  AreaDetailDto,
+  CreateCondoPropertyRequest,
+  UpdateCondoPropertyRequest,
+  GetCondoPropertyByIdResult,
+  CreateCondoPropertyResponse,
+  UpdateCondoPropertyResponse,
 };
-
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
 export type CreateRequestResponseType = z.infer<typeof CreateRequestResponse>;
+export type CreateLandAndBuildingPropertyRequestType = z.infer<
+  typeof CreateLandAndBuildingPropertyRequest
+>;
+export type UpdateLandAndBuildingPropertyRequestType = z.infer<
+  typeof UpdateLandAndBuildingPropertyRequest
+>;
+export type GetLandAndBuildingPropertyByIdResultType = z.infer<
+  typeof GetLandAndBuildingPropertyByIdResult
+>;
+export type CreateLandAndBuildingPropertyResponseType = z.infer<
+  typeof CreateLandAndBuildingPropertyResponse
+>;
+export type UpdateLandAndBuildingPropertyResponseType = z.infer<
+  typeof UpdateLandAndBuildingPropertyResponse
+>;
+export type GetLandPropertyByIdResultType = z.infer<typeof GetLandPropertyByIdResult>;
+export type UpdateLandPropertyRequestType = z.infer<typeof UpdateLandPropertyRequest>;
+export type UpdateLandPropertyResponseType = z.infer<typeof UpdateLandPropertyResponse>;
+export type CreateLandPropertyRequestType = z.infer<typeof CreateLandPropertyRequest>;
+export type CreateLandPropertyResponseType = z.infer<typeof CreateLandPropertyResponse>;
+export type LandTitleDtoType = z.infer<typeof LandTitleDto>;
+export type DeletePropertyResponseType = z.infer<typeof DeletePropertyResponse>;
+export type GetBuildingPropertyByIdResultType = z.infer<typeof GetBuildingPropertyByIdResult>;
+export type CreateBuildingPropertyRequestType = z.infer<typeof CreateBuildingPropertyRequest>;
+export type CreateBuildingPropertyResponseType = z.infer<typeof CreateBuildingPropertyResponse>;
+export type UpdateBuildingPropertyRequestType = z.infer<typeof UpdateBuildingPropertyRequest>;
+export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;
+export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
+export type CreateCondoPropertyResponseType = z.infer<typeof CreateCondoPropertyResponse>;
+export type CreateCondoPropertyRequestType = z.infer<typeof CreateCondoPropertyRequest>;
+export type UpdateCondoPropertyRequestType = z.infer<typeof UpdateCondoPropertyRequest>;
+export type UpdateCondoPropertyResponseType = z.infer<typeof UpdateCondoPropertyResponse>;
+export type GetCondoPropertyByIdResultType = z.infer<typeof GetCondoPropertyByIdResult>;

@@ -1,6 +1,6 @@
 import FormTable from '@/features/request/components/tables/FormTable';
 import Input from '@/shared/components/Input';
-import type { AreaDetailDtoType } from '@/shared/forms/typeCondo';
+import type { AreaDetailDtoType } from '@/shared/schemas/v1';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 
 interface CondoAreaDetailFormProps {

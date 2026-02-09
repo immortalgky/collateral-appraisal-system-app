@@ -346,18 +346,18 @@ export const createLandAndBuildingForm = z.object({
 });
 
 export const landAndBuildingPMAForm = z.object({
-  buildingInsurancePrice: z.coerce.number().nullable(),
-  sellingPrice: z.coerce.number().nullable(),
-  forcedSalePrice: z.coerce.number().nullable(),
-  titleNo: z.string().nullable().optional(),
-  rawang: z.string().nullable().optional(),
-  landNo: z.string().nullable().optional(),
-  surveyNo: z.string().nullable().optional(),
-  bookNumber: z.string().nullable().optional(),
-  pageNumber: z.string().nullable().optional(),
-  areaRai: z.number().int().nullable().optional(),
-  areaNgan: z.number().int().nullable().optional(),
-  areaSquareWa: z.number().nullable().optional(),
+  buildingInsurancePrice: z.coerce.number(),
+  sellingPrice: z.coerce.number(),
+  forcedSalePrice: z.coerce.number(),
+  titleNo: z.string().min(1, 'Ttitle deed no. is required.'),
+  rawang: z.string().min(1, 'Rawang is required.'),
+  landNo: z.string().min(1, 'Land no. is required.'),
+  surveyNo: z.string().min(1, 'Survey no. is required.'),
+  bookNumber: z.string().min(1, 'Book no. is required.'),
+  pageNumber: z.string().min(1, 'Page no. is required.'),
+  areaRai: z.number().int(),
+  areaNgan: z.number().int(),
+  areaSquareWa: z.number(),
   subDistrict: z.string().min(1, 'Sub district is required.'),
   subDistrictName: z.string().nullable(),
   district: z.string().min(1, 'District is required.'),
@@ -384,12 +384,24 @@ export const condoPMAForm = z.object({
   provinceName: z.string().nullable(),
 });
 
+export const summaryDecisionForm = z.object({
+  dateTime: z.string(),
+  appraisalPrice: z.coerce.number().nullable(),
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+  condition: z.string().nullable(),
+  remark: z.string().nullable(),
+  opinionAppraiser: z.string().nullable(),
+  specialAssumption: z.string().nullable(),
+});
+
 export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;
 export type createLandFormType = z.infer<typeof createLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
 export type landAndBuildingPMAFormType = z.infer<typeof landAndBuildingPMAForm>;
 export type condoPMAFormType = z.infer<typeof condoPMAForm>;
+export type summaryDecisionFormType = z.infer<typeof summaryDecisionForm>;
 
 //===============================================================
 
