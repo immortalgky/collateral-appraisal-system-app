@@ -21,7 +21,8 @@ export const ActiveMethodPanel = ({
   const property = PROPERTIES[1];
   // const surveys = MOC_SURVEY_DATA;
 
-  const value = methodId;
+  // const value = methodId;
+  const value = 'WQS_MARKET';
   switch (value) {
     case 'WQS_MARKET':
       return <WQSSection property={properties} surveys={marketSurveys} />;

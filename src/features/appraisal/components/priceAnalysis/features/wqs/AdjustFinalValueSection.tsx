@@ -1,5 +1,5 @@
 import { useController, useFormContext, useWatch } from 'react-hook-form';
-import { INTERCEPT, RSQ, SLOPE, STEYX } from '../../domain/excelUtils/regression';
+import { INTERCEPT, RSQ, SLOPE, STEYX } from './domain/regression';
 import clsx from 'clsx';
 import { useMemo } from 'react';
 import { useDerivedFields } from '../../components/useDerivedFieldArray';

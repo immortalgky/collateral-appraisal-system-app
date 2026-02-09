@@ -3,7 +3,7 @@ import { getDesciptions } from './WQSSection';
 import { Icon } from '@/shared/components';
 import { useFormContext, useWatch } from 'react-hook-form';
 import clsx from 'clsx';
-import { forecast } from '../../domain/excelUtils/forecast';
+import { forecast } from './domain/forecast';
 import { useMemo } from 'react';
 import {
   RHFHorizontalArrayTable,

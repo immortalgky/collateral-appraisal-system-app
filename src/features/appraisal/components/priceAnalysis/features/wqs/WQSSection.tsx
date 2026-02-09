@@ -15,6 +15,9 @@ import {
   type WQSTemplate,
 } from '../../data/data';
 import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
+import { ComparativeSurveySection } from './components_/ComparativeSurveySection';
+import { ScoringTable } from './components_/ScoringTable';
+import { MarketSurveySelectionModal } from '../../components/MarketSurveySelectionModal';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
@@ -254,6 +257,8 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
     setComparativeSurveys([...comparativeSurveys, survey]);
   };
 
+  const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
+
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <FormProvider {...methods}>
@@ -316,13 +321,26 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
                     Comparative Analysis
                   </div>
                   <div className="px-4 mt-4">
-                    <ComparativeSection
-                      surveys={surveys}
+                    <button
+                      type="button"
+                      onClick={() => setShowMarketSurveySelection(true)}
+                      className="w-[200px] border border-dashed border-primary text-primary hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
+                    >
+                      Add Comparative Data
+                    </button>
+                    {showMarketSurveySelection && (
+                      <MarketSurveySelectionModal
+                        surveys={surveys}
+                        comparativeSurveys={comparativeSurveys}
+                        onSelect={handleOnSelectMarketSurvey}
+                        onCancel={() => setShowMarketSurveySelection(false)}
+                      />
+                    )}
+                    <ComparativeSurveySection
                       comparativeSurveys={comparativeSurveys}
-                      template={template}
                       property={property}
                       allFactors={allFactors}
-                      onSelectMarketSurvey={handleOnSelectMarketSurvey}
+                      template={template}
                     />
                   </div>
                 </div>
@@ -333,12 +351,18 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
                         Calculation of Appraisal Value
                       </div>
                       <div className="px-4 mt-4">
-                        <CalculationSection
+                        <ScoringTable
+                          comparativeSurveys={comparativeSurveys}
+                          property={property}
+                          template={template}
+                          isLoading={false}
+                        />
+                        {/* <CalculationSection
                           comparativeSurveys={comparativeSurveys}
                           template={template}
                           allFactors={allFactors}
                           property={property}
-                        />
+                        /> */}
                       </div>
                     </div>
                     <div>
