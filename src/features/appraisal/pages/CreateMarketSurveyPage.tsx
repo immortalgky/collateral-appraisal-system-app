@@ -10,7 +10,7 @@ import {
   CreateMarketSurveyRequest,
   type CreateMarketSurveyRequestType,
 } from '@/shared/forms/marketSurvey';
-import { useCreateMarketSurveyRequest } from '../api';
+import { useCreateMarketSurvey } from '../api';
 import MarketSurveyForm from '../forms/MarketSurveyForm';
 import { createMarketSurveyRequestDefault } from '@/shared/forms/defaults';
 import { useEffect } from 'react';
@@ -47,7 +47,7 @@ const CreateMarketSurveyPage = () => {
 
   const { handleSubmit, getValues, setValue } = methods;
 
-  const { mutate } = useCreateMarketSurveyRequest();
+  const { mutate } = useCreateMarketSurvey();
 
   const onSubmit: SubmitHandler<CreateMarketSurveyRequestType> = data => {
     mutate(data);

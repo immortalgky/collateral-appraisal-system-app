@@ -1,5 +1,4 @@
 import { FormFields, type FormField } from '@/shared/components/form';
-import CondoAreaDetailForm from './CondoAreaDetailForm';
 import Icon from '@/shared/components/Icon';
 import type { ReactNode } from 'react';
 
@@ -24,9 +23,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
       </div>
     </div>
     <div className="col-span-4">
-      <div className="grid grid-cols-12 gap-4">
-        {children}
-      </div>
+      <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
     {!isLast && <div className="h-px bg-gray-200 col-span-5" />}
   </>
@@ -74,12 +71,12 @@ function CondoDetailForm() {
       <SectionRow title="Roof" icon="tent">
         <FormFields fields={roofFormFields} />
       </SectionRow>
-
+      {/* 
       <SectionRow title="Area Details" icon="chart-area">
         <div className="col-span-12">
           <CondoAreaDetailForm name={'condoDetail'} />
         </div>
-      </SectionRow>
+      </SectionRow> */}
 
       <SectionRow title="Expropriation" icon="file-invoice">
         <FormFields fields={expropriationFields} />
@@ -110,7 +107,6 @@ const condoFields: FormField[] = [
     label: 'Property Name',
     name: 'propertyName',
     wrapperClassName: 'col-span-12',
-    required: true,
   },
   {
     type: 'text-input',
@@ -122,21 +118,22 @@ const condoFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Room No',
-    name: 'roomNo',
+    name: 'roomNumber',
     wrapperClassName: 'col-span-3',
     required: true,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Floor No',
-    name: 'floorNo',
+    name: 'floorNumber',
     wrapperClassName: 'col-span-2',
     required: true,
+    decimalPlaces: 0,
   },
   {
     type: 'text-input',
     label: 'Building No',
-    name: 'buildingNo',
+    name: 'buildingNumber',
     wrapperClassName: 'col-span-3',
     required: true,
   },
@@ -168,26 +165,35 @@ const condoFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
   },
+  // Location selector (sub-district autocomplete that populates district, province, postcode)
   {
-    type: 'text-input',
-    label: 'Sub-District',
+    type: 'location-selector',
+    label: 'Sub District',
     name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
     wrapperClassName: 'col-span-3',
     required: true,
   },
+
+  // Display fields (autopopulated by location-selector)
   {
     type: 'text-input',
     label: 'District',
-    name: 'district',
+    name: 'districtName',
+    disabled: true,
     wrapperClassName: 'col-span-3',
-    required: true,
   },
   {
     type: 'text-input',
     label: 'Province',
-    name: 'province',
+    name: 'provinceName',
+    disabled: true,
     wrapperClassName: 'col-span-3',
-    required: true,
   },
   {
     type: 'number-input',
@@ -217,7 +223,7 @@ const condoFields: FormField[] = [
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
-    name: 'condoDetail.verifiableOwner',
+    name: 'isOwnerVerified',
     required: true,
     options: ['Can', 'Can not'],
     wrapperClassName: 'col-span-3',
@@ -225,14 +231,16 @@ const condoFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Owner',
-    name: 'condoDetail.owner',
-    wrapperClassName: 'col-span-12',
-    required: false,
+    name: 'ownerName',
+    wrapperClassName: 'col-span-4',
+    required: true,
+    disableWhen: { field: 'isOwnerVerified', is: false },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },
   {
     type: 'radio-group',
     label: 'Condominium Conditions',
-    name: 'condoDetail.condoConditions',
+    name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
     required: false,
     options: [
@@ -245,35 +253,28 @@ const condoFields: FormField[] = [
     orientation: 'horizontal',
   },
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
     label: 'Is Obligation',
-    name: 'condoDetail.isObligation',
+    name: 'hasObligation',
     wrapperClassName: 'col-span-12',
     required: false,
-    options: [
-      { value: '0', label: 'No obligations' },
-      { value: '1', label: 'Mortgage as security' },
-    ],
-    orientation: 'horizontal',
+    options: ['Mortgage as security', 'No obligations'],
   },
   {
     type: 'text-input',
     label: 'Obligation',
-    name: 'condoDetail.obligation',
+    name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
     required: false,
+    showWhen: { field: 'hasObligation', is: true },
   },
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
     label: 'Document Validation',
-    name: 'condoDetail.documentValidation',
+    name: 'isDocumentValidated',
     wrapperClassName: 'col-span-12',
     required: true,
-    options: [
-      { value: '0', label: 'Correctly Matched' },
-      { value: '1', label: 'Not Consistent' },
-    ],
-    orientation: 'horizontal',
+    options: ['Correctly Matched', 'Not Consistent'],
   },
 ];
 
@@ -281,7 +282,7 @@ const condoLocationFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
-    name: 'condoDetail.isCondoLocationCorrect',
+    name: 'locationType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -293,54 +294,55 @@ const condoLocationFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Street',
-    name: 'condoDetail.street',
+    name: 'street',
     wrapperClassName: 'col-span-6',
     required: false,
   },
   {
     type: 'text-input',
     label: 'Soi',
-    name: 'condoDetail.soi',
+    name: 'soi',
     wrapperClassName: 'col-span-6',
     required: false,
   },
   {
     type: 'number-input',
     label: 'Distance',
-    name: 'condoDetail.distance',
+    name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-3',
     required: false,
   },
   {
     type: 'number-input',
     label: 'Road Width',
-    name: 'condoDetail.width',
+    name: 'accessRoadWidth',
     wrapperClassName: 'col-span-3',
     required: false,
   },
   {
     type: 'number-input',
     label: 'Right of Way',
-    name: 'condoDetail.rightOfWay',
+    name: 'rightOfWay',
     wrapperClassName: 'col-span-3',
     required: false,
+    decimalPlaces: 0,
   },
   {
     type: 'radio-group',
     label: 'Road Surface',
-    name: 'condoDetail.roadSurface',
+    name: 'roadSurfaceType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
     options: [
-      { value: '1', label: 'Correct' },
-      { value: '0', label: 'Incorrect' },
+      { value: '1', label: 'Concrete' },
+      { value: '0', label: 'Soil' },
     ],
   },
   {
     type: 'checkbox-group',
     label: 'Public Utility',
-    name: 'condoDetail.publicUtility',
+    name: 'publicUtilityType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -355,17 +357,18 @@ const condoLocationFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.publicUtilityOther',
+    name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
     required: false,
+    showWhen: { field: 'publicUtility', is: '99', operator: 'in' },
   },
 ];
 
 const condoDecorationFields: FormField[] = [
   {
     type: 'radio-group',
-    label: 'Decoration',
-    name: 'condoDetail.decoration',
+    label: '',
+    name: 'decorationType',
     wrapperClassName: 'col-span-12',
     required: true,
     orientation: 'horizontal',
@@ -379,9 +382,10 @@ const condoDecorationFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.decorationOther',
+    name: 'decorationTypeOther',
     wrapperClassName: 'col-span-12',
     required: false,
+    showWhen: { field: 'decoration', is: '99' },
   },
 ];
 
@@ -389,14 +393,14 @@ const ageHeightCondoFields: FormField[] = [
   {
     type: 'number-input',
     label: 'Building Age (Years)',
-    name: 'condoDetail.buildingYear',
+    name: 'buildingAge',
     wrapperClassName: 'col-span-4',
     required: false,
   },
   {
     type: 'number-input',
     label: 'Total Number of Floors',
-    name: 'condoDetail.totalFloor',
+    name: 'numberOfFloors',
     wrapperClassName: 'col-span-4',
     required: false,
   },
@@ -406,7 +410,7 @@ const buildingFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
-    name: 'condoDetail.buildingForm',
+    name: 'buildingFormType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -422,7 +426,7 @@ const constructionMaterialsFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
-    name: 'condoDetail.constructionMaterials',
+    name: 'constructionMaterialType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -447,7 +451,7 @@ const condoRoomLayoutFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
-    name: 'condoDetail.roomLayout',
+    name: 'roomLayoutType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -456,9 +460,10 @@ const condoRoomLayoutFormFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.roomLayoutOther',
+    name: 'roomLayoutTypeOther',
     wrapperClassName: 'col-span-12',
     required: false,
+    showWhen: { field: 'roomLayoutType', is: '99' },
   },
 ];
 
@@ -480,7 +485,7 @@ const locationViewFormFields: FormField[] = [
   {
     type: 'checkbox-group',
     label: '',
-    name: 'condoDetail.locationView',
+    name: 'locationViewType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -521,7 +526,7 @@ const floorFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: 'Ground Flooring Materials',
-    name: 'condoDetail.groundFlooringMaterial',
+    name: 'groundFloorMaterialType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -530,13 +535,14 @@ const floorFormFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.groundFlooringMaterialOther',
+    name: 'groundFloorMaterialTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'groundFloorMaterial', is: '99' },
   },
   {
     type: 'radio-group',
     label: 'Upper Flooring Materials',
-    name: 'condoDetail.upperFlooringMaterial',
+    name: 'upperFloorMaterialType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -545,13 +551,14 @@ const floorFormFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.upperFlooringMaterialOther',
+    name: 'upperFloorMaterialTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'upperFloorMaterial', is: '99' },
   },
   {
     type: 'radio-group',
     label: 'Bathroom Flooring Materials',
-    name: 'condoDetail.bathroomFlooringMaterial',
+    name: 'bathroomFloorMaterialType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -560,8 +567,9 @@ const floorFormFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.bathroomFlooringMaterialOther',
+    name: 'bathroomFloorMaterialTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'bathroomFloorMaterial', is: '99' },
   },
 ];
 
@@ -582,7 +590,7 @@ const roofFormFields: FormField[] = [
   {
     type: 'radio-group',
     label: '',
-    name: 'condoDetail.roof',
+    name: 'roofType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -591,32 +599,47 @@ const roofFormFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.roofOther',
+    name: 'roofTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'roomType', is: '99' },
   },
-];
-
-const expropriationOptions = [
-  { value: '0', label: 'Is Expropriated' },
-  { value: '1', label: 'In Line Expropriated' },
 ];
 
 const expropriationFields: FormField[] = [
   {
-    type: 'radio-group',
-    label: '',
-    name: 'condoDetail.expropriation',
-    wrapperClassName: 'col-span-12',
+    type: 'checkbox',
+    label: 'Is Expropriated',
+    name: 'isExpropriated',
+    wrapperClassName: 'col-span-2',
     required: false,
-    orientation: 'horizontal',
-    options: expropriationOptions,
+  },
+  {
+    type: 'checkbox',
+    label: 'In Line Expropriated',
+    name: 'isInExpropriationLine',
+    wrapperClassName: 'col-span-7',
+    required: false,
   },
   {
     type: 'text-input',
     label: 'Royal Decree',
-    name: 'condoDetail.royalDecree',
-    wrapperClassName: 'col-span-2',
+    name: 'royalDecree',
+    wrapperClassName: 'col-span-3',
     required: false,
+  },
+  {
+    type: 'textarea',
+    label: 'Is Expropriated',
+    name: 'expropriationRemark',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isExpropriated', is: true },
+  },
+  {
+    type: 'textarea',
+    label: 'Is In Line Expropriated',
+    name: 'expropriationLineRemark',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isInExpropriationLine', is: true },
   },
 ];
 
@@ -645,7 +668,7 @@ const condoFacilityFields: FormField[] = [
   {
     type: 'checkbox-group',
     label: '',
-    name: 'condoDetail.condoFacility',
+    name: 'facilityType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -654,8 +677,9 @@ const condoFacilityFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Other',
-    name: 'condoDetail.condoFacilityOther',
+    name: 'facilityTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'facilityType', is: '99', operator: 'in' },
   },
 ];
 
@@ -674,7 +698,7 @@ const environmentFields: FormField[] = [
   {
     type: 'checkbox-group',
     label: '',
-    name: 'condoDetail.condoEnvironment',
+    name: 'environmentType',
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
@@ -684,18 +708,18 @@ const environmentFields: FormField[] = [
 
 const inForestBoundaryFormFields: FormField[] = [
   {
-    type: 'boolean-toggle',
+    type: 'checkbox',
     label: 'Is In Forest Boundary',
-    name: 'condoDetail.inForestBoundary',
+    name: 'isForestBoundary',
     required: false,
-    options: ['No', 'Yes'],
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
-    label: 'Remark',
-    name: 'condoDetail.inForestBoundaryRemark',
+    type: 'textarea',
+    label: 'Is In Forest Boundary',
+    name: 'forestBoundaryRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isForestBoundary', is: true },
   },
 ];
 
@@ -703,7 +727,7 @@ const remarkFormFields: FormField[] = [
   {
     type: 'textarea',
     label: '',
-    name: 'condoDetail.remarks',
+    name: 'remark',
     wrapperClassName: 'col-span-12',
     required: false,
   },

@@ -5,30 +5,63 @@ import type {
 import type {
   CreateBuildingRequestType,
   CreateBuildingResponseType,
+  GetBuildingPropertyByIdResultType,
+  UpdateBuildingRequestType,
+  UpdateBuildingResponseType,
 } from '@/shared/forms/typeBuilding';
-import type { CreateLandRequestType, CreateLandResponseType } from '@/shared/forms/v2';
+import {
+  schemas,
+  type CreateLandRequestType,
+  type CreateLandResponseType,
+  type DeletePropertyResponseType,
+} from '@/shared/forms/v2';
 import type {
-  CreateLandBuildingRequestType,
-  CreateLandBuildingResponseType,
+  CreateLandAndBuildingRequestType,
+  CreateLandAndBuildingResponseType,
+  GetLandAndBuildingPMAPropertyByIdResultType,
+  GetLandAndBuildingPropertyByIdResultType,
+  UpdateLandAndBuildingPMARequestType,
+  UpdateLandAndBuildingPMAResponseType,
+  UpdateLandAndBuildingRequestType,
+  UpdateLandAndBuildingResponseType,
 } from '../../shared/forms/typeLandBuilding';
-import type { CreateCondoRequestType, CreateCondoResponseType } from '../../shared/forms/typeCondo';
+import type {
+  CreateCondoRequestType,
+  CreateCondoResponseType,
+  GetCondoPMAPropertyByIdResultType,
+  GetCondoPropertyByIdResultType,
+  UpdateCondoPMARequestType,
+  UpdateCondoPMAResponseType,
+  UpdateCondoRequestType,
+  UpdateCondoResponseType,
+} from '../../shared/forms/typeCondo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AppraisalData } from './context/AppraisalContext';
+import type z from 'zod';
+import { isAxiosError } from 'axios';
+
+const { GetLandPropertyByIdResult, UpdateLandRequest, UpdateLandResponse } = schemas;
+
+export type GetLandPropertyByIdResultType = z.infer<typeof GetLandPropertyByIdResult>;
+export type UpdateLandRequestType = z.infer<typeof UpdateLandRequest>;
+export type UpdateLandResponseType = z.infer<typeof UpdateLandResponse>;
 
 // ==================== Collateral Appraisal APIs ====================
 
-export const useCreateLandRequest = () => {
+// ==================== Create Properties ============================
+
+export const useCreateLandProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (request: CreateLandRequestType): Promise<CreateLandResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/land-detail', request);
+      const { data } = await axios.post(`/appraisals/${request.apprId}/land-properties`, request);
       return data;
     },
     onSuccess: data => {
-      console.log(data);
+      console.log('Properties land created successfully', data);
       queryClient.invalidateQueries({ queryKey: ['appraisal'] });
     },
     onError: (error: any) => {
@@ -37,13 +70,16 @@ export const useCreateLandRequest = () => {
   });
 };
 
-export const useCreateBuildingRequest = () => {
+export const useCreateBuildingProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (request: CreateBuildingRequestType): Promise<CreateBuildingResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/building-detail', request);
+      const { data } = await axios.post(
+        `/appraisals/${request.apprId}/building-properties`,
+        request,
+      );
       return data;
     },
     onSuccess: data => {
@@ -56,15 +92,18 @@ export const useCreateBuildingRequest = () => {
   });
 };
 
-export const useCreateLandBuildingRequest = () => {
+export const useCreateLandAndBuildingProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (
-      request: CreateLandBuildingRequestType,
-    ): Promise<CreateLandBuildingResponseType> => {
+      request: CreateLandAndBuildingRequestType,
+    ): Promise<CreateLandAndBuildingResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/land-building-detail', request);
+      const { data } = await axios.post(
+        `/appraisals/${request.apprId}/land-and-building-properties`,
+        request,
+      );
       return data;
     },
     onSuccess: data => {
@@ -77,13 +116,13 @@ export const useCreateLandBuildingRequest = () => {
   });
 };
 
-export const useCreateCondoRequest = () => {
+export const useCreateCondoProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (request: CreateCondoRequestType): Promise<CreateCondoResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/condo-detail', request);
+      const { data } = await axios.post(`/appraisals/${request.apprId}/condo-properties`, request);
       return data;
     },
     onSuccess: data => {
@@ -96,9 +135,291 @@ export const useCreateCondoRequest = () => {
   });
 };
 
+// ==================== Update Properties ==========================
+
+export const useUpdateLandProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: UpdateLandRequestType): Promise<UpdateLandResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/land-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties land updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useUpdateBuildingProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: UpdateBuildingRequestType): Promise<UpdateBuildingResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/building-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties building updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useUpdateCondoProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: UpdateCondoRequestType): Promise<UpdateCondoResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/condo-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties condo updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useUpdateCondoPMAProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: UpdateCondoPMARequestType): Promise<UpdateCondoPMAResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/condo-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties condo updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useUpdateLandAndBuildingProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: UpdateLandAndBuildingRequestType,
+    ): Promise<UpdateLandAndBuildingResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/land-and-building-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties land and building updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+export const useUpdateLandAndBuildingPMAProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: UpdateLandAndBuildingPMARequestType,
+    ): Promise<UpdateLandAndBuildingPMAResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(
+        `/appraisals/${request.apprId}/properties/${request.propertyId}/land-and-building-detail`,
+        request,
+      );
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Properties land and building updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+// ==================== Get Properties ============================
+
+export const useGetLandPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'land-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/land-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetBuildingPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'building-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetBuildingPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/building-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetCondoPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'condo-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetCondoPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/condo-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetCondoPMAPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'condo-properties-pma', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetCondoPMAPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/condo-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetLandAndBuildingPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'land-and-building-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandAndBuildingPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/land-and-building-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetLandAndBuildingPMAPropertyById = (appraisalId: string, propertyId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'land-and-building-properties-pma', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandAndBuildingPMAPropertyByIdResultType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/land-and-building-detail/pma`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+//===================== Delete Property ==========================
+export const useDeleteProperty = (appraisalId: string, propertyId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<DeletePropertyResponseType> => {
+      const { data } = await axios.delete(`/appraisal/${appraisalId}/${propertyId}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+  });
+};
+
+//================================================================
 // ==================== Market Survey APIs ====================
 
-export const useCreateMarketSurveyRequest = () => {
+export const useCreateMarketSurvey = () => {
   const queryClient = useQueryClient();
 
   return useMutation({

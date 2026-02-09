@@ -50,9 +50,9 @@ export const BuildingDetailDto = z
     totalFloor: z.coerce.number(),
     decoration: z.string(),
     decorationOther: z.string(),
-    isEncroached: z.boolean(),
-    isEncroachedRemark: z.string(),
-    encroachArea: z.coerce.number().nullable(),
+    isEncroachingOthers: z.boolean(),
+    encroachingOthersRemark: z.string(),
+    encroachingOthersArea: z.coerce.number(),
     buildingMaterial: z.string().nullable(),
     buildingStyle: z.string().nullable(),
     isResidential: z.boolean(),
@@ -88,16 +88,217 @@ export const BuildingDetailDto = z
 
 export const CreateBuildingRequest = z
   .object({
-    propertyName: z.string().nullable(),
-    buildingNumber: z.string().nullable(),
-    modelName: z.string().nullable(),
-    houseNumber: z.string().nullable(),
-    builtOnTitleNumber: z.string().nullable(),
-    buildingDetail: BuildingDetailDto,
+    ownerName: z.string(),
+
+    propertyName: z.string(),
+    buildingNumber: z.string(),
+    modelName: z.string(),
+    builtOnTitleNumber: z.string(),
+
+    isOwnerVerified: z.boolean(),
+    houseNumber: z.string(),
+
+    buildingCondition: z.string(),
+    isUnderConstruction: z.boolean(),
+    constructionCompletionPercent: z.coerce.number(),
+    constructionLicenseExpirationDate: z.string().datetime({ offset: true }),
+    isAppraisable: z.boolean(),
+    hasObligation: z.boolean(),
+    obligationDetails: z.string(),
+
+    buildingType: z.string(),
+    buildingTypeOther: z.string(),
+    numberOfFloors: z.coerce.number(),
+    decorationType: z.string(),
+    decorationtypeOther: z.string(),
+    isEncroachingOthers: z.boolean(),
+    encroachingOthersRemark: z.string(),
+    encroachingOthersArea: z.coerce.number(),
+
+    buildingMaterial: z.string(),
+    buildingStyle: z.string(),
+    isResidential: z.boolean(),
+    buildingAge: z.coerce.number(),
+    isResidentialRemark: z.string(),
+    constructionStyleRemark: z.string(),
+    constructionStyleType: z.string(),
+
+    structureType: z.array(z.string()),
+    structureTypeOther: z.string(),
+    roofFrameType: z.array(z.string()),
+    roofFrameTypeOther: z.string(),
+    roofType: z.array(z.string()),
+    roofTypeOther: z.string(),
+    ceilingType: z.array(z.string()),
+    ceilingTypeOther: z.string(),
+    interiorWallType: z.array(z.string()),
+    interiorWallTypeOther: z.string(),
+    exteriorWallType: z.array(z.string()),
+    exteriorWallTypeOther: z.string(),
+    surface: SurfaceDto.nullable(),
+    fenceType: z.array(z.string()),
+    fenceTypeOther: z.string(),
+    constructionType: z.string(),
+    constructionTypeOther: z.string(),
+
+    utilizationType: z.string(),
+    otherPurposeUsage: z.string(),
+
+    buildingDepreciationDetails: z.array(BuildingDepreciationDetail),
+
+    totalBuildingArea: z.coerce.number(),
+    buildingInsurancePrice: z.coerce.number(),
+    sellingPrice: z.coerce.number(),
+    forcedSalePrice: z.coerce.number(),
+
+    remark: z.string(),
+  })
+  .passthrough();
+
+export const UpdateBuildingRequest = z
+  .object({
+    ownerName: z.string(),
+
+    propertyName: z.string(),
+    buildingNumber: z.string(),
+    modelName: z.string(),
+    builtOnTitleNumber: z.string(),
+
+    isOwnerVerified: z.boolean(),
+    houseNumber: z.string(),
+
+    buildingCondition: z.string(),
+    isUnderConstruction: z.boolean(),
+    constructionCompletionPercent: z.coerce.number(),
+    constructionLicenseExpirationDate: z.string().datetime({ offset: true }),
+    isAppraisable: z.boolean(),
+    hasObligation: z.boolean(),
+    obligationDetails: z.string(),
+
+    buildingType: z.string(),
+    buildingTypeOther: z.string(),
+    numberOfFloors: z.coerce.number(),
+    decorationType: z.string(),
+    decorationtypeOther: z.string(),
+    isEncroachingOthers: z.boolean(),
+    encroachingOthersRemark: z.string(),
+    encroachingOthersArea: z.coerce.number(),
+
+    buildingMaterial: z.string(),
+    buildingStyle: z.string(),
+    isResidential: z.boolean(),
+    buildingAge: z.coerce.number(),
+    isResidentialRemark: z.string(),
+    constructionStyleRemark: z.string(),
+    constructionStyleType: z.string(),
+
+    structureType: z.array(z.string()),
+    structureTypeOther: z.string(),
+    roofFrameType: z.array(z.string()),
+    roofFrameTypeOther: z.string(),
+    roofType: z.array(z.string()),
+    roofTypeOther: z.string(),
+    ceilingType: z.array(z.string()),
+    ceilingTypeOther: z.string(),
+    interiorWallType: z.array(z.string()),
+    interiorWallTypeOther: z.string(),
+    exteriorWallType: z.array(z.string()),
+    exteriorWallTypeOther: z.string(),
+    surface: SurfaceDto.nullable(),
+    fenceType: z.array(z.string()),
+    fenceTypeOther: z.string(),
+    constructionType: z.string(),
+    constructionTypeOther: z.string(),
+
+    utilizationType: z.string(),
+    otherPurposeUsage: z.string(),
+
+    buildingDepreciationDetails: z.array(BuildingDepreciationDetail),
+
+    totalBuildingArea: z.coerce.number(),
+    buildingInsurancePrice: z.coerce.number(),
+    sellingPrice: z.coerce.number(),
+    forcedSalePrice: z.coerce.number(),
+
+    remark: z.string(),
+  })
+  .passthrough();
+
+export const GetBuildingPropertyByIdResult = z
+  .object({
+    ownerName: z.string(),
+
+    propertyName: z.string(),
+    buildingNumber: z.string(),
+    modelName: z.string(),
+    builtOnTitleNumber: z.string(),
+
+    isOwnerVerified: z.boolean(),
+    houseNumber: z.string(),
+
+    buildingConditionType: z.string(),
+    isUnderConstruction: z.boolean(),
+    constructionCompletionPercent: z.coerce.number(),
+    constructionLicenseExpirationDate: z.string().datetime({ local: true }),
+    isAppraisable: z.boolean(),
+    hasObligation: z.boolean(),
+    obligationDetails: z.string(),
+
+    buildingType: z.string(),
+    buildingTypeOther: z.string(),
+    numberOfFloors: z.coerce.number(),
+    decorationType: z.string(),
+    decorationtypeOther: z.string(),
+    isEncroachingOthers: z.boolean(),
+    encroachingOthersRemark: z.string(),
+    encroachingOthersArea: z.coerce.number(),
+
+    buildingMaterialType: z.string(),
+    buildingStyleType: z.string(),
+    isResidential: z.boolean(),
+    buildingAge: z.coerce.number(),
+    constructionYear: z.coerce.number(),
+    residentialRemark: z.string(),
+    constructionStyleRemark: z.string(),
+    constructionStyleType: z.string(),
+
+    structureType: z.array(z.string()),
+    structureTypeOther: z.string(),
+    roofFrameType: z.array(z.string()),
+    roofFrameTypeOther: z.string(),
+    roofType: z.array(z.string()),
+    roofTypeOther: z.string(),
+    ceilingType: z.array(z.string()),
+    ceilingTypeOther: z.string(),
+    interiorWallType: z.array(z.string()),
+    interiorWallTypeOther: z.string(),
+    exteriorWallType: z.array(z.string()),
+    exteriorWallTypeOther: z.string(),
+    surface: SurfaceDto.nullable(),
+    fenceType: z.array(z.string()),
+    fenceTypeOther: z.string(),
+    constructionType: z.string(),
+    constructionTypeOther: z.string(),
+
+    utilizationType: z.string(),
+    utilizationTypeOther: z.string(),
+
+    buildingDepreciationDetails: z.array(BuildingDepreciationDetail),
+
+    totalBuildingArea: z.coerce.number(),
+    buildingInsurancePrice: z.coerce.number(),
+    sellingPrice: z.coerce.number(),
+    forcedSalePrice: z.coerce.number(),
+
+    remark: z.string(),
   })
   .passthrough();
 
 export const CreateBuildingResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+export const UpdateBuildingResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
+export type GetBuildingPropertyByIdResultType = z.infer<typeof GetBuildingPropertyByIdResult>;
 export type CreateBuildingRequestType = z.infer<typeof CreateBuildingRequest>;
 export type CreateBuildingResponseType = z.infer<typeof CreateBuildingResponse>;
+export type UpdateBuildingRequestType = z.infer<typeof UpdateBuildingRequest>;
+export type UpdateBuildingResponseType = z.infer<typeof UpdateBuildingResponse>;

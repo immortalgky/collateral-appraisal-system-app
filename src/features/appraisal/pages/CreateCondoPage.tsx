@@ -1,7 +1,6 @@
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation } from 'react-router-dom';
-
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
@@ -10,44 +9,146 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CondoDetailForm from '../forms/CondoDetailForm';
-import {
-  CreateCollateralCondoRequest,
-  CreateCollateralCondoRequestDefaults,
-  type CreateCondoRequestType,
-} from '@/shared/forms/typeCondo';
-import { useCreateCondoRequest } from '../api';
+import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty } from '../api';
+import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
+import { useEffect, useState } from 'react';
+import { mapCondoPropertyResponseToForm } from '../utils/mappers';
+import toast from 'react-hot-toast';
 
 const CreateCondoPage = () => {
+  const navigate = useNavigate();
+
   const { propertyId } = useParams<{ propertyId?: string }>();
+  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+
+  const isEditMode = Boolean(propertyId);
+
   const location = useLocation();
 
-  const methods = useForm<CreateCondoRequestType>({
-    defaultValues: CreateCollateralCondoRequestDefaults,
-    resolver: zodResolver(CreateCollateralCondoRequest),
+  const methods = useForm<createCondoFormType>({
+    defaultValues: createCondoFormDefault,
+    resolver: zodResolver(createCondoForm),
   });
-  const { handleSubmit, getValues } = methods;
+  const { handleSubmit, getValues, reset } = methods;
 
-  const { mutate } = useCreateCondoRequest();
+  const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId, propertyId);
 
-  const onSubmit: SubmitHandler<CreateCondoRequestType> = data => {
-    mutate({
-      ...data,
-      collateralId: propertyId,
-    } as any);
+  useEffect(() => {
+    if (isEditMode && propertyData) {
+      const formValues = mapCondoPropertyResponseToForm(propertyData);
+      reset(formValues);
+      console.log(formValues);
+    }
+  }, [isEditMode, propertyData, reset]);
+
+  const { mutate: createCondoProperties, isPending: isCreating } = useCreateCondoProperty();
+  const { mutate: updateCondoProperties, isPending: isUpdating } = useUpdateCondoProperty();
+
+  const isPending = isCreating || isUpdating;
+
+  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+
+  const onSubmit: SubmitHandler<createCondoFormType> = data => {
+    setSaveAction('submit');
+    if (isEditMode && propertyId) {
+      updateCondoProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Property condominium updated successfully');
+            setSaveAction(null);
+            navigate(`/appraisal/${appraisalId}/property`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    } else {
+      createCondoProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Property condominium updated successfully');
+            setSaveAction(null);
+            navigate(`/appraisal/${appraisalId}/property/condo/${response.id}`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    }
   };
 
   const { isOpen, onToggle } = useDisclosure();
 
   const handleSaveDraft = () => {
+    setSaveAction('draft');
     const data = getValues();
-    mutate({
-      ...data,
-      collateralId: propertyId,
-    } as any);
+
+    if (isEditMode && propertyId) {
+      updateCondoProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Draft saved successfully');
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    } else {
+      createCondoProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Draft saved successfully');
+            setSaveAction(null);
+            if (response.id) {
+              navigate(`/appraisa/${appraisalId}/property/condo/${response.id}`);
+            }
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    }
   };
 
   // Only show Photos tab if we have a propertyId (not for new)
   const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -91,7 +192,11 @@ const CreateCondoPage = () => {
                   </Section>
 
                   {/* Condo Form */}
-                  <Section id="condo-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="condo-info"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <CondoDetailForm />
                   </Section>
                 </div>
@@ -107,11 +212,21 @@ const CreateCondoPage = () => {
                 <div className="h-6 w-px bg-gray-200" />
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                   Save draft
                 </Button>
-                <Button type="submit">
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
                   Save
                 </Button>

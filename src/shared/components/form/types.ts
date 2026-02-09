@@ -84,6 +84,8 @@ interface BaseFormField {
   wrapperClassName?: string;
   /** Disable the input */
   disabled?: boolean;
+  /** Value to set when field is disabled */
+  disabledValue?: unknown;
   /** Mark as required (shows asterisk, overrides schema) */
   required?: boolean;
 

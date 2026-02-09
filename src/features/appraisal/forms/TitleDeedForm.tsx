@@ -10,13 +10,13 @@ const TitleDeedForm = () => {
 };
 
 const titleDeedTableHeaders = [
-  { name: 'titleDeedNo', label: 'Title Deed No.', disabled: true },
+  { name: 'titleDeedNo', label: 'Title Deed No.', disabled: true, type: 'text-input' },
   { name: 'bookNo', label: 'Book No', disabled: true, colSpan: 4 },
   { name: 'pageNo', label: 'Page No', disabled: true },
   { name: 'landNo', label: 'Land No', disabled: true },
   { name: 'surveyNo', label: 'Survey No', disabled: true },
   { name: 'sheetNo', label: 'Sheet No', disabled: true },
-  { name: 'rai', label: 'Rai', disabled: true, colSpan: 2 },
+  { name: 'rai', label: 'Rai', disabled: true, colSpan: 2, type: 'number-input', decimalPlace: 0 },
   { name: 'ngan', label: 'Ngan', disabled: true, colSpan: 2 },
   { name: 'wa', label: 'Wa', disabled: true, colSpan: 2 },
   { name: 'totalSqWa', label: 'Sq.Wa', disabled: true, colSpan: 2 },

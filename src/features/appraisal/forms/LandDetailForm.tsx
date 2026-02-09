@@ -22,9 +22,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
       </div>
     </div>
     <div className="col-span-4">
-      <div className="grid grid-cols-12 gap-4">
-        {children}
-      </div>
+      <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
     {!isLast && <div className="h-px bg-gray-200 col-span-5 my-2" />}
   </>
@@ -130,36 +128,45 @@ const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-6',
     required: true,
   },
+  // Location selector (sub-district autocomplete that populates district, province, postcode)
   {
-    type: 'text-input',
-    label: 'Sub-District',
+    type: 'location-selector',
+    label: 'Sub District',
     name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
     wrapperClassName: 'col-span-3',
     required: true,
   },
+
+  // Display fields (autopopulated by location-selector)
   {
     type: 'text-input',
     label: 'District',
-    name: 'district',
+    name: 'districtName',
     disabled: true,
-    wrapperClassName: 'col-span-3',
     required: true,
+    wrapperClassName: 'col-span-3',
   },
   {
     type: 'text-input',
     label: 'Province',
-    name: 'province',
+    name: 'provinceName',
     disabled: true,
-    wrapperClassName: 'col-span-3',
     required: true,
+    wrapperClassName: 'col-span-3',
   },
   {
     type: 'dropdown',
     label: 'Land Office',
     name: 'landOffice',
     options: [
-      { label: 'Yes', value: 'true' },
-      { label: 'No', value: 'false' },
+      { label: 'Bangkok Land Office', value: 'Bangkok Land Office' },
+      { label: 'Land Office', value: 'Land Office' },
     ],
     wrapperClassName: 'col-span-3',
     required: true,
@@ -174,7 +181,7 @@ const landInfoField: FormField[] = [
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
-    name: 'landDetail.varifiableOwner',
+    name: 'isOwnerVerified',
     required: true,
     options: ['Can', 'Can not'],
     wrapperClassName: 'col-span-3',
@@ -182,26 +189,26 @@ const landInfoField: FormField[] = [
   {
     type: 'text-input',
     label: 'Owner',
-    name: 'landDetail.owner',
-    wrapperClassName: 'col-span-9',
+    name: 'ownerName',
+    wrapperClassName: 'col-span-4',
     required: true,
+    disableWhen: { field: 'isOwnerVerified', is: false },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },
   {
-    type: 'radio-group',
+    type: 'boolean-toggle',
     label: 'Is Obligation',
-    name: 'landDetail.isObligation',
-    orientation: 'horizontal',
-    options: [
-      { value: '1', label: 'No Obligation' },
-      { value: '2', label: 'Mortgage as Security' },
-    ],
+    name: 'hasObligation',
+    options: ['Mortgage as Security', 'No Obligation'],
     wrapperClassName: 'col-span-6',
   },
   {
     type: 'text-input',
     label: 'Obligation',
-    name: 'landDetail.obligation',
+    name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
+    required: true,
+    showWhen: { field: 'hasObligation', is: true },
   },
 ];
 
@@ -209,63 +216,65 @@ const landLocationField: FormField[] = [
   {
     type: 'boolean-toggle',
     label: '',
-    name: 'landDetail.landLocationVerification',
+    name: 'isLandLocationVerified',
     options: ['Correct', 'In Correct'],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'radio-group',
     label: 'Check By',
-    name: 'landDetail.landCheckMethod',
+    name: 'landCheckMethodType',
     orientation: 'horizontal',
     options: [
       { value: 'plot', label: 'Plot' },
       { value: 'rawang', label: 'Rawang' },
-      { value: 'other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.landCheckOther',
+    name: 'landCheckMethodTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landCheckMethodType', is: '99', operator: 'equals' },
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Street',
-    name: 'landDetail.street',
+    name: 'street',
     wrapperClassName: 'col-span-6',
     required: true,
   },
   {
     type: 'text-input',
     label: 'Soi',
-    name: 'landDetail.soi',
+    name: 'soi',
     wrapperClassName: 'col-span-3',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Distance',
-    name: 'landDetail.distance',
+    name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'text-input',
     label: 'Village',
-    name: 'landDetail.village',
+    name: 'village',
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Address / Location',
-    name: 'landDetail.addressLocation',
+    name: 'addressLocation',
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'dropdown',
     label: 'Land Shape',
-    name: 'landDetail.landShape',
+    name: 'landShapeType',
     wrapperClassName: 'col-span-6',
     options: [
       {
@@ -285,7 +294,7 @@ const landLocationField: FormField[] = [
   {
     type: 'dropdown',
     label: 'Type of urban plan',
-    name: 'landDetail.urbanPlanningType',
+    name: 'urbanPlanningType',
     wrapperClassName: 'col-span-6',
     options: [
       {
@@ -301,7 +310,7 @@ const landLocationField: FormField[] = [
   {
     type: 'checkbox-group',
     label: 'Location',
-    name: 'landDetail.location',
+    name: 'landZoneType',
     orientation: 'horizontal',
     options: [
       { value: 'SanitaryZone', label: 'Sanitary Zone' },
@@ -319,90 +328,98 @@ const landLocationField: FormField[] = [
 const plotLocationField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.plotLocation',
+    name: 'plotLocationType',
     orientation: 'horizontal',
     options: [
       { value: 'ShowHouse', label: 'Show House' },
       { value: 'CornerPlot', label: 'Corner Plot' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.plotLocationOther',
+    name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
   },
 ];
 
 const landFillField: FormField[] = [
   {
-    type: 'checkbox-group',
-    name: 'landDetail.landFill',
+    type: 'radio-group',
+    name: 'landFillType',
     orientation: 'horizontal',
     options: [
-      { value: 'ShowHouse', label: 'Show House' },
-      { value: 'CornerPlot', label: 'Corner Plot' },
-      { value: 'Other', label: 'Other' },
+      { value: 'Empty Land', label: 'Empty Land' },
+      { value: 'Filled', label: 'Filled' },
+      { value: 'Not Filled yet', label: 'Not Filled yet' },
+      { value: 'Partially Filled', label: 'Partially Filled' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.landFillOther',
+    name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'in' },
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Landfill ( % )',
-    name: 'landDetail.landFillPct',
+    name: 'landFillPercent',
     wrapperClassName: 'col-span-6',
+    decimalPlaces: 2,
+    max: 100,
   },
   {
     type: 'number-input',
     label: 'Soil Level',
-    name: 'landDetail.soilLevel',
+    name: 'soilLevel',
     wrapperClassName: 'col-span-6',
   },
 ];
 
 const roadField: FormField[] = [
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Road Width',
-    name: 'landDetail.roadWidth',
+    name: 'accessRoadWidth',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Right of Way',
-    name: 'landDetail.rightOfWay',
+    name: 'rightOfWay',
     wrapperClassName: 'col-span-6',
+    decimalPlaces: 0,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Wide frontage of land adjacent to the road',
-    name: 'landDetail.wideFrontageOfLand',
+    name: 'roadFrontage',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Number of sides facing the road',
-    name: 'landDetail.noOfSideFacingRoad',
+    name: 'numberOfSidesFacingRoad',
     wrapperClassName: 'col-span-6',
+    decimalPlaces: 0,
   },
   {
     type: 'text-input',
     label: 'Road passing in front of the land',
-    name: 'landDetail.roadPassInFrontOfLand',
+    name: 'roadPassInFrontOfLand',
     wrapperClassName: 'col-span-6',
   },
   {
     type: 'radio-group',
     label: 'Land Accessibility',
-    name: 'landDetail.landAccessibility',
+    name: 'landAccessibilityType',
     orientation: 'horizontal',
     options: [
       { value: 'Able', label: 'Able' },
@@ -414,7 +431,7 @@ const roadField: FormField[] = [
   {
     type: 'textarea',
     label: 'Land Accessibility Description',
-    name: 'landDetail.landAccessibilityDesc',
+    name: 'landAccessibilityRemark',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -422,117 +439,122 @@ const roadField: FormField[] = [
 const roadSurfaceField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'landDetail.roadSurface',
+    name: 'roadSurfaceType',
     orientation: 'horizontal',
     options: [
       { value: 'ReinforcedConcrete', label: 'Reinforced Concrete' },
       { value: 'Gravel/CrushedStone', label: 'Gravel/Crushed Stone' },
       { value: 'Soil', label: 'Soil' },
       { value: 'Paved', label: 'Paved' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.roadSurfaceOther',
+    name: 'roadSurfaceTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'roadSurfaceType', is: '99', operator: 'equals' },
   },
 ];
 
 const publicUtilityField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.publicUtility',
+    name: 'publicUtilityType',
     orientation: 'horizontal',
     options: [
       { value: 'PermanentElectricity', label: 'Permanent Electricity' },
       { value: 'TapWater/Groundwater', label: 'Tap Water/Groundwater' },
       { value: 'DrainagePipe/Sump', label: 'Drainage Pipe/Sump' },
       { value: 'Streetlight', label: 'Streetlight' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.publicUtilityOther',
+    name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
   },
 ];
 
 const landUseField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.landUse',
+    name: 'landUseType',
     orientation: 'horizontal',
     options: [
       { value: 'Residential', label: 'Residential' },
       { value: 'Commercial', label: 'Commercial' },
       { value: 'Industrial', label: 'Industrial' },
       { value: 'Agricultural', label: 'Agricultural' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.landUseOther',
+    name: 'landUseTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landUseType', is: '99', operator: 'in' },
   },
 ];
 
 const landEntranceField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.landEntranceExit',
+    name: 'landEntranceExitType',
     orientation: 'horizontal',
     options: [
       { value: 'PublicInterest', label: 'Public Interest' },
       { value: 'InsideAllocationProject', label: 'Inside the  Allocation Project' },
       { value: 'Personal', label: 'Personal' },
       { value: 'Servitude', label: 'Servitude' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.landEntranceExitOther',
+    name: 'landEntranceExitTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
   },
 ];
 
 const transpotationField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.transportation',
+    name: 'transportationAccessType',
     orientation: 'horizontal',
     options: [
       { value: 'Car', label: 'Car' },
       { value: 'Bus', label: 'Bus' },
       { value: 'Ship', label: 'Ship' },
       { value: 'Footpath', label: 'Footpath' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.transportationOther',
+    name: 'transportationAccessTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
   },
 ];
 
 const anticipationProsperityField: FormField[] = [
   {
-    type: 'checkbox-group',
-    name: 'landDetail.anticipationOfProp',
+    type: 'radio-group',
+    name: 'propertyAnticipationType',
     orientation: 'horizontal',
     options: [
       { value: 'VeryProsperous', label: 'Very Prosperous' },
@@ -544,103 +566,109 @@ const anticipationProsperityField: FormField[] = [
   },
 ];
 
-// Expropriate need to change
-
+//****** */
 const expropriateField: FormField[] = [
   {
     type: 'checkbox',
-    name: 'landDetail.isExpropriate',
+    name: 'isExpropriated',
     label: 'Is Expropriate',
     wrapperClassName: 'col-span-2',
   },
   {
     type: 'checkbox',
-    name: 'landDetail.isLineExpropriate',
+    name: 'isInExpropriationLine',
     label: 'In Line Expropriate',
     wrapperClassName: 'col-span-7',
   },
   {
     type: 'text-input',
     label: 'Royal Decree',
-    name: 'landDetail.royalDecree',
+    name: 'royalDecree',
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'textarea',
-    label: 'Is Expropriate',
-    name: 'landDetail.isExpropriateRemark',
+    label: 'Is Expropriated',
+    name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isExpropriated', is: true },
   },
   {
     type: 'textarea',
-    label: 'Is Expropriate',
-    name: 'landDetail.inLineExpropriateRemark',
+    label: 'Is In Line Expropriate',
+    name: 'expropriationLineRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isInExpropriationLine', is: true },
   },
 ];
 
 const encroachedField: FormField[] = [
   {
     type: 'checkbox',
-    name: 'landDetail.isEncroached',
+    name: 'isEncroached',
     label: 'Is Encroached',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-9',
   },
   {
-    type: 'text-input',
-    label: 'Area Sq.wa',
-    name: 'landDetail.royalDecree',
-    wrapperClassName: 'col-span-2',
+    type: 'number-input',
+    label: 'Encraoched Area Sq.wa',
+    name: 'encroachmentArea',
+    wrapperClassName: 'col-span-3',
+    disableWhen: { field: 'isEncroached', is: false },
   },
   {
     type: 'textarea',
     label: 'Is Encroached',
-    name: 'landDetail.isEncroachedRemark',
+    name: 'encroachmentRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isEncroached', is: true },
   },
 ];
 const LimitationOther: FormField[] = [
   {
     type: 'checkbox',
-    name: 'landDetail.electricity',
-    label: 'Electricity',
-    wrapperClassName: 'col-span-3',
+    name: 'hasElectricity',
+    label: 'Has Electricity',
+    wrapperClassName: 'col-span-9',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Distance',
-    name: 'landDetail.electricityDistance',
+    name: 'electricityDistance',
     wrapperClassName: 'col-span-3',
+    disableWhen: { field: 'hasElectricity', is: false },
   },
   {
     type: 'checkbox',
     label: 'Is Landlocked',
-    name: 'landDetail.isLandlocked',
+    name: 'isLandlocked',
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'checkbox',
     label: 'Is Forest Boundary',
-    name: 'landDetail.isForestBoundary',
+    name: 'isForestBoundary',
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'textarea',
     label: 'Is Landlocked Other',
-    name: 'landDetail.isLandlockedRemark',
+    name: 'landlockedRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isLandlocked', is: true },
   },
 
   {
     type: 'textarea',
     label: 'Is Forest Boundary Other',
-    name: 'landDetail.isForestBoundaryRemark',
+    name: 'forestBoundaryRemark',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'isForestBoundary', is: true },
   },
   {
     type: 'textarea',
     label: 'Other',
-    name: 'landDetail.limitationOther',
+    name: 'otherLegalLimitations',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -648,31 +676,31 @@ const LimitationOther: FormField[] = [
 const evictionField: FormField[] = [
   {
     type: 'checkbox-group',
-    name: 'landDetail.eviction',
+    name: 'evictionType',
     orientation: 'horizontal',
     options: [
       { value: 'PermanentElectricity', label: 'Permanent Electricity' },
       { value: 'SubwayLine', label: 'Subway Line' },
-      { value: 'Other', label: 'Other' },
+      { value: '99', label: 'Other' },
     ],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.evictionOther',
+    name: 'evictionTypeOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'evictionStatusType', is: '99', operator: 'in' },
   },
 ];
 
 const allocationField: FormField[] = [
   {
     type: 'radio-group',
-    name: 'landDetail.allocation',
+    name: 'allocationType',
     orientation: 'horizontal',
     options: [
-      { value: 'AllocateNewProjects', label: 'Allocate New Projects' },
-      { value: 'AllocateOldProjects', label: 'Allocate Old Projects' },
+      { value: 'AllocateNewProjects', label: 'Allocate Projects' },
       { value: 'NotAllocate', label: 'Not Allocate' },
     ],
     wrapperClassName: 'col-span-12',
@@ -683,83 +711,78 @@ const sizeAndBoundary: FormField[] = [
   {
     type: 'text-input',
     label: 'North Consecutive Area',
-    name: 'landDetail.n_ConsecutiveArea',
+    name: 'northAdjacentArea',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'North Estimate Length',
-    name: 'landDetail.n_EstimateLength',
+    name: 'northBoundaryLength',
     wrapperClassName: 'col-span-6',
   },
   {
     type: 'text-input',
     label: 'South Consecutive Area',
-    name: 'landDetail.s_ConsecutiveArea',
+    name: 'southAdjacentArea',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'South Estimate Length',
-    name: 'landDetail.s_EstimateLength',
+    name: 'southBoundaryLength',
     wrapperClassName: 'col-span-6',
   },
   {
     type: 'text-input',
     label: 'East Consecutive Area',
-    name: 'landDetail.e_ConsecutiveArea',
+    name: 'eastAdjacentArea',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'East Estimate Length',
-    name: 'landDetail.e_EstimateLength',
+    name: 'eastBoundaryLength',
     wrapperClassName: 'col-span-6',
   },
   {
     type: 'text-input',
     label: 'West Consecutive Area',
-    name: 'landDetail.w_ConsecutiveArea',
+    name: 'westAdjacentArea',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'West Estimate Length',
-    name: 'landDetail.w_EstimateLength',
+    name: 'westBoundaryLength',
     wrapperClassName: 'col-span-6',
   },
 ];
 
 const otherInformationField: FormField[] = [
   {
-    type: 'text-input',
-    label: 'Pound Area',
-    name: 'landDetail.poundArea',
+    type: 'number-input',
+    label: 'Pond Area',
+    name: 'pondArea',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Depth of Pit',
-    name: 'landDetail.depthPit',
+    name: 'pondDepth',
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'radio-group',
+    type: 'checkbox',
     label: 'Has Building',
-    name: 'landDetail.hasBuilding',
-    orientation: 'horizontal',
-    options: [
-      { value: 'yes', label: 'Yes' },
-      { value: 'no', label: 'No' },
-      { value: 'other', label: 'Other' },
-    ],
+    name: 'hasBuilding',
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Other',
-    name: 'landDetail.hasBuildingOther',
+    name: 'hasBuildingOther',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'hasBuilding', is: true },
   },
 ];
 
@@ -767,7 +790,7 @@ const remarkLandField: FormField[] = [
   {
     type: 'textarea',
     label: '',
-    name: 'landDetail.remark',
+    name: 'remark',
     wrapperClassName: 'col-span-12',
   },
 ];
