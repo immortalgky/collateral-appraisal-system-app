@@ -91,14 +91,20 @@ export function calcTotalAdjustValue(totalDiffAmt: unknown, totalSecondRevision:
   return round2(td + ts);
 }
 
-/**
- * NOTE:
- * Weight is percent by input, so no need to (weight / 100).
- */
-export function calcWeightedAdjustValue(totalAdjustValue: unknown, weight: unknown): number {
-  const v = Number(totalAdjustValue) || 0;
-  const w = Number(weight) || 0;
-  return round2(v * w);
+export function calcFinalValue(values: unknown[], fallback = 0): number {
+  let min = Infinity;
+  let found = false;
+
+  for (const v of values) {
+    const n = typeof v === 'number' ? v : Number(v);
+
+    if (!Number.isFinite(n)) continue;
+
+    found = true;
+    if (n < min) min = n;
+  }
+
+  return found ? min : fallback;
 }
 
 export function calcFinalValueRoundedValue(finalValue: unknown): number {

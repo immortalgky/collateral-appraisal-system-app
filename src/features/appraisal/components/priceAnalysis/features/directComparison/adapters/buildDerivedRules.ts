@@ -1,5 +1,4 @@
 import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/features/wqs/WQSSection.tsx';
-import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 import {
@@ -7,6 +6,7 @@ import {
   calcAdjustedValueFromSellingPrice,
   calcAdjustValueFromSellingPrice,
   calcDiff,
+  calcFinalValue,
   calcFinalValueRoundedValue,
   calcIncreaseDecrease,
   calcSum,
@@ -14,10 +14,11 @@ import {
   calcTotalSecondRevision,
 } from '@features/appraisal/components/priceAnalysis/features/directComparison/domain/calculations.ts';
 import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/features/directComparison/domain/qualitativeDefault.ts';
+import { shouldAutoDefault } from '../domain/shouldAutoDefault';
 type SurveyFactor = { id: string; value?: number | string | null };
 type Survey = { factors?: SurveyFactor[] };
 
-export function buildDirectComparisonQualitativeDerivedRules(args: {
+export function buildDirectComparisonCalculationDerivedRules(args: {
   surveys: Survey[];
   property: Record<string, any>;
 }): DerivedFieldRule[] {
@@ -25,6 +26,7 @@ export function buildDirectComparisonQualitativeDerivedRules(args: {
   const { surveys = [], property } = args;
   const {
     adjustmentFactors: adjustmentFactorsPath,
+    calculation: calculationPath,
     calculationAdjustedValue: calculationAdjustedValuePath,
     calculationTotalAdjustValue: calculationTotalAdjustValuePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
@@ -190,7 +192,7 @@ export function buildDirectComparisonQualitativeDerivedRules(args: {
         },
         {
           targetPath: calculationTotalAdjustValuePath({ column: columnIndex }),
-          deps: [adjustmentFactorsPath()],
+          deps: [adjustmentFactorsPath(), calculationPath({ column: columnIndex })],
           compute: ({ getValues }) => {
             const totalDiffAmt =
               getValues(calculationSumFactorAmtPath({ column: columnIndex })) ?? 0;
@@ -277,7 +279,7 @@ export function buildDirectComparisonFinalValueRules(arg: {
   const {
     finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
-    calculationSumFactorPct: calculationSumFactorPctPath,
+    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
   } = directComparisonPath;
   const { surveys = [] } = arg;
 
@@ -285,17 +287,19 @@ export function buildDirectComparisonFinalValueRules(arg: {
     {
       targetPath: finalValuePath(),
       deps: [
-        ...surveys.map((s, columnIndex) => calculationSumFactorPctPath({ column: columnIndex })),
+        ...surveys.map((s, columnIndex) =>
+          calculationTotalAdjustValuePath({ column: columnIndex }),
+        ),
       ],
       compute: ({ getValues }) => {
-        const totalWeightedAdjustValue = surveys.reduce((acc, curr, columnIndex) => {
-          const weightedAdjustValue =
-            getValues(calculationWeightAdjustValuePath({ column: columnIndex })) ?? 0;
-          return acc + weightedAdjustValue;
-        }, 0);
-        return Number.isFinite(totalWeightedAdjustValue)
-          ? parseFloat(totalWeightedAdjustValue.toFixed(2))
-          : 0;
+        const totalValues = surveys.map((s, columnIndex) => {
+          const totalAdjustValue =
+            getValues(calculationTotalAdjustValuePath({ column: columnIndex })) ?? 0;
+          return totalAdjustValue;
+        });
+
+        const finalValue = calcFinalValue(totalValues);
+        return finalValue;
       },
     },
     {

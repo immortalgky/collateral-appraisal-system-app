@@ -28,7 +28,7 @@ export function ComparativeSurveySection({
     name: 'comparativeFactors',
   });
 
-  const { comparativeFactors: comparativeFactorsPath } = directComparisonPath;
+  const { comparativeFactorsFactorCode: comparativeFactorsFactorCodePath } = directComparisonPath;
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
@@ -91,13 +91,13 @@ export function ComparativeSurveySection({
                         return t.factorId === f.factorCode;
                       }) ? (
                         <RHFInputCell
-                          fieldName={comparativeFactorsPath({ row: rowIndex })}
+                          fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="display"
                           accessor={({ value }) => getDesciptions(value)}
                         />
                       ) : (
                         <RHFInputCell
-                          fieldName={comparativeFactorsPath({ row: rowIndex })}
+                          fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={comparativeFactors}
                         />
@@ -109,7 +109,7 @@ export function ComparativeSurveySection({
                       <td key={s.id} className="px-3 py-2.5 font-light text-gray-600">
                         {
                           <RHFInputCell
-                            fieldName={comparativeFactorsPath({ row: rowIndex })}
+                            fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) =>
                               s.factors.find(f => f.id === value)?.value ?? ''
@@ -126,7 +126,7 @@ export function ComparativeSurveySection({
                     )}
                   >
                     <RHFInputCell
-                      fieldName={comparativeFactorsPath({ row: rowIndex })}
+                      fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => getPropertyValueByFactorCode(value, property) ?? ''}
                     />

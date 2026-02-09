@@ -5,29 +5,22 @@ import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
-import {
-  buildSaleGridAdjustmentFactorAmountRules,
-  buildSaleGridAdjustmentFactorDefaultPercentRules,
-  buildSaleGridCalculationDerivedRules,
-  buildSaleGridFinalValueRules,
-  buildSaleGridQualitativeDerivedRules,
-} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildDerivedRules.ts';
 import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import clsx from 'clsx';
-import { SecondRevision } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SecondRevision.tsx';
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 import {
   buildDirectComparisonAdjustmentFactorAmountRules,
   buildDirectComparisonAdjustmentFactorDefaultPercentRules,
+  buildDirectComparisonCalculationDerivedRules,
   buildDirectComparisonFinalValueRules,
-  buildDirectComparisonQualitativeDerivedRules,
 } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/buildDerivedRules.ts';
+import { SecondRevision } from './SecondRevision';
+import { qualitativeDefault } from '../domain/qualitativeDefault';
 
 interface QualitativeTableProps {
-  saleAdjustmentGridQualitatives: Record<string, any>[];
+  directComparisonQualitatives: Record<string, any>[];
   comparativeFactors: Record<string, any>[];
   comparativeSurveys: Record<string, any>[];
   property: Record<string, any>;
@@ -35,7 +28,7 @@ interface QualitativeTableProps {
   isLoading: boolean;
 }
 export const QualitativeTable = ({
-  saleAdjustmentGridQualitatives = [],
+  directComparisonQualitatives = [],
   comparativeFactors = [],
   comparativeSurveys = [],
   property,
@@ -60,6 +53,7 @@ export const QualitativeTable = ({
     /** 2nd revision */
     calculationSumFactorPct: calculationSumFactorPctPath,
     calculationSumFactorAmt: calculationSumFactorAmtPath,
+    calculationAdjustedValue: calculationAdjustedValuePath,
     calculationTotalAdjustValue: calculationTotalAdjustValuePath,
 
     /** adjust percent */
@@ -112,20 +106,8 @@ export const QualitativeTable = ({
   };
 
   /** TODO: avoid using effects to create “derived state” when possible. re-create as needed */
-  const derivedRules: DerivedFieldRule<any>[] = useMemo(() => {
-    /** Adjustment factors which initial by Qualitative part */
-    let rules = buildDirectComparisonQualitativeDerivedRules({
-      surveys: comparativeSurveys,
-      qualitativeRows: saleAdjustmentGridQualitatives,
-    });
-
-    rules = [...rules, ...buildDirectComparisonFinalValueRules({ surveys: comparativeSurveys })];
-
-    return rules;
-  }, [comparativeSurveys.length, qualitativeFactors.length]);
-
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
-    const rules = buildSaleGridCalculationDerivedRules({
+    const rules = buildDirectComparisonCalculationDerivedRules({
       surveys: comparativeSurveys,
       property: property,
     });
@@ -147,10 +129,16 @@ export const QualitativeTable = ({
     });
   }, [comparativeSurveys.length, qualitativeFactors.length, property]);
 
-  useDerivedFields({ rules: derivedRules });
+  const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildDirectComparisonFinalValueRules({
+      surveys: comparativeSurveys,
+    });
+  }, [comparativeSurveys.length, qualitativeFactors.length]);
+
   useDerivedFields({ rules: calculationRules });
   useDerivedFields({ rules: adjustPercentDefaultRules });
   useDerivedFields({ rules: adjustAmountRules });
+  useDerivedFields({ rules: finalValueRules });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
@@ -218,12 +206,12 @@ export const QualitativeTable = ({
               </tr>
             ) : (
               qualitativeFactors.map((f, rowIndex) => {
-                const selected = saleAdjustmentGridQualitatives[rowIndex]?.factorCode ?? '';
+                const selected = directComparisonQualitatives[rowIndex]?.factorCode ?? '';
                 const qualitativeFactors = (comparativeFactors ?? [])
                   .filter(
                     f =>
                       f.factorCode === selected ||
-                      !saleAdjustmentGridQualitatives.some(q => q.factorCode === f.factorCode),
+                      !directComparisonQualitatives.some(q => q.factorCode === f.factorCode),
                   )
                   .map(f => ({
                     label: getDesciptions(f.factorCode) ?? '',
@@ -356,8 +344,10 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <span>Adjusted Offering Price</span>
-                <span>(%)</span>
+                <div className={'flex flex-rows justify-between items-center'}>
+                  <span>Adjusted Offering Price</span>
+                  <span>(%)</span>
+                </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
@@ -448,8 +438,10 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <span>Total difference, factors affecting property value</span>
-                <span>(%)</span>
+                <div className={'flex flex-rows justify-between items-center'}>
+                  <span>Cumulative Adjusted Period</span>
+                  <span>(%)</span>
+                </div>
               </td>
               {comparativeSurveys.map((s, columnIndex) => {
                 const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
@@ -637,16 +629,6 @@ export const QualitativeTable = ({
               })}
               <td className={clsx('bg-white', rightColumnBody, bgGradientLeft)}></td>
               <td className="border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]"></td>
-            </tr>
-
-            {/* adjust weighted */}
-            <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjust Weight</td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
-              })}
-              <td className={clsx('bg-gray-200', rightColumnBody, bgGradientLeft)}></td>
-              <td className="border-b border-gray-300 w-[70px] sticky right-0 z-25 bg-gray-200 min-w-[70px] max-w-[70px]"></td>
             </tr>
 
             {/* final value */}

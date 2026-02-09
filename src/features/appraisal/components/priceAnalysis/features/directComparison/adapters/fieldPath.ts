@@ -1,6 +1,8 @@
 export const directComparisonPath = {
   /** comparative factor section */
-  comparativeFactors: (arg: { row: number }) => `comparativeFactors.${arg.row}.factorCode`,
+  comparativeFactor: () => `comparativeFactors`,
+  comparativeFactorsFactorCode: (arg: { row: number }) =>
+    `comparativeFactors.${arg.row}.factorCode`,
 
   /** qualitative section */
   qualitative: () => `directComparisonQualitatives`,
@@ -12,6 +14,8 @@ export const directComparisonPath = {
     `directComparisonQualitatives.${arg.row}.qualitatives.${arg.column}.marketId` as const,
 
   /** calculation section */
+  calculations: () => `directComparisonCalculations`,
+  calculation: (arg: { column: number }) => `directComparisonCalculations.${arg.column}`,
   calculationOfferingPrice: (arg: { column: number }) =>
     `directComparisonCalculations.${arg.column}.offeringPrice`,
   calculationOfferingPriceAdjustmentPct: (arg: { column: number }) =>
