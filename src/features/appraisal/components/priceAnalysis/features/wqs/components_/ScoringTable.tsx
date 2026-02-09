@@ -7,6 +7,7 @@ import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import {
   buildWQSCalculationDerivedRules,
+  buildWQSFinalValueDerivedRules,
   buildWQSScoringSurveyDerivedRules,
   buildWQSTotalScoreRules,
 } from '../adapters/buildDerivedRules';
@@ -116,9 +117,14 @@ export function ScoringTable({
     return buildWQSCalculationDerivedRules({ surveys: comparativeSurveys, property: property });
   }, [comparativeSurveys]);
 
+  const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildWQSFinalValueDerivedRules({ surveys: comparativeSurveys, property: property });
+  }, [comparativeSurveys, property]);
+
   useDerivedFields({ rules: scoringSurveyRules });
   useDerivedFields({ rules: totalScoreRules });
   useDerivedFields({ rules: calculationRules });
+  useDerivedFields({ rules: finalValueRules });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';

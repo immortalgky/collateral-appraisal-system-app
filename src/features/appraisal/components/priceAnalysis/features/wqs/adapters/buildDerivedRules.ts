@@ -6,6 +6,7 @@ import {
   calcSum,
   calcWeightedScore,
 } from '../domain/calculations';
+import { forecast } from '../domain/forecast';
 import { wqsFieldPath } from './fieldPath';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
@@ -288,55 +289,46 @@ export function buildWQSTotalScoreRules(args: {
   return rules;
 }
 
-// export function buildWQSFinalValueDerivedRules(args: {
-//   surveys: Survey[];
-//   property: Record<string, any>;
-// }): DerivedFieldRule[] {
-//   /** Calculation section */
-//   const { surveys = [], property } = args;
-//   const { finalValueFinalValue: finalValueFinalValuePath } = wqsFieldPath;
+export function buildWQSFinalValueDerivedRules(args: {
+  surveys: Survey[];
+  property: Record<string, any>;
+}): DerivedFieldRule[] {
+  /** Calculation section */
+  const { surveys = [], property } = args;
+  const {
+    finalValueFinalValue: finalValueFinalValuePath,
+    totalWeightedSurveyScore: totalWeightedSurveyScorePath,
+    totalWeightedCollateralScore: totalWeightedCollateralScorePath,
+    calculationAdjustedValue: calculationAdjustedValuePath,
+  } = wqsFieldPath;
 
-//   const rules: DerivedFieldRule[] = surveys
-//     .map((s, columnIndex) => {
-//       return [
-//         {
-//           targetPath: finalValueFinalValuePath({ column: columnIndex }),
-//           deps: [
-//             calculationOfferingPriceAdjustmentPctPath({ column: columnIndex }),
-//             calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex }),
-//             calculationAdjustmentYearPath({ column: columnIndex }),
-//           ],
-//           compute: ({ getValues }) => {
-//             const offeringPrice = s.factors?.find(f => f.id === '17')?.value;
-//             if (offeringPrice) {
-//               const offeringPriceAdjustmentPct =
-//                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
-//               const offeringPriceAdjustmentAmt =
-//                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
-//               console.log(offeringPrice);
-//               return calcAdjustedValue(
-//                 offeringPrice,
-//                 offeringPriceAdjustmentPct,
-//                 offeringPriceAdjustmentAmt,
-//               );
-//             }
-//             const sellingPrice = s.factors?.find(f => f.id === '21')?.value;
-//             if (sellingPrice) {
-//               const numberOfYears =
-//                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
-//               const sellingPriceAdjustmentYearPct =
-//                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
-//               return calcAdjustedValueFromSellingPrice(
-//                 sellingPrice,
-//                 numberOfYears,
-//                 sellingPriceAdjustmentYearPct,
-//               );
-//             }
-//             return 0;
-//           },
-//         },
-//       ];
-//     })
-//     .flat();
-//   return rules;
-// }
+  const rules: DerivedFieldRule[] = [
+    {
+      targetPath: finalValueFinalValuePath(),
+      deps: [
+        ...surveys.map((_, columnIndex) => totalWeightedSurveyScorePath({ column: columnIndex })),
+        totalWeightedCollateralScorePath(),
+        ...surveys.map((_, columnIndex) => calculationAdjustedValuePath({ column: columnIndex })),
+      ],
+      compute: ({ getValues }) => {
+        const surveyScores = surveys.map((_, columnIndex) => {
+          return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? [];
+        });
+        const collateralScore = getValues(totalWeightedCollateralScorePath()) ?? 0;
+        const surveyCalculate = surveys.map((_, columnIndex) => {
+          return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? [];
+        });
+        const finalValue =
+          forecast({
+            x: collateralScore,
+            known_ys: surveyCalculate,
+            known_xs: surveyScores,
+          }) ?? 0;
+        console.log(finalValue);
+        return finalValue;
+      },
+    },
+  ];
+
+  return rules;
+}
