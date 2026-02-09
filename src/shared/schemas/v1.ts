@@ -572,6 +572,146 @@ const SimulateTransitionCompletedRequest = z
   })
   .partial()
   .passthrough();
+const FactorDataDto = z
+  .object({
+    factorId: z.string().uuid().nullable().optional(),
+    factorCode: z.string().nullable().optional(),
+    value: z.string().nullable().optional(),
+    otherRemarks: z.string().nullable().optional(),
+    factorName: z.string().nullable().optional(),
+    fieldName: z.string().nullable().optional(),
+    dataType: z.string().nullable().optional(),
+    fieldLength: z.coerce.number().nullable().optional(),
+    fieldDecimal: z.coerce.number().nullable().optional(),
+    parameterGroup: z.string().nullable().optional(),
+  })
+  .passthrough();
+const TemplateFactorDto = z
+  .object({
+    templateFactorId: z.string().uuid().nullable(),
+    factorId: z.string().uuid().nullable().optional(),
+    factorCode: z.string().nullable().optional(),
+    factorName: z.string().nullable().optional(),
+    fieldName: z.string().nullable().optional(),
+    dataType: z.string().nullable().optional(),
+    fieldLength: z.coerce.number().nullable().optional(),
+    fieldDecimal: z.coerce.number().nullable().optional(),
+    parameterGroup: z.string().nullable().optional(),
+    isActive: z.boolean().nullable().optional(),
+    isMandatory: z.boolean(),
+    displaySequence: z.coerce.number().int().nullable().optional(),
+  })
+  .passthrough();
+
+const ImageDto = z.object({
+  id: z.string().uuid(),
+  documentId: z.string().uuid(),
+  displaySequence: z.coerce.number(),
+  title: z.string(),
+  description: z.string(),
+});
+const CreateMarketComparableRequest = z
+  .object({
+    factorData: z.array(FactorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
+    surveyName: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
+const UpdateMarketComparableRequest = z
+  .object({
+    factorData: z.array(FactorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
+    surveyName: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
+const GetMarketComparablesResponse = z
+  .object({
+    factorData: z.array(FactorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
+    surveyName: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
+
+const MarketComparableDetailDto = {
+  id: z.string().uuid(),
+  comparableNumber: z.string().nullable(),
+  propertyType: z.string().nullable(),
+  surveyName: z.string().nullable().optional(),
+  infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+  sourceInfo: z.string().nullable(),
+  templateId: z.string().uuid(),
+  notes: z.string().nullable(),
+  createdOn: z.string().datetime({ local: true }).nullable().optional(),
+  createdBy: z.string(),
+  updatedOn: z.string().datetime({ local: true }).nullable().optional(),
+  updatedBy: z.string(),
+  factorData: z.array(FactorDataDto),
+  images: z.array(ImageDto),
+};
+const GetMarketComparableByIdResponse = z
+  .object({
+    marketComparable: z.object(MarketComparableDetailDto),
+  })
+  .passthrough();
+const GetMarketComparableTemplateFactorResponse = z
+  .object({
+    factorId: z.string().uuid(),
+    factorCode: z.string(),
+    value: z.any(),
+    otherRemarks: z.string(),
+    factorName: z.string(),
+    fieldName: z.string(),
+    dataType: z.string(),
+    fieldLength: z.coerce.number(),
+    fieldDecimal: z.coerce.number(),
+    parameterGroup: z.string(),
+    isActive: z.boolean(),
+    displaySeq: z.coerce.number().int(),
+  })
+  .passthrough();
+const DeleteMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const MarketComparableTemplateDto = {
+  id: z.string().uuid(),
+  templateCode: z.string(),
+  templateName: z.string(),
+  propertyType: z.string(),
+  description: z.string(),
+  isActive: z.boolean(),
+  createdOn: z.string().datetime({ local: true }).nullable().optional(),
+  updatedOn: z.string(),
+};
+const MarketComparableTemplateDetailDto = {
+  id: z.string().uuid(),
+  templateCode: z.string(),
+  templateName: z.string(),
+  propertyType: z.string(),
+  description: z.string(),
+  isActive: z.boolean(),
+  factors: z.array(TemplateFactorDto),
+  createdOn: z.string().datetime({ local: true }).nullable().optional(),
+  updatedOn: z.string(),
+};
+const GetMarketComparableTemplatesResponse = z
+  .object({
+    templates: z.array(z.object(MarketComparableTemplateDto)),
+  })
+  .passthrough();
+const GetMarketComparableTemplateByIdResponse = z
+  .object({
+    tempalte: z.object(MarketComparableTemplateDetailDto),
+  })
+  .passthrough();
+const UpdateMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const CreateMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schemas = {
   AddressDto,
@@ -649,7 +789,33 @@ export const schemas = {
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
+  CreateMarketComparableRequest,
+  UpdateMarketComparableRequest,
+  GetMarketComparablesResponse,
+  DeleteMarketComparableResponse,
+  GetMarketComparableTemplateFactorResponse,
+  UpdateMarketComparableResponse,
+  CreateMarketComparableResponse,
+  GetMarketComparableByIdResponse,
+  GetMarketComparableTemplatesResponse,
+  GetMarketComparableTemplateByIdResponse,
 };
 
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
 export type CreateRequestResponseType = z.infer<typeof CreateRequestResponse>;
+export type CreateMarketComparableRequestType = z.infer<typeof CreateMarketComparableRequest>;
+export type UpdateMarketComparableRequestType = z.infer<typeof UpdateMarketComparableRequest>;
+export type CreateMarketComparableResponseType = z.infer<typeof CreateMarketComparableResponse>;
+export type UpdateMarketComparableResponseType = z.infer<typeof UpdateMarketComparableResponse>;
+export type GetMarketComparableTemplateFactorResponseType = z.infer<
+  typeof GetMarketComparableTemplateFactorResponse
+>;
+export type GetMarketComparablesResponseType = z.infer<typeof GetMarketComparablesResponse>;
+export type GetMarketComparableByIdResponseType = z.infer<typeof GetMarketComparableByIdResponse>;
+export type GetMarketComparableTemplatesResponseType = z.infer<
+  typeof GetMarketComparableTemplatesResponse
+>;
+export type GetMarketComparableTemplateByIdResponseType = z.infer<
+  typeof GetMarketComparableTemplateByIdResponse
+>;
+export type DeleteMarketComparableResponseType = z.infer<typeof DeleteMarketComparableResponse>;

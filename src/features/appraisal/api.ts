@@ -1,9 +1,14 @@
 import {
-  type CreateMarketSurveyRequestType,
-  type CreateMarketSurveyResponseType,
-  type UpdateMarketSurveyRequestType,
-  type UpdateMarketSurveyResponseType,
-} from '@/shared/forms/marketSurvey';
+  type CreateMarketComparableRequestType,
+  type CreateMarketComparableResponseType,
+  type DeleteMarketComparableResponseType,
+  type GetMarketComparableByIdResponseType,
+  type GetMarketComparablesResponseType,
+  type GetMarketComparableTemplateByIdResponseType,
+  type GetMarketComparableTemplatesResponseType,
+  type UpdateMarketComparableRequestType,
+  type UpdateMarketComparableResponseType,
+} from '@/shared/schemas/v1';
 import type {
   CreateBuildingRequestType,
   CreateBuildingResponseType,
@@ -17,12 +22,6 @@ import type { CreateCondoRequestType, CreateCondoResponseType } from '../../shar
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AppraisalData } from './context/AppraisalContext';
-import { schema } from '@/shared/forms/marketSurvey.ts';
-import type z from 'zod';
-
-const { DeleteMarketSurveyResponse } = schema;
-
-export type DeleteMarketSurveyResponseType = z.infer<typeof DeleteMarketSurveyResponse>;
 
 // ==================== Collateral Appraisal APIs ====================
 
@@ -32,7 +31,7 @@ export const useCreateLandRequest = () => {
   return useMutation({
     mutationFn: async (request: CreateLandRequestType): Promise<CreateLandResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/land-detail', request);
+      const { data } = await axios.post('/land-detail', request);
       return data;
     },
     onSuccess: data => {
@@ -51,7 +50,7 @@ export const useCreateBuildingRequest = () => {
   return useMutation({
     mutationFn: async (request: CreateBuildingRequestType): Promise<CreateBuildingResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/building-detail', request);
+      const { data } = await axios.post('/building-detail', request);
       return data;
     },
     onSuccess: data => {
@@ -72,7 +71,7 @@ export const useCreateLandBuildingRequest = () => {
       request: CreateLandBuildingRequestType,
     ): Promise<CreateLandBuildingResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/land-building-detail', request);
+      const { data } = await axios.post('/land-building-detail', request);
       return data;
     },
     onSuccess: data => {
@@ -91,7 +90,7 @@ export const useCreateCondoRequest = () => {
   return useMutation({
     mutationFn: async (request: CreateCondoRequestType): Promise<CreateCondoResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/condo-detail', request);
+      const { data } = await axios.post('/condo-detail', request);
       return data;
     },
     onSuccess: data => {
@@ -111,11 +110,11 @@ export const useCreateMarketSurveyRequest = () => {
 
   return useMutation({
     mutationFn: async (
-      request: CreateMarketSurveyRequestType,
-    ): Promise<CreateMarketSurveyResponseType> => {
+      request: CreateMarketComparableRequestType,
+    ): Promise<CreateMarketComparableResponseType> => {
       console.log(request);
-      const { data } = await axios.post('https://localhost:7111/market-comparables', request);
-      await axios.put(`https://localhost:7111/market-comparables/${data.id}/factor-data`, request);
+      const { data } = await axios.post('/market-comparables', request);
+      await axios.put(`/market-comparables/${data.id}/factor-data`, request);
       return data;
     },
     onSuccess: data => {
@@ -133,17 +132,11 @@ export const useUpdateMarketSurveyRequest = () => {
 
   return useMutation({
     mutationFn: async (
-      request: UpdateMarketSurveyRequestType,
-    ): Promise<UpdateMarketSurveyResponseType> => {
+      request: UpdateMarketComparableRequestType,
+    ): Promise<UpdateMarketComparableResponseType> => {
       console.log(request);
-      const { data } = await axios.put(
-        `https://localhost:7111/market-comparables/${request.id}`,
-        request,
-      );
-      await axios.put(
-        `https://localhost:7111/market-comparables/${request.id}/factor-data`,
-        request,
-      );
+      const { data } = await axios.put(`/market-comparables/${request.id}`, request);
+      await axios.put(`/market-comparables/${request.id}/factor-data`, request);
       return data;
     },
     onSuccess: data => {
@@ -160,10 +153,8 @@ export const useGetMarketSurveyTemplateByPropertyType = (propertyType?: string) 
   return useQuery({
     queryKey: ['market-comparable-template', propertyType],
     enabled: !!propertyType,
-    queryFn: async () => {
-      const { data } = await axios.get(
-        `https://localhost:7111/market-comparable-templates?propertyType=${propertyType}`,
-      );
+    queryFn: async (): Promise<GetMarketComparableTemplatesResponseType> => {
+      const { data } = await axios.get(`/market-comparable-templates?propertyType=${propertyType}`);
       return data;
     },
   });
@@ -173,10 +164,8 @@ export const useGetMarketSurveyTemplateById = (templateId?: string) => {
   return useQuery({
     queryKey: ['market-survey-template', templateId],
     enabled: !!templateId,
-    queryFn: async () => {
-      const { data } = await axios.get(
-        `https://localhost:7111/market-comparable-templates/${templateId}`,
-      );
+    queryFn: async (): Promise<GetMarketComparableTemplateByIdResponseType> => {
+      const { data } = await axios.get(`/market-comparable-templates/${templateId}`);
       return data;
     },
   });
@@ -186,9 +175,9 @@ export const useGetMarketSurvey = (appraisalId?: string) => {
   return useQuery({
     queryKey: ['market-survey', appraisalId],
     enabled: !!appraisalId,
-    queryFn: async () => {
+    queryFn: async (): Promise<GetMarketComparablesResponseType> => {
       // const { data } = await axios.get(
-      //   `https://localhost:7111/market-comparables/${appraisalId}`,
+      //   `/market-comparables/${appraisalId}`,
       // );
       return market;
     },
@@ -238,8 +227,8 @@ export const useGetMarketSurveyById = (marketId?: string) => {
   return useQuery({
     queryKey: ['market-survey', marketId],
     enabled: !!marketId,
-    queryFn: async () => {
-      const { data } = await axios.get(`https://localhost:7111/market-comparables/${marketId}`);
+    queryFn: async (): Promise<GetMarketComparableByIdResponseType> => {
+      const { data } = await axios.get(`/market-comparables/${marketId}`);
       return data;
     },
   });
@@ -287,7 +276,7 @@ export const useDeleteMarketSurvey = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (marketId: string): Promise<DeleteMarketSurveyResponseType> => {
+    mutationFn: async (marketId: string): Promise<DeleteMarketComparableResponseType> => {
       const { data } = await axios.delete(`/market-comparable/${marketId}`);
       return data;
     },

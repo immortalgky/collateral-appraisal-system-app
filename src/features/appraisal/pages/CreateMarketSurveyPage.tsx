@@ -65,7 +65,7 @@ const CreateMarketSurveyPage = () => {
       propertyType: marketComparable.marketComparable.propertyType,
       templateCode: template?.template.templateCode,
       infoDateTime: marketComparable.marketComparable.infoDateTime,
-      note: marketComparable.marketComparable.note,
+      notes: marketComparable.marketComparable.notes,
       sourceInfo: marketComparable.marketComparable.sourceInfo,
       templateId: marketComparable.marketComparable.templateId,
       factorData: factorDataValue,

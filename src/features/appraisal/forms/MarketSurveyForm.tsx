@@ -1,7 +1,7 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useEffect, useState } from 'react';
-import type { GetMarketSurveyTemplateFactorResponseType } from '@/shared/forms/marketSurvey';
+import type { GetMarketComparableTemplateFactorResponseType } from '@/shared/schemas/v1';
 import { useGetMarketSurveyTemplateById, useGetMarketSurveyTemplateByPropertyType } from '../api';
 import { useSearchParams } from 'react-router-dom';
 
@@ -160,6 +160,10 @@ const MarketSurveyForm = () => {
     },
   ];
 
+  const remark: FormField[] = [
+    { type: 'textarea', name: 'notes', label: '', wrapperClassName: 'col-span-6' },
+  ];
+
   return (
     <div>
       {formStaticSections.map(section => (
@@ -197,12 +201,22 @@ const MarketSurveyForm = () => {
           })}
         </div>
       )}
+      <div className="grid grid-cols-4 gap-6 mb-6">
+        <div className="col-span-1">
+          <p>Remark</p>
+        </div>
+        <div className="col-span-3">
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={remark} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
 const buildFormField = (
-  fac: GetMarketSurveyTemplateFactorResponseType,
+  fac: GetMarketComparableTemplateFactorResponseType,
   index: number,
   parameterOptions: Record<string, { value: string; label: string }[]>,
 ): FormField => {
@@ -326,7 +340,7 @@ const mockParameterOptions = [
 ];
 
 const defaultMarketSurveyData = (
-  newFactors: GetMarketSurveyTemplateFactorResponseType[],
+  newFactors: GetMarketComparableTemplateFactorResponseType[],
   oldData: any[] = [],
 ) => {
   return newFactors.map(fac => {
