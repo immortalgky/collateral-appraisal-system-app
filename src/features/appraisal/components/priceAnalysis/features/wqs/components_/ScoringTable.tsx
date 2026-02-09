@@ -94,8 +94,6 @@ export function ScoringTable({
 
   const handleRemoveRow = (rowIndex: number) => {
     removeScoringFactor(rowIndex);
-    console.log(getValues(scoringFactorsPath()));
-    // removeAdjustmentFactor(rowIndex);
   };
 
   const scoringSurveyRules: DerivedFieldRule<any>[] = useMemo(() => {
@@ -124,7 +122,7 @@ export function ScoringTable({
   useDerivedFields({ rules: scoringSurveyRules });
   useDerivedFields({ rules: totalScoreRules });
   useDerivedFields({ rules: calculationRules });
-  useDerivedFields({ rules: finalValueRules });
+  useDerivedFields({ rules: finalValueRules, ctx: { property: property } });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
@@ -826,7 +824,6 @@ export function ScoringTable({
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        console.log(value);
                         return value ? value.toLocaleString() : 0;
                       }}
                     />

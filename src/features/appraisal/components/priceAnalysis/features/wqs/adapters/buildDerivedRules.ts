@@ -1,12 +1,18 @@
 import type { DerivedFieldRule } from '../../../components/useDerivedFieldArray';
 import { calcAdjustedValueFromSellingPrice } from '../../saleAdjustmentGrid/domain/calculations';
+import { shouldAutoDefault } from '../../saleAdjustmentGrid/domain/shouldAutoDefault';
 import {
   calcAdjustedValue,
   calcAdjustValueFromSellingPrice,
   calcSum,
   calcWeightedScore,
+  floorToTenThousands,
+  round2,
+  toFiniteNumber,
+  toNumberArray,
 } from '../domain/calculations';
 import { forecast } from '../domain/forecast';
+import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
 import { wqsFieldPath } from './fieldPath';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
@@ -114,7 +120,6 @@ export function buildWQSCalculationDerivedRules(args: {
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
-              console.log(offeringPrice);
               return calcAdjustedValue(
                 offeringPrice,
                 offeringPriceAdjustmentPct,
@@ -296,10 +301,21 @@ export function buildWQSFinalValueDerivedRules(args: {
   /** Calculation section */
   const { surveys = [], property } = args;
   const {
-    finalValueFinalValue: finalValueFinalValuePath,
     totalWeightedSurveyScore: totalWeightedSurveyScorePath,
     totalWeightedCollateralScore: totalWeightedCollateralScorePath,
     calculationAdjustedValue: calculationAdjustedValuePath,
+
+    finalValueFinalValue: finalValueFinalValuePath,
+    finalValueFinalValueRounded: finalValueFinalValueRoundedPath,
+    finalValueCoefficientOfDecision: finalValueCoefficientOfDecisionPath,
+    finalValueStandardError: finalValueStandardErrorPath,
+    finalValueIntersectionPoint: finalValueIntersectionPointPath,
+    finalValuSlope: finalValuSlopePath,
+    finalValueLowestEstimate: finalValueLowestEstimatePath,
+    finalValueHighestEstimate: finalValueHighestEstimatePath,
+    finalValueLandArea: finalValueLandAreaPath,
+    finalValueAppraisalPrice: finalValueAppraisalPricePath,
+    finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
   } = wqsFieldPath;
 
   const rules: DerivedFieldRule[] = [
@@ -311,21 +327,176 @@ export function buildWQSFinalValueDerivedRules(args: {
         ...surveys.map((_, columnIndex) => calculationAdjustedValuePath({ column: columnIndex })),
       ],
       compute: ({ getValues }) => {
-        const surveyScores = surveys.map((_, columnIndex) => {
-          return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? [];
-        });
         const collateralScore = getValues(totalWeightedCollateralScorePath()) ?? 0;
-        const surveyCalculate = surveys.map((_, columnIndex) => {
-          return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? [];
-        });
-        const finalValue =
+        const surveyScores = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const surveyCalculate = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const forecastResult =
           forecast({
             x: collateralScore,
             known_ys: surveyCalculate,
             known_xs: surveyScores,
           }) ?? 0;
-        console.log(finalValue);
-        return finalValue;
+        return round2(toFiniteNumber(forecastResult));
+      },
+    },
+    {
+      targetPath: finalValueFinalValueRoundedPath(),
+      deps: [finalValueFinalValuePath()],
+      when: ({ getValues, getFieldState, formState }) => {
+        const target = finalValueFinalValuePath();
+        const curr = getValues(target) ?? 0;
+        const { isDirty } = getFieldState(target, formState);
+        return shouldAutoDefault({ value: curr, isDirty });
+      },
+      compute: ({ getValues }) => {
+        const finalValue = getValues(finalValueFinalValuePath()) ?? 0;
+        return floorToTenThousands(finalValue);
+      },
+    },
+    {
+      targetPath: finalValueCoefficientOfDecisionPath(),
+      deps: [
+        ...surveys.map((_, columnIndex) => totalWeightedSurveyScorePath({ column: columnIndex })),
+        ...surveys.map((_, columnIndex) => calculationAdjustedValuePath({ column: columnIndex })),
+      ],
+      compute: ({ getValues }) => {
+        const surveyScores = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const surveyCalculate = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        console.log(surveyScores, surveyCalculate);
+        const coefficient = RSQ(surveyScores, surveyCalculate) ?? 0;
+        return toFiniteNumber(coefficient);
+      },
+    },
+    {
+      targetPath: finalValueStandardErrorPath(),
+      deps: [
+        ...surveys.map((_, columnIndex) => totalWeightedSurveyScorePath({ column: columnIndex })),
+        ...surveys.map((_, columnIndex) => calculationAdjustedValuePath({ column: columnIndex })),
+      ],
+      compute: ({ getValues }) => {
+        const surveyScores = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const surveyCalculate = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const stdError = STEYX(surveyScores, surveyCalculate) ?? 0;
+        return toFiniteNumber(stdError).toFixed(6);
+      },
+    },
+    {
+      targetPath: finalValueIntersectionPointPath(),
+      deps: [
+        ...surveys.map((_, columnIndex) => totalWeightedSurveyScorePath({ column: columnIndex })),
+        ...surveys.map((_, columnIndex) => calculationAdjustedValuePath({ column: columnIndex })),
+      ],
+      compute: ({ getValues }) => {
+        const surveyScores = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const surveyCalculate = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const intersectionPoint = INTERCEPT(surveyScores, surveyCalculate) ?? 0;
+        return toFiniteNumber(intersectionPoint);
+      },
+    },
+    {
+      targetPath: finalValuSlopePath(),
+      deps: [
+        ...surveys.map((_, columnIndex) => totalWeightedSurveyScorePath({ column: columnIndex })),
+        ...surveys.map((_, columnIndex) => calculationAdjustedValuePath({ column: columnIndex })),
+      ],
+      compute: ({ getValues }) => {
+        const surveyScores = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(totalWeightedSurveyScorePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const surveyCalculate = toNumberArray(
+          surveys.map((_, columnIndex) => {
+            return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
+          }),
+        );
+        const slope = SLOPE(surveyScores, surveyCalculate) ?? 0;
+        return toFiniteNumber(slope);
+      },
+    },
+    {
+      targetPath: finalValueLowestEstimatePath(),
+      deps: [finalValueFinalValueRoundedPath(), finalValueStandardErrorPath()],
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
+        const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
+        return round2(finalValueRounded - stdError);
+      },
+    },
+    {
+      targetPath: finalValueHighestEstimatePath(),
+      deps: [finalValueFinalValueRoundedPath(), finalValueStandardErrorPath()],
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
+        const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
+        return round2(finalValueRounded + stdError);
+      },
+    },
+    {
+      targetPath: finalValueLandAreaPath(),
+      deps: [],
+      compute: ({ ctx }) => {
+        const collateralType = ctx.property?.collateralType;
+
+        if (collateralType === 'L') {
+          return ctx.property?.landArea;
+        }
+        return null;
+      },
+    },
+    {
+      targetPath: finalValueAppraisalPricePath(),
+      deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
+      compute: ({ getValues, ctx }) => {
+        const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
+        const collateralType = ctx.property?.collateralType;
+
+        if (collateralType === 'L') {
+          const landArea = getValues(finalValueLandAreaPath()) ?? 0;
+          return round2(finalValueRounded * landArea);
+        }
+
+        return round2(finalValueRounded);
+      },
+    },
+    {
+      targetPath: finalValueAppraisalPriceRoundedPath(),
+      deps: [finalValueAppraisalPricePath()],
+      compute: ({ getValues, ctx }) => {
+        const appraisalPrice = getValues(finalValueAppraisalPricePath()) ?? 0;
+        return floorToTenThousands(appraisalPrice);
       },
     },
   ];

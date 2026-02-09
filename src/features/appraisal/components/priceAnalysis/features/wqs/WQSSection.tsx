@@ -3,18 +3,14 @@ import { FormProvider, useController, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WQSDto, type WQSRequestType } from '../../schemas/form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
-import { ComparativeSection } from './ComparativeSection';
-import { CalculationSection } from './CalculationSection';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ALL_FACTORS,
   COLLATERAL_TYPE,
   MAPPING_FACTORS_PROPERTIES_FIELDS,
-  PROPERTIES,
   WQS_TEMPLATES,
   type WQSTemplate,
 } from '../../data/data';
-import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
 import { ComparativeSurveySection } from './components_/ComparativeSurveySection';
 import { ScoringTable } from './components_/ScoringTable';
 import { MarketSurveySelectionModal } from '../../components/MarketSurveySelectionModal';
