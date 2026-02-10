@@ -58,6 +58,7 @@ export function SecondRevision({
               </div>
             </td>
             {comparativeSurveys.map((s, columnIndex) => {
+              console.log(s, columnIndex);
               return (
                 <td key={s.id} className={clsx(surveyStyle)}>
                   <div className="flex flex-row justify-end">
