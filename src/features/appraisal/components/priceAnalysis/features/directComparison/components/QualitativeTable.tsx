@@ -113,7 +113,7 @@ export const QualitativeTable = ({
     });
 
     return rules;
-  }, [comparativeSurveys.length, property]);
+  }, [comparativeSurveys, property]);
 
   const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildDirectComparisonAdjustmentFactorDefaultPercentRules({
