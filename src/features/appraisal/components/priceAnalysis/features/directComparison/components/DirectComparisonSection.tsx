@@ -23,6 +23,7 @@ import { directComparisonPath } from '@features/appraisal/components/priceAnalys
 interface DirectComparisonSectionProps {
   property: Record<string, any>;
   surveys: Record<string, any>[];
+  onCalculationMethodDirty: (check: boolean) => void;
 }
 
 /**
@@ -37,7 +38,11 @@ interface DirectComparisonSectionProps {
  *
  *
  */
-export const DirectComparisonSection = ({ property, surveys }: DirectComparisonSectionProps) => {
+export const DirectComparisonSection = ({
+  property,
+  surveys,
+  onCalculationMethodDirty,
+}: DirectComparisonSectionProps) => {
   const { qualitative: qualitativePath } = directComparisonPath;
 
   const [allFactors, setAllFactors] =
@@ -77,7 +82,7 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
   const handleOnGenerate = () => {
     // if (!pricingTemplateCode) return;
     // load template configuration
-    reset({});
+    reset({}, { keepDirty: false, keepDirtyValues: false, keepTouched: false });
     setComparativeSurveys([]);
 
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
@@ -92,7 +97,56 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
     if (!template) {
       setTimeout(() => {
         setOnLoading(true);
-        reset({
+        reset(
+          {
+            methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
+            collateralType: collateralTypeId,
+            pricingTemplateCode: pricingTemplateCode,
+            comparativeSurveys: [
+              ...comparativeSurveys.map((survey, columnIndex) => ({
+                marketId: survey.id,
+                displaySeq: columnIndex + 1,
+              })),
+            ],
+            comparativeFactors: [],
+
+            directComparisonQualitatives: [],
+
+            directComparisonCalculations: [
+              ...comparativeSurveys.map(survey => {
+                const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+                return {
+                  marketId: survey.id,
+                  offeringPrice: surveyMap.get('17') ?? 0,
+                  offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+                  offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+                  offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+                  sellingPrice: surveyMap.get('21') ?? 0,
+                  sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+                  sellingDate: surveyMap.get('22') ?? '',
+                  sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+                  numberOfYears: 10, // TODO: convert selling date to number of year
+                };
+              }),
+            ],
+            directComparisonAdjustmentFactors: [],
+            directComparisonFinalValue: {
+              finalValue: 0,
+              finalValueRounded: 0,
+            },
+          },
+          { keepDirty: false, keepDirtyValues: false, keepTouched: false },
+        );
+        setOnLoading(false);
+      }, 1000);
+      return;
+    }
+
+    // initial data
+    setTimeout(() => {
+      setOnLoading(true);
+      reset(
+        {
           methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
           collateralType: collateralTypeId,
           pricingTemplateCode: pricingTemplateCode,
@@ -102,9 +156,14 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
               displaySeq: columnIndex + 1,
             })),
           ],
-          comparativeFactors: [],
+          comparativeFactors: template.comparativeFactors.map(compFact => ({
+            factorCode: compFact.factorId,
+          })),
 
-          directComparisonQualitatives: [],
+          directComparisonQualitatives: template.qualitativeFactors.map(q => ({
+            factorCode: q.factorId,
+            qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
+          })),
 
           directComparisonCalculations: [
             ...comparativeSurveys.map(survey => {
@@ -128,57 +187,9 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
             finalValue: 0,
             finalValueRounded: 0,
           },
-        });
-        setOnLoading(false);
-      }, 1000);
-      return;
-    }
-
-    // initial data
-    setTimeout(() => {
-      setOnLoading(true);
-      reset({
-        methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
-        collateralType: collateralTypeId,
-        pricingTemplateCode: pricingTemplateCode,
-        comparativeSurveys: [
-          ...comparativeSurveys.map((survey, columnIndex) => ({
-            marketId: survey.id,
-            displaySeq: columnIndex + 1,
-          })),
-        ],
-        comparativeFactors: template.comparativeFactors.map(compFact => ({
-          factorCode: compFact.factorId,
-        })),
-
-        directComparisonQualitatives: template.qualitativeFactors.map(q => ({
-          factorCode: q.factorId,
-          qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
-        })),
-
-        directComparisonCalculations: [
-          ...comparativeSurveys.map(survey => {
-            const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
-            return {
-              marketId: survey.id,
-              offeringPrice: surveyMap.get('17') ?? 0,
-              offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-              offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-              sellingPrice: surveyMap.get('21') ?? 0,
-              sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              sellingDate: surveyMap.get('22') ?? '',
-              sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-              numberOfYears: 10, // TODO: convert selling date to number of year
-            };
-          }),
-        ],
-        directComparisonAdjustmentFactors: [],
-        directComparisonFinalValue: {
-          finalValue: 0,
-          finalValueRounded: 0,
         },
-      });
+        { keepDirty: false, keepDirtyValues: false, keepTouched: false },
+      );
       setOnLoading(false);
     }, 1000);
   }, [collateralTypeId, onLoading, pricingTemplateCode, reset, surveys, template]);
@@ -192,48 +203,61 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
         marketId: survey.id,
         displaySeq: index + 1,
       })),
+      { shouldDirty: false },
     );
 
-    setValue(qualitativePath(), [
-      ...qualitativeFactors.map(f => ({
-        ...f,
-        qualitatives: comparativeSurveys.map(survey => ({
-          marketId: survey.id,
-          qualitativeLevel: 'E', // TODO: can config
+    setValue(
+      qualitativePath(),
+      [
+        ...qualitativeFactors.map(f => ({
+          ...f,
+          qualitatives: comparativeSurveys.map(survey => ({
+            marketId: survey.id,
+            qualitativeLevel: 'E', // TODO: can config
+          })),
         })),
-      })),
-    ]);
+      ],
+      { shouldDirty: false },
+    );
 
-    setValue('directComparisonCalculations', [
-      ...comparativeSurveys.map(survey => {
-        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
-        return {
-          marketId: survey.id,
-          offeringPrice: surveyMap.get('17') ?? 0,
-          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-          offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-          sellingPrice: surveyMap.get('21') ?? 0,
-          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          sellingDate: surveyMap.get('22') ?? '',
-          sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-          numberOfYears: 10, // TODO: convert selling date to number of year
-          adjustedValue: 0,
-          weight: 0,
-        };
-      }),
-    ]);
+    setValue(
+      'directComparisonCalculations',
+      [
+        ...comparativeSurveys.map(survey => {
+          const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+          return {
+            marketId: survey.id,
+            offeringPrice: surveyMap.get('17') ?? 0,
+            offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+            sellingPrice: surveyMap.get('21') ?? 0,
+            sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            sellingDate: surveyMap.get('22') ?? '',
+            sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+            numberOfYears: 10, // TODO: convert selling date to number of year
+            adjustedValue: 0,
+            weight: 0,
+          };
+        }),
+      ],
+      { shouldDirty: false },
+    );
 
-    setValue('directComparisonAdjustmentFactors', [
-      ...qualitativeFactors.map(f => ({
-        factorCode: f.factorCode,
-        surveys: comparativeSurveys.map(survey => ({
-          marketId: survey.id,
-          adjustPercent: 0,
-          adjustAmount: 0,
+    setValue(
+      'directComparisonAdjustmentFactors',
+      [
+        ...qualitativeFactors.map(f => ({
+          factorCode: f.factorCode,
+          surveys: comparativeSurveys.map(survey => ({
+            marketId: survey.id,
+            adjustPercent: 0,
+            adjustAmount: 0,
+          })),
         })),
-      })),
-    ]);
+      ],
+      { shouldDirty: false },
+    );
   }, [comparativeSurveys, setValue]);
 
   const handleOnSave = data => {
@@ -242,6 +266,7 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {
+    onCalculationMethodDirty(isDirty);
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
@@ -267,13 +292,8 @@ export const DirectComparisonSection = ({ property, surveys }: DirectComparisonS
     }
   };
 
-  const handleOnSelectMarketSurvey = (survey: Record<string, any>) => {
-    if (comparativeSurveys.find(s => s.id === survey.id)) {
-      setComparativeSurveys([...comparativeSurveys.filter(s => s.id != survey.id)]);
-      return;
-    }
-
-    setComparativeSurveys([...comparativeSurveys, survey]);
+  const handleOnSelectMarketSurvey = (surveys: Record<string, any>[]) => {
+    setComparativeSurveys([...surveys]);
   };
 
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);

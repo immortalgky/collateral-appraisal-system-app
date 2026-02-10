@@ -205,15 +205,19 @@ export const PriceAnalysisAccordion = ({
     methodId: string;
   } | null>(null);
   const handleOnSelectMethod = (approachId: string, methodId: string) => {
+    /** find method that belongs to approach in reducer's state */
     const beforeChange =
       state.editDraft.find(appr => appr.id === approachId)?.methods.find(m => m.id === methodId)
         ?.appraisalValue ?? 0;
 
+    /** if appraisal value of the method which being deselect got value, warning! */
     if (beforeChange > 0) {
       setPendingDeselect({ approachId, methodId });
       onConfirmDeselectedMethodOpen();
       return;
     }
+
+    /** call dispatch to toggle that method */
     dispatch({
       type: 'EDIT_TOGGLE_METHOD',
       payload: { apprId: approachId, methodId: methodId },
@@ -235,9 +239,9 @@ export const PriceAnalysisAccordion = ({
     onConfirmDeselectedMethodClose();
   };
 
+  /** accordian effect */
   const detailInnerRef = useRef<HTMLDivElement>(null);
   const [detailMaxHeight, setDetailMaxHeight] = useState(0);
-
   useLayoutEffect(() => {
     const el = detailInnerRef.current;
     if (!el) return;

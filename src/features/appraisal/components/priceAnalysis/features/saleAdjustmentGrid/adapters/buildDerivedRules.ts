@@ -119,7 +119,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
             const propertyLandArea = getPropertyValueByFactorCode('05', property) ?? 0;
             const surveyLandArea = s.factors?.find(f => f.id === '05')?.value ?? 0;
             const landDiff = calcDiff(propertyLandArea, surveyLandArea);
-
+            console.log(landDiff);
             return landDiff;
           },
         },

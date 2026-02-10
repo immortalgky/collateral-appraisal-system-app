@@ -20,11 +20,6 @@ export const getDesciptions = (id: string) => {
   return factors.get(id) ?? null;
 };
 
-const getCollateralTypeDescriptions = (id: string) => {
-  const factors = new Map(COLLATERAL_TYPE.map(factor => [factor.value, factor.label]));
-  return factors.get(id) ?? null;
-};
-
 export const getPropertyValueByFactorCode = (id: string, property: Record<string, any>) => {
   const mapping = new Map(
     MAPPING_FACTORS_PROPERTIES_FIELDS.map(factor => [factor.id, factor.value]),
@@ -41,8 +36,9 @@ export const getPropertyValueByFactorCode = (id: string, property: Record<string
 interface WQSSectionProps {
   property: Record<string, any>;
   surveys: Record<string, any>[];
+  onCalculationMethodDirty: (check: boolean) => void;
 }
-export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
+export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSSectionProps) => {
   /**
    * => default collateral type, template => generate => query factors in template
    * =>
@@ -120,7 +116,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
     getValues,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = methods;
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
   const [pricingTemplateCode, setPricingTemplateCode] = useState<string>('');
@@ -135,6 +131,9 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
     setComparativeSurveys([]);
     setOnLoading(false);
+
+    // Mark as dirty because Generate creates a new unsaved configuration
+    setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
   };
 
   useEffect(() => {
@@ -212,6 +211,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
         marketId: survey.id,
         displaySeq: index + 1,
       })),
+      { shouldDirty: false },
     );
     setValue(
       'WQSScores',
@@ -241,11 +241,14 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
   }, [comparativeSurveys, getValues, setValue]);
 
   const handleOnSave = data => {
-    console.log(data);
+    // call api
+    reset(data);
   };
 
   const handleOnSaveDraft = () => {
-    console.log(getValues());
+    const data = getValues();
+    // call api
+    reset(data);
   };
 
   const handleOnSelectMarketSurvey = (surveys: Record<string, any>[]) => {
@@ -253,6 +256,20 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
   };
 
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
+
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    onCalculationMethodDirty(isDirty);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">

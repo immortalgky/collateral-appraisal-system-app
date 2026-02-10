@@ -95,6 +95,8 @@ export const WQSDto = z
     WQSTotalScores: z.array(WQSTotalScore),
     WQSCalculations: z.array(WQSCalculation),
     WQSFinalValue: WQSFinalValue,
+
+    generateAt: z.string(),
   })
   .passthrough();
 

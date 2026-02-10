@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 import MarketsTab from '../components/tabs/MarketsTab';
 import GalleryTab from '../components/tabs/GalleryTab';
 import LawsRegulationTab from '../components/tabs/LawsRegulationTab';
-import { PriceAnalysisTab } from '../components/priceAnalysis/features/selection/components/PriceAnalysisTab';
+import { PriceAnalysisTab } from '@features/appraisal/components/priceAnalysis/components/PriceAnalysisTab.tsx';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
 type ViewMode = 'grid' | 'list';

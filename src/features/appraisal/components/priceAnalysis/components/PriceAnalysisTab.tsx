@@ -1,9 +1,12 @@
 import { useLocation } from 'react-router-dom';
-import { PriceAnalysisAccordion } from './PriceAnalysisAccordion';
 import { useEffect, useState, type JSX } from 'react';
 import { Icon } from '@/shared/components';
-import { useGetMarketSurvey, useGetProperty } from '../api/api';
-import { ActiveMethodPanel } from '../../../components/ActiveMethodPanel';
+import {
+  useGetMarketSurvey,
+  useGetProperty,
+} from '@features/appraisal/components/priceAnalysis/features/selection/api/api.ts';
+import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
+import { ActiveMethodPanel } from '@features/appraisal/components/priceAnalysis/components/ActiveMethodPanel.tsx';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
@@ -42,6 +45,11 @@ export function PriceAnalysisTab(): JSX.Element {
     }, 500);
   }, [isLoadingProperty, isLoadingMarketSurvey]);
 
+  const [isDirty, setIsDirty] = useState(false);
+  const handleOnCalculationMethodDirty = (check: boolean) => {
+    setIsDirty(check);
+  };
+
   /** Query selected approach & method */
   // TODO:
 
@@ -50,8 +58,30 @@ export function PriceAnalysisTab(): JSX.Element {
    * - the state will pass to `ActiveMethodPanel` to show method
    */
   const [methodId, setMethodId] = useState<string | undefined>('');
-  const handleOnSetMethodId = (methodId: string) => {
-    setMethodId(methodId);
+
+  // When user tries to switch method while there are unsaved changes,
+  // we confirm first and only then allow the switch.
+  const confirmDiscardUnsavedChanges = () => {
+    return window.confirm(
+      'You have unsaved changes in the current calculation method.\n\nDiscard changes and switch methods?',
+    );
+  };
+
+  const handleOnSelectCalculationMethod = (nextMethodId: string) => {
+    // no-op if selecting the same method
+    if (nextMethodId === methodId) return;
+
+    // TODO: If current method has unsaved changes, confirm before switching.
+    if (isDirty && methodId) {
+      const ok = confirmDiscardUnsavedChanges();
+      if (!ok) return;
+
+      // Clear dirty flag for the current method since we're discarding changes.
+      // (The current method component will unmount after we switch.)
+      setIsDirty(false);
+    }
+
+    setMethodId(nextMethodId);
   };
 
   /**
@@ -59,7 +89,7 @@ export function PriceAnalysisTab(): JSX.Element {
    * (1) In case that we have 1 land multiple building, how to map?
    */
 
-  const property = properties[0];
+  const property = properties[2];
 
   if (isPropertyError || isMarketSurveyError) {
     return (
@@ -78,13 +108,15 @@ export function PriceAnalysisTab(): JSX.Element {
         <div>
           <PriceAnalysisAccordion
             groupId={groupId}
-            onSelectCalculationMethod={handleOnSetMethodId}
+            onSelectCalculationMethod={handleOnSelectCalculationMethod}
           />
           {methodId != undefined && (
             <ActiveMethodPanel
+              key={methodId}
               methodId={methodId}
-              properties={property}
+              property={property}
               marketSurveys={marketSurveys}
+              onCalculationMethodDirty={handleOnCalculationMethodDirty}
             />
           )}
         </div>

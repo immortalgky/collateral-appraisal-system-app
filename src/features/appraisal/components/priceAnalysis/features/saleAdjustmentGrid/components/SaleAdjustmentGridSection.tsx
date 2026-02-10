@@ -21,6 +21,7 @@ import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/apprais
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, any>;
   surveys: Record<string, any>[];
+  onCalculationMethodDirty: (check: boolean) => void;
 }
 
 /**
@@ -38,6 +39,7 @@ interface SaleAdjustmentGridSectionProps {
 export const SaleAdjustmentGridSection = ({
   property,
   surveys,
+  onCalculationMethodDirty,
 }: SaleAdjustmentGridSectionProps) => {
   const [allFactors, setAllFactors] =
     useState<{ value: string; description: string }[]>(ALL_FACTORS);
@@ -74,7 +76,8 @@ export const SaleAdjustmentGridSection = ({
   const handleOnGenerate = () => {
     // if (!pricingTemplateCode) return;
     // load template configuration
-    reset({});
+    // Discard any unsaved edits when generating a new configuration
+    reset({}, { keepDirty: false, keepDirtyValues: false, keepTouched: false });
     setComparativeSurveys([]);
 
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
@@ -89,7 +92,56 @@ export const SaleAdjustmentGridSection = ({
     if (!template) {
       setTimeout(() => {
         setOnLoading(true);
-        reset({
+        reset(
+          {
+            methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+            collateralType: collateralTypeId,
+            pricingTemplateCode: pricingTemplateCode,
+            comparativeSurveys: [
+              ...comparativeSurveys.map((survey, columnIndex) => ({
+                marketId: survey.id,
+                displaySeq: columnIndex + 1,
+              })),
+            ],
+            comparativeFactors: [],
+
+            saleAdjustmentGridQualitatives: [],
+
+            saleAdjustmentGridCalculations: [
+              ...comparativeSurveys.map(survey => {
+                const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+                return {
+                  marketId: survey.id,
+                  offeringPrice: surveyMap.get('17') ?? 0,
+                  offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+                  offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+                  offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+                  sellingPrice: surveyMap.get('21') ?? 0,
+                  sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+                  sellingDate: surveyMap.get('22') ?? '',
+                  sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+                  numberOfYears: 10, // TODO: convert selling date to number of year
+                };
+              }),
+            ],
+            saleAdjustmentGridAdjustmentFactors: [],
+            saleAdjustmentGridFinalValue: {
+              finalValue: 0,
+              finalValueRounded: 0,
+            },
+          },
+          { keepDirty: false, keepDirtyValues: false, keepTouched: false },
+        );
+        setOnLoading(false);
+      }, 1000);
+      return;
+    }
+
+    // initial data
+    setTimeout(() => {
+      setOnLoading(true);
+      reset(
+        {
           methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
           collateralType: collateralTypeId,
           pricingTemplateCode: pricingTemplateCode,
@@ -99,9 +151,14 @@ export const SaleAdjustmentGridSection = ({
               displaySeq: columnIndex + 1,
             })),
           ],
-          comparativeFactors: [],
+          comparativeFactors: template.comparativeFactors.map(compFact => ({
+            factorCode: compFact.factorId,
+          })),
 
-          saleAdjustmentGridQualitatives: [],
+          saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
+            factorCode: q.factorId,
+            qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
+          })),
 
           saleAdjustmentGridCalculations: [
             ...comparativeSurveys.map(survey => {
@@ -125,57 +182,9 @@ export const SaleAdjustmentGridSection = ({
             finalValue: 0,
             finalValueRounded: 0,
           },
-        });
-        setOnLoading(false);
-      }, 1000);
-      return;
-    }
-
-    // initial data
-    setTimeout(() => {
-      setOnLoading(true);
-      reset({
-        methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
-        collateralType: collateralTypeId,
-        pricingTemplateCode: pricingTemplateCode,
-        comparativeSurveys: [
-          ...comparativeSurveys.map((survey, columnIndex) => ({
-            marketId: survey.id,
-            displaySeq: columnIndex + 1,
-          })),
-        ],
-        comparativeFactors: template.comparativeFactors.map(compFact => ({
-          factorCode: compFact.factorId,
-        })),
-
-        saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
-          factorCode: q.factorId,
-          qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
-        })),
-
-        saleAdjustmentGridCalculations: [
-          ...comparativeSurveys.map(survey => {
-            const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
-            return {
-              marketId: survey.id,
-              offeringPrice: surveyMap.get('17') ?? 0,
-              offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-              offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-              sellingPrice: surveyMap.get('21') ?? 0,
-              sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              sellingDate: surveyMap.get('22') ?? '',
-              sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-              numberOfYears: 10, // TODO: convert selling date to number of year
-            };
-          }),
-        ],
-        saleAdjustmentGridAdjustmentFactors: [],
-        saleAdjustmentGridFinalValue: {
-          finalValue: 0,
-          finalValueRounded: 0,
         },
-      });
+        { keepDirty: false, keepDirtyValues: false, keepTouched: false },
+      );
       setOnLoading(false);
     }, 1000);
   }, [collateralTypeId, onLoading, pricingTemplateCode, reset, surveys, template]);
@@ -189,48 +198,61 @@ export const SaleAdjustmentGridSection = ({
         marketId: survey.id,
         displaySeq: index + 1,
       })),
+      { shouldDirty: false },
     );
 
-    setValue('saleAdjustmentGridQualitatives', [
-      ...qualitativeFactors.map(f => ({
-        ...f,
-        qualitatives: comparativeSurveys.map(survey => ({
-          marketId: survey.id,
-          qualitativeLevel: 'E', // TODO: can config
+    setValue(
+      'saleAdjustmentGridQualitatives',
+      [
+        ...qualitativeFactors.map(f => ({
+          ...f,
+          qualitatives: comparativeSurveys.map(survey => ({
+            marketId: survey.id,
+            qualitativeLevel: 'E', // TODO: can config
+          })),
         })),
-      })),
-    ]);
+      ],
+      { shouldDirty: false },
+    );
 
-    setValue('saleAdjustmentGridCalculations', [
-      ...comparativeSurveys.map(survey => {
-        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
-        return {
-          marketId: survey.id,
-          offeringPrice: surveyMap.get('17') ?? 0,
-          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-          offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-          sellingPrice: surveyMap.get('21') ?? 0,
-          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          sellingDate: surveyMap.get('22') ?? '',
-          sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-          numberOfYears: 10, // TODO: convert selling date to number of year
-          adjustedValue: 0,
-          weight: 0,
-        };
-      }),
-    ]);
+    setValue(
+      'saleAdjustmentGridCalculations',
+      [
+        ...comparativeSurveys.map(survey => {
+          const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+          return {
+            marketId: survey.id,
+            offeringPrice: surveyMap.get('17') ?? 0,
+            offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+            sellingPrice: surveyMap.get('21') ?? 0,
+            sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            sellingDate: surveyMap.get('22') ?? '',
+            sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+            numberOfYears: 10, // TODO: convert selling date to number of year
+            adjustedValue: 0,
+            weight: 0,
+          };
+        }),
+      ],
+      { shouldDirty: false },
+    );
 
-    setValue('saleAdjustmentGridAdjustmentFactors', [
-      ...qualitativeFactors.map(f => ({
-        factorCode: f.factorCode,
-        surveys: comparativeSurveys.map(survey => ({
-          marketId: survey.id,
-          adjustPercent: 0,
-          adjustAmount: 0,
+    setValue(
+      'saleAdjustmentGridAdjustmentFactors',
+      [
+        ...qualitativeFactors.map(f => ({
+          factorCode: f.factorCode,
+          surveys: comparativeSurveys.map(survey => ({
+            marketId: survey.id,
+            adjustPercent: 0,
+            adjustAmount: 0,
+          })),
         })),
-      })),
-    ]);
+      ],
+      { shouldDirty: false },
+    );
   }, [comparativeSurveys, setValue]);
 
   const handleOnSave = data => {
@@ -239,6 +261,7 @@ export const SaleAdjustmentGridSection = ({
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {
+    onCalculationMethodDirty(isDirty);
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
@@ -264,13 +287,8 @@ export const SaleAdjustmentGridSection = ({
     }
   };
 
-  const handleOnSelectMarketSurvey = (survey: Record<string, any>) => {
-    if (comparativeSurveys.find(s => s.id === survey.id)) {
-      setComparativeSurveys([...comparativeSurveys.filter(s => s.id != survey.id)]);
-      return;
-    }
-
-    setComparativeSurveys([...comparativeSurveys, survey]);
+  const handleOnSelectMarketSurvey = (surveys: Record<string, any>[]) => {
+    setComparativeSurveys([...surveys]);
   };
 
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);

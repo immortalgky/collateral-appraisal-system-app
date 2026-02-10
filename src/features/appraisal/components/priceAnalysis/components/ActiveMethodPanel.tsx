@@ -5,12 +5,14 @@ import { DirectComparisonSection } from '@features/appraisal/components/priceAna
 
 export const ActiveMethodPanel = ({
   methodId,
-  properties,
+  property,
   marketSurveys,
+  onCalculationMethodDirty,
 }: {
   methodId: string;
-  properties: any;
+  property: any;
   marketSurveys: any;
+  onCalculationMethodDirty: (check: boolean) => void;
 }) => {
   /**
    * TODO:
@@ -18,17 +20,32 @@ export const ActiveMethodPanel = ({
    * (2) pass config into method components
    */
 
-  const property = PROPERTIES[0];
-  // const surveys = MOC_SURVEY_DATA;
-
   const value = methodId;
   switch (value) {
     case 'WQS_MARKET':
-      return <WQSSection property={property} surveys={marketSurveys} />;
+      return (
+        <WQSSection
+          property={property}
+          surveys={marketSurveys}
+          onCalculationMethodDirty={onCalculationMethodDirty}
+        />
+      );
     case 'SAG_MARKET':
-      return <SaleAdjustmentGridSection property={property} surveys={marketSurveys} />;
+      return (
+        <SaleAdjustmentGridSection
+          property={property}
+          surveys={marketSurveys}
+          onCalculationMethodDirty={onCalculationMethodDirty}
+        />
+      );
     case 'DC_MARKET':
-      return <DirectComparisonSection property={property} surveys={marketSurveys} />;
+      return (
+        <DirectComparisonSection
+          property={property}
+          surveys={marketSurveys}
+          onCalculationMethodDirty={onCalculationMethodDirty}
+        />
+      );
     default:
       return <></>;
   }
