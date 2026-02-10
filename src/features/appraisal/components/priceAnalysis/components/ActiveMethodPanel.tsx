@@ -1,4 +1,4 @@
-import { MOC_SURVEY_DATA, PROPERTIES } from '../data/data';
+import { PROPERTIES } from '../data/data';
 import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/components/SaleAdjustmentGridSection';
 import { WQSSection } from '../features/wqs/components/WQSSection';
 import { DirectComparisonSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonSection.tsx';
@@ -18,7 +18,7 @@ export const ActiveMethodPanel = ({
    * (2) pass config into method components
    */
 
-  const property = PROPERTIES[1];
+  const property = PROPERTIES[0];
   // const surveys = MOC_SURVEY_DATA;
 
   const value = methodId;

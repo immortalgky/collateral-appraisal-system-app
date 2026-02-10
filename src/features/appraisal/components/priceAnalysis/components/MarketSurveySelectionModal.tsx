@@ -2,6 +2,7 @@ import Button from '@/shared/components/Button';
 import { getDesciptions } from '../features/wqs/components/WQSSection';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
+import { useState } from 'react';
 
 interface MarketSurveySelectionModalProps {
   surveys: Record<string, any>[];
@@ -16,6 +17,20 @@ export const MarketSurveySelectionModal = ({
   onSelect,
   onCancel,
 }: MarketSurveySelectionModalProps) => {
+  const [selectedSurveys, setSelectedSurveys] = useState<Record<string, any>[]>([
+    ...comparativeSurveys,
+  ]);
+
+  const handleOnSave = () => {
+    onSelect(selectedSurveys);
+    onCancel();
+  };
+
+  const handleOnCancel = () => {
+    setSelectedSurveys([]);
+    onCancel();
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl shadow-xl h-4/5 w-4/5 flex flex-col">
@@ -23,11 +38,15 @@ export const MarketSurveySelectionModal = ({
 
         <div className="flex-1 overflow-auto space-y-3">
           {surveys.map((survey, idx) => {
-            const isSelected = comparativeSurveys.some(s => s.id === survey.id);
+            const isSelected = selectedSurveys.some(s => s.id === survey.id);
             return (
               <button
                 key={idx}
-                onClick={() => onSelect(survey)}
+                onClick={() =>
+                  isSelected
+                    ? setSelectedSurveys([...selectedSurveys.filter(s => s.id !== survey.id)])
+                    : setSelectedSurveys([...selectedSurveys, survey])
+                }
                 className={clsx(
                   'flex flex-row gap-2 text-left items-center p-4 rounded-lg transition-colors cursor-pointer ',
                   isSelected
@@ -65,13 +84,11 @@ export const MarketSurveySelectionModal = ({
           )}
         </div>
 
-        <div className="mt-6 flex justify-end gap-2 shrink-0">
-          <Button variant="ghost" type="button" onClick={onCancel}>
+        <div className="mt-6 flex justify-between gap-2 shrink-0">
+          <Button variant="ghost" type="button" onClick={() => handleOnCancel()}>
             Cancel
           </Button>
-        </div>
-        <div className="mt-6 flex justify-end gap-2 shrink-0">
-          <Button variant="ghost" type="button" onClick={onCancel}>
+          <Button variant="primary" type="button" onClick={() => handleOnSave()}>
             Save
           </Button>
         </div>

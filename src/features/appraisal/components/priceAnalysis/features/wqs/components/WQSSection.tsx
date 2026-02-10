@@ -1,7 +1,6 @@
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { FormProvider, useController, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WQSDto, type WQSRequestType } from '../../../schemas/form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
 import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { ScoringTable } from './ScoringTable';
 import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
+import { WQSDto, type WQSRequestType } from '../schemas/wqsForm';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
@@ -152,6 +152,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
           WQSScores: [],
           WQSCalculations: [],
           WQSFinalValue: {
+            landArea: property?.landArea ?? null,
             finalValue: 0,
             finalValueRounded: 0,
             coefficientOfDecision: 0,
@@ -188,6 +189,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
         })),
         WQSCalculations: [],
         WQSFinalValue: {
+          landArea: property?.landArea ?? null,
           finalValue: 0,
           finalValueRounded: 0,
           coefficientOfDecision: 0,
@@ -246,13 +248,8 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
     console.log(getValues());
   };
 
-  const handleOnSelectMarketSurvey = (survey: Record<string, any>) => {
-    if (comparativeSurveys.find(s => s.id === survey.id)) {
-      setComparativeSurveys([...comparativeSurveys.filter(s => s.id != survey.id)]);
-      return;
-    }
-
-    setComparativeSurveys([...comparativeSurveys, survey]);
+  const handleOnSelectMarketSurvey = (surveys: Record<string, any>[]) => {
+    setComparativeSurveys([...surveys]);
   };
 
   const [showMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);

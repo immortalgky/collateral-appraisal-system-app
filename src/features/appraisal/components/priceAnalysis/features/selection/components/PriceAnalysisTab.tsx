@@ -42,6 +42,9 @@ export function PriceAnalysisTab(): JSX.Element {
     }, 500);
   }, [isLoadingProperty, isLoadingMarketSurvey]);
 
+  /** Query selected approach & method */
+  // TODO:
+
   /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
    * - when user click on pencil button to start calculation on the method, will set methodId on this state
    * - the state will pass to `ActiveMethodPanel` to show method

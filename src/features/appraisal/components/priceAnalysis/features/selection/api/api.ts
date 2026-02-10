@@ -2,6 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { PriceAnalysisApproachRequest } from '../type';
 import { MOC_SURVEY_DATA, PROPERTIES } from '../../../data/data';
+import type {
+  AddPriceAnalysisApproachRequestType,
+  AddPriceAnalysisApproachResponseType,
+  AddPriceAnalysisMethodRequestType,
+  AddPriceAnalysisMethodResponseType,
+} from '../schemas/V1';
 
 /**
  * initialize approach and method choices
@@ -65,17 +71,64 @@ export const useGetAppraisalGroupById = (groupId: string | undefined) => {
 };
 
 /**
- * Hook for adding approaches and methods to price analysis
+ * Hook for adding approaches to price analysis
  * POST /appraisal/ ...
  * @returns
  */
-export const useAddPriceAnalysisApproachMethod = () => {
-  // const queryClient = useQueryClient();
+export const useAddPriceAnalysisApproach = () => {
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ groupId, data }: { groupId: string; data: any }) => {
-      const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
+    mutationFn: async ({
+      id,
+      request,
+    }: {
+      id: string;
+      request: AddPriceAnalysisApproachRequestType;
+    }): Promise<AddPriceAnalysisApproachResponseType> => {
+      const { data: response } = await axios.post(`/pricing-analysis/${id}/approaches`, request);
       return response;
+    },
+    onSuccess: data => {
+      console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['priceAnalysis'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
+
+/**
+ * Hook for adding methods to price analysis
+ * POST /appraisal/ ...
+ * @returns
+ */
+export const useAddPriceAnalysisMethod = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      approachId,
+      request,
+    }: {
+      id: string;
+      approachId: string;
+      request: AddPriceAnalysisMethodRequestType;
+    }): Promise<AddPriceAnalysisMethodResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${id}/approaches/${approachId}/methods`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: data => {
+      console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['priceAnalysis'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
     },
   });
 };

@@ -11,7 +11,8 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { usePriceAnalysisQuery } from '../../../domain/usePriceAnalysisQuery';
 import {
-  useAddPriceAnalysisApproachMethod,
+  useAddPriceAnalysisApproach,
+  useAddPriceAnalysisMethod,
   useGetPriceAnalysisApproachMethodByGroupId,
   useSelectPriceAnalysisApproachMethod,
 } from '../api/api';
@@ -19,7 +20,15 @@ import { usePropertyStore } from '@/features/appraisal/store';
 import type { PriceAnalysisApproachRequest } from '../type';
 import { DispatchCtx, StateCtx } from '../domain/selectionContext';
 import { PropertyCard } from '@/features/appraisal/components/PropertyCard';
-import { approachMethodReducer, type PriceAnalysisSelectorState } from '../domain/useReducer';
+import {
+  approachMethodReducer,
+  type PriceAnalysisSelectorAction,
+  type PriceAnalysisSelectorState,
+} from '../domain/useReducer';
+import { convertToAddApproachApi, convertToAddMethodApi } from '../domain/convertToApi';
+import type { SubmitHandler } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const createInitialState = (
   approachConfig: any,
@@ -65,10 +74,12 @@ export const PriceAnalysisAccordion = ({
   groupId,
   onSelectCalculationMethod,
 }: PriceAnalysisAccordionProps) => {
+  const navigate = useNavigate();
   /* Server state: fetch property data by groupId && fetch approach and method by groupId */
   const { data, isLoading, isError, error } = usePriceAnalysisQuery();
   const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
 
+  /** Initial reducer state */
   const initialState: PriceAnalysisSelectorState = {
     viewMode: 'summary',
     editDraft: [],
@@ -79,7 +90,6 @@ export const PriceAnalysisAccordion = ({
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
   const { summarySelected } = state;
 
-  // replace by fetch property data
   const { groups } = usePropertyStore();
   const group = groups.find(group => group.id === groupId) ?? null;
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -100,10 +110,23 @@ export const PriceAnalysisAccordion = ({
 
   /* Local state:  */
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
-    useDisclosure({ defaultIsOpen: false });
+    useDisclosure({ defaultIsOpen: true });
 
   // fire api to save selected methods
-  const { mutate: addPriceAnalysisMutate } = useAddPriceAnalysisApproachMethod();
+  const {
+    mutate: addPriceAnalysisApproachMutate,
+    isPending: isAddingApproach,
+    isSuccess: isAddApproachSuccess,
+  } = useAddPriceAnalysisApproach();
+  const {
+    mutate: addPriceAnalysisMethodMutate,
+    isPending: isAddingMethod,
+    isSuccess: isAddMethodSuccess,
+  } = useAddPriceAnalysisMethod();
+
+  const isApiPending = isAddingApproach || isAddingMethod;
+  const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;
+
   // fire api to save candidate approach & methods
   const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
@@ -121,14 +144,47 @@ export const PriceAnalysisAccordion = ({
     setIsSystemCalculation(!isSystemCalculation);
   };
 
-  const handleOnEditModeSave = (
-    data: PriceAnalysisApproachRequest,
+  const handleOnEditModeSave = async (
+    data: PriceAnalysisApproachRequest[],
     dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
   ) => {
     // if some method has remove, need to fire api to update
+    const selections =
+      data
+        ?.filter(d => d.methods.some(m => m.isSelected))
+        .map(d => ({
+          approachId: d.id,
+          methodIds: d.methods.filter(m => m.isSelected).map(m => m.id),
+        })) ?? [];
+    try {
+      for (const sel of selections) {
+        const approachType = convertToAddApproachApi(sel.approachId);
 
-    addPriceAnalysisMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
-    dispatch({ type: 'EDIT_SAVE' });
+        const approachRes = await addPriceAnalysisApproachMutate({
+          id: '019C45EA-A220-72B6-A06E-BDDD15494E0A',
+          request: { approachType },
+        });
+
+        await Promise.all(
+          sel.methodIds.map(methodId => {
+            const methodType = convertToAddMethodApi(methodId);
+            return addPriceAnalysisMethodMutate({
+              id: '019C45EA-A220-72B6-A06E-BDDD15494E0A',
+              approachId: '00000000-0000-0000-0000-000000000000', // approachRes.id
+              request: { methodType },
+            });
+          }),
+        );
+      }
+
+      toast.success('Price analysis selection updated successfully');
+      dispatch({ type: 'EDIT_SAVE' });
+      // navigate('/dev/price-analysis');
+    } catch (err: any) {
+      toast.error(
+        err?.apiError?.detail || 'Failed to update price analysis selection. Please try again.',
+      );
+    }
   };
 
   const handleOnSummaryModeSave = (

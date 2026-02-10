@@ -1,6 +1,6 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useSelectionDispatch, useSelectionState } from './domain/selectionContext';
+import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
 
 interface PriceAnalysisApproachCard {
   approach: any;
