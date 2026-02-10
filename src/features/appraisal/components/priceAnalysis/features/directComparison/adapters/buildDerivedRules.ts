@@ -1,4 +1,4 @@
-import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/features/wqs/WQSSection.tsx';
+import { getPropertyValueByFactorCode } from '@/features/appraisal/components/priceAnalysis/features/wqs/components/WQSSection';
 import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 import {

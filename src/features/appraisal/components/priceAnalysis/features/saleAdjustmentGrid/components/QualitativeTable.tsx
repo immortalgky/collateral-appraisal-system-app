@@ -14,7 +14,7 @@ import {
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildDerivedRules.ts';
-import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
+import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/components/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import clsx from 'clsx';

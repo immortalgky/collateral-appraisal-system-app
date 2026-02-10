@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import type { PriceAnalysisApproachRequest } from '../features/selection/type';
-import { MOC_SURVEY_DATA, PROPERTIES } from '../data/data';
+import axios from '@shared/api/axiosInstance';
+import type { PriceAnalysisApproachRequest } from '../type';
+import { MOC_SURVEY_DATA, PROPERTIES } from '../../../data/data';
 
 /**
  * initialize approach and method choices
@@ -42,7 +42,6 @@ export const useGetPriceAnalysisApproachMethodByGroupId = (groupId: string | und
   //   },
   // });
 
-  // console.log('GET /appraisal/price-analysis/ { approach, method }');
   return APPROACHES_MOC;
 };
 

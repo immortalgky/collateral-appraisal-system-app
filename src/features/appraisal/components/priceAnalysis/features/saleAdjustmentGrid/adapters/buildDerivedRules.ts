@@ -11,7 +11,7 @@ import {
   calcTotalSecondRevision,
   calcWeightedAdjustValue,
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/calculations.ts';
-import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/features/wqs/WQSSection.tsx';
+import { getPropertyValueByFactorCode } from '@/features/appraisal/components/priceAnalysis/features/wqs/components/WQSSection';
 import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';

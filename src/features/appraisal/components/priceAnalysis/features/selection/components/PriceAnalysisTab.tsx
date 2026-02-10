@@ -1,11 +1,9 @@
 import { useLocation } from 'react-router-dom';
 import { PriceAnalysisAccordion } from './PriceAnalysisAccordion';
-import { WQSSection } from '../wqs/WQSSection';
 import { useEffect, useState, type JSX } from 'react';
-import { boolean } from 'zod';
-import { useGetMarketSurvey, useGetProperty } from '../../api/api';
-import { ActiveMethodPanel } from '../../components/ActiveMethodPanel';
 import { Icon } from '@/shared/components';
+import { useGetMarketSurvey, useGetProperty } from '../api/api';
+import { ActiveMethodPanel } from '../../../components/ActiveMethodPanel';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
@@ -16,6 +14,7 @@ export function PriceAnalysisTab(): JSX.Element {
    * (1) fetch property and market survey
    */
 
+  /** Query property data by group Id */
   const {
     data: propertyData,
     isLoading: isLoadingProperty,
@@ -25,6 +24,7 @@ export function PriceAnalysisTab(): JSX.Element {
   const propertyQueryResult = propertyData?.result ?? propertyData;
   const properties = propertyQueryResult?.items ?? [];
 
+  /** Query market survey data by group Id */
   const {
     data: marketSurveyData,
     isLoading: isLoadingMarketSurvey,
@@ -33,7 +33,6 @@ export function PriceAnalysisTab(): JSX.Element {
   } = useGetMarketSurvey(groupId);
   const marketSurveyQueryResult = marketSurveyData?.result ?? marketSurveyData;
   const marketSurveys = marketSurveyQueryResult?.items ?? [];
-  console.log(marketSurveyData?.result);
 
   const [isCurrentLoading, setIsCurrentLoading] = useState<boolean>(true);
   useEffect(() => {
@@ -43,8 +42,11 @@ export function PriceAnalysisTab(): JSX.Element {
     }, 500);
   }, [isLoadingProperty, isLoadingMarketSurvey]);
 
+  /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
+   * - when user click on pencil button to start calculation on the method, will set methodId on this state
+   * - the state will pass to `ActiveMethodPanel` to show method
+   */
   const [methodId, setMethodId] = useState<string | undefined>('');
-
   const handleOnSetMethodId = (methodId: string) => {
     setMethodId(methodId);
   };

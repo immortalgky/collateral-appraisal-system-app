@@ -1,7 +1,7 @@
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { FormProvider, useController, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WQSDto, type WQSRequestType } from '../../schemas/form';
+import { WQSDto, type WQSRequestType } from '../../../schemas/form';
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -10,10 +10,10 @@ import {
   MAPPING_FACTORS_PROPERTIES_FIELDS,
   WQS_TEMPLATES,
   type WQSTemplate,
-} from '../../data/data';
-import { ComparativeSurveySection } from './components_/ComparativeSurveySection';
-import { ScoringTable } from './components_/ScoringTable';
-import { MarketSurveySelectionModal } from '../../components/MarketSurveySelectionModal';
+} from '../../../data/data';
+import { ComparativeSurveySection } from './ComparativeSurveySection';
+import { ScoringTable } from './ScoringTable';
+import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
@@ -133,6 +133,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
     // if (!pricingTemplateCode) return;
     // load template configuration
     setTemplateQuery(templates.find(template => template.templateCode === pricingTemplateCode));
+    setComparativeSurveys([]);
     setOnLoading(false);
   };
 
@@ -217,6 +218,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
         surveys: comparativeSurveys.map(survey => ({ marketId: survey.id, surveyScore: 0 })),
       })) ?? [],
     );
+
     setValue('WQSCalculations', [
       ...comparativeSurveys.map(survey => {
         const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
@@ -234,7 +236,7 @@ export const WQSSection = ({ property, surveys }: WQSSectionProps) => {
         };
       }),
     ]);
-  }, [comparativeSurveys, setValue]);
+  }, [comparativeSurveys, getValues, setValue]);
 
   const handleOnSave = data => {
     console.log(data);

@@ -3,7 +3,7 @@ import type { RHFColumnDef, RHFRowDef } from '../../adapters/rhf-table/builder';
 import type { SaleAdjustmentGridTemplate } from '../../data/data';
 import { getFactorDesciption } from '../../domain/getFactorDescription';
 import { RHFInputCell } from '../../components/table/RHFInputCell';
-import { getDesciptions, getPropertyValueByFactorCode } from '../wqs/WQSSection';
+import { getDesciptions, getPropertyValueByFactorCode } from '../wqs/components/WQSSection';
 import { useEffect, useMemo } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 

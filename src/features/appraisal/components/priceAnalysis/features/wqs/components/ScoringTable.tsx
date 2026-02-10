@@ -2,7 +2,7 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { wqsFieldPath } from '../adapters/fieldPath';
 import type { WQSTemplate } from '../../../data/data';
 import clsx from 'clsx';
-import { getDesciptions } from '../WQSSection';
+import { getDesciptions } from './WQSSection';
 import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import {

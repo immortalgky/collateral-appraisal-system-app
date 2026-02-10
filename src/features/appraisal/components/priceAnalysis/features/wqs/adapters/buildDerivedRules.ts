@@ -92,10 +92,7 @@ export function buildWQSCalculationDerivedRules(args: {
   /** Calculation section */
   const { surveys = [], property } = args;
   const {
-    adjustmentFactors: adjustmentFactorsPath,
-    calculation: calculationPath,
     calculationAdjustedValue: calculationAdjustedValuePath,
-    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
@@ -116,6 +113,7 @@ export function buildWQSCalculationDerivedRules(args: {
           compute: ({ getValues }) => {
             const offeringPrice = s.factors?.find(f => f.id === '17')?.value;
             if (offeringPrice) {
+              console.log(offeringPrice);
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
@@ -379,7 +377,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const coefficient = RSQ(surveyScores, surveyCalculate) ?? 0;
-        return toFiniteNumber(coefficient).toFixed(4);
+        return toFiniteNumber(coefficient.toFixed(4));
       },
     },
     {
@@ -400,7 +398,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const stdError = STEYX(surveyScores, surveyCalculate) ?? 0;
-        return toFiniteNumber(stdError).toFixed(6);
+        return toFiniteNumber(stdError.toFixed(6));
       },
     },
     {

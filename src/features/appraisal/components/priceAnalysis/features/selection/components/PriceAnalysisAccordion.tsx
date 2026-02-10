@@ -6,23 +6,20 @@ import {
   PriceAnalysisApproachMethodSelector,
   type Approach,
 } from './PriceAnalysisApproachMethodSelector';
+
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { usePriceAnalysisQuery } from '../../../domain/usePriceAnalysisQuery';
 import {
   useAddPriceAnalysisApproachMethod,
   useGetPriceAnalysisApproachMethodByGroupId,
   useSelectPriceAnalysisApproachMethod,
-} from '../../api/api';
-import {
-  approachMethodReducer,
-  type PriceAnalysisSelectorAction,
-  type PriceAnalysisSelectorState,
-} from '../../domain/useReducer';
-import type { PriceAnalysisApproachRequest } from './type';
-import { usePriceAnalysisQuery } from '../../domain/usePriceAnalysisQuery';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { usePropertyStore } from '../../../../store';
-import { PropertyCard } from '../../../PropertyCard';
-import { DispatchCtx, StateCtx } from './selectionContext';
+} from '../api/api';
+import { usePropertyStore } from '@/features/appraisal/store';
+import type { PriceAnalysisApproachRequest } from '../type';
+import { DispatchCtx, StateCtx } from '../domain/selectionContext';
+import { PropertyCard } from '@/features/appraisal/components/PropertyCard';
+import { approachMethodReducer, type PriceAnalysisSelectorState } from '../domain/useReducer';
 
 const createInitialState = (
   approachConfig: any,
@@ -131,9 +128,6 @@ export const PriceAnalysisAccordion = ({
     // if some method has remove, need to fire api to update
 
     addPriceAnalysisMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
-    console.log(
-      'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
-    );
     dispatch({ type: 'EDIT_SAVE' });
   };
 

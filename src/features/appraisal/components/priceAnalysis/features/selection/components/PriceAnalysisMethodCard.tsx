@@ -1,6 +1,6 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useSelectionDispatch } from './selectionContext';
+import { useSelectionDispatch } from './domain/selectionContext';
 
 interface PriceAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';

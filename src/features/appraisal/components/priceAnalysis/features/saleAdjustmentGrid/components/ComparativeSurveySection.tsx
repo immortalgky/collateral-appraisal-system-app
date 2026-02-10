@@ -1,6 +1,6 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { getFactorDesciption } from '../../../domain/getFactorDescription';
-import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
+import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/components/WQSSection';
 import { saleGridFieldPath } from '../adapters/fieldPath';
 import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';

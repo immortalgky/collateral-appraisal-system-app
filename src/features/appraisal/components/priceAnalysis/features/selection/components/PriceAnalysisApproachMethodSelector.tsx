@@ -1,6 +1,6 @@
 import { Toggle } from '@/shared/components';
 import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
-import { useSelectionDispatch, useSelectionState } from './selectionContext';
+import { useSelectionDispatch, useSelectionState } from './domain/selectionContext';
 
 export interface Method {
   id: string;

@@ -1,8 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import type {
-  PriceAnalysisSelectorAction,
-  PriceAnalysisSelectorState,
-} from '../../domain/useReducer';
+import type { PriceAnalysisSelectorAction, PriceAnalysisSelectorState } from './useReducer';
 
 export const StateCtx = createContext<PriceAnalysisSelectorState | null>(null);
 export const DispatchCtx = createContext<React.Dispatch<PriceAnalysisSelectorAction> | null>(null);

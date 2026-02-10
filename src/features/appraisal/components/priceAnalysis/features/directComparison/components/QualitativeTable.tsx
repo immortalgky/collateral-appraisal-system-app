@@ -5,7 +5,7 @@ import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/WQSSection';
+import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/components/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import clsx from 'clsx';

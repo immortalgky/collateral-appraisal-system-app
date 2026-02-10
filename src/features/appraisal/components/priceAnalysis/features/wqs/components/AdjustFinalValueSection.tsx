@@ -1,10 +1,8 @@
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 import clsx from 'clsx';
-import { NumberInput } from '@/shared/components';
-import { formatNumber } from '@/shared/utils/formatUtils';
-import { RHFInputCell } from '../../components/table/RHFInputCell';
-import { wqsFieldPath } from './adapters/fieldPath';
-import { toFiniteNumber } from './domain/calculations';
+import { RHFInputCell } from '../../../components/table/RHFInputCell';
+import { wqsFieldPath } from '../adapters/fieldPath';
+import { toFiniteNumber } from '../domain/calculations';
 
 export const AdjustFinalValueSection = ({ property }) => {
   const {
@@ -35,7 +33,7 @@ export const AdjustFinalValueSection = ({ property }) => {
     <div className="flex flex-col gap-4 text-sm py-2">
       <div className="grid grid-cols-12">
         <div className="col-span-3">Final value</div>
-        <div className={clsx('col-span-9')}>
+        <div className={clsx('col-span-2')}>
           <RHFInputCell
             fieldName={finalValueFinalValuePath()}
             inputType="display"
@@ -45,20 +43,20 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3 flex items-center">{'Final value (rounded)'}</div>
-        <div className="col-span-9">
+        <div className="col-span-2">
           <RHFInputCell fieldName={finalValueFinalValueRoundedPath()} inputType="number" />
         </div>
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Coefficient of decision</div>
-        <div className="col-span-9">
+        <div className="col-span-3">
           <RHFInputCell
             fieldName={finalValueCoefficientOfDecisionPath()}
             inputType="display"
             accessor={({ value }) => {
               const coeff = toFiniteNumber(value);
               return coeff < 0.85 ? (
-                <div className="flex flex-rows justify-between items-center text-danger">
+                <div className="flex flex-rows gap-2 justify-between items-center text-danger">
                   <span>{value}</span>
                   <span>{'Consider for the market survey data'}</span>
                 </div>
@@ -73,7 +71,7 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Standard error</div>
-        <div className={clsx('col-span-9')}>
+        <div className={clsx('col-span-2')}>
           <RHFInputCell
             fieldName={finalValueStandardErrorPath()}
             inputType="display"
@@ -93,7 +91,7 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Slope</div>
-        <div className={clsx('col-span-9')}>
+        <div className={clsx('col-span-2')}>
           <RHFInputCell
             fieldName={finalValuSlopePath()}
             inputType="display"
@@ -103,7 +101,7 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Lowest estimate</div>
-        <div className={clsx('col-span-9')}>
+        <div className={clsx('col-span-2')}>
           <RHFInputCell
             fieldName={finalValueLowestEstimatePath()}
             inputType="display"
@@ -113,7 +111,7 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Highest estimate</div>
-        <div className={clsx('col-span-9')}>
+        <div className={clsx('col-span-2')}>
           <RHFInputCell
             fieldName={finalValueHighestEstimatePath()}
             inputType="display"
@@ -128,12 +126,12 @@ export const AdjustFinalValueSection = ({ property }) => {
       {property.collateralType === 'L' && (
         <div className="grid grid-cols-12">
           <div className="col-span-3">Area</div>
-          <div className="col-span-9">{property.landArea ?? 0}</div>
+          <div className="col-span-2">{property.landArea ?? 0}</div>
         </div>
       )}
       <div className="grid grid-cols-12">
         <div className="col-span-3">Appraisal Price</div>
-        <div className="col-span-9">
+        <div className="col-span-2">
           <RHFInputCell
             fieldName={finalValueAppraisalPricePath()}
             inputType="display"
@@ -143,7 +141,7 @@ export const AdjustFinalValueSection = ({ property }) => {
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3 flex items-center">{'Appraisal Price (rounded)'}</div>
-        <div className="col-span-9">
+        <div className="col-span-2">
           <RHFInputCell fieldName={finalValueAppraisalPriceRoundedPath()} inputType="number" />
         </div>
       </div>

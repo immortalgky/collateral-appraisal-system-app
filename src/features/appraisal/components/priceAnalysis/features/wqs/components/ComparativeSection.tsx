@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Icon } from '@/shared/components';
-import { RHFInputCell } from '../../components/table/RHFInputCell';
+import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { getDesciptions, getPropertyValueByFactorCode } from './WQSSection';
-import { MarketSurveySelectionModal } from '../../components/MarketSurveySelectionModal';
+import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import type { RHFHorizontalColumn } from '../../adapters/rhf-table/spec';
 import { RHFHorizontalArrayTable } from '../../adapters/rhf-table/RHFArrayTable';
-import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../data/comparativeData';
+import { MOC_SELECTED_COMPARATIVE_SURVEY_DATA_LAND } from '../../../data/comparativeData';
 
 type ComparativeDataRowType = {
   factor: string;
