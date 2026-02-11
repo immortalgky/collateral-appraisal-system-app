@@ -5,37 +5,46 @@ export const PriceAnalysisConfigSchema = z.object({
   approaches: z.array(
     z.object({
       id: z.string(),
+      approachType: z.string(),
       label: z.string(),
       icon: z.string(),
-      appraisalValue: z.number(),
+      appraisalValue: z.number().nullable().optional(),
       methods: z.array(
         z.object({
           id: z.string(),
+          methodType: z.string(),
           label: z.string(),
           icon: z.string(),
-          appraisalValue: z.number(),
+          appraisalValue: z.number().nullable().optional(),
         }),
       ),
     }),
   ),
 });
-export type PriceAnalysisConfig = z.infer<typeof PriceAnalysisConfigSchema>;
+export type PriceAnalysisConfigType = z.infer<typeof PriceAnalysisConfigSchema>;
 
-export async function fetchPriceAnalysisConfig(): Promise<PriceAnalysisConfig> {
-  const res = await fetch(
-    '/src/features/appraisal/components/priceAnalysis/data/priceAnalysis.config.json', // Is this secure?
-    { cache: 'no-cache' },
-  );
-  if (!res.ok) throw new Error(`Config fetch failed (${res.status})`);
-  const data = await res.json();
-  return PriceAnalysisConfigSchema.parse(data);
-}
-
-export const usePriceAnalysisQuery = () => {
+/** fetch price analysis configuration on json file. The configuration file consist of 1 approach can include which method */
+export const useGetPriceAnalysisConfigQuery = () => {
   return useQuery({
     queryKey: ['price-analysis-config'],
-    queryFn: fetchPriceAnalysisConfig,
+    queryFn: async (): Promise<PriceAnalysisConfigType> => {
+      const res = await fetch(
+        '/src/features/appraisal/components/priceAnalysis/data/priceAnalysis.config.json',
+        { cache: 'no-store' },
+      );
 
-    // TODO: refresh and retry
+      if (!res.ok) {
+        throw new Error(`Config fetch failed (${res.status})`);
+      }
+
+      const json = await res.json();
+      return PriceAnalysisConfigSchema.parse(json);
+    },
+
+    /** set stateTime infinit since this is static config */
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 };

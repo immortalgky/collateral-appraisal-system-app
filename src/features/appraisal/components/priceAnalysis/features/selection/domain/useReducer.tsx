@@ -1,3 +1,5 @@
+import type { Approach, Method } from '../type';
+
 /*
 collect 2 separate object
 
@@ -25,25 +27,6 @@ interface Approach {
   2. one method must be select
   3. one approach must be select
 */
-
-interface Method {
-  id: string;
-  label: string;
-  icon: string;
-  appraisalValue: number;
-  isSelected: boolean;
-  isCandidated: boolean;
-}
-
-interface Approach {
-  id: string;
-  label: string;
-  icon: string;
-  appraisalValue: number;
-  isCandidated: boolean;
-  methods: Method[];
-}
-
 type ViewMode = 'editing' | 'summary';
 
 export type PriceAnalysisSelectorState = {
@@ -58,12 +41,12 @@ export type PriceAnalysisSelectorState = {
 export type PriceAnalysisSelectorAction =
   | { type: 'INIT'; payload: { approaches: Approach[] } }
   | { type: 'EDIT_ENTER' }
-  | { type: 'EDIT_TOGGLE_METHOD'; payload: { apprId: string; methodId: string } }
+  | { type: 'EDIT_TOGGLE_METHOD'; payload: { approachType: string; methodType: string } }
   | { type: 'EDIT_CANCEL' }
   | { type: 'EDIT_SAVE' }
   | { type: 'SUMMARY_ENTER' }
-  | { type: 'SUMMARY_SELECT_METHOD'; payload: { apprId: string; methodId: string } }
-  | { type: 'SUMMARY_SELECT_APPROACH'; payload: { apprId: string } }
+  | { type: 'SUMMARY_SELECT_METHOD'; payload: { approachType: string; methodType: string } }
+  | { type: 'SUMMARY_SELECT_APPROACH'; payload: { approachType: string } }
   | { type: 'SUMMARY_SAVE' };
 
 const getVisibleApproach = (approaches: Approach[] = []) => {
@@ -75,22 +58,22 @@ const getVisibleApproach = (approaches: Approach[] = []) => {
 const selectionKey = (approaches: Approach[] = []) => {
   return getVisibleApproach(approaches)
     .map(appr => {
-      const methodIds = appr.methods
-        .map(m => m.id)
+      const methodTypes = appr.methods
+        .map(m => m.methodType)
         .sort()
         .join(',');
-      return `${appr.id}:${methodIds}`;
+      return `${appr.approachType}:${methodTypes}`;
     })
     .sort()
     .join('}');
 };
 
 const checkMethodIsCandidated = (methods: Method[]): string | null => {
-  return methods.find(method => method.isCandidated)?.id ?? null;
+  return methods.find(method => method.isCandidated)?.methodType ?? null;
 };
 
 const checkApproachIsCandidated = (approaches: Approach[]): string | null => {
-  return approaches.find(appr => appr.isCandidated)?.id ?? null;
+  return approaches.find(appr => appr.isCandidated)?.approachType ?? null;
 };
 
 const sortApproaches = (approaches: Approach[]): Approach[] | null => {
@@ -99,26 +82,28 @@ const sortApproaches = (approaches: Approach[]): Approach[] | null => {
   return approaches
     .map(appr => ({
       ...appr,
-      methods: [...appr.methods].sort((prev, curr) => prev.id.localeCompare(curr.id)), // clone then sort
+      methods: [...appr.methods].sort((prev, curr) =>
+        prev.methodType.localeCompare(curr.methodType),
+      ), // clone then sort
     }))
-    .sort((prev, curr) => prev.id.localeCompare(curr.id)); // sorting mapped array is fine
+    .sort((prev, curr) => prev.approachType.localeCompare(curr.approachType)); // sorting mapped array is fine
 };
 
-const cloneApproaches = (approaches: Approach[] | null): Approach[] | null => {
+const cloneApproaches = (approaches: Approach[]): Approach[] => {
   return approaches
     ? approaches.map(appr => ({
         ...appr,
         methods: appr.methods.map(method => ({ ...method })),
       }))
-    : null;
+    : [];
 };
 
 const diffApproaches = (oldApproaches: Approach[], newApproaches: Approach[]) => {};
 
-export const approachMethodReducer: React.Reducer<State, Action> = (
+export function approachMethodReducer(
   state: PriceAnalysisSelectorState,
   action: PriceAnalysisSelectorAction,
-) => {
+): PriceAnalysisSelectorState {
   switch (action.type) {
     case 'INIT': {
       // const sorted = sortApproaches(action.payload.approaches) ?? null;
@@ -140,7 +125,7 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
        *
        */
       // const sorted = sortApproaches(state.editDraft) ?? null;
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         viewMode: 'editing',
       };
@@ -149,22 +134,30 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
 
     case 'EDIT_TOGGLE_METHOD': {
       if (state.editDraft == null) return state;
-      if (!state.editDraft.find(appr => appr.id === action.payload.apprId)) return state;
+      if (!state.editDraft.find(appr => appr.approachType === action.payload.approachType))
+        return state;
 
       /**
        * control logic
        * (1) if `summarySelected` has selected, warning
        */
 
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         editDraft: state.editDraft.map(appr => {
-          if (appr.id !== action.payload.apprId) return appr;
+          /** if approach not match the payload return it */
+          if (appr.approachType !== action.payload.approachType) return appr;
+          /** if approach match the payload, loop find matching method type */
           return {
             ...appr,
             methods: appr.methods.map(method => {
-              if (method.id !== action.payload.methodId) return method;
+              /** if method type not match, return it */
+              if (method.methodType !== action.payload.methodType) return method;
+
+              /** if method type is match and method is selected, flip status to false */
               if (method.isSelected) return { ...method, appraisalValue: 0, isSelected: false };
+
+              /** if method type is match and method is not selected, flip status to true */
               return { ...method, appraisalValue: 0, isSelected: true };
             }),
           };
@@ -178,7 +171,7 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
        * control logic
        * (1) warning if any method has changed
        */
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         editDraft: cloneApproaches(state.editSaved),
         viewMode: 'summary',
@@ -213,7 +206,7 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
         }));
       }
 
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         editSaved: cloneApproaches(state.editDraft),
         summarySelected: cloneApproaches(visibleApproach),
@@ -233,7 +226,7 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
       const visibleApproach = getVisibleApproach(state.summarySelected);
       // const sortVisibleApproach = sortApproaches(visibleApproach);
 
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         summarySelected: cloneApproaches(visibleApproach),
         viewMode: 'summary',
@@ -251,22 +244,22 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
         return state;
 
       // if any method has select, clear that method and enable selected one
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         summarySelected: state.summarySelected.map(appr => {
-          if (appr.id !== action.payload.apprId) return appr;
+          if (appr.approachType !== action.payload.approachType) return appr;
 
           const candidatedMethod = checkMethodIsCandidated(appr.methods);
-          if (action.payload.methodId === candidatedMethod) return appr;
+          if (action.payload.methodType === candidatedMethod) return appr;
 
           return {
             ...appr,
             appraisalValue:
-              appr.methods.find(method => method.id === action.payload.methodId)?.appraisalValue ??
-              0,
+              appr.methods.find(method => method.methodType === action.payload.methodType)
+                ?.appraisalValue ?? 0,
             methods: appr.methods.map(method => ({
               ...method,
-              isCandidated: method.id === action.payload.methodId,
+              isCandidated: method.methodType === action.payload.methodType,
             })),
           };
         }),
@@ -285,13 +278,13 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
       if (!allApproachHavecandidated) return state;
 
       const candidatedApproach = checkApproachIsCandidated(state.summarySelected);
-      if (action.payload.apprId === candidatedApproach) return state;
+      if (action.payload.approachType === candidatedApproach) return state;
 
-      const nextState = {
+      const nextState: PriceAnalysisSelectorState = {
         ...state,
         summarySelected: state.summarySelected.map(appr => ({
           ...appr,
-          isCandidated: appr.id === action.payload.apprId,
+          isCandidated: appr.approachType === action.payload.approachType,
         })),
       };
       return nextState;
@@ -304,4 +297,4 @@ export const approachMethodReducer: React.Reducer<State, Action> = (
     default:
       return state;
   }
-};
+}

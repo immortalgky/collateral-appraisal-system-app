@@ -2,105 +2,121 @@
   "approaches": [
     {
       "id": "MARAPPR",
+      "approachType": "MARAPPR",
       "label": "Market Approach",
       "icon": "shop",
       "appraisalValue": 0,
       "methods": [
         {
           "id": "WQS_MARKET",
+          "methodType": "WQS_MARKET",
           "icon": "scale-balanced",
-          "appraisalValue": 0,
-          "label": "Weighted Quality Score (WQS)"
+          "label": "Weighted Quality Score (WQS)",
+          "appraisalValue": 0
         },
         {
           "id": "SAG_MARKET",
+          "methodType": "SAG_MARKET",
           "icon": "table",
-          "appraisalValue": 0,
-          "label": "Sales Adjustment Grid"
+          "label": "Sales Adjustment Grid",
+          "appraisalValue": 0
         },
         {
           "id": "DC_MARKET",
+          "methodType": "DC_MARKET",
           "icon": "house-building",
-          "appraisalValue": 0,
-          "label": "Direct Comparison"
+          "label": "Direct Comparison",
+          "appraisalValue": 0
         }
       ]
     },
     {
       "id": "COSTAPPR",
+      "approachType": "COSTAPPR",
       "label": "Cost Approach",
       "icon": "triangle-person-digging",
       "appraisalValue": 0,
       "methods": [
         {
           "id": "WQS_COST",
+          "methodType": "WQS_COST",
           "icon": "scale-balanced",
-          "appraisalValue": 0,
-          "label": "Weighted Quality Score (WQS)"
+          "label": "Weighted Quality Score (WQS)",
+          "appraisalValue": 0
         },
         {
           "id": "SAG_COST",
+          "methodType": "SAG_COST",
           "icon": "table",
-          "appraisalValue": 0,
-          "label": "Sales Adjustment Grid"
+          "label": "Sales Adjustment Grid",
+          "appraisalValue": 0
         },
         {
           "id": "DC_COST",
+          "methodType": "DC_COST",
           "icon": "house-building",
-          "appraisalValue": 0,
-          "label": "Direct Comparison"
+          "label": "Direct Comparison",
+          "appraisalValue": 0
         },
         {
           "id": "BC",
+          "methodType": "BC",
           "icon": "person-digging",
-          "appraisalValue": 0,
-          "label": "Building Cost"
+          "label": "Building Cost",
+          "appraisalValue": 0
         },
         {
           "id": "PR",
+          "methodType": "PR",
           "icon": "file-signature",
-          "appraisalValue": 0,
-          "label": "Profit Rent"
+          "label": "Profit Rent",
+          "appraisalValue": 0
         },
         {
           "id": "LH",
+          "methodType": "LH",
           "icon": "file-contract",
-          "appraisalValue": 0,
-          "label": "Leasehold"
+          "label": "Leasehold",
+          "appraisalValue": 0
         },
         {
           "id": "MC",
+          "methodType": "MC",
           "icon": "gears",
-          "appraisalValue": 0,
-          "label": "Machinery Cost"
+          "label": "Machinery Cost",
+          "appraisalValue": 0
         }
       ]
     },
     {
       "id": "INCOMEAPPR",
+      "approachType": "INCOMEAPPR",
       "label": "Income Approach",
       "icon": "chart-line-up",
       "appraisalValue": 0,
       "methods": [
         {
           "id": "I",
+          "methodType": "I",
           "icon": "chart-line",
-          "appraisalValue": 0,
-          "label": "Income"
+          "label": "Income",
+          "appraisalValue": 0
         }
       ]
     },
     {
       "id": "RESAPPR",
+      "approachType": "RESAPPR",
       "label": "Residual Approach",
       "icon": "land-mine-on",
       "appraisalValue": 0,
       "methods": [
         {
           "id": "HYPO",
+          "methodType": "I",
           "icon": "flask-vial",
-          "appraisalValue": 0,
-          "label": "Hypothesis"
+          "label": "Hypothesis",
+          "appraisalValue": 0
         }
       ]
     }

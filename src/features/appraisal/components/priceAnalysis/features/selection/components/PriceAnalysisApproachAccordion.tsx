@@ -2,10 +2,11 @@ import clsx from 'clsx';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { PriceAnalysisApproachCard } from './PriceAnalysisApproachCard';
 import { PriceAnalysisMethodCard } from './PriceAnalysisMethodCard';
+import type { Approach } from '../type';
 
 interface PriceAnalysisApproachAccordian {
   viewMode: 'editing' | 'summary';
-  approach: any;
+  approach: Approach;
   onSelectMethod: (approachId: string, methodId: string) => void;
   onSelectCalculationMethod?: (methodId: string) => void;
 }
@@ -36,9 +37,10 @@ export const PriceAnalysisApproachAccordion = ({
           {/* method */}
           {approach.methods.map(method => (
             <PriceAnalysisMethodCard
-              key={method.id}
+              key={method.methodType}
               viewMode={viewMode}
               approachId={approach.id}
+              approachType={approach.approachType}
               method={method}
               onSelectMethod={onSelectMethod}
             />
@@ -65,9 +67,10 @@ export const PriceAnalysisApproachAccordion = ({
         {/* method */}
         {approach.methods.map(method => (
           <PriceAnalysisMethodCard
-            key={method.id}
+            key={method.methodType}
             viewMode={viewMode}
             approachId={approach.id}
+            approachType={approach.approachType}
             method={method}
             onSelectMethod={onSelectMethod}
             onSelectCalculationMethod={onSelectCalculationMethod}

@@ -1,11 +1,13 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useSelectionDispatch } from '../domain/selectionContext';
+import type { Method } from '../type';
 
 interface PriceAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';
-  approachId: string;
-  method: any;
+  approachId?: string;
+  approachType: string;
+  method: Method;
   onSelectMethod: (approachId: string, methodId: string) => void;
   onSelectCalculationMethod?: (methodId: string) => void;
 }
@@ -13,6 +15,7 @@ interface PriceAnalysisMethodCardProps {
 export const PriceAnalysisMethodCard = ({
   viewMode,
   approachId,
+  approachType,
   method,
   onSelectMethod,
   onSelectCalculationMethod,
@@ -32,7 +35,7 @@ export const PriceAnalysisMethodCard = ({
             method.isSelected ? '  text-primary' : '',
             'hover:bg-primary/10',
           )}
-          onClick={() => onSelectMethod(approachId, method.id)}
+          onClick={() => onSelectMethod(approachType, method.methodType)}
         >
           <div className="col-span-1">
             <Icon name={'check'} style="solid" className={clsx('size-3')} />
@@ -62,7 +65,7 @@ export const PriceAnalysisMethodCard = ({
           onClick={() =>
             dispatch({
               type: 'SUMMARY_SELECT_METHOD',
-              payload: { apprId: approachId, methodId: method.id },
+              payload: { approachType: approachType, methodType: method.methodType },
             })
           }
           className="cursor-pointer"

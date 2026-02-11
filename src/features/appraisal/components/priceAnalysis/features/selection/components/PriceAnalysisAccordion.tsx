@@ -2,18 +2,18 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import React, { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
-import {
-  PriceAnalysisApproachMethodSelector,
-  type Approach,
-} from './PriceAnalysisApproachMethodSelector';
+import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMethodSelector';
 
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { usePriceAnalysisQuery } from '../../../domain/usePriceAnalysisQuery';
+import {
+  useGetPriceAnalysisConfigQuery,
+  type PriceAnalysisConfigType,
+} from '../../../domain/usePriceAnalysisQuery';
 import {
   useAddPriceAnalysisApproach,
   useAddPriceAnalysisMethod,
-  useGetPriceAnalysisApproachMethodByGroupId,
+  useGetPricingAnalysis,
   useSelectPriceAnalysisApproachMethod,
 } from '../api/api';
 import { usePropertyStore } from '@/features/appraisal/store';
@@ -26,47 +26,25 @@ import {
   type PriceAnalysisSelectorState,
 } from '../domain/useReducer';
 import { convertToAddApproachApi, convertToAddMethodApi } from '../domain/convertToApi';
-import type { SubmitHandler } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { createInitialState } from '../domain/createInitialState';
 
-const createInitialState = (
-  approachConfig: any,
-  approachData: PriceAnalysisApproachRequest[],
-): Approach[] => {
-  const approaches = approachConfig?.map(appr => {
-    const apprData = approachData.find(data => data.id === appr.id);
-    return {
-      id: appr.id,
-      label: appr.label,
-      icon: appr.icon,
-      appraisalValue: apprData ? apprData.appraisalValue : 0,
-      isCandidated: apprData && (apprData.isCandidated ? true : false),
-      methods: appr.methods.map(method => {
-        return {
-          id: method.id,
-          label: method.label,
-          icon: method.icon,
-          // if approachData could not match id, means that method not selected
-          isSelected:
-            apprData && (apprData.methods.find(data => data.id === method.id) ? true : false),
-          isCandidated:
-            apprData && apprData.methods.find(data => data.id === method.id)?.isCandidated,
-          appraisalValue: apprData
-            ? (apprData.methods.find(data => data.id === method.id)?.appraisalValue ?? 0)
-            : method.appraisalValue,
-        };
-      }),
-    };
-  });
-
-  return approaches;
-};
+/**
+ * Flow:
+ * (1) no approach or method id
+ * (2) [Editing mode] user choose approach and method under approach => save
+ * (3) fire api to save data and return approach ids and method ids
+ * (4) reload to [Summart mode] and query approach and method with ids
+ * (5) ids will be assign to variables
+ */
 
 export type PriceAnalysisSelectorMode = 'editing' | 'summary';
 
 interface PriceAnalysisAccordionProps {
   groupId: string;
+  // priceAnalysisConfig: PriceAnalysisConfigType;
+  // priceAnalysisData: GetPricingAnalysisResponseType;
   onSelectCalculationMethod: (methodId: string) => void;
 }
 
@@ -75,9 +53,20 @@ export const PriceAnalysisAccordion = ({
   onSelectCalculationMethod,
 }: PriceAnalysisAccordionProps) => {
   const navigate = useNavigate();
+
   /* Server state: fetch property data by groupId && fetch approach and method by groupId */
-  const { data, isLoading, isError, error } = usePriceAnalysisQuery();
-  const approachesMoc = useGetPriceAnalysisApproachMethodByGroupId(groupId);
+  const {
+    data: getPriceAnalysisConfigData,
+    isLoading: isGetPriceAnalysisConfigLoading,
+    isError: isGetPriceAnalysisConfigError,
+    error: getPriceAnalysisConfigError,
+  } = useGetPriceAnalysisConfigQuery();
+  const {
+    data: getPricingAnalysisData,
+    isLoading: isGetPricingAnalysisLoading,
+    isError: isGetPricingAnalysisError,
+    error: getPricingAnalysisError,
+  } = useGetPricingAnalysis(groupId);
 
   /** Initial reducer state */
   const initialState: PriceAnalysisSelectorState = {
@@ -87,9 +76,11 @@ export const PriceAnalysisAccordion = ({
     summarySelected: [],
   };
 
+  /** start using reducer with initial state */
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
   const { summarySelected } = state;
 
+  /** left side panel, show collateral in the group */
   const { groups } = usePropertyStore();
   const group = groups.find(group => group.id === groupId) ?? null;
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -101,18 +92,30 @@ export const PriceAnalysisAccordion = ({
   });
 
   useEffect(() => {
-    if (isLoading) return;
-    const approaches = createInitialState(data?.approaches, approachesMoc);
+    if (isGetPriceAnalysisConfigLoading || isGetPricingAnalysisLoading) return;
 
-    dispatch({ type: 'INIT', payload: { approaches } });
-    dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
-  }, [data, isLoading, isError, error, approachesMoc]);
+    if (getPriceAnalysisConfigData && getPricingAnalysisData) {
+      const approaches = createInitialState(getPriceAnalysisConfigData, getPricingAnalysisData);
 
-  /* Local state:  */
+      dispatch({ type: 'INIT', payload: { approaches } });
+      dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
+    }
+  }, [
+    getPriceAnalysisConfigData,
+    getPricingAnalysisData,
+    isGetPriceAnalysisConfigLoading,
+    isGetPricingAnalysisLoading,
+    isGetPriceAnalysisConfigError,
+    isGetPricingAnalysisError,
+  ]);
+
+  /** Local state:  */
+
+  /** state to control accordian disclosure */
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
     useDisclosure({ defaultIsOpen: true });
 
-  // fire api to save selected methods
+  /** api to save approach and method on editing mode */
   const {
     mutate: addPriceAnalysisApproachMutate,
     isPending: isAddingApproach,
@@ -179,7 +182,9 @@ export const PriceAnalysisAccordion = ({
 
       toast.success('Price analysis selection updated successfully');
       dispatch({ type: 'EDIT_SAVE' });
-      // navigate('/dev/price-analysis');
+      navigate('/dev/price-analysis', {
+        state: { groupId: 'D7AA433E-F36B-1410-8965-006F4F934FE1' },
+      });
     } catch (err: any) {
       toast.error(
         err?.apiError?.detail || 'Failed to update price analysis selection. Please try again.',
@@ -201,18 +206,22 @@ export const PriceAnalysisAccordion = ({
   };
 
   const [pendingDeselect, setPendingDeselect] = useState<{
-    approachId: string;
-    methodId: string;
+    approachType: string;
+    methodType: string;
   } | null>(null);
-  const handleOnSelectMethod = (approachId: string, methodId: string) => {
-    /** find method that belongs to approach in reducer's state */
-    const beforeChange =
-      state.editDraft.find(appr => appr.id === approachId)?.methods.find(m => m.id === methodId)
-        ?.appraisalValue ?? 0;
+
+  const handleOnSelectMethod = (approachType: string, methodType: string) => {
+    console.log(approachType, methodType);
+
+    /** find method type that belongs to approach type in reducer's state */
+    const appraisalValueBeforeChange =
+      state.editDraft
+        .find(appr => appr.approachType === approachType)
+        ?.methods.find(m => m.methodType === methodType)?.appraisalValue ?? 0;
 
     /** if appraisal value of the method which being deselect got value, warning! */
-    if (beforeChange > 0) {
-      setPendingDeselect({ approachId, methodId });
+    if (appraisalValueBeforeChange > 0) {
+      setPendingDeselect({ approachType, methodType });
       onConfirmDeselectedMethodOpen();
       return;
     }
@@ -220,7 +229,7 @@ export const PriceAnalysisAccordion = ({
     /** call dispatch to toggle that method */
     dispatch({
       type: 'EDIT_TOGGLE_METHOD',
-      payload: { apprId: approachId, methodId: methodId },
+      payload: { approachType: approachType, methodType: methodType },
     });
   };
 

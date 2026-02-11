@@ -1,9 +1,10 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
+import type { Approach } from '../type';
 
 interface PriceAnalysisApproachCard {
-  approach: any;
+  approach: Approach;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -71,7 +72,7 @@ export const PriceAnalysisApproachCard = ({
             onClick={() =>
               dispatch({
                 type: 'SUMMARY_SELECT_APPROACH',
-                payload: { apprId: approach.id },
+                payload: { approachType: approach.approachType },
               })
             }
             className="cursor-pointer items-center justify-end"

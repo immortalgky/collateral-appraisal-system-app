@@ -1,54 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { PriceAnalysisApproachRequest } from '../type';
-import { MOC_SURVEY_DATA, PROPERTIES } from '../../../data/data';
-import type {
-  AddPriceAnalysisApproachRequestType,
-  AddPriceAnalysisApproachResponseType,
-  AddPriceAnalysisMethodRequestType,
-  AddPriceAnalysisMethodResponseType,
+import { APPROACHES_QUERY_RESPONSE, MOC_SURVEY_DATA, PROPERTIES } from '../../../data/data';
+import {
+  GetPricingAnalysisResponse,
+  type AddPriceAnalysisApproachRequestType,
+  type AddPriceAnalysisApproachResponseType,
+  type AddPriceAnalysisMethodRequestType,
+  type AddPriceAnalysisMethodResponseType,
+  type GetPricingAnalysisResponseType,
 } from '../schemas/V1';
-
-/**
- * initialize approach and method choices
- * 1 api to fetch all approach and method choices
- */
-
-// onload
-
-const APPROACHES_MOC: PriceAnalysisApproachRequest[] = [
-  // {
-  //   id: 'MARAPPR',
-  //   appraisalValue: 1000000000,
-  //   isCandidated: true,
-  //   methods: [
-  //     { id: 'WQS', isCandidated: true, appraisalValue: 1000000000 },
-  //     { id: 'SAG', isCandidated: false, appraisalValue: 1200000000 },
-  //   ],
-  // },
-  // {
-  //   id: 'COSTAPPR',
-  //   appraisalValue: 1000000,
-  //   isCandidated: false,
-  //   methods: [{ id: 'SAG', isCandidated: true, appraisalValue: 1000000 }],
-  // },
-];
 
 /**
  * Hook for fetching price analysis approach and method by group Id
  * GET /appraisal ...
- * @param groupId
  */
-export const useGetPriceAnalysisApproachMethodByGroupId = (groupId: string | undefined) => {
-  // return useQuery({
-  //   queryKey: ['group', groupId],
-  //   queryFn: async (): Promise<PriceAnalysisApproachRequest> => {
-  //     const { data } = await axios.get(`/appraisal/${groupId}`);
-  //     return data;
-  //   },
-  // });
+export const useGetPricingAnalysis = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['price-analysis', id],
+    enabled: !!id,
+    queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
+      // REAL:
+      // const { data } = await axios.get(`/price-analysis/${id}`);
+      // return GetPricingAnalysisResponse.parse(data);
 
-  return APPROACHES_MOC;
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      // validate mock matches schema:
+      // return GetPricingAnalysisResponse.parse(APPROACHES_QUERY_RESPONSE);
+      return APPROACHES_QUERY_RESPONSE;
+    },
+  });
 };
 
 /**

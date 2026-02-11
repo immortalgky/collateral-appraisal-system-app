@@ -1,29 +1,24 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
+import { saleGridFieldPath } from '../adapters/fieldPath';
 
 export function SecondRevision({
   comparativeSurveys = [],
   collateralType,
 }: {
-  comparativeSurveys: unknown;
+  comparativeSurveys: Record<string, any>[];
   collateralType: string;
 }): React.ReactNode {
   /** field paths */
   const {
-    /** 2nd revision */
     calculationLandAreaDiff: calculationLandAreaDiffPath,
     calculationLandPrice: calculationLandPricePath,
-    calculationAdjustedValue: calculationAdjustedValuePath,
     calculationLandValueIncreaseDecrease: calculationLandValueIncreaseDecreasePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
     calculationUsableAreaDiff: calculationUsableAreaDiffPath,
     calculationBuildingValueIncreaseDecrease: calculationBuildingValueIncreaseDecreasePath,
     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
-    calculationSumFactorPct: calculationSumFactorPctPath,
-    calculationSumFactorAmt: calculationSumFactorAmtPath,
-    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
-  } = directComparisonPath;
+  } = saleGridFieldPath;
 
   /** styles */
   const bgGradient =

@@ -1,12 +1,14 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, type JSX } from 'react';
 import { Icon } from '@/shared/components';
 import {
   useGetMarketSurvey,
+  useGetPricingAnalysis,
   useGetProperty,
 } from '@features/appraisal/components/priceAnalysis/features/selection/api/api.ts';
 import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
 import { ActiveMethodPanel } from '@features/appraisal/components/priceAnalysis/components/ActiveMethodPanel.tsx';
+import { useGetPriceAnalysisConfigQuery } from '../domain/usePriceAnalysisQuery';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
@@ -37,13 +39,66 @@ export function PriceAnalysisTab(): JSX.Element {
   const marketSurveyQueryResult = marketSurveyData?.result ?? marketSurveyData;
   const marketSurveys = marketSurveyQueryResult?.items ?? [];
 
+  /* Server state: fetch property data by groupId && fetch approach and method by groupId */
+  const {
+    data: getPriceAnalysisConfigData,
+    isLoading: isGetPriceAnalysisConfigLoading,
+    isError: isGetPriceAnalysisConfigError,
+    error: getPriceAnalysisConfigError,
+  } = useGetPriceAnalysisConfigQuery();
+  const {
+    data: getPricingAnalysisData,
+    isLoading: isGetPricingAnalysisLoading,
+    isError: isGetPricingAnalysisError,
+    error: getPricingAnalysisError,
+  } = useGetPricingAnalysis(groupId);
+
+  const isError =
+    isPropertyError ||
+    isMarketSurveyError ||
+    isGetPriceAnalysisConfigError ||
+    isGetPricingAnalysisError;
+
   const [isCurrentLoading, setIsCurrentLoading] = useState<boolean>(true);
+  const [isCurrentError, setIsCurrentError] = useState<boolean>(false);
+
   useEffect(() => {
-    if (isLoadingMarketSurvey || isLoadingProperty) return;
-    setTimeout(() => {
-      setIsCurrentLoading(false);
-    }, 500);
-  }, [isLoadingProperty, isLoadingMarketSurvey]);
+    if (
+      isPropertyError ||
+      isMarketSurveyError ||
+      isGetPriceAnalysisConfigError ||
+      isGetPricingAnalysisError
+    )
+      return setIsCurrentError(true);
+    return setIsCurrentError(false);
+  }, [
+    isGetPriceAnalysisConfigError,
+    isGetPricingAnalysisError,
+    isMarketSurveyError,
+    isPropertyError,
+  ]);
+
+  useEffect(() => {
+    if (
+      isLoadingMarketSurvey ||
+      isLoadingProperty ||
+      isGetPriceAnalysisConfigLoading ||
+      isGetPricingAnalysisLoading
+    )
+      return;
+
+    if (propertyData && marketSurveyData && getPriceAnalysisConfigData && getPricingAnalysisData)
+      return setIsCurrentLoading(false);
+  }, [
+    isLoadingProperty,
+    isLoadingMarketSurvey,
+    isGetPriceAnalysisConfigLoading,
+    isGetPricingAnalysisLoading,
+    propertyData,
+    marketSurveyData,
+    getPriceAnalysisConfigData,
+    getPricingAnalysisData,
+  ]);
 
   const [isDirty, setIsDirty] = useState(false);
   const handleOnCalculationMethodDirty = (check: boolean) => {
@@ -68,6 +123,8 @@ export function PriceAnalysisTab(): JSX.Element {
   };
 
   const handleOnSelectCalculationMethod = (nextMethodId: string) => {
+    // need methodId and methodType
+
     // no-op if selecting the same method
     if (nextMethodId === methodId) return;
 
@@ -91,7 +148,7 @@ export function PriceAnalysisTab(): JSX.Element {
 
   const property = properties[2];
 
-  if (isPropertyError || isMarketSurveyError) {
+  if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />

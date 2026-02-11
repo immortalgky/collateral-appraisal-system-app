@@ -2,24 +2,6 @@ import { Toggle } from '@/shared/components';
 import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
 import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
 
-export interface Method {
-  id: string;
-  label: string;
-  icon: string;
-  appraisalValue: number;
-  isSelected: boolean;
-  isCandidated: boolean;
-}
-
-export interface Approach {
-  id: string;
-  label: string;
-  icon: string;
-  appraisalValue: number;
-  isCandidated: boolean; // if no method means not selected
-  methods: Method[]; // selected methods from database
-}
-
 interface PriceAnalysisApproachMethodSelectorProps {
   isSystemCalculation: boolean;
   onSystemCalculationChange: () => void;

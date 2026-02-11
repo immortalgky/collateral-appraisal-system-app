@@ -1,3 +1,38 @@
+import type { GetPricingAnalysisResponseType } from '../features/selection/schemas/V1';
+
+/** approach and method query response */
+export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
+  id: '00000000-0000-0000-0000-000000000001',
+  propertyGroupId: 'D7AA433E-F36B-1410-8965-006F4F934FE1',
+  status: '',
+  finalMarketValue: 0,
+  finalAppraisedValue: 0,
+  finalForcedSaleValue: 0,
+  valuationDate: '2025-01-15T10:00:00',
+  approaches: [
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      approachType: 'MARAPPR',
+      appraisalValue: 0,
+      isCandidated: false,
+      methods: [
+        {
+          id: '00000000-0000-0000-0000-000000000000',
+          methodType: 'WQS_MARKET',
+          isCandidated: false,
+          appraisalValue: 0,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000001',
+          methodType: 'SAG_MARKET',
+          isCandidated: false,
+          appraisalValue: 0,
+        },
+      ],
+    },
+  ],
+};
+
 /* Collateral type in group, Initial on loading price analysis page*/
 export const PROPERTIES = [
   {
