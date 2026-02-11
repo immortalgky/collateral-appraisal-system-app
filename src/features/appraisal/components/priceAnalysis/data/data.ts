@@ -1,4 +1,7 @@
-import type { GetPricingAnalysisResponseType } from '../features/selection/schemas/V1';
+import type {
+  GetPricingAnalysisResponseType,
+  GetPropertyGroupByIdResponseType,
+} from '../features/selection/schemas/V1';
 
 /** approach and method query response */
 export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
@@ -33,9 +36,20 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
   ],
 };
 
+/** GetPropertyGroupById */
+export const GET_PROPERTY_GROUP_BY_ID_RESPONSE: GetPropertyGroupByIdResponseType = {
+  id: '00000000-0000-0000-0000-000000000001',
+  groupNumber: 1,
+  groupName: '',
+  description: '',
+  useSystemCalc: true,
+  properties: [{ propertyId: '019e2a6b-9c2d-7a44-b2d1-6d2b7f5c3a10', sequenceInGroup: 1 }],
+};
+
 /* Collateral type in group, Initial on loading price analysis page*/
 export const PROPERTIES = [
   {
+    propertyId: '00000000-0000-0000-0000-000000000000',
     collateralType: 'L',
     environment: 'ที่อยู่อาศัย และอุตสาหกรรม',
     plotLocation: 'แปลงกลาง',
@@ -47,6 +61,7 @@ export const PROPERTIES = [
     laws: 'ที่ดินประเภทอุตสาหกรรม และคลังสินค้า',
   },
   {
+    propertyId: '00000000-0000-0000-0000-000000000000',
     collateralType: 'LB',
     addressLocation: 'ถนนภายในโครงการ',
     plotLocation: 'แปลงกลาง',
@@ -57,6 +72,7 @@ export const PROPERTIES = [
     developerReputation: 'บจก ดีๆ ที่มีชื่อเสียงนิดหน่อย',
   },
   {
+    propertyId: '00000000-0000-0000-0000-000000000000',
     collateralType: 'C',
     condoName: 'พลัส 38 คอนโดมีเนียม',
     facility: 'สระว่ายน้ำ ห้องฟิตเนส',

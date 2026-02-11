@@ -37,4 +37,6 @@ export interface Approach {
   methods: Method[]; // selected methods from database
 }
 
+export type MarketSurvey
+
 export type PriceAnalysisSelectorMode = 'editing' | 'summary';

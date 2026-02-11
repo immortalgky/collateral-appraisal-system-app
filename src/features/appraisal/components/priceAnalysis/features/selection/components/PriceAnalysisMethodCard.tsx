@@ -9,7 +9,7 @@ interface PriceAnalysisMethodCardProps {
   approachType: string;
   method: Method;
   onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod: (methodId: string, methodType: string) => void;
+  onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
 }
 
 export const PriceAnalysisMethodCard = ({
@@ -95,7 +95,7 @@ export const PriceAnalysisMethodCard = ({
       <div className="col-span-1 flex items-center justify-end">
         <button
           type="button"
-          onClick={() => onSelectCalculationMethod(method.id, method.methodType)}
+          onClick={() => onSelectCalculationMethod(approachId, method.id, method.methodType)}
           className="cursor-pointer items-center justify-end"
         >
           <Icon

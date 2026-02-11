@@ -1,10 +1,14 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useReducer, useRef, useState, type JSX } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useEffect, useReducer, useState, type JSX } from 'react';
 import { Icon } from '@/shared/components';
 import {
-  useGetMarketSurvey,
+  useAddPriceAnalysisApproach,
+  useAddPriceAnalysisMethod,
+  useGetComparativeFactors,
+  useGetMarketSurveys,
   useGetPricingAnalysis,
-  useGetProperty,
+  useGetPropertyById,
+  useGetPropertyGroupById,
 } from '@features/appraisal/components/priceAnalysis/features/selection/api/api.ts';
 import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
 import { ActiveMethodPanel } from '@features/appraisal/components/priceAnalysis/components/ActiveMethodPanel.tsx';
@@ -19,7 +23,9 @@ import { createInitialState } from '../features/selection/domain/createInitialSt
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
   const { state: navigationState } = location;
-  const { groupId } = navigationState; // groupId from property
+  // const { groupId } = navigationState; // groupId from property
+  const appraisalId = '00000000-0000-0000-0000-000000000001';
+  const groupId = 'D7AA433E-F36B-1410-8965-006F4F934FE1';
 
   /** Initial reducer state */
   const initialState: PriceAnalysisSelectorState = {
@@ -29,6 +35,14 @@ export function PriceAnalysisTab(): JSX.Element {
     summarySelected: [],
   };
 
+  /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
+   * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
+   * - the state will pass to `ActiveMethodPanel` to show method
+   */
+  const [calculationMethod, setCalculationMethod] = useState<
+    { approachId: string; methodId: string; methodType: string } | undefined
+  >(undefined);
+
   /** start using reducer with initial state */
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
 
@@ -36,30 +50,38 @@ export function PriceAnalysisTab(): JSX.Element {
     console.log('Reload');
   }, []);
 
-  /** Query group data by group Id */
-  // =>
+  /** ================================= */
+  /** Initial data                      */
+  /** ================================= */
 
-  /** Query property data by group Id */
+  /** (1) Query group data by group Id */
+  const {
+    data: propertyGroupData,
+    isLoading: isPropertyGroupLoading,
+    isError: isPropertyGroupError,
+    error: propertyGrouopError,
+  } = useGetPropertyGroupById(appraisalId, groupId);
+  const propertyId = propertyGroupData?.properties?.[0]?.propertyId;
+
+  /** (2) Query property data by property Id */
   const {
     data: propertyData,
     isLoading: isLoadingProperty,
     isError: isPropertyError,
     error: propertyError,
-  } = useGetProperty(groupId);
-  const propertyQueryResult = propertyData?.result ?? propertyData;
-  const properties = propertyQueryResult?.items ?? [];
+  } = useGetPropertyById(appraisalId, propertyId);
 
-  /** Query market survey data by group Id */
+  /** (3) Query market surveys data in application *
+   * [!] not sure that have to query survey Ids in group first, then loop queries each survey or not
+   */
   const {
     data: marketSurveyData,
     isLoading: isLoadingMarketSurvey,
     isError: isMarketSurveyError,
     error: marketSurveyError,
-  } = useGetMarketSurvey(groupId);
-  const marketSurveyQueryResult = marketSurveyData?.result ?? marketSurveyData;
-  const marketSurveys = marketSurveyQueryResult?.items ?? [];
+  } = useGetMarketSurveys();
 
-  /** fetch price analysis configuration */
+  /** (4) fetch price analysis configuration */
   const {
     data: getPriceAnalysisConfigData,
     isLoading: isGetPriceAnalysisConfigLoading,
@@ -67,7 +89,7 @@ export function PriceAnalysisTab(): JSX.Element {
     error: getPriceAnalysisConfigError,
   } = useGetPriceAnalysisConfigQuery();
 
-  /** Query price analysis data */
+  /** (5) Query price analysis data containing approaches and methods in the group */
   const {
     data: getPricingAnalysisData,
     isLoading: isGetPricingAnalysisLoading,
@@ -75,7 +97,25 @@ export function PriceAnalysisTab(): JSX.Element {
     error: getPricingAnalysisError,
   } = useGetPricingAnalysis(groupId);
 
-  /** Query method detail by method Id */
+  /** api to save approach and method on editing mode */
+  const {
+    mutate: addPriceAnalysisApproachMutate,
+    isPending: isAddingApproach,
+    isSuccess: isAddApproachSuccess,
+  } = useAddPriceAnalysisApproach();
+  const {
+    mutate: addPriceAnalysisMethodMutate,
+    isPending: isAddingMethod,
+    isSuccess: isAddMethodSuccess,
+  } = useAddPriceAnalysisMethod();
+
+  /** Query method detail by method ID when user clicks calculation button (pencil icon) */
+  const {
+    data: getComparativeFactorsData,
+    isLoading: isGetComparativeFactorsLoading,
+    isError: isGetComparativeFactorsError,
+    error: getComparativeFactorsError,
+  } = useGetComparativeFactors('', calculationMethod?.methodId);
 
   /** Initial reducer state */
   useEffect(() => {
@@ -151,14 +191,6 @@ export function PriceAnalysisTab(): JSX.Element {
   /** Query selected approach & method */
   // TODO:
 
-  /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
-   * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
-   * - the state will pass to `ActiveMethodPanel` to show method
-   */
-  const [calculationMethod, setCalculationMethod] = useState<
-    { methodId: string; methodType: string } | undefined
-  >(undefined);
-
   // When a user tries to switch method while there are unsaved changes,
   // we confirm first and only then allow the switch.
   const confirmDiscardUnsavedChanges = () => {
@@ -167,9 +199,11 @@ export function PriceAnalysisTab(): JSX.Element {
     );
   };
 
-  const handleOnSelectCalculationMethod = (nextMethodId: string, nextMethodType: string) => {
-    // need methodId and methodType
-
+  const handleOnSelectCalculationMethod = (
+    nextApproachId: string | undefined,
+    nextMethodId: string | undefined,
+    nextMethodType: string,
+  ) => {
     // no-op if selecting the same method
     if (nextMethodId === calculationMethod?.methodId) return;
 
@@ -183,15 +217,19 @@ export function PriceAnalysisTab(): JSX.Element {
       setIsDirty(false);
     }
 
-    setCalculationMethod({ methodId: nextMethodId, methodType: nextMethodType });
+    if (!!nextApproachId && !!nextMethodId) {
+      setCalculationMethod({
+        approachId: nextApproachId,
+        methodId: nextMethodId,
+        methodType: nextMethodType,
+      });
+    }
   };
 
   /**
    * How to manage property to send to each method?
    * (1) In case that we have 1 land multiple building, how to map?
    */
-
-  const property = properties[2];
 
   if (isCurrentError) {
     return (
@@ -216,12 +254,12 @@ export function PriceAnalysisTab(): JSX.Element {
                 groupId={groupId}
                 onSelectCalculationMethod={handleOnSelectCalculationMethod}
               />
-              {calculationMethod != undefined && (
+              {!!calculationMethod && (
                 <ActiveMethodPanel
                   methodId={calculationMethod.methodId}
                   methodType={calculationMethod.methodType}
-                  property={property}
-                  marketSurveys={marketSurveys}
+                  property={propertyData}
+                  marketSurveys={marketSurveyData}
                   onCalculationMethodDirty={handleOnCalculationMethodDirty}
                 />
               )}

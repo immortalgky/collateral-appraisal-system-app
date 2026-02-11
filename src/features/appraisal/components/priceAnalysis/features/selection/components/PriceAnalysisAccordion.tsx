@@ -32,7 +32,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface PriceAnalysisAccordionProps {
   groupId: string;
-  onSelectCalculationMethod: (methodId: string, methodType: string) => void;
+  onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
 }
 
 export const PriceAnalysisAccordion = ({
@@ -62,23 +62,22 @@ export const PriceAnalysisAccordion = ({
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
     useDisclosure({ defaultIsOpen: true });
 
-  /** api to save approach and method on editing mode */
-  const {
-    mutate: addPriceAnalysisApproachMutate,
-    isPending: isAddingApproach,
-    isSuccess: isAddApproachSuccess,
-  } = useAddPriceAnalysisApproach();
-  const {
-    mutate: addPriceAnalysisMethodMutate,
-    isPending: isAddingMethod,
-    isSuccess: isAddMethodSuccess,
-  } = useAddPriceAnalysisMethod();
+  // /** api to save approach and method on editing mode */
+  // const {
+  //   mutate: addPriceAnalysisApproachMutate,
+  //   isPending: isAddingApproach,
+  //   isSuccess: isAddApproachSuccess,
+  // } = useAddPriceAnalysisApproach();
+  // const {
+  //   mutate: addPriceAnalysisMethodMutate,
+  //   isPending: isAddingMethod,
+  //   isSuccess: isAddMethodSuccess,
+  // } = useAddPriceAnalysisMethod();
 
   const isApiPending = isAddingApproach || isAddingMethod;
   const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;
 
   // fire api to save candidate approach & methods
-  const { mutate: addCandidateApproachMutate } = useSelectPriceAnalysisApproachMethod();
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
   const {
     isOpen: isConfirmDeselectedMethodOpen,

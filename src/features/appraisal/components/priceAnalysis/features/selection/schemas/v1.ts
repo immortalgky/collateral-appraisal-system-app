@@ -1,6 +1,27 @@
 import z from 'zod';
 
 /** ================================ */
+/** GetPropertyGroupById */
+/** ================================ */
+const PropertyGroupItemDto = z
+  .object({ propertyId: z.string(), sequenceInGroup: z.number() })
+  .passthrough();
+
+export const GetPropertyGroupByIdRequest = z.object({}).passthrough();
+export const GetPropertyGroupByIdResponse = z
+  .object({
+    id: z.string(),
+    groupNumber: z.number(),
+    groupName: z.string(),
+    description: z.string().nullable().optional(),
+    useSystemCalc: z.boolean(),
+    properties: z.array(PropertyGroupItemDto),
+  })
+  .passthrough();
+export type GetPropertyGroupByIdRequestType = z.infer<typeof GetPropertyGroupByIdRequest>;
+export type GetPropertyGroupByIdResponseType = z.infer<typeof GetPropertyGroupByIdResponse>;
+
+/** ================================ */
 /** Add price analysis approach */
 /** ================================ */
 const AddPriceAnalysisApproachRequest = z.object({ approachType: z.string() }).passthrough();
@@ -57,6 +78,78 @@ export const GetPricingAnalysisResponse = z
     approaches: z.array(ApproachDto),
   })
   .passthrough();
+
+/** ================================ */
+/** Query comparative factor bu method id */
+/** ================================ */
+export const linkedComparableDto = z
+  .object({
+    linkId: z.string(),
+    marketComparableId: z.string(),
+    displaySequence: z.number(),
+    comparableName: z.string().nullable().optional(),
+    comparableCode: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export const ComparativeFactorDto = z
+  .object({
+    id: z.string(),
+    factorId: z.string(),
+    factorName: z.string().nullable().optional(),
+    factorCode: z.string().nullable().optional(),
+    displaySequence: z.number(),
+    isSelectedForScoring: z.boolean(),
+    remarks: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export const FactorScoreDto = z
+  .object({
+    id: z.string(),
+    factorId: z.string(),
+    factorName: z.string().nullable().optional(),
+    marketComparableId: z.string().nullable().optional(),
+    comparableName: z.string().nullable().optional(),
+    factorWeight: z.number(),
+    displaySequence: z.number(),
+    value: z.string().nullable().optional(),
+    score: z.number().nullable().optional(),
+    weightedScore: z.number().nullable().optional(),
+    adjustmentPct: z.number().nullable().optional(),
+    remarks: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export const CalculationDto = z.object({
+  id: z.string(),
+  marketComparableId: z.string(),
+  comparableName: z.string().nullable().optional(),
+  offeringPrice: z.number().nullable().optional(),
+  offeringPriceUnit: z.string().nullable().optional(),
+  adjustOfferPricePct: z.number().nullable().optional(),
+  sellingPrice: z.number().nullable().optional(),
+  buySellYear: z.number().nullable().optional(),
+  buySellMonth: z.number().nullable().optional(),
+  adjustedPeriodPct: z.number().nullable().optional(),
+  cumulativeAdjPeriod: z.number().nullable().optional(),
+  totalFactorDiffPct: z.number().nullable().optional(),
+  totalAdjustedValue: z.number().nullable().optional(),
+}).passthrough;
+export const GetComparativeFactorsRequest = z.object({}).passthrough();
+export const GetComparativeFactorsResponse = z
+  .object({
+    priceAnalysisId: z.string(),
+    methodId: z.string(),
+    methodType: z.string(),
+    linkedComparables: z.array(linkedComparableDto),
+    comparativeFactors: z.array(ComparativeFactorDto),
+    factorScores: z.array(FactorScoreDto),
+    calculations: z.array(CalculationDto()),
+  })
+  .passthrough();
+export type GetComparativeFactorsRequestType = z.infer<typeof GetComparativeFactorsRequest>;
+export type GetComparativeFactorsResponseType = z.infer<typeof GetComparativeFactorsResponse>;
 
 export type ApproachDtoType = z.infer<typeof ApproachDto>;
 export type MethodDtoType = z.infer<typeof MethodDto>;

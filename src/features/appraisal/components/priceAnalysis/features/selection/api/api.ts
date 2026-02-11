@@ -1,15 +1,43 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { PriceAnalysisApproachRequest } from '../type';
-import { APPROACHES_QUERY_RESPONSE, MOC_SURVEY_DATA, PROPERTIES } from '../../../data/data';
+import {
+  APPROACHES_QUERY_RESPONSE,
+  GET_PROPERTY_GROUP_BY_ID_RESPONSE,
+  MOC_SURVEY_DATA,
+  PROPERTIES,
+} from '../../../data/data';
 import {
   GetPricingAnalysisResponse,
+  GetPropertyGroupByIdResponse,
   type AddPriceAnalysisApproachRequestType,
   type AddPriceAnalysisApproachResponseType,
   type AddPriceAnalysisMethodRequestType,
   type AddPriceAnalysisMethodResponseType,
   type GetPricingAnalysisResponseType,
+  type GetPropertyGroupByIdResponseType,
+  type GetComparativeFactorsResponseType,
+  GetComparativeFactorsResponse,
 } from '../schemas/V1';
+import { LAND_PROPERTY } from '@features/appraisal/components/priceAnalysis/data/propertyData.ts';
+
+export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
+  return useQuery({
+    queryKey: ['price-analysis', groupId, appraisalId],
+    queryFn: async (): Promise<GetPropertyGroupByIdResponseType> => {
+      // const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
+      // return GetPropertyGroupByIdResponse.parse(data);
+
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return GET_PROPERTY_GROUP_BY_ID_RESPONSE;
+    },
+    enabled: !!appraisalId && !!groupId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
 
 /**
  * Hook for fetching price analysis approach and method by group Id
@@ -19,7 +47,6 @@ export const useGetPricingAnalysis = (id: string | undefined) => {
   return useQuery({
     queryKey: ['price-analysis', id],
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
-      // REAL:
       // const { data } = await axios.get(`/price-analysis/${id}`);
       // return GetPricingAnalysisResponse.parse(data);
 
@@ -31,6 +58,30 @@ export const useGetPricingAnalysis = (id: string | undefined) => {
     },
     enabled: !!id,
     refetchOnWindowFocus: false, // don't refetch when tab focuses
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+};
+
+/**
+ * Hook for fetching comparative factor bu method id
+ * GET /appraisal ...
+ */
+export const useGetComparativeFactors = (id: string | undefined, methodId: string | undefined) => {
+  return useQuery({
+    queryKey: ['price-analysis', id, methodId],
+    queryFn: async (): Promise<GetComparativeFactorsResponseType> => {
+      // const { data } = await axios.get(
+      //   `/pricing-analysis/${id}/methods/${methodId}/comparative-factors`,
+      // );
+      // return GetComparativeFactorsResponse.parse(data);
+
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return; // return mock data
+    },
+    enabled: !!id && !!methodId,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
   });
@@ -119,78 +170,45 @@ export const useAddPriceAnalysisMethod = () => {
 };
 
 /**
- * Hook for adding group appraisal value
- * POST /appraisal/ ...
+ * get property by property Id
+ * @param appraisalId - appraisal Id
+ * @param propertyId - property Id
  * @returns
  */
-export const useSelectPriceAnalysisApproachMethod = () => {
-  return useMutation({
-    mutationFn: async ({
-      groupId,
-      data,
-    }: {
-      groupdId: string;
-      data: PriceAnalysisApproachRequest;
-    }) => {
-      const { data: response } = await axios.post(`/appraisal/${groupId}/`, data);
-      return response;
-    },
-  });
-};
-
-/**
- *
- * @param groupId
- * @returns
- */
-export const useGetProperty = (groupId: string = '') => {
-  const queryKey = [];
-
+export function useGetPropertyById(
+  appraisalId: string | undefined,
+  propertyId: string | undefined,
+): any {
   return useQuery({
-    queryKey,
-    queryFn: async (): Promise<any> => {
-      await new Promise(resolve => setTimeout(resolve, 300));
+    queryKey: ['appraisal', appraisalId, propertyId],
+    queryFn: async (): Promise<unknown> => {
+      // const { data } = await axios.get(`/appraisals/${appraisalId}/properties/${propertyId}/`);
 
-      const properties = [...getMockProperties()];
-
-      // filter property to under this group
-
-      return {
-        result: {
-          items: properties,
-        },
-      };
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return LAND_PROPERTY;
     },
-    staleTime: 30 * 1000, // Cache later
+    enabled: !!appraisalId && !!propertyId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
-};
+}
 
-const getMockProperties = () => {
-  return PROPERTIES;
-};
-
-export const useGetMarketSurvey = (groupId: string = '') => {
+export const useGetMarketSurveys = () => {
   const queryKey = ['marketSurvey'];
 
   return useQuery({
     queryKey,
     queryFn: async (): Promise<any> => {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // const { data } = await axios.get(`/market-comparable/`);
 
-      const marketSurveys = [...getMockMarketSurveys()];
-
-      // filter property to under this group
-
-      return {
-        result: {
-          items: marketSurveys,
-        },
-      };
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return MOC_SURVEY_DATA;
     },
-    staleTime: 30 * 1000, // Cache later
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
-};
-
-const getMockMarketSurveys = () => {
-  return MOC_SURVEY_DATA;
 };
