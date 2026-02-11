@@ -34,8 +34,8 @@ export const getPropertyValueByFactorCode = (id: string, property: Record<string
 };
 
 interface WQSSectionProps {
-  property: Record<string, any>;
-  surveys: Record<string, any>[];
+  property: Record<string, unknown>;
+  surveys: Record<string, unknown>[];
   onCalculationMethodDirty: (check: boolean) => void;
 }
 export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSSectionProps) => {

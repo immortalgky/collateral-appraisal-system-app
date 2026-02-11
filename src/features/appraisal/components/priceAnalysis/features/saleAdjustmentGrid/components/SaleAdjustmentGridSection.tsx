@@ -19,8 +19,8 @@ import toast from 'react-hot-toast';
 import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
 
 interface SaleAdjustmentGridSectionProps {
-  property: Record<string, any>;
-  surveys: Record<string, any>[];
+  property: Record<string, unknown>;
+  surveys: Record<string, unknown>[];
   onCalculationMethodDirty: (check: boolean) => void;
 }
 

@@ -18,7 +18,6 @@ import {
 export const useGetPricingAnalysis = (id: string | undefined) => {
   return useQuery({
     queryKey: ['price-analysis', id],
-    enabled: !!id,
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
       // REAL:
       // const { data } = await axios.get(`/price-analysis/${id}`);
@@ -30,6 +29,10 @@ export const useGetPricingAnalysis = (id: string | undefined) => {
       // return GetPricingAnalysisResponse.parse(APPROACHES_QUERY_RESPONSE);
       return APPROACHES_QUERY_RESPONSE;
     },
+    enabled: !!id,
+    refetchOnWindowFocus: false, // don't refetch when tab focuses
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
 };
 

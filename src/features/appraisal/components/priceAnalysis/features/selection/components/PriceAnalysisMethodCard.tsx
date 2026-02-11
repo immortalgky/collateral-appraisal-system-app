@@ -95,7 +95,7 @@ export const PriceAnalysisMethodCard = ({
       <div className="col-span-1 flex items-center justify-end">
         <button
           type="button"
-          onClick={() => onSelectCalculationMethod(method.id)}
+          onClick={() => onSelectCalculationMethod(method.id, method.methodType)}
           className="cursor-pointer items-center justify-end"
         >
           <Icon

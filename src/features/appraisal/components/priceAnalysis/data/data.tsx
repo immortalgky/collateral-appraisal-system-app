@@ -26,7 +26,7 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
           id: '00000000-0000-0000-0000-000000000001',
           methodType: 'SAG_MARKET',
           isCandidated: false,
-          appraisalValue: 0,
+          appraisalValue: 15000000,
         },
       ],
     },

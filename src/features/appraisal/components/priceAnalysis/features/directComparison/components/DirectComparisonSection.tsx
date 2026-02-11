@@ -21,8 +21,8 @@ import { DirectComparisonAdjustAppraisalPriceSection } from '@features/appraisal
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 
 interface DirectComparisonSectionProps {
-  property: Record<string, any>;
-  surveys: Record<string, any>[];
+  property: Record<string, unknown>;
+  surveys: Record<string, unknown>[];
   onCalculationMethodDirty: (check: boolean) => void;
 }
 

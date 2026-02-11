@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useReducer, useState, type JSX } from 'react';
+import { useEffect, useReducer, useRef, useState, type JSX } from 'react';
 import { Icon } from '@/shared/components';
 import {
   useGetMarketSurvey,
@@ -32,9 +32,9 @@ export function PriceAnalysisTab(): JSX.Element {
   /** start using reducer with initial state */
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
 
-  /**
-   * (1) fetch property and market survey
-   */
+  useEffect(() => {
+    console.log('Reload');
+  }, []);
 
   /** Query property data by group Id */
   const {
@@ -71,6 +71,8 @@ export function PriceAnalysisTab(): JSX.Element {
     isError: isGetPricingAnalysisError,
     error: getPricingAnalysisError,
   } = useGetPricingAnalysis(groupId);
+
+  /** Query method detail by method Id */
 
   /** Initial reducer state */
   useEffect(() => {
@@ -150,7 +152,9 @@ export function PriceAnalysisTab(): JSX.Element {
    * - when user click on pencil button to start calculation on the method, will set methodId on this state
    * - the state will pass to `ActiveMethodPanel` to show method
    */
-  const [methodId, setMethodId] = useState<string | undefined>('');
+  const [calculationMethod, setCalculationMethod] = useState<
+    { methodId: string; methodType: string } | undefined
+  >(undefined);
 
   // When user tries to switch method while there are unsaved changes,
   // we confirm first and only then allow the switch.
@@ -160,14 +164,14 @@ export function PriceAnalysisTab(): JSX.Element {
     );
   };
 
-  const handleOnSelectCalculationMethod = (nextMethodId: string) => {
+  const handleOnSelectCalculationMethod = (nextMethodId: string, nextMethodType: string) => {
     // need methodId and methodType
 
     // no-op if selecting the same method
-    if (nextMethodId === methodId) return;
+    if (nextMethodId === calculationMethod?.methodId) return;
 
     // TODO: If current method has unsaved changes, confirm before switching.
-    if (isDirty && methodId) {
+    if (isDirty && calculationMethod?.methodId) {
       const ok = confirmDiscardUnsavedChanges();
       if (!ok) return;
 
@@ -176,7 +180,7 @@ export function PriceAnalysisTab(): JSX.Element {
       setIsDirty(false);
     }
 
-    setMethodId(nextMethodId);
+    setCalculationMethod({ methodId: nextMethodId, methodType: nextMethodType });
   };
 
   /**
@@ -209,10 +213,10 @@ export function PriceAnalysisTab(): JSX.Element {
                 groupId={groupId}
                 onSelectCalculationMethod={handleOnSelectCalculationMethod}
               />
-              {methodId != undefined && (
+              {calculationMethod != undefined && (
                 <ActiveMethodPanel
-                  key={methodId}
-                  methodId={methodId}
+                  methodId={calculationMethod.methodId}
+                  methodType={calculationMethod.methodType}
                   property={property}
                   marketSurveys={marketSurveys}
                   onCalculationMethodDirty={handleOnCalculationMethodDirty}

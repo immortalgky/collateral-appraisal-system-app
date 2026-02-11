@@ -1,17 +1,18 @@
-import { PROPERTIES } from '../data/data';
 import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/components/SaleAdjustmentGridSection';
 import { WQSSection } from '../features/wqs/components/WQSSection';
 import { DirectComparisonSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonSection.tsx';
 
 export const ActiveMethodPanel = ({
   methodId,
+  methodType,
   property,
   marketSurveys,
   onCalculationMethodDirty,
 }: {
   methodId: string;
-  property: any;
-  marketSurveys: any;
+  methodType: string;
+  property: Record<string, unknown>;
+  marketSurveys: Record<string, unknown>[];
   onCalculationMethodDirty: (check: boolean) => void;
 }) => {
   /**
@@ -20,8 +21,7 @@ export const ActiveMethodPanel = ({
    * (2) pass config into method components
    */
 
-  const value = methodId;
-  switch (value) {
+  switch (methodType) {
     case 'WQS_MARKET':
       return (
         <WQSSection

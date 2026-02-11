@@ -19,6 +19,7 @@ import { type PriceAnalysisSelectorAction } from '../domain/useReducer';
 import { convertToAddApproachApi, convertToAddMethodApi } from '../domain/convertToApi';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 /**
  * Flow:
@@ -156,9 +157,8 @@ export const PriceAnalysisAccordion = ({
     methodType: string;
   } | null>(null);
 
+  /** handle  */
   const handleOnSelectMethod = (approachType: string, methodType: string) => {
-    console.log(approachType, methodType);
-
     /** find method type that belongs to approach type in reducer's state */
     const appraisalValueBeforeChange =
       editDraft
@@ -183,8 +183,8 @@ export const PriceAnalysisAccordion = ({
     dispatch({
       type: 'EDIT_TOGGLE_METHOD',
       payload: {
-        approachType: pendingDeselect?.approachType,
-        methodType: pendingDeselect?.methodType,
+        approachType: pendingDeselect?.approachType ?? '',
+        methodType: pendingDeselect?.methodType ?? '',
       },
     });
 
@@ -313,6 +313,12 @@ export const PriceAnalysisAccordion = ({
           </Group>
         </div>
       </div>
+      <ConfirmDialog
+        isOpen={isConfirmDeselectedMethodOpen}
+        onClose={handleOnCancelDeselectMethod}
+        onConfirm={handleOnConfirmDeselectMethod}
+        message={`Are you sure? If you confirm the appraisal value of this method will be removed.`}
+      />
     </div>
   );
 };

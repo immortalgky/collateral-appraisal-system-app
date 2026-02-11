@@ -521,6 +521,16 @@ export function ScoringTable({
               ></td>
             </tr>
 
+            {/* scoring criteria */}
+            <tr>
+              <td
+                colSpan={comparativeSurveys?.length + 6}
+                className={clsx('bg-gray-200', leftColumnBody)}
+              >
+                <div className="flex flex-row justify-center items-center">{``}</div>
+              </td>
+            </tr>
+
             {/* calculation section */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody)}>Initial Price</td>
