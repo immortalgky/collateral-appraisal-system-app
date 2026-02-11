@@ -36,3 +36,5 @@ export interface Approach {
   isCandidated: boolean; // if no method means not selected
   methods: Method[]; // selected methods from database
 }
+
+export type PriceAnalysisSelectorMode = 'editing' | 'summary';

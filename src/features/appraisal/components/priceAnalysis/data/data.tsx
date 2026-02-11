@@ -13,14 +13,14 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
     {
       id: '00000000-0000-0000-0000-000000000001',
       approachType: 'MARAPPR',
-      appraisalValue: 0,
+      appraisalValue: 10000000,
       isCandidated: false,
       methods: [
         {
           id: '00000000-0000-0000-0000-000000000000',
           methodType: 'WQS_MARKET',
           isCandidated: false,
-          appraisalValue: 0,
+          appraisalValue: 10000000,
         },
         {
           id: '00000000-0000-0000-0000-000000000001',

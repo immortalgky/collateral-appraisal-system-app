@@ -7,28 +7,18 @@ import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMeth
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import {
-  useGetPriceAnalysisConfigQuery,
-  type PriceAnalysisConfigType,
-} from '../../../domain/usePriceAnalysisQuery';
-import {
   useAddPriceAnalysisApproach,
   useAddPriceAnalysisMethod,
-  useGetPricingAnalysis,
   useSelectPriceAnalysisApproachMethod,
 } from '../api/api';
 import { usePropertyStore } from '@/features/appraisal/store';
 import type { PriceAnalysisApproachRequest } from '../type';
-import { DispatchCtx, StateCtx } from '../domain/selectionContext';
+import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
 import { PropertyCard } from '@/features/appraisal/components/PropertyCard';
-import {
-  approachMethodReducer,
-  type PriceAnalysisSelectorAction,
-  type PriceAnalysisSelectorState,
-} from '../domain/useReducer';
+import { type PriceAnalysisSelectorAction } from '../domain/useReducer';
 import { convertToAddApproachApi, convertToAddMethodApi } from '../domain/convertToApi';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { createInitialState } from '../domain/createInitialState';
 
 /**
  * Flow:
@@ -39,12 +29,8 @@ import { createInitialState } from '../domain/createInitialState';
  * (5) ids will be assign to variables
  */
 
-export type PriceAnalysisSelectorMode = 'editing' | 'summary';
-
 interface PriceAnalysisAccordionProps {
   groupId: string;
-  // priceAnalysisConfig: PriceAnalysisConfigType;
-  // priceAnalysisData: GetPricingAnalysisResponseType;
   onSelectCalculationMethod: (methodId: string) => void;
 }
 
@@ -54,31 +40,9 @@ export const PriceAnalysisAccordion = ({
 }: PriceAnalysisAccordionProps) => {
   const navigate = useNavigate();
 
-  /* Server state: fetch property data by groupId && fetch approach and method by groupId */
-  const {
-    data: getPriceAnalysisConfigData,
-    isLoading: isGetPriceAnalysisConfigLoading,
-    isError: isGetPriceAnalysisConfigError,
-    error: getPriceAnalysisConfigError,
-  } = useGetPriceAnalysisConfigQuery();
-  const {
-    data: getPricingAnalysisData,
-    isLoading: isGetPricingAnalysisLoading,
-    isError: isGetPricingAnalysisError,
-    error: getPricingAnalysisError,
-  } = useGetPricingAnalysis(groupId);
-
-  /** Initial reducer state */
-  const initialState: PriceAnalysisSelectorState = {
-    viewMode: 'summary',
-    editDraft: [],
-    editSaved: [],
-    summarySelected: [],
-  };
-
-  /** start using reducer with initial state */
-  const [state, dispatch] = useReducer(approachMethodReducer, initialState);
-  const { summarySelected } = state;
+  /** access reducer states */
+  const { summarySelected, editDraft } = useSelectionState();
+  const dispatch = useSelectionDispatch();
 
   /** left side panel, show collateral in the group */
   const { groups } = usePropertyStore();
@@ -90,24 +54,6 @@ export const PriceAnalysisAccordion = ({
     property: null,
     groupId: null,
   });
-
-  useEffect(() => {
-    if (isGetPriceAnalysisConfigLoading || isGetPricingAnalysisLoading) return;
-
-    if (getPriceAnalysisConfigData && getPricingAnalysisData) {
-      const approaches = createInitialState(getPriceAnalysisConfigData, getPricingAnalysisData);
-
-      dispatch({ type: 'INIT', payload: { approaches } });
-      dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
-    }
-  }, [
-    getPriceAnalysisConfigData,
-    getPricingAnalysisData,
-    isGetPriceAnalysisConfigLoading,
-    isGetPricingAnalysisLoading,
-    isGetPriceAnalysisConfigError,
-    isGetPricingAnalysisError,
-  ]);
 
   /** Local state:  */
 
@@ -215,7 +161,7 @@ export const PriceAnalysisAccordion = ({
 
     /** find method type that belongs to approach type in reducer's state */
     const appraisalValueBeforeChange =
-      state.editDraft
+      editDraft
         .find(appr => appr.approachType === approachType)
         ?.methods.find(m => m.methodType === methodType)?.appraisalValue ?? 0;
 
@@ -236,7 +182,10 @@ export const PriceAnalysisAccordion = ({
   const handleOnConfirmDeselectMethod = () => {
     dispatch({
       type: 'EDIT_TOGGLE_METHOD',
-      payload: { apprId: pendingDeselect?.approachId, methodId: pendingDeselect?.methodId },
+      payload: {
+        approachType: pendingDeselect?.approachType,
+        methodType: pendingDeselect?.methodType,
+      },
     });
 
     setPendingDeselect(null);
@@ -271,103 +220,99 @@ export const PriceAnalysisAccordion = ({
   }, []);
 
   return (
-    <StateCtx.Provider value={state}>
-      <DispatchCtx.Provider value={dispatch}>
-        <div className="rounded-xl border border-gray-200 bg-white px-2">
-          {/* header */}
-          <div className="grid grid-cols-12 justify-between items-center h-12">
-            <div className="col-span-8">
-              <span>{`${group?.name} (${group?.items.length} item(s))`}</span>
-            </div>
-            <div className="col-span-4 flex items-center justify-end gap-1">
-              <div className="flex flex-row gap-1 items-center justify-end">
-                <span>
-                  {summarySelected
-                    ? summarySelected.find(appr => appr.isCandidated)
-                      ? Number(
-                          summarySelected.find(appr => appr.isCandidated).appraisalValue,
-                        ).toLocaleString()
-                      : 0
-                    : 0}
-                </span>
-                <Icon name="baht-sign" style="light" className="size-4" />
-              </div>
-              <button
-                type="button"
-                onClick={onPriceAnalysisAccordionChange}
-                className="btn btn-ghost btn-sm"
-                aria-expanded={isPriceAnalysisAccordionOpen}
-              >
-                <Icon
-                  name="chevron-down"
-                  style="solid"
-                  className={clsx(
-                    'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
-                    isPriceAnalysisAccordionOpen ? 'rotate-180' : 'rotate-0',
-                  )}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* detail */}
-          <div
-            className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-            style={{ maxHeight: isPriceAnalysisAccordionOpen ? detailMaxHeight : 0 }}
-          >
-            <div
-              ref={detailInnerRef}
-              className={clsx(
-                'px-4 pb-4 text-gray-700 transition-opacity duration-200',
-                isPriceAnalysisAccordionOpen
-                  ? 'opacity-100 pointer-events-auto'
-                  : 'opacity-0 pointer-events-none',
-              )}
-            >
-              <Group className="flex-1 min-h-0 h-full gap-4">
-                <Panel className="h-full min-h-0" minSize="20%" maxSize="40%">
-                  {group && (
-                    <SortableContext
-                      items={group.items.map(item => item.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="h-full min-h-0 overflow-y-auto space-y-2">
-                        {group.items.map(property => (
-                          <PropertyCard
-                            key={property.id}
-                            property={property}
-                            groupId={group.id}
-                            onContextMenu={contextMenu}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  )}
-                </Panel>
-
-                <Separator>
-                  <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
-                    <Icon name="grip-vertical" className="text-gray-400" />
-                  </div>
-                </Separator>
-
-                <Panel className="h-full min-h-0">
-                  <div className="h-full min-h-0">
-                    <PriceAnalysisApproachMethodSelector
-                      isSystemCalculation={isSystemCalculation}
-                      onSystemCalculationChange={handleOnSystemCalculationChange}
-                      onEditModeSave={handleOnEditModeSave}
-                      onSummaryModeSave={handleOnSummaryModeSave}
-                      onSelectMethod={handleOnSelectMethod}
-                      onSelectCalculationMethod={onSelectCalculationMethod}
-                    />
-                  </div>
-                </Panel>
-              </Group>
-            </div>
-          </div>
+    <div className="rounded-xl border border-gray-200 bg-white px-2">
+      {/* header */}
+      <div className="grid grid-cols-12 justify-between items-center h-12">
+        <div className="col-span-8">
+          <span>{`${group?.name} (${group?.items.length} item(s))`}</span>
         </div>
-      </DispatchCtx.Provider>
-    </StateCtx.Provider>
+        <div className="col-span-4 flex items-center justify-end gap-1">
+          <div className="flex flex-row gap-1 items-center justify-end">
+            <span>
+              {summarySelected
+                ? summarySelected.find(appr => appr.isCandidated)
+                  ? Number(
+                      summarySelected.find(appr => appr.isCandidated).appraisalValue,
+                    ).toLocaleString()
+                  : 0
+                : 0}
+            </span>
+            <Icon name="baht-sign" style="light" className="size-4" />
+          </div>
+          <button
+            type="button"
+            onClick={onPriceAnalysisAccordionChange}
+            className="btn btn-ghost btn-sm"
+            aria-expanded={isPriceAnalysisAccordionOpen}
+          >
+            <Icon
+              name="chevron-down"
+              style="solid"
+              className={clsx(
+                'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
+                isPriceAnalysisAccordionOpen ? 'rotate-180' : 'rotate-0',
+              )}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* detail */}
+      <div
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: isPriceAnalysisAccordionOpen ? detailMaxHeight : 0 }}
+      >
+        <div
+          ref={detailInnerRef}
+          className={clsx(
+            'px-4 pb-4 text-gray-700 transition-opacity duration-200',
+            isPriceAnalysisAccordionOpen
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none',
+          )}
+        >
+          <Group className="flex-1 min-h-0 h-full gap-4">
+            <Panel className="h-full min-h-0" minSize="20%" maxSize="40%">
+              {group && (
+                <SortableContext
+                  items={group.items.map(item => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="h-full min-h-0 overflow-y-auto space-y-2">
+                    {group.items.map(property => (
+                      <PropertyCard
+                        key={property.id}
+                        property={property}
+                        groupId={group.id}
+                        onContextMenu={contextMenu}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              )}
+            </Panel>
+
+            <Separator>
+              <div className="flex items-center justify-center w-5 h-full hover:bg-gray-50 border-gray-200 flex-shrink-0 border-r">
+                <Icon name="grip-vertical" className="text-gray-400" />
+              </div>
+            </Separator>
+
+            <Panel className="h-full min-h-0">
+              <div className="h-full min-h-0">
+                <PriceAnalysisApproachMethodSelector
+                  isSystemCalculation={isSystemCalculation}
+                  onSystemCalculationChange={handleOnSystemCalculationChange}
+                  onEditModeSave={handleOnEditModeSave}
+                  onSummaryModeSave={handleOnSummaryModeSave}
+                  onSelectMethod={handleOnSelectMethod}
+                  onSelectCalculationMethod={onSelectCalculationMethod}
+                />
+              </div>
+            </Panel>
+          </Group>
+        </div>
+      </div>
+    </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState, type JSX } from 'react';
+import { useEffect, useReducer, useState, type JSX } from 'react';
 import { Icon } from '@/shared/components';
 import {
   useGetMarketSurvey,
@@ -9,11 +9,28 @@ import {
 import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
 import { ActiveMethodPanel } from '@features/appraisal/components/priceAnalysis/components/ActiveMethodPanel.tsx';
 import { useGetPriceAnalysisConfigQuery } from '../domain/usePriceAnalysisQuery';
+import { DispatchCtx, StateCtx } from '../features/selection/domain/selectionContext';
+import {
+  approachMethodReducer,
+  type PriceAnalysisSelectorState,
+} from '../features/selection/domain/useReducer';
+import { createInitialState } from '../features/selection/domain/createInitialState';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
-  const { state } = location;
-  const { groupId } = state; // groupId from property
+  const { state: navigationState } = location;
+  const { groupId } = navigationState; // groupId from property
+
+  /** Initial reducer state */
+  const initialState: PriceAnalysisSelectorState = {
+    viewMode: 'summary',
+    editDraft: [],
+    editSaved: [],
+    summarySelected: [],
+  };
+
+  /** start using reducer with initial state */
+  const [state, dispatch] = useReducer(approachMethodReducer, initialState);
 
   /**
    * (1) fetch property and market survey
@@ -39,19 +56,40 @@ export function PriceAnalysisTab(): JSX.Element {
   const marketSurveyQueryResult = marketSurveyData?.result ?? marketSurveyData;
   const marketSurveys = marketSurveyQueryResult?.items ?? [];
 
-  /* Server state: fetch property data by groupId && fetch approach and method by groupId */
+  /** fetch price analysis configuration */
   const {
     data: getPriceAnalysisConfigData,
     isLoading: isGetPriceAnalysisConfigLoading,
     isError: isGetPriceAnalysisConfigError,
     error: getPriceAnalysisConfigError,
   } = useGetPriceAnalysisConfigQuery();
+
+  /** Query price analysis data */
   const {
     data: getPricingAnalysisData,
     isLoading: isGetPricingAnalysisLoading,
     isError: isGetPricingAnalysisError,
     error: getPricingAnalysisError,
   } = useGetPricingAnalysis(groupId);
+
+  /** Initial reducer state */
+  useEffect(() => {
+    if (isGetPriceAnalysisConfigLoading || isGetPricingAnalysisLoading) return;
+
+    if (getPriceAnalysisConfigData && getPricingAnalysisData) {
+      const approaches = createInitialState(getPriceAnalysisConfigData, getPricingAnalysisData);
+
+      dispatch({ type: 'INIT', payload: { approaches } });
+      dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
+    }
+  }, [
+    getPriceAnalysisConfigData,
+    getPricingAnalysisData,
+    isGetPriceAnalysisConfigLoading,
+    isGetPricingAnalysisLoading,
+    isGetPriceAnalysisConfigError,
+    isGetPricingAnalysisError,
+  ]);
 
   const isError =
     isPropertyError ||
@@ -148,36 +186,42 @@ export function PriceAnalysisTab(): JSX.Element {
 
   const property = properties[2];
 
-  if (isError) {
+  if (isCurrentError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
         <p className="text-gray-600">Failed to load price analysis</p>
         <p className="text-sm text-gray-400">{(propertyError as Error)?.message}</p>
         <p className="text-sm text-gray-400">{(marketSurveyError as Error)?.message}</p>
+        <p className="text-sm text-gray-400">{(getPriceAnalysisConfigError as Error)?.message}</p>
+        <p className="text-sm text-gray-400">{(getPricingAnalysisError as Error)?.message}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 min-w-0 min-h-0 flex-col">
-      {!isCurrentLoading && (
-        <div>
-          <PriceAnalysisAccordion
-            groupId={groupId}
-            onSelectCalculationMethod={handleOnSelectCalculationMethod}
-          />
-          {methodId != undefined && (
-            <ActiveMethodPanel
-              key={methodId}
-              methodId={methodId}
-              property={property}
-              marketSurveys={marketSurveys}
-              onCalculationMethodDirty={handleOnCalculationMethodDirty}
-            />
+    <StateCtx.Provider value={state}>
+      <DispatchCtx.Provider value={dispatch}>
+        <div className="flex-1 min-w-0 min-h-0 flex-col">
+          {!isCurrentLoading && (
+            <div>
+              <PriceAnalysisAccordion
+                groupId={groupId}
+                onSelectCalculationMethod={handleOnSelectCalculationMethod}
+              />
+              {methodId != undefined && (
+                <ActiveMethodPanel
+                  key={methodId}
+                  methodId={methodId}
+                  property={property}
+                  marketSurveys={marketSurveys}
+                  onCalculationMethodDirty={handleOnCalculationMethodDirty}
+                />
+              )}
+            </div>
           )}
         </div>
-      )}
-    </div>
+      </DispatchCtx.Provider>
+    </StateCtx.Provider>
   );
 }
