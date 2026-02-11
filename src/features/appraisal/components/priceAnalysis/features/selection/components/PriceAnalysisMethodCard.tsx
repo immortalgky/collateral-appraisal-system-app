@@ -9,7 +9,7 @@ interface PriceAnalysisMethodCardProps {
   approachType: string;
   method: Method;
   onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod?: (methodId: string) => void;
+  onSelectCalculationMethod: (methodId: string, methodType: string) => void;
 }
 
 export const PriceAnalysisMethodCard = ({

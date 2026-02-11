@@ -32,7 +32,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface PriceAnalysisAccordionProps {
   groupId: string;
-  onSelectCalculationMethod: (methodId: string) => void;
+  onSelectCalculationMethod: (methodId: string, methodType: string) => void;
 }
 
 export const PriceAnalysisAccordion = ({

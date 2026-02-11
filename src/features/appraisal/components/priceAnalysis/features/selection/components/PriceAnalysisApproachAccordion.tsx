@@ -8,7 +8,7 @@ interface PriceAnalysisApproachAccordian {
   viewMode: 'editing' | 'summary';
   approach: Approach;
   onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod?: (methodId: string) => void;
+  onSelectCalculationMethod: (methodId: string, methodType: string) => void;
 }
 
 export const PriceAnalysisApproachAccordion = ({

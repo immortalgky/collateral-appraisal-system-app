@@ -8,7 +8,7 @@ interface PriceAnalysisApproachMethodSelectorProps {
   onEditModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
   onSummaryModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
   onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod: (methodId: string) => void;
+  onSelectCalculationMethod: (methodId: string, methodType: string) => void;
 }
 
 export const PriceAnalysisApproachMethodSelector = ({

@@ -36,6 +36,9 @@ export function PriceAnalysisTab(): JSX.Element {
     console.log('Reload');
   }, []);
 
+  /** Query group data by group Id */
+  // =>
+
   /** Query property data by group Id */
   const {
     data: propertyData,
@@ -149,14 +152,14 @@ export function PriceAnalysisTab(): JSX.Element {
   // TODO:
 
   /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
-   * - when user click on pencil button to start calculation on the method, will set methodId on this state
+   * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
    * - the state will pass to `ActiveMethodPanel` to show method
    */
   const [calculationMethod, setCalculationMethod] = useState<
     { methodId: string; methodType: string } | undefined
   >(undefined);
 
-  // When user tries to switch method while there are unsaved changes,
+  // When a user tries to switch method while there are unsaved changes,
   // we confirm first and only then allow the switch.
   const confirmDiscardUnsavedChanges = () => {
     return window.confirm(
