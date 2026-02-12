@@ -63,7 +63,9 @@ export function PriceAnalysisTab(): JSX.Element {
   } = useGetPropertyGroupById(appraisalId, groupId);
   const propertyId = propertyGroupData?.properties?.[0]?.propertyId;
 
-  /** (2) Query property data by property Id */
+  /** (2) Query property data by property Id
+   *  - we have property ID from (1) and how to fire api path to get
+   */
   const {
     data: propertyData,
     isLoading: isLoadingProperty,
@@ -71,8 +73,9 @@ export function PriceAnalysisTab(): JSX.Element {
     error: propertyError,
   } = useGetPropertyById(appraisalId, propertyId);
 
-  /** (3) Query market surveys data in application *
+  /** (3) Query market surveys data in application
    * [!] not sure that have to query survey Ids in group first, then loop queries each survey or not
+   * => Yes
    */
   const {
     data: marketSurveyData,
