@@ -10,14 +10,36 @@ export const PriceAnalysisConfigSchema = z.object({
       icon: z.string(),
       appraisalValue: z.number().nullable().optional(),
       methods: z.array(
-        z.object({
-          id: z.string(),
-          methodType: z.string(),
-          label: z.string(),
-          icon: z.string(),
-          appraisalValue: z.number().nullable().optional(),
-        }),
+        z
+          .object({
+            id: z.string(),
+            methodType: z.string(),
+            label: z.string(),
+            icon: z.string(),
+            appraisalValue: z.number().nullable().optional(),
+            configurations: z.array(
+              z
+                .object({
+                  type: z.string(),
+
+                  // sale grid & direct configs
+                  showQualitativeSection: z.boolean().nullable().optional(),
+                  showInitialPriceSection: z.boolean().nullable().optional(),
+                  showSecondRevisionSection: z.boolean().nullable().optional(),
+                  showAdjustedValueSection: z.boolean().nullable().optional(),
+                  showAdjustedWeightSection: z.boolean().nullable().optional(),
+                  showAdjustFinalValueSection: z.boolean().nullable().optional(),
+                })
+                .passthrough(),
+            ),
+          })
+          .passthrough(),
       ),
+    }),
+  ),
+  methods: z.array(
+    z.object({
+      methodType: z.string(),
     }),
   ),
 });

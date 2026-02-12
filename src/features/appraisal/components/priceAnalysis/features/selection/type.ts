@@ -37,6 +37,19 @@ export interface Approach {
   methods: Method[]; // selected methods from database
 }
 
-export type MarketSurvey
+// export type MarketSurvey;
 
 export type PriceAnalysisSelectorMode = 'editing' | 'summary';
+
+export interface MethodConfiguration {
+  methodType: string;
+  type: string;
+
+  // sale grid & direct configs
+  showQualitativeSection?: boolean;
+  showInitialPriceSection?: boolean;
+  showSecondRevisionSection?: boolean;
+  showAdjustedValueSection?: boolean;
+  showAdjustedWeightSection?: boolean;
+  showAdjustFinalValueSection?: boolean;
+}

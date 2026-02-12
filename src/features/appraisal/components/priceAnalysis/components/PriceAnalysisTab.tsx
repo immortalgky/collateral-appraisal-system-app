@@ -20,6 +20,7 @@ import {
 } from '../features/selection/domain/useReducer';
 import { createInitialState } from '../features/selection/domain/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useEnrichedPropertyGroup } from '../shared/hooks/useEnrichedPropertyGroup';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
@@ -80,6 +81,10 @@ export function PriceAnalysisTab(): JSX.Element {
     isError: isPropertyError,
     error: propertyError,
   } = useGetPropertyById(appraisalId, propertyId);
+
+  const { group, isLoading, error, isLoadingGroupDetails, isLoadingPropertyDetails } =
+    useEnrichedPropertyGroup(appraisalId, groupId);
+  console.log(group, error);
 
   /** (3) Query market surveys data in application
    * [!] not sure that have to query survey Ids in group first, then loop queries each survey or not
@@ -263,6 +268,7 @@ export function PriceAnalysisTab(): JSX.Element {
                   methodType={calculationMethod.methodType}
                   property={propertyData}
                   marketSurveys={marketSurveyData}
+                  configurations={getPriceAnalysisConfigData}
                   onCalculationMethodDirty={handleOnCalculationMethodDirty}
                 />
               )}

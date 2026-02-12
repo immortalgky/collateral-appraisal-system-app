@@ -5,9 +5,9 @@ import clsx from 'clsx';
 import { useState } from 'react';
 
 interface MarketSurveySelectionModalProps {
-  surveys: Record<string, any>[];
-  comparativeSurveys: Record<string, any>[];
-  onSelect: (survey: Record<string, any>) => void;
+  surveys: Record<string, unknown>[];
+  comparativeSurveys: Record<string, unknown>[];
+  onSelect: (survey: Record<string, unknown>[]) => void;
   onCancel: () => void;
 }
 

@@ -12,21 +12,80 @@
           "methodType": "WQS_MARKET",
           "icon": "scale-balanced",
           "label": "Weighted Quality Score (WQS)",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": [{ "type": "land" }, { "type": "landAndBuilding" }, { "type": "condo" }]
         },
         {
           "id": "SAG_MARKET",
           "methodType": "SAG_MARKET",
           "icon": "table",
           "label": "Sales Adjustment Grid",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": [
+            {
+              "type": "land",
+              "showQualitativeSection": true,
+              "showInitialPriceSection": true,
+              "showSecondRevisionSection": false,
+              "showAdjustedValueSection": true,
+              "showAdjustedWeightSection": true,
+              "showAdjustFinalValueSection": true
+            },
+            {
+              "type": "landAndBuilding",
+              "showQualitativeSection": true,
+              "showInitialPriceSection": true,
+              "showSecondRevisionSection": true,
+              "showAdjustedValueSection": true,
+              "showAdjustedWeightSection": true,
+              "showAdjustFinalValueSection": true
+            },
+            {
+              "type": "condo",
+              "showQualitativeSection": true,
+              "showInitialPriceSection": true,
+              "showSecondRevisionSection": true,
+              "showAdjustedValueSection": true,
+              "showAdjustedWeightSection": true,
+              "showAdjustFinalValueSection": true
+            }
+          ]
         },
         {
           "id": "DC_MARKET",
           "methodType": "DC_MARKET",
           "icon": "house-building",
           "label": "Direct Comparison",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": [
+            {
+              "type": "land",
+              "showQualitativeSection": true,
+              "showInitialPriceSection": true,
+              "showSecondRevisionSection": false,
+              "showAdjustedValueSection": true,
+              "showAdjustedWeightSection": true,
+              "showAdjustFinalValueSection": true
+            },
+            {
+              "type": "landAndBuilding",
+              "showQualitativeSection": true,
+              "showInitialPriceSection": true,
+              "showSecondRevisionSection": true,
+              "showAdjustedValueSection": true,
+              "showAdjustedWeightSection": true,
+              "showAdjustFinalValueSection": true
+            },
+            {
+              "type": "condo",
+              "showQualitativeSection": true,
+              "showInitialPriceSection": true,
+              "showSecondRevisionSection": true,
+              "showAdjustedValueSection": true,
+              "showAdjustedWeightSection": true,
+              "showAdjustFinalValueSection": true
+            }
+          ]
         }
       ]
     },
@@ -42,49 +101,56 @@
           "methodType": "WQS_COST",
           "icon": "scale-balanced",
           "label": "Weighted Quality Score (WQS)",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         },
         {
           "id": "SAG_COST",
           "methodType": "SAG_COST",
           "icon": "table",
           "label": "Sales Adjustment Grid",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         },
         {
           "id": "DC_COST",
           "methodType": "DC_COST",
           "icon": "house-building",
           "label": "Direct Comparison",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         },
         {
           "id": "BC",
           "methodType": "BC",
           "icon": "person-digging",
           "label": "Building Cost",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         },
         {
           "id": "PR",
           "methodType": "PR",
           "icon": "file-signature",
           "label": "Profit Rent",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         },
         {
           "id": "LH",
           "methodType": "LH",
           "icon": "file-contract",
           "label": "Leasehold",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         },
         {
           "id": "MC",
           "methodType": "MC",
           "icon": "gears",
           "label": "Machinery Cost",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         }
       ]
     },
@@ -100,7 +166,8 @@
           "methodType": "I",
           "icon": "chart-line",
           "label": "Income",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         }
       ]
     },
@@ -116,7 +183,8 @@
           "methodType": "I",
           "icon": "flask-vial",
           "label": "Hypothesis",
-          "appraisalValue": 0
+          "appraisalValue": 0,
+          "configurations": []
         }
       ]
     }

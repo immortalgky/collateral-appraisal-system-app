@@ -14,6 +14,7 @@ import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { ScoringTable } from './ScoringTable';
 import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import { WQSDto, type WQSRequestType } from '../schemas/wqsForm';
+import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
 
 export const getDesciptions = (id: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.value, factor.description]));
@@ -279,53 +280,27 @@ export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSS
             id="form-scroll-container"
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4 py-4"
           >
-            <div className="flex flex-row gap-2">
-              <div className="text-2xl">
-                <Icon name="scale-balanced"></Icon>
-              </div>
-              <span className="text-2xl">{'Weighted Quality Scores (WQS)'}</span>
-            </div>
-            <div className="grid grid-cols-12 items-end gap-4">
-              <div className="col-span-2 flex h-full items-center">
-                <span>Pricing Analysis Template</span>
-              </div>
-              <div className="col-span-3">
-                <Dropdown
-                  label="Collateral Type"
-                  options={[...collateralTypes]}
-                  value={collateralTypeId}
-                  onChange={value => {
-                    setCollateralTypeId(value);
-                  }}
-                />
-              </div>
-              <div className="col-span-3">
-                <Dropdown
-                  label="Template"
-                  options={
-                    templates
-                      .filter(template => template.collateralTypeId === collateralTypeId)
-                      .map(template => ({
-                        value: template.templateCode,
-                        label: template.templateName,
-                      })) ?? ''
-                  }
-                  value={pricingTemplateCode}
-                  onChange={value => {
-                    setPricingTemplateCode(value);
-                  }}
-                />
-              </div>
-              <div className="col-span-2">
-                <button
-                  type="button"
-                  onClick={() => handleOnGenerate()}
-                  className="px-4 py-2 border border-primary text-primary rounded-lg cursor-pointer hover:bg-primary/10"
-                >
-                  Generate
-                </button>
-              </div>
-            </div>
+            <PriceAnalysisTemplateSelector
+              icon="scale-balanced"
+              methodName="Weighted Quality Scores (WQS)"
+              onGenerate={handleOnGenerate}
+              collateralType={{
+                onSelectCollateralType: setCollateralTypeId,
+                value: collateralTypeId,
+                options: collateralTypes,
+              }}
+              template={{
+                onSelectTemplate: setPricingTemplateCode,
+                value: pricingTemplateCode,
+                options:
+                  templates
+                    .filter(template => template.collateralTypeId === collateralTypeId)
+                    .map(template => ({
+                      value: template.templateCode,
+                      label: template.templateName,
+                    })) ?? '',
+              }}
+            />
             {!onLoading && (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-4">

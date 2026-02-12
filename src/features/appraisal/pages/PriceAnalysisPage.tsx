@@ -27,8 +27,6 @@ function PriceAnalysisPage() {
   const location = useLocation();
   const state = location.state ?? null;
 
-  console.log(state.groupId);
-
   // api call to get property data which belongs to this group
 
   const [activeTab, setActiveTab] = useState<TabId>('properties');

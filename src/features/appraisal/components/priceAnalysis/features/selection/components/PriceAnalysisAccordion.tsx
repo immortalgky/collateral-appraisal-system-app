@@ -7,10 +7,8 @@ import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMeth
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useAddPriceAnalysisApproach, useAddPriceAnalysisMethod } from '../api/api';
-import { usePropertyStore } from '@/features/appraisal/store';
 import type { PriceAnalysisApproachRequest } from '../type';
 import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
-import { PropertyCard } from '@/features/appraisal/components/PropertyCard';
 import { type PriceAnalysisSelectorAction } from '../domain/useReducer';
 import { convertToAddApproachApi, convertToAddMethodApi } from '../domain/convertToApi';
 import toast from 'react-hot-toast';
@@ -46,15 +44,15 @@ export const PriceAnalysisAccordion = ({
   const dispatch = useSelectionDispatch();
 
   /** left side panel, show collateral in the group */
-  const { groups } = usePropertyStore();
-  const group = groups.find(group => group.id === groupId) ?? null;
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    visible: false,
-    x: 0,
-    y: 0,
-    property: null,
-    groupId: null,
-  });
+  // const { groups } = usePropertyStore();
+  // const group = groups.find(group => group.id === groupId) ?? null;
+  // const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+  //   visible: false,
+  //   x: 0,
+  //   y: 0,
+  //   property: null,
+  //   groupId: null,
+  // });
 
   /** Local state:  */
 
@@ -219,7 +217,7 @@ export const PriceAnalysisAccordion = ({
       {/* header */}
       <div className="grid grid-cols-12 justify-between items-center h-12">
         <div className="col-span-8">
-          <span>{`${group?.name} (${group?.items.length} item(s))`}</span>
+          {/* <span>{`${group?.name} (${group?.items.length} item(s))`}</span> */}
         </div>
         <div className="col-span-4 flex items-center justify-end gap-1">
           <div className="flex flex-row gap-1 items-center justify-end">
@@ -268,7 +266,7 @@ export const PriceAnalysisAccordion = ({
         >
           <Group className="flex-1 min-h-0 h-full gap-4">
             <Panel className="h-full min-h-0" minSize="20%" maxSize="40%">
-              {group && (
+              {/* {group && (
                 <SortableContext
                   items={group.items.map(item => item.id)}
                   strategy={verticalListSortingStrategy}
@@ -284,7 +282,7 @@ export const PriceAnalysisAccordion = ({
                     ))}
                   </div>
                 </SortableContext>
-              )}
+              )} */}
             </Panel>
 
             <Separator>

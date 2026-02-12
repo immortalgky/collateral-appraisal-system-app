@@ -17,10 +17,13 @@ import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import toast from 'react-hot-toast';
 import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
+import type { MethodConfiguration } from '../../selection/type';
+import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
 
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, unknown>;
   surveys: Record<string, unknown>[];
+  methodConfiguration: MethodConfiguration;
   onCalculationMethodDirty: (check: boolean) => void;
 }
 
@@ -39,6 +42,7 @@ interface SaleAdjustmentGridSectionProps {
 export const SaleAdjustmentGridSection = ({
   property,
   surveys,
+  configuration,
   onCalculationMethodDirty,
 }: SaleAdjustmentGridSectionProps) => {
   const [allFactors, setAllFactors] =
@@ -90,56 +94,6 @@ export const SaleAdjustmentGridSection = ({
     if (onLoading) return;
 
     if (!template) {
-      setTimeout(() => {
-        setOnLoading(true);
-        reset(
-          {
-            methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
-            collateralType: collateralTypeId,
-            pricingTemplateCode: pricingTemplateCode,
-            comparativeSurveys: [
-              ...comparativeSurveys.map((survey, columnIndex) => ({
-                marketId: survey.id,
-                displaySeq: columnIndex + 1,
-              })),
-            ],
-            comparativeFactors: [],
-
-            saleAdjustmentGridQualitatives: [],
-
-            saleAdjustmentGridCalculations: [
-              ...comparativeSurveys.map(survey => {
-                const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
-                return {
-                  marketId: survey.id,
-                  offeringPrice: surveyMap.get('17') ?? 0,
-                  offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-                  offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-                  offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-                  sellingPrice: surveyMap.get('21') ?? 0,
-                  sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-                  sellingDate: surveyMap.get('22') ?? '',
-                  sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-                  numberOfYears: 10, // TODO: convert selling date to number of year
-                };
-              }),
-            ],
-            saleAdjustmentGridAdjustmentFactors: [],
-            saleAdjustmentGridFinalValue: {
-              finalValue: 0,
-              finalValueRounded: 0,
-            },
-          },
-          { keepDirty: false, keepDirtyValues: false, keepTouched: false },
-        );
-        setOnLoading(false);
-      }, 1000);
-      return;
-    }
-
-    // initial data
-    setTimeout(() => {
-      setOnLoading(true);
       reset(
         {
           methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
@@ -151,14 +105,9 @@ export const SaleAdjustmentGridSection = ({
               displaySeq: columnIndex + 1,
             })),
           ],
-          comparativeFactors: template.comparativeFactors.map(compFact => ({
-            factorCode: compFact.factorId,
-          })),
+          comparativeFactors: [],
 
-          saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
-            factorCode: q.factorId,
-            qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
-          })),
+          saleAdjustmentGridQualitatives: [],
 
           saleAdjustmentGridCalculations: [
             ...comparativeSurveys.map(survey => {
@@ -185,8 +134,55 @@ export const SaleAdjustmentGridSection = ({
         },
         { keepDirty: false, keepDirtyValues: false, keepTouched: false },
       );
-      setOnLoading(false);
-    }, 1000);
+      return;
+    }
+
+    // initial data
+    reset(
+      {
+        methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+        collateralType: collateralTypeId,
+        pricingTemplateCode: pricingTemplateCode,
+        comparativeSurveys: [
+          ...comparativeSurveys.map((survey, columnIndex) => ({
+            marketId: survey.id,
+            displaySeq: columnIndex + 1,
+          })),
+        ],
+        comparativeFactors: template.comparativeFactors.map(compFact => ({
+          factorCode: compFact.factorId,
+        })),
+
+        saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
+          factorCode: q.factorId,
+          qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
+        })),
+
+        saleAdjustmentGridCalculations: [
+          ...comparativeSurveys.map(survey => {
+            const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+            return {
+              marketId: survey.id,
+              offeringPrice: surveyMap.get('17') ?? 0,
+              offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+              offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
+              offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+              sellingPrice: surveyMap.get('21') ?? 0,
+              sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+              sellingDate: surveyMap.get('22') ?? '',
+              sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+              numberOfYears: 10, // TODO: convert selling date to number of year
+            };
+          }),
+        ],
+        saleAdjustmentGridAdjustmentFactors: [],
+        saleAdjustmentGridFinalValue: {
+          finalValue: 0,
+          finalValueRounded: 0,
+        },
+      },
+      { keepDirty: false, keepDirtyValues: false, keepTouched: false },
+    );
   }, [collateralTypeId, onLoading, pricingTemplateCode, reset, surveys, template]);
 
   useEffect(() => {
@@ -301,55 +297,30 @@ export const SaleAdjustmentGridSection = ({
             id="form-scroll-container"
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4 py-4"
           >
-            <div className="flex flex-row gap-2">
-              <div className="text-2xl">
-                <Icon name="table"></Icon>
-              </div>
-              <span className="text-2xl">{'Sale Adjustment Grid'}</span>
-            </div>
-            <div className="grid grid-cols-12 items-end gap-4">
-              <div className="col-span-2 flex h-full items-center">
-                <span>Pricing Analysis Template</span>
-              </div>
-              <div className="col-span-3">
-                <Dropdown
-                  label="Collateral Type"
-                  options={[...collateralTypes]}
-                  value={collateralTypeId}
-                  onChange={value => {
-                    setCollateralTypeId(value);
-                  }}
-                />
-              </div>
-              <div className="col-span-3">
-                <Dropdown
-                  label="Template"
-                  options={
-                    templates
-                      .filter(template => template.collateralTypeId === collateralTypeId)
-                      .map(template => ({
-                        value: template.templateCode,
-                        label: template.templateName,
-                      })) ?? ''
-                  }
-                  value={pricingTemplateCode}
-                  onChange={value => {
-                    setPricingTemplateCode(value);
-                  }}
-                />
-              </div>
-              <div className="col-span-2">
-                <button
-                  type="button"
-                  onClick={() => handleOnGenerate()}
-                  className="px-4 py-2 border border-primary text-primary rounded-lg cursor-pointer hover:bg-primary/10"
-                >
-                  Generate
-                </button>
-              </div>
-            </div>
+            <PriceAnalysisTemplateSelector
+              icon="table"
+              methodName="Sale Adjustment Grid"
+              onGenerate={handleOnGenerate}
+              collateralType={{
+                onSelectCollateralType: setCollateralTypeId,
+                value: collateralTypeId,
+                options: collateralTypes,
+              }}
+              template={{
+                onSelectTemplate: setPricingTemplateCode,
+                value: pricingTemplateCode,
+                options:
+                  templates
+                    .filter(template => template.collateralTypeId === collateralTypeId)
+                    .map(template => ({
+                      value: template.templateCode,
+                      label: template.templateName,
+                    })) ?? '',
+              }}
+            />
             {!onLoading && (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 mt-4">
+                {/* comparative surveys section */}
                 <div className="flex flex-col gap-2">
                   <button
                     type="button"
@@ -373,6 +344,8 @@ export const SaleAdjustmentGridSection = ({
                     template={template}
                   />
                 </div>
+
+                {/* calculation section */}
                 {comparativeSurveys.length > 0 && (
                   <>
                     <SaleAdjustmentGridCalculationSection
