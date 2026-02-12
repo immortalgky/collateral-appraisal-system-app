@@ -2,7 +2,7 @@ import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MarketSurveyTable from '../components/tables/MarketSurveyTable';
-import { useGetMarketSurvey, useGetParameter } from '../api';
+import { useGetMarketSurvey } from '../api';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollateralSelectModal from '../components/CollateralSelectModal';
@@ -12,9 +12,7 @@ const ListMarketSurveyPage = () => {
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market survey data
   const { data: marketSurvey, isLoading } = useGetMarketSurvey('appraisalId');
-
-  // Fetch parameter data for collateral types
-  const { data: parameter } = useGetParameter();
+  const items = marketSurvey?.result?.items;
 
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -49,7 +47,11 @@ const ListMarketSurveyPage = () => {
   };
 
   if (isLoading) {
-    return <span className="loading loading-spinner loading-xl"></span>;
+    return (
+      <div className="w-full flex justify-center col-span-4">
+        <span className="loading loading-spinner text-primary"></span>
+      </div>
+    );
   }
 
   return (
@@ -66,11 +68,7 @@ const ListMarketSurveyPage = () => {
           <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden pt-3">
             <div className="flex-auto flex flex-col gap-6">
               <Section anchor className="flex flex-col gap-6">
-                <MarketSurveyTable
-                  headers={headers}
-                  data={marketSurvey}
-                  onSelect={handleEditSelect}
-                />
+                <MarketSurveyTable headers={headers} data={items} onSelect={handleEditSelect} />
               </Section>
             </div>
             <div className="border-t border-gray-100 sticky bottom-0 pt-3">
@@ -89,7 +87,7 @@ const ListMarketSurveyPage = () => {
             </div>
             {isOpenModal && (
               <CollateralSelectModal
-                items={getParameterValues(parameter, 'propertyType')}
+                items={parameters.values}
                 position={modalPosition || { x: 0, y: 0 }}
                 onSelect={handleCreateSelect}
                 onCancel={() => setIsOpenModal(false)}
@@ -100,6 +98,20 @@ const ListMarketSurveyPage = () => {
       </div>
     </div>
   );
+};
+
+const parameters = {
+  parameterGroup: 'propertyType',
+  values: [
+    { code: 'Land', description: 'Land' },
+    { code: 'Building', description: 'Building' },
+    { code: 'LandAndBuilding', description: 'Land and Building' },
+    { code: 'Condo', description: 'Condominium' },
+    { code: 'Machine', description: 'Machinery' },
+    { code: 'LS', description: 'Lease Agreement Lands' },
+    { code: 'BS', description: 'Lease Agreement Building' },
+    { code: 'LBS', description: 'Lease Agreement Land and Building' },
+  ],
 };
 
 const headers = [

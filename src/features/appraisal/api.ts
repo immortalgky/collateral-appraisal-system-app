@@ -176,52 +176,12 @@ export const useGetMarketSurvey = (appraisalId?: string) => {
     queryKey: ['market-survey', appraisalId],
     enabled: !!appraisalId,
     queryFn: async (): Promise<GetMarketComparablesResponseType> => {
-      // const { data } = await axios.get(
-      //   `/market-comparables/${appraisalId}`,
-      // );
-      return market;
+      // const { data } = await axios.get(`/market-comparables/${appraisalId}`);
+      const { data } = await axios.get(`/market-comparables`);
+      return data;
     },
   });
 };
-const market = [
-  {
-    id: '512546f4-99af-47c6-9b6e-01db9bcf59b2',
-    comparableNumber: 'MC-2026-004',
-    surveyName: 'Townhouse',
-    propertyType: 'Land',
-    infoDateTime: '2026-02-03T17:00:00',
-    sourceInfo: 'Some Website',
-    createdOn: '2026-02-03T11:38:06.1612285',
-  },
-  {
-    id: '026d8f18-47ec-46ce-88fc-778097563091',
-    comparableNumber: 'MC-2026-003',
-    surveyName: 'Land Survey Co., Ltd.',
-    propertyType: 'Land',
-    infoDateTime: '2026-02-03T17:00:00',
-    sourceInfo: 'Some Website',
-    createdOn: '2026-02-03T11:38:06.1612285',
-  },
-  {
-    id: 'a52ad9bf-48c9-4451-ac5c-0c1f4e1de57e',
-    comparableNumber: 'MC-2026-002',
-    surveyName: 'Urban Property Surveys',
-    propertyType: 'Building',
-    infoDateTime: '2026-02-03T17:00:00',
-    sourceInfo: 'Some Website',
-    createdOn: '2026-02-03T11:38:06.1612285',
-  },
-  {
-    id: '7ab67bda-ddf0-4576-ac36-284979c33bcf',
-    comparableNumber: 'MC-2026-001',
-    surveyName: 'Land Survey Co., Ltd.',
-    propertyType: 'Land',
-    infoDateTime: '2026-02-03T17:00:00',
-    sourceInfo: 'Some Website',
-    notes: 'Verified through land office records',
-    createdOn: '2026-02-03T11:38:06.1612285',
-  },
-];
 
 export const useGetMarketSurveyById = (marketId?: string) => {
   return useQuery({
@@ -233,44 +193,6 @@ export const useGetMarketSurveyById = (marketId?: string) => {
     },
   });
 };
-
-export const useGetParameter = (parameterGroup?: string) => {
-  return useQuery({
-    queryKey: ['parameter', parameterGroup],
-    queryFn: async () => {
-      return parameters;
-    },
-  });
-};
-
-const parameters = [
-  {
-    parameterGroup: 'propertyType',
-    values: [
-      { code: 'Land', description: 'Land' },
-      { code: 'Building', description: 'Building' },
-      { code: 'LandAndBuilding', description: 'Land and Building' },
-      { code: 'Condo', description: 'Condominium' },
-      { code: 'Machine', description: 'Machinery' },
-      { code: 'LS', description: 'Lease Agreement Lands' },
-      { code: 'BS', description: 'Lease Agreement Building' },
-      { code: 'LBS', description: 'Lease Agreement Land and Building' },
-    ],
-  },
-  {
-    parameterGroup: 'conditionType',
-    values: [
-      { code: 'L', description: 'Lands' },
-      { code: 'B', description: 'Building' },
-      { code: 'LB', description: 'Land and Building' },
-      { code: 'U', description: 'Condominium' },
-      { code: 'MC', description: 'Machinery' },
-      { code: 'LS', description: 'Lease Agreement Lands' },
-      { code: 'BS', description: 'Lease Agreement Building' },
-      { code: 'LBS', description: 'Lease Agreement Land and Building' },
-    ],
-  },
-];
 
 export const useDeleteMarketSurvey = () => {
   const queryClient = useQueryClient();

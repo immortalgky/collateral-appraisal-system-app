@@ -73,7 +73,14 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
           <tbody>
             {isEmpty ? (
               <tr>
-                <td colSpan={headers.length + 1} className="text-center py-6"></td>
+                <td colSpan={headers.length + 1} className="text-center py-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Icon style="regular" name="inbox" className="size-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-500">No market comparables yet</p>
+                  </div>
+                </td>
               </tr>
             ) : (
               data.map(item => (
@@ -112,6 +119,7 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
           </tbody>
         </table>
       </div>
+
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}

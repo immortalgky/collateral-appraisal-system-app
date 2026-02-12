@@ -103,7 +103,7 @@ const CreateMarketSurveyPage = () => {
       createMarketSurvey(
         {
           ...payload,
-          comparableNumber: 'MC-2026-005',
+          comparableNumber: 'MC-2026-006',
         } as any,
         {
           onSuccess: response => {

@@ -632,12 +632,23 @@ const UpdateMarketComparableRequest = z
   .passthrough();
 const GetMarketComparablesResponse = z
   .object({
-    factorData: z.array(FactorDataDto),
-    note: z.string().nullable().optional(),
-    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
-    sourceInfo: z.string().nullable().optional(),
-    surveyName: z.string(),
-    templateId: z.string().uuid().nullable().optional(),
+    result: z.object({
+      items: z.array(
+        z.object({
+          id: z.string().uuid(),
+          comparableNumber: z.string().nullable(),
+          surveyName: z.string(),
+          propertyType: z.string().nullable(),
+          infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+          notes: z.string().nullable().optional(),
+          sourceInfo: z.string().nullable().optional(),
+          createdOn: z.string().datetime({ local: true }).nullable().optional(),
+        }),
+      ),
+      count: z.coerce.number(),
+      pageNumber: z.coerce.number(),
+      PageSize: z.coerce.number(),
+    }),
   })
   .passthrough();
 
