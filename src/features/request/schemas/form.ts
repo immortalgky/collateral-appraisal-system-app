@@ -16,7 +16,6 @@ const RequestDetailDto = z.object({
     totalSellingPrice: z.number().nullable(),
   }),
   prevAppraisalId: z.string().nullable(),
-  prevAppraisalReportNo: z.string().nullable(),
   prevAppraisalValue: z.number().nullable(),
   prevAppraisalDate: z.string().nullable(),
   address: z.object({
@@ -39,7 +38,7 @@ const RequestDetailDto = z.object({
     dealerCode: z.string().nullable(),
   }),
   appointment: z.object({
-    appointmentDate: z.string().datetime({ local: true }),
+    appointmentDateTime: z.string().datetime({ local: true }),
     appointmentLocation: z.string().min(1, 'Appointment location is required.'),
   }),
   fee: z.object({
@@ -105,12 +104,16 @@ const BaseTitleFields = {
 
 // Optional fields for land-based types
 const LandFields = {
-  titleNo: z.string().nullable().optional(),
-  deedType: z.string().nullable().optional(),
+  titleNumber: z.string().nullable().optional(),
+  titleType: z.string().nullable().optional(),
   titleDetail: z.string().nullable().optional(),
+  bookNumber: z.string().nullable().optional(),
+  pageNumber: z.string().nullable().optional(),
   rawang: z.string().nullable().optional(),
-  landNo: z.string().nullable().optional(),
-  surveyNo: z.string().nullable().optional(),
+  landParcelNumber: z.string().nullable().optional(),
+  surveyNumber: z.string().nullable().optional(),
+  aerialMapName: z.string().nullable().optional(),
+  aerialMapNumber: z.string().nullable().optional(),
   areaRai: z.number().int().nullable().optional(),
   areaNgan: z.number().int().nullable().optional(),
   areaSquareWa: z.number().nullable().optional(),
@@ -126,9 +129,9 @@ const BuildingFields = {
 // Optional fields for a condominium type
 const CondoFields = {
   condoName: z.string().nullable().optional(),
-  buildingNo: z.string().nullable().optional(),
-  roomNo: z.string().nullable().optional(),
-  floorNo: z.string().nullable().optional(),
+  buildingNumber: z.string().nullable().optional(),
+  roomNumber: z.string().nullable().optional(),
+  floorNumber: z.string().nullable().optional(),
 };
 
 // Optional fields for a vehicle type
@@ -184,7 +187,7 @@ const LandTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('L'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().min(1, 'Title number is required'),
 });
 
 // Building title schema
@@ -197,7 +200,7 @@ const BuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('B'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().min(1, 'Title number is required'),
   buildingType: z.string().min(1, 'Building type is required'),
 });
 
@@ -211,7 +214,7 @@ const LandAndBuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LB'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().min(1, 'Title number is required'),
   buildingType: z.string().min(1, 'Building type is required'),
 });
 
@@ -226,7 +229,7 @@ const CondominiumTitleDto = z.object({
   ...VesselFields,
   collateralType: z.literal('U'),
   condoName: z.string().min(1, 'Condo name is required'),
-  roomNo: z.string().min(1, 'Room number is required'),
+  roomNumber: z.string().min(1, 'Room number is required'),
 });
 
 // Vehicle title schema
@@ -254,7 +257,7 @@ const MachineTitleDto = z.object({
   ...VesselFields,
   collateralType: z.literal('MAC'),
   machineType: z.string().min(1, 'Machine type is required'),
-  registrationNo: z.string().min(1, 'Registration number is required'),
+  registrationNumber: z.string().min(1, 'Registration number is required'),
 });
 
 // Lease Agreement Land title schema
@@ -267,7 +270,7 @@ const LeaseAgreementLandTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LSL'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().min(1, 'Title number is required'),
 });
 
 // Lease Agreement Building title schema
@@ -280,7 +283,7 @@ const LeaseAgreementBuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LSB'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().min(1, 'Title number is required'),
   buildingType: z.string().min(1, 'Building type is required'),
 });
 
@@ -294,7 +297,7 @@ const LeaseAgreementLandAndBuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LS'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().min(1, 'Title number is required'),
   buildingType: z.string().min(1, 'Building type is required'),
 });
 
@@ -341,20 +344,38 @@ const RequestCommentDto = z.object({
   isLocal: z.boolean().optional(), // true = not yet saved to API
 });
 
-export const createRequestForm = z.object({
-  purpose: z.string().min(1, 'Appraisal purpose is required.'),
-  channel: z.string().min(1, 'Channel is required.'),
-  priority: z.string(),
-  isPma: z.boolean(),
-  creator: UserDto,
-  requestor: UserDto,
-  detail: RequestDetailDto,
-  customers: z.array(RequestCustomerDto).min(1, 'At least one customer is required.'),
-  properties: z.array(RequestPropertyDto).min(1, 'At least one property is required.'),
-  titles: z.array(RequestTitleDto),
-  documents: z.array(RequestDocumentDto),
-  comments: z.array(RequestCommentDto),
-});
+export const createRequestForm = z
+  .object({
+    purpose: z.string().min(1, 'Appraisal purpose is required.'),
+    channel: z.string().min(1, 'Channel is required.'),
+    priority: z.string(),
+    isPma: z.boolean(),
+    creator: UserDto,
+    requestor: UserDto,
+    detail: RequestDetailDto,
+    customers: z.array(RequestCustomerDto).min(1, 'At least one customer is required.'),
+    properties: z.array(RequestPropertyDto).min(1, 'At least one property is required.'),
+    titles: z.array(RequestTitleDto),
+    documents: z.array(RequestDocumentDto),
+    comments: z.array(RequestCommentDto),
+  })
+  .superRefine((data, ctx) => {
+    // Loan Application Number is required when the purpose is '01' (New Loan)
+    console.log('[superRefine] Running validation, purpose:', data.purpose);
+    if (data.purpose === '01') {
+      const loanAppNumber = data.detail?.loanDetail?.loanApplicationNumber;
+      const isEmpty = loanAppNumber == null || loanAppNumber.trim() === '';
+      console.log('[superRefine] loanAppNumber:', loanAppNumber, 'isEmpty:', isEmpty);
+      if (isEmpty) {
+        console.log('[superRefine] Adding error for loanApplicationNumber');
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Loan Application No is required',
+          path: ['detail', 'loanDetail', 'loanApplicationNumber'],
+        });
+      }
+    }
+  });
 
 export type UserDtoType = z.infer<typeof UserDto>;
 export type RequestCommentDtoType = z.infer<typeof RequestCommentDto>;
@@ -389,12 +410,11 @@ export const createRequestFormDefault: createRequestFormType = {
       bankingSegment: '',
       loanApplicationNumber: '',
       facilityLimit: 0,
-      additionalFacilityLimit: '',
-      previousFacilityLimit: '',
+      additionalFacilityLimit: null,
+      previousFacilityLimit: null,
       totalSellingPrice: 0,
     },
     prevAppraisalId: null,
-    prevAppraisalReportNo: null,
     prevAppraisalValue: null,
     prevAppraisalDate: null,
     address: {
@@ -417,7 +437,7 @@ export const createRequestFormDefault: createRequestFormType = {
       dealerCode: '',
     },
     appointment: {
-      appointmentDate: '',
+      appointmentDateTime: '',
       appointmentLocation: '',
     },
     fee: {
@@ -435,15 +455,19 @@ export const createRequestFormDefault: createRequestFormType = {
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
   collateralStatus: false,
-  titleNo: '',
-  deedType: '',
+  titleNumber: '',
+  titleType: '',
   titleDetail: '',
-  rawang: 'd',
-  landNo: '',
-  surveyNo: '',
-  areaRai: 0,
-  areaNgan: 0,
-  areaSquareWa: 0,
+  bookNumber: '',
+  pageNumber: '',
+  rawang: '',
+  landParcelNumber: '',
+  surveyNumber: '',
+  aerialMapName: '',
+  aerialMapNumber: '',
+  areaRai: null,
+  areaNgan: null,
+  areaSquareWa: null,
   ownerName: '',
   vehicleType: '',
   vehicleAppointmentLocation: '',
@@ -463,9 +487,9 @@ export const requestTitleDefault: RequestTitleDtoType = {
   usableArea: 0,
   numberOfBuilding: 0,
   condoName: '',
-  buildingNo: '',
-  roomNo: '',
-  floorNo: '',
+  buildingNumber: '',
+  roomNumber: '',
+  floorNumber: '',
   titleAddress: {
     houseNumber: '',
     projectName: '',

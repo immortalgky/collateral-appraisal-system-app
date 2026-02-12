@@ -20,8 +20,10 @@ import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
 import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
-import CollateralPhotoPage from '@/features/appraisal/pages/CollateralPhotoPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
+import { ProtectedRoute } from '@features/auth/components';
+import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
+import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
 import PriceAnalysisPage from '@/features/appraisal/pages/PriceAnalysisPage';
 
 /**
@@ -58,7 +60,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: <ProtectedRoute component={<HomePage />} />,
       },
       {
         path: 'login',
@@ -118,13 +120,21 @@ export const router = createBrowserRouter([
         element: <CreateLandBuildingPage />,
       },
       {
+        path: 'land-building-pma',
+        element: <LandBuildingPMAPage />,
+      },
+      {
+        path: 'condo-pma',
+        element: <CondoPMAPage />,
+      },
+      {
         path: 'dev/property-information',
         element: <PropertyInformationPage />,
       },
-      {
-        path: 'dev/land-detail',
-        element: <LandDetailPage />,
-      },
+      // {
+      //   path: 'dev/land-detail',
+      //   element: <LandDetailPage />,
+      // },
       {
         path: 'dev/price-analysis',
         element: <PriceAnalysisPage />,
@@ -174,20 +184,12 @@ export const router = createBrowserRouter([
             element: <CreateLandPage />,
           },
           {
-            path: 'land/:propertyId/photos',
-            element: <CollateralPhotoPage />,
-          },
-          {
             path: 'building/new',
             element: <CreateBuildingPage />,
           },
           {
             path: 'building/:propertyId',
             element: <CreateBuildingPage />,
-          },
-          {
-            path: 'building/:propertyId/photos',
-            element: <CollateralPhotoPage />,
           },
           {
             path: 'condo/new',
@@ -198,8 +200,8 @@ export const router = createBrowserRouter([
             element: <CreateCondoPage />,
           },
           {
-            path: 'condo/:propertyId/photos',
-            element: <CollateralPhotoPage />,
+            path: 'condo/:propertyId/pma',
+            element: <CondoPMAPage />,
           },
           {
             path: 'land-building/new',
@@ -210,8 +212,8 @@ export const router = createBrowserRouter([
             element: <CreateLandBuildingPage />,
           },
           {
-            path: 'land-building/:propertyId/photos',
-            element: <CollateralPhotoPage />,
+            path: 'land-building/:propertyId/pma',
+            element: <LandBuildingPMAPage />,
           },
         ],
       },

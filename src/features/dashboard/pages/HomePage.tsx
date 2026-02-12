@@ -16,9 +16,8 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useCurrentUser } from '@features/auth/api';
+import { useAuthStore } from '@features/auth/store';
 import Icon from '@shared/components/Icon';
-import { LoadingSpinner } from '@shared/components';
 import { useDashboardStore } from '../store';
 import { canPlaceInSidebar, type WidgetType } from '../types';
 import {
@@ -73,7 +72,7 @@ function DroppableArea({
 }
 
 function HomePage() {
-  const { data: user, isLoading } = useCurrentUser();
+  const user = useAuthStore(state => state.user);
   const { widgets, isEditMode, setEditMode, reorderWidgets, moveWidget } = useDashboardStore();
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -88,14 +87,6 @@ function HomePage() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" variant="default" text="Loading dashboard..." />
-      </div>
-    );
-  }
 
   // Separate widgets by their current position
   const mainWidgets = widgets

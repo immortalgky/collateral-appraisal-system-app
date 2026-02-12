@@ -213,7 +213,7 @@ export const Machine = z
 // Base fields shared by all title types
 const BaseTitleFields = {
   titleDocuments: z.array(TitleDocument).nullable().optional(),
-  collateralStatus: z.string().nullable().optional(),
+  collateralStatus: z.boolean().nullable().optional(),
   owner: z.string().nullable().optional(),
   noOfBuilding: z.coerce.number().int().nullable().optional(),
   titleDetail: z.string().nullable().optional(),
@@ -225,8 +225,8 @@ const BaseTitleFields = {
 // Land title schema
 const LandTitleDto = z.object({
   ...BaseTitleFields,
-  collateralType: z.literal('land'),
-  titleNo: z.string().min(1, 'Title number is required'),
+  collateralType: z.literal('L'),
+  titleNumber: z.string().min(1, 'Title number is required'),
   condo: Condo.nullable().optional(),
   building: Building.nullable().optional(),
   vehicle: Vehicle.nullable().optional(),

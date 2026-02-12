@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -11,44 +11,152 @@ import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useCreateLandBuildingRequest } from '../api';
+import {
+  useCreateLandBuildingRequest,
+  useGetLandAndBuildingPropertyById,
+  useUpdateLandAndBuildingProperty,
+} from '../api';
 import LandDetailForm from '../forms/LandDetailForm';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import {
-  CreateLandBuildingRequest,
-  type CreateLandBuildingRequestType,
-} from '@/shared/forms/typeLandBuilding';
+  createLandAndBuildingForm,
+  createLandAndBuildingFormDefault,
+  type createLandAndBuildingFormType,
+} from '../schemas/form';
+import toast from 'react-hot-toast';
+import { mapLandAndBuildingPropertyResponseToForm } from '../utils/mappers';
 
 // TODO: Add proper defaults when schema is finalized
-const createLandBuildingRequestDefault = {} as any;
 
 const CreateLandBuildingPage = () => {
+  const navigate = useNavigate();
+
   const { propertyId } = useParams<{ propertyId?: string }>();
+  const isEditMode = Boolean(propertyId);
+
+  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+
   const location = useLocation();
 
-  const methods = useForm<CreateLandBuildingRequestType>({
-    defaultValues: createLandBuildingRequestDefault,
-    resolver: zodResolver(CreateLandBuildingRequest),
+  const methods = useForm<createLandAndBuildingFormType>({
+    defaultValues: createLandAndBuildingFormDefault,
+    resolver: zodResolver(createLandAndBuildingForm),
   });
-  const { handleSubmit, getValues } = methods;
+  const { handleSubmit, getValues, reset } = methods;
 
-  const { mutate } = useCreateLandBuildingRequest();
+  const { data: propertyData, isLoading } = useGetLandAndBuildingPropertyById(
+    appraisalId,
+    propertyId,
+  );
 
-  const onSubmit: SubmitHandler<CreateLandBuildingRequestType> = data => {
-    mutate({
-      ...data,
-      collateralId: propertyId,
-    } as any);
+  useEffect(() => {
+    if (isEditMode && propertyData) {
+      const formValues = mapLandAndBuildingPropertyResponseToForm(propertyData);
+      reset(formValues);
+    }
+  }, [isEditMode, propertyData, reset]);
+
+  // const { mutate } = useCreateLandAndBuildingProperty();
+  const { mutate: createLandAndBuildingProperties, isPending: isCreating } =
+    useCreateLandBuildingRequest();
+  const { mutate: updateLandAndBuildingProperties, isPending: isUpdating } =
+    useUpdateLandAndBuildingProperty();
+
+  const isPending = isCreating || isUpdating;
+
+  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+
+  const onSubmit: SubmitHandler<createLandAndBuildingFormType> = data => {
+    setSaveAction('submit');
+
+    if (isEditMode && propertyId) {
+      updateLandAndBuildingProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Property land and building updated successfully');
+            setSaveAction(null);
+            navigate(`/appraisal/${appraisalId}/property`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    } else {
+      createLandAndBuildingProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Property land and building updated successfully');
+            setSaveAction(null);
+            navigate(`/appraisal/${appraisalId}/property/land-building/${response.id}`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    }
   };
 
   const { isOpen, onToggle } = useDisclosure();
 
   const handleSaveDraft = () => {
+    setSaveAction('draft');
+
     const data = getValues();
-    mutate({
-      ...data,
-      collateralId: propertyId,
-    } as any);
+
+    if (isEditMode && propertyId) {
+      updateLandAndBuildingProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: () => {
+            toast.success('Draft saved successfully');
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    } else {
+      createLandAndBuildingProperties(
+        {
+          ...data,
+          apprId: appraisalId,
+          propertyId: propertyId,
+        } as any,
+        {
+          onSuccess: response => {
+            toast.success('Draft saved successfully');
+            setSaveAction(null);
+            if (response.id) {
+              navigate(`/appraisal/${appraisalId}/property/land-building/${response.id}`);
+            }
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
+      );
+    }
   };
 
   // Tab selection state (Land or Building)
@@ -57,6 +165,14 @@ const CreateLandBuildingPage = () => {
   // Only show Photos tab if we have a propertyId (not for new)
   const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* NavAnchors with Land/Building tabs */}
@@ -64,11 +180,18 @@ const CreateLandBuildingPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Land', id: 'land-section', icon: 'mountain-sun', onClick: () => setActiveTab('land') },
-            { label: 'Building', id: 'building-section', icon: 'building', onClick: () => setActiveTab('building') },
-            ...(propertyId
-              ? [{ label: 'Photos', id: 'photos', icon: 'images', href: photosHref }]
-              : []),
+            {
+              label: 'Land',
+              id: 'land-section',
+              icon: 'mountain-sun',
+              onClick: () => setActiveTab('land'),
+            },
+            {
+              label: 'Building',
+              id: 'building-section',
+              icon: 'building',
+              onClick: () => setActiveTab('building'),
+            },
           ]}
         />
       </div>
@@ -93,20 +216,32 @@ const CreateLandBuildingPage = () => {
                     id="land-section"
                     className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
                   >
-                      {/* Land Section Header */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <Icon name="mountain-sun" style="solid" className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                    {/* Land Section Header */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                        <Icon
+                          name="mountain-sun"
+                          style="solid"
+                          className="w-5 h-5 text-amber-600"
+                        />
                       </div>
-                      <div className="h-px bg-gray-200" />
-                      <Section id="land-title" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
-                        <TitleDeedForm />
-                      </Section>
-                      <Section id="land-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
-                        <LandDetailForm />
-                      </Section>
+                      <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                    </div>
+                    <div className="h-px bg-gray-200" />
+                    <Section
+                      id="land-title"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <TitleDeedForm />
+                    </Section>
+                    <Section
+                      id="land-info"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <LandDetailForm />
+                    </Section>
                   </div>
 
                   {/* Building Tab Content */}
@@ -114,17 +249,17 @@ const CreateLandBuildingPage = () => {
                     id="building-section"
                     className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
                   >
-                      {/* Building Section Header */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
+                    {/* Building Section Header */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
                       </div>
-                      <div className="h-px bg-gray-200" />
-                      <Section id="building-info" anchor className="flex flex-col gap-6">
-                        <BuildingDetailForm prefix="building" />
-                      </Section>
+                      <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
+                    </div>
+                    <div className="h-px bg-gray-200" />
+                    <Section id="building-info" anchor className="flex flex-col gap-6">
+                      <BuildingDetailForm />
+                    </Section>
                   </div>
                 </div>
               </ResizableSidebar.Main>
@@ -139,11 +274,21 @@ const CreateLandBuildingPage = () => {
                 <div className="h-6 w-px bg-gray-200" />
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" type="button" onClick={handleSaveDraft}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                   Save draft
                 </Button>
-                <Button type="submit">
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
                   Save
                 </Button>

@@ -21,24 +21,21 @@ export interface PropertyItem {
   area: string;
   priceRange: string;
   location: string;
+  sequenceNumber?: number;
+  detailId?: string;
 }
 
 export interface PropertyGroup {
   id: string;
   name: string;
   items: PropertyItem[];
+  description?: string | null;
+  groupNumber?: number;
+  useSystemCalc?: boolean;
 }
 
-export interface PropertyStore {
-  groups: PropertyGroup[];
+export interface PropertyClipboardStore {
   clipboard: PropertyItem | null;
-  addGroup: () => void;
-  deleteGroup: (groupId: string) => void;
-  addPropertyToGroup: (groupId: string, property: Omit<PropertyItem, 'id'>) => void;
-  updateProperty: (groupId: string, propertyId: string, updates: Partial<PropertyItem>) => void;
-  deleteProperty: (groupId: string, propertyId: string) => void;
-  movePropertyToGroup: (fromGroupId: string, toGroupId: string, propertyId: string) => void;
-  reorderPropertiesInGroup: (groupId: string, oldIndex: number, newIndex: number) => void;
   copyProperty: (property: PropertyItem) => void;
-  pasteProperty: (groupId: string) => void;
+  clearClipboard: () => void;
 }

@@ -26,6 +26,7 @@ dist-ssr
 *.pem
 .env.local
 .env
+.env*
 *.env
 
 # TypeScript build info

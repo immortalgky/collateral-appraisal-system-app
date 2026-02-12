@@ -54,6 +54,7 @@ const AdministrationPage = () => {
   const assignmentMethod = watch('assignmentMethod');
   const selectedStaff = watch('selectedStaff');
   const selectedCompany = watch('selectedCompany');
+  const selectedFollowupStaff = watch('selectedFollowupStaff');
 
   // Modal states
   const {
@@ -80,6 +81,12 @@ const AdministrationPage = () => {
     onClose: closeCreateQuotationModal,
   } = useDisclosure();
 
+  const {
+    isOpen: isFollowupStaffModalOpen,
+    onOpen: openFollowupStaffModal,
+    onClose: closeFollowupStaffModal,
+  } = useDisclosure();
+
   // Handle staff selection
   const handleStaffSelect = (staff: InternalStaff) => {
     setValue('selectedStaff', staff, { shouldDirty: true });
@@ -92,6 +99,12 @@ const AdministrationPage = () => {
     setValue('companyId', company.id, { shouldDirty: true });
   };
 
+  // Handle followup staff selection
+  const handleFollowupStaffSelect = (staff: InternalStaff) => {
+    setValue('selectedFollowupStaff', staff, { shouldDirty: true });
+    setValue('followupStaffId', staff.id, { shouldDirty: true });
+  };
+
   // Clear selections when type changes
   useEffect(() => {
     setValue('selectedStaff', null);
@@ -99,6 +112,11 @@ const AdministrationPage = () => {
     setValue('selectedCompany', null);
     setValue('companyId', null);
     setValue('assignmentMethod', 'manual');
+    // Clear followup staff when switching to internal
+    if (assignmentType === 'internal') {
+      setValue('selectedFollowupStaff', null);
+      setValue('followupStaffId', null);
+    }
   }, [assignmentType, setValue]);
 
   // Handle form submission
@@ -111,6 +129,8 @@ const AdministrationPage = () => {
       assignmentMethod: data.assignmentMethod,
       assigneeId:
         data.assignmentType === 'internal' ? data.staffId : data.companyId,
+      followupStaffId:
+        data.assignmentType === 'external' ? data.followupStaffId ?? undefined : undefined,
       requireQuotation: data.assignmentMethod === 'quotation',
       remarks: data.remarks || undefined,
     });
@@ -466,6 +486,42 @@ const AdministrationPage = () => {
                 </div>
               )}
 
+              {/* Internal Followup Staff - Only for external assignments */}
+              {assignmentType === 'external' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Internal Followup Staff <span className="text-danger">*</span>
+                  </label>
+                  {selectedFollowupStaff ? (
+                    <StaffDisplay
+                      staff={selectedFollowupStaff}
+                      onClear={() => {
+                        setValue('selectedFollowupStaff', null, { shouldDirty: true });
+                        setValue('followupStaffId', null, { shouldDirty: true });
+                      }}
+                      variant="purple"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={openFollowupStaffModal}
+                      className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
+                    >
+                      <span className="text-sm text-gray-500">
+                        Click to search and select internal followup staff...
+                      </span>
+                      <Icon
+                        name="magnifying-glass"
+                        style="regular"
+                        className="w-4 h-4 text-purple-400"
+                      />
+                    </button>
+                  )}
+                  {errors.followupStaffId && (
+                    <p className="mt-2 text-sm text-danger">{errors.followupStaffId.message}</p>
+                  )}
+                </div>
+              )}
             </FormCard>
 
             {/* Current Assignment Info (if already assigned) */}
@@ -565,6 +621,11 @@ const AdministrationPage = () => {
         isOpen={isStaffModalOpen}
         onClose={closeStaffModal}
         onSelect={handleStaffSelect}
+      />
+      <SearchStaffModal
+        isOpen={isFollowupStaffModalOpen}
+        onClose={closeFollowupStaffModal}
+        onSelect={handleFollowupStaffSelect}
       />
       <SearchCompanyModal
         isOpen={isCompanyModalOpen}

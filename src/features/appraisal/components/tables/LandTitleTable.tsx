@@ -168,82 +168,82 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
       <div className="relative h-60">
         <div className="absolute inset-0 overflow-auto border border-gray-200 rounded-lg">
           <table className="table min-w-max">
-          <thead>
-            <tr className="bg-primary-700">
-              {headers.map((header, index) => (
+            <thead>
+              <tr className="bg-primary-700">
+                {headers.map((header, index) => (
+                  <th
+                    key={index}
+                    className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg"
+                  >
+                    {header.label}
+                  </th>
+                ))}
                 <th
-                  key={index}
-                  className="text-white text-sm font-medium py-3 px-4 text-left first:rounded-tl-lg"
-                >
-                  {header.label}
-                </th>
-              ))}
-              <th
-                className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0
+                  className="text-white text-sm font-medium py-3 px-4 text-right sticky right-0
     bg-primary-700 w-24"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isEmpty ? (
-              <div></div>
-            ) : (
-              values.map((field: Record<string, any>, index: number) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                  {headers.map((header, inner_index) => {
-                    if ('name' in header) {
-                      return (
-                        <td key={inner_index} className="py-3 px-4">
-                          <TableCell
-                            name={name}
-                            index={index}
-                            value={field[header.name]}
-                            header={header}
-                            control={control}
-                            editIndex={undefined}
-                          />
-                        </td>
-                      );
-                    } else {
-                      return (
-                        <td key={inner_index} className="py-3 px-4">
-                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-                            {index + 1}
-                          </span>
-                        </td>
-                      );
-                    }
-                  })}
-                  <td className="py-3 px-4 sticky right-0 z-10 bg-white">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditIndex(index);
-                          setIsEditOpen(true);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                        title="Edit"
-                      >
-                        <Icon style="solid" name="pen" className="size-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                        title="Delete"
-                      >
-                        <Icon style="solid" name="trash" className="size-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {isEmpty ? (
+                <div></div>
+              ) : (
+                values.map((field: Record<string, any>, index: number) => (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    {headers.map((header, inner_index) => {
+                      if ('name' in header) {
+                        return (
+                          <td key={inner_index} className="py-3 px-4">
+                            <TableCell
+                              name={name}
+                              index={index}
+                              value={field[header.name]}
+                              header={header}
+                              control={control}
+                              editIndex={undefined}
+                            />
+                          </td>
+                        );
+                      } else {
+                        return (
+                          <td key={inner_index} className="py-3 px-4">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
+                              {index + 1}
+                            </span>
+                          </td>
+                        );
+                      }
+                    })}
+                    <td className="py-3 px-4 sticky right-0 z-10 bg-white">
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditIndex(index);
+                            setIsEditOpen(true);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                          title="Edit"
+                        >
+                          <Icon style="solid" name="pen" className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                          title="Delete"
+                        >
+                          <Icon style="solid" name="trash" className="size-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -263,7 +263,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
         <LandTitleSelectModal
           items={getSelectableRecords()}
           fieldsInfo={FieldInfo}
-          onSelect={handleAddSelect}
+          onConfirm={handleAddSelect}
           onCancel={() => setIsAddOpen(false)}
         />
       )}

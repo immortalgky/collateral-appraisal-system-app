@@ -20,6 +20,7 @@ interface GroupContainerProps {
   onDelete: (property: PropertyItem, groupId: string) => void;
   onGoToPriceAnalysis: (groupId: string) => void;
   hasClipboard: boolean;
+  isDeletingGroup?: boolean;
 }
 
 export const GroupContainer = ({
@@ -34,6 +35,7 @@ export const GroupContainer = ({
   onDelete,
   onGoToPriceAnalysis,
   hasClipboard,
+  isDeletingGroup = false,
 }: GroupContainerProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: group.id,
@@ -54,10 +56,15 @@ export const GroupContainer = ({
           </span>
           <button
             onClick={() => onDeleteGroup(group.id)}
-            className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+            disabled={isDeletingGroup}
+            className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Delete group"
           >
-            <Icon name="trash" className="text-xs" />
+            {isDeletingGroup ? (
+              <Icon name="spinner" className="text-xs animate-spin" />
+            ) : (
+              <Icon name="trash" className="text-xs" />
+            )}
           </button>
         </div>
         <button

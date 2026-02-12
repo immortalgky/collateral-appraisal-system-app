@@ -12,12 +12,18 @@ import { useParameterStore } from '@shared/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
-import { RightMenuPortalProvider, useRightMenuPortal, } from '@shared/contexts/RightMenuPortalContext';
+import {
+  RightMenuPortalProvider,
+  useRightMenuPortal,
+} from '@shared/contexts/RightMenuPortalContext';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 
 const userNavigation = [
   { name: 'Your profile', href: '#' },
-  { name: 'Sign out', href: '#' },
+  {
+    name: 'Sign out',
+    href: 'https://localhost:7111/connect/logout?client_id=spa&post_logout_redirect_uri=https://localhost:3000/',
+  },
 ];
 
 /**

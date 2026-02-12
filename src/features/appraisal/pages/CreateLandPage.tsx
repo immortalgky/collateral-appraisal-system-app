@@ -1,6 +1,6 @@
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -19,13 +19,17 @@ const createLandRequestDefaults = {} as any;
 
 const CreateLandPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const location = useLocation();
-
   const methods = useForm<CreateLandRequestType>({
     defaultValues: createLandRequestDefaults,
     resolver: zodResolver(CreateLandRequest),
   });
   const { handleSubmit, getValues } = methods;
+
+  const {
+    formState: { errors },
+  } = methods;
+
+  console.log(errors);
 
   const { mutate } = useCreateLandRequest();
 
@@ -46,21 +50,13 @@ const CreateLandPage = () => {
     } as any);
   };
 
-  // Only show Photos tab if we have a propertyId (not for new)
-  const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
-
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* NavAnchors */}
       <div className="shrink-0 pb-4">
         <NavAnchors
           containerId="form-scroll-container"
-          anchors={[
-            { label: 'Land', id: 'properties-section', icon: 'mountain-sun' },
-            ...(propertyId
-              ? [{ label: 'Photos', id: 'photos', icon: 'images', href: photosHref }]
-              : []),
-          ]}
+          anchors={[{ label: 'Land', id: 'properties-section', icon: 'mountain-sun' }]}
         />
       </div>
 

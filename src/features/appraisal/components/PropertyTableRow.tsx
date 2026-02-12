@@ -6,13 +6,17 @@ import Icon from '@shared/components/Icon';
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
   const typeMap: Record<string, string> = {
-    'Building': 'building',
-    'Condominium': 'condo',
+    Building: 'building',
+    Condominium: 'condo',
     'Land and building': 'land-building',
-    'Lands': 'land',
+    Lands: 'land',
     'Lease Agreement Building': 'building',
     'Lease Agreement Land and building': 'land-building',
     'Lease Agreement Lands': 'land',
+    L: 'land',
+    B: 'building',
+    LB: 'land-building',
+    U: 'condo',
   };
   return typeMap[type] || 'land';
 };
@@ -44,7 +48,9 @@ export const PropertyTableRow = ({
   const handleClick = () => {
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
-      navigate(`/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`);
+      navigate(
+        `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+      );
     }
   };
 
