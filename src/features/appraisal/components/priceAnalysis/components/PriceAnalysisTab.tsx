@@ -97,18 +97,6 @@ export function PriceAnalysisTab(): JSX.Element {
     error: getPricingAnalysisError,
   } = useGetPricingAnalysis(groupId);
 
-  /** api to save approach and method on editing mode */
-  const {
-    mutate: addPriceAnalysisApproachMutate,
-    isPending: isAddingApproach,
-    isSuccess: isAddApproachSuccess,
-  } = useAddPriceAnalysisApproach();
-  const {
-    mutate: addPriceAnalysisMethodMutate,
-    isPending: isAddingMethod,
-    isSuccess: isAddMethodSuccess,
-  } = useAddPriceAnalysisMethod();
-
   /** Query method detail by method ID when user clicks calculation button (pencil icon) */
   const {
     data: getComparativeFactorsData,
@@ -217,6 +205,7 @@ export function PriceAnalysisTab(): JSX.Element {
       setIsDirty(false);
     }
 
+    // [!] right now, after save methods on editing mode and refresh page. Mock data not cover add method
     if (!!nextApproachId && !!nextMethodId) {
       setCalculationMethod({
         approachId: nextApproachId,

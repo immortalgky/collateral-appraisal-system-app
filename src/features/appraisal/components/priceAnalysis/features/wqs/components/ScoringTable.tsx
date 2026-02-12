@@ -523,12 +523,13 @@ export function ScoringTable({
 
             {/* scoring criteria */}
             <tr>
-              <td
-                colSpan={comparativeSurveys?.length + 6}
-                className={clsx('bg-gray-200', leftColumnBody)}
-              >
-                <div className="flex flex-row justify-center items-center">{``}</div>
+              <td colSpan={4} className={clsx('bg-gray-200', leftColumnBody)}>
+                <div className="flex flex-row justify-start items-center">{`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}</div>
               </td>
+              <td
+                colSpan={comparativeSurveys?.length + 2}
+                className={clsx('bg-gray-200 border-b border-gray-300')}
+              ></td>
             </tr>
 
             {/* calculation section */}

@@ -121,21 +121,24 @@ export const FactorScoreDto = z
   })
   .passthrough();
 
-export const CalculationDto = z.object({
-  id: z.string(),
-  marketComparableId: z.string(),
-  comparableName: z.string().nullable().optional(),
-  offeringPrice: z.number().nullable().optional(),
-  offeringPriceUnit: z.string().nullable().optional(),
-  adjustOfferPricePct: z.number().nullable().optional(),
-  sellingPrice: z.number().nullable().optional(),
-  buySellYear: z.number().nullable().optional(),
-  buySellMonth: z.number().nullable().optional(),
-  adjustedPeriodPct: z.number().nullable().optional(),
-  cumulativeAdjPeriod: z.number().nullable().optional(),
-  totalFactorDiffPct: z.number().nullable().optional(),
-  totalAdjustedValue: z.number().nullable().optional(),
-}).passthrough;
+export const CalculationDto = z
+  .object({
+    id: z.string(),
+    marketComparableId: z.string(),
+    comparableName: z.string().nullable().optional(),
+    offeringPrice: z.number().nullable().optional(),
+    offeringPriceUnit: z.string().nullable().optional(),
+    adjustOfferPricePct: z.number().nullable().optional(),
+    sellingPrice: z.number().nullable().optional(),
+    buySellYear: z.number().nullable().optional(),
+    buySellMonth: z.number().nullable().optional(),
+    adjustedPeriodPct: z.number().nullable().optional(),
+    cumulativeAdjPeriod: z.number().nullable().optional(),
+    totalFactorDiffPct: z.number().nullable().optional(),
+    totalAdjustedValue: z.number().nullable().optional(),
+  })
+  .passthrough();
+
 export const GetComparativeFactorsRequest = z.object({}).passthrough();
 export const GetComparativeFactorsResponse = z
   .object({
@@ -145,7 +148,7 @@ export const GetComparativeFactorsResponse = z
     linkedComparables: z.array(linkedComparableDto),
     comparativeFactors: z.array(ComparativeFactorDto),
     factorScores: z.array(FactorScoreDto),
-    calculations: z.array(CalculationDto()),
+    calculations: z.array(CalculationDto),
   })
   .passthrough();
 export type GetComparativeFactorsRequestType = z.infer<typeof GetComparativeFactorsRequest>;

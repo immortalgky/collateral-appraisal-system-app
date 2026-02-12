@@ -1,16 +1,12 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import React, { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMethodSelector';
 
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import {
-  useAddPriceAnalysisApproach,
-  useAddPriceAnalysisMethod,
-  useSelectPriceAnalysisApproachMethod,
-} from '../api/api';
+import { useAddPriceAnalysisApproach, useAddPriceAnalysisMethod } from '../api/api';
 import { usePropertyStore } from '@/features/appraisal/store';
 import type { PriceAnalysisApproachRequest } from '../type';
 import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
@@ -58,21 +54,21 @@ export const PriceAnalysisAccordion = ({
 
   /** Local state:  */
 
+  /** api to save approach and method on editing mode */
+  const {
+    mutate: addPriceAnalysisApproachMutate,
+    isPending: isAddingApproach,
+    isSuccess: isAddApproachSuccess,
+  } = useAddPriceAnalysisApproach();
+  const {
+    mutate: addPriceAnalysisMethodMutate,
+    isPending: isAddingMethod,
+    isSuccess: isAddMethodSuccess,
+  } = useAddPriceAnalysisMethod();
+
   /** state to control accordian disclosure */
   const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
     useDisclosure({ defaultIsOpen: true });
-
-  // /** api to save approach and method on editing mode */
-  // const {
-  //   mutate: addPriceAnalysisApproachMutate,
-  //   isPending: isAddingApproach,
-  //   isSuccess: isAddApproachSuccess,
-  // } = useAddPriceAnalysisApproach();
-  // const {
-  //   mutate: addPriceAnalysisMethodMutate,
-  //   isPending: isAddingMethod,
-  //   isSuccess: isAddMethodSuccess,
-  // } = useAddPriceAnalysisMethod();
 
   const isApiPending = isAddingApproach || isAddingMethod;
   const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;
