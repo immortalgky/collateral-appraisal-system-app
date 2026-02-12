@@ -1,3 +1,4 @@
+import { GroupValuations, LandTitleDto } from '@/shared/schemas/v1';
 import { z } from 'zod';
 
 export const createLandForm = z.object({
@@ -385,13 +386,17 @@ export const condoPMAForm = z.object({
 });
 
 export const summaryDecisionForm = z.object({
-  dateTime: z.string(),
+  dateTime: z.string().datetime({ offset: true }).nullable(),
   appraisalPrice: z.coerce.number().nullable(),
   buildingInsurancePrice: z.coerce.number().nullable(),
   forcedSalePrice: z.coerce.number().nullable(),
+  priceVerification: z.boolean(),
+  groupValuations: z.array(GroupValuations),
+  landTitle: z.array(LandTitleDto),
   condition: z.string().nullable(),
   remark: z.string().nullable(),
-  opinionAppraiser: z.string().nullable(),
+  opinionAppraiser: z.string(),
+  opinionCommittee: z.string(),
   specialAssumption: z.string().nullable(),
 });
 
@@ -759,7 +764,6 @@ export const landAndBuildingPMAFormDefault: landAndBuildingPMAFormType = {
   province: '',
   provinceName: '',
 };
-
 export const condoPMAFormDefault: condoPMAFormType = {
   buildingInsurancePrice: 0,
   sellingPrice: 0,
@@ -776,4 +780,19 @@ export const condoPMAFormDefault: condoPMAFormType = {
   districtName: '',
   province: '',
   provinceName: '',
+};
+
+export const summaryDecisionFormDefault: summaryDecisionFormType = {
+  dateTime: '',
+  appraisalPrice: 0,
+  buildingInsurancePrice: 0,
+  forcedSalePrice: 0,
+  priceVerification: true,
+  groupValuations: [],
+  landTitle: [],
+  condition: '',
+  remark: '',
+  opinionAppraiser: '',
+  opinionCommittee: '',
+  specialAssumption: '',
 };

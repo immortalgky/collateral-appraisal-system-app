@@ -3,9 +3,13 @@ import type {
   createCondoFormType,
   createLandAndBuildingFormType,
   createLandFormType,
+  summaryDecisionFormType,
 } from '@/features/appraisal/schemas/form';
 import type { GetLandPropertyByIdResultType } from '@/features/appraisal/api';
-import type { GetBuildingPropertyByIdResultType } from '@/shared/schemas/v1';
+import type {
+  GetBuildingPropertyByIdResultType,
+  GetSummaryDecisionResponseType,
+} from '@/shared/schemas/v1';
 import type { GetCondoPropertyByIdResultType } from '@/shared/schemas/v1';
 import type { GetLandAndBuildingPropertyByIdResultType } from '@/shared/schemas/v1';
 
@@ -416,3 +420,22 @@ export const mapLandAndBuildingPropertyResponseToForm = (
 //     provinceName: '',
 //   };
 // };
+
+export const mapSummaryDecisionResponseToForm = (
+  response: GetSummaryDecisionResponseType,
+): summaryDecisionFormType => {
+  return {
+    dateTime: response.dateTime ?? '',
+    appraisalPrice: response.appraisalPrice ?? 0,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    forcedSalePrice: response.forcedSalePrice ?? 0,
+    priceVerification: response.priceVerification ?? true,
+    groupValuations: response.groupValuations ?? [],
+    landTitle: response.landTitle ?? [],
+    condition: response.condition ?? '',
+    remark: response.remark ?? '',
+    opinionAppraiser: response.opinionAppraiser ?? '',
+    opinionCommittee: response.opinionCommittee ?? '',
+    specialAssumption: response.specialAssumption ?? '',
+  };
+};

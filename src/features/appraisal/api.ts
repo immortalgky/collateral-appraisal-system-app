@@ -6,8 +6,11 @@ import type {
   CreateBuildingPropertyRequestType,
   CreateBuildingPropertyResponseType,
   GetBuildingPropertyByIdResultType,
+  GetSummaryDecisionResponseType,
   UpdateBuildingPropertyRequestType,
   UpdateBuildingPropertyResponseType,
+  UpdateSummaryDecisionRequestType,
+  UpdateSummaryDecisionResponseType,
 } from '@/shared/schemas/v1';
 import {
   schemas,
@@ -254,6 +257,26 @@ export const useUpdateLandAndBuildingProperty = () => {
     },
   });
 };
+export const useUpdateSummaryDecision = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: UpdateSummaryDecisionRequestType,
+    ): Promise<UpdateSummaryDecisionResponseType> => {
+      console.log(request);
+      const { data } = await axios.put(`/appraisals/${request.apprId}/summary-decision`, request);
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Summary decision updated successfully', data);
+      queryClient.invalidateQueries({ queryKey: ['appraisal'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+};
 
 // export const useUpdateLandAndBuildingPMAProperty = () => {
 //   const queryClient = useQueryClient();
@@ -383,6 +406,73 @@ export const useGetLandAndBuildingPropertyById = (appraisalId: string, propertyI
       return failureCount < 3;
     },
   });
+};
+
+export const useGetSummaryDecision = (appraisalId: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId],
+    enabled: !!appraisalId,
+    queryFn: async (): Promise<GetSummaryDecisionResponseType> => {
+      // const { data } = await axios.get(`/appraisals/${appraisalId}/summart-decision/`);
+      return summaryDecision;
+    },
+    retry: (failureCount, error) => {
+      // Don't retry 404 errors - they're not recoverable
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return false;
+      }
+      // Default: retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+  });
+};
+
+const summaryDecision = {
+  dateTime: '',
+  appraisalPrice: 1000000,
+  buildingInsurancePrice: 500000,
+  forcedSalePrice: 700000,
+  groupValuations: [
+    {
+      groupNumber: 1,
+      marketComparasionApproach: 1000000,
+      useApproach: 'marketComparasionApproach',
+    },
+    { groupNumber: 2, costApproach: 1000000, incomeApproach: 1200000, useApproach: 'costApproach' },
+  ],
+  landTitle: [
+    {
+      titleDeedNumber: '1111',
+      areaRai: 0,
+      areaNgan: 0,
+      areaSquareWa: 50,
+      isMissingFromSurvey: false,
+      governmentPricePerSqWa: 50000,
+      governmentPrice: 2500000,
+    },
+    {
+      titleDeedNumber: '1234',
+      areaRai: 0,
+      areaNgan: 0,
+      areaSquareWa: 50,
+      isMissingFromSurvey: false,
+      governmentPricePerSqWa: 50000,
+      governmentPrice: 2500000,
+    },
+    {
+      titleDeedNumber: '1232',
+      areaRai: 0,
+      areaNgan: 0,
+      areaSquareWa: 50,
+      isMissingFromSurvey: true,
+    },
+  ],
+  condition: '',
+  remark: '',
+  opinionAppraiser: '',
+  opinionCommittee: '',
+  specialAssumption: '',
+  activityLog: [],
 };
 
 // export const useGetLandAndBuildingPMAPropertyById = (appraisalId: string, propertyId: string) => {
