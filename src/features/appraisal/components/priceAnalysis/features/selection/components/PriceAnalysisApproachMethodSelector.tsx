@@ -79,7 +79,7 @@ export const PriceAnalysisApproachMethodSelector = ({
               <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
                 <button
                   type="button"
-                  className="flex justify-center items-center w-full p-2 border border-dashed border-gray-200 rounded-md hover:bg-gray-100 duration-300 transition-all cursor-pointer"
+                  className="flex justify-center items-center w-full p-2 border border-dashed border-primary text-primary rounded-md hover:bg-gray-100 duration-300 transition-all cursor-pointer"
                   onClick={() => dispatch({ type: 'EDIT_ENTER' })}
                 >
                   Determine Approach and Method

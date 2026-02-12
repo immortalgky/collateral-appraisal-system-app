@@ -29,10 +29,14 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 interface PriceAnalysisAccordionProps {
   groupId: string;
   onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
+  isPriceAnalysisAccordionOpen: boolean;
+  onPriceAnalysisAccordionChange: any;
 }
 
 export const PriceAnalysisAccordion = ({
   groupId,
+  onPriceAnalysisAccordionChange,
+  isPriceAnalysisAccordionOpen,
   onSelectCalculationMethod,
 }: PriceAnalysisAccordionProps) => {
   const navigate = useNavigate();
@@ -65,10 +69,6 @@ export const PriceAnalysisAccordion = ({
     isPending: isAddingMethod,
     isSuccess: isAddMethodSuccess,
   } = useAddPriceAnalysisMethod();
-
-  /** state to control accordian disclosure */
-  const { isOpen: isPriceAnalysisAccordionOpen, onToggle: onPriceAnalysisAccordionChange } =
-    useDisclosure({ defaultIsOpen: true });
 
   const isApiPending = isAddingApproach || isAddingMethod;
   const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;

@@ -19,6 +19,7 @@ import {
   type PriceAnalysisSelectorState,
 } from '../features/selection/domain/useReducer';
 import { createInitialState } from '../features/selection/domain/createInitialState';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
 
 export function PriceAnalysisTab(): JSX.Element {
   const location = useLocation();
@@ -42,6 +43,13 @@ export function PriceAnalysisTab(): JSX.Element {
   const [calculationMethod, setCalculationMethod] = useState<
     { approachId: string; methodId: string; methodType: string } | undefined
   >(undefined);
+
+  /** state to control accordian disclosure */
+  const {
+    isOpen: isPriceAnalysisAccordionOpen,
+    onToggle: onPriceAnalysisAccordionChange,
+    onClose: onPriceAnalysisAccordianClose,
+  } = useDisclosure({ defaultIsOpen: true });
 
   /** start using reducer with initial state */
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
@@ -215,6 +223,7 @@ export function PriceAnalysisTab(): JSX.Element {
         methodId: nextMethodId,
         methodType: nextMethodType,
       });
+      onPriceAnalysisAccordianClose();
     }
   };
 
@@ -245,6 +254,8 @@ export function PriceAnalysisTab(): JSX.Element {
               <PriceAnalysisAccordion
                 groupId={groupId}
                 onSelectCalculationMethod={handleOnSelectCalculationMethod}
+                onPriceAnalysisAccordionChange={onPriceAnalysisAccordionChange}
+                isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
               />
               {!!calculationMethod && (
                 <ActiveMethodPanel
