@@ -70,7 +70,11 @@ export function PriceAnalysisTab(): JSX.Element {
     isError: isPropertyGroupError,
     error: propertyGrouopError,
   } = useGetPropertyGroupById(appraisalId, groupId);
-  const propertyId = propertyGroupData?.properties?.[0]?.propertyId;
+  const groupNumber = propertyGroupData?.groupNumber;
+  const groupDescription = propertyGroupData?.description;
+  const groupName = propertyGroupData?.groupName;
+  const useSystemCalc = propertyGroupData?.useSystemCalc;
+  const groupProperties = propertyGroupData?.properties;
 
   /** (2) Query property data by property Id
    *  - we have property ID from (1) and how to fire api path to get
@@ -80,11 +84,11 @@ export function PriceAnalysisTab(): JSX.Element {
     isLoading: isLoadingProperty,
     isError: isPropertyError,
     error: propertyError,
-  } = useGetPropertyById(appraisalId, propertyId);
+  } = useGetPropertyById(appraisalId, '00000000-0000-0000-0000-000000000001');
 
-  const { group, isLoading, error, isLoadingGroupDetails, isLoadingPropertyDetails } =
-    useEnrichedPropertyGroup(appraisalId, groupId);
-  console.log(group, error);
+  // const { group, isLoading, error, isLoadingGroupDetails, isLoadingPropertyDetails } =
+  //   useEnrichedPropertyGroup(appraisalId, groupId);
+  // console.log(group, error);
 
   /** (3) Query market surveys data in application
    * [!] not sure that have to query survey Ids in group first, then loop queries each survey or not
@@ -114,12 +118,12 @@ export function PriceAnalysisTab(): JSX.Element {
   } = useGetPricingAnalysis(groupId);
 
   /** Query method detail by method ID when user clicks calculation button (pencil icon) */
-  const {
-    data: getComparativeFactorsData,
-    isLoading: isGetComparativeFactorsLoading,
-    isError: isGetComparativeFactorsError,
-    error: getComparativeFactorsError,
-  } = useGetComparativeFactors('', calculationMethod?.methodId);
+  // const {
+  //   data: getComparativeFactorsData,
+  //   isLoading: isGetComparativeFactorsLoading,
+  //   isError: isGetComparativeFactorsError,
+  //   error: getComparativeFactorsError,
+  // } = useGetComparativeFactors('', calculationMethod?.methodId);
 
   /** Initial reducer state */
   useEffect(() => {
@@ -167,15 +171,14 @@ export function PriceAnalysisTab(): JSX.Element {
 
   useEffect(() => {
     if (
-      isLoadingMarketSurvey ||
-      isLoadingProperty ||
-      isGetPriceAnalysisConfigLoading ||
-      isGetPricingAnalysisLoading
-    )
-      return;
-
-    if (propertyData && marketSurveyData && getPriceAnalysisConfigData && getPricingAnalysisData)
+      !!propertyData &&
+      !!marketSurveyData &&
+      !!getPriceAnalysisConfigData &&
+      !!getPricingAnalysisData
+    ) {
+      console.log('loading complete!');
       return setIsCurrentLoading(false);
+    }
   }, [
     isLoadingProperty,
     isLoadingMarketSurvey,
@@ -257,7 +260,15 @@ export function PriceAnalysisTab(): JSX.Element {
           {!isCurrentLoading && (
             <div>
               <PriceAnalysisAccordion
-                groupId={groupId}
+                appraisalId={appraisalId}
+                group={{
+                  id: groupId ?? '',
+                  number: groupNumber ?? 0,
+                  name: groupName ?? '',
+                  description: groupDescription ?? '',
+                  useSystemCalc: useSystemCalc ?? true,
+                  properties: groupProperties ?? [],
+                }}
                 onSelectCalculationMethod={handleOnSelectCalculationMethod}
                 onPriceAnalysisAccordionChange={onPriceAnalysisAccordionChange}
                 isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
@@ -268,7 +279,6 @@ export function PriceAnalysisTab(): JSX.Element {
                   methodType={calculationMethod.methodType}
                   property={propertyData}
                   marketSurveys={marketSurveyData}
-                  configurations={getPriceAnalysisConfigData}
                   onCalculationMethodDirty={handleOnCalculationMethodDirty}
                 />
               )}

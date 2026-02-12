@@ -14,8 +14,8 @@ export const PriceAnalysisConfigSchema = z.object({
           .object({
             id: z.string(),
             methodType: z.string(),
-            label: z.string(),
             icon: z.string(),
+            label: z.string(),
             appraisalValue: z.number().nullable().optional(),
             configurations: z.array(
               z
@@ -35,11 +35,6 @@ export const PriceAnalysisConfigSchema = z.object({
           })
           .passthrough(),
       ),
-    }),
-  ),
-  methods: z.array(
-    z.object({
-      methodType: z.string(),
     }),
   ),
 });
@@ -63,7 +58,7 @@ export const useGetPriceAnalysisConfigQuery = () => {
       return PriceAnalysisConfigSchema.parse(json);
     },
 
-    /** set stateTime infinit since this is static config */
+    /** set stateTime infinit since this is a static config */
     staleTime: Infinity,
     gcTime: Infinity,
     refetchOnWindowFocus: false,

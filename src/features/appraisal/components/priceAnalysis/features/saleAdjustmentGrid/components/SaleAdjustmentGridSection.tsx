@@ -23,7 +23,6 @@ import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceA
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, unknown>;
   surveys: Record<string, unknown>[];
-  methodConfiguration: MethodConfiguration;
   onCalculationMethodDirty: (check: boolean) => void;
 }
 
@@ -42,7 +41,6 @@ interface SaleAdjustmentGridSectionProps {
 export const SaleAdjustmentGridSection = ({
   property,
   surveys,
-  configuration,
   onCalculationMethodDirty,
 }: SaleAdjustmentGridSectionProps) => {
   const [allFactors, setAllFactors] =

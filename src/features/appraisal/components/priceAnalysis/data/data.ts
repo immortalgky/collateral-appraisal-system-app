@@ -40,7 +40,7 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
 export const GET_PROPERTY_GROUP_BY_ID_RESPONSE: GetPropertyGroupByIdResponseType = {
   id: '00000000-0000-0000-0000-000000000001',
   groupNumber: 1,
-  groupName: '',
+  groupName: 'Land group',
   description: '',
   useSystemCalc: true,
   properties: [{ propertyId: '019e2a6b-9c2d-7a44-b2d1-6d2b7f5c3a10', sequenceInGroup: 1 }],

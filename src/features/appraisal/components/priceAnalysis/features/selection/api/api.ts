@@ -43,7 +43,7 @@ export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
  * Hook for fetching price analysis approach and method by group Id
  * GET /appraisal ...
  */
-export const useGetPricingAnalysis = (id: string | undefined) => {
+export function useGetPricingAnalysis(id: string | undefined) {
   return useQuery({
     queryKey: ['price-analysis', id],
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
@@ -61,13 +61,13 @@ export const useGetPricingAnalysis = (id: string | undefined) => {
     refetchOnReconnect: false,
     staleTime: Infinity,
   });
-};
+}
 
 /**
  * Hook for fetching comparative factor bu method id
  * GET /appraisal ...
  */
-export const useGetComparativeFactors = (id: string | undefined, methodId: string | undefined) => {
+export function useGetComparativeFactors(id: string | undefined, methodId: string | undefined) {
   return useQuery({
     queryKey: ['price-analysis', id, methodId],
     queryFn: async (): Promise<GetComparativeFactorsResponseType> => {
@@ -85,7 +85,7 @@ export const useGetComparativeFactors = (id: string | undefined, methodId: strin
     refetchOnReconnect: false,
     staleTime: Infinity,
   });
-};
+}
 
 /**
  * Hook for fetching a group of collateral by group Id
@@ -93,7 +93,7 @@ export const useGetComparativeFactors = (id: string | undefined, methodId: strin
  * @param groupId
  * @returns
  */
-export const useGetAppraisalGroupById = (groupId: string | undefined) => {
+export function useGetAppraisalGroupById(groupId: string | undefined) {
   // return useQuery({
   //   queryKey: [''],
   //   queryFn: async (): Promise<> => {
@@ -104,14 +104,14 @@ export const useGetAppraisalGroupById = (groupId: string | undefined) => {
 
   // console.log('GET /appraisal/${groupId}');
   return null;
-};
+}
 
 /**
  * Hook for adding approaches to price analysis
  * POST /appraisal/ ...
  * @returns
  */
-export const useAddPriceAnalysisApproach = () => {
+export function useAddPriceAnalysisApproach() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -133,14 +133,14 @@ export const useAddPriceAnalysisApproach = () => {
       console.log(error);
     },
   });
-};
+}
 
 /**
  * Hook for adding methods to price analysis
  * POST /appraisal/ ...
  * @returns
  */
-export const useAddPriceAnalysisMethod = () => {
+export function useAddPriceAnalysisMethod() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -167,7 +167,7 @@ export const useAddPriceAnalysisMethod = () => {
       console.log(error);
     },
   });
-};
+}
 
 /**
  * get property by property Id
@@ -195,7 +195,7 @@ export function useGetPropertyById(
   });
 }
 
-export const useGetMarketSurveys = () => {
+export function useGetMarketSurveys() {
   const queryKey = ['marketSurvey'];
 
   return useQuery({
@@ -211,4 +211,11 @@ export const useGetMarketSurveys = () => {
     refetchOnReconnect: false,
     staleTime: Infinity,
   });
-};
+}
+
+export function useGetPriceAnalysisTemplates() {
+  const queryKey = ['priceAnalysis'];
+  return useQuery({
+    queryKey,
+  });
+}

@@ -5,15 +5,15 @@ import { Group, Panel, Separator } from 'react-resizable-panels';
 import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMethodSelector';
 
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useAddPriceAnalysisApproach, useAddPriceAnalysisMethod } from '../api/api';
 import type { PriceAnalysisApproachRequest } from '../type';
 import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
 import { type PriceAnalysisSelectorAction } from '../domain/useReducer';
-import { convertToAddApproachApi, convertToAddMethodApi } from '../domain/convertToApi';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { saveEditingSelection } from '@features/appraisal/components/priceAnalysis/features/selection/domain/saveEditingSelection.ts';
+import { usePriceAnalysisGateway } from '@features/appraisal/components/priceAnalysis/features/selection/domain/priceAnalysisGateway.ts';
 
 /**
  * Flow:
@@ -25,14 +25,23 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
  */
 
 interface PriceAnalysisAccordionProps {
-  groupId: string;
+  appraisalId: string;
+  group: {
+    id: string;
+    number: string;
+    name: string;
+    description: string;
+    useSystemCalc: boolean;
+    properties: Record<string, unknown>[];
+  };
   onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
   isPriceAnalysisAccordionOpen: boolean;
   onPriceAnalysisAccordionChange: any;
 }
 
 export const PriceAnalysisAccordion = ({
-  groupId,
+  appraisalId,
+  group,
   onPriceAnalysisAccordionChange,
   isPriceAnalysisAccordionOpen,
   onSelectCalculationMethod,
@@ -57,19 +66,19 @@ export const PriceAnalysisAccordion = ({
   /** Local state:  */
 
   /** api to save approach and method on editing mode */
-  const {
-    mutate: addPriceAnalysisApproachMutate,
-    isPending: isAddingApproach,
-    isSuccess: isAddApproachSuccess,
-  } = useAddPriceAnalysisApproach();
-  const {
-    mutate: addPriceAnalysisMethodMutate,
-    isPending: isAddingMethod,
-    isSuccess: isAddMethodSuccess,
-  } = useAddPriceAnalysisMethod();
-
-  const isApiPending = isAddingApproach || isAddingMethod;
-  const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;
+  // const {
+  //   mutate: addPriceAnalysisApproachMutate,
+  //   isPending: isAddingApproach,
+  //   isSuccess: isAddApproachSuccess,
+  // } = useAddPriceAnalysisApproach();
+  // const {
+  //   mutate: addPriceAnalysisMethodMutate,
+  //   isPending: isAddingMethod,
+  //   isSuccess: isAddMethodSuccess,
+  // } = useAddPriceAnalysisMethod();
+  //
+  // const isApiPending = isAddingApproach || isAddingMethod;
+  // const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;
 
   // fire api to save candidate approach & methods
   const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
@@ -91,7 +100,7 @@ export const PriceAnalysisAccordion = ({
     data: PriceAnalysisApproachRequest[],
     dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
   ) => {
-    // if some method has remove, need to fire api to update
+    // TODO: if some method has removed, need to fire api to update
     const selections =
       data
         ?.filter(d => d.methods.some(m => m.isSelected))
@@ -100,25 +109,8 @@ export const PriceAnalysisAccordion = ({
           methodIds: d.methods.filter(m => m.isSelected).map(m => m.id),
         })) ?? [];
     try {
-      for (const sel of selections) {
-        const approachType = convertToAddApproachApi(sel.approachId);
-
-        const approachRes = await addPriceAnalysisApproachMutate({
-          id: '019C45EA-A220-72B6-A06E-BDDD15494E0A',
-          request: { approachType },
-        });
-
-        await Promise.all(
-          sel.methodIds.map(methodId => {
-            const methodType = convertToAddMethodApi(methodId);
-            return addPriceAnalysisMethodMutate({
-              id: '019C45EA-A220-72B6-A06E-BDDD15494E0A',
-              approachId: '00000000-0000-0000-0000-000000000000', // approachRes.id
-              request: { methodType },
-            });
-          }),
-        );
-      }
+      const gateway = usePriceAnalysisGateway();
+      await saveEditingSelection(gateway, { appraisalId: appraisalId, selections });
 
       toast.success('Price analysis selection updated successfully');
       dispatch({ type: 'EDIT_SAVE' });
@@ -152,7 +144,7 @@ export const PriceAnalysisAccordion = ({
 
   /** handle  */
   const handleOnSelectMethod = (approachType: string, methodType: string) => {
-    /** find method type that belongs to approach type in reducer's state */
+    /** find a method type that belongs to approach type in reducer's state */
     const appraisalValueBeforeChange =
       editDraft
         .find(appr => appr.approachType === approachType)
@@ -217,7 +209,7 @@ export const PriceAnalysisAccordion = ({
       {/* header */}
       <div className="grid grid-cols-12 justify-between items-center h-12">
         <div className="col-span-8">
-          {/* <span>{`${group?.name} (${group?.items.length} item(s))`}</span> */}
+          <span>{`${group?.name ?? ''} (${group?.properties?.length ?? 0} item(s))`}</span>
         </div>
         <div className="col-span-4 flex items-center justify-end gap-1">
           <div className="flex flex-row gap-1 items-center justify-end">

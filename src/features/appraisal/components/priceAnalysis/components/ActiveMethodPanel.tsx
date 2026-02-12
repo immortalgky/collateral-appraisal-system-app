@@ -11,14 +11,12 @@ export const ActiveMethodPanel = ({
   methodType,
   property,
   marketSurveys,
-  configurations,
   onCalculationMethodDirty,
 }: {
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
   marketSurveys: Record<string, unknown>[];
-  configurations: PriceAnalysisConfigType;
   onCalculationMethodDirty: (check: boolean) => void;
 }) => {
   /**
@@ -27,9 +25,7 @@ export const ActiveMethodPanel = ({
    * (2) pass config into method components
    */
 
-  const configuration = useGetConfigMethod(methodType, methodConfigurations);
-
-  /** Query template which belong to method type */
+  /** Query template that belongs to method type */
 
   switch (methodType) {
     case 'WQS_MARKET':
@@ -45,7 +41,6 @@ export const ActiveMethodPanel = ({
         <SaleAdjustmentGridSection
           property={property}
           surveys={marketSurveys}
-          methodConfiguration={configuration}
           onCalculationMethodDirty={onCalculationMethodDirty}
         />
       );
