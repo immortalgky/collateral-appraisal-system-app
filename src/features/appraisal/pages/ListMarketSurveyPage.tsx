@@ -26,11 +26,6 @@ const ListMarketSurveyPage = () => {
     });
     setIsOpenModal(true);
   };
-
-  // Helper to get parameter values by group
-  const getParameterValues = (parameters: any[] | undefined, group: string) => {
-    return parameters?.find(p => p.parameterGroup === group)?.values ?? [];
-  };
   // Handle selection of market survey for editing
   const handleEditSelect = (item: any) => {
     navigate(`/market-comparable/detail?id=${item.id}`, {
@@ -39,7 +34,6 @@ const ListMarketSurveyPage = () => {
       },
     });
   };
-
   // Handle selection of collateral type for creating new market survey
   const handleCreateSelect = (item: any) => {
     navigate(`/market-comparable/detail?propertyType=${item.code}`);
@@ -56,7 +50,12 @@ const ListMarketSurveyPage = () => {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-gray-900">Market Survey</h1>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">Market Surveys</h3>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {items?.length} survey{items?.length !== 1 ? 's' : ''} linked to this appraisal
+        </p>
+      </div>
 
       <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
         <ResizableSidebar

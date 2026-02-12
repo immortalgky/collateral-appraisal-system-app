@@ -2,6 +2,7 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
 import { PropertiesTab, MarketsTab, GalleryTab, LawsRegulationTab } from '../components/tabs';
+import ListMarketSurveyPage from './ListMarketSurveyPage';
 
 // Photo tab removed - photos are now managed at collateral level in each collateral page
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
@@ -29,7 +30,7 @@ export default function PropertyInformationPage() {
       case 'properties':
         return <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} />;
       case 'markets':
-        return <MarketsTab />;
+        return <ListMarketSurveyPage />;
       case 'gallery':
         return <GalleryTab />;
       case 'laws':
@@ -55,7 +56,7 @@ export default function PropertyInformationPage() {
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
                   isActive
                     ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
                 )}
               >
                 <Icon
@@ -71,9 +72,7 @@ export default function PropertyInformationPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {renderTabContent()}
-      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
     </div>
   );
 }

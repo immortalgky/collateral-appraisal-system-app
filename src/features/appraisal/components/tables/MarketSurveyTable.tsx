@@ -53,6 +53,7 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
           toast.error(error.apiError?.detail || 'Failed to delete market. Please try again.');
         },
       });
+      setDeleteConfirm({ isOpen: false, id: null });
     }
   };
 
