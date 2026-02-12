@@ -252,60 +252,6 @@ export function buildSaleGridCalculationDerivedRules(args: {
   return rules;
 }
 
-// export function buildSaleGridAdjustmentFactorRules(args: {
-//   surveys: Survey[];
-//   qualitativeRows: any[];
-// }): DerivedFieldRule[] {
-//   const { surveys = [], qualitativeRows } = args;
-//
-//   const {
-//     qualitativeLevel: qualitativeLevelPath,
-//     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
-//     adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
-//     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
-//   } = saleGridFieldPath;
-//
-//   /** Adjustment factors which initial by Qualitative part */
-//   const rules: DerivedFieldRule[] = qualitativeRows
-//     .map((f, rowIndex) => {
-//       return surveys.map((_, columnIndex) => {
-//         /** set adjustment factors section to be 1:1 with a qualitative section */
-//         return [
-//           {
-//             targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-//             deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
-//             compute: ({ getValues }) => {
-//               const level =
-//                 getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
-//               return qualitativeDefaultPercent(level) ?? null;
-//             },
-//           },
-//           {
-//             targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
-//             deps: [
-//               adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-//               calculationTotalSecondRevisionPath({ column: columnIndex }),
-//             ],
-//             compute: ({ getValues }) => {
-//               const totalSecondRevision =
-//                 getValues(calculationTotalSecondRevisionPath({ column: columnIndex })) ?? 0;
-//               const adjustPercent =
-//                 getValues(
-//                   adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-//                 ) ?? 0;
-//
-//               const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
-//               return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
-//             },
-//           },
-//         ];
-//       });
-//     })
-//     .flat(2);
-//
-//   return rules;
-// }
-
 export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   surveys: Survey[];
   qualitativeRows: any[];

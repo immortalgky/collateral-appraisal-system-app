@@ -349,9 +349,10 @@ export function buildWQSFinalValueDerivedRules(args: {
       targetPath: finalValueFinalValueRoundedPath(),
       deps: [finalValueFinalValuePath()],
       when: ({ getValues, getFieldState, formState }) => {
-        const target = finalValueFinalValuePath();
+        const target = finalValueFinalValueRoundedPath();
         const curr = getValues(target) ?? 0;
         const { isDirty } = getFieldState(target, formState);
+        console.log(isDirty);
         return shouldAutoDefault({ value: curr, isDirty });
       },
       compute: ({ getValues }) => {
@@ -491,7 +492,13 @@ export function buildWQSFinalValueDerivedRules(args: {
     {
       targetPath: finalValueAppraisalPriceRoundedPath(),
       deps: [finalValueAppraisalPricePath()],
-      compute: ({ getValues, ctx }) => {
+      when: ({ getValues, getFieldState, formState }) => {
+        const target = finalValueAppraisalPriceRoundedPath();
+        const curr = getValues(target) ?? 0;
+        const { isDirty } = getFieldState(target, formState);
+        return shouldAutoDefault({ value: curr, isDirty });
+      },
+      compute: ({ getValues }) => {
         const appraisalPrice = getValues(finalValueAppraisalPricePath()) ?? 0;
         return floorToTenThousands(appraisalPrice);
       },
