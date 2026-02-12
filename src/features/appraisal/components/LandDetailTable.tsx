@@ -73,11 +73,7 @@ export default function LandDetailTable() {
       {/* Section Header */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Land Detail</span>
-        <button
-          type="button"
-          onClick={handleAddRow}
-          className="btn btn-circle btn-xs btn-success"
-        >
+        <button type="button" onClick={handleAddRow} className="btn btn-circle btn-xs btn-success">
           <Icon name="plus" style="solid" className="text-xs" />
         </button>
       </div>
@@ -110,7 +106,9 @@ export default function LandDetailTable() {
                       {editIndex === index ? (
                         <input
                           type="text"
-                          {...register(`landDetails.${index}.${header.key as keyof LandDetailItem}`)}
+                          {...register(
+                            `landDetails.${index}.${header.key as keyof LandDetailItem}`,
+                          )}
                           className="input input-bordered input-xs w-full"
                         />
                       ) : (

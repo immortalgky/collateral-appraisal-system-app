@@ -48,7 +48,7 @@ export const mapRequestResponseToForm = (
         dealerCode: response.detail?.contact?.dealerCode ?? '',
       },
       appointment: {
-        appointmentDate: response.detail?.appointment?.appointmentDate ?? '',
+        appointmentDateTime: response.detail?.appointment?.appointmentDateTime ?? '',
         appointmentLocation: response.detail?.appointment?.appointmentLocation ?? '',
       },
       fee: {

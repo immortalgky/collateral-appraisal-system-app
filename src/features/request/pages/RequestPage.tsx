@@ -15,6 +15,7 @@ import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { DetailPageSkeleton } from '@/shared/components/Skeleton';
 import AddressForm from '../forms/AddressForm';
+import { useRequestLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 import Button from '@/shared/components/Button';
 import RequestRightMenu, { type LocalComment } from '../components/RequestRightMenu';
 import RightMenuPortal from '@/shared/components/RightMenuPortal';
@@ -25,7 +26,7 @@ import RequestForm from '../forms/RequestForm';
 import AppointmentAndFeeForm from '../forms/AppointmentAndFeeForm';
 import TitleInformationForm from '../forms/TitleInformationForm';
 import AttachDocumentForm from '../forms/AttachDocumentForm';
-import { createUploadSession, useCreateRequest, useGetRequestById, useUpdateRequest } from '../api';
+import { createUploadSession, useCreateRequest, useGetRequestById, useSubmitRequest, useUpdateRequest, } from '../api';
 import { mapRequestResponseToForm } from '../utils/mappers';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
 import CancelButton from '@/shared/components/buttons/CancelButton';
@@ -37,6 +38,15 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import SearchUserModal from '../components/SearchUserModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+
+/**
+ * Component that initializes request-level required documents.
+ * Must be rendered inside FormProvider to access form context.
+ */
+const RequiredDocumentsInitializer = () => {
+  useRequestLevelRequiredDocuments();
+  return null;
+};
 
 interface RequestPageProps {
   /** When true, displays the page in view-only mode without edit capabilities */
@@ -99,17 +109,14 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     formState: { errors },
   } = methods;
 
-  console.log(getValues());
-  console.log(errors);
-
   // Reset form when switching between create/edit mode or when requestId changes
   useEffect(() => {
     if (!isEditMode) {
-      // Create mode: reset to defaults and set current user
+      // Create mode: reset to defaults and set the current user
       reset(createRequestFormDefault);
       if (currentUser) {
         const userDto: UserDtoType = {
-          userId: currentUser.id,
+          userId: currentUser.username,
           username: currentUser.name,
         };
         setValue('creator', userDto);
@@ -130,11 +137,12 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
   // Mutations
   const { mutate: createRequest, isPending: isCreating } = useCreateRequest();
   const { mutate: updateRequest, isPending: isUpdating } = useUpdateRequest();
+  const { mutate: submitRequest, isPending: isSubmitting } = useSubmitRequest();
 
-  const isPending = isCreating || isUpdating;
+  const isPending = isCreating || isUpdating || isSubmitting;
 
   // Track which save action is in progress (for loading state on the correct button)
-  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+  const [saveAction, setSaveAction] = useState<'draft' | 'save' | 'submit' | null>(null);
 
   // Portal context for the right menu
   const rightMenuPortal = useRightMenuPortal();
@@ -185,7 +193,8 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
   }, []);
 
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
-    setSaveAction('submit');
+    console.log('[onSubmit] Validation passed, submitting data:', data);
+    setSaveAction('save');
 
     if (isEditMode && requestId) {
       // Update existing request
@@ -202,7 +211,6 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
           onSuccess: () => {
             toast.success('Request updated successfully');
             setSaveAction(null);
-            navigate('/requests');
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to update request. Please try again.');
@@ -304,6 +312,95 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     }
   };
 
+  /**
+   * Handle submit request flow:
+   * 1. Validate and save the request first
+   * 2. Then call the submit API
+   * 3. Navigate to requests list on success
+   */
+  const handleSubmitRequest = () => {
+    setSaveAction('submit');
+
+    // Use handleSubmit to validate the form first
+    handleSubmit(
+      data => {
+        // Helper function to submit after save
+        const doSubmit = (id: string) => {
+          submitRequest(id, {
+            onSuccess: () => {
+              toast.success('Request submitted successfully');
+              setSaveAction(null);
+              navigate('/requests');
+            },
+            onError: (error: any) => {
+              toast.error(error.apiError?.detail || 'Failed to submit request. Please try again.');
+              setSaveAction(null);
+            },
+          });
+        };
+
+        if (isEditMode && requestId) {
+          // Update existing request first, then submit
+          updateRequest(
+            {
+              id: requestId,
+              request: {
+                ...data,
+                requestor: data.requestor ?? { userId: '', username: '' },
+                creator: data.creator ?? { userId: '', username: '' },
+              },
+            },
+            {
+              onSuccess: () => {
+                doSubmit(requestId);
+              },
+              onError: (error: any) => {
+                toast.error(error.apiError?.detail || 'Failed to save request. Please try again.');
+                setSaveAction(null);
+              },
+            },
+          );
+        } else {
+          // Create new request first, then submit
+          const commentsForApi = pendingComments.map(c => ({
+            comment: c.comment,
+            commentedBy: c.commentedBy,
+            commentedByName: c.commentedByName,
+            commentedAt: c.commentedAt,
+            lastModifiedAt: c.lastModifiedAt ?? null,
+          }));
+
+          createRequest(
+            {
+              ...data,
+              sessionId: uploadSessionIdRef.current || '',
+              comments: commentsForApi,
+            } as CreateRequestRequestType,
+            {
+              onSuccess: response => {
+                if (response.id) {
+                  doSubmit(response.id);
+                } else {
+                  toast.error('Failed to get request ID after creation.');
+                  setSaveAction(null);
+                }
+              },
+              onError: (error: any) => {
+                toast.error(error.apiError?.detail || 'Failed to save request. Please try again.');
+                setSaveAction(null);
+              },
+            },
+          );
+        }
+      },
+      errors => {
+        console.log('[handleSubmitRequest] Validation failed:', errors);
+        toast.error('Please fill in all required fields before submitting.');
+        setSaveAction(null);
+      },
+    )();
+  };
+
   // Loading state (edit mode only)
   if (isLoading) {
     return <DetailPageSkeleton showSidebar sidebarWidth="w-72" contentSections={2} />;
@@ -352,7 +449,16 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
 
       {/* Main Content Area with Sidebar */}
       <FormProvider methods={methods} schema={createRequestForm} readOnly={readOnly}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex relative">
+        <RequiredDocumentsInitializer />
+        <form
+          onSubmit={e => {
+            console.log('[form] Form submit event triggered');
+            handleSubmit(onSubmit, errors =>
+              console.log('[handleSubmit] Validation failed:', errors),
+            )(e);
+          }}
+          className="flex-1 min-h-0 flex relative"
+        >
           {/* Scrollable Form Content */}
           <div className="flex-1 min-w-0 flex flex-col">
             <div
@@ -411,12 +517,22 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
                       Save draft
                     </Button>
                     <Button
+                      variant="outline"
                       type="submit"
-                      isLoading={isPending && saveAction === 'submit'}
+                      isLoading={isPending && saveAction === 'save'}
                       disabled={isPending}
                     >
                       <Icon style="solid" name="check" className="size-4 mr-2" />
                       Save
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSubmitRequest}
+                      isLoading={isPending && saveAction === 'submit'}
+                      disabled={isPending}
+                    >
+                      <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
+                      Submit
                     </Button>
                   </div>
                 </div>

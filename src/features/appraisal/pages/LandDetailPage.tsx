@@ -41,8 +41,10 @@ export default function LandDetailPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto p-6 -mt-4">
-
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex-1 min-h-0 overflow-y-auto p-6 -mt-4"
+        >
           {/* Top Navigation Tabs - DaisyUI tabs */}
           <div role="tablist" className="tabs tabs-bordered mt-4 mb-6">
             <button type="button" role="tab" className="tab tab-active">

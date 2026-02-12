@@ -42,6 +42,8 @@ export const assignmentFormSchema = z
     companyId: z.string().nullable(),
     selectedStaff: internalStaffSchema.nullable(),
     selectedCompany: externalCompanySchema.nullable(),
+    followupStaffId: z.string().nullable(),
+    selectedFollowupStaff: internalStaffSchema.nullable(),
     remarks: z.string().max(500, 'Remarks must not exceed 500 characters'),
   })
   .refine(
@@ -61,6 +63,19 @@ export const assignmentFormSchema = z
       message: 'Please select an assignee',
       path: ['staffId'], // Will show on staffId field
     }
+  )
+  .refine(
+    data => {
+      // For external assignments, require followup staff
+      if (data.assignmentType === 'external') {
+        return data.followupStaffId !== null && data.followupStaffId.length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'Please select an internal followup staff',
+      path: ['followupStaffId'],
+    }
   );
 
 export type AssignmentFormType = z.infer<typeof assignmentFormSchema>;
@@ -75,5 +90,7 @@ export const assignmentFormDefaults: AssignmentFormType = {
   companyId: null,
   selectedStaff: null,
   selectedCompany: null,
+  followupStaffId: null,
+  selectedFollowupStaff: null,
   remarks: '',
 };

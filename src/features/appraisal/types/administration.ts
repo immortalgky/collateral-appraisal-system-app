@@ -77,6 +77,9 @@ export interface AssignmentFormData {
   // Selected entities for display
   selectedStaff: InternalStaff | null;
   selectedCompany: ExternalCompany | null;
+  // External only - internal staff to follow up
+  followupStaffId: string | null;
+  selectedFollowupStaff: InternalStaff | null;
   // External only
   requireQuotation: boolean;
   // Notes/remarks
@@ -91,6 +94,7 @@ export interface CreateAssignmentRequest {
   assignmentType: AssignmentType;
   assignmentMethod: AssignmentMethod;
   assigneeId: string | null; // null for round-robin
+  followupStaffId?: string; // Internal staff to follow up on external assignments
   requireQuotation?: boolean;
   remarks?: string;
 }

@@ -1,4 +1,4 @@
-import { Outlet, useParams, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
@@ -45,7 +45,9 @@ function AppraisalLayout() {
   const location = useLocation();
   const { data: parametersData, isSuccess: isParametersSuccess } = useAllParameters();
   const { setParameters } = useParameterStore();
-  const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({ defaultIsOpen: true });
+  const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
+    defaultIsOpen: true,
+  });
 
   // Fetch appraisal data to get requestId and other info
   const {
@@ -61,11 +63,11 @@ function AppraisalLayout() {
     }
   }, [parametersData, isParametersSuccess, setParameters]);
 
-  // Build breadcrumb items based on current route
+  // Build breadcrumb items based on the current route
   const breadcrumbItems = useMemo(() => {
-    const appraisalNo = appraisalData?.appraisalReportNo || appraisalData?.appraisalId || appraisalId;
+    const appraisalNo =
+      appraisalData?.appraisalReportNo || appraisalData?.appraisalId || appraisalId;
     const items = [
-      { label: 'Appraisal', href: '/appraisal', icon: 'magnifying-glass-chart' },
       { label: appraisalNo || '...', href: `/appraisal/${appraisalId}`, icon: 'file-certificate' },
     ];
 

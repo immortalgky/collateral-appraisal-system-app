@@ -4,18 +4,33 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 
-// Map property type to route segment
+// Map property type to route a segment
 const getRouteSegment = (type: string): string => {
   const typeMap: Record<string, string> = {
-    'Building': 'building',
-    'Condominium': 'condo',
+    Building: 'building',
+    Condominium: 'condo',
     'Land and building': 'land-building',
-    'Lands': 'land',
+    Lands: 'land',
     'Lease Agreement Building': 'building',
     'Lease Agreement Land and building': 'land-building',
     'Lease Agreement Lands': 'land',
+    L: 'land',
+    B: 'building',
+    LB: 'land-building',
+    U: 'condo',
   };
   return typeMap[type] || 'land';
+};
+
+// Map property type to description
+const getPropertyDescription = (type: string) => {
+  const typeMap: Record<string, string> = {
+    L: 'Land',
+    B: 'Building',
+    LB: 'Land & Building',
+    U: 'Condo',
+  };
+  return typeMap[type] || 'Unknown type';
 };
 
 interface PropertyCardProps {
@@ -54,7 +69,9 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
   const handleCardClick = () => {
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
-      navigate(`/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`);
+      navigate(
+        `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+      );
     }
   };
 
@@ -62,7 +79,7 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
     <div
       ref={setNodeRef}
       style={style}
-      onContextMenu={(e) => onContextMenu(e, property, groupId)}
+      onContextMenu={e => onContextMenu(e, property, groupId)}
       className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex"
     >
       {/* Drag Handle */}
@@ -105,7 +122,10 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
         <div className="flex-1 p-2.5 flex flex-col justify-between min-w-0">
           <div>
             {/* Address/Title */}
-            <h3 className="font-medium text-gray-900 text-sm mb-1.5 line-clamp-1" title={property.address}>
+            <h3
+              className="font-medium text-gray-900 text-sm mb-1.5 line-clamp-1"
+              title={property.address}
+            >
               {property.address}
             </h3>
 
@@ -114,12 +134,6 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
               <div className="flex items-center gap-1">
                 <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
                 <span>{property.area}</span>
-              </div>
-
-              {/* Price Range with icon */}
-              <div className="flex items-center gap-1">
-                <Icon name="baht-sign" className="text-gray-400 text-[10px]" style="solid" />
-                <span className="truncate">{property.priceRange}</span>
               </div>
             </div>
 
@@ -135,7 +149,7 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
           {/* Property Type Badge - Bottom Right */}
           <div className="flex justify-end">
             <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
-              {property.type}
+              {getPropertyDescription(property.type)}
             </span>
           </div>
         </div>

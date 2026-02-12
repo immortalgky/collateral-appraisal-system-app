@@ -38,7 +38,7 @@ interface ListBoxOptionProps {
 }
 
 export type ListBoxItem = {
-  value: string;
+  value: string | undefined;
   label: string;
   id?: string | number;
 };
@@ -62,7 +62,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const { data: fetchedOptions } = useParameters(queryParameters);
-    const dropdownOptions =
+    let dropdownOptions =
       options !== undefined
         ? options
         : Array.isArray(fetchedOptions)
@@ -70,6 +70,10 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
               return { value: p.code, label: p.description, id: p.code };
             })
           : [];
+
+    // to allow selecting placeholder
+    dropdownOptions = [{ value: undefined, label: placeholder, id: '' }, ...dropdownOptions];
+
     const isControlled = onChange !== undefined && value !== undefined;
     const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
     const selectedOnChange = (opt: ListBoxItem) => {

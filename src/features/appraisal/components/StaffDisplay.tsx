@@ -5,9 +5,10 @@ import type { InternalStaff } from '../types/administration';
 interface StaffDisplayProps {
   staff: InternalStaff;
   onClear?: () => void;
+  variant?: 'emerald' | 'purple';
 }
 
-const StaffDisplay = ({ staff, onClear }: StaffDisplayProps) => {
+const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps) => {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -18,7 +19,13 @@ const StaffDisplay = ({ staff, onClear }: StaffDisplayProps) => {
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+    <div
+      className={clsx(
+        'flex items-center gap-3 p-3 rounded-lg border',
+        variant === 'emerald' && 'bg-emerald-50 border-emerald-200',
+        variant === 'purple' && 'bg-purple-50 border-purple-200'
+      )}
+    >
       {/* Avatar */}
       {staff.avatar ? (
         <img
@@ -27,8 +34,22 @@ const StaffDisplay = ({ staff, onClear }: StaffDisplayProps) => {
           className="w-10 h-10 rounded-full object-cover"
         />
       ) : (
-        <div className="w-10 h-10 rounded-full bg-emerald-200 flex items-center justify-center shrink-0">
-          <span className="text-sm font-medium text-emerald-700">{getInitials(staff.name)}</span>
+        <div
+          className={clsx(
+            'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
+            variant === 'emerald' && 'bg-emerald-200',
+            variant === 'purple' && 'bg-purple-200'
+          )}
+        >
+          <span
+            className={clsx(
+              'text-sm font-medium',
+              variant === 'emerald' && 'text-emerald-700',
+              variant === 'purple' && 'text-purple-700'
+            )}
+          >
+            {getInitials(staff.name)}
+          </span>
         </div>
       )}
 

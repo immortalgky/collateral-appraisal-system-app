@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
-import { usePropertyStore } from '../store';
+import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 
 interface CollateralAssignmentModalProps {
   isOpen: boolean;
@@ -22,7 +23,8 @@ const CollateralAssignmentModal = ({
   selectedCount,
   isLoading = false,
 }: CollateralAssignmentModalProps) => {
-  const { groups } = usePropertyStore();
+  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const { groups } = useEnrichedPropertyGroups(appraisalId);
   const [selectedCollateralId, setSelectedCollateralId] = useState<string | null>(null);
 
   if (!isOpen) return null;

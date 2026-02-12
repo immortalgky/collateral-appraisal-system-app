@@ -88,7 +88,7 @@ export type MovementType = (typeof Movement)[keyof typeof Movement];
 // Main Task interface
 export interface Task {
   id: string;
-  appraisalReportNo: string;
+  appraisalNumber: string;
   referenceNo?: string;
   customerName: string;
   taskType: TaskTypeType;
@@ -101,7 +101,7 @@ export interface Task {
   assignee?: Assignee;
   commentCount: number;
   timeInfo?: string; // e.g., "1 / 0.7 / 0.3"
-  appointmentDate?: string;
+  appointmentDateTime?: string;
   requestDate?: string;
   movement?: MovementType;
   ola?: number;
@@ -117,12 +117,10 @@ export type GroupByField = 'kanbanStatus' | 'status' | 'purpose' | 'taskType' | 
 
 // Paginated response type
 export interface TaskListResponse {
-  result: {
-    items: Task[];
-    count: number;
-    pageNumber: number;
-    pageSize: number;
-  };
+  items: Task[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
 }
 
 // Query params for task listing

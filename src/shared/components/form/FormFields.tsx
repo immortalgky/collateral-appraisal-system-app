@@ -20,8 +20,7 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import type { FormField, FieldCondition, FieldConditions, ConditionInput } from './types';
-import { useEffect } from 'react';
+import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types'; // =============================================================================
 
 // =============================================================================
 // Condition Evaluation Utilities
@@ -145,19 +144,19 @@ function evaluateConditions(
 }
 
 // =============================================================================
-// Field Visibility Hook
+// Field State Hook
 // =============================================================================
 
-interface UseFieldVisibilityOptions {
+interface UseFieldStateOptions {
   field: FormField;
   namePrefix: string;
   index?: number;
 }
 
 /**
- * Hook to compute field visibility and disabled state based on conditions.
+ * Hook to compute field visibility, disabled, and required state based on conditions.
  */
-function useFieldVisibility({ field, namePrefix, index }: UseFieldVisibilityOptions) {
+function useFieldState({ field, namePrefix, index }: UseFieldStateOptions) {
   const { watch } = useFormContext();
   const values = watch();
 
@@ -176,7 +175,14 @@ function useFieldVisibility({ field, namePrefix, index }: UseFieldVisibilityOpti
   } else if (isDisabled && field.enableWhen) {
     isDisabled = !evaluateConditions(field.enableWhen, values, namePrefix, index);
   }
-  return { isVisible, isDisabled };
+
+  // Calculate required state
+  let isRequired = field.required ?? false;
+  if (field.requiredWhen) {
+    isRequired = evaluateConditions(field.requiredWhen, values, namePrefix, index);
+  }
+
+  return { isVisible, isDisabled, isRequired };
 }
 
 // =============================================================================
@@ -268,9 +274,8 @@ function FieldRenderer({
   schema,
   globalShowCharCount,
 }: FieldRendererProps) {
-  // Check visibility and disabled state
-  const { isVisible, isDisabled } = useFieldVisibility({ field, namePrefix, index });
-  const { setValue, getValues } = useFormContext();
+  // Check visibility, disabled, and required state
+  const { isVisible, isDisabled, isRequired } = useFieldState({ field, namePrefix, index });
 
   // Build a full field name with prefix and index
   let name = field.name;
@@ -281,25 +286,13 @@ function FieldRenderer({
     name = `${namePrefix}.${name}`;
   }
 
-  // Set disabled value if field is disabled
-  useEffect(() => {
-    if (!isDisabled) return;
-    if (field.disabledValue === undefined) return;
-
-    const currentValue = getValues(name);
-
-    if (currentValue !== field.disabledValue) {
-      setValue(name, field.disabledValue, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
-  }, [isDisabled, name, field.disabledValue, getValues, setValue]);
-
   const {
     field: fieldProps,
     fieldState: { error },
-  } = useController({ name, control });
+  } = useController({
+    name,
+    control,
+  });
 
   // Don't render if field is not visible
   if (!isVisible) {
@@ -317,8 +310,9 @@ function FieldRenderer({
     hideWhen: _hw,
     disableWhen: _dw,
     enableWhen: _ew,
+    requiredWhen: _rw,
     disabled: _d,
-    disabledValue: _dv,
+    required: _r,
     ...passedField
   } = field;
 
@@ -331,7 +325,7 @@ function FieldRenderer({
           ...schemaProps,
           maxLength: passedField.maxLength ?? schemaProps.maxLength,
           minLength: passedField.minLength ?? schemaProps.minLength,
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           showCharCount: passedField.showCharCount ?? globalShowCharCount,
           disabled: isDisabled,
         };
@@ -343,7 +337,7 @@ function FieldRenderer({
           ...schemaProps,
           min: passedField.min ?? schemaProps.min,
           max: passedField.max ?? schemaProps.max,
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           disabled: isDisabled,
         };
         return (
@@ -353,7 +347,7 @@ function FieldRenderer({
 
       case 'date-input': {
         const dateProps = {
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           disabled: isDisabled,
         };
         return <DateInput {...fieldProps} {...passedField} {...dateProps} error={error?.message} />;
@@ -361,7 +355,7 @@ function FieldRenderer({
 
       case 'datetime-input': {
         const dateTimeProps = {
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           disabled: isDisabled,
         };
         return (
@@ -376,7 +370,7 @@ function FieldRenderer({
 
       case 'select-input': {
         const selectProps = {
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           disabled: isDisabled,
         };
         return (
@@ -386,7 +380,7 @@ function FieldRenderer({
 
       case 'dropdown': {
         const dropdownProps = {
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           disabled: isDisabled,
         };
         return (
@@ -422,7 +416,7 @@ function FieldRenderer({
         const textareaProps = {
           ...schemaProps,
           maxLength: passedField.maxLength ?? schemaProps.maxLength,
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           showCharCount: passedField.showCharCount ?? globalShowCharCount,
           disabled: isDisabled,
         };
@@ -516,7 +510,7 @@ function FieldRenderer({
         };
 
         const locationProps = {
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           disabled: isDisabled,
         };
         return (

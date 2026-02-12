@@ -17,7 +17,8 @@ import {
   useAddPhotoToCollateral,
   useRemovePhotoFromCollateral,
 } from '../api/photo';
-import { usePropertyStore } from '../store';
+import { useParams } from 'react-router-dom';
+import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 // Use same upload API as RequestPage
 import { createUploadSession, useUploadDocument } from '@/features/request/api';
 
@@ -503,8 +504,9 @@ export const CollateralPhotoTab = ({
   collateralId,
   collateralType,
 }: CollateralPhotoTabProps) => {
-  // Get gallery images from property store (same as GalleryTab)
-  const { groups } = usePropertyStore();
+  // Get property groups from API
+  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const { groups } = useEnrichedPropertyGroups(appraisalId);
 
   // API hooks
   const { data: topicsData, isLoading: isLoadingTopics } = useGetCollateralPhotoTopics(
