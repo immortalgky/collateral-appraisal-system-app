@@ -12,11 +12,12 @@ export const useCurrentUser = () => {
     queryKey: ['currentUser'],
     queryFn: async (): Promise<User> => {
       const { data } = await axios.get('/auth/me');
-      return data;
-    },
-    select: (data: User) => {
-      setUser(data);
-      return data;
+      const user: User = {
+        ...data,
+        name: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || data.username || '',
+      };
+      setUser(user);
+      return user;
     },
     onError: () => {
       // If we can't get the user, they're not authenticated

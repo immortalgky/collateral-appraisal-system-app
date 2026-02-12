@@ -1,8 +1,15 @@
 export interface User {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: string;
+  username: string;
+  avatarUrl: string;
+  position: string;
+  department: string;
+  roles: string[];
+  permissions: string[];
 }
 
 export interface LoginCredentials {

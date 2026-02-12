@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
-import { PropertiesTab, MarketsTab, GalleryTab, LawsRegulationTab } from '../components/tabs';
+import {
+  GalleryTab,
+  LawsRegulationTab,
+  MarketsTab,
+  PhotosTab,
+  PropertiesTab,
+} from '../components/tabs';
 
-// Photo tab removed - photos are now managed at collateral level in each collateral page
-type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
+type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws';
 type ViewMode = 'grid' | 'list';
 
 interface Tab {
@@ -17,6 +22,7 @@ const TABS: Tab[] = [
   { id: 'properties', label: 'Properties', icon: 'buildings' },
   { id: 'markets', label: 'Markets', icon: 'chart-line' },
   { id: 'gallery', label: 'Gallery', icon: 'images' },
+  { id: 'photos', label: 'Photos', icon: 'camera' },
   { id: 'laws', label: 'Laws', icon: 'gavel' },
 ];
 
@@ -32,6 +38,8 @@ export default function PropertyInformationPage() {
         return <MarketsTab />;
       case 'gallery':
         return <GalleryTab />;
+      case 'photos':
+        return <PhotosTab />;
       case 'laws':
         return <LawsRegulationTab />;
       default:
@@ -55,7 +63,7 @@ export default function PropertyInformationPage() {
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
                   isActive
                     ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
                 )}
               >
                 <Icon
@@ -71,9 +79,7 @@ export default function PropertyInformationPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {renderTabContent()}
-      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
     </div>
   );
 }

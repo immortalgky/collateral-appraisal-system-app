@@ -1,7 +1,7 @@
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -12,7 +12,7 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import {
-  useCreateBuildingProperty,
+  useCreateBuildingRequest,
   useGetBuildingPropertyById,
   useUpdateBuildingProperty,
 } from '../api';
@@ -54,7 +54,7 @@ const CreateBuildingPage = () => {
     }
   }, [isEditMode, propertyData, reset]);
 
-  const { mutate: createBuildingProperties, isPending: isCreating } = useCreateBuildingProperty();
+  const { mutate: createBuildingProperties, isPending: isCreating } = useCreateBuildingRequest();
   const { mutate: updateBuildingProperties, isPending: isUpdating } = useUpdateBuildingProperty();
 
   const isPending = isCreating || isUpdating;

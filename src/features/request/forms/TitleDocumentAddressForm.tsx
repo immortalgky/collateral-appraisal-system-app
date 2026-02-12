@@ -107,7 +107,7 @@ const TitleDocumentAddressForm = ({ index }: TitleDocumentAdressFormProps) => {
 export const titleAddressFieldsTop: FormField[] = [
   {
     type: 'text-input',
-    label: 'House No',
+    label: 'House Number',
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
   },

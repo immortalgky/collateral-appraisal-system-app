@@ -1,17 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
+import axios from '@shared/api/axiosInstance';
 import type {
-  Task,
-  TaskListResponse,
+  Assignee,
   GetTasksParams,
+  KanbanStatusType,
+  MovementType,
+  PropertyTypeType,
+  Task,
+  TaskActionType,
+  TaskListResponse,
+  TaskPriorityType,
+  TaskPurposeType,
   TaskStatusType,
   TaskTypeType,
-  TaskPurposeType,
-  PropertyTypeType,
-  KanbanStatusType,
-  TaskPriorityType,
-  TaskActionType,
-  MovementType,
-  Assignee,
 } from './types';
 
 // Customer names matching Figma design
@@ -123,8 +124,7 @@ const getMockTasks = (): Task[] => {
 };
 
 /**
- * Hook for fetching paginated list of tasks
- * Uses mock data for development
+ * Hook for fetching a paginated list of tasks
  */
 export const useGetTasks = (params: GetTasksParams = {}) => {
   const {
@@ -158,67 +158,9 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
   return useQuery({
     queryKey,
     queryFn: async (): Promise<TaskListResponse> => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const { data } = await axios.get('/tasks');
 
-      let tasks = [...getMockTasks()];
-
-      // Apply search filter
-      if (search) {
-        const searchLower = search.toLowerCase();
-        tasks = tasks.filter(
-          t =>
-            t.appraisalReportNo.toLowerCase().includes(searchLower) ||
-            t.customerName.toLowerCase().includes(searchLower) ||
-            (t.referenceNo && t.referenceNo.toLowerCase().includes(searchLower)),
-        );
-      }
-
-      // Apply status filter
-      if (status) {
-        tasks = tasks.filter(t => t.status === status);
-      }
-
-      // Apply task type filter
-      if (taskType) {
-        tasks = tasks.filter(t => t.taskType === taskType);
-      }
-
-      // Apply property type filter
-      if (propertyType) {
-        tasks = tasks.filter(t => t.propertyType === propertyType);
-      }
-
-      // Apply purpose filter
-      if (purpose) {
-        tasks = tasks.filter(t => t.purpose === purpose);
-      }
-
-      // Apply sorting
-      if (sortBy) {
-        tasks.sort((a, b) => {
-          const aVal = String(a[sortBy as keyof Task] ?? '');
-          const bVal = String(b[sortBy as keyof Task] ?? '');
-          const comparison = aVal.localeCompare(bVal);
-          return sortDirection === 'asc' ? comparison : -comparison;
-        });
-      }
-
-      // Get total before pagination
-      const totalCount = tasks.length;
-
-      // Apply pagination
-      const start = pageNumber * pageSize;
-      const paginatedTasks = tasks.slice(start, start + pageSize);
-
-      return {
-        result: {
-          items: paginatedTasks,
-          count: totalCount,
-          pageNumber,
-          pageSize,
-        },
-      };
+      return data;
     },
     staleTime: 30 * 1000, // Cache for 30 seconds
   });

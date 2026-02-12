@@ -1,6 +1,6 @@
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
@@ -9,7 +9,7 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CondoDetailForm from '../forms/CondoDetailForm';
-import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty } from '../api';
+import { useCreateCondoRequest, useGetCondoPropertyById, useUpdateCondoProperty } from '../api';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { useEffect, useState } from 'react';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
@@ -41,7 +41,7 @@ const CreateCondoPage = () => {
     }
   }, [isEditMode, propertyData, reset]);
 
-  const { mutate: createCondoProperties, isPending: isCreating } = useCreateCondoProperty();
+  const { mutate: createCondoProperties, isPending: isCreating } = useCreateCondoRequest();
   const { mutate: updateCondoProperties, isPending: isUpdating } = useUpdateCondoProperty();
 
   const isPending = isCreating || isUpdating;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -12,7 +12,7 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import {
-  useCreateLandAndBuildingProperty,
+  useCreateLandBuildingRequest,
   useGetLandAndBuildingPropertyById,
   useUpdateLandAndBuildingProperty,
 } from '../api';
@@ -58,7 +58,7 @@ const CreateLandBuildingPage = () => {
 
   // const { mutate } = useCreateLandAndBuildingProperty();
   const { mutate: createLandAndBuildingProperties, isPending: isCreating } =
-    useCreateLandAndBuildingProperty();
+    useCreateLandBuildingRequest();
   const { mutate: updateLandAndBuildingProperties, isPending: isUpdating } =
     useUpdateLandAndBuildingProperty();
 
@@ -192,9 +192,6 @@ const CreateLandBuildingPage = () => {
               icon: 'building',
               onClick: () => setActiveTab('building'),
             },
-            ...(propertyId
-              ? [{ label: 'Photos', id: 'photos', icon: 'images', href: photosHref }]
-              : []),
           ]}
         />
       </div>

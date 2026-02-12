@@ -1,4 +1,4 @@
-import { useParameterStore, useLocaleStore } from '../store';
+import { useLocaleStore, useParameterStore } from '../store';
 
 type DisplayFormat = 'description' | 'code-description';
 
@@ -11,7 +11,7 @@ interface ParameterDisplayProps {
 }
 
 /**
- * Display component that converts a parameter code to its label.
+ * Display a component that converts a parameter code to its label.
  * Reads from the global parameter store (loaded at app startup).
  * Auto-detects language from locale store.
  *

@@ -1,4 +1,4 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 
 interface TitleCondoFormProps {
   index: number;
@@ -10,23 +10,43 @@ const TitleCondoForm = ({ index }: TitleCondoFormProps) => {
 
 const condoFields: FormField[] = [
   {
+    type: 'dropdown',
+    label: 'Title Type',
+    name: 'titleType',
+    options: [
+      { value: 'DEED', label: 'Title Deed' },
+      { value: 'NS3', label: 'Nor Sor 3' },
+      { value: 'NS3K', label: 'Nor Sor 3 K' },
+      { value: 'NS3KO', label: 'Nor Sor 3 Ko' },
+      { value: 'RIGHT', label: 'Document of possessory rights to land' },
+      { value: 'OTH', label: 'Other' },
+    ],
+    wrapperClassName: 'col-span-2',
+  },
+  {
     type: 'text-input',
-    label: 'Room No',
-    name: 'roomNo',
+    label: 'Title Number',
+    name: 'titleNumber',
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    type: 'text-input',
+    label: 'Room Number',
+    name: 'roomNumber',
     wrapperClassName: 'col-span-2',
     required: true,
   },
   {
     type: 'text-input',
-    label: 'Floor No',
-    name: 'floorNo',
+    label: 'Floor Number',
+    name: 'floorNumber',
     wrapperClassName: 'col-span-2',
     required: true,
   },
   {
     type: 'text-input',
-    label: 'Building No',
-    name: 'buildingNo',
+    label: 'Building Number',
+    name: 'buildingNumber',
     wrapperClassName: 'col-span-2',
     required: true,
   },
@@ -55,7 +75,7 @@ const condoFields: FormField[] = [
   {
     type: 'textarea',
     label: 'Title Detail',
-    name: 'titleDetail',
+    name: 'notes',
     wrapperClassName: 'col-span-6',
   },
 ];

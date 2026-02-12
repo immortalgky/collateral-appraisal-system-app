@@ -11,9 +11,14 @@ import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import TitleDocumentAddressForm from './TitleDocumentAddressForm';
 import DopaAddressForm from './DopaAddressForm';
-import { RequestTitleDto, type RequestTitleDtoType } from '@/shared/forms/v1';
-import { requestTitleDefault } from '@/features/request/schemas/form';
+//import { RequestTitleDto, type RequestTitleDtoType } from '@/shared/forms/v1';
+import {
+  requestTitleDefault,
+  RequestTitleDto,
+  type RequestTitleDtoType,
+} from '@/features/request/schemas/form';
 import clsx from 'clsx';
+import { useTitleLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 
 interface TitleFormProps {
   index: number;
@@ -34,6 +39,9 @@ const TitleInformationForm = () => {
   // Check if the title passes Zod validation (uses the same schema as form)
   const isTitleComplete = (index: number): boolean => {
     const title = titles[index];
+
+    console.log(title, 'testing');
+    console.log(RequestTitleDto.safeParse(title), 'parsed');
     if (!title) return false;
     const result = RequestTitleDto.safeParse(title);
     return result.success;
@@ -99,6 +107,7 @@ const TitleInformationForm = () => {
       } else if (editIndex !== undefined && editIndex > index) {
         setEditIndex(editIndex - 1);
       }
+      setDeleteConfirm({ isOpen: false, index: null });
     }
   };
 
@@ -115,23 +124,23 @@ const TitleInformationForm = () => {
 
   const getCollateralTypeIcon = (type: string | undefined) => {
     switch (type) {
-      case 'land':
+      case 'L':
         return 'mountain-sun';
-      case 'building':
+      case 'B':
         return 'building';
-      case 'landAndBuilding':
+      case 'LB':
         return 'city';
-      case 'condominium':
+      case 'U':
         return 'building-user';
-      case 'vehicle':
+      case 'VEH':
         return 'car';
-      case 'machine':
+      case 'MAC':
         return 'gear';
-      case 'leaseAgreementLand':
+      case 'LSL':
         return 'file-contract';
-      case 'leaseAgreementLandAndBuilding':
+      case 'LS':
         return 'file-signature';
-      case 'leaseAgreementBuilding':
+      case 'LSB':
         return 'file-lines';
       default:
         return 'file-circle-question';
@@ -162,13 +171,19 @@ const TitleInformationForm = () => {
   }, [contextMenu]);
 
   return (
-    <FormCard
-      title="Title Information"
-      subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles?.length} title(s)`}
-      icon="file-certificate"
-      iconColor="purple"
-      rightIcon={
-        isEditing ? (
+    <>
+      {/* Initialize required documents for all titles */}
+      {titles?.map((_: any, index: number) => (
+        <TitleRequiredDocsInitializer key={`init-${index}`} index={index} />
+      ))}
+
+      <FormCard
+        title="Title Information"
+        subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles?.length} title(s)`}
+        icon="file-certificate"
+        iconColor="purple"
+        rightIcon={
+          isEditing ? (
           <button
             type="button"
             onClick={handleBackToList}
@@ -271,7 +286,7 @@ const TitleInformationForm = () => {
                           {getCollateralTypeLabel(title?.collateralType)}
                         </div>
                         <div className="text-[10px] text-gray-400 truncate">
-                          {title?.titleNo || 'No title number'}
+                          {title?.titleNumber || 'No title number'}
                         </div>
                       </div>
                       {/* Delete button - visible on hover (hidden in readOnly) */}
@@ -365,6 +380,7 @@ const TitleInformationForm = () => {
         variant="danger"
       />
     </FormCard>
+    </>
   );
 };
 
@@ -380,6 +396,25 @@ interface TitleTableViewProps {
   isTitleComplete: (index: number) => boolean;
   isReadOnly?: boolean;
 }
+
+// Helper to get required document stats for a title
+const getRequiredDocStats = (documents: any[] | undefined): { total: number; completed: number } => {
+  if (!documents || !Array.isArray(documents)) return { total: 0, completed: 0 };
+
+  let total = 0;
+  let completed = 0;
+
+  documents.forEach(doc => {
+    if (doc?.isRequired) {
+      total++;
+      if (doc?.fileName) {
+        completed++;
+      }
+    }
+  });
+
+  return { total, completed };
+};
 
 const TitleTableView = ({
   titles,
@@ -430,13 +465,16 @@ const TitleTableView = ({
               Property Type
             </th>
             <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
-              Title No / Room No
+              Title Number
             </th>
             <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
-              Building Type
+              Rawang
             </th>
             <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
               Area
+            </th>
+            <th className="text-center text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-24">
+              Documents
             </th>
             <th className="text-center text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-10">
               Status
@@ -477,11 +515,39 @@ const TitleTableView = ({
                     </span>
                   </div>
                 </td>
+                <td className="py-3 px-4 text-sm text-gray-600">{title?.titleNumber || '-'}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{title?.rawang || '-'}</td>
                 <td className="py-3 px-4 text-sm text-gray-600">
-                  {title?.titleNo || title?.roomNo || '-'}
+                  {title?.collateralType === 'U'
+                    ? `${title?.usableArea} sq.m`
+                    : `${title?.areaRai || 0}-${title?.areaNgan || 0}-${title?.areaSquareWa || 0}`}
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-600">{title?.buildingType || '-'}</td>
-                <td className="py-3 px-4 text-sm text-gray-600">{title?.usableArea || '-'}</td>
+                <td className="py-3 px-4 text-center">
+                  {(() => {
+                    const docStats = getRequiredDocStats(title?.documents);
+                    if (docStats.total === 0) {
+                      return <span className="text-xs text-gray-400">-</span>;
+                    }
+                    const isDocComplete = docStats.completed === docStats.total;
+                    return (
+                      <div
+                        className={clsx(
+                          'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
+                          isDocComplete
+                            ? 'bg-success/10 text-success'
+                            : 'bg-amber-100 text-amber-700',
+                        )}
+                      >
+                        <Icon
+                          style="solid"
+                          name={isDocComplete ? 'check' : 'asterisk'}
+                          className="size-2.5"
+                        />
+                        {docStats.completed}/{docStats.total}
+                      </div>
+                    );
+                  })()}
+                </td>
                 <td className="py-3 px-4 text-center">
                   <div
                     className={clsx(
@@ -544,11 +610,17 @@ const TitleTableView = ({
   );
 };
 
+// Component to initialize required documents for a title (renders nothing)
+const TitleRequiredDocsInitializer = ({ index }: { index: number }) => {
+  useTitleLevelRequiredDocuments(index);
+  return null;
+};
+
 const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
   switch (currentFormType) {
-    case 'land':
+    case 'L':
       return <TitleLandForm index={index} />;
-    case 'building':
+    case 'B':
       return <TitleBuildingForm index={index} />;
     case 'LB':
       return (
@@ -557,22 +629,22 @@ const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
           <TitleBuildingForm index={index} variant={2} />
         </>
       );
-    case 'condominium':
+    case 'U':
       return <TitleCondoForm index={index} />;
-    case 'vehicle':
+    case 'VEH':
       return <TitleVehicleForm index={index} />;
-    case 'machine':
+    case 'MAC':
       return <TitleMachineForm index={index} />;
-    case 'leaseAgreementLand':
+    case 'LSL':
       return <TitleLandForm index={index} />;
-    case 'leaseAgreementLandAndBuilding':
+    case 'LS':
       return (
         <>
           <TitleLandForm index={index} variant="landAndBuilding" />
           <TitleBuildingForm index={index} variant={2} />
         </>
       );
-    case 'leaseAgreementBuilding':
+    case 'LSB':
       return <TitleBuildingForm index={index} />;
     default:
       return (
@@ -585,15 +657,15 @@ const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
 };
 
 const collateralTypeOptions = [
-  { value: 'land', label: 'Land' },
-  { value: 'landAndBuilding', label: 'Land and Building' },
-  { value: 'building', label: 'Building' },
-  { value: 'condominium', label: 'Condominium' },
-  { value: 'vehicle', label: 'Vehicle' },
-  { value: 'machine', label: 'Machine' },
-  { value: 'leaseAgreementLand', label: 'Lease Agreement Land' },
-  { value: 'leaseAgreementLandAndBuilding', label: 'Lease Agreement Land and Building' },
-  { value: 'leaseAgreementBuilding', label: 'Lease Agreement Building' },
+  { value: 'L', label: 'Land' },
+  { value: 'LB', label: 'Land and Building' },
+  { value: 'B', label: 'Building' },
+  { value: 'U', label: 'Condominium' },
+  { value: 'VEH', label: 'Vehicle' },
+  { value: 'MAC', label: 'Machine' },
+  { value: 'LSL', label: 'Lease Agreement Land' },
+  { value: 'LS', label: 'Lease Agreement Land and Building' },
+  { value: 'LSB', label: 'Lease Agreement Building' },
 ];
 
 const titleFields: FormField[] = [

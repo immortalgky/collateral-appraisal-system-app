@@ -4,9 +4,9 @@ import {
   landAndBuildingPMAFormDefault,
   type landAndBuildingPMAFormType,
 } from '../schemas/form';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { useGetLandAndBuildingPMAPropertyById, useUpdateLandAndBuildingPMAProperty } from '../api';
+//import { useGetLandAndBuildingPMAPropertyById, useUpdateLandAndBuildingPMAProperty } from '../api';
 import { useEffect, useState } from 'react';
 import { mapLandAndBuildingPMAPropertyResponseToForm } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
@@ -28,23 +28,26 @@ const LandBuildingPMAPage = () => {
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
-  const { mutate, isPending } = useUpdateLandAndBuildingPMAProperty();
+  //const { mutate, isPending } = useUpdateLandAndBuildingPMAProperty();
 
-  const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
-    appraisalId,
-    propertyId,
-  );
+  // const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
+  //   appraisalId,
+  //   propertyId,
+  // );
+
+  const data = {};
+  const isPending = false;
 
   const onSubmit: SubmitHandler<landAndBuildingPMAFormType> = data => {
     setSaveAction('submit');
 
-    mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
   };
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
   };
 
   const { isOpen, onToggle } = useDisclosure();

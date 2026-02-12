@@ -36,7 +36,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
 
 const propertiesTableHeader = [
   { name: 'areaDetail', label: 'Area Detail' },
-  { name: 'area', label: 'Area', inputType: 'number' },
+  { name: 'area', label: 'Area', inputType: 'number' as const },
 ];
 
 function calcTotalArea(properties: AreaDetailDtoType[]): number {

@@ -1,4 +1,4 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 
 /** Section row component for form layout */
@@ -140,7 +140,6 @@ const landInfoField: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     wrapperClassName: 'col-span-3',
-    required: true,
   },
 
   // Display fields (autopopulated by location-selector)
@@ -149,7 +148,6 @@ const landInfoField: FormField[] = [
     label: 'District',
     name: 'districtName',
     disabled: true,
-    required: true,
     wrapperClassName: 'col-span-3',
   },
   {
@@ -157,7 +155,6 @@ const landInfoField: FormField[] = [
     label: 'Province',
     name: 'provinceName',
     disabled: true,
-    required: true,
     wrapperClassName: 'col-span-3',
   },
   {

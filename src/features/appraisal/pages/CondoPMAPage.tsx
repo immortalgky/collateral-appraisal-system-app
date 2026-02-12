@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { condoPMAForm, condoPMAFormDefault, type condoPMAFormType } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
-import { useGetCondoPMAPropertyById, useUpdateCondoPMAProperty } from '../api';
+//import { useGetCondoPMAPropertyById, useUpdateCondoPMAProperty } from '../api';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
@@ -24,20 +24,23 @@ const CondoPMAPage = () => {
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
-  const { mutate, isPending } = useUpdateCondoPMAProperty();
+  //const { mutate, isPending } = useUpdateCondoPMAProperty();
 
-  const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
+  //const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
+
+  const propertyData = {};
+  const isPending = false;
 
   const onSubmit: SubmitHandler<condoPMAFormType> = data => {
     setSaveAction('submit');
 
-    mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
   };
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
   };
 
   const { isOpen, onToggle } = useDisclosure();

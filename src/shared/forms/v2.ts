@@ -113,7 +113,7 @@ export const CreateLandRequest = z
 const GetLandPropertyByIdResult = z
   .object({
     landTitle: z.array(LandTitleDto),
-    propertyName: z.string().nullable(),
+    propertyName: z.string(),
     latitude: z.coerce.number(),
     longitude: z.coerce.number(),
     subDistrict: z.string().min(1, 'Sub district is required.'),

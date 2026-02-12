@@ -54,8 +54,8 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
         requestId,
         data: {
           comment: newComment.trim(),
-          commentedBy: currentUser.id,
-          commentedByName: currentUser.name,
+          commentedBy: currentUser.username,
+          commentedByName: `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() || currentUser.username || 'Anonymous',
         },
       },
       {
@@ -385,9 +385,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
               ) : (
                 <div className="space-y-2">
                   {comments.map(comment => {
-                    const isOwnComment = comment.commentedBy === currentUser?.id;
+                    const isOwnComment = comment.commentedBy === currentUser?.username;
                     const isEditing = editingId === comment.id;
-                    const displayName = comment.commentedBy === currentUser?.id ? 'Me' : comment.commentedByName;
+                    const displayName = comment.commentedBy === currentUser?.username ? 'Me' : comment.commentedByName;
                     const timeDisplay = getRelativeTimeString(comment.commentedAt);
 
                     return (

@@ -100,6 +100,10 @@ interface BaseFormField {
   disableWhen?: ConditionInput;
   /** Enable field when condition is met (overrides disabled) */
   enableWhen?: ConditionInput;
+
+  // Conditional required state
+  /** Make field required when condition is met (shows asterisk and validates) */
+  requiredWhen?: ConditionInput;
 }
 
 // =============================================================================

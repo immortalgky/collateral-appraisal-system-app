@@ -3,7 +3,8 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-import { usePropertyStore } from '../../store';
+import { useParams } from 'react-router-dom';
+import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ViewModeToggle, { type GalleryViewMode } from '../ViewModeToggle';
 import { PhotoGridView, PhotoListView, PhotoDisplayView } from '../gallery';
 import type { GalleryImage } from '../../types/gallery';
@@ -150,7 +151,8 @@ const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => (
 );
 
 export const GalleryTab = () => {
-  const { groups } = usePropertyStore();
+  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const { groups } = useEnrichedPropertyGroups(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(new Set());
@@ -173,7 +175,7 @@ export const GalleryTab = () => {
   const { mutate: assignPhotos, isPending: isAssigning } = useAssignPhotosToCollateral();
 
   // Mock appraisal ID (in real app, get from context/params)
-  const appraisalId = 'mock-appraisal-id';
+
 
   /**
    * Get or create an upload session for photo uploads.
@@ -188,7 +190,7 @@ export const GalleryTab = () => {
       return sessionPromiseRef.current;
     }
 
-    sessionPromiseRef.current = createUploadSession(appraisalId)
+    sessionPromiseRef.current = createUploadSession(appraisalId!)
       .then(response => {
         uploadSessionIdRef.current = response.sessionId;
         return response.sessionId;

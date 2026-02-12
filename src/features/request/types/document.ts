@@ -32,24 +32,16 @@ export interface DocumentTypeInfo {
 }
 
 export const DOCUMENT_TYPES = {
-  TITLE_DEED: { type: 'TITLE_DEED', displayName: 'Title Deed', isRequired: true },
-  REGISTRATION: { type: 'REGISTRATION', displayName: 'Registration document', isRequired: false },
-  INVOICE: { type: 'INVOICE', displayName: 'Invoice', isRequired: false },
-  BUILDING_PLAN: { type: 'BUILDING_PLAN', displayName: 'Building plan', isRequired: true },
-  ID_CARD: { type: 'ID_CARD', displayName: 'ID Card', isRequired: true },
-  CERTIFICATE: { type: 'CERTIFICATE', displayName: 'Certificate', isRequired: false },
+  D001: { type: 'D001', displayName: 'Title Deed', isRequired: false },
+  D002: { type: 'D002', displayName: 'Registration Document', isRequired: false },
+  D003: { type: 'D003', displayName: 'Invoice', isRequired: false },
+  D004: { type: 'D004', displayName: 'Building Plan', isRequired: false },
+  D005: { type: 'D005', displayName: 'ID Card', isRequired: false },
+  D006: { type: 'D006', displayName: 'Certificate', isRequired: false },
 } as const;
 
-export const MOCK_REQUEST_DOCUMENTS: DocumentTypeInfo[] = [
-  DOCUMENT_TYPES.ID_CARD,
-  DOCUMENT_TYPES.INVOICE,
-];
-
-export const MOCK_TITLE_DOCUMENTS: DocumentTypeInfo[] = [
-  DOCUMENT_TYPES.TITLE_DEED,
-  DOCUMENT_TYPES.REGISTRATION,
-  DOCUMENT_TYPES.BUILDING_PLAN,
-];
+// Array of all document types for dropdown use (shared by request and title)
+export const ALL_DOCUMENT_TYPES: DocumentTypeInfo[] = Object.values(DOCUMENT_TYPES);
 
 export const ENTITY_KEY_PREFIXES = {
   request: '67',
@@ -84,18 +76,33 @@ export interface UploadDocumentParams {
 // Document Type to Category Mapping (max 10 chars)
 export const DOCUMENT_TYPE_CATEGORY_MAP: Record<string, string> = {
   // Legal documents
-  TITLE_DEED: 'legal',
-  REGISTRATION: 'legal',
-  CERTIFICATE: 'legal',
+  D001: 'legal', // Title Deed
+  D002: 'legal', // Registration document
+  D006: 'legal', // Certificate
 
   // Supporting documents
-  ID_CARD: 'support',
-  INVOICE: 'support',
+  D005: 'support', // ID Card
+  D003: 'support', // Invoice
 
   // Request documents
-  BUILDING_PLAN: 'request',
+  D004: 'request', // Building plan
 };
 
 export const getDocumentCategory = (documentType: string): string => {
   return DOCUMENT_TYPE_CATEGORY_MAP[documentType] || 'support';
 };
+
+// Required Documents Types
+export interface RequiredDocumentConfig {
+  documentType: string;
+  displayName: string;
+}
+
+export interface GetRequiredDocumentsParams {
+  purpose?: string;
+  collateralType?: string;
+}
+
+export interface GetRequiredDocumentsResponse {
+  documents: RequiredDocumentConfig[];
+}

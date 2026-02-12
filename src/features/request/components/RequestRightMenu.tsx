@@ -136,8 +136,8 @@ const RequestRightMenu = ({
     const commentData: LocalComment = {
       tempId: `temp-${Date.now()}`,
       comment: newComment.trim(),
-      commentedBy: currentUser?.id || '',
-      commentedByName: currentUser?.name || '',
+      commentedBy: currentUser?.username || 'anonymous',
+      commentedByName: `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim() || currentUser?.username || 'Anonymous User',
       commentedAt: new Date().toISOString(),
       lastModifiedAt: null,
     };
@@ -358,7 +358,7 @@ const RequestRightMenu = ({
                   label="Requestor"
                   name={requestor.username || currentUser?.name || 'Not set'}
                   avatar={null}
-                  isMe={requestor.userId === currentUser?.id}
+                  isMe={requestor.username === currentUser?.username}
                   onClick={onRequestorClick}
                   editable
                 />
@@ -366,7 +366,7 @@ const RequestRightMenu = ({
                   label="Creator"
                   name={creator.username || currentUser?.name || 'Not set'}
                   avatar={null}
-                  isMe={creator.userId === currentUser?.id}
+                  isMe={creator.username === currentUser?.username}
                 />
               </div>
             </div>
@@ -405,7 +405,7 @@ const RequestRightMenu = ({
               ) : (
                 <div className="space-y-2">
                   {comments.map((comment, index) => {
-                    const isOwnComment = comment.commentedBy === currentUser?.id;
+                    const isOwnComment = comment.commentedBy === currentUser?.username;
                     const isEditing = editingIndex === index;
                     const displayName = isOwnComment ? 'Me' : comment.commentedByName;
                     const timeDisplay = getRelativeTimeString(comment.commentedAt);
