@@ -77,6 +77,7 @@ const DirectComparisonAdjustmentFactor = z
   .object({
     factorCode: z.string(),
     surveys: z.array(DirectComparisonAdjustmentPct),
+    remark: z.string().nullable().optional(),
   })
   .passthrough();
 

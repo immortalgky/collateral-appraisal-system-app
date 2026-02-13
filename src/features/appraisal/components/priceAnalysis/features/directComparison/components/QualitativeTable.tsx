@@ -5,9 +5,7 @@ import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/components/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import clsx from 'clsx';
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 import {
@@ -18,6 +16,8 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/buildDerivedRules.ts';
 import { SecondRevision } from './SecondRevision';
 import { qualitativeDefault } from '../domain/qualitativeDefault';
+import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
+import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
 
 interface QualitativeTableProps {
   directComparisonQualitatives: Record<string, any>[];
@@ -217,7 +217,7 @@ export const QualitativeTable = ({
                       !directComparisonQualitatives.some(q => q.factorCode === f.factorCode),
                   )
                   .map(f => ({
-                    label: getDesciptions(f.factorCode) ?? '',
+                    label: getFactorDesciption(f.factorCode) ?? '',
                     value: f.factorCode,
                   }));
                 return (
@@ -228,7 +228,7 @@ export const QualitativeTable = ({
                           <RHFInputCell
                             fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) => getDesciptions(value)}
+                            accessor={({ value }) => getFactorDesciption(value)}
                           />
                         ) : (
                           <RHFInputCell

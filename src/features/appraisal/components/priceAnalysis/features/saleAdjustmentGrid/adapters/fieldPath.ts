@@ -68,6 +68,8 @@ export const saleGridFieldPath = {
     `saleAdjustmentGridAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustAmount`,
   adjustmentFactorAdjustPercent: (arg: { row: number; column: number }) =>
     `saleAdjustmentGridAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustPercent`,
+  adjustmentFactorsRemark: (arg: { row: number }) =>
+    `saleAdjustmentGridAdjustmentFactors.${arg.row}.remark` as const,
 
   /** Final value section */
   finalValue: () => 'saleAdjustmentGridFinalValue.finalValue',

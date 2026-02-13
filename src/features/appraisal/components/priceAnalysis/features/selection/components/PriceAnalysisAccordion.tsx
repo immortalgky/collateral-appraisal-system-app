@@ -5,7 +5,6 @@ import { Group, Panel, Separator } from 'react-resizable-panels';
 import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMethodSelector';
 
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { useAddPriceAnalysisApproach, useAddPriceAnalysisMethod } from '../api/api';
 import type { PriceAnalysisApproachRequest } from '../type';
 import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
 import { type PriceAnalysisSelectorAction } from '../domain/useReducer';

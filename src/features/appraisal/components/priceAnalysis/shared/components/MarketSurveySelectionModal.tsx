@@ -1,8 +1,8 @@
 import Button from '@/shared/components/Button';
-import { getDesciptions } from '../features/wqs/components/WQSSection';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useState } from 'react';
+import { getFactorDesciption } from '../domain/getFactorDescription';
 
 interface MarketSurveySelectionModalProps {
   surveys: Record<string, unknown>[];
@@ -70,7 +70,7 @@ export const MarketSurveySelectionModal = ({
                   </div>
                   {survey.factors?.map(f => (
                     <div key={f.id} className="text-sm w-60">
-                      <span className="font-semibold capitalize">{getDesciptions(f.id)}:</span>{' '}
+                      <span className="font-semibold capitalize">{getFactorDesciption(f.id)}:</span>{' '}
                       {f.value ?? '-'}
                     </div>
                   )) ?? <></>}

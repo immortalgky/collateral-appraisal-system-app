@@ -63,6 +63,8 @@ export const directComparisonPath = {
     `directComparisonAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustAmount`,
   adjustmentFactorAdjustPercent: (arg: { row: number; column: number }) =>
     `directComparisonAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustPercent`,
+  adjustmentFactorsRemark: (arg: { row: number }) =>
+    `directComparisonAdjustmentFactors.${arg.row}.remark` as const,
 
   calculationTotalAdjustValue: (arg: { column: number }) =>
     `directComparisonCalculations.${arg.column}.totalAdjustValue`,

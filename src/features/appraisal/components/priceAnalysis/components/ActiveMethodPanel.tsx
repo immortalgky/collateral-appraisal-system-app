@@ -1,10 +1,5 @@
-import { Icon } from '@/shared/components';
-import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/components/SaleAdjustmentGridSection';
-import { WQSSection } from '../features/wqs/components/WQSSection';
-import { DirectComparisonSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonSection.tsx';
-import type { MethodConfiguration } from '../features/selection/type';
-import { useGetConfigMethod } from '../domain/useGetConfigMethod';
-import type { PriceAnalysisConfigType } from '../domain/usePriceAnalysisQuery';
+import { ALL_FACTORS, WQS_TEMPLATES } from '../data/data';
+import { MethodSectionRenderer } from './MethodSectionRenderer';
 
 export const ActiveMethodPanel = ({
   methodId,
@@ -26,33 +21,20 @@ export const ActiveMethodPanel = ({
    */
 
   /** Query template that belongs to method type */
+  const templates = WQS_TEMPLATES;
 
-  switch (methodType) {
-    case 'WQS_MARKET':
-      return (
-        <WQSSection
-          property={property}
-          surveys={marketSurveys}
-          onCalculationMethodDirty={onCalculationMethodDirty}
-        />
-      );
-    case 'SAG_MARKET':
-      return (
-        <SaleAdjustmentGridSection
-          property={property}
-          surveys={marketSurveys}
-          onCalculationMethodDirty={onCalculationMethodDirty}
-        />
-      );
-    case 'DC_MARKET':
-      return (
-        <DirectComparisonSection
-          property={property}
-          surveys={marketSurveys}
-          onCalculationMethodDirty={onCalculationMethodDirty}
-        />
-      );
-    default:
-      return <></>;
-  }
+  /** Get all factor */
+  const allFactors = ALL_FACTORS;
+
+  return (
+    <MethodSectionRenderer
+      methodId={methodId}
+      methodType={methodType}
+      property={property}
+      marketSurveys={marketSurveys}
+      templates={templates}
+      allFactors={allFactors}
+      onCalculationMethodDirty={onCalculationMethodDirty}
+    />
+  );
 };

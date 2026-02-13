@@ -1,4 +1,4 @@
-import { Dropdown, NumberInput, Toggle, type ListBoxItem } from '@/shared/components';
+import { Dropdown, NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
 import { Input } from '@headlessui/react';
 import clsx from 'clsx';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
@@ -23,6 +23,9 @@ interface RHFInputCellProps {
     checked: unknown;
     options: [string, string];
   };
+  text?: {
+    label: string;
+  };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
   accessor?: (args: {
@@ -36,6 +39,7 @@ export const RHFInputCell = ({
   fieldName,
   inputType,
   toggle,
+  text,
   options,
   onUserChange,
   accessor,
@@ -85,7 +89,18 @@ export const RHFInputCell = ({
 
   // text default
   if (inputType === 'text') {
-    return <Input {...field} value={field.value ?? ''} error={error?.message} />;
+    return (
+      <TextInput
+        {...field}
+        value={field.value ?? ''}
+        onChange={e => {
+          const next = onUserChange ? onUserChange(e as any) : e;
+          field.onChange(next);
+        }}
+        label={text?.label ?? ''}
+        error={error?.message}
+      />
+    );
   }
 
   if (inputType === 'display') {

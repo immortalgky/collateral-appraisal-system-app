@@ -13,13 +13,12 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/directComparison/schemas/directComparisonForm.ts';
 import toast from 'react-hot-toast';
 import { Button, CancelButton, Icon } from '@shared/components';
-import { MarketSurveySelectionModal } from '@features/appraisal/components/priceAnalysis/components/MarketSurveySelectionModal.tsx';
 import { ComparativeSurveySection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/ComparativeSurveySection.tsx';
-import Dropdown from '@shared/components/inputs/Dropdown.tsx';
 import { DirectComparisonCalculationSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonCalculationSection.tsx';
 import { DirectComparisonAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
+import { MarketSurveySelectionModal } from '../../../shared/components/MarketSurveySelectionModal';
 
 interface DirectComparisonSectionProps {
   property: Record<string, unknown>;

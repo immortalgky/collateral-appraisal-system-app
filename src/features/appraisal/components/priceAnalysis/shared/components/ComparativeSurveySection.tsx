@@ -1,16 +1,16 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { getFactorDesciption } from '../../../domain/getFactorDescription';
-import { getDesciptions, getPropertyValueByFactorCode } from './WQSSection';
-import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { wqsFieldPath } from '../adapters/fieldPath';
+import { getFactorDesciption } from '../domain/getFactorDescription';
+import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
+import { wqsFieldPath } from '../../features/wqs/adapters/fieldPath';
+import { RHFInputCell } from '../../components/table/RHFInputCell';
 
 interface ComparativeSurveySectionProps {
-  comparativeSurveys: any;
-  property: any;
-  allFactors: any;
-  template: any;
+  comparativeSurveys: Record<string, unknown>[];
+  property: Record<string, unknown>;
+  allFactors: Record<string, unknown>[];
+  template: WQSTemplate;
 }
 export function ComparativeSurveySection({
   comparativeSurveys,
@@ -93,7 +93,7 @@ export function ComparativeSurveySection({
                         <RHFInputCell
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="display"
-                          accessor={({ value }) => getDesciptions(value)}
+                          accessor={({ value }) => getFactorDesciption(value)}
                         />
                       ) : (
                         <RHFInputCell

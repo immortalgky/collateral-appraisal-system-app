@@ -1,4 +1,3 @@
-import { getPropertyValueByFactorCode } from '@/features/appraisal/components/priceAnalysis/features/wqs/components/WQSSection';
 import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/directComparison/domain/calculations.ts';
 import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/features/directComparison/domain/qualitativeDefault.ts';
 import { shouldAutoDefault } from '../domain/shouldAutoDefault';
+import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
 type SurveyFactor = { id: string; value?: number | string | null };
 type Survey = { factors?: SurveyFactor[] };
 

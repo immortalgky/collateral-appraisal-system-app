@@ -1,11 +1,10 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { getFactorDesciption } from '../../../domain/getFactorDescription';
-import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/components/WQSSection';
 import { saleGridFieldPath } from '../adapters/fieldPath';
 import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
-import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import clsx from 'clsx';
+import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
+import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
 
 interface ComparativeSurveySectionProps {
   comparativeSurveys: any;
@@ -94,7 +93,7 @@ export function ComparativeSurveySection({
                         <RHFInputCell
                           fieldName={comparativeFactorsPath({ row: rowIndex })}
                           inputType="display"
-                          accessor={({ value }) => getDesciptions(value)}
+                          accessor={({ value }) => getFactorDesciption(value)}
                         />
                       ) : (
                         <RHFInputCell

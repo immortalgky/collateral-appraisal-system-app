@@ -31,7 +31,7 @@ export function buildWQSScoringSurveyDerivedRules(args: {
     scoringFactorSurveyWeightedSurveyScore: scoringFactorSurveyWeightedSurveyScorePath,
   } = wqsFieldPath;
 
-  let rules: DerivedFieldRule[] = scoringRows
+  const rules: DerivedFieldRule[] = scoringRows
     .map((_, rowIndex) => {
       return [
         {
@@ -180,7 +180,6 @@ export function buildWQSTotalScoreRules(args: {
     totalWeightedIntensity: totalWeightedIntensityPath,
     totalSurveyScore: totalSurveyScorePath,
     totalWeightedSurveyScore: totalWeightedSurveyScorePath,
-    totalMarketId: totalMarketIdPath,
     totalCollateralScore: totalCollateralScorePath,
     totalWeightedCollateralScore: totalWeightedCollateralScorePath,
   } = wqsFieldPath;

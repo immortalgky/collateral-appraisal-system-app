@@ -2,7 +2,6 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { wqsFieldPath } from '../adapters/fieldPath';
 import type { WQSTemplate } from '../../../data/data';
 import clsx from 'clsx';
-import { getDesciptions } from './WQSSection';
 import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import {
@@ -12,12 +11,13 @@ import {
   buildWQSTotalScoreRules,
 } from '../adapters/buildDerivedRules';
 import { useDerivedFields, type DerivedFieldRule } from '../../../components/useDerivedFieldArray';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
 
 interface ScoringTableProps {
-  comparativeSurveys: Record<string, any>[];
+  comparativeSurveys: Record<string, unknown>[];
   property: Record<string, any>;
-  template: WQSTemplate;
+  template?: WQSTemplate;
   isLoading: boolean;
 }
 
@@ -30,7 +30,6 @@ export function ScoringTable({
   const {
     /** scoring section path */
     scoringFactors: scoringFactorsPath,
-    scoringFactor: scoringFactorPath,
     scoringFactorCode: scoringFactorCodePath,
     comparativeFactor: comparativeFactorPath,
     scoringFactorWeight: scoringFactorWeightPath,
@@ -47,7 +46,6 @@ export function ScoringTable({
     totalWeight: totalWeightPath,
     totalIntensity: totalIntensityPath,
     totalWeightedIntensity: totalWeightedIntensityPath,
-    totalMarketId: totalMarketIdPath,
     totalSurveyScore: totalSurveyScorePath,
     totalWeightedSurveyScore: totalWeightedSurveyScorePath,
     totalCollateralScore: totalCollateralScorePath,
@@ -82,11 +80,13 @@ export function ScoringTable({
       weight: 0,
       intensity: 0,
       weightedIntensity: 0,
-      surveys: comparativeSurveys.map(s => ({
-        marketId: s.Id,
-        surveyScore: 0,
-        weightedSurveyScore: 0,
-      })),
+      surveys: comparativeSurveys.map(s => {
+        return {
+          marketId: s.id,
+          surveyScore: 0,
+          weightedSurveyScore: 0,
+        };
+      }),
       collateral: 0,
       collateralWeightedScore: 0,
     });
@@ -244,7 +244,7 @@ export function ScoringTable({
                       !wqsScoringFactors.some(q => q.factorCode === f.factorCode),
                   )
                   .map(f => ({
-                    label: getDesciptions(f.factorCode) ?? '',
+                    label: getFactorDesciption(f.factorCode) ?? '',
                     value: f.factorCode,
                   }));
                 return (
@@ -255,7 +255,7 @@ export function ScoringTable({
                           <RHFInputCell
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) => getDesciptions(value)}
+                            accessor={({ value }) => getFactorDesciption(value)}
                           />
                         ) : (
                           <RHFInputCell
@@ -523,12 +523,12 @@ export function ScoringTable({
 
             {/* scoring criteria */}
             <tr>
-              <td colSpan={4} className={clsx('bg-gray-200', leftColumnBody)}>
+              <td colSpan={4} className={clsx('bg-white', leftColumnBody)}>
                 <div className="flex flex-row justify-start items-center">{`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}</div>
               </td>
               <td
                 colSpan={comparativeSurveys?.length + 2}
-                className={clsx('bg-gray-200 border-b border-gray-300')}
+                className={clsx('bg-white border-b border-gray-300')}
               ></td>
             </tr>
 

@@ -14,11 +14,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
 import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 import { ComparativeSurveySection } from './ComparativeSurveySection';
-import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import toast from 'react-hot-toast';
 import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
-import type { MethodConfiguration } from '../../selection/type';
 import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
+import { MarketSurveySelectionModal } from '../../../shared/components/MarketSurveySelectionModal';
 
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, unknown>;

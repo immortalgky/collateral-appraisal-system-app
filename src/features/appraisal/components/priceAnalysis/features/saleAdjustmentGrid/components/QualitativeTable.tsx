@@ -14,11 +14,11 @@ import {
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildDerivedRules.ts';
-import { getDesciptions, getPropertyValueByFactorCode } from '../../wqs/components/WQSSection';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import clsx from 'clsx';
 import { SecondRevision } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SecondRevision.tsx';
+import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
+import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
 
 interface QualitativeTableProps {
   saleAdjustmentGridQualitatives: Record<string, any>[];
@@ -61,6 +61,7 @@ export const QualitativeTable = ({
     /** adjust percent */
     adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
+    adjustmentFactorsRemark: adjustmentFactorsRemarkPath,
 
     /** final value */
     finalValue: finalValuePath,
@@ -224,7 +225,7 @@ export const QualitativeTable = ({
                       !saleAdjustmentGridQualitatives.some(q => q.factorCode === f.factorCode),
                   )
                   .map(f => ({
-                    label: getDesciptions(f.factorCode) ?? '',
+                    label: getFactorDesciption(f.factorCode) ?? '',
                     value: f.factorCode,
                   }));
                 return (
@@ -235,7 +236,7 @@ export const QualitativeTable = ({
                           <RHFInputCell
                             fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) => getDesciptions(value)}
+                            accessor={({ value }) => getFactorDesciption(value)}
                           />
                         ) : (
                           <RHFInputCell
@@ -586,7 +587,14 @@ export const QualitativeTable = ({
                       </td>
                     );
                   })}
-                  <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
+                  <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}>
+                    <div className="flex flex-row justify-items-center items-center">
+                      <RHFInputCell
+                        fieldName={adjustmentFactorsRemarkPath({ row: rowIndex })}
+                        inputType="text"
+                      />
+                    </div>
+                  </td>
                   <td className={clsx('bg-white', actionColumnBody)}></td>
                 </tr>
               );
