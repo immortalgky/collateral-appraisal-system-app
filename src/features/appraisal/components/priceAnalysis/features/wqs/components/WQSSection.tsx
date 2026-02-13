@@ -141,52 +141,13 @@ export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSS
     if (onLoading) return;
 
     if (!template) {
-      setTimeout(() => {
-        setOnLoading(true);
-        reset({
-          methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
-          collateralType: collateralTypeId,
-          pricingTemplateCode: '',
-          comparativeSurveys: [],
-          comparativeFactors: [],
-          WQSScores: [],
-          WQSCalculations: [],
-          WQSFinalValue: {
-            landArea: property?.landArea ?? null,
-            finalValue: 0,
-            finalValueRounded: 0,
-            coefficientOfDecision: 0,
-            standardError: 0,
-            intersectionPoint: 0,
-            slope: 0,
-            lowestEstimate: 0,
-            highestEstimate: 0,
-            appraisalPriceRounded: 0,
-          },
-        });
-        setOnLoading(false);
-      }, 1000);
-      return;
-    }
-
-    // initial data
-    setTimeout(() => {
-      setOnLoading(true);
       reset({
         methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
         collateralType: collateralTypeId,
-        pricingTemplateCode: pricingTemplateCode,
+        pricingTemplateCode: '',
         comparativeSurveys: [],
-        comparativeFactors: template.comparativeFactors.map(compFact => ({
-          factorCode: compFact.factorId,
-        })),
-        WQSScores: template.calculationFactors.map(calFact => ({
-          factorCode: calFact.factorId,
-          weight: calFact.weight,
-          intensity: calFact.intensity,
-          surveys: [],
-          collateral: 0,
-        })),
+        comparativeFactors: [],
+        WQSScores: [],
         WQSCalculations: [],
         WQSFinalValue: {
           landArea: property?.landArea ?? null,
@@ -200,9 +161,42 @@ export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSS
           highestEstimate: 0,
           appraisalPriceRounded: 0,
         },
+        generateAt: new Date().toISOString().toString(),
       });
-      setOnLoading(false);
-    }, 1000);
+      return;
+    }
+
+    // initial data
+    reset({
+      methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
+      collateralType: collateralTypeId,
+      pricingTemplateCode: pricingTemplateCode,
+      comparativeSurveys: [],
+      comparativeFactors: template.comparativeFactors.map(compFact => ({
+        factorCode: compFact.factorId,
+      })),
+      WQSScores: template.calculationFactors.map(calFact => ({
+        factorCode: calFact.factorId,
+        weight: calFact.weight,
+        intensity: calFact.intensity,
+        surveys: [],
+        collateral: 0,
+      })),
+      WQSCalculations: [],
+      WQSFinalValue: {
+        landArea: property?.landArea ?? null,
+        finalValue: 0,
+        finalValueRounded: 0,
+        coefficientOfDecision: 0,
+        standardError: 0,
+        intersectionPoint: 0,
+        slope: 0,
+        lowestEstimate: 0,
+        highestEstimate: 0,
+        appraisalPriceRounded: 0,
+      },
+      generateAt: new Date().toISOString().toString(),
+    });
   }, [collateralTypeId, pricingTemplateCode, reset, template]);
 
   useEffect(() => {
@@ -214,6 +208,7 @@ export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSS
       })),
       { shouldDirty: false },
     );
+
     setValue(
       'WQSScores',
       getValues('WQSScores')?.map(score => ({
@@ -222,11 +217,23 @@ export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSS
       })) ?? [],
     );
 
-    setValue('WQSCalculations', [
-      ...comparativeSurveys.map(survey => {
+    setValue('WQSTotalScores', {
+      totalWeight: 0,
+      totalIntensity: 0,
+      totalWeightedIntensity: 0,
+      surveys: comparativeSurveys.map(survey => ({
+        marketId: survey.id.toString(),
+      })),
+      totalCollateralScore: 0,
+      totalWeightedCollateralScore: 0,
+    });
+
+    setValue(
+      'WQSCalculations',
+      comparativeSurveys.map(survey => {
         const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
         return {
-          marketId: survey.id,
+          marketId: survey.id.toString(),
           offeringPrice: surveyMap.get('17') ?? 0,
           offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
           offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
@@ -238,7 +245,7 @@ export const WQSSection = ({ property, surveys, onCalculationMethodDirty }: WQSS
           numberOfYears: 10, // TODO: convert selling date to number of year
         };
       }),
-    ]);
+    );
   }, [comparativeSurveys, getValues, setValue]);
 
   const handleOnSave = data => {

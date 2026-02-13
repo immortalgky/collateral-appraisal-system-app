@@ -1,4 +1,4 @@
-import { Dropdown, NumberInput, type ListBoxItem } from '@/shared/components';
+import { Dropdown, NumberInput, Toggle, type ListBoxItem } from '@/shared/components';
 import { Input } from '@headlessui/react';
 import clsx from 'clsx';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
@@ -18,7 +18,11 @@ export function toNumber(v: any): number | null {
 
 interface RHFInputCellProps {
   fieldName: string;
-  inputType?: 'number' | 'select' | 'text' | 'display';
+  inputType?: 'number' | 'select' | 'text' | 'display' | 'toggle';
+  toggle?: {
+    checked: unknown;
+    options: [string, string];
+  };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
   accessor?: (args: {
@@ -31,6 +35,7 @@ interface RHFInputCellProps {
 export const RHFInputCell = ({
   fieldName,
   inputType,
+  toggle,
   options,
   onUserChange,
   accessor,
@@ -62,6 +67,20 @@ export const RHFInputCell = ({
 
   if (inputType === 'select') {
     return <Dropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
+  }
+
+  if (inputType === 'toggle') {
+    return (
+      <Toggle
+        {...field}
+        options={toggle.options}
+        checked={field.value}
+        onChange={e => {
+          const next = onUserChange ? onUserChange(e as any) : e;
+          field.onChange(next);
+        }}
+      ></Toggle>
+    );
   }
 
   // text default

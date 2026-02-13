@@ -92,7 +92,7 @@ export const WQSDto = z
     comparativeSurveys: z.array(ComparativeSurveys),
     comparativeFactors: z.array(ComparativeFactors),
     WQSScores: z.array(WQSScore),
-    WQSTotalScores: z.array(WQSTotalScore),
+    WQSTotalScores: WQSTotalScore,
     WQSCalculations: z.array(WQSCalculation),
     WQSFinalValue: WQSFinalValue,
 
