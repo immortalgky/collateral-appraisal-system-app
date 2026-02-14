@@ -213,12 +213,10 @@ export const PriceAnalysisAccordion = ({
         <div className="col-span-4 flex items-center justify-end gap-1">
           <div className="flex flex-row gap-1 items-center justify-end">
             <span>
-              {summarySelected
-                ? summarySelected.find(appr => appr.isCandidated)
-                  ? Number(
-                      summarySelected.find(appr => appr.isCandidated).appraisalValue,
-                    ).toLocaleString()
-                  : 0
+              {summarySelected?.find(appr => appr.isCandidated)
+                ? (Number(
+                    summarySelected?.find(appr => appr.isCandidated)?.appraisalValue,
+                  ).toLocaleString() ?? 0)
                 : 0}
             </span>
             <Icon name="baht-sign" style="light" className="size-4" />

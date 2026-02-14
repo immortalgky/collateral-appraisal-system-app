@@ -20,7 +20,7 @@ export function setWQSInitialValueOnSelectSurvey({
   reset: UseFormReset<WQSRequestType>;
   getValues: UseFormGetValues<WQSRequestType>;
 }) {
-  if (!methodId && !methodType && !property && !comparativeSurveys && !reset) return;
+  if (!methodId || !methodType || !property || !comparativeSurveys || !reset) return;
 
   const currentFormValue = getValues();
 

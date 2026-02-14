@@ -141,6 +141,9 @@ export function approachMethodReducer(
           /** if approach matches the payload, loop finds a matching method type */
           return {
             ...appr,
+            /** either select or deselect, reset approach's appraisal value to 0 and reset candidate */
+            appraisalValue: 0,
+            isCandidated: false,
             methods: appr.methods.map(method => {
               /** if a method type not matches, return it */
               if (method.methodType !== action.payload.methodType) return method;
@@ -192,6 +195,7 @@ export function approachMethodReducer(
       if (changed) {
         visibleApproach = visibleApproach.map(appr => ({
           ...appr,
+          /** reset candidate and approach's appraisal value to 0  */
           appraisalValue: 0,
           isCandidated: false,
           methods: appr.methods.map(method => {
