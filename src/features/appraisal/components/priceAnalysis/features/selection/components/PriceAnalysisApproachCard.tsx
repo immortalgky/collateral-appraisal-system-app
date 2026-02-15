@@ -1,20 +1,22 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
 import type { Approach } from '../type';
+import type { ViewMode } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
 
 interface PriceAnalysisApproachCard {
+  viewMode: ViewMode;
   approach: Approach;
   isOpen: boolean;
   onToggle: () => void;
+  onSelectCandidateApproach: (approachType: string) => void;
 }
 export const PriceAnalysisApproachCard = ({
+  viewMode,
   approach,
   isOpen,
   onToggle,
+  onSelectCandidateApproach,
 }: PriceAnalysisApproachCard) => {
-  const { viewMode } = useSelectionState();
-  const dispatch = useSelectionDispatch();
   if (viewMode === 'editing') {
     return (
       <div className="flex flex-col">
@@ -69,12 +71,7 @@ export const PriceAnalysisApproachCard = ({
         <div className="col-span-1 flex items-center justify-center">
           <button
             type="button"
-            onClick={() =>
-              dispatch({
-                type: 'SUMMARY_SELECT_APPROACH',
-                payload: { approachType: approach.approachType },
-              })
-            }
+            onClick={() => onSelectCandidateApproach(approach.approachType)}
             className="cursor-pointer items-center justify-end"
           >
             <Icon

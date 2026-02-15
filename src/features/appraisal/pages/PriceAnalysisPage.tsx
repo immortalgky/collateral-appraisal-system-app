@@ -1,11 +1,19 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import MarketsTab from '../components/tabs/MarketsTab';
 import GalleryTab from '../components/tabs/GalleryTab';
 import LawsRegulationTab from '../components/tabs/LawsRegulationTab';
 import { PriceAnalysisTab } from '@features/appraisal/components/priceAnalysis/components/PriceAnalysisTab.tsx';
+import {
+  DispatchCtx,
+  StateCtx,
+} from '../components/priceAnalysis/features/selection/domain/selectionContext';
+import {
+  approachMethodReducer,
+  type PriceAnalysisSelectorState,
+} from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
 type ViewMode = 'grid' | 'list';
@@ -25,18 +33,42 @@ const TABS: Tab[] = [
 
 function PriceAnalysisPage() {
   const location = useLocation();
-  const state = location.state ?? null;
+  const { state: navigationState } = location;
+  // const { groupId } = navigationState; // groupId from property
 
   // api call to get property data which belongs to this group
 
   const [activeTab, setActiveTab] = useState<TabId>('properties');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  // const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'properties':
+      case 'properties': {
         // when click this tab, actually should show Property tab as default so user can click 'AP' button to go back to Price Analysis tab
-        return <PriceAnalysisTab />;
+        /** Initial reducer state */
+        const initialState: PriceAnalysisSelectorState = {
+          viewMode: 'summary',
+          editDraft: [],
+          editSaved: [],
+          summarySelected: [],
+          systemCalculationMode: 'System', // base on group detail query
+
+          groupDetails: {},
+          property: {},
+          marketSurveys: [],
+        };
+
+        const _groupId = 'D7AA433E-F36B-1410-8965-006F4F934FE1';
+
+        const [state, dispatch] = useReducer(approachMethodReducer, initialState);
+        return (
+          <StateCtx.Provider value={state}>
+            <DispatchCtx.Provider value={dispatch}>
+              <PriceAnalysisTab groupId={_groupId} />
+            </DispatchCtx.Provider>
+          </StateCtx.Provider>
+        );
+      }
       case 'markets':
         return <MarketsTab />;
       case 'gallery':

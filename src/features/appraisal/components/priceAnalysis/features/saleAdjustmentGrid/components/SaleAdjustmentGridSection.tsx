@@ -9,9 +9,9 @@ import { FormProvider, useForm } from 'react-hook-form';
 import {
   SaleAdjustmentGridDto,
   type SaleAdjustmentGridType,
-} from '../schemas/saleAdjustmentGridForm';
+} from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, CancelButton, Dropdown, Icon } from '@/shared/components';
+import { Button, CancelButton, Icon } from '@/shared/components';
 import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 import { ComparativeSurveySection } from './ComparativeSurveySection';
 import toast from 'react-hot-toast';

@@ -1,7 +1,7 @@
 import {
   useAddPriceAnalysisApproach,
   useAddPriceAnalysisMethod,
-} from '@features/appraisal/components/priceAnalysis/features/selection/api/api.ts';
+} from '@features/appraisal/components/priceAnalysis/api/api.ts';
 
 export interface PriceAnalysisGateway {
   addApproach(input: { appraisalId: string; approachType: string }): Promise<{ id: string }>;

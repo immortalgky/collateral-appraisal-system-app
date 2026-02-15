@@ -6,6 +6,7 @@ import {
   type GetPropertyGroupByIdResponse,
   type PropertyGroupDto,
 } from '@/features/appraisal/api';
+import { GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '@features/appraisal/components/priceAnalysis/data/data.ts';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -174,15 +175,16 @@ export function useEnrichedPropertyGroup(appraisalId: string | undefined, groupI
         sequenceNumber: prop.sequenceInGroup,
       };
     });
-  const group: PropertyGroup = {
-    id: groupDetail?.id ?? '',
-    name: groupDetail?.groupName ?? '',
-    items,
-    description: groupDetail?.description,
-    groupNumber: groupDetail?.groupNumber,
-    useSystemCalc: groupDetail?.useSystemCalc,
-  };
+  // const group: PropertyGroup = {
+  //   id: groupDetail?.id ?? '',
+  //   name: groupDetail?.groupName ?? '',
+  //   items,
+  //   description: groupDetail?.description,
+  //   groupNumber: groupDetail?.groupNumber,
+  //   useSystemCalc: groupDetail?.useSystemCalc,
+  // };
 
+  const group = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
   return {
     group,
     isLoading,

@@ -8,8 +8,9 @@ interface PriceAnalysisMethodCardProps {
   approachId?: string;
   approachType: string;
   method: Method;
-  onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
+  onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
 }
 
 export const PriceAnalysisMethodCard = ({
@@ -17,8 +18,10 @@ export const PriceAnalysisMethodCard = ({
   approachId,
   approachType,
   method,
-  onSelectMethod,
+  onToggleMethod,
   onSelectCalculationMethod,
+
+  onSelectCandidateMethod,
 }: PriceAnalysisMethodCardProps) => {
   const dispatch = useSelectionDispatch();
   if (viewMode === 'editing') {
@@ -35,7 +38,9 @@ export const PriceAnalysisMethodCard = ({
             method.isSelected ? '  text-primary' : '',
             'hover:bg-primary/10',
           )}
-          onClick={() => onSelectMethod(approachType, method.methodType)}
+          onClick={() =>
+            onToggleMethod({ approachType: approachType, methodType: method.methodType })
+          }
         >
           <div className="col-span-1">
             <Icon name={'check'} style="solid" className={clsx('size-3')} />
@@ -63,10 +68,7 @@ export const PriceAnalysisMethodCard = ({
         <button
           type="button"
           onClick={() =>
-            dispatch({
-              type: 'SUMMARY_SELECT_METHOD',
-              payload: { approachType: approachType, methodType: method.methodType },
-            })
+            onSelectCandidateMethod({ approachType: approachType, methodType: method.methodType })
           }
           className="cursor-pointer"
         >
@@ -95,7 +97,7 @@ export const PriceAnalysisMethodCard = ({
       <div className="col-span-1 flex items-center justify-end">
         <button
           type="button"
-          onClick={() => onSelectCalculationMethod(approachId, method.id, method.methodType)}
+          onClick={() => onSelectCalculationMethod({ approachType, methodType: method.methodType })}
           className="cursor-pointer items-center justify-end"
         >
           <Icon

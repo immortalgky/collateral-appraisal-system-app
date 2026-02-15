@@ -4,6 +4,7 @@ export async function saveEditingSelection(
   gateway: PriceAnalysisGateway,
   input: {
     appraisalId: string;
+    groupId: string;
     selections: Array<{ approachType: string; methodTypes: string[] }>;
   },
 ) {

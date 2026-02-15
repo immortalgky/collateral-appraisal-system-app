@@ -1,28 +1,36 @@
 import { Toggle } from '@/shared/components';
 import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
-import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
+import type { PriceAnalysisSelectorState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
 
 interface PriceAnalysisApproachMethodSelectorProps {
-  isSystemCalculation: boolean;
-  onSystemCalculationChange: () => void;
-  onEditModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
-  onSummaryModeSave: (data: any, dispatch: React.Dispatch<any>) => void;
-  onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
+  state: PriceAnalysisSelectorState;
+  isSystemCalculation: string;
+  onSystemCalculationChange: (check: boolean) => void;
+  onEnterEdit: () => void;
+  onEditModeSave: () => void;
+  onCancelEditMode: () => void;
+  onSummaryModeSave: () => void;
+  onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
+
+  onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCandidateApproach: (approachType: string) => void;
 }
 
 export const PriceAnalysisApproachMethodSelector = ({
+  state,
   isSystemCalculation,
   onSystemCalculationChange,
+  onEnterEdit,
   onEditModeSave,
+  onCancelEditMode,
   onSummaryModeSave,
-
-  onSelectMethod,
+  onToggleMethod,
   onSelectCalculationMethod,
-}: PriceAnalysisApproachMethodSelectorProps) => {
-  const { viewMode, editDraft, summarySelected } = useSelectionState();
-  const dispatch = useSelectionDispatch();
 
+  onSelectCandidateMethod,
+  onSelectCandidateApproach,
+}: PriceAnalysisApproachMethodSelectorProps) => {
   return (
     <div className="flex flex-col overflow-hidden gap-4 h-full">
       {/* System Calculation */}
@@ -30,40 +38,39 @@ export const PriceAnalysisApproachMethodSelector = ({
         <span>Use System Calculation: </span>
         <Toggle
           options={['No', 'Yes']}
-          checked={isSystemCalculation}
+          checked={isSystemCalculation === 'System'}
           onChange={onSystemCalculationChange}
         ></Toggle>
       </div>
       {isSystemCalculation ? (
         <div className="flex flex-col min-h-0 h-full">
-          {viewMode === 'editing' && (
+          {state.viewMode === 'editing' && (
             <div className="flex flex-col w-full h-full min-h-0 gap-4">
               {/* Approach and methods */}
               <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
-                {editDraft?.map(appr => (
+                {state.editDraft?.map(appr => (
                   <PriceAnalysisApproachAccordion
                     key={appr.id}
-                    viewMode={viewMode}
+                    viewMode={state.viewMode}
                     approach={appr}
-                    onSelectMethod={onSelectMethod}
+                    onToggleMethod={onToggleMethod}
+                    onSelectCalculationMethod={onSelectCalculationMethod}
+                    onSelectCandidateApproach={onSelectCandidateApproach}
+                    onSelectCandidateMethod={onSelectCandidateMethod}
                   />
                 ))}
               </div>
 
               {/* Footer Actions */}
               <div className="shrink-0 min-h-14 flex items-center justify-between py-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => dispatch({ type: 'EDIT_CANCEL' })}
-                >
+                <button type="button" className="btn btn-ghost" onClick={() => onCancelEditMode()}>
                   Cancel
                 </button>
                 <div className="flex gap-4">
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => onEditModeSave(editDraft, dispatch)}
+                    onClick={() => onEditModeSave()}
                   >
                     Save
                   </button>
@@ -71,7 +78,7 @@ export const PriceAnalysisApproachMethodSelector = ({
               </div>
             </div>
           )}
-          {viewMode === 'summary' && (
+          {state.viewMode === 'summary' && (
             <div className="flex flex-col w-full h-full min-h-0 gap-4">
               {/* summary mode */}
 
@@ -80,20 +87,22 @@ export const PriceAnalysisApproachMethodSelector = ({
                 <button
                   type="button"
                   className="flex justify-center items-center w-full p-2 border border-dashed border-primary text-primary rounded-md hover:bg-primary/10 duration-300 transition-all cursor-pointer"
-                  onClick={() => dispatch({ type: 'EDIT_ENTER' })}
+                  onClick={() => onEnterEdit()}
                 >
                   Determine Approach and Method
                 </button>
-                {summarySelected?.map(appr => (
+                {state.summarySelected?.map(appr => (
                   <PriceAnalysisApproachAccordion
                     key={appr.id}
-                    viewMode={viewMode}
+                    viewMode={state.viewMode}
                     approach={{
                       ...appr,
                       methods: appr.methods.filter(method => method.isSelected),
                     }}
-                    onSelectMethod={onSelectMethod}
+                    onToggleMethod={onToggleMethod}
                     onSelectCalculationMethod={onSelectCalculationMethod}
+                    onSelectCandidateApproach={onSelectCandidateApproach}
+                    onSelectCandidateMethod={onSelectCandidateMethod}
                   />
                 ))}
               </div>
@@ -107,7 +116,7 @@ export const PriceAnalysisApproachMethodSelector = ({
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => onSummaryModeSave(summarySelected, dispatch)}
+                    onClick={() => onSummaryModeSave()}
                   >
                     Save
                   </button>

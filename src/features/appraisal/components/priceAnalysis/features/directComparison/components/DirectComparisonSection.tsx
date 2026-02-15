@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DirectComparisonDto,
   type DirectComparisonType,
-} from '@features/appraisal/components/priceAnalysis/features/directComparison/schemas/directComparisonForm.ts';
+} from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm.ts';
 import toast from 'react-hot-toast';
 import { Button, CancelButton, Icon } from '@shared/components';
 import { ComparativeSurveySection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/ComparativeSurveySection.tsx';

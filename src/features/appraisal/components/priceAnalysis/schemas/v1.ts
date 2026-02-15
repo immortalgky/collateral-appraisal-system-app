@@ -33,6 +33,68 @@ export type AddPriceAnalysisApproachRequestType = z.infer<typeof AddPriceAnalysi
 export type AddPriceAnalysisApproachResponseType = z.infer<typeof AddPriceAnalysisApproachResponse>;
 
 /** ================================ */
+/** Save comparative analysis method */
+/** ================================ */
+
+export const ComparativeFactorInputDto = z
+  .object({
+    id: z.string().nullable().optional(),
+    factorId: z.string(),
+    displaySequence: z.number(),
+    isSelectedForScoring: z.boolean(),
+    remarks: z.string().nullable().optional(),
+  })
+  .passthrough();
+export const FactorScoreInputDto = z
+  .object({
+    id: z.string().nullable().optional(),
+    factorId: z.string(),
+    marketComparableId: z.string().nullable().optional(),
+    factorWeight: z.number(),
+    displaySequence: z.number(),
+    value: z.string().nullable().optional(),
+    score: z.number().nullable().optional(),
+    adjustmentPct: z.number().nullable().optional(),
+    remarks: z.string().nullable().optional(),
+  })
+  .passthrough();
+const CalculationInputDto = z
+  .object({
+    marketComparableId: z.string(),
+    offeringPrice: z.number().nullable().optional(),
+    offeringPriceUnit: z.string().nullable().optional(),
+    adjustOfferPricePct: z.number().nullable().optional(),
+    sellingPrice: z.number().nullable().optional(),
+    buySellYear: z.number().nullable().optional(),
+    buySellMonth: z.number().nullable().optional(),
+    adjustedPeriodPct: z.number().nullable().optional(),
+    cumulativeAdjPeriod: z.number().nullable().optional(),
+    totalAdjustedValue: z.number().nullable().optional(),
+    weight: z.number().nullable().optional(),
+  })
+  .passthrough();
+
+const SaveComparativeAnalysisRequest = z
+  .object({
+    comparativeFactors: z.array(ComparativeFactorInputDto),
+    factorScores: z.array(FactorScoreInputDto),
+    calculations: z.array(CalculationInputDto),
+  })
+  .passthrough();
+const SaveComparativeAnalysisResponse = z
+  .object({
+    pricingAnalysisId: z.string(),
+    methodId: z.string(),
+    comparativeFactorsCount: z.number(),
+    factorScoresCount: z.number(),
+    calculationsCount: z.number(),
+    success: z.boolean(),
+  })
+  .passthrough();
+export type SaveComparativeAnalysisRequestType = z.infer<typeof SaveComparativeAnalysisRequest>;
+export type SaveComparativeAnalysisResponseType = z.infer<typeof SaveComparativeAnalysisResponse>;
+
+/** ================================ */
 /** Add price analysis method */
 /** ================================ */
 const AddPriceAnalysisMethodRequest = z.object({ methodType: z.string() }).passthrough();

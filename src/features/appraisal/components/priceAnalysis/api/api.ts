@@ -1,25 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import type { PriceAnalysisApproachRequest } from '../type';
+import { LAND_PROPERTY } from '@features/appraisal/components/priceAnalysis/data/propertyData.ts';
 import {
   APPROACHES_QUERY_RESPONSE,
   GET_PROPERTY_GROUP_BY_ID_RESPONSE,
   MOC_SURVEY_DATA,
-  PROPERTIES,
-} from '../../../data/data';
+} from '@features/appraisal/components/priceAnalysis/data/data.ts';
 import {
-  GetPricingAnalysisResponse,
-  GetPropertyGroupByIdResponse,
   type AddPriceAnalysisApproachRequestType,
   type AddPriceAnalysisApproachResponseType,
   type AddPriceAnalysisMethodRequestType,
   type AddPriceAnalysisMethodResponseType,
+  GetComparativeFactorsResponse,
+  type GetComparativeFactorsResponseType,
   type GetPricingAnalysisResponseType,
   type GetPropertyGroupByIdResponseType,
-  type GetComparativeFactorsResponseType,
-  GetComparativeFactorsResponse,
-} from '../schemas/V1';
-import { LAND_PROPERTY } from '@features/appraisal/components/priceAnalysis/data/propertyData.ts';
+  type SaveComparativeAnalysisRequestType,
+  type SaveComparativeAnalysisResponseType,
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 
 export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
   return useQuery({
@@ -71,14 +69,14 @@ export function useGetComparativeFactors(id: string | undefined, methodId: strin
   return useQuery({
     queryKey: ['price-analysis', id, methodId],
     queryFn: async (): Promise<GetComparativeFactorsResponseType> => {
-      // const { data } = await axios.get(
-      //   `/pricing-analysis/${id}/methods/${methodId}/comparative-factors`,
-      // );
-      // return GetComparativeFactorsResponse.parse(data);
+      const { data } = await axios.get(
+        `/pricing-analysis/${id}/methods/${methodId}/comparative-factors`,
+      );
+      return GetComparativeFactorsResponse.parse(data);
 
       // MOCK delay:
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      return; // return mock data
+      // await new Promise(resolve => setTimeout(resolve, 3000));
+      // return; // return mock data
     },
     enabled: !!id && !!methodId,
     refetchOnWindowFocus: false,
@@ -123,6 +121,40 @@ export function useAddPriceAnalysisApproach() {
       request: AddPriceAnalysisApproachRequestType;
     }): Promise<AddPriceAnalysisApproachResponseType> => {
       const { data: response } = await axios.post(`/pricing-analysis/${id}/approaches`, request);
+      return response;
+    },
+    onSuccess: data => {
+      console.log(data);
+      queryClient.invalidateQueries({ queryKey: ['priceAnalysis'] });
+    },
+    onError: (error: any) => {
+      console.log(error);
+    },
+  });
+}
+
+/**
+ * Hook for adding approaches to price analysis
+ * POST /appraisal/ ...
+ * @returns
+ */
+export function useSaveComparativeAnalysis() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      methodId,
+      request,
+    }: {
+      id: string;
+      methodId: string;
+      request: SaveComparativeAnalysisRequestType;
+    }): Promise<SaveComparativeAnalysisResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${id}/methods/${methodId}/comparative-analysis`,
+        request,
+      );
       return response;
     },
     onSuccess: data => {

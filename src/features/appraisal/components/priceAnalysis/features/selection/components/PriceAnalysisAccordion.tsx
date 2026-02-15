@@ -1,18 +1,10 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMethodSelector';
-
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import type { PriceAnalysisApproachRequest } from '../type';
-import { useSelectionDispatch, useSelectionState } from '../domain/selectionContext';
-import { type PriceAnalysisSelectorAction } from '../domain/useReducer';
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { saveEditingSelection } from '@features/appraisal/components/priceAnalysis/features/selection/domain/saveEditingSelection.ts';
-import { usePriceAnalysisGateway } from '@features/appraisal/components/priceAnalysis/features/selection/domain/priceAnalysisGateway.ts';
+import type { PriceAnalysisSelectorState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * Flow:
@@ -24,33 +16,56 @@ import { usePriceAnalysisGateway } from '@features/appraisal/components/priceAna
  */
 
 interface PriceAnalysisAccordionProps {
+  state: PriceAnalysisSelectorState;
   appraisalId: string;
   group: {
     id: string;
-    number: string;
+    number: number;
     name: string;
     description: string;
     useSystemCalc: boolean;
-    properties: Record<string, unknown>[];
+    properties: Record<string, unknown>;
   };
-  onSelectCalculationMethod: (approachId: string, methodId: string, methodType: string) => void;
   isPriceAnalysisAccordionOpen: boolean;
   onPriceAnalysisAccordionChange: any;
+
+  onEnterEdit: () => void;
+  onEditModeSave: () => void;
+  onCancelEditMode: () => void;
+  onSummaryModeSave: () => void;
+  onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
+
+  isConfirmDeselectedMethodOpen: boolean;
+  onConfirmDeselectMethod: () => void;
+  onCancelDeselectMethod: () => void;
+  onSystemCalculationChange: (check: boolean) => void;
+  systemCalculationMode: string;
+
+  onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCandidateApproach: (approachType: string) => void;
 }
 
 export const PriceAnalysisAccordion = ({
+  state,
   appraisalId,
   group,
   onPriceAnalysisAccordionChange,
   isPriceAnalysisAccordionOpen,
   onSelectCalculationMethod,
+  onCancelEditMode,
+  onEnterEdit,
+  onEditModeSave,
+  onSummaryModeSave,
+  onToggleMethod,
+  isConfirmDeselectedMethodOpen,
+  onConfirmDeselectMethod,
+  onCancelDeselectMethod,
+  onSystemCalculationChange,
+  systemCalculationMode,
+  onSelectCandidateMethod,
+  onSelectCandidateApproach,
 }: PriceAnalysisAccordionProps) => {
-  const navigate = useNavigate();
-
-  /** access reducer states */
-  const { summarySelected, editDraft } = useSelectionState();
-  const dispatch = useSelectionDispatch();
-
   /** left side panel, show collateral in the group */
   // const { groups } = usePropertyStore();
   // const group = groups.find(group => group.id === groupId) ?? null;
@@ -79,108 +94,6 @@ export const PriceAnalysisAccordion = ({
   // const isApiPending = isAddingApproach || isAddingMethod;
   // const isApiSuccess = isAddApproachSuccess && isAddMethodSuccess;
 
-  // fire api to save candidate approach & methods
-  const [isSystemCalculation, setIsSystemCalculation] = useState<boolean>(true);
-  const {
-    isOpen: isConfirmDeselectedMethodOpen,
-    onOpen: onConfirmDeselectedMethodOpen,
-    onClose: onConfirmDeselectedMethodClose,
-  } = useDisclosure();
-
-  /**
-   * control:
-   * (1) clear data on system calculation changed
-   */
-  const handleOnSystemCalculationChange = () => {
-    setIsSystemCalculation(!isSystemCalculation);
-  };
-
-  const handleOnEditModeSave = async (
-    data: PriceAnalysisApproachRequest[],
-    dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
-  ) => {
-    // TODO: if some method has removed, need to fire api to update
-    const selections =
-      data
-        ?.filter(d => d.methods.some(m => m.isSelected))
-        .map(d => ({
-          approachId: d.id,
-          methodIds: d.methods.filter(m => m.isSelected).map(m => m.id),
-        })) ?? [];
-    try {
-      const gateway = usePriceAnalysisGateway();
-      await saveEditingSelection(gateway, { appraisalId: appraisalId, selections });
-
-      toast.success('Price analysis selection updated successfully');
-      dispatch({ type: 'EDIT_SAVE' });
-      navigate('/dev/price-analysis', {
-        state: { groupId: 'D7AA433E-F36B-1410-8965-006F4F934FE1' },
-      });
-    } catch (err: any) {
-      toast.error(
-        err?.apiError?.detail || 'Failed to update price analysis selection. Please try again.',
-      );
-    }
-  };
-
-  const handleOnSummaryModeSave = (
-    data: PriceAnalysisApproachRequest,
-    dispatch: React.Dispatch<PriceAnalysisSelectorAction>,
-  ) => {
-    console.log(
-      'POST /appraisal/price-analysis/ { approaches: [ {approach: {methods: [...method] } ] }',
-      data,
-    );
-    // addCandidateApproachMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
-    console.log(data);
-    dispatch({ type: 'SUMMARY_SAVE' });
-  };
-
-  const [pendingDeselect, setPendingDeselect] = useState<{
-    approachType: string;
-    methodType: string;
-  } | null>(null);
-
-  /** handle  */
-  const handleOnSelectMethod = (approachType: string, methodType: string) => {
-    /** find a method type that belongs to approach type in reducer's state */
-    const appraisalValueBeforeChange =
-      editDraft
-        .find(appr => appr.approachType === approachType)
-        ?.methods.find(m => m.methodType === methodType)?.appraisalValue ?? 0;
-
-    /** if appraisal value of the method which being deselect got value, warning! */
-    if (appraisalValueBeforeChange > 0) {
-      setPendingDeselect({ approachType, methodType });
-      onConfirmDeselectedMethodOpen();
-      return;
-    }
-
-    /** call dispatch to toggle that method */
-    dispatch({
-      type: 'EDIT_TOGGLE_METHOD',
-      payload: { approachType: approachType, methodType: methodType },
-    });
-  };
-
-  const handleOnConfirmDeselectMethod = () => {
-    dispatch({
-      type: 'EDIT_TOGGLE_METHOD',
-      payload: {
-        approachType: pendingDeselect?.approachType ?? '',
-        methodType: pendingDeselect?.methodType ?? '',
-      },
-    });
-
-    setPendingDeselect(null);
-    onConfirmDeselectedMethodClose();
-  };
-
-  const handleOnCancelDeselectMethod = () => {
-    setPendingDeselect(null);
-    onConfirmDeselectedMethodClose();
-  };
-
   /** accordian effect */
   const detailInnerRef = useRef<HTMLDivElement>(null);
   const [detailMaxHeight, setDetailMaxHeight] = useState(0);
@@ -208,14 +121,14 @@ export const PriceAnalysisAccordion = ({
       {/* header */}
       <div className="grid grid-cols-12 justify-between items-center h-12">
         <div className="col-span-8">
-          <span>{`${group?.name ?? ''} (${group?.properties?.length ?? 0} item(s))`}</span>
+          <span>{`Group: ${group?.number ?? ''} ${group?.name ?? ''} ( ${group?.properties?.length ?? 0} item(s) )`}</span>
         </div>
         <div className="col-span-4 flex items-center justify-end gap-1">
           <div className="flex flex-row gap-1 items-center justify-end">
             <span>
-              {summarySelected?.find(appr => appr.isCandidated)
+              {state.summarySelected?.find(appr => appr.isCandidated)
                 ? (Number(
-                    summarySelected?.find(appr => appr.isCandidated)?.appraisalValue,
+                    state.summarySelected?.find(appr => appr.isCandidated)?.appraisalValue,
                   ).toLocaleString() ?? 0)
                 : 0}
             </span>
@@ -283,12 +196,17 @@ export const PriceAnalysisAccordion = ({
             <Panel className="h-full min-h-0">
               <div className="h-full min-h-0">
                 <PriceAnalysisApproachMethodSelector
-                  isSystemCalculation={isSystemCalculation}
-                  onSystemCalculationChange={handleOnSystemCalculationChange}
-                  onEditModeSave={handleOnEditModeSave}
-                  onSummaryModeSave={handleOnSummaryModeSave}
-                  onSelectMethod={handleOnSelectMethod}
+                  state={state}
+                  isSystemCalculation={systemCalculationMode}
+                  onSystemCalculationChange={onSystemCalculationChange}
+                  onEnterEdit={onEnterEdit}
+                  onEditModeSave={onEditModeSave}
+                  onSummaryModeSave={onSummaryModeSave}
+                  onToggleMethod={onToggleMethod}
                   onSelectCalculationMethod={onSelectCalculationMethod}
+                  onCancelEditMode={onCancelEditMode}
+                  onSelectCandidateMethod={onSelectCandidateMethod}
+                  onSelectCandidateApproach={onSelectCandidateApproach}
                 />
               </div>
             </Panel>
@@ -297,8 +215,8 @@ export const PriceAnalysisAccordion = ({
       </div>
       <ConfirmDialog
         isOpen={isConfirmDeselectedMethodOpen}
-        onClose={handleOnCancelDeselectMethod}
-        onConfirm={handleOnConfirmDeselectMethod}
+        onClose={onCancelDeselectMethod}
+        onConfirm={onConfirmDeselectMethod}
         message={`Are you sure? If you confirm the appraisal value of this method will be removed.`}
       />
     </div>

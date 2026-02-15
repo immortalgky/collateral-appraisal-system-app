@@ -1,3 +1,5 @@
+import type { PropertyGroupItemDto } from '@features/appraisal/api';
+
 export interface PriceAnalysisMethodRequest {
   id: string;
   methodType: string;
@@ -37,6 +39,15 @@ export interface Approach {
   appraisalValue: number;
   isCandidated: boolean; // if no method means not selected
   methods: Method[]; // selected methods from database
+}
+
+export interface GroupDetails {
+  id: string;
+  groupNumber: number;
+  groupName: string;
+  description: string;
+  useSystemCalc: boolean;
+  groupProperties: PropertyGroupItemDto[];
 }
 
 // export type MarketSurvey;

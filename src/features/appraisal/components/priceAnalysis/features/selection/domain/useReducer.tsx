@@ -1,4 +1,4 @@
-import type { Approach, Method } from '../type';
+import type { Approach, GroupDetails, Method } from '../type';
 
 /*
 // state to collect approach & method which selected
@@ -7,7 +7,8 @@ import type { Approach, Method } from '../type';
   2. one method must be select
   3. one approach must be select
 */
-type ViewMode = 'editing' | 'summary';
+export type ViewMode = 'editing' | 'summary';
+export type SystemCalculationMode = 'System' | 'FillIn';
 
 /**
  * states that keep on reducer:
@@ -23,10 +24,28 @@ export type PriceAnalysisSelectorState = {
   editSaved: Approach[];
 
   summarySelected: Approach[];
+
+  systemCalculationMode: SystemCalculationMode;
+
+  groupDetails: GroupDetails;
+  property: Record<string, unknown>;
+  marketSurveys: Record<string, unknown>[];
 };
 
 export type PriceAnalysisSelectorAction =
-  | { type: 'INIT'; payload: { approaches: Approach[] } }
+  | {
+      type: 'INIT';
+      payload: {
+        approaches: Approach[];
+        groupDetails: GroupDetails;
+        property: Record<string, unknown>;
+        marketSurveys: Record<string, unknown>[];
+      };
+    }
+  | {
+      type: 'CHANGE_CALCULATION_METHOD';
+      payload: { systemCalculationMethodType: SystemCalculationMode };
+    }
   | { type: 'EDIT_ENTER' }
   | { type: 'EDIT_TOGGLE_METHOD'; payload: { approachType: string; methodType: string } }
   | { type: 'EDIT_CANCEL' }
@@ -110,6 +129,19 @@ export function approachMethodReducer(
         editSaved: cloneApproaches(approaches),
         editDraft: cloneApproaches(approaches),
         summarySelected: cloneApproaches(visibleApproach),
+        systemCalculationMode: 'System',
+
+        groupDetails: action.payload.groupDetails,
+        property: action.payload.property,
+        marketSurveys: action.payload.marketSurveys,
+      };
+    }
+
+    case 'CHANGE_CALCULATION_METHOD': {
+      // clear state that related to use system calculation mode
+      return {
+        ...state,
+        systemCalculationMode: action.payload.systemCalculationMethodType,
       };
     }
 

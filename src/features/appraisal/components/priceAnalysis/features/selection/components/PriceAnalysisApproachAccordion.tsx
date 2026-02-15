@@ -1,37 +1,45 @@
 import clsx from 'clsx';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { PriceAnalysisApproachCard } from './PriceAnalysisApproachCard';
 import { PriceAnalysisMethodCard } from './PriceAnalysisMethodCard';
 import type { Approach } from '../type';
+import type { ViewMode } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
+import { useState } from 'react';
 
 interface PriceAnalysisApproachAccordian {
-  viewMode: 'editing' | 'summary';
+  viewMode: ViewMode;
   approach: Approach;
-  onSelectMethod: (approachId: string, methodId: string) => void;
-  onSelectCalculationMethod?: (approachId: string, methodId: string, methodType: string) => void;
+  onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
+
+  onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
+  onSelectCandidateApproach: (approachType: string) => void;
 }
 
 export const PriceAnalysisApproachAccordion = ({
   viewMode,
   approach,
-  onSelectMethod,
+  onToggleMethod,
   onSelectCalculationMethod,
-}: PriceAnalysisApproachAccordian) => {
-  const { isOpen: isApproachAccordianOpen, onToggle: onApproachAccordianChange } = useDisclosure();
 
+  onSelectCandidateMethod,
+  onSelectCandidateApproach,
+}: PriceAnalysisApproachAccordian) => {
+  const [isOpen, setIsOpen] = useState(false);
   if (viewMode === 'editing') {
     return (
       <div>
         <PriceAnalysisApproachCard
+          viewMode={viewMode}
           approach={approach}
-          isOpen={isApproachAccordianOpen}
-          onToggle={onApproachAccordianChange}
+          isOpen={isOpen}
+          onToggle={() => setIsOpen(!isOpen)}
+          onSelectCandidateApproach={onSelectCandidateApproach}
         />
         <div
           className={clsx(
             'flex flex-col gap-2 ml-4 pl-4 border-l border-base-300',
             'transition-all ease-in-out duration-300 overflow-hidden',
-            isApproachAccordianOpen ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0',
+            isOpen ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0',
           )}
         >
           {/* method */}
@@ -42,7 +50,9 @@ export const PriceAnalysisApproachAccordion = ({
               approachId={approach.id}
               approachType={approach.approachType}
               method={method}
-              onSelectMethod={onSelectMethod}
+              onToggleMethod={onToggleMethod}
+              onSelectCalculationMethod={onSelectCalculationMethod}
+              onSelectCandidateMethod={onSelectCandidateMethod}
             />
           ))}
         </div>
@@ -53,9 +63,11 @@ export const PriceAnalysisApproachAccordion = ({
   return (
     <div>
       <PriceAnalysisApproachCard
+        viewMode={viewMode}
         approach={approach}
-        isOpen={isApproachAccordianOpen}
-        onToggle={onApproachAccordianChange}
+        isOpen={isOpen}
+        onToggle={() => setIsOpen(!isOpen)}
+        onSelectCandidateApproach={onSelectCandidateApproach}
       />
       <div
         className={clsx(
@@ -72,7 +84,8 @@ export const PriceAnalysisApproachAccordion = ({
             approachId={approach.id}
             approachType={approach.approachType}
             method={method}
-            onSelectMethod={onSelectMethod}
+            onToggleMethod={onToggleMethod}
+            onSelectCandidateMethod={onSelectCandidateMethod}
             onSelectCalculationMethod={onSelectCalculationMethod}
           />
         ))}

@@ -1,41 +1,12 @@
 import { useLocation } from 'react-router-dom';
-import { useEffect, useReducer, useState, type JSX } from 'react';
-import { Icon } from '@/shared/components';
-import {
-  useAddPriceAnalysisApproach,
-  useAddPriceAnalysisMethod,
-  useGetComparativeFactors,
-  useGetMarketSurveys,
-  useGetPricingAnalysis,
-  useGetPropertyById,
-  useGetPropertyGroupById,
-} from '@features/appraisal/components/priceAnalysis/features/selection/api/api.ts';
+import { useEffect, useState, type JSX } from 'react';
 import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
 import { ActiveMethodPanel } from '@features/appraisal/components/priceAnalysis/components/ActiveMethodPanel.tsx';
-import { useGetPriceAnalysisConfigQuery } from '../domain/usePriceAnalysisQuery';
-import { DispatchCtx, StateCtx } from '../features/selection/domain/selectionContext';
-import {
-  approachMethodReducer,
-  type PriceAnalysisSelectorState,
-} from '../features/selection/domain/useReducer';
-import { createInitialState } from '../features/selection/domain/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { useEnrichedPropertyGroup } from '../shared/hooks/useEnrichedPropertyGroup';
+import { useSelectionFlowController } from '@features/appraisal/components/priceAnalysis/application/useSelectionFlowController.ts';
 
-export function PriceAnalysisTab(): JSX.Element {
-  const location = useLocation();
-  const { state: navigationState } = location;
-  // const { groupId } = navigationState; // groupId from property
+export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element {
   const appraisalId = '00000000-0000-0000-0000-000000000001';
-  const groupId = 'D7AA433E-F36B-1410-8965-006F4F934FE1';
-
-  /** Initial reducer state */
-  const initialState: PriceAnalysisSelectorState = {
-    viewMode: 'summary',
-    editDraft: [],
-    editSaved: [],
-    summarySelected: [],
-  };
 
   /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
    * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
@@ -52,8 +23,49 @@ export function PriceAnalysisTab(): JSX.Element {
     onClose: onPriceAnalysisAccordianClose,
   } = useDisclosure({ defaultIsOpen: true });
 
-  /** start using reducer with initial state */
-  const [state, dispatch] = useReducer(approachMethodReducer, initialState);
+  const handleOnStartCalculation = (args: {
+    approachId: string;
+    methodId: string;
+    methodType: string;
+  }) => {
+    setCalculationMethod({
+      approachId: args.approachId,
+      methodId: args.methodId,
+      methodType: args.methodType,
+    });
+    onPriceAnalysisAccordianClose();
+  };
+
+  const handleOnCloseSelectionPanel = () => {};
+
+  const {
+    state,
+
+    // change calculatino mode
+    changeSystemCalculation,
+
+    initial,
+
+    // edit mode
+    enterEdit,
+    cancelEdit,
+    toggleMethod,
+    saveEdit,
+
+    // summary mode
+    selectCandidateMethod,
+    selectCandidateApproach,
+    startCalculation,
+    saveSummary,
+
+    // confirm dialog state
+    confirm,
+  } = useSelectionFlowController({
+    appraisalId: appraisalId,
+    groupId: groupId,
+    onStartCalculation: handleOnStartCalculation,
+    closeSelectionPanel: handleOnCloseSelectionPanel,
+  });
 
   useEffect(() => {
     console.log('Reload');
@@ -62,133 +74,6 @@ export function PriceAnalysisTab(): JSX.Element {
   /** ================================= */
   /** Initial data                      */
   /** ================================= */
-
-  /** (1) Query group data by group Id */
-  const {
-    data: propertyGroupData,
-    isLoading: isPropertyGroupLoading,
-    isError: isPropertyGroupError,
-    error: propertyGrouopError,
-  } = useGetPropertyGroupById(appraisalId, groupId);
-  const groupNumber = propertyGroupData?.groupNumber;
-  const groupDescription = propertyGroupData?.description;
-  const groupName = propertyGroupData?.groupName;
-  const useSystemCalc = propertyGroupData?.useSystemCalc;
-  const groupProperties = propertyGroupData?.properties;
-
-  /** (2) Query property data by property Id
-   *  - we have property ID from (1) and how to fire api path to get
-   */
-  const {
-    data: propertyData,
-    isLoading: isLoadingProperty,
-    isError: isPropertyError,
-    error: propertyError,
-  } = useGetPropertyById(appraisalId, '00000000-0000-0000-0000-000000000001');
-
-  // const { group, isLoading, error, isLoadingGroupDetails, isLoadingPropertyDetails } =
-  //   useEnrichedPropertyGroup(appraisalId, groupId);
-  // console.log(group, error);
-
-  /** (3) Query market surveys data in application
-   * [!] not sure that have to query survey Ids in group first, then loop queries each survey or not
-   * => Yes
-   */
-  const {
-    data: marketSurveyData,
-    isLoading: isLoadingMarketSurvey,
-    isError: isMarketSurveyError,
-    error: marketSurveyError,
-  } = useGetMarketSurveys();
-
-  /** (4) fetch price analysis configuration */
-  const {
-    data: getPriceAnalysisConfigData,
-    isLoading: isGetPriceAnalysisConfigLoading,
-    isError: isGetPriceAnalysisConfigError,
-    error: getPriceAnalysisConfigError,
-  } = useGetPriceAnalysisConfigQuery();
-
-  /** (5) Query price analysis data containing approaches and methods in the group */
-  const {
-    data: getPricingAnalysisData,
-    isLoading: isGetPricingAnalysisLoading,
-    isError: isGetPricingAnalysisError,
-    error: getPricingAnalysisError,
-  } = useGetPricingAnalysis(groupId);
-
-  /** Query method detail by method ID when user clicks calculation button (pencil icon) */
-  // const {
-  //   data: getComparativeFactorsData,
-  //   isLoading: isGetComparativeFactorsLoading,
-  //   isError: isGetComparativeFactorsError,
-  //   error: getComparativeFactorsError,
-  // } = useGetComparativeFactors('', calculationMethod?.methodId);
-
-  /** Initial reducer state */
-  useEffect(() => {
-    if (isGetPriceAnalysisConfigLoading || isGetPricingAnalysisLoading) return;
-
-    if (getPriceAnalysisConfigData && getPricingAnalysisData) {
-      const approaches = createInitialState(getPriceAnalysisConfigData, getPricingAnalysisData);
-
-      dispatch({ type: 'INIT', payload: { approaches } });
-      dispatch({ type: 'SUMMARY_ENTER' }); // TODO: check when these parameter, mode will switch to summary
-    }
-  }, [
-    getPriceAnalysisConfigData,
-    getPricingAnalysisData,
-    isGetPriceAnalysisConfigLoading,
-    isGetPricingAnalysisLoading,
-    isGetPriceAnalysisConfigError,
-    isGetPricingAnalysisError,
-  ]);
-
-  const isError =
-    isPropertyError ||
-    isMarketSurveyError ||
-    isGetPriceAnalysisConfigError ||
-    isGetPricingAnalysisError;
-
-  const [isCurrentLoading, setIsCurrentLoading] = useState<boolean>(true);
-  const [isCurrentError, setIsCurrentError] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (
-      isPropertyError ||
-      isMarketSurveyError ||
-      isGetPriceAnalysisConfigError ||
-      isGetPricingAnalysisError
-    )
-      return setIsCurrentError(true);
-    return setIsCurrentError(false);
-  }, [
-    isGetPriceAnalysisConfigError,
-    isGetPricingAnalysisError,
-    isMarketSurveyError,
-    isPropertyError,
-  ]);
-
-  useEffect(() => {
-    if (
-      !!propertyData &&
-      !!marketSurveyData &&
-      !!getPriceAnalysisConfigData &&
-      !!getPricingAnalysisData
-    ) {
-      console.log('loading complete!');
-      return setIsCurrentLoading(false);
-    }
-  }, [
-    isLoadingProperty,
-    isLoadingMarketSurvey,
-    isGetPriceAnalysisConfigLoading,
-    isGetPricingAnalysisLoading,
-    propertyData,
-    marketSurveyData,
-    getPriceAnalysisConfigData,
-    getPricingAnalysisData,
-  ]);
 
   const [isDirty, setIsDirty] = useState(false);
   const handleOnCalculationMethodDirty = (check: boolean) => {
@@ -240,52 +125,56 @@ export function PriceAnalysisTab(): JSX.Element {
    * (1) In case that we have 1 land multiple building, how to map?
    */
 
-  if (isCurrentError) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Failed to load price analysis</p>
-        <p className="text-sm text-gray-400">{(propertyError as Error)?.message}</p>
-        <p className="text-sm text-gray-400">{(marketSurveyError as Error)?.message}</p>
-        <p className="text-sm text-gray-400">{(getPriceAnalysisConfigError as Error)?.message}</p>
-        <p className="text-sm text-gray-400">{(getPricingAnalysisError as Error)?.message}</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (initial.isLoading) {
+      console.log('Initializing...');
+      return;
+    }
+    console.log('Completed!');
+  }, [initial.isLoading]);
 
   return (
-    <StateCtx.Provider value={state}>
-      <DispatchCtx.Provider value={dispatch}>
-        <div className="flex-1 min-w-0 min-h-0 flex-col">
-          {!isCurrentLoading && (
-            <div>
-              <PriceAnalysisAccordion
-                appraisalId={appraisalId}
-                group={{
-                  id: groupId ?? '',
-                  number: groupNumber ?? 0,
-                  name: groupName ?? '',
-                  description: groupDescription ?? '',
-                  useSystemCalc: useSystemCalc ?? true,
-                  properties: groupProperties ?? [],
-                }}
-                onSelectCalculationMethod={handleOnSelectCalculationMethod}
-                onPriceAnalysisAccordionChange={onPriceAnalysisAccordionChange}
-                isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
-              />
-              {!!calculationMethod && (
-                <ActiveMethodPanel
-                  methodId={calculationMethod.methodId}
-                  methodType={calculationMethod.methodType}
-                  property={propertyData}
-                  marketSurveys={marketSurveyData}
-                  onCalculationMethodDirty={handleOnCalculationMethodDirty}
-                />
-              )}
-            </div>
+    <div className="flex-1 min-w-0 min-h-0 flex-col">
+      {!initial.isLoading && (
+        <div>
+          <PriceAnalysisAccordion
+            state={state}
+            appraisalId={appraisalId}
+            group={{
+              id: groupId ?? '',
+              number: state.groupDetails?.groupNumber ?? 0,
+              name: state.groupDetails?.groupName ?? '',
+              description: state.groupDetails?.description ?? '',
+              useSystemCalc: state.groupDetails?.useSystemCalc ?? true,
+              properties: state.property ?? [],
+            }}
+            onSelectCalculationMethod={startCalculation}
+            onSummaryModeSave={saveSummary}
+            onEditModeSave={saveEdit}
+            onToggleMethod={toggleMethod}
+            onPriceAnalysisAccordionChange={onPriceAnalysisAccordionChange}
+            isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
+            onSystemCalculationChange={changeSystemCalculation}
+            systemCalculationMode={state.systemCalculationMode}
+            isConfirmDeselectedMethodOpen={confirm.isOpen}
+            onConfirmDeselectMethod={confirm.confirmDeselect}
+            onCancelDeselectMethod={confirm.cancelDeselect}
+            onEnterEdit={enterEdit}
+            onCancelEditMode={cancelEdit}
+            onSelectCandidateMethod={selectCandidateMethod}
+            onSelectCandidateApproach={selectCandidateApproach}
+          />
+          {!!calculationMethod && (
+            <ActiveMethodPanel
+              methodId={calculationMethod.methodId}
+              methodType={calculationMethod.methodType}
+              property={state.property}
+              marketSurveys={state.marketSurveys}
+              onCalculationMethodDirty={handleOnCalculationMethodDirty}
+            />
           )}
         </div>
-      </DispatchCtx.Provider>
-    </StateCtx.Provider>
+      )}
+    </div>
   );
 }
