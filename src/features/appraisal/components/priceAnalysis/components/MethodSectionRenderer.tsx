@@ -2,6 +2,7 @@ import type { WQSTemplate } from '../data/data';
 import { DirectComparisonSection } from '../features/directComparison/components/DirectComparisonSection';
 import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/components/SaleAdjustmentGridSection';
 import { WQSMethodPanel } from '../features/wqs/components/WQSMethodPanel';
+import { SaleAdjustmentGridPanel } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridPanel.tsx';
 
 export function MethodSectionRenderer({
   methodId,
@@ -36,10 +37,13 @@ export function MethodSectionRenderer({
     }
     case 'SAG_MARKET':
       return (
-        <SaleAdjustmentGridSection
+        <SaleAdjustmentGridPanel
+          methodId={methodId}
+          methodType={methodType}
           property={property}
-          surveys={marketSurveys}
-          onCalculationMethodDirty={onCalculationMethodDirty}
+          marketSurveys={marketSurveys}
+          templates={templates}
+          allFactors={allFactors}
         />
       );
     case 'DC_MARKET':

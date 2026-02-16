@@ -36,7 +36,7 @@ export type AddPriceAnalysisApproachResponseType = z.infer<typeof AddPriceAnalys
 /** Save comparative analysis method */
 /** ================================ */
 
-export const ComparativeFactorInputDto = z
+const ComparativeFactorInputDto = z
   .object({
     id: z.string().nullable().optional(),
     factorId: z.string(),
@@ -45,7 +45,7 @@ export const ComparativeFactorInputDto = z
     remarks: z.string().nullable().optional(),
   })
   .passthrough();
-export const FactorScoreInputDto = z
+const FactorScoreInputDto = z
   .object({
     id: z.string().nullable().optional(),
     factorId: z.string(),
@@ -91,6 +91,8 @@ const SaveComparativeAnalysisResponse = z
     success: z.boolean(),
   })
   .passthrough();
+
+export type ComparativeFactorInputType = z.infer<typeof ComparativeFactorInputDto>;
 export type SaveComparativeAnalysisRequestType = z.infer<typeof SaveComparativeAnalysisRequest>;
 export type SaveComparativeAnalysisResponseType = z.infer<typeof SaveComparativeAnalysisResponse>;
 

@@ -37,7 +37,7 @@ export const MarketSurveySelectionModal = ({
         <span className="text-lg mb-2 shrink-0 font-medium">Select Comparative Data</span>
 
         <div className="flex-1 overflow-auto space-y-3">
-          {surveys.map((survey, idx) => {
+          {(surveys ?? []).map((survey, idx) => {
             const isSelected = selectedSurveys.some(s => s.id === survey.id);
             return (
               <button
@@ -68,20 +68,18 @@ export const MarketSurveySelectionModal = ({
                       )}
                     />
                   </div>
-                  {survey.factors?.map(f => (
-                    <div key={f.id} className="text-sm w-60">
-                      <span className="font-semibold capitalize">{getFactorDesciption(f.id)}:</span>{' '}
-                      {f.value ?? '-'}
+                  {(survey.factors ?? []).map((factor: any) => (
+                    <div key={factor.id} className="text-sm w-60">
+                      <span className="font-semibold capitalize">
+                        {getFactorDesciption(factor.id)}:
+                      </span>{' '}
+                      {factor.value ?? '-'}
                     </div>
-                  )) ?? <></>}
+                  ))}
                 </div>
               </button>
             );
           })}
-
-          {surveys.length === 0 && (
-            <div className="text-center text-gray-500 py-10">No items available</div>
-          )}
         </div>
 
         <div className="mt-6 flex justify-between gap-2 shrink-0">

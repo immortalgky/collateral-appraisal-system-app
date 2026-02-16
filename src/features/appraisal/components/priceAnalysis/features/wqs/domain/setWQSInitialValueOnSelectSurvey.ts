@@ -1,6 +1,16 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
 import type { WQSRequestType } from '../schemas/wqsForm';
 
+interface WQSInitialValueOnSelectSurveyProps {
+  collateralType: string;
+  methodId: string;
+  methodType: string;
+  property: Record<string, unknown>;
+  template?: Record<string, unknown>;
+  comparativeSurveys: Record<string, unknown>[];
+  reset: UseFormReset<WQSRequestType>;
+  getValues: UseFormGetValues<WQSRequestType>;
+}
 export function setWQSInitialValueOnSelectSurvey({
   collateralType,
   methodId,
@@ -10,16 +20,7 @@ export function setWQSInitialValueOnSelectSurvey({
   comparativeSurveys,
   reset,
   getValues,
-}: {
-  collateralType: string;
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  template?: Record<string, unknown>;
-  comparativeSurveys: Record<string, unknown>[];
-  reset: UseFormReset<WQSRequestType>;
-  getValues: UseFormGetValues<WQSRequestType>;
-}) {
+}: WQSInitialValueOnSelectSurveyProps) {
   if (!methodId || !methodType || !property || !comparativeSurveys || !reset) return;
 
   const currentFormValue = getValues();

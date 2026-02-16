@@ -1,12 +1,6 @@
 import { Dropdown, Icon, type ListBoxItem } from '@/shared/components';
 
-export function PriceAnalysisTemplateSelector({
-  icon,
-  methodName,
-  onGenerate,
-  collateralType,
-  template,
-}: {
+interface PriceAnalysisTemplateSelectorProps {
   icon: string;
   methodName: string;
   onGenerate: () => void;
@@ -20,7 +14,14 @@ export function PriceAnalysisTemplateSelector({
     value: any;
     options: ListBoxItem[];
   };
-}) {
+}
+export function PriceAnalysisTemplateSelector({
+  icon,
+  methodName,
+  onGenerate,
+  collateralType,
+  template,
+}: PriceAnalysisTemplateSelectorProps) {
   return (
     <div>
       <div className="flex flex-row gap-2">

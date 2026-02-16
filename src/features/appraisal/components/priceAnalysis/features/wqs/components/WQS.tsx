@@ -1,28 +1,24 @@
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
 import { type WQSTemplate } from '../../../data/data';
-import { ScoringTable } from './ScoringTable';
 import { ComparativeMarketSurveySection } from '../../../shared/components/ComparativeMarketSurveySection';
+import { WQSScoringSection } from '@features/appraisal/components/priceAnalysis/features/wqs/components/WQSScoringSection.tsx';
 
-interface WQSSectionProps {
+interface WQSProps {
   property: Record<string, unknown>;
-  surveys: Record<string, unknown>[];
-  comparativeSurveys: Record<string, unknown>[];
+  marketSurveys: Record<string, unknown>[];
+  comparativeMarketSurveys: Record<string, unknown>[];
   template?: WQSTemplate;
   allFactors: Record<string, unknown>[];
   onSelectComparativeMarketSurvey: (surveys: Record<string, unknown>[]) => void;
-  onShowComparativeDataSelection: (check: boolean) => void;
-  showMarketSurveySelection: boolean;
 }
-export const WQSSection = ({
+export const WQS = ({
   property,
-  surveys,
-  comparativeSurveys,
+  marketSurveys,
+  comparativeMarketSurveys,
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
-  onShowComparativeDataSelection,
-  showMarketSurveySelection,
-}: WQSSectionProps) => {
+}: WQSProps) => {
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <div
@@ -34,21 +30,19 @@ export const WQSSection = ({
             template={template}
             allFactors={allFactors}
             property={property}
-            marketSurveys={surveys}
-            comparativeMarketSurveys={comparativeSurveys}
+            marketSurveys={marketSurveys}
+            comparativeMarketSurveys={comparativeMarketSurveys}
             onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
-            onShowComparativeDataSelection={onShowComparativeDataSelection}
-            showMarketSurveySelection={showMarketSurveySelection}
           />
-          {comparativeSurveys?.length > 0 && (
-            <div>
+          {comparativeMarketSurveys.length > 0 && (
+            <>
               <div>
                 <div className="text-lg border-b border-neutral-300 py-2">
                   Calculation of Appraisal Value
                 </div>
                 <div className="px-4 mt-4">
-                  <ScoringTable
-                    comparativeSurveys={comparativeSurveys}
+                  <WQSScoringSection
+                    comparativeSurveys={comparativeMarketSurveys}
                     property={property}
                     template={template}
                     isLoading={false}
@@ -61,7 +55,7 @@ export const WQSSection = ({
                   <AdjustFinalValueSection property={property} />
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

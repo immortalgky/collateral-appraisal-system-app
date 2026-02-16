@@ -5,19 +5,26 @@ import { getFactorDesciption } from '../domain/getFactorDescription';
 import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
 import { wqsFieldPath } from '../../features/wqs/adapters/fieldPath';
 import { RHFInputCell } from '../../components/table/RHFInputCell';
+import type { WQSTemplate } from '@features/appraisal/components/priceAnalysis/data/data.ts';
+import { useMemo } from 'react';
 
 interface ComparativeSurveySectionProps {
-  comparativeSurveys: Record<string, unknown>[];
+  comparativeMarketSurveys: Record<string, unknown>[];
   property: Record<string, unknown>;
   allFactors: Record<string, unknown>[];
-  template: WQSTemplate;
+  template?: WQSTemplate;
 }
 export function ComparativeSurveySection({
-  comparativeSurveys,
+  comparativeMarketSurveys,
   property,
   allFactors,
   template,
 }: ComparativeSurveySectionProps) {
+  const {
+    comparativeFactor: comparativeFactorPath,
+    comparativeFactorsFactorCode: comparativeFactorsFactorCodePath,
+  } = wqsFieldPath;
+
   const { control, getValues } = useFormContext();
   const {
     fields: comparativeSurveyFactors,
@@ -25,114 +32,116 @@ export function ComparativeSurveySection({
     remove: removeComparativeSurveyFactors,
   } = useFieldArray({
     control,
-    name: 'comparativeFactors',
+    name: comparativeFactorPath(),
   });
 
-  const { comparativeFactorsFactorCode: comparativeFactorsFactorCodePath } = wqsFieldPath;
+  const comparativeFactors = useMemo(() => {
+    return getValues(comparativeFactorPath());
+  }, [comparativeSurveyFactors]);
+
+  const factorColumnStyle =
+    'z-20 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
+  const collateralColumnStyle =
+    'text-left font-medium  px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap  sticky right-[70px] z-25 after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
 
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+    <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg b overflow-hidden flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="table table-sm min-w-max">
-          <thead className="sticky top-0 z-20 bg-gray-50">
+          <thead className="bg-gray-50 sticky top-0">
             <tr className="">
               <th
-                className={clsx(
-                  'bg-gray-50 sticky left-0 z-10 h-[55px] w-[350px] after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
-                )}
+                className={clsx('bg-gray-50 sticky left-0 h-[55px] w-[350px]', factorColumnStyle)}
               >
                 Factors
               </th>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeMarketSurveys.map((survey: any) => {
                 return (
                   <th
-                    key={s.id}
-                    className={
-                      'text-left font-medium text-gray-600 px-3 py-2.5 select-none whitespace-nowrap'
-                    }
+                    key={survey.id}
+                    className={'text-left font-medium  px-3 py-2.5 select-none whitespace-nowrap'}
                   >
-                    {s.surveyName}
+                    {survey.surveyName}
                   </th>
                 );
               })}
-              <th
-                className={clsx(
-                  'text-left font-medium text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap bg-gray-50 sticky right-[70px] z-20 ',
-                  'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
-                )}
-              >
-                Collateral
-              </th>
+              <th className={clsx('bg-gray-50', collateralColumnStyle)}>Collateral</th>
               <th className="w-[70px] max-w-[70px] min-w-[70px]"></th>
             </tr>
           </thead>
           <tbody>
-            {comparativeSurveyFactors.map((f, rowIndex) => {
-              const selected = comparativeSurveyFactors[rowIndex] ?? '';
-              const comparativeFactors = (allFactors ?? [])
+            {comparativeFactors.map((compFact: any, rowIndex: number) => {
+              const selected = comparativeFactors[rowIndex];
+              const options = (allFactors ?? [])
                 .filter(
-                  f =>
+                  (f: any) =>
                     f.value === selected.factorCode ||
-                    !comparativeSurveyFactors.some(q => q.factorCode === f.value),
+                    !comparativeFactors.some((q: any) => q.factorCode === f.value),
                 )
                 .map(f => ({
                   label: f.description ?? '',
                   value: f.value,
                 }));
               return (
-                <tr key={f.id} className="hover:bg-gray-50 cursor-default transition-colors">
+                <tr
+                  key={compFact.factorCode}
+                  className="hover:bg-gray-50 cursor-default transition-colors"
+                >
                   <td
                     className={clsx(
-                      'bg-white font-medium text-gray-600 sticky left-0 z-10 h-[55px] after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                      'bg-white font-medium  sticky left-0 h-[55px]',
+                      factorColumnStyle,
                     )}
                   >
-                    <div className="truncate" title={getFactorDesciption(f.factorCode) ?? ''}>
+                    <div
+                      className="truncate"
+                      title={getFactorDesciption(compFact.factorCode) ?? ''}
+                    >
                       {template?.comparativeFactors.find(t => {
-                        return t.factorId === f.factorCode;
+                        return t.factorId === compFact.factorCode;
                       }) ? (
                         <RHFInputCell
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="display"
-                          accessor={({ value }) => getFactorDesciption(value)}
+                          accessor={({ value }) => getFactorDesciption(value.toString())}
                         />
                       ) : (
                         <RHFInputCell
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="select"
-                          options={comparativeFactors}
+                          options={options}
                         />
                       )}
                     </div>
                   </td>
-                  {comparativeSurveys.map(s => {
+                  {comparativeMarketSurveys.map((survey: any) => {
                     return (
-                      <td key={s.id} className="px-3 py-2.5 font-light text-gray-600">
+                      <td key={survey.id} className="px-3 py-2.5 font-medium ">
                         {
                           <RHFInputCell
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) =>
-                              s.factors.find(f => f.id === value)?.value ?? ''
+                              survey.factors.find((factor: any) => factor.id === value)?.value ?? ''
                             }
                           />
                         }
                       </td>
                     );
                   })}
-                  <td
-                    className={clsx(
-                      'bg-white text-left font-light text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap sticky right-[70px] z-20',
-                      'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
-                    )}
-                  >
+                  <td className={clsx('bg-white ', collateralColumnStyle)}>
                     <RHFInputCell
                       fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                       inputType="display"
-                      accessor={({ value }) => getPropertyValueByFactorCode(value, property) ?? ''}
+                      accessor={({ value }) =>
+                        getPropertyValueByFactorCode(value.toString(), property) ?? ''
+                      }
                     />
                   </td>
                   <td className="bg-white px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0">
-                    {!template?.comparativeFactors.find(t => t.factorId === f.factorCode) && (
+                    {!template?.comparativeFactors.find(
+                      t => t.factorId === compFact.factorCode,
+                    ) && (
                       <div className="flex flex-row justify-center items-center">
                         <button
                           type="button"
@@ -151,7 +160,7 @@ export function ComparativeSurveySection({
               );
             })}
             <tr>
-              <td className="bg-white sticky left-0 z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full">
+              <td className={clsx('bg-white sticky left-0', factorColumnStyle)}>
                 <button
                   type="button"
                   onClick={() =>
@@ -164,16 +173,11 @@ export function ComparativeSurveySection({
                   + Add More Factors
                 </button>
               </td>
-              {comparativeSurveys.map((col, columnIndex) => {
-                return <td key={col.id} className="px-3 py-2.5 text-gray-600"></td>;
+              {comparativeMarketSurveys.map((survey: any) => {
+                return <td key={survey.id} className="px-3 py-2.5 "></td>;
               })}
-              <td
-                className={clsx(
-                  'bg-white text-left font-medium text-gray-600 px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap sticky right-[70px] z-10',
-                  'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full',
-                )}
-              ></td>
-              <td className="text-center font-medium text-gray-600 px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0 z-20"></td>
+              <td className={clsx('bg-white', collateralColumnStyle)}></td>
+              <td className="text-center font-medium  px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0 z-20"></td>
             </tr>
           </tbody>
         </table>

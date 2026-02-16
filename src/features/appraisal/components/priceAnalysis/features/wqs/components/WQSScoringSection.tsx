@@ -14,19 +14,19 @@ import { useDerivedFields, type DerivedFieldRule } from '../../../components/use
 import { useEffect, useMemo } from 'react';
 import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
 
-interface ScoringTableProps {
+interface WQSScoringSectionProps {
   comparativeSurveys: Record<string, unknown>[];
   property: Record<string, any>;
   template?: WQSTemplate;
   isLoading: boolean;
 }
 
-export function ScoringTable({
+export function WQSScoringSection({
   comparativeSurveys = [],
   property,
   template,
   isLoading = true,
-}: ScoringTableProps) {
+}: WQSScoringSectionProps) {
   const {
     /** scoring section path */
     scoringFactors: scoringFactorsPath,
@@ -208,16 +208,16 @@ export function ScoringTable({
               >
                 Score
               </td>
-              {comparativeSurveys.map(col => {
+              {comparativeSurveys.map((survey: any) => {
                 return (
                   <th
-                    key={col.id}
+                    key={survey.id}
                     className={
                       'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[40px] h-[70px] min-h-[70px] max-h-[70px] z-23 whitespace-nowrap'
                     }
                   >
                     <div className="flex flex-col">
-                      <div className="p-1">{col.surveyName}</div>
+                      <div className="p-1">{survey.surveyName}</div>
                       <div className="flex flex-row justify-between items-center">
                         <span>Score</span>
                         <span>Weighted Score</span>
@@ -235,27 +235,29 @@ export function ScoringTable({
               </tr>
             ) : (
               /** scoring section */
-              scoringFactors.map((f, rowIndex) => {
+              scoringFactors.map((factor: any, rowIndex: number) => {
                 const selected = wqsScoringFactors[rowIndex]?.factorCode ?? '';
                 const options = (comparativeFactors ?? [])
                   .filter(
-                    f =>
-                      f.factorCode === selected ||
-                      !wqsScoringFactors.some(q => q.factorCode === f.factorCode),
+                    (compFact: any) =>
+                      compFact.factorCode === selected ||
+                      !wqsScoringFactors.some((q: any) => q.factorCode === compFact.factorCode),
                   )
-                  .map(f => ({
+                  .map((f: any) => ({
                     label: getFactorDesciption(f.factorCode) ?? '',
                     value: f.factorCode,
                   }));
                 return (
-                  <tr key={f.id}>
+                  <tr key={factor.id}>
                     <td className={clsx('bg-white border-r', leftColumnBody)}>
                       <div className="truncate">
-                        {template?.calculationFactors.find(t => t.factorId === f.factorCode) ? (
+                        {template?.calculationFactors.find(
+                          t => t.factorId === factor.factorCode,
+                        ) ? (
                           <RHFInputCell
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) => getFactorDesciption(value)}
+                            accessor={({ value }) => getFactorDesciption(value.toString())}
                           />
                         ) : (
                           <RHFInputCell
@@ -300,9 +302,9 @@ export function ScoringTable({
                       />
                     </td>
 
-                    {comparativeSurveys.map((col, columnIndex) => {
+                    {comparativeSurveys.map((survey: any, columnIndex: number) => {
                       return (
-                        <td key={col.id} className={clsx(surveyStyle)}>
+                        <td key={survey.id} className={clsx(surveyStyle)}>
                           <div className="flex flex-row justitfy-between items-center gap-2">
                             <div className="w-[100px]">
                               <RHFInputCell
@@ -369,7 +371,9 @@ export function ScoringTable({
                     </td>
                     <td className={clsx('bg-white', bgGradientLeft, rightColumnBody)}>
                       {/* if rowIndex > template factors length, show delete button */}
-                      {!template?.calculationFactors.find(t => t.factorId === f.factorCode) && (
+                      {!template?.calculationFactors.find(
+                        t => t.factorId === factor.factorCode,
+                      ) && (
                         <div className="flex flex-row justify-center items-center">
                           <button
                             type="button"
@@ -416,8 +420,8 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx(surveyStyle)}></td>;
+              {comparativeSurveys.map((survey: any) => {
+                return <td key={survey.id} className={clsx(surveyStyle)}></td>;
               })}
               <td className={clsx('border-b border-gray-300')}></td>
               <td
@@ -464,9 +468,9 @@ export function ScoringTable({
                   }}
                 />
               </td>
-              {comparativeSurveys.map((col, columnIndex) => {
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
                 return (
-                  <td key={col.id} className={clsx(surveyStyle)}>
+                  <td key={survey.id} className={clsx(surveyStyle)}>
                     <div className={'flex flex-rows justify-between items-center'}>
                       <div>
                         <RHFInputCell
@@ -547,8 +551,8 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
+              {comparativeSurveys.map((survey: any) => {
+                return <td key={survey.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200 border-b border-gray-300')}></td>
               <td
@@ -574,9 +578,9 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
                 return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -612,12 +616,12 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+                const offeringPrice = survey.factors?.find((f: any) => f.id === '17')?.value ?? '';
                 if (!offeringPrice)
-                  return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
+                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
-                  <td key={s.id} className={'border-b border-r border-gray-300'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     <RHFInputCell
                       fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
                       inputType="number"
@@ -650,12 +654,12 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+                const offeringPrice = survey.factors?.find((f: any) => f.id === '17')?.value ?? '';
                 if (!offeringPrice)
-                  return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
+                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={survey.id} className={clsx(surveyStyle)}>
                     <RHFInputCell
                       fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
                       inputType="number"
@@ -687,11 +691,11 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map(s => {
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
-                if (!sellingPrice) return <td key={s.id} className={clsx(surveyStyle)}></td>;
+              {comparativeSurveys.map((survey: any) => {
+                const sellingPrice = survey.factors?.find((f: any) => f.id === '21')?.value ?? '';
+                if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                     {sellingPrice.toLocaleString()}
                   </td>
                 );
@@ -718,9 +722,9 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
                 return (
-                  <td key={s.id} className={clsx('text-right', surveyStyle)}>
+                  <td key={survey.id} className={clsx('text-right', surveyStyle)}>
                     <RHFInputCell
                       fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
                       inputType="display"
@@ -752,11 +756,11 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
-                if (!sellingPrice) return <td key={s.id} className={clsx(surveyStyle)}></td>;
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+                const sellingPrice = survey.factors?.find((f: any) => f.id === '21')?.value ?? '';
+                if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyStyle)}>
+                  <td key={survey.id} className={clsx(surveyStyle)}>
                     <RHFInputCell
                       fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
                       inputType="number"
@@ -791,11 +795,11 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
-                if (!sellingPrice) return <td key={s.id} className={clsx(surveyStyle)}></td>;
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+                const sellingPrice = survey.factors?.find((f: any) => f.id === '21')?.value ?? '';
+                if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={s.id} className={clsx('text-right', surveyStyle)}>
+                  <td key={survey.id} className={clsx('text-right', surveyStyle)}>
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -828,9 +832,9 @@ export function ScoringTable({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: any, columnIndex: number) => {
                 return (
-                  <td key={s.id} className={'border-b border-r border-gray-300'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"

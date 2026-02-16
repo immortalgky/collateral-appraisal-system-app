@@ -1,84 +1,45 @@
+import {
+  COLLATERAL_TYPE,
+  type WQSTemplate,
+} from '@features/appraisal/components/priceAnalysis/data/data.ts';
+import { FormProvider, type SubmitErrorHandler, useForm } from 'react-hook-form';
+import {
+  WQSDto,
+  type WQSRequestType,
+} from '@features/appraisal/components/priceAnalysis/features/wqs/schemas/wqsForm.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
-import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
-import { WQS } from './WQSSection';
-import { MethodFooterActions } from '../../../components/MethodFooterActions';
-import { WQSDto, type WQSRequestType } from '../schemas/wqsForm';
-import { useEffect, useState } from 'react';
-import { COLLATERAL_TYPE, type WQSTemplate } from '../../../data/data';
+import {
+  SaleAdjustmentGridDto,
+  type SaleAdjustmentGridType,
+} from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
 import toast from 'react-hot-toast';
-import { setWQSInitialValueOnSelectSurvey } from '../domain/setWQSInitialValueOnSelectSurvey';
-import { setWQSInitialValue } from '../domain/setWQSInitialValue';
-import { flattenRHFErrors } from '../domain/flattenRHFErrors';
+import { useState } from 'react';
+import { PriceAnalysisTemplateSelector } from '@features/appraisal/components/priceAnalysis/shared/components/PriceAnalysisTemplateSelector.tsx';
+import { WQS } from '@features/appraisal/components/priceAnalysis/features/wqs/components/WQSSection.tsx';
+import { MethodFooterActions } from '@features/appraisal/components/priceAnalysis/components/MethodFooterActions.tsx';
+import { flattenRHFErrors } from '@features/appraisal/components/priceAnalysis/features/wqs/domain/flattenRHFErrors.ts';
+import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValue.ts';
+import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
 
-/**
- * => default collateral type, template => generate => query factors in template
- * =>
- * API stages:
- * stage (1): after user click 'AP' button
- * - use 'groupId' to query property in the group, market survey in application
- *
- * stage (2): after user trigger 'pencil' button to start method
- * - load 'collateral type', 'template', 'all factors' parameter
- *
- * stage (3): after user trigger 'generate' button
- * - initial template setting into methods
- *
- * WQS divided into 4 sections:
- * (1) select comparative data
- * (2) WQS score
- * (3) WQS calculation
- * (4) adjust value
- *
- * WQS flow:
- * (1) user choose collateral type and template then system initial data
- * (2) user choose market survey in application to calculate at section (1)
- * (3) user adjust score in section (2)
- * (4) user adjust pricing from market survey such as offering price or selling price (3)
- * (5) after system calculate final value, user will adjust final value at section (4)
- *
- * Control logic:
- * section (1)
- * - in selection market survey screen, system will display in map ***
- * - factor from template setting cannot change/ remove
- * - user can add more factor from all parameter
- * - in case that no template, user still select factor by themself
- * section (2)
- * - factor from template setting cannot change/ remove
- * - user can add more factor from section (1), these factors can change or remove
- * - if total intensity > 100, system will show red color
- * - in case that no template, no factor initail from section (1). but user still choose factor from section (1) to key in score
- * section (3)
- * - market survey data will deliver either offering price or selling price
- * - if offering price has value, user can adjust value by either percentage or amount. but default percentage 5%
- * - if selling price has value, system will calculate total number of year of collateral from date. then, user can adjust period of time (%) and period of time also default 3%
- * section (4)
- * - if coefficient > 0.85, highlight red color
- * others
- * - warning when change template button data already key in ***
- */
-
-interface WQSMethodPanelProps {
+interface SaleAdjustmentGridPanelProps {
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
   templates?: WQSTemplate[];
   allFactors: Record<string, unknown>[];
   marketSurveys: Record<string, unknown>[];
-  onCalculationMethodDirty: (check: boolean) => void;
 }
-export function WQSMethodPanel({
+export function SaleAdjustmentGridPanel({
   methodId,
   methodType,
   property,
   marketSurveys,
   templates,
   allFactors,
-  onCalculationMethodDirty,
-}: WQSMethodPanelProps) {
-  const methods = useForm<WQSRequestType>({
+}: SaleAdjustmentGridPanelProps) {
+  const methods = useForm<SaleAdjustmentGridType>({
     mode: 'onSubmit',
-    resolver: zodResolver(WQSDto),
+    resolver: zodResolver(SaleAdjustmentGridDto),
   });
 
   const {
@@ -138,24 +99,8 @@ export function WQSMethodPanel({
     setPricingTemplateId(templateId);
   };
 
-  const onInvalid: SubmitErrorHandler<WQSRequestType> = errs => {
-    const messages = flattenRHFErrors(errs);
-
-    toast.error(
-      <div>
-        <div className="font-semibold">Please fix these fields</div>
-        <ul className="mt-1 list-disc pl-5">
-          {messages.slice(0, 6).map(m => (
-            <li key={m}>{m}</li>
-          ))}
-        </ul>
-      </div>,
-      { id: 'wqs-form-errors' }, // prevents stacking duplicate toasts
-    );
-  };
-
   useEffect(() => {
-    setWQSInitialValue({
+    setSaleAdjustmentGridInitialValue({
       collateralType: collateralTypeId,
       methodId: methodId,
       methodType: methodType,
@@ -176,8 +121,7 @@ export function WQSMethodPanel({
   ]);
 
   useEffect(() => {
-    console.log('comparative change!');
-    setWQSInitialValueOnSelectSurvey({
+    setSaleAdjustmentGridInitialValueOnSelectSurvey({
       collateralType: collateralTypeId,
       methodId: methodId,
       methodType: methodType,
@@ -189,19 +133,21 @@ export function WQSMethodPanel({
     });
   }, [comparativeSurveys.length]);
 
-  // Warn user about unsaved changes before leaving
-  useEffect(() => {
-    onCalculationMethodDirty(isDirty);
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
+  const onInvalid: SubmitErrorHandler<WQSRequestType> = errs => {
+    const messages = flattenRHFErrors(errs);
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty, onCalculationMethodDirty]);
+    toast.error(
+      <div>
+        <div className="font-semibold">Please fix these fields</div>
+        <ul className="mt-1 list-disc pl-5">
+          {messages.slice(0, 6).map(m => (
+            <li key={m}>{m}</li>
+          ))}
+        </ul>
+      </div>,
+      { id: 'wqs-form-errors' }, // prevents stacking duplicate toasts
+    );
+  };
 
   return (
     <FormProvider {...methods}>
@@ -210,8 +156,8 @@ export function WQSMethodPanel({
         className="flex flex-col h-full gap-4"
       >
         <PriceAnalysisTemplateSelector
-          icon="scale-balanced"
-          methodName="Weighted Quality Scores (WQS)"
+          icon="table"
+          methodName="Sale Adjustment Grid"
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,

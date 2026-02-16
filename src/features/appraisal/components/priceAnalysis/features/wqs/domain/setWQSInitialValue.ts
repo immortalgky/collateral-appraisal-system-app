@@ -2,6 +2,15 @@ import type { UseFormReset } from 'react-hook-form';
 import type { WQSTemplate } from '../../../data/data';
 import type { WQSRequestType } from '../schemas/wqsForm';
 
+interface setWQSInitialValueProps {
+  collateralType: string;
+  methodId: string;
+  methodType: string;
+  property: Record<string, unknown>;
+  template?: WQSTemplate;
+  comparativeSurveys: Record<string, unknown>[];
+  reset: UseFormReset<WQSRequestType>;
+}
 export function setWQSInitialValue({
   collateralType,
   methodId,
@@ -10,24 +19,8 @@ export function setWQSInitialValue({
   template,
   comparativeSurveys,
   reset,
-}: {
-  collateralType: string;
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  template?: WQSTemplate;
-  comparativeSurveys: Record<string, unknown>[];
-  reset: UseFormReset<WQSRequestType>;
-}) {
-  if (
-    !collateralType &&
-    !methodId &&
-    !methodType &&
-    !property &&
-    !template &&
-    !comparativeSurveys &&
-    !reset
-  )
+}: setWQSInitialValueProps) {
+  if (!collateralType || !methodId || !methodType || !property || !comparativeSurveys || !reset)
     return;
 
   if (!template) {
@@ -38,6 +31,7 @@ export function setWQSInitialValue({
       comparativeSurveys: [],
       comparativeFactors: [],
       WQSScores: [],
+      WQSTotalScores: undefined,
       WQSCalculations: [],
       WQSFinalValue: {
         landArea: property?.landArea ?? undefined,
@@ -57,6 +51,7 @@ export function setWQSInitialValue({
   }
 
   reset({
+    WQSTotalScores: undefined,
     methodId: 'WQSXXXXXXX', // method Id which generate when enable in methods selection screen
     collateralType: collateralType,
     pricingTemplateCode: '', // TODO: replace by template id
