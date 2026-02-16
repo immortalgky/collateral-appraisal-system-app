@@ -1,12 +1,14 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import type { PropertyGroup, PropertyItem, PropertyType } from '@/features/appraisal/types';
+import { propertyGroupKeys, type GetPropertyGroupByIdResponse } from '@/features/appraisal/api';
 import {
-  propertyGroupKeys,
-  type GetPropertyGroupByIdResponse,
-  type PropertyGroupDto,
-} from '@/features/appraisal/api';
-import { GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '@features/appraisal/components/priceAnalysis/data/data.ts';
+  GET_MARKET_SURVEYS_QUERY,
+  GET_PROPERTY_GROUP_BY_ID_RESPONSE,
+  MOC_SURVEY_DATA,
+} from '../../data/data';
+import { useGetPriceAnalysisConfigQuery } from '../../domain/usePriceAnalysisQuery';
+import type { PropertyGroup } from '@/features/appraisal/types';
+import { useGetPricingAnalysis } from '../../api/api';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -81,15 +83,24 @@ function mapDetailToPropertyItem(detail: Record<string, unknown>): PropertyItem 
   };
 }
 
-// ==================== Hook ====================
+// ==================== Hook ===================
 
-export function useEnrichedPropertyGroup(appraisalId: string | undefined, groupId: string) {
+export function useInitializePriceAnalysis({
+  appraisalId,
+  groupId,
+}: {
+  appraisalId: string;
+  groupId: string;
+}) {
   // Step 1: For a group, fetch group detail (to get property IDs + types)
   const groupDetailQuery = useQuery({
     queryKey: propertyGroupKeys.detail(appraisalId!, groupId),
     queryFn: async (): Promise<GetPropertyGroupByIdResponse> => {
-      const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
-      return data;
+      // const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
+      // return data;
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return GET_PROPERTY_GROUP_BY_ID_RESPONSE;
     },
     enabled: !!appraisalId && !!groupId,
     staleTime: Infinity,
@@ -136,13 +147,71 @@ export function useEnrichedPropertyGroup(appraisalId: string | undefined, groupI
     }),
   });
 
-  // Step 3: Assemble enriched groups. wait until all property finished
+  // Step 3: fetch market surveys in this group
+  const marketSurveysQuery = useQuery({
+    queryKey: ['market-survey'],
+    queryFn: async (): Promise<Record<string, unknown>[]> => {
+      // const { data } = await axios.get(`/market-comparable/`);
+
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return GET_MARKET_SURVEYS_QUERY;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    retry: 1,
+  });
+
+  const allMarketSurveyEntries: Array<{ id: string }> = [];
+
+  if (marketSurveysQuery.data) {
+    marketSurveysQuery.data.map(survey => {
+      allMarketSurveyEntries.push({
+        id: String(survey.id),
+      });
+    });
+  }
+
+  // Step 3.1: For each market survey, fetch its detail
+  const mapping_mock_survey_data = new Map(MOC_SURVEY_DATA.map(s => [s.id, s]));
+  const marketSurveyDetailQueries = useQueries({
+    queries: allMarketSurveyEntries.map(entry => {
+      return {
+        queryKey: ['pricing-market', entry.id, appraisalId],
+        queryFn: async () => {
+          // const { data } = await axios.get(`/market-comparables/${entry.id}`);
+          // return data as Record<string, unknown>;
+          return mapping_mock_survey_data.get(entry.id);
+        },
+        enabled: !!appraisalId && !!entry.id,
+        staleTime: Infinity,
+        retry: 1,
+      };
+    }),
+  });
+
+  // Step 4: Fetch price analysis config
+  const pricingConfigurationQuery = useGetPriceAnalysisConfigQuery();
+
+  // Step: 5 Fetch price analysis selection data
+  const pricingSelectionQuery = useGetPricingAnalysis(groupId);
+
+  // Step 5: Assemble wait until all data finished
   const isLoadingGroupDetails = groupDetailQuery.isLoading;
   const isLoadingPropertyDetails = propertyDetailQueries.some(q => q.isLoading);
+  const isLoadingMarketSurveyDetails = marketSurveyDetailQueries.some(q => q.isLoading);
+  const isLoadingPricingConfiguration = pricingConfigurationQuery.isLoading;
+  const isLoadingPricingSelection = pricingSelectionQuery.isLoading;
 
   // Only groups-level and group-detail-level errors are fatal.
   // Property detail errors are non-fatal — the property just shows minimal info.
-  const isLoading = isLoadingGroupDetails;
+  const isLoading =
+    isLoadingGroupDetails ||
+    isLoadingPropertyDetails ||
+    isLoadingMarketSurveyDetails ||
+    isLoadingPricingConfiguration ||
+    isLoadingPricingSelection;
   const error = groupDetailQuery.error;
 
   // Build a lookup map for property details
@@ -154,44 +223,33 @@ export function useEnrichedPropertyGroup(appraisalId: string | undefined, groupI
     }
   }
 
-  // Map to the PropertyGroup[] shape used by the frontend
   const groupDetail = groupDetailQuery?.data;
   const properties = groupDetail?.properties ?? [];
-  // Sort by sequenceInGroup and map to PropertyItem
-  const items: PropertyItem[] = properties
-    .slice()
-    .sort((a, b) => a.sequenceInGroup - b.sequenceInGroup)
-    .map(prop => {
-      const detail = propertyDetailMap.get(prop.propertyId);
-      if (detail) {
-        return mapDetailToPropertyItem(detail);
-      }
-      // Fallback: property detail still loading or failed — show what we know
-      return {
-        id: prop.propertyId,
-        type: (prop.propertyType as PropertyType) || 'Lands',
-        address: prop.propertyType || 'Property',
-        area: '-',
-        priceRange: '-',
-        location: '-',
-        sequenceNumber: prop.sequenceInGroup,
-      };
-    });
-  const group: PropertyGroup = {
-    id: groupDetail?.id ?? '',
-    name: groupDetail?.groupName ?? '',
-    items,
-    description: groupDetail?.description,
-    groupNumber: groupDetail?.groupNumber,
-    useSystemCalc: groupDetail?.useSystemCalc,
+  const marketSurveyDetails = marketSurveyDetailQueries?.map(q => q.data);
+  const pricingConfiguration = pricingConfigurationQuery?.data;
+  const pricingSelection = pricingSelectionQuery?.data ?? {
+    id: '',
+    propertyGroupId: groupId,
+    status: '',
+    finalMarketValue: 0,
+    finalAppraisedValue: 0,
+    finalForcedSaleValue: 0,
+    valuationDate: new Date(),
+    approaches: [],
+  };
+
+  const initialData = {
+    groupDetail,
+    properties,
+    marketSurveyDetails,
+    pricingConfiguration,
+    pricingSelection,
   };
 
   // const group = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
   return {
-    group,
+    initialData,
     isLoading,
     error,
-    isLoadingGroupDetails,
-    isLoadingPropertyDetails,
   };
 }

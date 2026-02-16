@@ -1,3 +1,4 @@
+import { unknown } from 'zod';
 import type { Approach, GroupDetails, Method } from '../type';
 
 /*
@@ -30,6 +31,8 @@ export type PriceAnalysisSelectorState = {
   groupDetails: GroupDetails;
   property: Record<string, unknown>;
   marketSurveys: Record<string, unknown>[];
+  allFactors?: Record<string, unknown>[];
+  methodTemplates?: Record<string, unknown>[];
 };
 
 export type PriceAnalysisSelectorAction =
@@ -40,6 +43,7 @@ export type PriceAnalysisSelectorAction =
         groupDetails: GroupDetails;
         property: Record<string, unknown>;
         marketSurveys: Record<string, unknown>[];
+        allFactors: { value: string; description: string }[];
       };
     }
   | {
@@ -53,7 +57,11 @@ export type PriceAnalysisSelectorAction =
   | { type: 'SUMMARY_ENTER' }
   | { type: 'SUMMARY_SELECT_METHOD'; payload: { approachType: string; methodType: string } }
   | { type: 'SUMMARY_SELECT_APPROACH'; payload: { approachType: string } }
-  | { type: 'SUMMARY_SAVE' };
+  | { type: 'SUMMARY_SAVE' }
+  | {
+      type: 'CALCULATION_ENTER';
+      payload: { allFactors: Record<string, unknown>[]; templates: Record<string, unknown>[] };
+    };
 
 /** filter out approaches and methods that are not selected in editing mode
  * @param approaches - approaches which want to filter out
@@ -134,6 +142,7 @@ export function approachMethodReducer(
         groupDetails: action.payload.groupDetails,
         property: action.payload.property,
         marketSurveys: action.payload.marketSurveys,
+        allFactors: action.payload.allFactors,
       };
     }
 
@@ -321,6 +330,14 @@ export function approachMethodReducer(
 
     case 'SUMMARY_SAVE': {
       return state;
+    }
+
+    case 'CALCULATION_ENTER': {
+      return {
+        ...state,
+        allFactors: action.payload.allFactors,
+        methodTemplates: action.payload.templates,
+      };
     }
 
     default:

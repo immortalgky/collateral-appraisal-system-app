@@ -241,11 +241,7 @@ export function WQSMethodPanel({
               allFactors={allFactors}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
             />
-            <MethodFooterActions
-              isLoading={isGenerated}
-              onSaveDraft={handleOnSaveDraft}
-              onCancel={handleOnCancel}
-            />
+            <MethodFooterActions onSaveDraft={handleOnSaveDraft} onCancel={handleOnCancel} />
           </div>
         )}
       </form>

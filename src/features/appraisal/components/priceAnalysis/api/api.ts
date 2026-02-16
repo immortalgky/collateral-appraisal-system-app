@@ -58,6 +58,7 @@ export function useGetPricingAnalysis(id: string | undefined) {
     refetchOnWindowFocus: false, // don't refetch when tab focuses
     refetchOnReconnect: false,
     staleTime: Infinity,
+    retry: 1,
   });
 }
 
@@ -224,6 +225,7 @@ export function useGetPropertyById(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
+    retry: 1,
   });
 }
 
@@ -242,6 +244,7 @@ export function useGetMarketSurveys() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
+    retry: 1,
   });
 }
 
