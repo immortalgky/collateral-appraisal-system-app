@@ -8,17 +8,13 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/selection/domain/selectionContext.tsx';
 import { usePriceAnalysisGateway } from '@features/appraisal/components/priceAnalysis/features/selection/domain/priceAnalysisGateway.ts';
 import toast from 'react-hot-toast';
-import {
-  useGetComparativeFactors,
-  useGetMarketSurveys,
-  useGetPricingAnalysis,
-  useGetPropertyById,
-} from '@features/appraisal/components/priceAnalysis/api/api.ts';
-import { useGetPriceAnalysisConfigQuery } from '@features/appraisal/components/priceAnalysis/domain/usePriceAnalysisQuery.tsx';
+import { useGetComparativeFactors } from '@features/appraisal/components/priceAnalysis/api/api.ts';
 import { createInitialState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/createInitialState.ts';
 import type { Method } from '@features/appraisal/components/priceAnalysis/features/selection/type.ts';
-import { useEnrichedPropertyGroup } from '@features/appraisal/components/priceAnalysis/shared/hooks/useEnrichedPropertyGroup.ts';
 import { useNavigate } from 'react-router-dom'; // your use-case fn
+import { ALL_FACTORS } from '../data/data';
+import { saveEditingSelection } from '../features/selection/domain/saveEditingSelection';
+import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
 
 type MethodKey = { approachType: string; methodType: string };
 type StartCalculationArgs = { approachId: string; methodId: string; methodType: string }; // what ActiveMethodPanel needs
@@ -36,6 +32,8 @@ export function useSelectionFlowController(opts: {
   onStartCalculation: (args: StartCalculationArgs) => void;
   closeSelectionPanel?: () => void; // e.g. close accordion
 }) {
+  console.log('Check useSelectionFlowController refresh!');
+
   const navigate = useNavigate();
   const state = useSelectionState();
   const dispatch = useSelectionDispatch();
@@ -43,43 +41,51 @@ export function useSelectionFlowController(opts: {
   const gateway = usePriceAnalysisGateway();
   const qc = useQueryClient();
 
-  /** Initialize query data such as group detail, property under the group, market surveys, price analysis configuration file and, pricing data in database */
-  const groupQ = useEnrichedPropertyGroup(opts.appraisalId, opts.groupId);
-  const propertyQ = useGetPropertyById(opts.appraisalId, '00000000-0000-0000-0000-000000000001');
-  const surveysQ = useGetMarketSurveys();
-  const configQ = useGetPriceAnalysisConfigQuery();
-  const pricingQ = useGetPricingAnalysis(opts.groupId);
+  /** (1) Initialize query data such as group detail, property under the group, market surveys, price analysis configuration file and, pricing data in database */
+  const {
+    initialData,
+    isLoading: isInitialDataLoading,
+    error: initialDataError,
+  } = useInitializePriceAnalysis({
+    appraisalId: opts.appraisalId,
+    groupId: opts.groupId,
+  });
 
-  const isLoading =
-    groupQ.isLoading ||
-    propertyQ.isLoading ||
-    surveysQ.isLoading ||
-    configQ.isLoading ||
-    pricingQ.isLoading;
-
-  const isError =
-    !!groupQ.error || propertyQ.isError || surveysQ.isError || configQ.isError || pricingQ.isError;
+  const { groupDetail, properties, marketSurveyDetails, pricingConfiguration, pricingSelection } =
+    useMemo(() => {
+      return initialData;
+    }, [initialData]);
 
   useEffect(() => {
-    if (!configQ.data || !pricingQ.data) return;
-    if (!groupQ.group) return; // if required
-    // (optionally) guard against overwriting edits
-    const approaches = createInitialState(configQ.data, pricingQ.data);
-    dispatch({
-      type: 'INIT',
-      payload: {
-        approaches,
-        groupDetails: groupQ.group,
-        property: propertyQ.data,
-        marketSurveys: surveysQ.data,
-      },
-    });
-    dispatch({ type: 'SUMMARY_ENTER' });
-  }, [configQ.data, pricingQ.data, groupQ.group, propertyQ.data, surveysQ.data, dispatch]);
+    if (isInitialDataLoading) return;
 
-  useEffect(() => {
-    if (!isLoading) toast.error('Initial data errors!');
-  }, [isError, isLoading]);
+    console.log(initialData);
+
+    if (
+      !!groupDetail &&
+      !!properties &&
+      !!marketSurveyDetails &&
+      !!pricingConfiguration &&
+      !!pricingSelection
+    ) {
+      const approaches = createInitialState(pricingConfiguration, pricingSelection);
+      /** (2) after complete preparing data, trigger first state 'INIT' with initial data */
+
+      console.log(approaches, pricingConfiguration, pricingSelection);
+      dispatch({
+        type: 'INIT',
+        payload: {
+          approaches,
+          groupDetails: groupDetail,
+          property: properties,
+          marketSurveys: marketSurveyDetails,
+          allFactors: ALL_FACTORS, // TODO: replace by query all factors
+        },
+      });
+      /** (3) enter summary selection screen */
+      dispatch({ type: 'SUMMARY_ENTER' });
+    }
+  }, [isInitialDataLoading]);
 
   const { isOpen: isConfirmOpen, onOpen: openConfirm, onClose: closeConfirm } = useDisclosure();
 
@@ -98,6 +104,8 @@ export function useSelectionFlowController(opts: {
 
   // Fetch comparative factors only when user initiated calculation and IDs exist
   const comparativeQ = useGetComparativeFactors(opts.appraisalId, calcIds?.method.id);
+
+  // const templatesQ = useGetPricingTemplate();
 
   useEffect(() => {
     if (!calcKey) return;
@@ -120,6 +128,10 @@ export function useSelectionFlowController(opts: {
       return;
     }
 
+    /** if got comparative value, mapping, pass to calculation section.
+     * if not, initail data
+     */
+
     opts.onStartCalculation({
       approachId: appr.approachId,
       methodId: method.id,
@@ -135,9 +147,6 @@ export function useSelectionFlowController(opts: {
     comparativeQ.isError,
     comparativeQ.error,
     comparativeQ.data,
-    state,
-    opts.onStartCalculation,
-    opts.closeSelectionPanel,
   ]);
 
   const vm = useMemo(() => {
@@ -205,11 +214,11 @@ export function useSelectionFlowController(opts: {
         dispatch({ type: 'SUMMARY_ENTER' });
         return;
       }
-      // await saveEditingSelection(gateway, {
-      //   appraisalId: opts.appraisalId,
-      //   groupId: opts.groupId,
-      //   selections,
-      // });
+      await saveEditingSelection(gateway, {
+        appraisalId: opts.appraisalId,
+        groupId: opts.groupId,
+        selections,
+      });
 
       dispatch({ type: 'EDIT_SAVE' });
 
@@ -258,6 +267,7 @@ export function useSelectionFlowController(opts: {
 
   const saveSummary = async () => {
     try {
+      /** replace by tanStackQuery */
       // await addCandidateApproachMutate({ groupId: groupId, data: data }); // convert to PriceAnalysisApproachRequest
       dispatch({ type: 'EDIT_SAVE' });
 
@@ -287,18 +297,15 @@ export function useSelectionFlowController(opts: {
     // pops up to confirm
   };
 
+  const saveCalculation = () => {};
+
   return {
     state,
     vm,
+    isInitialDataLoading,
 
     // change calculation mode
     changeSystemCalculation,
-
-    //
-    initial: {
-      isLoading: isLoading,
-      isError: isError,
-    },
 
     // edit mode
     enterEdit,

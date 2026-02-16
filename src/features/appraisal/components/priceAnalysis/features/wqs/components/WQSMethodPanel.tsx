@@ -219,11 +219,11 @@ export function WQSMethodPanel({
             value: pricingTemplateCode,
             options:
               templates
-                .filter(template => template.collateralTypeId === collateralTypeId)
+                ?.filter(template => template.collateralTypeId === collateralTypeId)
                 .map(template => ({
                   value: template.templateCode,
                   label: template.templateName,
-                })) ?? '',
+                })) ?? [],
           }}
         />
         {isGenerated && (
@@ -239,11 +239,7 @@ export function WQSMethodPanel({
               onShowComparativeDataSelection={handleOnClickAddComparativeSurvey}
               showMarketSurveySelection={showMarketSurveySelection}
             />
-            <MethodFooterActions
-              isLoading={isGenerated}
-              onSaveDraft={handleOnSaveDraft}
-              onCancel={handleOnCancel}
-            />
+            <MethodFooterActions onSaveDraft={handleOnSaveDraft} onCancel={handleOnCancel} />
           </div>
         )}
       </form>

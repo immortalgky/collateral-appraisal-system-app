@@ -1,16 +1,12 @@
 import { Button, Icon } from '@/shared/components';
 
 export function MethodFooterActions({
-  isLoading,
   onSaveDraft,
   onCancel,
 }: {
-  isLoading: boolean;
   onSaveDraft: () => void;
   onCancel: () => void;
 }) {
-  if (isLoading) return;
-
   return (
     <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       <div className="flex justify-between items-center">

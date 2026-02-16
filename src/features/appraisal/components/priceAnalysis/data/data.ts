@@ -36,6 +36,36 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
   ],
 };
 
+export const GET_MARKET_SURVEYS_QUERY: Record<string, unknown>[] = [
+  {
+    id: '00000000-0000-0000-0000-000000000000',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000001',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000002',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000003',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000004',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000005',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000006',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000007',
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000008',
+  },
+];
+
 /** GetPropertyGroupById */
 export const GET_PROPERTY_GROUP_BY_ID_RESPONSE: GetPropertyGroupByIdResponseType = {
   id: '00000000-0000-0000-0000-000000000001',
@@ -391,7 +421,7 @@ export const DIRECT_COMPARISON_TEMPLATE: DirectComparisonTemplate[] = [
 export const MOC_SURVEY_DATA = [
   // survey for land
   {
-    id: 'SURVEY_01',
+    id: '00000000-0000-0000-0000-000000000000',
     surveyName: 'Survey 1',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
@@ -406,7 +436,7 @@ export const MOC_SURVEY_DATA = [
     ],
   },
   {
-    id: 'SURVEY_02',
+    id: '00000000-0000-0000-0000-000000000001',
     surveyName: 'Survey 2',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
@@ -420,7 +450,7 @@ export const MOC_SURVEY_DATA = [
     ],
   },
   {
-    id: 'SURVEY_03',
+    id: '00000000-0000-0000-0000-000000000002',
     surveyName: 'Survey 3',
     factors: [
       { id: '01', value: 'ที่อยู่อาศัย และอุตสาหกรรม' },
@@ -437,7 +467,7 @@ export const MOC_SURVEY_DATA = [
 
   // survey for land and building
   {
-    id: 'SURVEY_04',
+    id: '00000000-0000-0000-0000-000000000003',
     surveyName: 'Survey 4',
     factors: [
       { id: '02', value: 'แปลงกลาง' },
@@ -452,7 +482,7 @@ export const MOC_SURVEY_DATA = [
     ],
   },
   {
-    id: 'SURVEY_05',
+    id: '00000000-0000-0000-0000-000000000004',
     surveyName: 'Survey 5',
     factors: [
       { id: '02', value: 'แปลงมุม' },
@@ -467,7 +497,7 @@ export const MOC_SURVEY_DATA = [
     ],
   },
   {
-    id: 'SURVEY_06',
+    id: '00000000-0000-0000-0000-000000000005',
     surveyName: 'Survey 6',
     factors: [
       { id: '02', value: 'แปลงกลาง' },
@@ -484,7 +514,7 @@ export const MOC_SURVEY_DATA = [
 
   //   surveys for condo
   {
-    id: 'SURVEY_07',
+    id: '00000000-0000-0000-0000-000000000006',
     surveyName: 'Survey 7',
     factors: [
       { id: '02', value: 'แปลงกลาง' },
@@ -498,7 +528,7 @@ export const MOC_SURVEY_DATA = [
     ],
   },
   {
-    id: 'SURVEY_08',
+    id: '00000000-0000-0000-0000-000000000007',
     surveyName: 'Survey 8',
     factors: [
       { id: '02', value: 'แปลงมุม' },
@@ -512,7 +542,7 @@ export const MOC_SURVEY_DATA = [
     ],
   },
   {
-    id: 'SURVEY_09',
+    id: '00000000-0000-0000-0000-000000000008',
     surveyName: 'Survey 9',
     factors: [
       { id: '02', value: 'แปลงกลาง' },

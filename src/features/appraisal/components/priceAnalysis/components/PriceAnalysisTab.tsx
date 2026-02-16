@@ -1,9 +1,9 @@
-import { useLocation } from 'react-router-dom';
-import { useEffect, useState, type JSX } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
-import { ActiveMethodPanel } from '@features/appraisal/components/priceAnalysis/components/ActiveMethodPanel.tsx';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useSelectionFlowController } from '@features/appraisal/components/priceAnalysis/application/useSelectionFlowController.ts';
+import { MethodSectionRenderer } from './MethodSectionRenderer';
+import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
 
 export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element {
   const appraisalId = '00000000-0000-0000-0000-000000000001';
@@ -12,7 +12,7 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
    * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
    * - the state will pass to `ActiveMethodPanel` to show method
    */
-  const [calculationMethod, setCalculationMethod] = useState<
+  const [activeCalculationMethod, setActiveCalculationMethod] = useState<
     { approachId: string; methodId: string; methodType: string } | undefined
   >(undefined);
 
@@ -23,12 +23,13 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
     onClose: onPriceAnalysisAccordianClose,
   } = useDisclosure({ defaultIsOpen: true });
 
+  /** functino to trigger calculation section */
   const handleOnStartCalculation = (args: {
     approachId: string;
     methodId: string;
     methodType: string;
   }) => {
-    setCalculationMethod({
+    setActiveCalculationMethod({
       approachId: args.approachId,
       methodId: args.methodId,
       methodType: args.methodType,
@@ -36,6 +37,7 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
     onPriceAnalysisAccordianClose();
   };
 
+  /** function to close price analysis page */
   const handleOnCloseSelectionPanel = () => {};
 
   const {
@@ -44,7 +46,7 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
     // change calculatino mode
     changeSystemCalculation,
 
-    initial,
+    isInitialDataLoading,
 
     // edit mode
     enterEdit,
@@ -67,9 +69,17 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
     closeSelectionPanel: handleOnCloseSelectionPanel,
   });
 
+  const { state: priceAnalysisState } = useMemo(() => {
+    return {
+      state,
+    };
+  }, [state]);
+
   useEffect(() => {
     console.log('Reload');
   }, []);
+
+  console.log('Check component refresh!');
 
   /** ================================= */
   /** Initial data                      */
@@ -80,73 +90,33 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
     setIsDirty(check);
   };
 
-  /** Query selected approach & method */
-  // TODO:
-
-  // When a user tries to switch method while there are unsaved changes,
-  // we confirm first and only then allow the switch.
-  const confirmDiscardUnsavedChanges = () => {
-    return window.confirm(
-      'You have unsaved changes in the current calculation method.\n\nDiscard changes and switch methods?',
-    );
-  };
-
-  const handleOnSelectCalculationMethod = (
-    nextApproachId: string | undefined,
-    nextMethodId: string | undefined,
-    nextMethodType: string,
-  ) => {
-    // no-op if selecting the same method
-    if (nextMethodId === calculationMethod?.methodId) return;
-
-    // TODO: If current method has unsaved changes, confirm before switching.
-    if (isDirty && calculationMethod?.methodId) {
-      const ok = confirmDiscardUnsavedChanges();
-      if (!ok) return;
-
-      // Clear dirty flag for the current method since we're discarding changes.
-      // (The current method component will unmount after we switch.)
-      setIsDirty(false);
-    }
-
-    // [!] right now, after save methods on editing mode and refresh page. Mock data not cover add method
-    if (!!nextApproachId && !!nextMethodId) {
-      setCalculationMethod({
-        approachId: nextApproachId,
-        methodId: nextMethodId,
-        methodType: nextMethodType,
-      });
-      onPriceAnalysisAccordianClose();
-    }
-  };
-
   /**
    * How to manage property to send to each method?
    * (1) In case that we have 1 land multiple building, how to map?
    */
 
   useEffect(() => {
-    if (initial.isLoading) {
+    if (isInitialDataLoading) {
       console.log('Initializing...');
       return;
     }
     console.log('Completed!');
-  }, [initial.isLoading]);
+  }, [isInitialDataLoading]);
 
   return (
     <div className="flex-1 min-w-0 min-h-0 flex-col">
-      {!initial.isLoading && (
+      {!isInitialDataLoading && (
         <div>
           <PriceAnalysisAccordion
-            state={state}
+            state={priceAnalysisState}
             appraisalId={appraisalId}
             group={{
               id: groupId ?? '',
-              number: state.groupDetails?.groupNumber ?? 0,
-              name: state.groupDetails?.groupName ?? '',
-              description: state.groupDetails?.description ?? '',
-              useSystemCalc: state.groupDetails?.useSystemCalc ?? true,
-              properties: state.property ?? [],
+              number: priceAnalysisState.groupDetails?.groupNumber ?? 0,
+              name: priceAnalysisState.groupDetails?.groupName ?? '',
+              description: priceAnalysisState.groupDetails?.description ?? '',
+              useSystemCalc: priceAnalysisState.groupDetails?.useSystemCalc ?? true,
+              properties: priceAnalysisState.property ?? [],
             }}
             onSelectCalculationMethod={startCalculation}
             onSummaryModeSave={saveSummary}
@@ -155,7 +125,7 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
             onPriceAnalysisAccordionChange={onPriceAnalysisAccordionChange}
             isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
             onSystemCalculationChange={changeSystemCalculation}
-            systemCalculationMode={state.systemCalculationMode}
+            systemCalculationMode={priceAnalysisState.systemCalculationMode}
             isConfirmDeselectedMethodOpen={confirm.isOpen}
             onConfirmDeselectMethod={confirm.confirmDeselect}
             onCancelDeselectMethod={confirm.cancelDeselect}
@@ -164,12 +134,14 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
             onSelectCandidateMethod={selectCandidateMethod}
             onSelectCandidateApproach={selectCandidateApproach}
           />
-          {!!calculationMethod && (
-            <ActiveMethodPanel
-              methodId={calculationMethod.methodId}
-              methodType={calculationMethod.methodType}
-              property={state.property}
-              marketSurveys={state.marketSurveys}
+          {!!activeCalculationMethod && (
+            <MethodSectionRenderer
+              allFactors={priceAnalysisState.allFactors}
+              methodId={activeCalculationMethod.methodId}
+              methodType={activeCalculationMethod.methodType}
+              property={priceAnalysisState.property}
+              templates={priceAnalysisState.methodTemplates}
+              marketSurveys={priceAnalysisState.marketSurveys}
               onCalculationMethodDirty={handleOnCalculationMethodDirty}
             />
           )}
