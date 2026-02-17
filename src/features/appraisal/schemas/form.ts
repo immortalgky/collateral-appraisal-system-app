@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GroupValuations, LandTitleDto } from '@/shared/schemas/v1';
 
 export const createLandForm = z.object({
   propertyName: z.string().nullable().optional(),
@@ -384,12 +385,28 @@ export const condoPMAForm = z.object({
   provinceName: z.string().nullable(),
 });
 
+export const summaryDecisionForm = z.object({
+  dateTime: z.string().datetime({ offset: true }).nullable(),
+  appraisalPrice: z.coerce.number().nullable(),
+  buildingInsurancePrice: z.coerce.number().nullable(),
+  forcedSalePrice: z.coerce.number().nullable(),
+  priceVerification: z.boolean(),
+  groupValuations: z.array(GroupValuations),
+  landTitle: z.array(LandTitleDto),
+  condition: z.string().nullable(),
+  remark: z.string().nullable(),
+  opinionAppraiser: z.string(),
+  opinionCommittee: z.string(),
+  specialAssumption: z.string().nullable(),
+});
+
 export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;
 export type createLandFormType = z.infer<typeof createLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
 export type landAndBuildingPMAFormType = z.infer<typeof landAndBuildingPMAForm>;
 export type condoPMAFormType = z.infer<typeof condoPMAForm>;
+export type summaryDecisionFormType = z.infer<typeof summaryDecisionForm>;
 
 //===============================================================
 
@@ -764,4 +781,19 @@ export const condoPMAFormDefault: condoPMAFormType = {
   districtName: '',
   province: '',
   provinceName: '',
+};
+
+export const summaryDecisionFormDefault: summaryDecisionFormType = {
+  dateTime: '',
+  appraisalPrice: 0,
+  buildingInsurancePrice: 0,
+  forcedSalePrice: 0,
+  priceVerification: true,
+  groupValuations: [],
+  landTitle: [],
+  condition: '',
+  remark: '',
+  opinionAppraiser: '',
+  opinionCommittee: '',
+  specialAssumption: '',
 };

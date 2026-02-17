@@ -719,7 +719,7 @@ const LandTitleAreaDto = z
     totalAreaInSqWa: z.number().nullable(),
   })
   .passthrough();
-const LandTitleDto = z
+export const LandTitleDto = z
   .object({
     id: z.number().int(),
     seqNo: z.number().int(),
@@ -3282,12 +3282,56 @@ const SimulateTransitionCompletedRequest = z
   })
   .partial()
   .passthrough();
+export const GroupValuations = z
+  .object({
+    groupNumber: z.coerce.number(),
+    marketComparasionApproach: z.coerce.number().nullable(),
+    costApproach: z.coerce.number().nullable(),
+    incomeApproach: z.coerce.number().nullable(),
+    residualApproach: z.coerce.number().nullable(),
+    useApproach: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+const UpdateSummaryDecisionRequest = z
+  .object({
+    dateTime: z.string().datetime({ offset: true }).nullable(),
+    appraisalPrice: z.coerce.number().nullable(),
+    buildingInsurancePrice: z.coerce.number().nullable(),
+    forcedSalePrice: z.coerce.number().nullable(),
+    priceVerification: z.boolean(),
+    condition: z.string().nullable(),
+    remark: z.string().nullable(),
+    opinionAppraiser: z.string().nullable(),
+    opinionCommittee: z.string().nullable(),
+    specialAssumption: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+const GetSummaryDecisionResponse = z
+  .object({
+    dateTime: z.string().datetime({ offset: true }).nullable(),
+    appraisalPrice: z.coerce.number().nullable(),
+    buildingInsurancePrice: z.coerce.number().nullable(),
+    forcedSalePrice: z.coerce.number().nullable(),
+    priceVerification: z.boolean(),
+    groupValuations: z.array(GroupValuations),
+    landTitle: z.array(LandTitleDto),
+    condition: z.string().nullable(),
+    remark: z.string().nullable(),
+    opinionAppraiser: z.string().nullable(),
+    opinionCommittee: z.string().nullable(),
+    specialAssumption: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
 
 export const UpdateBuildingPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 export const UpdateCondoPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 export const UpdateLandAndBuildingPropertyResponse = z
   .object({ isSuccess: z.boolean() })
   .passthrough();
+const UpdateSummaryDecisionResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schemas = {
   AddressDto,
@@ -3553,6 +3597,9 @@ export const schemas = {
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
+  UpdateSummaryDecisionRequest,
+  UpdateSummaryDecisionResponse,
+  GetSummaryDecisionResponse,
 };
 
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
@@ -3570,3 +3617,6 @@ export type UpdateLandAndBuildingPropertyRequestType = z.infer<
 export type UpdateLandAndBuildingPropertyResponseType = z.infer<
   typeof UpdateLandAndBuildingPropertyResponse
 >;
+export type UpdateSummaryDecisionRequestType = z.infer<typeof UpdateSummaryDecisionRequest>;
+export type UpdateSummaryDecisionResponseType = z.infer<typeof UpdateSummaryDecisionResponse>;
+export type GetSummaryDecisionResponseType = z.infer<typeof GetSummaryDecisionResponse>;

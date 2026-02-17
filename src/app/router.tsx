@@ -22,8 +22,9 @@ import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 import { ProtectedRoute } from '@features/auth/components';
-import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
-import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
+import SummaryDecisionPage from '@/features/appraisal/pages/SummaryDecisionPage';
+// import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
+// import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -118,14 +119,14 @@ export const router = createBrowserRouter([
         path: 'land-building-detail',
         element: <CreateLandBuildingPage />,
       },
-      {
-        path: 'land-building-pma',
-        element: <LandBuildingPMAPage />,
-      },
-      {
-        path: 'condo-pma',
-        element: <CondoPMAPage />,
-      },
+      // {
+      //   path: 'land-building-pma',
+      //   element: <LandBuildingPMAPage />,
+      // },
+      // {
+      //   path: 'condo-pma',
+      //   element: <CondoPMAPage />,
+      // },
       {
         path: 'dev/property-information',
         element: <PropertyInformationPage />,
@@ -194,10 +195,10 @@ export const router = createBrowserRouter([
             path: 'condo/:propertyId',
             element: <CreateCondoPage />,
           },
-          {
-            path: 'condo/:propertyId/pma',
-            element: <CondoPMAPage />,
-          },
+          // {
+          //   path: 'condo/:propertyId/pma',
+          //   element: <CondoPMAPage />,
+          // },
           {
             path: 'land-building/new',
             element: <CreateLandBuildingPage />,
@@ -206,10 +207,10 @@ export const router = createBrowserRouter([
             path: 'land-building/:propertyId',
             element: <CreateLandBuildingPage />,
           },
-          {
-            path: 'land-building/:propertyId/pma',
-            element: <LandBuildingPMAPage />,
-          },
+          // {
+          //   path: 'land-building/:propertyId/pma',
+          //   element: <LandBuildingPMAPage />,
+          // },
         ],
       },
       {
@@ -218,7 +219,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'summary',
-        element: <PlaceholderPage title="Summary & Decision" />,
+        element: <SummaryDecisionPage />,
       },
     ],
   },

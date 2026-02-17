@@ -5,6 +5,7 @@ import type {
   createLandAndBuildingFormType,
   createLandFormType,
   landAndBuildingPMAFormType,
+  summaryDecisionFormType,
 } from '@/features/appraisal/schemas/form';
 import type { GetLandPropertyByIdResultType } from '@/features/appraisal/api';
 import type { GetBuildingPropertyByIdResultType } from '@/shared/forms/typeBuilding';
@@ -16,6 +17,7 @@ import type {
   GetLandAndBuildingPMAPropertyByIdResultType,
   GetLandAndBuildingPropertyByIdResultType,
 } from '@/shared/forms/typeLandBuilding';
+import type { GetSummaryDecisionResponseType } from '@/shared/schemas/v1';
 
 export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyByIdResultType,
@@ -422,5 +424,24 @@ export const mapCondoPMAPropertyResponseToForm = (
     districtName: '',
     province: response.province ?? '',
     provinceName: '',
+  };
+};
+
+export const mapSummaryDecisionResponseToForm = (
+  response: GetSummaryDecisionResponseType,
+): summaryDecisionFormType => {
+  return {
+    dateTime: response.dateTime ?? '',
+    appraisalPrice: response.appraisalPrice ?? 0,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    forcedSalePrice: response.forcedSalePrice ?? 0,
+    priceVerification: response.priceVerification ?? true,
+    groupValuations: response.groupValuations ?? [],
+    landTitle: response.landTitle ?? [],
+    condition: response.condition ?? '',
+    remark: response.remark ?? '',
+    opinionAppraiser: response.opinionAppraiser ?? '',
+    opinionCommittee: response.opinionCommittee ?? '',
+    specialAssumption: response.specialAssumption ?? '',
   };
 };
