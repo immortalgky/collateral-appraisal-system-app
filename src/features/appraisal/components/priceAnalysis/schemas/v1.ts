@@ -222,3 +222,121 @@ export const GetComparativeFactorsResponse = z
   .passthrough();
 export type GetComparativeFactorsRequestType = z.infer<typeof GetComparativeFactorsRequest>;
 export type GetComparativeFactorsResponseType = z.infer<typeof GetComparativeFactorsResponse>;
+
+/** ================================ */
+/** Query method's template by method type */
+/** ================================ */
+const TemplateFactorDataDto = z
+  .object({
+    id: z.string(),
+    factorCode: z.string(),
+    weight: z.number().nullable().optional(),
+    intensity: z.number().nullable().optional(),
+  })
+  .passthrough();
+
+const TemplateDetailDto = z
+  .object({
+    templateCode: z.string(),
+    templateName: z.string(),
+    collateralType: z.string(),
+    comparativeFactors: z.array(TemplateFactorDataDto).optional().nullable(),
+    calculationFactors: z.array(TemplateFactorDataDto).optional().nullable(),
+  })
+  .optional();
+
+export const GetPricingTemplateByMethodRequest = z.object({}).passthrough();
+export const GetPricingTemplateByMethodResponse = z
+  .object({
+    templates: z.array(TemplateDetailDto).nullable().optional(),
+  })
+  .passthrough();
+
+export type TemplateFactorDataType = z.infer<typeof TemplateFactorDataDto>;
+export type TemplateDetailType = z.infer<typeof TemplateDetailDto>;
+export type GetPricingTemplatesByMethodRequestType = z.infer<
+  typeof GetPricingTemplateByMethodRequest
+>;
+export type GetPricingTemplatesByMethodResponseType = z.infer<
+  typeof GetPricingTemplateByMethodResponse
+>;
+
+/** ================================ */
+/** Query market comparables */
+/** ================================ */
+export const GetMarketComparablesRequest = z.object({}).passthrough();
+export const GetMarketComparablesResponse = z
+  .object({
+    id: z.string(),
+    comparableNumber: z.string(),
+    propertyType: z.string(),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime().nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
+    createdOn: z.string().datetime().nullable().optional(),
+  })
+  .passthrough();
+
+export type GetMarketComparablesRequestType = z.infer<typeof GetMarketComparablesRequest>;
+export type GetMarketComparablesResponseType = z.infer<typeof GetMarketComparablesResponse>;
+
+/** ================================ */
+/** Query market comparable by Id */
+/** GET /market-comparables/{id:guid} */
+/** ================================ */
+const FactorDataDto = z
+  .object({
+    id: z.string(),
+    factorCode: z.string(),
+    factorName: z.string(),
+    fieldName: z.string(),
+    dataType: z.string(),
+    fieldLength: z.number().nullable().optional(),
+    fieldDecimal: z.number().nullable().optional(),
+    parameterGroup: z.string().nullable().optional(),
+    value: z.string().nullable().optional(),
+    otherRemarks: z.string().nullable().optional(),
+  })
+  .passthrough();
+export type FactorDataType = z.infer<typeof FactorDataDto>;
+
+const MarketComparableDetailDto = z
+  .object({
+    id: z.string(),
+    comparableNumber: z.string(),
+    propertyType: z.string(),
+    surveyName: z.string(),
+
+    // Data Information
+    infoDateTime: z.string().datetime().nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
+
+    // Notes
+    notes: z.string().nullable().optional(),
+
+    // Template Reference
+    templateId: z.string().nullable().optional(),
+
+    // Audit
+    createdOn: z.string().datetime().nullable().optional(),
+    createdBy: z.string().nullable().optional(),
+    updatedOn: z.string().datetime().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
+
+    // Child collections
+    factorData: z.array(FactorDataDto).nullable().optional(),
+    //  List<ImageDto> Images;
+  })
+  .passthrough();
+
+export const GetMarketComparableByIdRequest = z.object({}).passthrough();
+export const GetMarketComparableByIdResponse = z
+  .object({
+    marketComparables: z.array(MarketComparableDetailDto).nullable().optional(),
+  })
+  .passthrough();
+
+export type MarketComparableDetailType = z.infer<typeof MarketComparableDetailDto>;
+export type GetMarketComparablesByIdRequestType = z.infer<typeof GetMarketComparableByIdRequest>;
+export type GetMarketComparablesByIdResponseType = z.infer<typeof GetMarketComparableByIdResponse>;

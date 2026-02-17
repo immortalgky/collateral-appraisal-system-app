@@ -8,14 +8,12 @@ interface SaleAdjustmentGridCalculationSectionProps {
   property: Record<string, any>;
   template: SaleAdjustmentGridTemplate;
   comparativeSurveys: Record<string, any>[];
-  configuration: MethodConfiguration;
 }
 
 export const SaleAdjustmentGridCalculationSection = ({
   property,
   template,
   comparativeSurveys,
-  configuration,
 }: SaleAdjustmentGridCalculationSectionProps) => {
   const { getValues } = useFormContext();
   const saleAdjustmentGridQualitatives = useWatch({ name: 'saleAdjustmentGridQualitatives' });

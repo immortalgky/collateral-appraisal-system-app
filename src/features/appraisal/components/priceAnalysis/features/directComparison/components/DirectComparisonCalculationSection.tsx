@@ -1,6 +1,5 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { directComparisonTemplate } from '../../../data/data';
-import { useEffect } from 'react';
 import { QualitativeTable } from './QualitativeTable';
 import { directComparisonPath } from '../adapters/fieldPath';
 
@@ -15,10 +14,10 @@ export const DirectComparisonCalculationSection = ({
   template,
   comparativeSurveys,
 }: DirectComparisonCalculationSectionProps) => {
-  const { qualitative: qualitativePath, comparativeFactor: comparativeFactorPath } =
+  const { qualitatives: qualitativesPath, comparativeFactor: comparativeFactorPath } =
     directComparisonPath;
   const { getValues } = useFormContext();
-  const directComparisonQualitatives = useWatch({ name: qualitativePath() });
+  const directComparisonQualitatives = useWatch({ name: qualitativesPath() });
   const comparativeFactors = useWatch({ name: comparativeFactorPath() });
 
   return (

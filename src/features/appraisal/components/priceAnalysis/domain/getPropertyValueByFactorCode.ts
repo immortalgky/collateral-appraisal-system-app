@@ -1,15 +1,17 @@
-import { MAPPING_FACTORS_PROPERTIES_FIELDS } from '../data/data';
+import { MAPPING_FACTORS_PROPERTIES_FIELDS } from '../data/mappingFactorsAndProperty';
 
-export const getPropertyValueByFactorCode = (id: string, property: Record<string, any>) => {
+export const getPropertyValueByFactorCode = (factorCode: string, property: Record<string, any>) => {
   if (!property) return '';
 
-  const mapping = MAPPING_FACTORS_PROPERTIES_FIELDS.find(f => f.id === id)?.value ?? null;
+  const mapping =
+    MAPPING_FACTORS_PROPERTIES_FIELDS.find((factor: any) => factor.factorCode === factorCode)
+      ?.fieldName ?? null;
 
-  if (!mapping) return '';
+  if (!mapping) return null;
 
   const propertyValue = property[mapping] ?? null;
 
-  if (!propertyValue) return '';
+  if (!propertyValue) return null;
 
   return propertyValue;
 };

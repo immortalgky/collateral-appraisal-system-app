@@ -1,15 +1,19 @@
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '../../schemas/v1';
 import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
-import type { WQSTemplate } from '@features/appraisal/components/priceAnalysis/data/data.ts';
 import { useState } from 'react';
 
 interface ComparativeMarketSurveySectionProps {
   property: Record<string, unknown>;
-  marketSurveys: Record<string, unknown>[];
-  comparativeMarketSurveys: Record<string, unknown>[];
-  template?: WQSTemplate;
-  allFactors: Record<string, unknown>[];
-  onSelectComparativeMarketSurvey: (surveys: Record<string, unknown>[]) => void;
+  marketSurveys: MarketComparableDetailType[];
+  comparativeMarketSurveys: MarketComparableDetailType[];
+  template?: TemplateDetailType;
+  allFactors: FactorDataType[];
+  onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 export function ComparativeMarketSurveySection({
   template,

@@ -1,11 +1,14 @@
 export const directComparisonPath = {
+  /** comparative surveys */
+  comparativeSurveys: () => `comparativeSurveys`,
+
   /** comparative factor section */
   comparativeFactor: () => `comparativeFactors`,
   comparativeFactorsFactorCode: (arg: { row: number }) =>
     `comparativeFactors.${arg.row}.factorCode`,
 
   /** qualitative section */
-  qualitative: () => `directComparisonQualitatives`,
+  qualitatives: () => `directComparisonQualitatives`,
   qualitativeFactorCode: (arg: { row: number }) =>
     `directComparisonQualitatives.${arg.row}.factorCode`,
   qualitativeLevel: (arg: { row: number; column: number }) =>

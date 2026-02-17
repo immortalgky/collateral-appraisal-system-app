@@ -8,13 +8,16 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/selection/domain/selectionContext.tsx';
 import { usePriceAnalysisGateway } from '@features/appraisal/components/priceAnalysis/features/selection/domain/priceAnalysisGateway.ts';
 import toast from 'react-hot-toast';
-import { useGetComparativeFactors } from '@features/appraisal/components/priceAnalysis/api/api.ts';
+import {
+  useGetComparativeFactors,
+  useGetPricingTemplate,
+} from '@features/appraisal/components/priceAnalysis/api/api.ts';
 import { createInitialState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/createInitialState.ts';
 import type { Method } from '@features/appraisal/components/priceAnalysis/features/selection/type.ts';
 import { useNavigate } from 'react-router-dom'; // your use-case fn
-import { ALL_FACTORS } from '../data/data';
 import { saveEditingSelection } from '../features/selection/domain/saveEditingSelection';
 import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
+import { ALL_FACTORS } from '../data/allFactorsData';
 
 type MethodKey = { approachType: string; methodType: string };
 type StartCalculationArgs = { approachId: string; methodId: string; methodType: string }; // what ActiveMethodPanel needs
@@ -105,11 +108,12 @@ export function useSelectionFlowController(opts: {
   // Fetch comparative factors only when user initiated calculation and IDs exist
   const comparativeQ = useGetComparativeFactors(opts.appraisalId, calcIds?.method.id);
 
-  // const templatesQ = useGetPricingTemplate();
+  const templateQuery = useGetPricingTemplate(state.activeMethod?.methodType);
 
   useEffect(() => {
     if (!calcKey) return;
     if (!calcIds) return; // safety
+    if (!templateQuery.data) return;
 
     // if (comparativeQ.isLoading) return;
     //
@@ -131,6 +135,17 @@ export function useSelectionFlowController(opts: {
     /** if got comparative value, mapping, pass to calculation section.
      * if not, initail data
      */
+
+    dispatch({
+      type: 'CALCULATION_ENTER',
+      payload: {
+        allFactors: ALL_FACTORS,
+        templates: templateQuery.data,
+        approachId: appr.id,
+        methodId: method.id,
+        methodType: method.methodType,
+      },
+    });
 
     opts.onStartCalculation({
       approachId: appr.approachId,

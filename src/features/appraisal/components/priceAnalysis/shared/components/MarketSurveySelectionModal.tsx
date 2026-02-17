@@ -3,11 +3,12 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useState } from 'react';
 import { getFactorDesciption } from '../domain/getFactorDescription';
+import type { FactorDataType, MarketComparableDetailType } from '../../schemas/v1';
 
 interface MarketSurveySelectionModalProps {
-  surveys: Record<string, unknown>[];
-  comparativeSurveys: Record<string, unknown>[];
-  onSelect: (survey: Record<string, unknown>[]) => void;
+  surveys: MarketComparableDetailType[];
+  comparativeSurveys: MarketComparableDetailType[];
+  onSelect: (survey: MarketComparableDetailType[]) => void;
   onCancel: () => void;
 }
 
@@ -17,7 +18,7 @@ export const MarketSurveySelectionModal = ({
   onSelect,
   onCancel,
 }: MarketSurveySelectionModalProps) => {
-  const [selectedSurveys, setSelectedSurveys] = useState<Record<string, any>[]>([
+  const [selectedSurveys, setSelectedSurveys] = useState<MarketComparableDetailType[]>([
     ...comparativeSurveys,
   ]);
 
@@ -68,10 +69,10 @@ export const MarketSurveySelectionModal = ({
                       )}
                     />
                   </div>
-                  {(survey.factors ?? []).map((factor: any) => (
+                  {(survey.factorData ?? []).map((factor: FactorDataType) => (
                     <div key={factor.id} className="text-sm w-60">
                       <span className="font-semibold capitalize">
-                        {getFactorDesciption(factor.id)}:
+                        {getFactorDesciption(factor.factorCode)}:
                       </span>{' '}
                       {factor.value ?? '-'}
                     </div>

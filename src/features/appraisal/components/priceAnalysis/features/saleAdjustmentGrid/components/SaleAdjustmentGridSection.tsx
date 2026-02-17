@@ -1,4 +1,8 @@
-import { type WQSTemplate } from '../../../data/data';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '../../../schemas/v1';
 import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
 import { ComparativeMarketSurveySection } from '@features/appraisal/components/priceAnalysis/shared/components/ComparativeMarketSurveySection.tsx';
@@ -17,11 +21,11 @@ import { ComparativeMarketSurveySection } from '@features/appraisal/components/p
 
 interface SaleAdjustmentGridSectionProps {
   property: Record<string, unknown>;
-  marketSurveys: Record<string, unknown>[];
-  comparativeMarketSurveys: Record<string, unknown>[];
-  template?: WQSTemplate;
-  allFactors: Record<string, unknown>[];
-  onSelectComparativeMarketSurvey: (surveys: Record<string, unknown>[]) => void;
+  marketSurveys: MarketComparableDetailType[];
+  comparativeMarketSurveys: MarketComparableDetailType[];
+  template?: TemplateDetailType;
+  allFactors: FactorDataType[];
+  onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 
 export const SaleAdjustmentGridSection = ({
@@ -57,7 +61,7 @@ export const SaleAdjustmentGridSection = ({
                   <SaleAdjustmentGridCalculationSection
                     property={property}
                     template={template}
-                    comparativeSurveys={comparativeSurveys}
+                    comparativeSurveys={comparativeMarketSurveys}
                   />
                 </div>
               </div>

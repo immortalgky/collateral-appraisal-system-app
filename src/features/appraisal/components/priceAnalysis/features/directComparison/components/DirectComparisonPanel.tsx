@@ -1,25 +1,24 @@
-import { COLLATERAL_TYPE } from '@features/appraisal/components/priceAnalysis/data/data.ts';
-import { FormProvider, type SubmitErrorHandler, useForm } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  SaleAdjustmentGridDto,
-  type SaleAdjustmentGridType,
-} from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
-import toast from 'react-hot-toast';
-import { useEffect, useState } from 'react';
-import { PriceAnalysisTemplateSelector } from '@features/appraisal/components/priceAnalysis/shared/components/PriceAnalysisTemplateSelector.tsx';
-import { MethodFooterActions } from '@features/appraisal/components/priceAnalysis/components/MethodFooterActions.tsx';
-import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValue.ts';
-import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
-import { flattenRHFErrors } from '../../wqs/domain/flattenRHFErrors';
-import { SaleAdjustmentGridSection } from './SaleAdjustmentGridSection';
+  DirectComparisonDto,
+  type DirectComparisonType,
+} from '../../../schemas/directComparisonForm';
 import type {
   FactorDataType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../../../schemas/v1';
+import { useEffect, useState } from 'react';
+import { flattenRHFErrors } from '../../wqs/domain/flattenRHFErrors';
+import toast from 'react-hot-toast';
+import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
+import { MethodFooterActions } from '../../../components/MethodFooterActions';
+import { DirectComparisonSection } from './DirectComparisonSection';
+import { setDirectComparisonInitialValueOnSelectSurvey } from '../domain/setDirectComparisonInitialValueOnSelectSurvey';
+import { setDirectComparisonInitialValue } from '../domain/setDirectComparisonInitialValue';
 
-interface SaleAdjustmentGridPanelProps {
+interface DirectComparisonPanelProps {
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
@@ -27,17 +26,17 @@ interface SaleAdjustmentGridPanelProps {
   allFactors: FactorDataType[];
   marketSurveys: MarketComparableDetailType[];
 }
-export function SaleAdjustmentGridPanel({
+export function DirectComparisonPanel({
   methodId,
   methodType,
   property,
   marketSurveys,
   templates,
   allFactors,
-}: SaleAdjustmentGridPanelProps) {
-  const methods = useForm<SaleAdjustmentGridType>({
+}: DirectComparisonPanelProps) {
+  const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
-    resolver: zodResolver(SaleAdjustmentGridDto),
+    resolver: zodResolver(DirectComparisonDto),
   });
 
   const {
@@ -49,7 +48,7 @@ export function SaleAdjustmentGridPanel({
   } = methods;
 
   /** Form handler */
-  const handleOnSubmit = (value: SaleAdjustmentGridType) => {
+  const handleOnSubmit = (value: DirectComparisonType) => {
     reset(value);
     toast.success('Saved!');
   };
@@ -98,7 +97,7 @@ export function SaleAdjustmentGridPanel({
   };
 
   useEffect(() => {
-    setSaleAdjustmentGridInitialValue({
+    setDirectComparisonInitialValue({
       collateralType: collateralTypeId,
       methodId: methodId,
       methodType: methodType,
@@ -110,14 +109,14 @@ export function SaleAdjustmentGridPanel({
   }, [collateralTypeId, isGenerated, methodId, methodType, pricingTemplate, property, reset]);
 
   useEffect(() => {
-    setSaleAdjustmentGridInitialValueOnSelectSurvey({
+    setDirectComparisonInitialValueOnSelectSurvey({
       comparativeSurveys: comparativeSurveys,
       setValue: setValue,
       getValues: getValues,
     });
   }, [comparativeSurveys.length]);
 
-  const onInvalid: SubmitErrorHandler<SaleAdjustmentGridType> = errs => {
+  const onInvalid: SubmitErrorHandler<DirectComparisonType> = errs => {
     const messages = flattenRHFErrors(errs);
 
     toast.error(
@@ -162,7 +161,7 @@ export function SaleAdjustmentGridPanel({
         />
         {isGenerated && (
           <div className="flex-1 min-h-0">
-            <SaleAdjustmentGridSection
+            <DirectComparisonSection
               {...methods}
               property={property}
               marketSurveys={marketSurveys}

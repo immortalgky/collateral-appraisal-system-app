@@ -1,23 +1,25 @@
 import type { UseFormGetValues, UseFormSetValue } from 'react-hook-form';
-import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
-import type { SaleAdjustmentGridType } from '../../../schemas/saleAdjustmentGridForm';
+import type { DirectComparisonType } from '../../../schemas/directComparisonForm';
+import { directComparisonPath } from '../adapters/fieldPath';
+import { toFactorMap } from '../../../domain/toFactorMap';
+import type { MarketComparableDetailType } from '../../../schemas/v1';
 
-interface SetSaleAdjustmentGridInitialValueOnSelectSurveyProps {
-  comparativeSurveys: Record<string, unknown>[];
-  setValue: UseFormSetValue<SaleAdjustmentGridType>;
-  getValues: UseFormGetValues<SaleAdjustmentGridType>;
+interface SetDirectComparisonInitialValueOnSelectSurveyProps {
+  comparativeSurveys: MarketComparableDetailType[];
+  setValue: UseFormSetValue<DirectComparisonType>;
+  getValues: UseFormGetValues<DirectComparisonType>;
 }
-export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
+export function setDirectComparisonInitialValueOnSelectSurvey({
   comparativeSurveys,
   setValue,
   getValues,
-}: SetSaleAdjustmentGridInitialValueOnSelectSurveyProps) {
+}: SetDirectComparisonInitialValueOnSelectSurveyProps) {
   const {
-    qualitatives: qualitativesPath,
-    comparativeSurveys: comparativeSurveysPath,
     calculations: calculationsPath,
     adjustmentFactors: adjustmentFactorsPath,
-  } = saleGridFieldPath;
+    qualitatives: qualitativesPath,
+    comparativeSurveys: comparativeSurveysPath,
+  } = directComparisonPath;
   const qualitativeFactors = getValues(qualitativesPath()) ?? [];
 
   setValue(
@@ -47,7 +49,7 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
     calculationsPath(),
     [
       ...comparativeSurveys.map(survey => {
-        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+        const surveyMap = toFactorMap(survey.factorData ?? []);
         return {
           marketId: survey.id,
           offeringPrice: surveyMap.get('17') ?? 0,

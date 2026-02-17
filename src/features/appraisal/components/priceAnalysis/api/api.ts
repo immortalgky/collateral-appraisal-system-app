@@ -4,7 +4,6 @@ import { LAND_PROPERTY } from '@features/appraisal/components/priceAnalysis/data
 import {
   APPROACHES_QUERY_RESPONSE,
   GET_PROPERTY_GROUP_BY_ID_RESPONSE,
-  MOC_SURVEY_DATA,
 } from '@features/appraisal/components/priceAnalysis/data/data.ts';
 import {
   type AddPriceAnalysisApproachRequestType,
@@ -13,11 +12,19 @@ import {
   type AddPriceAnalysisMethodResponseType,
   GetComparativeFactorsResponse,
   type GetComparativeFactorsResponseType,
+  GetPricingAnalysisResponse,
   type GetPricingAnalysisResponseType,
+  GetPricingTemplateByMethodResponse,
+  type GetPricingTemplatesByMethodResponseType,
   type GetPropertyGroupByIdResponseType,
   type SaveComparativeAnalysisRequestType,
   type SaveComparativeAnalysisResponseType,
 } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import {
+  DIRECT_COMPARISON_TEMPLATES,
+  SALE_GRID_TEMPLATES,
+  WQS_TEMPLATES,
+} from '../data/templatesData';
 
 export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
   return useQuery({
@@ -55,6 +62,31 @@ export function useGetPricingAnalysis(id: string | undefined) {
       return APPROACHES_QUERY_RESPONSE;
     },
     enabled: !!id,
+    refetchOnWindowFocus: false, // don't refetch when tab focuses
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    retry: 1,
+  });
+}
+
+/**
+ *
+ */
+export function useGetPricingTemplate(methodType: string) {
+  return useQuery({
+    queryKey: ['price-analysis-template'],
+    queryFn: async (): Promise<GetPricingTemplatesByMethodResponseType> => {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      if (methodType === 'WQS_MARKET')
+        return GetPricingTemplateByMethodResponse.parse(DIRECT_COMPARISON_TEMPLATES);
+      if (methodType === 'SAG_MARKET')
+        return GetPricingTemplateByMethodResponse.parse(SALE_GRID_TEMPLATES);
+      if (methodType === 'DC_MARKET')
+        return GetPricingTemplateByMethodResponse.parse(WQS_TEMPLATES);
+      return GetPricingTemplateByMethodResponse.parse(null);
+    },
+    enabled: !!methodType,
     refetchOnWindowFocus: false, // don't refetch when tab focuses
     refetchOnReconnect: false,
     staleTime: Infinity,
@@ -248,9 +280,24 @@ export function useGetMarketSurveys() {
   });
 }
 
-export function useGetPriceAnalysisTemplates() {
-  const queryKey = ['priceAnalysis'];
+export function useGetPriceAnalysisTemplates(methodType: string) {
+  const queryKey = ['price-analysis-template', methodType];
   return useQuery({
     queryKey,
+    queryFn: async (): Promise<GetPricingTemplatesByMethodResponseType> => {
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      if (methodType === 'WQS_MARKET')
+        return GetPricingTemplateByMethodResponse.parse(DIRECT_COMPARISON_TEMPLATES);
+      if (methodType === 'SAG_MARKET')
+        return GetPricingTemplateByMethodResponse.parse(SALE_GRID_TEMPLATES);
+      if (methodType === 'DC_MARKET')
+        return GetPricingTemplateByMethodResponse.parse(WQS_TEMPLATES);
+      return GetPricingTemplateByMethodResponse.parse(null);
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    retry: 1,
   });
 }

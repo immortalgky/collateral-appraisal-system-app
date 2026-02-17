@@ -1,14 +1,10 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, type GetPropertyGroupByIdResponse } from '@/features/appraisal/api';
-import {
-  GET_MARKET_SURVEYS_QUERY,
-  GET_PROPERTY_GROUP_BY_ID_RESPONSE,
-  MOC_SURVEY_DATA,
-} from '../../data/data';
+import { GET_MARKET_SURVEYS_QUERY, GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
 import { useGetPriceAnalysisConfigQuery } from '../../domain/usePriceAnalysisQuery';
-import type { PropertyGroup } from '@/features/appraisal/types';
 import { useGetPricingAnalysis } from '../../api/api';
+import { MAPPED_MARKET_COMPARABLES } from '../../data/marketSurveyData';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -174,7 +170,7 @@ export function useInitializePriceAnalysis({
   }
 
   // Step 3.1: For each market survey, fetch its detail
-  const mapping_mock_survey_data = new Map(MOC_SURVEY_DATA.map(s => [s.id, s]));
+  const mapping_mock_survey_data = new Map(MAPPED_MARKET_COMPARABLES.map(s => [s.id, s]));
   const marketSurveyDetailQueries = useQueries({
     queries: allMarketSurveyEntries.map(entry => {
       return {

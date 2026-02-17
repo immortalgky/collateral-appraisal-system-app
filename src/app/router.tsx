@@ -136,7 +136,7 @@ export const router = createBrowserRouter([
       //   element: <LandDetailPage />,
       // },
       {
-        path: 'dev/price-analysis',
+        path: 'dev/:appraisalId/price-analysis/:groupId',
         element: <PriceAnalysisPage />,
       },
       // Catch-all route for 404 pages

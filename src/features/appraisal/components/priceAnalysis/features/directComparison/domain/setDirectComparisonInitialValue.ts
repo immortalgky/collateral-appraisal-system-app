@@ -1,17 +1,18 @@
-import type { SaleAdjustmentGridTemplate } from '@features/appraisal/components/priceAnalysis/data/data.ts';
 import type { UseFormReset } from 'react-hook-form';
-import type { SaleAdjustmentGridType } from '../../../schemas/saleAdjustmentGridForm';
+import type { MarketComparableDetailType, TemplateDetailType } from '../../../schemas/v1';
+import type { DirectComparisonType } from '../../../schemas/directComparisonForm';
+import { toFactorMap } from '../../../domain/toFactorMap';
 
-interface SetSaleAdjustmentGridInitialValueProps {
+interface SetDirectComparisonInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  template?: SaleAdjustmentGridTemplate;
-  comparativeSurveys: Record<string, unknown>[];
-  reset: UseFormReset<SaleAdjustmentGridType>;
+  template?: TemplateDetailType;
+  comparativeSurveys: MarketComparableDetailType[];
+  reset: UseFormReset<DirectComparisonType>;
 }
-export function setSaleAdjustmentGridInitialValue({
+export function setDirectComparisonInitialValue({
   collateralType,
   methodId,
   methodType,
@@ -19,14 +20,14 @@ export function setSaleAdjustmentGridInitialValue({
   template,
   comparativeSurveys,
   reset,
-}: SetSaleAdjustmentGridInitialValueProps) {
+}: SetDirectComparisonInitialValueProps) {
   if (!collateralType || !methodId || !methodType || !property || !comparativeSurveys || !reset)
     return;
 
   if (!template) {
     reset(
       {
-        methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+        methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
         collateralType: undefined,
         pricingTemplateCode: undefined,
         comparativeSurveys: [
@@ -37,11 +38,11 @@ export function setSaleAdjustmentGridInitialValue({
         ],
         comparativeFactors: [],
 
-        saleAdjustmentGridQualitatives: [],
+        directComparisonQualitatives: [],
 
-        saleAdjustmentGridCalculations: [
+        directComparisonCalculations: [
           ...comparativeSurveys.map(survey => {
-            const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+            const surveyMap = toFactorMap(survey.factorData ?? []);
             return {
               marketId: survey.id,
               offeringPrice: surveyMap.get('17') ?? 0,
@@ -56,8 +57,8 @@ export function setSaleAdjustmentGridInitialValue({
             };
           }),
         ],
-        saleAdjustmentGridAdjustmentFactors: [],
-        saleAdjustmentGridFinalValue: {
+        directComparisonAdjustmentFactors: [],
+        directComparisonFinalValue: {
           finalValue: 0,
           finalValueRounded: 0,
         },
@@ -69,7 +70,7 @@ export function setSaleAdjustmentGridInitialValue({
 
   reset(
     {
-      methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+      methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
       collateralType: collateralType,
       pricingTemplateCode: template.templateCode,
       comparativeSurveys: [
@@ -78,18 +79,18 @@ export function setSaleAdjustmentGridInitialValue({
           displaySeq: columnIndex + 1,
         })),
       ],
-      comparativeFactors: template.comparativeFactors.map(compFact => ({
-        factorCode: compFact.factorId,
+      comparativeFactors: template.comparativeFactors?.map(compFact => ({
+        factorCode: compFact.factorCode,
       })),
 
-      saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
-        factorCode: q.factorId,
+      directComparisonQualitatives: template.calculationFactors?.map(q => ({
+        factorCode: q.factorCode,
         qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
       })),
 
-      saleAdjustmentGridCalculations: [
+      directComparisonCalculations: [
         ...comparativeSurveys.map(survey => {
-          const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+          const surveyMap = new Map(survey.factorData?.map(s => [s.id, s.value]));
           return {
             marketId: survey.id,
             offeringPrice: surveyMap.get('17') ?? 0,
@@ -104,8 +105,8 @@ export function setSaleAdjustmentGridInitialValue({
           };
         }),
       ],
-      saleAdjustmentGridAdjustmentFactors: [],
-      saleAdjustmentGridFinalValue: {
+      directComparisonAdjustmentFactors: [],
+      directComparisonFinalValue: {
         finalValue: 0,
         finalValueRounded: 0,
       },

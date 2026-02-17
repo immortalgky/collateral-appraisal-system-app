@@ -3,7 +3,6 @@ import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnal
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useSelectionFlowController } from '@features/appraisal/components/priceAnalysis/application/useSelectionFlowController.ts';
 import { MethodSectionRenderer } from './MethodSectionRenderer';
-import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
 
 export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element {
   const appraisalId = '00000000-0000-0000-0000-000000000001';
@@ -137,8 +136,8 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
           {!!activeCalculationMethod && (
             <MethodSectionRenderer
               allFactors={priceAnalysisState.allFactors}
-              methodId={activeCalculationMethod.methodId}
-              methodType={activeCalculationMethod.methodType}
+              methodId={priceAnalysisState.activeMethod?.methodId}
+              methodType={priceAnalysisState.activeMethod?.methodType}
               property={priceAnalysisState.property}
               templates={priceAnalysisState.methodTemplates}
               marketSurveys={priceAnalysisState.marketSurveys}

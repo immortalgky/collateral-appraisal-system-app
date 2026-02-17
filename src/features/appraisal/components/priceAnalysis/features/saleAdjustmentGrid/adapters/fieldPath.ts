@@ -4,6 +4,8 @@ export const saleGridFieldPath = {
 
   /** comparative factor section */
   comparativeFactors: (arg: { row: number }) => `comparativeFactors.${arg.row}.factorCode`,
+  comparativeFactorsFactorCode: (arg: { row: number }) =>
+    `comparativeFactors.${arg.row}.factorCode`,
 
   /** qualitative section */
   qualitatives: () => `saleAdjustmentGridQualitatives`,

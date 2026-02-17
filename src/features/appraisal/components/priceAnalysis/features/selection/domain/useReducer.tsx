@@ -1,5 +1,10 @@
 import { unknown } from 'zod';
 import type { Approach, GroupDetails, Method } from '../type';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '../../../schemas/v1';
 
 /*
 // state to collect approach & method which selected
@@ -28,11 +33,12 @@ export type PriceAnalysisSelectorState = {
 
   systemCalculationMode: SystemCalculationMode;
 
-  groupDetails: GroupDetails;
-  property: Record<string, unknown>;
-  marketSurveys: Record<string, unknown>[];
-  allFactors?: Record<string, unknown>[];
-  methodTemplates?: Record<string, unknown>[];
+  activeMethod?: { approachId: string; methodId: string; methodType: string };
+  groupDetails?: GroupDetails;
+  property?: Record<string, unknown>;
+  marketSurveys?: MarketComparableDetailType[];
+  allFactors?: FactorDataType[];
+  methodTemplates?: TemplateDetailType[];
 };
 
 export type PriceAnalysisSelectorAction =
@@ -60,7 +66,13 @@ export type PriceAnalysisSelectorAction =
   | { type: 'SUMMARY_SAVE' }
   | {
       type: 'CALCULATION_ENTER';
-      payload: { allFactors: Record<string, unknown>[]; templates: Record<string, unknown>[] };
+      payload: {
+        allFactors: FactorDataType[];
+        templates: TemplateDetailType[];
+        approachId: string;
+        methodId: string;
+        methodType: string;
+      };
     };
 
 /** filter out approaches and methods that are not selected in editing mode

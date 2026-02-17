@@ -1,14 +1,14 @@
-import type { WQSTemplate } from '../data/data';
-import { DirectComparisonSection } from '../features/directComparison/components/DirectComparisonSection';
-import { SaleAdjustmentGridSection } from '../features/saleAdjustmentGrid/components/SaleAdjustmentGridSection';
 import { WQSMethodPanel } from '../features/wqs/components/WQSMethodPanel';
 import { SaleAdjustmentGridPanel } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridPanel.tsx';
+import type { FactorDataType, MarketComparableDetailType } from '../schemas/v1';
+import { useMemo } from 'react';
+import { useGetPriceAnalysisTemplates } from '../api/api';
+import { DirectComparisonPanel } from '../features/directComparison/components/DirectComparisonPanel';
 
 export function MethodSectionRenderer({
   methodId,
   methodType,
   property,
-  templates,
   allFactors,
   marketSurveys,
   onCalculationMethodDirty,
@@ -16,9 +16,8 @@ export function MethodSectionRenderer({
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  templates?: WQSTemplate[];
-  allFactors: Record<string, unknown>[];
-  marketSurveys: Record<string, unknown>[];
+  allFactors: FactorDataType[];
+  marketSurveys: MarketComparableDetailType[];
   onCalculationMethodDirty: (check: boolean) => void;
 }) {
   switch (methodType) {
@@ -48,10 +47,13 @@ export function MethodSectionRenderer({
       );
     case 'DC_MARKET':
       return (
-        <DirectComparisonSection
+        <DirectComparisonPanel
+          methodId={methodId}
+          methodType={methodType}
           property={property}
-          surveys={marketSurveys}
-          onCalculationMethodDirty={onCalculationMethodDirty}
+          marketSurveys={marketSurveys}
+          templates={templates}
+          allFactors={allFactors}
         />
       );
     default:

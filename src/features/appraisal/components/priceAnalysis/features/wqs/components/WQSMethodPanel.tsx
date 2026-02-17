@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
-import { WQS } from './WQSSection';
 import { MethodFooterActions } from '../../../components/MethodFooterActions';
 import { WQSDto, type WQSRequestType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
@@ -10,6 +9,12 @@ import toast from 'react-hot-toast';
 import { setWQSInitialValueOnSelectSurvey } from '../domain/setWQSInitialValueOnSelectSurvey';
 import { setWQSInitialValue } from '../domain/setWQSInitialValue';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
+import { WQS } from './WQS';
+import type {
+  FactorDataType,
+  GetMarketComparableByIdResponseType,
+  GetPricingTemplateByMethodResponseType,
+} from '../../../schemas/v1';
 
 /**
  * => default collateral type, template => generate => query factors in template
@@ -62,9 +67,9 @@ interface WQSMethodPanelProps {
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  templates?: WQSTemplate[];
-  allFactors: Record<string, unknown>[];
-  marketSurveys: Record<string, unknown>[];
+  templates?: GetPricingTemplateByMethodResponseType[];
+  allFactors: FactorDataType[];
+  marketSurveys: GetMarketComparableByIdResponseType[];
   onCalculationMethodDirty: (check: boolean) => void;
 }
 export function WQSMethodPanel({
@@ -90,7 +95,7 @@ export function WQSMethodPanel({
   } = methods;
 
   /** Form handler */
-  const handleOnSubmit = (value: any) => {
+  const handleOnSubmit = (value: WQSRequestType) => {
     reset(value);
     toast.success('Saved!');
   };
