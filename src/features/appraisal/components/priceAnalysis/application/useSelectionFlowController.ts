@@ -15,9 +15,10 @@ import {
 import { createInitialState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/createInitialState.ts';
 import type { Method } from '@features/appraisal/components/priceAnalysis/features/selection/type.ts';
 import { useNavigate } from 'react-router-dom'; // your use-case fn
-import { saveEditingSelection } from '../features/selection/domain/saveEditingSelection';
 import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
 import { ALL_FACTORS } from '../data/allFactorsData';
+import type { TemplateDetailType } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import { useSaveEditingSelection } from '@features/appraisal/components/priceAnalysis/features/selection/domain/saveEditingSelection.ts';
 
 type MethodKey = { approachType: string; methodType: string };
 type StartCalculationArgs = { approachId: string; methodId: string; methodType: string }; // what ActiveMethodPanel needs
@@ -31,6 +32,7 @@ function findMethodByType(state: any, k: MethodKey) {
 export function useSelectionFlowController(opts: {
   appraisalId: string;
   groupId: string;
+  pricingAnalysisId: string;
   // UI boundary callbacks (keeps controller decoupled from specific components)
   onStartCalculation: (args: StartCalculationArgs) => void;
   closeSelectionPanel?: () => void; // e.g. close accordion
@@ -52,6 +54,7 @@ export function useSelectionFlowController(opts: {
   } = useInitializePriceAnalysis({
     appraisalId: opts.appraisalId,
     groupId: opts.groupId,
+    pricingAnalysisId: opts.pricingAnalysisId,
   });
 
   const { groupDetail, properties, marketSurveyDetails, pricingConfiguration, pricingSelection } =
@@ -94,21 +97,28 @@ export function useSelectionFlowController(opts: {
 
   const [pendingDeselect, setPendingDeselect] = useState<MethodKey | null>(null);
 
-  // When user clicks "Calculate" we set this, then the query below will run.
+  /** Start calculation process */
+  /** (1) When user clicks "Calculate" we set this, then the query below will run. */
   const [calcKey, setCalcKey] = useState<MethodKey | null>(null);
 
-  // Derive IDs needed for the comparative factors call (from current state + calcKey)
+  /** (2) Derive IDs needed for the comparative factors call (from current state + calcKey) */
   const calcIds = useMemo(() => {
     if (!calcKey) return null;
+    /** find approach ID and method ID in reducer's state */
     const { appr, method } = findMethodByType(state, calcKey);
-    if (!appr?.id || !method?.id) return null;
+    if (!appr?.id || !method?.id) return toast.error('Unique key not found!');
     return { appr, method };
   }, [state, calcKey]);
 
-  // Fetch comparative factors only when user initiated calculation and IDs exist
-  const comparativeQ = useGetComparativeFactors(opts.appraisalId, calcIds?.method.id);
-
+  /** (3.1) Fetch template that belonging to method*/
   const templateQuery = useGetPricingTemplate(state.activeMethod?.methodType);
+
+  /** (3.2) Fetch comparative factors only when user initiated calculation and IDs exist */
+  const comparativeFactorsQuery = useGetComparativeFactors(
+    opts.appraisalId,
+    state.activeMethod?.methodId,
+  );
+  const isEditMode = Boolean(comparativeFactorsQuery.data);
 
   useEffect(() => {
     if (!calcKey) return;
@@ -140,7 +150,7 @@ export function useSelectionFlowController(opts: {
       type: 'CALCULATION_ENTER',
       payload: {
         allFactors: ALL_FACTORS,
-        templates: templateQuery.data,
+        templates: templateQuery.data.templates as TemplateDetailType[],
         approachId: appr.id,
         methodId: method.id,
         methodType: method.methodType,
@@ -155,14 +165,7 @@ export function useSelectionFlowController(opts: {
     opts.closeSelectionPanel?.();
 
     setCalcKey(null);
-  }, [
-    calcKey,
-    calcIds,
-    comparativeQ.isLoading,
-    comparativeQ.isError,
-    comparativeQ.error,
-    comparativeQ.data,
-  ]);
+  }, [calcKey, calcIds]);
 
   const vm = useMemo(() => {
     const canFinalize =
@@ -171,7 +174,7 @@ export function useSelectionFlowController(opts: {
         a.methods.every((m: any) => (m.appraisalValue ?? 0) > 0),
       );
 
-    return { canFinalize, comparativeQ };
+    return { canFinalize };
   }, [state.summarySelected]);
 
   const enterEdit = () => dispatch({ type: 'EDIT_ENTER' });
@@ -203,6 +206,7 @@ export function useSelectionFlowController(opts: {
     closeConfirm();
   };
 
+  const { save: saveEditingSelection } = useSaveEditingSelection();
   const saveEdit = async () => {
     // Build API payload using natural keys (types). Backend generates IDs.
     const selections =
@@ -222,6 +226,7 @@ export function useSelectionFlowController(opts: {
         }))
         .sort((a, b) => a.approachType.toLocaleCompare(b.approachType)) ?? [];
 
+    /** compare has any changes or not */
     const isEqualSelection = JSON.stringify(selections) === JSON.stringify(prevSelections);
 
     try {
@@ -229,15 +234,18 @@ export function useSelectionFlowController(opts: {
         dispatch({ type: 'SUMMARY_ENTER' });
         return;
       }
-      await saveEditingSelection(gateway, {
-        appraisalId: opts.appraisalId,
-        groupId: opts.groupId,
-        selections,
-      });
+
+      console.log('Saving selection', selections);
+      const pricingIds: Array<{ approachId: string; methodIds: Array<{ id: string }> }> =
+        await saveEditingSelection({
+          pricingAnalysisId: opts.pricingAnalysisId,
+          groupId: opts.groupId,
+          selections,
+        });
 
       dispatch({ type: 'EDIT_SAVE' });
 
-      // ✅ refresh from server so IDs appear in state via your INIT effect
+      // refresh from server so IDs appear in state via your INIT effect
       await qc.invalidateQueries({ queryKey: ['pricing-analysis', opts.groupId] });
 
       toast.success('Selection saved');

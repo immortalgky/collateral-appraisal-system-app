@@ -1,10 +1,19 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, type GetPropertyGroupByIdResponse } from '@/features/appraisal/api';
-import { GET_MARKET_SURVEYS_QUERY, GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
-import { useGetPriceAnalysisConfigQuery } from '../../domain/usePriceAnalysisQuery';
+import { GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
 import { useGetPricingAnalysis } from '../../api/api';
-import { MAPPED_MARKET_COMPARABLES } from '../../data/marketSurveyData';
+import { MAPPED_MARKET_COMPARABLE_DATA } from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
+import {
+  GetMarketComparableByIdResponse,
+  type GetMarketComparablesByIdResponseType,
+  GetMarketComparablesResponse,
+  type GetMarketComparablesResponseType,
+  PriceAnalysisConfig,
+  type PriceAnalysisConfigType,
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import { PROPERTIES } from '@features/appraisal/components/priceAnalysis/data/propertiesData.ts';
+import type { PropertyItem, PropertyType } from '@features/appraisal/types';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -84,9 +93,11 @@ function mapDetailToPropertyItem(detail: Record<string, unknown>): PropertyItem 
 export function useInitializePriceAnalysis({
   appraisalId,
   groupId,
+  pricingAnalysisId,
 }: {
   appraisalId: string;
   groupId: string;
+  pricingAnalysisId: string;
 }) {
   // Step 1: For a group, fetch group detail (to get property IDs + types)
   const groupDetailQuery = useQuery({
@@ -143,26 +154,25 @@ export function useInitializePriceAnalysis({
     }),
   });
 
-  // Step 3: fetch market surveys in this group
+  // Step 3: fetch market surveys in application
   const marketSurveysQuery = useQuery({
     queryKey: ['market-survey'],
-    queryFn: async (): Promise<Record<string, unknown>[]> => {
+    queryFn: async (): Promise<GetMarketComparablesResponseType> => {
       // const { data } = await axios.get(`/market-comparable/`);
+      // return data;
 
-      // MOCK delay:
       await new Promise(resolve => setTimeout(resolve, 3000));
-      return GET_MARKET_SURVEYS_QUERY;
+      return GetMarketComparablesResponse.parse(GET_PROPERTY_GROUP_BY_ID_RESPONSE);
     },
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    enabled: !!appraisalId && !!groupId,
     staleTime: Infinity,
     retry: 1,
   });
 
+  // loop add survey ID
   const allMarketSurveyEntries: Array<{ id: string }> = [];
-
   if (marketSurveysQuery.data) {
-    marketSurveysQuery.data.map(survey => {
+    marketSurveysQuery.data.marketComparables.map(survey => {
       allMarketSurveyEntries.push({
         id: String(survey.id),
       });
@@ -170,15 +180,15 @@ export function useInitializePriceAnalysis({
   }
 
   // Step 3.1: For each market survey, fetch its detail
-  const mapping_mock_survey_data = new Map(MAPPED_MARKET_COMPARABLES.map(s => [s.id, s]));
+  const mapping_mock_survey_data = new Map(MAPPED_MARKET_COMPARABLE_DATA.map(s => [s.id, s]));
   const marketSurveyDetailQueries = useQueries({
     queries: allMarketSurveyEntries.map(entry => {
       return {
         queryKey: ['pricing-market', entry.id, appraisalId],
-        queryFn: async () => {
+        queryFn: async (): Promise<GetMarketComparablesByIdResponseType> => {
           // const { data } = await axios.get(`/market-comparables/${entry.id}`);
           // return data as Record<string, unknown>;
-          return mapping_mock_survey_data.get(entry.id);
+          return GetMarketComparableByIdResponse.parse(mapping_mock_survey_data.get(entry.id));
         },
         enabled: !!appraisalId && !!entry.id,
         staleTime: Infinity,
@@ -188,7 +198,29 @@ export function useInitializePriceAnalysis({
   });
 
   // Step 4: Fetch price analysis config
-  const pricingConfigurationQuery = useGetPriceAnalysisConfigQuery();
+  /** fetch price analysis configuration on json file. The configuration file consist of 1 approach can include which method */
+  const pricingConfigurationQuery = useQuery({
+    queryKey: ['price-analysis-config'],
+    queryFn: async (): Promise<PriceAnalysisConfigType> => {
+      const res = await fetch(
+        '/src/features/appraisal/components/priceAnalysis/data/priceAnalysis.config.json',
+        { cache: 'no-store' },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Config fetch failed (${res.status})`);
+      }
+
+      const json = await res.json();
+      return PriceAnalysisConfig.parse(json);
+    },
+
+    /** set stateTime infinit since this is a static config */
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
 
   // Step: 5 Fetch price analysis selection data
   const pricingSelectionQuery = useGetPricingAnalysis(groupId);
@@ -208,7 +240,7 @@ export function useInitializePriceAnalysis({
     isLoadingMarketSurveyDetails ||
     isLoadingPricingConfiguration ||
     isLoadingPricingSelection;
-  const error = groupDetailQuery.error;
+  const error = pricingConfigurationQuery.error;
 
   // Build a lookup map for property details
   const propertyDetailMap = new Map<string, Record<string, unknown>>();
@@ -234,15 +266,16 @@ export function useInitializePriceAnalysis({
     approaches: [],
   };
 
+  const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
+  const _property = PROPERTIES[0];
   const initialData = {
-    groupDetail,
-    properties,
+    groupDetail: _groupDetail, // groupDetail
+    properties: _property, // properties
     marketSurveyDetails,
     pricingConfiguration,
     pricingSelection,
   };
 
-  // const group = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
   return {
     initialData,
     isLoading,

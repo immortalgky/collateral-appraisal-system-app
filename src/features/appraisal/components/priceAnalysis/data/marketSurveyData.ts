@@ -1,6 +1,6 @@
 import type { MarketComparableDetailType } from '../schemas/v1';
 
-export const MAPPED_MARKET_COMPARABLES: MarketComparableDetailType[] = [
+export const MAPPED_MARKET_COMPARABLE_DATA: MarketComparableDetailType[] = [
   {
     id: '00000000-0000-0000-0000-000000000000',
     comparableNumber: '1',

@@ -32,8 +32,11 @@ const TABS: Tab[] = [
 ];
 
 function PriceAnalysisPage() {
-  const { appraisalId, groupId } = useParams<{ appraisalId: string; groupId: string }>();
-  const location = useLocation();
+  const { appraisalId, groupId, pricingAnalysisId } = useParams<{
+    appraisalId: string;
+    groupId: string;
+    pricingAnalysisId: string;
+  }>();
   // const { groupId } = navigationState; // groupId from property
 
   // api call to get property data which belongs to this group
@@ -51,22 +54,25 @@ function PriceAnalysisPage() {
   };
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
 
-  console.log(appraisalId, groupId);
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'properties': {
         // when click this tab, actually should show Property tab as default so user can click 'AP' button to go back to Price Analysis tab
 
-        const _groupId = 'D7AA433E-F36B-1410-8965-006F4F934FE1';
-
-        return (
-          <StateCtx.Provider value={state}>
-            <DispatchCtx.Provider value={dispatch}>
-              <PriceAnalysisTab groupId={_groupId} />
-            </DispatchCtx.Provider>
-          </StateCtx.Provider>
-        );
+        if (!!appraisalId && !!groupId && !!pricingAnalysisId) {
+          return (
+            <StateCtx.Provider value={state}>
+              <DispatchCtx.Provider value={dispatch}>
+                <PriceAnalysisTab
+                  appraisalId={appraisalId}
+                  groupId={groupId}
+                  pricingAnalysisId={pricingAnalysisId}
+                />
+              </DispatchCtx.Provider>
+            </StateCtx.Provider>
+          );
+        }
+        return <div></div>;
       }
       case 'markets':
         return <MarketsTab />;

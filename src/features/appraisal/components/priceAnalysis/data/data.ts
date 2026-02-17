@@ -36,36 +36,6 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
   ],
 };
 
-export const GET_MARKET_SURVEYS_QUERY: Record<string, unknown>[] = [
-  {
-    id: '00000000-0000-0000-0000-000000000000',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000001',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000002',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000003',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000004',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000005',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000006',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000007',
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000008',
-  },
-];
-
 /** GetPropertyGroupById */
 export const GET_PROPERTY_GROUP_BY_ID_RESPONSE: GetPropertyGroupByIdResponseType = {
   id: '00000000-0000-0000-0000-000000000001',

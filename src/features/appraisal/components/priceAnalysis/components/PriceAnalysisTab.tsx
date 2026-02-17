@@ -1,12 +1,19 @@
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PriceAnalysisAccordion } from '@features/appraisal/components/priceAnalysis/features/selection/components/PriceAnalysisAccordion.tsx';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useSelectionFlowController } from '@features/appraisal/components/priceAnalysis/application/useSelectionFlowController.ts';
 import { MethodSectionRenderer } from './MethodSectionRenderer';
 
-export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element {
-  const appraisalId = '00000000-0000-0000-0000-000000000001';
-
+interface PriceAnalysisTabProps {
+  appraisalId: string;
+  groupId: string;
+  pricingAnalysisId: string;
+}
+export function PriceAnalysisTab({
+  appraisalId,
+  groupId,
+  pricingAnalysisId,
+}: PriceAnalysisTabProps) {
   /** State link between component `PriceAnalysisAccordion` and `ActiveMethodPanel`
    * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
    * - the state will pass to `ActiveMethodPanel` to show method
@@ -64,6 +71,7 @@ export function PriceAnalysisTab({ groupId }: { groupId: string }): JSX.Element 
   } = useSelectionFlowController({
     appraisalId: appraisalId,
     groupId: groupId,
+    pricingAnalysisId: pricingAnalysisId,
     onStartCalculation: handleOnStartCalculation,
     closeSelectionPanel: handleOnCloseSelectionPanel,
   });

@@ -48,8 +48,8 @@ export type PriceAnalysisSelectorAction =
         approaches: Approach[];
         groupDetails: GroupDetails;
         property: Record<string, unknown>;
-        marketSurveys: Record<string, unknown>[];
-        allFactors: { value: string; description: string }[];
+        marketSurveys: MarketComparableDetailType[];
+        allFactors: FactorDataType[];
       };
     }
   | {

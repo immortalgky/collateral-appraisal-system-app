@@ -12,6 +12,8 @@ import {
   type AddPriceAnalysisMethodResponseType,
   GetComparativeFactorsResponse,
   type GetComparativeFactorsResponseType,
+  GetMarketComparablesResponse,
+  type GetMarketComparablesResponseType,
   GetPricingAnalysisResponse,
   type GetPricingAnalysisResponseType,
   GetPricingTemplateByMethodResponse,
@@ -25,6 +27,7 @@ import {
   SALE_GRID_TEMPLATES,
   WQS_TEMPLATES,
 } from '../data/templatesData';
+import { MAPPED_MARKET_COMPARABLE_DATA } from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
 
 export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
   return useQuery({
@@ -52,8 +55,9 @@ export function useGetPricingAnalysis(id: string | undefined) {
   return useQuery({
     queryKey: ['price-analysis', id],
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
-      // const { data } = await axios.get(`/price-analysis/${id}`);
-      // return GetPricingAnalysisResponse.parse(data);
+      const { data } = await axios.get(`/price-analysis/${id}`);
+      console.log(data);
+      return GetPricingAnalysisResponse.parse(data);
 
       // MOCK delay:
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -153,15 +157,26 @@ export function useAddPriceAnalysisApproach() {
       id: string;
       request: AddPriceAnalysisApproachRequestType;
     }): Promise<AddPriceAnalysisApproachResponseType> => {
+      console.log('fire add approach');
       const { data: response } = await axios.post(`/pricing-analysis/${id}/approaches`, request);
       return response;
     },
-    onSuccess: data => {
-      console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['priceAnalysis'] });
+    onSuccess: (data, variables) => {
+      // data = API response
+      console.log('success:', data);
+
+      // (Recommended) invalidate the specific thing you changed
+      queryClient.invalidateQueries({ queryKey: ['price-analysis', variables.id] });
     },
-    onError: (error: any) => {
-      console.log(error);
+
+    onError: error => {
+      // error = thrown error (axios error, etc.)
+      console.log('error:', error);
+    },
+
+    onSettled: () => {
+      // runs on both success + error (great for cleanup / closing modal)
+      console.log('done (success or error)');
     },
   });
 }
@@ -224,12 +239,22 @@ export function useAddPriceAnalysisMethod() {
       );
       return response;
     },
-    onSuccess: data => {
-      console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['priceAnalysis'] });
+    onSuccess: (data, variables) => {
+      // data = API response
+      console.log('success:', data);
+
+      // (Recommended) invalidate the specific thing you changed
+      queryClient.invalidateQueries({ queryKey: ['price-analysis', variables.id] });
     },
-    onError: (error: any) => {
-      console.log(error);
+
+    onError: error => {
+      // error = thrown error (axios error, etc.)
+      console.log('error:', error);
+    },
+
+    onSettled: () => {
+      // runs on both success + error (great for cleanup / closing modal)
+      console.log('done (success or error)');
     },
   });
 }
@@ -261,24 +286,24 @@ export function useGetPropertyById(
   });
 }
 
-export function useGetMarketSurveys() {
-  const queryKey = ['marketSurvey'];
-
-  return useQuery({
-    queryKey,
-    queryFn: async (): Promise<any> => {
-      // const { data } = await axios.get(`/market-comparable/`);
-
-      // MOCK delay:
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      return MOC_SURVEY_DATA;
-    },
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
-    retry: 1,
-  });
-}
+// export function useGetMarketSurveys() {
+//   const queryKey = ['marketSurvey'];
+//
+//   return useQuery({
+//     queryKey,
+//     queryFn: async (): Promise<GetMarketComparablesResponseType> => {
+//       // const { data } = await axios.get(`/market-comparable/`);
+//
+//       // MOCK delay:
+//       await new Promise(resolve => setTimeout(resolve, 3000));
+//       return GetMarketComparablesResponse.parse();
+//     },
+//     refetchOnWindowFocus: false,
+//     refetchOnReconnect: false,
+//     staleTime: Infinity,
+//     retry: 1,
+//   });
+// }
 
 export function useGetPriceAnalysisTemplates(methodType: string) {
   const queryKey = ['price-analysis-template', methodType];
