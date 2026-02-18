@@ -100,4 +100,5 @@ export const WQSDto = z
   })
   .passthrough();
 
+export type ComparativeFactorFormType = z.infer<typeof ComparativeFactors>;
 export type WQSRequestType = z.infer<typeof WQSDto>;

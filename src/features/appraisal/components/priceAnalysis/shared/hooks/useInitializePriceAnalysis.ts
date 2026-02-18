@@ -1,19 +1,22 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, type GetPropertyGroupByIdResponse } from '@/features/appraisal/api';
-import { GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
-import { useGetAllFactors, useGetPricingAnalysis } from '../../api/api';
+import { APPROACHES_QUERY_RESPONSE, GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
 import { MAPPED_MARKET_COMPARABLE_DATA } from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
 import {
+  type FactorDataType,
   GetMarketComparableByIdResponse,
   type GetMarketComparablesByIdResponseType,
   GetMarketComparablesResponse,
   type GetMarketComparablesResponseType,
+  GetPricingAnalysisResponse,
+  type GetPricingAnalysisResponseType,
   PriceAnalysisConfig,
   type PriceAnalysisConfigType,
 } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 import { PROPERTIES } from '@features/appraisal/components/priceAnalysis/data/propertiesData.ts';
 import type { PropertyItem, PropertyType } from '@features/appraisal/types';
+import { ALL_FACTORS } from '../../data/allFactorsData';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -162,7 +165,11 @@ export function useInitializePriceAnalysis({
       // return data;
 
       await new Promise(resolve => setTimeout(resolve, 3000));
-      return GetMarketComparablesResponse.parse(GET_PROPERTY_GROUP_BY_ID_RESPONSE);
+      const parse = GetMarketComparablesResponse.safeParse(GET_PROPERTY_GROUP_BY_ID_RESPONSE);
+      if (!parse.success) {
+        throw parse.error;
+      }
+      return parse.data;
     },
     enabled: !!appraisalId && !!groupId,
     staleTime: Infinity,
@@ -188,7 +195,13 @@ export function useInitializePriceAnalysis({
         queryFn: async (): Promise<GetMarketComparablesByIdResponseType> => {
           // const { data } = await axios.get(`/market-comparables/${entry.id}`);
           // return data as Record<string, unknown>;
-          return GetMarketComparableByIdResponse.parse(mapping_mock_survey_data.get(entry.id));
+          const parse = GetMarketComparableByIdResponse.safeParse(
+            mapping_mock_survey_data.get(entry.id),
+          );
+          if (!parse.success) {
+            throw parse.error;
+          }
+          return parse.data;
         },
         enabled: !!appraisalId && !!entry.id,
         staleTime: Infinity,
@@ -212,7 +225,11 @@ export function useInitializePriceAnalysis({
       }
 
       const json = await res.json();
-      return PriceAnalysisConfig.parse(json);
+      const parsed = PriceAnalysisConfig.safeParse(json);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
+      return parsed.data;
     },
 
     /** set stateTime infinit since this is a static config */
@@ -223,10 +240,41 @@ export function useInitializePriceAnalysis({
   });
 
   // Step 5: Fetch price analysis selection data
-  const pricingSelectionQuery = useGetPricingAnalysis(groupId);
+  const pricingSelectionQuery = useQuery({
+    queryKey: ['price-analysis', pricingAnalysisId],
+    queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
+      // const { data } = await axios.get(`/price-analysis/${id}`);
+      // return GetPricingAnalysisResponse.parse(data);
+
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const parsed = GetPricingAnalysisResponse.safeParse(APPROACHES_QUERY_RESPONSE);
+      if (!parsed.success) {
+        console.error('PricingAnalysis schema error', parsed.error.flatten());
+        throw parsed.error;
+      }
+      return parsed.data;
+    },
+    enabled: !!pricingAnalysisId,
+    refetchOnWindowFocus: false, // don't refetch when tab focuses
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    retry: 1,
+  });
 
   // Step 6: Fetch all factors
-  const allFactorQuery = useGetAllFactors();
+  const allFactorQuery = useQuery({
+    queryKey: ['all-factors'],
+    queryFn: async (): Promise<FactorDataType> => {
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return ALL_FACTORS;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    retry: 1,
+  });
 
   // Step 5: Assemble wait until all data finished
   const isLoadingGroupDetails = groupDetailQuery.isLoading;
@@ -260,16 +308,8 @@ export function useInitializePriceAnalysis({
   const properties = groupDetail?.properties ?? [];
   const marketSurveyDetails = marketSurveyDetailQueries?.map(q => q.data);
   const pricingConfiguration = pricingConfigurationQuery?.data;
-  const pricingSelection = pricingSelectionQuery?.data ?? {
-    id: '',
-    propertyGroupId: groupId,
-    status: '',
-    finalMarketValue: 0,
-    finalAppraisedValue: 0,
-    finalForcedSaleValue: 0,
-    valuationDate: new Date(),
-    approaches: [],
-  };
+  const pricingSelection = pricingSelectionQuery?.data ?? [];
+  const allFactors = allFactorQuery?.data;
 
   const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
   const _property = PROPERTIES[0];
@@ -279,6 +319,7 @@ export function useInitializePriceAnalysis({
     marketSurveyDetails,
     pricingConfiguration,
     pricingSelection,
+    allFactors,
   };
 
   return {

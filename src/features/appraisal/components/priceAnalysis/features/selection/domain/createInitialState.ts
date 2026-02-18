@@ -1,14 +1,14 @@
-import type { PriceAnalysisConfigType } from '../../../domain/usePriceAnalysisQuery';
-import type { GetPricingAnalysisResponseType } from '../../../schemas/v1';
+import type { GetPricingAnalysisResponseType, PriceAnalysisConfigType } from '../../../schemas/v1';
 import type { Approach } from '../type';
 
 export function createInitialState(
   priceAnalysisConfig: PriceAnalysisConfigType,
   priceAnalysisData: GetPricingAnalysisResponseType,
 ): Approach[] {
+  console.log(priceAnalysisData);
+  console.log('matching!');
   const apiApproaches = priceAnalysisData?.approaches ?? [];
   const apiApproachByType = new Map(apiApproaches.map(a => [a.approachType, a]));
-  console.log('matching!');
 
   return (priceAnalysisConfig.approaches ?? []).map(confAppr => {
     const apiAppr = apiApproachByType.get(confAppr.approachType);

@@ -1,14 +1,15 @@
 import type { UseFormReset } from 'react-hook-form';
 import type { WQSTemplate } from '../../../data/data';
 import type { WQSRequestType } from '../schemas/wqsForm';
+import type { MarketComparableDataType, TemplateDetailType } from '../../../schemas/v1';
 
 interface setWQSInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  template?: WQSTemplate;
-  comparativeSurveys: Record<string, unknown>[];
+  template?: TemplateDetailType;
+  comparativeSurveys: MarketComparableDataType[];
   reset: UseFormReset<WQSRequestType>;
 }
 export function setWQSInitialValue({
@@ -56,11 +57,12 @@ export function setWQSInitialValue({
     collateralType: collateralType,
     pricingTemplateCode: '', // TODO: replace by template id
     comparativeSurveys: [],
-    comparativeFactors: template.comparativeFactors.map(compFact => ({
-      factorCode: compFact.factorId,
-    })),
+    comparativeFactors:
+      template.comparativeFactors?.map(compFact => ({
+        factorCode: compFact.factorCode,
+      })) ?? [],
     WQSScores: template.calculationFactors.map(calFact => ({
-      factorCode: calFact.factorId,
+      factorCode: calFact.factorCode,
       weight: calFact.weight,
       intensity: calFact.intensity,
       surveys: [],

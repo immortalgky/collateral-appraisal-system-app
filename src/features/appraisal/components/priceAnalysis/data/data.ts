@@ -5,13 +5,12 @@ import type {
 
 /** approach and method query response */
 export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
-  id: '00000000-0000-0000-0000-000000000001',
-  propertyGroupId: 'D7AA433E-F36B-1410-8965-006F4F934FE1',
+  id: '019c6ccf-013b-7f92-956e-0ed0ace1df15',
+  propertyGroupId: 'ec87433e-f36b-1410-8bff-00c20893b8c7',
   status: '',
   finalMarketValue: 0,
   finalAppraisedValue: 0,
   finalForcedSaleValue: 0,
-  valuationDate: '2025-01-15T10:00:00',
   approaches: [
     {
       id: '00000000-0000-0000-0000-000000000001',
@@ -23,13 +22,19 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
           id: '00000000-0000-0000-0000-000000000000',
           methodType: 'WQS_MARKET',
           isCandidated: false,
-          appraisalValue: 10000000,
+          appraisalValue: 0,
         },
         {
           id: '00000000-0000-0000-0000-000000000001',
           methodType: 'SAG_MARKET',
           isCandidated: false,
-          appraisalValue: 15000000,
+          appraisalValue: 0,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000002',
+          methodType: 'DC_MARKET',
+          isCandidated: false,
+          appraisalValue: 0,
         },
       ],
     },

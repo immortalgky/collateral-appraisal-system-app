@@ -1,4 +1,3 @@
-import { unknown } from 'zod';
 import type { Approach, GroupDetails, Method } from '../type';
 import type {
   FactorDataType,
@@ -34,7 +33,7 @@ export type PriceAnalysisSelectorState = {
 
   systemCalculationMode: SystemCalculationMode;
 
-  activeMethod?: { approachId: string; methodId: string; methodType: string };
+  activeMethod?: { approachId: string; approachType: string; methodId: string; methodType: string };
   groupDetails?: GroupDetails;
   property?: Record<string, unknown>;
   marketSurveys?: MarketComparableDetailType[];
@@ -66,6 +65,10 @@ export type PriceAnalysisSelectorAction =
   | { type: 'SUMMARY_SELECT_METHOD'; payload: { approachType: string; methodType: string } }
   | { type: 'SUMMARY_SELECT_APPROACH'; payload: { approachType: string } }
   | { type: 'SUMMARY_SAVE' }
+  | {
+      type: 'CALCULATION_SELECTED';
+      payload: { approachId: string; approachType: string; methodId: string; methodType: string };
+    }
   | {
       type: 'CALCULATION_ENTER';
       payload: {
@@ -266,6 +269,7 @@ export function approachMethodReducer(
       /** update editSaved equal to editDraft and update summarySelected with visible approach */
       const nextState: PriceAnalysisSelectorState = {
         ...state,
+        activeMethod: undefined,
         editSaved: cloneApproaches(state.editDraft),
         summarySelected: cloneApproaches(visibleApproach),
         viewMode: 'summary',
@@ -345,6 +349,18 @@ export function approachMethodReducer(
 
     case 'SUMMARY_SAVE': {
       return state;
+    }
+
+    case 'CALCULATION_SELECTED': {
+      return {
+        ...state,
+        activeMethod: {
+          approachId: action.payload.approachId,
+          approachType: action.payload.approachType,
+          methodId: action.payload.methodId,
+          methodType: action.payload.methodType,
+        },
+      };
     }
 
     case 'CALCULATION_ENTER': {

@@ -33,7 +33,7 @@ import { ALL_FACTORS } from '../data/allFactorsData';
 
 export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
   return useQuery({
-    queryKey: ['price-analysis', groupId, appraisalId],
+    queryKey: ['property-group', groupId, appraisalId],
     queryFn: async (): Promise<GetPropertyGroupByIdResponseType> => {
       // const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
       // return GetPropertyGroupByIdResponse.parse(data);
@@ -53,19 +53,17 @@ export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
  * Hook for fetching price analysis approach and method by group Id
  * GET /appraisal ...
  */
-export function useGetPricingAnalysis(id: string | undefined) {
+export function useGetPricingAnalysis(id: string) {
   return useQuery({
     queryKey: ['price-analysis', id],
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
-      const { data } = await axios.get(`/price-analysis/${id}`);
-      console.log(data);
-      return GetPricingAnalysisResponse.parse(data);
+      // const { data } = await axios.get(`/price-analysis/${id}`);
+      // return GetPricingAnalysisResponse.parse(data);
 
       // MOCK delay:
       await new Promise(resolve => setTimeout(resolve, 3000));
-      // validate mock matches schema:
-      // return GetPricingAnalysisResponse.parse(APPROACHES_QUERY_RESPONSE);
-      return APPROACHES_QUERY_RESPONSE;
+      console.log(APPROACHES_QUERY_RESPONSE);
+      return GetPricingAnalysisResponse.parse(APPROACHES_QUERY_RESPONSE);
     },
     enabled: !!id,
     refetchOnWindowFocus: false, // don't refetch when tab focuses
@@ -80,7 +78,7 @@ export function useGetPricingAnalysis(id: string | undefined) {
  */
 export function useGetPricingTemplate(methodType: string) {
   return useQuery({
-    queryKey: ['price-analysis-template'],
+    queryKey: ['price-analysis-template', methodType],
     queryFn: async (): Promise<GetPricingTemplatesByMethodResponseType> => {
       await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -106,7 +104,7 @@ export function useGetPricingTemplate(methodType: string) {
  */
 export function useGetComparativeFactors(id: string | undefined, methodId: string | undefined) {
   return useQuery({
-    queryKey: ['price-analysis', id, methodId],
+    queryKey: ['price-analysis-comparative-factors', id, methodId],
     queryFn: async (): Promise<GetComparativeFactorsResponseType> => {
       const { data } = await axios.get(
         `/pricing-analysis/${id}/methods/${methodId}/comparative-factors`,
@@ -330,9 +328,8 @@ export function useGetPriceAnalysisTemplates(methodType: string) {
 }
 
 export function useGetAllFactors() {
-  const queryKey = ['all-factors'];
   return useQuery({
-    queryKey,
+    queryKey: ['all-factors'],
     queryFn: async (): Promise<FactorDataType> => {
       // MOCK delay:
       await new Promise(resolve => setTimeout(resolve, 3000));

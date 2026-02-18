@@ -11,13 +11,14 @@ import {
   buildWQSTotalScoreRules,
 } from '../adapters/buildDerivedRules';
 import { useDerivedFields, type DerivedFieldRule } from '../../../components/useDerivedFieldArray';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
+import type { MarketComparableDataType, TemplateDetailType } from '../../../schemas/v1';
 
 interface WQSScoringSectionProps {
-  comparativeSurveys: Record<string, unknown>[];
+  comparativeSurveys: MarketComparableDataType[];
   property: Record<string, any>;
-  template?: WQSTemplate;
+  template?: TemplateDetailType;
   isLoading: boolean;
 }
 

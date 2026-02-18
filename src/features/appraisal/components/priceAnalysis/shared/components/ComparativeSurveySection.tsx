@@ -5,14 +5,21 @@ import { getFactorDesciption } from '../domain/getFactorDescription';
 import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
 import { wqsFieldPath } from '../../features/wqs/adapters/fieldPath';
 import { RHFInputCell } from '../../components/table/RHFInputCell';
-import type { WQSTemplate } from '@features/appraisal/components/priceAnalysis/data/data.ts';
 import { useMemo } from 'react';
+import type {
+  FactorDataType,
+  MarketComparableDataType,
+  TemplateDetailType,
+  TemplateFactorDataType,
+} from '../../schemas/v1';
+import { readFactorValue } from '../../domain/readFactorValue';
+import type { ComparativeFactorFormType } from '../../features/wqs/schemas/wqsForm';
 
 interface ComparativeSurveySectionProps {
-  comparativeMarketSurveys: Record<string, unknown>[];
+  comparativeMarketSurveys: MarketComparableDataType[];
   property: Record<string, unknown>;
-  allFactors: Record<string, unknown>[];
-  template?: WQSTemplate;
+  allFactors: FactorDataType[];
+  template?: TemplateDetailType;
 }
 export function ComparativeSurveySection({
   comparativeMarketSurveys,
@@ -36,7 +43,7 @@ export function ComparativeSurveySection({
   });
 
   const comparativeFactors = useMemo(() => {
-    return getValues(comparativeFactorPath());
+    return getValues(comparativeFactorPath()) as ComparativeFactorFormType[];
   }, [comparativeSurveyFactors]);
 
   const factorColumnStyle =
@@ -55,7 +62,7 @@ export function ComparativeSurveySection({
               >
                 Factors
               </th>
-              {comparativeMarketSurveys.map((survey: any) => {
+              {comparativeMarketSurveys.map((survey: MarketComparableDataType) => {
                 return (
                   <th
                     key={survey.id}
@@ -74,13 +81,21 @@ export function ComparativeSurveySection({
               const selected = comparativeFactors[rowIndex];
               const options = (allFactors ?? [])
                 .filter(
-                  (f: any) =>
-                    f.value === selected.factorCode ||
-                    !comparativeFactors.some((q: any) => q.factorCode === f.value),
+                  (f: FactorDataType) =>
+                    f.factorCode === selected.factorCode ||
+                    !comparativeFactors.some(
+                      (q: any) =>
+                        q.factorCode ===
+                        readFactorValue({
+                          dataType: f.dataType,
+                          fieldDecimal: f.fieldDecimal,
+                          value: f.value,
+                        }),
+                    ),
                 )
-                .map(f => ({
-                  label: f.description ?? '',
-                  value: f.value,
+                .map((f: FactorDataType) => ({
+                  label: f.factorName ?? '',
+                  value: f.factorCode,
                 }));
               return (
                 <tr
@@ -97,8 +112,9 @@ export function ComparativeSurveySection({
                       className="truncate"
                       title={getFactorDesciption(compFact.factorCode) ?? ''}
                     >
-                      {template?.comparativeFactors.find(t => {
-                        return t.factorId === compFact.factorCode;
+                      {template?.comparativeFactors.find((t: TemplateFactorDataType) => {
+                        console.log(t.factorCode, compFact.factorCode);
+                        return t.factorCode === compFact.factorCode;
                       }) ? (
                         <RHFInputCell
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
@@ -139,8 +155,8 @@ export function ComparativeSurveySection({
                     />
                   </td>
                   <td className="bg-white px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0">
-                    {!template?.comparativeFactors.find(
-                      t => t.factorId === compFact.factorCode,
+                    {!template?.comparativeFactors?.find(
+                      t => t.factorCode === compFact.factorCode,
                     ) && (
                       <div className="flex flex-row justify-center items-center">
                         <button

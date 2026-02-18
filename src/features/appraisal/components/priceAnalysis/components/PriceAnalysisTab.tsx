@@ -18,9 +18,6 @@ export function PriceAnalysisTab({
    * - when user clicks on pencil button to start calculation on the method, will set methodId on this state
    * - the state will pass to `ActiveMethodPanel` to show method
    */
-  const [activeCalculationMethod, setActiveCalculationMethod] = useState<
-    { approachId: string; methodId: string; methodType: string } | undefined
-  >(undefined);
 
   /** state to control accordian disclosure */
   const {
@@ -29,22 +26,11 @@ export function PriceAnalysisTab({
     onClose: onPriceAnalysisAccordianClose,
   } = useDisclosure({ defaultIsOpen: true });
 
-  /** functino to trigger calculation section */
-  const handleOnStartCalculation = (args: {
-    approachId: string;
-    methodId: string;
-    methodType: string;
-  }) => {
-    setActiveCalculationMethod({
-      approachId: args.approachId,
-      methodId: args.methodId,
-      methodType: args.methodType,
-    });
+  /** function to close price analysis page */
+  const handleOnCloseSelectionPanel = () => {
+    console.log('close accordian');
     onPriceAnalysisAccordianClose();
   };
-
-  /** function to close price analysis page */
-  const handleOnCloseSelectionPanel = () => {};
 
   const {
     state,
@@ -53,6 +39,7 @@ export function PriceAnalysisTab({
     changeSystemCalculation,
 
     isInitialDataLoading,
+    isLoadingCalculationMethodData,
 
     // edit mode
     enterEdit,
@@ -72,7 +59,6 @@ export function PriceAnalysisTab({
     appraisalId: appraisalId,
     groupId: groupId,
     pricingAnalysisId: pricingAnalysisId,
-    onStartCalculation: handleOnStartCalculation,
     closeSelectionPanel: handleOnCloseSelectionPanel,
   });
 
@@ -141,7 +127,7 @@ export function PriceAnalysisTab({
             onSelectCandidateMethod={selectCandidateMethod}
             onSelectCandidateApproach={selectCandidateApproach}
           />
-          {!!activeCalculationMethod && (
+          {!isLoadingCalculationMethodData && (
             <MethodSectionRenderer
               allFactors={priceAnalysisState.allFactors}
               methodId={priceAnalysisState.activeMethod?.methodId}

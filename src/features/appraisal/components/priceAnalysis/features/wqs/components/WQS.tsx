@@ -1,15 +1,19 @@
 import { AdjustFinalValueSection } from './AdjustFinalValueSection';
-import { type WQSTemplate } from '../../../data/data';
 import { ComparativeMarketSurveySection } from '../../../shared/components/ComparativeMarketSurveySection';
 import { WQSScoringSection } from '@features/appraisal/components/priceAnalysis/features/wqs/components/WQSScoringSection.tsx';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '../../../schemas/v1';
 
 interface WQSProps {
   property: Record<string, unknown>;
-  marketSurveys: Record<string, unknown>[];
-  comparativeMarketSurveys: Record<string, unknown>[];
-  template?: WQSTemplate;
-  allFactors: Record<string, unknown>[];
-  onSelectComparativeMarketSurvey: (surveys: Record<string, unknown>[]) => void;
+  marketSurveys: MarketComparableDetailType[];
+  comparativeMarketSurveys: MarketComparableDetailType[];
+  template?: TemplateDetailType;
+  allFactors: FactorDataType[];
+  onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 export const WQS = ({
   property,

@@ -143,8 +143,8 @@ export const GetPricingAnalysisResponse = z
   })
   .passthrough();
 
-export type ApproachDtoType = z.infer<typeof ApproachDto>;
-export type MethodDtoType = z.infer<typeof MethodDto>;
+export type ApproachType = z.infer<typeof ApproachDto>;
+export type MethodType = z.infer<typeof MethodDto>;
 export type GetPricingAnalysisRequestType = z.infer<typeof GetPricingAnalysisRequest>;
 export type GetPricingAnalysisResponseType = z.infer<typeof GetPricingAnalysisResponse>;
 

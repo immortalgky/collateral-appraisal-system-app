@@ -1,9 +1,17 @@
 import { WQSMethodPanel } from '../features/wqs/components/WQSMethodPanel';
 import { SaleAdjustmentGridPanel } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridPanel.tsx';
-import type { FactorDataType, MarketComparableDetailType } from '../schemas/v1';
-import { useMemo } from 'react';
-import { useGetPriceAnalysisTemplates } from '../api/api';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
 import { DirectComparisonPanel } from '../features/directComparison/components/DirectComparisonPanel';
+
+interface MethodSectionRendererProps {
+  methodId: string;
+  methodType: string;
+  property: Record<string, unknown>;
+  allFactors: FactorDataType[];
+  marketSurveys: MarketComparableDetailType[];
+  templates: TemplateDetailType[];
+  onCalculationMethodDirty: (check: boolean) => void;
+}
 
 export function MethodSectionRenderer({
   methodId,
@@ -11,15 +19,9 @@ export function MethodSectionRenderer({
   property,
   allFactors,
   marketSurveys,
+  templates,
   onCalculationMethodDirty,
-}: {
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  allFactors: FactorDataType[];
-  marketSurveys: MarketComparableDetailType[];
-  onCalculationMethodDirty: (check: boolean) => void;
-}) {
+}: MethodSectionRendererProps) {
   switch (methodType) {
     case 'WQS_MARKET': {
       return (

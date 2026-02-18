@@ -4,7 +4,7 @@ import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceA
 import { MethodFooterActions } from '../../../components/MethodFooterActions';
 import { WQSDto, type WQSRequestType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
-import { COLLATERAL_TYPE, type WQSTemplate } from '../../../data/data';
+import { COLLATERAL_TYPE } from '../../../data/data';
 import toast from 'react-hot-toast';
 import { setWQSInitialValueOnSelectSurvey } from '../domain/setWQSInitialValueOnSelectSurvey';
 import { setWQSInitialValue } from '../domain/setWQSInitialValue';
@@ -12,8 +12,8 @@ import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { WQS } from './WQS';
 import type {
   FactorDataType,
-  GetMarketComparableByIdResponseType,
-  GetPricingTemplateByMethodResponseType,
+  MarketComparableDetailType,
+  TemplateDetailType,
 } from '../../../schemas/v1';
 
 /**
@@ -67,9 +67,9 @@ interface WQSMethodPanelProps {
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  templates?: GetPricingTemplateByMethodResponseType[];
+  templates?: TemplateDetailType[];
   allFactors: FactorDataType[];
-  marketSurveys: GetMarketComparableByIdResponseType[];
+  marketSurveys: MarketComparableDetailType[];
   onCalculationMethodDirty: (check: boolean) => void;
 }
 export function WQSMethodPanel({
@@ -81,6 +81,7 @@ export function WQSMethodPanel({
   allFactors,
   onCalculationMethodDirty,
 }: WQSMethodPanelProps) {
+  console.log(templates);
   const methods = useForm<WQSRequestType>({
     mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
@@ -227,12 +228,14 @@ export function WQSMethodPanel({
             onSelectTemplate: handleOnSelectTemplate,
             value: pricingTemplateId,
             options:
-              templates
-                ?.filter(template => template.collateralTypeId === collateralTypeId)
-                .map(template => ({
-                  value: template.templateCode,
-                  label: template.templateName,
-                })) ?? [],
+              (templates ?? [])
+                .filter(template => template?.collateralType === collateralTypeId)
+                .map(template => {
+                  return {
+                    value: template?.templateCode ?? '',
+                    label: template?.templateName ?? '',
+                  };
+                }) ?? [],
           }}
         />
         {isGenerated && (

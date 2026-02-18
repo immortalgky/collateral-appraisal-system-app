@@ -6,26 +6,30 @@ import {
   useSelectionDispatch,
   useSelectionState,
 } from '@features/appraisal/components/priceAnalysis/features/selection/domain/selectionContext.tsx';
-import { usePriceAnalysisGateway } from '@features/appraisal/components/priceAnalysis/features/selection/domain/priceAnalysisGateway.ts';
 import toast from 'react-hot-toast';
 import {
   useGetComparativeFactors,
   useGetPricingTemplate,
 } from '@features/appraisal/components/priceAnalysis/api/api.ts';
 import { createInitialState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/createInitialState.ts';
-import type { Method } from '@features/appraisal/components/priceAnalysis/features/selection/type.ts';
-import { useNavigate } from 'react-router-dom'; // your use-case fn
+import type {
+  Approach,
+  Method,
+} from '@features/appraisal/components/priceAnalysis/features/selection/type.ts';
 import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
 import { ALL_FACTORS } from '../data/allFactorsData';
-import type { TemplateDetailType } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 import { useSaveEditingSelection } from '@features/appraisal/components/priceAnalysis/features/selection/domain/saveEditingSelection.ts';
+import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
+import { useInitializeCalculationMethod } from '../shared/hooks/useInitailizeCalculationMethod';
 
 type MethodKey = { approachType: string; methodType: string };
 type StartCalculationArgs = { approachId: string; methodId: string; methodType: string }; // what ActiveMethodPanel needs
 
-function findMethodByType(state: any, k: MethodKey) {
-  const appr = state.summarySelected.find((a: any) => a.approachType === k.approachType);
-  const method = appr?.methods.find((m: any) => m.methodType === k.methodType);
+function findMethodByType(state: PriceAnalysisSelectorState, k: MethodKey) {
+  const appr = state.summarySelected.find(
+    (approach: Approach) => approach.approachType === k.approachType,
+  );
+  const method = appr?.methods.find((method: Method) => method.methodType === k.methodType);
   return { appr, method };
 }
 
@@ -34,16 +38,13 @@ export function useSelectionFlowController(opts: {
   groupId: string;
   pricingAnalysisId: string;
   // UI boundary callbacks (keeps controller decoupled from specific components)
-  onStartCalculation: (args: StartCalculationArgs) => void;
   closeSelectionPanel?: () => void; // e.g. close accordion
 }) {
   console.log('Check useSelectionFlowController refresh!');
 
-  const navigate = useNavigate();
   const state = useSelectionState();
   const dispatch = useSelectionDispatch();
 
-  const gateway = usePriceAnalysisGateway();
   const qc = useQueryClient();
 
   /** (1) Initialize query data such as group detail, property under the group, market surveys, price analysis configuration file and, pricing data in database */
@@ -57,27 +58,32 @@ export function useSelectionFlowController(opts: {
     pricingAnalysisId: opts.pricingAnalysisId,
   });
 
-  const { groupDetail, properties, marketSurveyDetails, pricingConfiguration, pricingSelection } =
-    useMemo(() => {
-      return initialData;
-    }, [initialData]);
+  const {
+    groupDetail,
+    properties,
+    marketSurveyDetails,
+    pricingConfiguration,
+    pricingSelection,
+    allFactors,
+  } = useMemo(() => {
+    return initialData;
+  }, [initialData]);
 
   useEffect(() => {
+    console.log('Check initial data useEffect() refresh');
     if (isInitialDataLoading) return;
-
-    console.log(initialData);
 
     if (
       !!groupDetail &&
       !!properties &&
       !!marketSurveyDetails &&
       !!pricingConfiguration &&
-      !!pricingSelection
+      !!pricingSelection &&
+      !!allFactors
     ) {
       const approaches = createInitialState(pricingConfiguration, pricingSelection);
       /** (2) after complete preparing data, trigger first state 'INIT' with initial data */
 
-      console.log(approaches, pricingConfiguration, pricingSelection);
       dispatch({
         type: 'INIT',
         payload: {
@@ -85,7 +91,7 @@ export function useSelectionFlowController(opts: {
           groupDetails: groupDetail,
           property: properties,
           marketSurveys: marketSurveyDetails,
-          allFactors: ALL_FACTORS, // TODO: replace by query all factors
+          allFactors: allFactors, // TODO: replace by query all factors
         },
       });
       /** (3) enter summary selection screen */
@@ -99,38 +105,55 @@ export function useSelectionFlowController(opts: {
 
   /** Start calculation process */
   /** (1) When user clicks "Calculate" we set this, then the query below will run. */
-  const [calcKey, setCalcKey] = useState<MethodKey | null>(null);
+  const calcKey = useMemo(() => {
+    console.log('Check state active method refresh');
+    return {
+      approachType: state.activeMethod?.approachType,
+      methodType: state.activeMethod?.methodType,
+    } as MethodKey;
+  }, [state.activeMethod?.approachType, state.activeMethod?.methodType]);
 
   /** (2) Derive IDs needed for the comparative factors call (from current state + calcKey) */
   const calcIds = useMemo(() => {
+    console.log('Check calcKey refresh');
+    if (!state.activeMethod?.approachType || !state.activeMethod?.methodType) return;
+
     if (!calcKey) return null;
+
     /** find approach ID and method ID in reducer's state */
     const { appr, method } = findMethodByType(state, calcKey);
     if (!appr?.id || !method?.id) return toast.error('Unique key not found!');
     return { appr, method };
-  }, [state, calcKey]);
+  }, [calcKey]);
 
   /** (3.1) Fetch template that belonging to method when methodType is existed */
-  const templateQuery = useGetPricingTemplate(calcKey?.methodType);
-
   /** (3.2) Fetch comparative factors only when user initiated calculation and IDs exist */
-  const comparativeFactorsQuery = useGetComparativeFactors(
-    opts.appraisalId,
-    state.activeMethod?.methodId,
-  );
-
-  const isEditMode = Boolean(comparativeFactorsQuery.data);
+  const {
+    calculationMethodData,
+    isLoading: isLoadingCalculationMethodData,
+    error,
+  } = useInitializeCalculationMethod({
+    appraisalId: opts.appraisalId,
+    methodId: state.activeMethod?.methodId ?? '',
+    methodType: state.activeMethod?.methodType ?? '',
+  });
 
   /** (4) mange result
    * (4.1) If got comparative value, mapping, pass to calculation section.
    * (4.2) If not, start new calulcation.
    */
   useEffect(() => {
-    if (!calcKey) return;
+    console.log('Check select calculation method useEffect() refresh');
+    if (!state.activeMethod?.approachType || !state.activeMethod?.methodType) return;
+
     if (!calcIds) return; // safety
 
+    if (isLoadingCalculationMethodData) return;
+
+    console.log('calculation refresh!');
+
     /** Guard template data in case that we not allow user to do calculation if not choose method. so, if don't have any method to query, user still cannot do calculation */
-    if (!templateQuery.data) return;
+    // if (!templateQuery.data) return;
 
     // if (comparativeQ.isLoading) return;
     //
@@ -145,46 +168,42 @@ export function useSelectionFlowController(opts: {
     const { appr, method } = findMethodByType(state, calcKey);
     if (!method?.id || !appr?.id) {
       toast.error('Save selection first to generate method and approach IDs before calculation.');
-      setCalcKey(null);
       return;
     }
 
+    console.log('success');
+
     /** (4.1) if got comparative value, mapping, pass to calculation section. */
-    if (comparativeFactorsQuery.data) {
+    if (calculationMethodData.comparativeFactors) {
       dispatch({
         type: 'CALCULATION_ENTER',
         payload: {
-          allFactors: ALL_FACTORS,
-          templates: templateQuery.data.templates as TemplateDetailType[],
           approachId: appr.id,
           methodId: method.id,
           methodType: method.methodType,
-          com
+          allFactors: ALL_FACTORS,
+          templates: calculationMethodData.pricingTemplate,
+          comparativeFactors: calculationMethodData.comparativeFactors,
         },
       });
+      opts.closeSelectionPanel?.();
       return;
     }
 
     dispatch({
       type: 'CALCULATION_ENTER',
       payload: {
-        allFactors: ALL_FACTORS,
-        templates: templateQuery.data.templates as TemplateDetailType[],
         approachId: appr.id,
         methodId: method.id,
         methodType: method.methodType,
+        allFactors: ALL_FACTORS,
+        templates: calculationMethodData.pricingTemplate,
       },
-    });
-
-    opts.onStartCalculation({
-      approachId: appr.approachId,
-      methodId: method.id,
-      methodType: method.methodType,
     });
     opts.closeSelectionPanel?.();
 
-    setCalcKey(null);
-  }, [calcKey, calcIds]);
+    // TODO: don't forget to set active method to others when change method or cancel method
+  }, [isLoadingCalculationMethodData]);
 
   const vm = useMemo(() => {
     const canFinalize =
@@ -306,7 +325,17 @@ export function useSelectionFlowController(opts: {
       return;
     }
 
-    setCalcKey(k); // trigger query
+    console.log(appr, method);
+
+    dispatch({
+      type: 'CALCULATION_SELECTED',
+      payload: {
+        approachId: appr.id,
+        approachType: appr.approachType,
+        methodId: method.id,
+        methodType: method.methodType,
+      },
+    });
   };
 
   const saveSummary = async () => {
@@ -347,6 +376,7 @@ export function useSelectionFlowController(opts: {
     state,
     vm,
     isInitialDataLoading,
+    isLoadingCalculationMethodData,
 
     // change calculation mode
     changeSystemCalculation,
