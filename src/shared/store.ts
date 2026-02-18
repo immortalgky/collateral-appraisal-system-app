@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AddressStore, BreadcrumbItem, BreadcrumbStore, CurrentUser, LoadingStore, LocaleStore, ParameterStore, StoredParameters, UIStore, UserStore } from './types';
+import type {
+  AddressStore,
+  BreadcrumbItem,
+  BreadcrumbStore,
+  CurrentUser,
+  LoadingStore,
+  LocaleStore,
+  ParameterStore,
+  StoredParameters,
+  UIStore,
+  UserStore,
+} from './types';
 import type { Parameter } from './types/api';
 import { mockThaiAddresses, type ThaiAddress } from './data/thaiAddresses';
 import type { WorkflowActivity } from './config/navigation';
@@ -14,6 +25,7 @@ export const useUIStore = create<UIStore>(set => ({
 
 export const useParameterStore = create<ParameterStore>(set => ({
   parameters: {},
+  isLoaded: false,
   setParameters: (params: Parameter[]) => {
     const mapped: StoredParameters = {};
     for (const param of params) {
@@ -26,6 +38,7 @@ export const useParameterStore = create<ParameterStore>(set => ({
     }
     set({
       parameters: mapped,
+      isLoaded: true,
     });
   },
 }));
@@ -97,7 +110,7 @@ const defaultDevUser: CurrentUser = {
  */
 export const useUserStore = create<UserStore>()(
   persist(
-    (set) => ({
+    set => ({
       user: defaultDevUser, // Default to dev user for development
       isAuthenticated: true,
       setUser: (user: CurrentUser | null) =>
@@ -106,7 +119,7 @@ export const useUserStore = create<UserStore>()(
           isAuthenticated: user !== null,
         }),
       setRole: (role: WorkflowActivity) =>
-        set((state) => ({
+        set(state => ({
           user: state.user ? { ...state.user, role } : null,
         })),
       logout: () =>
@@ -117,7 +130,7 @@ export const useUserStore = create<UserStore>()(
     }),
     {
       name: 'user-storage',
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: state => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     },
   ),
 );

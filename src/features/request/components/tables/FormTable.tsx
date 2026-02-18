@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
-import { NumberInput } from '@/shared/components/inputs';
+import { Dropdown, NumberInput, type ListBoxItem } from '@/shared/components/inputs';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
   type Control,
@@ -24,9 +24,10 @@ type FormTableHeader = FormTableRegularHeader | FormTableRowNumberHeader;
 interface FormTableRegularHeader {
   name: string;
   label: string;
-  inputType?: string;
+  inputType?: 'text' | 'number' | 'dropdown';
   width?: string; // Optional fixed width like '150px' or '20%'
   decimalPlaces?: number; // For number inputs (default: 2)
+  options?: ListBoxItem[]; // For dropdown input type
 }
 
 interface FormTableRowNumberHeader {
@@ -72,6 +73,7 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
         originalValuesRef.current = null;
       }
       remove(deleteConfirm.index);
+      setDeleteConfirm({ isOpen: false, index: null });
     }
   };
 
@@ -407,9 +409,16 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
   const isNumber = header.inputType === 'number';
   const decimalPlaces = header.decimalPlaces ?? 2;
 
-  // Format number for display
+  // Format value for display
   const formatDisplayValue = (val: unknown): string => {
     if (val === null || val === undefined || val === '') return '-';
+
+    // For dropdown, show label instead of value
+    if (header.inputType === 'dropdown' && header.options) {
+      const option = header.options.find(opt => opt.value === val);
+      return option?.label ?? String(val);
+    }
+
     if (isNumber) {
       const num = typeof val === 'string' ? parseFloat(val) : val;
       if (typeof num === 'number' && !isNaN(num)) {
@@ -425,6 +434,15 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
   const renderInput = () => {
     if (isNumber) {
       return <NumberInput {...field} decimalPlaces={decimalPlaces} />;
+    }
+    if (header.inputType === 'dropdown' && header.options) {
+      return (
+        <Dropdown
+          value={field.value}
+          onChange={field.onChange}
+          options={header.options}
+        />
+      );
     }
     return <Input type={header.inputType} {...field} />;
   };

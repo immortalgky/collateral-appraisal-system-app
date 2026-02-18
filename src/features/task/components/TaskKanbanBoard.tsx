@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Task, GroupByField } from '../types';
-import { KanbanStatus, TaskStatus, TaskPurpose, TaskType, TaskPriority } from '../types';
+import { TaskStatus, TaskPurpose, TaskType, TaskPriority } from '../types';
 import { TaskKanbanColumn } from './TaskKanbanColumn';
 
 interface TaskKanbanBoardProps {
@@ -22,16 +22,6 @@ const groupConfigs: Record<
     getTaskValue: (task: Task) => string;
   }
 > = {
-  kanbanStatus: {
-    values: Object.values(KanbanStatus),
-    colors: {
-      'Not Started': 'blue',
-      'In Progress': 'yellow',
-      Overdue: 'red',
-      Completed: 'green',
-    },
-    getTaskValue: task => task.kanbanStatus,
-  },
   status: {
     values: Object.values(TaskStatus),
     colors: {
@@ -41,7 +31,7 @@ const groupConfigs: Record<
       Completed: 'green',
       Cancelled: 'gray',
     },
-    getTaskValue: task => task.status,
+    getTaskValue: task => task.status ?? '',
   },
   purpose: {
     values: Object.values(TaskPurpose),
@@ -51,7 +41,7 @@ const groupConfigs: Record<
       Refinance: 'purple',
       'New Loan': 'amber',
     },
-    getTaskValue: task => task.purpose,
+    getTaskValue: task => task.purpose ?? '',
   },
   taskType: {
     values: Object.values(TaskType),
@@ -61,7 +51,7 @@ const groupConfigs: Record<
       Review: 'yellow',
       Revision: 'red',
     },
-    getTaskValue: task => task.taskType,
+    getTaskValue: task => task.taskType ?? '',
   },
   priority: {
     values: Object.values(TaskPriority),
@@ -70,7 +60,7 @@ const groupConfigs: Record<
       Medium: 'yellow',
       Low: 'green',
     },
-    getTaskValue: task => task.priority,
+    getTaskValue: task => task.priority ?? '',
   },
 };
 

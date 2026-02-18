@@ -3,66 +3,44 @@ import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
-import FileInput from '@/shared/components/inputs/FileInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DocumentActionMenu from './DocumentActionMenu';
 import DocumentEditModal from './DocumentEditModal';
 import { useDownloadDocument, useUploadDocument } from '../api';
 import {
-  type DocumentChecklistItem,
-  ENTITY_KEY_PREFIXES,
   getDocumentCategory,
   getDocumentTypeInfo,
-  MOCK_REQUEST_DOCUMENTS,
-  MOCK_TITLE_DOCUMENTS,
   type UploadedDocument,
 } from '../types/document';
 import clsx from 'clsx';
+import { useAuthStore } from '@features/auth/store.ts';
+import { useFormReadOnly } from '@/shared/components/form/context';
 
-interface DocumentRowProps {
-  document: UploadedDocument | null;
-  documentType: string;
-  documentTypeCode: string;
-  isRequired: boolean;
+interface UploadedDocumentRowProps {
+  document: UploadedDocument;
   entityType: 'request' | 'title';
   entityIndex: number;
-  docTypeIndex: number;
   isSelected: boolean;
   onSelect: (selected: boolean) => void;
-  onUpload: (file: File, docType: string) => void;
   onDelete: (document: UploadedDocument) => void;
   onEdit: (document: UploadedDocument) => void;
   onReplace: (document: UploadedDocument) => void;
   onView: (document: UploadedDocument) => void;
+  onUpload: (document: UploadedDocument) => void;
+  readOnly?: boolean;
 }
 
-interface ProgressStats {
-  uploaded: number;
-  required: number;
-  total: number;
-  percentage: number;
-}
-
-const DocumentRow: React.FunctionComponent<DocumentRowProps> = ({
+const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = ({
   document,
-  documentType,
-  documentTypeCode,
-  isRequired,
   isSelected,
   onSelect,
-  onUpload,
   onDelete,
   onEdit,
   onReplace,
   onView,
+  onUpload,
+  readOnly,
 }) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      onUpload(files[0], documentTypeCode);
-    }
-  };
-
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '';
     const mb = bytes / (1024 * 1024);
@@ -75,22 +53,9 @@ const DocumentRow: React.FunctionComponent<DocumentRowProps> = ({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getFileIcon = (fileName?: string | null, file?: File) => {
+  const getFileIcon = (fileName?: string | null) => {
     if (!fileName) return null;
     const extension = fileName.split('.').pop()?.toLowerCase();
-
-    // Show image thumbnail if it's an image file
-    if (['png', 'jpg', 'jpeg', 'gif'].includes(extension || '') && file) {
-      const imageUrl = URL.createObjectURL(file);
-      return (
-        <img
-          src={imageUrl}
-          alt={fileName}
-          className="w-12 h-12 object-cover rounded border border-gray-200"
-          onLoad={() => URL.revokeObjectURL(imageUrl)}
-        />
-      );
-    }
 
     if (extension === 'pdf') {
       return <Icon name="file-pdf" style="solid" className="w-8 h-8 text-red-500" />;
@@ -102,38 +67,11 @@ const DocumentRow: React.FunctionComponent<DocumentRowProps> = ({
   };
 
   const isUploading = document?.isUploading || false;
-
-  if (!document) {
-    return (
-      <tr className="hover:bg-gray-50 transition-colors">
-        <td className="px-4 py-3 w-12">{/* Empty checkbox for placeholder rows */}</td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-700">{documentType}</span>
-            {isRequired && (
-              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
-                Required
-              </span>
-            )}
-          </div>
-        </td>
-        <td className="px-4 py-3" colSpan={4}>
-          <div className="flex items-center gap-3 py-2 px-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
-            <Icon name="file-circle-plus" style="regular" className="w-5 h-5 text-gray-400" />
-            <span className="text-gray-500 text-sm">No file uploaded</span>
-          </div>
-        </td>
-        <td className="px-4 py-3 text-center">
-          <FileInput onChange={handleFileChange} fullWidth={false}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors cursor-pointer shadow-sm">
-              <Icon name="cloud-arrow-up" style="solid" className="w-3.5 h-3.5" />
-              Upload file
-            </span>
-          </FileInput>
-        </td>
-      </tr>
-    );
-  }
+  const docTypeInfo = getDocumentTypeInfo(document.documentType || '');
+  const displayName = docTypeInfo?.displayName || document.documentType || 'Unknown';
+  const isRequired = document.isRequired;
+  const hasFile = !!document.fileName;
+  const isEmpty = isRequired && !hasFile;
 
   return (
     <tr
@@ -141,48 +79,110 @@ const DocumentRow: React.FunctionComponent<DocumentRowProps> = ({
         'hover:bg-gray-50 transition-colors',
         isUploading && 'opacity-60',
         isSelected && 'bg-primary/5',
+        isEmpty && 'bg-amber-50/50',
       )}
     >
       <td className="px-4 py-3 w-12">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={e => onSelect(e.target.checked)}
-          disabled={isUploading}
-          className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary disabled:opacity-50 cursor-pointer"
-        />
+        {!readOnly && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={e => onSelect(e.target.checked)}
+            disabled={isUploading || isEmpty}
+            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary disabled:opacity-50 cursor-pointer"
+          />
+        )}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 w-40">
         <div className="flex items-center gap-2">
-          <span className="text-gray-700">{documentType}</span>
+          <span className="text-gray-700 text-sm">{displayName}</span>
           {isRequired && (
-            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+            <span
+              className={clsx(
+                'inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0',
+                hasFile
+                  ? 'bg-success/10 text-success'
+                  : 'bg-amber-100 text-amber-700',
+              )}
+            >
+              <Icon
+                name={hasFile ? 'check' : 'asterisk'}
+                style="solid"
+                className="w-2.5 h-2.5"
+              />
               Required
             </span>
           )}
         </div>
       </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          {isUploading ? (
-            <LoadingSpinner size="sm" variant="default" />
-          ) : (
-            getFileIcon(document.fileName, document.file)
-          )}
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900">{document.fileName}</span>
-            <span className="text-xs text-gray-500">
-              {isUploading ? 'Uploading...' : formatFileSize(document.file?.size)}
-            </span>
+      <td className="px-4 py-3 w-52">
+        {isEmpty ? (
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded border-2 border-dashed border-amber-300 bg-amber-50 flex items-center justify-center shrink-0">
+              <Icon name="cloud-arrow-up" style="solid" className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-medium text-amber-700">Awaiting upload</span>
+              <span className="text-xs text-amber-500">Click upload to add file</span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {isUploading ? (
+              <LoadingSpinner size="sm" variant="default" />
+            ) : (
+              <button
+                type="button"
+                onClick={() => onView(document)}
+                className="shrink-0 cursor-pointer"
+              >
+                {getFileIcon(document.fileName)}
+              </button>
+            )}
+            <div className="flex flex-col min-w-0">
+              {isUploading ? (
+                <span className="text-sm font-medium text-gray-900 truncate">{document.fileName}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onView(document)}
+                  className="text-sm font-medium text-gray-900 truncate text-left hover:underline hover:text-primary cursor-pointer"
+                >
+                  {document.fileName}
+                </button>
+              )}
+              <span className="text-xs text-gray-500">
+                {isUploading ? 'Uploading...' : formatFileSize(document.file?.size)}
+              </span>
+            </div>
+          </div>
+        )}
       </td>
-      <td className="px-4 py-3 text-sm text-gray-700">{formatDate(document.uploadedAt)}</td>
-      <td className="px-4 py-3 text-sm text-gray-700">{document.prefix || '-'}</td>
-      <td className="px-4 py-3 text-sm text-gray-700">{document.set}</td>
-      <td className="px-4 py-3 text-center">
+      <td className="px-4 py-3 w-28 text-sm text-gray-700">
+        {isEmpty ? '-' : formatDate(document.uploadedAt)}
+      </td>
+      <td className="px-4 py-3 w-12 text-sm text-gray-700 text-center">{isEmpty ? '-' : document.set}</td>
+      <td className="px-4 py-3 w-24 text-center">
         {isUploading ? (
           <span className="text-xs text-gray-500">Processing...</span>
+        ) : readOnly ? (
+          isEmpty ? (
+            <span className="text-sm text-gray-400">-</span>
+          ) : (
+            <DocumentActionMenu
+              document={document}
+              onView={onView}
+            />
+          )
+        ) : isEmpty ? (
+          <button
+            type="button"
+            onClick={() => onUpload(document)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
+          >
+            <Icon name="cloud-arrow-up" style="solid" className="w-3.5 h-3.5" />
+            Upload
+          </button>
         ) : (
           <DocumentActionMenu
             document={document}
@@ -204,6 +204,8 @@ interface DocumentUploaderProps {
 const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   getOrCreateSession,
 }) => {
+  const isReadOnly = useFormReadOnly();
+  const currentUser = useAuthStore(state => state.user);
   const { watch, setValue } = useFormContext();
   const titles = watch('titles') || [];
   const headerRef = useRef<HTMLTableSectionElement>(null);
@@ -219,6 +221,12 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     entityIndex: number;
   } | null>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingToDocument, setUploadingToDocument] = useState<{
+    docType: string;
+    entityType: 'request' | 'title';
+    entityIndex: number;
+  } | null>(null);
+  const uploadFileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
@@ -248,7 +256,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   // Expand/collapse all sections
   const toggleAllSections = (collapse: boolean) => {
     if (collapse) {
-      const allKeys = generateDocumentChecklist().map(
+      const allKeys = generateDocumentSections().map(
         item => `${item.entityType}-${item.entityIndex}`,
       );
       setCollapsedSections(new Set(allKeys));
@@ -257,9 +265,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     }
   };
 
-  // Helper to create unique document identifier
-  const getDocumentId = (entityType: 'request' | 'title', entityIndex: number, docType: string) => {
-    return `${entityType}-${entityIndex}-${docType}`;
+  // Helper to create unique document identifier (includes set for uniqueness)
+  // Uses | as separator to avoid issues with negative entityIndex (-1)
+  const getDocumentId = (entityType: 'request' | 'title', entityIndex: number, docType: string, set: number) => {
+    return `${entityType}|${entityIndex}|${docType}|${set}`;
   };
 
   useEffect(() => {
@@ -268,87 +277,91 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     }
   }, []);
 
-  const generateDocumentChecklist = (): DocumentChecklistItem[] => {
-    const checklist: DocumentChecklistItem[] = [];
+  // Get uploaded documents for request level
+  const getRequestDocuments = (): UploadedDocument[] => {
+    return watch('documents') || [];
+  };
 
-    // Add request-level documents
-    checklist.push({
+  // Get uploaded documents for a specific title
+  const getTitleDocuments = (entityIndex: number): UploadedDocument[] => {
+    return watch(`titles.${entityIndex}.documents`) || [];
+  };
+
+  // Generate sections with their uploaded documents
+  interface DocumentSection {
+    entityType: 'request' | 'title';
+    entityKey: string;
+    entityIndex: number;
+    documents: UploadedDocument[];
+  }
+
+  const generateDocumentSections = (): DocumentSection[] => {
+    const sections: DocumentSection[] = [];
+    const requestNumber = watch('requestNumber');
+
+    // Add request-level section
+    sections.push({
       entityType: 'request',
-      entityKey: `${ENTITY_KEY_PREFIXES.request}XXXXXXX`,
+      entityKey: requestNumber || 'This request',
       entityIndex: -1,
-      requiredDocuments: MOCK_REQUEST_DOCUMENTS,
+      documents: getRequestDocuments(),
     });
 
-    // Add title-level documents
-    titles.forEach((_title: any, index: number) => {
-      const prefix =
-        index % 2 === 0 ? ENTITY_KEY_PREFIXES.title_chonot : ENTITY_KEY_PREFIXES.title_regis;
-      const suffix = index % 2 === 0 ? 'xxxx' : `xxxx`;
-
-      checklist.push({
+    // Add title-level sections
+    titles.forEach((title: any, index: number) => {
+      sections.push({
         entityType: 'title',
-        entityKey: `${prefix}${suffix}`,
+        entityKey: title?.titleNumber || `Title ${index + 1}`,
         entityIndex: index,
-        requiredDocuments: MOCK_TITLE_DOCUMENTS,
+        documents: getTitleDocuments(index),
       });
     });
 
-    return checklist;
+    return sections;
   };
 
+  // Count total uploaded documents (excluding empty required placeholders)
+  const getTotalUploadedCount = (): number => {
+    const sections = generateDocumentSections();
+    return sections.reduce(
+      (total, section) => total + section.documents.filter(doc => doc.fileName).length,
+      0,
+    );
+  };
+
+  // Count required documents statistics
+  const getRequiredDocStats = (): { total: number; completed: number } => {
+    const sections = generateDocumentSections();
+    let total = 0;
+    let completed = 0;
+
+    sections.forEach(section => {
+      section.documents.forEach(doc => {
+        if (doc.isRequired) {
+          total++;
+          if (doc.fileName) {
+            completed++;
+          }
+        }
+      });
+    });
+
+    return { total, completed };
+  };
+
+  // Get a specific document by entity and document type
   const getDocumentForSlot = (
     entityType: 'request' | 'title',
     entityIndex: number,
     docType: string,
   ): UploadedDocument | null => {
     if (entityType === 'request') {
-      const documents = watch('documents') || [];
+      const documents = getRequestDocuments();
       return documents.find((doc: UploadedDocument) => doc.documentType === docType) || null;
     } else {
-      const titleDocuments = watch(`titles.${entityIndex}.documents`) || [];
+      const titleDocuments = getTitleDocuments(entityIndex);
       return titleDocuments.find((doc: UploadedDocument) => doc.documentType === docType) || null;
     }
-  };
-
-  // Calculate progress stats for a single entity section
-  const calculateSectionProgress = (
-    entityType: 'request' | 'title',
-    entityIndex: number,
-    requiredDocs: { type: string; isRequired: boolean }[],
-  ): ProgressStats => {
-    const requiredDocsOnly = requiredDocs.filter(d => d.isRequired);
-    const uploadedRequired = requiredDocsOnly.filter(doc =>
-      getDocumentForSlot(entityType, entityIndex, doc.type),
-    ).length;
-
-    return {
-      uploaded: uploadedRequired,
-      required: requiredDocsOnly.length,
-      total: requiredDocs.length,
-      percentage: requiredDocsOnly.length > 0 ? (uploadedRequired / requiredDocsOnly.length) * 100 : 100,
-    };
-  };
-
-  // Calculate overall progress across all entities
-  const calculateOverallProgress = (): ProgressStats => {
-    const checklist = generateDocumentChecklist();
-    let totalRequired = 0;
-    let totalUploaded = 0;
-    let totalDocs = 0;
-
-    checklist.forEach(item => {
-      const stats = calculateSectionProgress(item.entityType, item.entityIndex, item.requiredDocuments);
-      totalRequired += stats.required;
-      totalUploaded += stats.uploaded;
-      totalDocs += stats.total;
-    });
-
-    return {
-      uploaded: totalUploaded,
-      required: totalRequired,
-      total: totalDocs,
-      percentage: totalRequired > 0 ? (totalUploaded / totalRequired) * 100 : 100,
-    };
   };
 
   const updateDocument = (
@@ -368,90 +381,6 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     }
   };
 
-  const handleUpload = async (
-    file: File,
-    docType: string,
-    entityType: 'request' | 'title',
-    entityIndex: number,
-  ) => {
-    // Create temporary document with uploading state
-    const docTypeInfo = getDocumentTypeInfo(docType);
-    const tempDocument: UploadedDocument = {
-      id: null,
-      titleId: null,
-      documentId: null,
-      documentType: docType || null,
-      fileName: file.name,
-      uploadedAt: new Date().toISOString(),
-      prefix: null,
-      set: 1,
-      documentDescription: null,
-      filePath: null,
-      createdWorkstation: null,
-      isRequired: docTypeInfo?.isRequired || false,
-      uploadedBy: null,
-      uploadedByName: null,
-      file,
-      isUploading: true,
-    };
-
-    // Add/update document in form state with uploading flag
-    updateDocument(entityType, entityIndex, docType, docs => {
-      const existingIndex = docs.findIndex(doc => doc.documentType === docType);
-      if (existingIndex >= 0) {
-        docs[existingIndex] = tempDocument;
-      } else {
-        docs.push(tempDocument);
-      }
-      return [...docs];
-    });
-
-    try {
-      // Get or create upload session
-      const sessionId = await getOrCreateSession();
-
-      // Upload file with session
-      uploadDocument(
-        {
-          uploadSessionId: sessionId,
-          file,
-          documentType: docType,
-          documentCategory: getDocumentCategory(docType),
-        },
-        {
-          onSuccess: uploadedDoc => {
-            // Update document with documentId and remove uploading flag
-            updateDocument(entityType, entityIndex, docType, docs => {
-              const doc = docs.find(d => d.documentType === docType);
-              if (doc) {
-                doc.documentId = uploadedDoc.documentId;
-                doc.fileName = uploadedDoc.fileName;
-                doc.filePath = null; // Will be fetched from server when needed
-                doc.isUploading = false;
-              }
-              return [...docs];
-            });
-
-            toast.success(`Document uploaded successfully`);
-          },
-          onError: (error: any) => {
-            // Remove document on error
-            updateDocument(entityType, entityIndex, docType, docs =>
-              docs.filter(d => d.documentType !== docType),
-            );
-
-            toast.error(error.apiError?.detail || 'Upload failed. Please try again.');
-          },
-        },
-      );
-    } catch (error: any) {
-      // Session creation failed
-      updateDocument(entityType, entityIndex, docType, docs =>
-        docs.filter(d => d.documentType !== docType),
-      );
-      toast.error(error.apiError?.detail || 'Failed to create upload session. Please try again.');
-    }
-  };
 
   const handleDelete = (
     document: UploadedDocument,
@@ -465,18 +394,39 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     if (!deleteConfirm.document) return;
 
     const { document, entityType, entityIndex } = deleteConfirm;
-    const docTypeInfo = getDocumentTypeInfo(document.documentType || '');
-    const isRequired = docTypeInfo?.isRequired || false;
+    const isRequired = document.isRequired;
 
-    // Remove the document to show empty placeholder
-    updateDocument(entityType, entityIndex, document.documentType || '', docs =>
-      docs.filter(doc => doc.documentType !== document.documentType),
-    );
+    // Helper to identify specific document by type AND set
+    const isTargetDoc = (doc: UploadedDocument) =>
+      doc.documentType === document.documentType && doc.set === document.set;
 
-    const message = isRequired
-      ? 'Required document removed. You can upload a new file.'
-      : 'Document deleted';
-    toast.success(message);
+    if (isRequired) {
+      // For required documents: clear file but keep placeholder
+      updateDocument(entityType, entityIndex, document.documentType || '', docs =>
+        docs.map(doc =>
+          isTargetDoc(doc)
+            ? {
+                ...doc,
+                fileName: null,
+                file: undefined,
+                documentId: null,
+                filePath: null,
+                uploadedAt: new Date().toISOString(),
+                uploadedBy: null,
+                uploadedByName: null,
+              }
+            : doc,
+        ),
+      );
+      toast.success('File removed. Required document placeholder retained.');
+    } else {
+      // For non-required documents: remove entire record
+      updateDocument(entityType, entityIndex, document.documentType || '', docs =>
+        docs.filter(doc => !isTargetDoc(doc)),
+      );
+      toast.success('Document deleted');
+    }
+
     setDeleteConfirm({ isOpen: false, document: null, entityType: 'request', entityIndex: -1 });
   };
 
@@ -538,8 +488,8 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       filePath: currentDoc?.filePath || null,
       createdWorkstation: currentDoc?.createdWorkstation || null,
       isRequired: docTypeInfo?.isRequired || currentDoc?.isRequired || false,
-      uploadedBy: currentDoc?.uploadedBy || null,
-      uploadedByName: currentDoc?.uploadedByName || null,
+      uploadedBy: currentUser?.username || 'anonymous',
+      uploadedByName: currentUser?.name || 'Anonymous',
       file,
       isUploading: true,
     };
@@ -554,7 +504,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     e.target.value = '';
 
     try {
-      // Get or create upload session
+      // Get or create an upload session
       const sessionId = await getOrCreateSession();
 
       // Upload new file with session
@@ -581,7 +531,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
             toast.success('Document replaced successfully');
           },
           onError: (error: any) => {
-            // Revert to original document on error
+            // Revert to an original document on error
             if (currentDoc) {
               updateDocument(entityType, entityIndex, docType, docs =>
                 docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
@@ -594,6 +544,109 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       );
     } catch (error: any) {
       // Session creation failed - revert to original
+      if (currentDoc) {
+        updateDocument(entityType, entityIndex, docType, docs =>
+          docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
+        );
+      }
+      toast.error(error.apiError?.detail || 'Failed to create upload session. Please try again.');
+    }
+  };
+
+  const handleUploadToSlot = (
+    document: UploadedDocument,
+    entityType: 'request' | 'title',
+    entityIndex: number,
+  ) => {
+    setUploadingToDocument({
+      docType: document.documentType || '',
+      entityType,
+      entityIndex,
+    });
+    uploadFileInputRef.current?.click();
+  };
+
+  const handleUploadFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadingToDocument) return;
+
+    const { docType, entityType, entityIndex } = uploadingToDocument;
+
+    // Get current document (placeholder) to preserve metadata
+    const currentDoc = getDocumentForSlot(entityType, entityIndex, docType);
+
+    // Create new document with file data
+    const tempDocument: UploadedDocument = {
+      id: currentDoc?.id || null,
+      titleId: currentDoc?.titleId || null,
+      documentId: null,
+      documentType: docType || null,
+      fileName: file.name,
+      uploadedAt: new Date().toISOString(),
+      prefix: currentDoc?.prefix || null,
+      set: currentDoc?.set || 1,
+      documentDescription: currentDoc?.documentDescription || null,
+      filePath: null,
+      createdWorkstation: null,
+      isRequired: currentDoc?.isRequired || false,
+      uploadedBy: currentUser?.username || 'anonymous',
+      uploadedByName: currentUser?.name || 'Anonymous',
+      file,
+      isUploading: true,
+    };
+
+    // Update document with uploading state
+    updateDocument(entityType, entityIndex, docType, docs =>
+      docs.map(doc => (doc.documentType === docType ? tempDocument : doc)),
+    );
+
+    // Reset upload state early
+    setUploadingToDocument(null);
+    e.target.value = '';
+
+    try {
+      // Get or create an upload session
+      const sessionId = await getOrCreateSession();
+
+      // Upload file with session
+      uploadDocument(
+        {
+          uploadSessionId: sessionId,
+          file,
+          documentType: docType,
+          documentCategory: getDocumentCategory(docType),
+        },
+        {
+          onSuccess: uploadedDoc => {
+            updateDocument(entityType, entityIndex, docType, docs =>
+              docs.map(doc =>
+                doc.documentType === docType
+                  ? {
+                      ...doc,
+                      documentId: uploadedDoc.documentId,
+                      fileName: uploadedDoc.fileName,
+                      isUploading: false,
+                    }
+                  : doc,
+              ),
+            );
+
+            toast.success('Document uploaded successfully');
+          },
+          onError: (error: any) => {
+            // Revert to placeholder on error
+            if (currentDoc) {
+              updateDocument(entityType, entityIndex, docType, docs =>
+                docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
+              );
+            }
+
+            toast.error(error.apiError?.detail || 'Upload failed. Please try again.');
+          },
+        },
+      );
+    } catch (error: any) {
+      // Session creation failed - revert to placeholder
       if (currentDoc) {
         updateDocument(entityType, entityIndex, docType, docs =>
           docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
@@ -629,9 +682,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     entityType: 'request' | 'title',
     entityIndex: number,
     docType: string,
+    set: number,
     selected: boolean,
   ) => {
-    const docId = getDocumentId(entityType, entityIndex, docType);
+    const docId = getDocumentId(entityType, entityIndex, docType, set);
     setSelectedDocuments(prev => {
       const newSet = new Set(prev);
       if (selected) {
@@ -645,14 +699,13 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const checklist = generateDocumentChecklist();
+      const sections = generateDocumentSections();
       const allDocIds = new Set<string>();
 
-      checklist.forEach(item => {
-        item.requiredDocuments.forEach(docInfo => {
-          const document = getDocumentForSlot(item.entityType, item.entityIndex, docInfo.type);
-          if (document && !document.isUploading) {
-            allDocIds.add(getDocumentId(item.entityType, item.entityIndex, docInfo.type));
+      sections.forEach(section => {
+        section.documents.forEach(doc => {
+          if (!doc.isUploading && doc.documentType && doc.fileName) {
+            allDocIds.add(getDocumentId(section.entityType, section.entityIndex, doc.documentType, doc.set));
           }
         });
       });
@@ -670,34 +723,72 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
   const confirmBulkDelete = () => {
     let deletedCount = 0;
+    let clearedCount = 0;
 
     selectedDocuments.forEach(docId => {
-      const [entityType, entityIndexStr, docType] = docId.split('-');
+      const [entityType, entityIndexStr, docType, setStr] = docId.split('|');
       const entityIndex = parseInt(entityIndexStr);
+      const set = parseInt(setStr);
 
-      updateDocument(entityType as 'request' | 'title', entityIndex, docType, docs =>
-        docs.filter(doc => doc.documentType !== docType),
-      );
+      // Get the document to check if it's required
+      const docs = entityType === 'request'
+        ? getRequestDocuments()
+        : getTitleDocuments(entityIndex);
+      const targetDoc = docs.find(doc => doc.documentType === docType && doc.set === set);
 
-      deletedCount++;
+      if (targetDoc?.isRequired) {
+        // For required documents: clear file but keep placeholder
+        updateDocument(entityType as 'request' | 'title', entityIndex, docType, docs =>
+          docs.map(doc =>
+            doc.documentType === docType && doc.set === set
+              ? {
+                  ...doc,
+                  fileName: null,
+                  file: undefined,
+                  documentId: null,
+                  filePath: null,
+                  uploadedAt: new Date().toISOString(),
+                  uploadedBy: null,
+                  uploadedByName: null,
+                }
+              : doc,
+          ),
+        );
+        clearedCount++;
+      } else {
+        // For non-required documents: remove entire record
+        updateDocument(entityType as 'request' | 'title', entityIndex, docType, docs =>
+          docs.filter(doc => !(doc.documentType === docType && doc.set === set)),
+        );
+        deletedCount++;
+      }
     });
 
     setSelectedDocuments(new Set());
     setBulkDeleteConfirm(false);
-    toast.success(`Deleted ${deletedCount} document(s)`);
+
+    // Show appropriate message
+    if (clearedCount > 0 && deletedCount > 0) {
+      toast.success(`Deleted ${deletedCount} document(s), cleared ${clearedCount} required document(s)`);
+    } else if (clearedCount > 0) {
+      toast.success(`Cleared ${clearedCount} required document(s). Placeholders retained.`);
+    } else {
+      toast.success(`Deleted ${deletedCount} document(s)`);
+    }
   };
 
-  const checklist = generateDocumentChecklist();
+  const sections = generateDocumentSections();
+  const totalUploadedCount = getTotalUploadedCount();
+  const requiredStats = getRequiredDocStats();
 
-  // Calculate if all selectable documents are selected
-  const selectableDocuments = checklist.flatMap(item =>
-    item.requiredDocuments
-      .map(docInfo => {
-        const document = getDocumentForSlot(item.entityType, item.entityIndex, docInfo.type);
-        return document && !document.isUploading
-          ? getDocumentId(item.entityType, item.entityIndex, docInfo.type)
-          : null;
-      })
+  // Calculate if all selectable documents are selected (only docs with files)
+  const selectableDocuments = sections.flatMap(section =>
+    section.documents
+      .map(doc =>
+        !doc.isUploading && doc.documentType && doc.fileName
+          ? getDocumentId(section.entityType, section.entityIndex, doc.documentType, doc.set)
+          : null,
+      )
       .filter(Boolean),
   ) as string[];
 
@@ -706,120 +797,91 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     selectableDocuments.every(docId => selectedDocuments.has(docId));
   const someSelected = selectedDocuments.size > 0 && !allSelected;
 
-  const overallProgress = calculateOverallProgress();
-
   return (
     <>
-      {/* Overall progress bar */}
+      {/* Document count summary */}
       <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Icon
-              name={overallProgress.percentage === 100 ? 'circle-check' : 'file-lines'}
-              style="solid"
-              className={clsx(
-                'w-5 h-5',
-                overallProgress.percentage === 100 ? 'text-green-600' : 'text-primary',
-              )}
-            />
-            <span className="text-sm font-medium text-gray-700">Required Documents</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Icon name="file-lines" style="solid" className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-gray-700">Uploaded Documents</span>
+              <span className="text-sm font-semibold text-primary">
+                {totalUploadedCount}
+              </span>
+            </div>
+            {requiredStats.total > 0 && (
+              <>
+                <div className="h-4 w-px bg-gray-200" />
+                <div className="flex items-center gap-2">
+                  <Icon
+                    name="asterisk"
+                    style="solid"
+                    className={clsx(
+                      'w-3 h-3',
+                      requiredStats.completed === requiredStats.total
+                        ? 'text-success'
+                        : 'text-amber-500',
+                    )}
+                  />
+                  <span className="text-sm text-gray-600">Required:</span>
+                  <span
+                    className={clsx(
+                      'text-sm font-semibold',
+                      requiredStats.completed === requiredStats.total
+                        ? 'text-success'
+                        : 'text-amber-600',
+                    )}
+                  >
+                    {requiredStats.completed}/{requiredStats.total}
+                  </span>
+                  {requiredStats.completed === requiredStats.total && requiredStats.total > 0 && (
+                    <Icon name="check-circle" style="solid" className="w-4 h-4 text-success" />
+                  )}
+                </div>
+              </>
+            )}
           </div>
-          <span
-            className={clsx(
-              'text-sm font-semibold',
-              overallProgress.percentage === 100 ? 'text-green-600' : 'text-primary',
-            )}
-          >
-            {overallProgress.uploaded}/{overallProgress.required} uploaded
-          </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-          <div
-            className={clsx(
-              'h-2.5 rounded-full transition-all duration-300',
-              overallProgress.percentage === 100
-                ? 'bg-green-500'
-                : overallProgress.percentage > 0
-                  ? 'bg-primary'
-                  : 'bg-gray-300',
-            )}
-            style={{ width: `${overallProgress.percentage}%` }}
-          />
-        </div>
-        {overallProgress.percentage === 100 && (
-          <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
-            <Icon name="check" style="solid" className="w-3 h-3" />
-            All required documents have been uploaded
+        {totalUploadedCount === 0 && requiredStats.total === 0 && (
+          <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+            <Icon name="info-circle" style="solid" className="w-3 h-3" />
+            No documents uploaded yet. Use the file input above to upload documents.
+          </p>
+        )}
+        {requiredStats.total > 0 && requiredStats.completed < requiredStats.total && (
+          <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+            <Icon name="exclamation-triangle" style="solid" className="w-3 h-3" />
+            {requiredStats.total - requiredStats.completed} required document(s) still need to be uploaded.
           </p>
         )}
       </div>
 
-      {/* Validation summary - missing required documents */}
-      {overallProgress.percentage < 100 && overallProgress.required > 0 && (
-        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <Icon
-              name="triangle-exclamation"
-              style="solid"
-              className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"
-            />
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold text-amber-800 mb-2">
-                Missing Required Documents ({overallProgress.required - overallProgress.uploaded})
-              </h4>
-              <div className="space-y-2">
-                {checklist.map(item => {
-                  const missingDocs = item.requiredDocuments.filter(
-                    docInfo =>
-                      docInfo.isRequired &&
-                      !getDocumentForSlot(item.entityType, item.entityIndex, docInfo.type),
-                  );
-
-                  if (missingDocs.length === 0) return null;
-
-                  const entityLabel =
-                    item.entityType === 'request'
-                      ? 'Request'
-                      : `Title ${item.entityIndex + 1}`;
-
-                  return (
-                    <div key={`missing-${item.entityType}-${item.entityIndex}`} className="text-sm">
-                      <span className="font-medium text-amber-700">{entityLabel}:</span>
-                      <span className="text-amber-600 ml-1">
-                        {missingDocs.map(d => d.displayName).join(', ')}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+      {/* Expand/Collapse controls - only show if there are documents or required placeholders */}
+      {(totalUploadedCount > 0 || requiredStats.total > 0) && (
+        <div className="mb-2 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toggleAllSections(false)}
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+          >
+            <Icon name="angles-down" style="solid" className="w-3 h-3" />
+            Expand all
+          </button>
+          <span className="text-gray-300">|</span>
+          <button
+            type="button"
+            onClick={() => toggleAllSections(true)}
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+          >
+            <Icon name="angles-up" style="solid" className="w-3 h-3" />
+            Collapse all
+          </button>
         </div>
       )}
 
-      {/* Expand/Collapse controls */}
-      <div className="mb-2 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => toggleAllSections(false)}
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-        >
-          <Icon name="angles-down" style="solid" className="w-3 h-3" />
-          Expand all
-        </button>
-        <span className="text-gray-300">|</span>
-        <button
-          type="button"
-          onClick={() => toggleAllSections(true)}
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-        >
-          <Icon name="angles-up" style="solid" className="w-3 h-3" />
-          Collapse all
-        </button>
-      </div>
-
       {/* Bulk action bar */}
-      {selectedDocuments.size > 0 && (
+      {selectedDocuments.size > 0 && !isReadOnly && (
         <div className="mb-4 flex items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded-lg">
           <div className="flex items-center gap-3">
             <Icon name="circle-check" style="solid" className="w-5 h-5 text-primary" />
@@ -829,12 +891,14 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setSelectedDocuments(new Set())}
               className="px-3 py-1.5 text-sm font-medium text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors"
             >
               Clear selection
             </button>
             <button
+              type="button"
               onClick={handleBulkDelete}
               className="px-3 py-1.5 text-sm font-medium text-white bg-danger-600 hover:bg-danger-700 rounded transition-colors flex items-center gap-2"
             >
@@ -845,139 +909,180 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         </div>
       )}
 
-      <div className="h-96 overflow-auto rounded-lg">
-        <table className="table w-full">
-          <thead ref={headerRef} className="sticky top-0 z-20 bg-primary-50">
-            <tr>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-12">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={input => {
-                    if (input) {
-                      input.indeterminate = someSelected;
-                    }
-                  }}
-                  onChange={e => handleSelectAll(e.target.checked)}
-                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
-                  title={allSelected ? 'Deselect all' : 'Select all'}
-                />
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
-                Document type
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">File name</th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
-                Date uploaded
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">Prefix</th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">Set</th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg"></th>
-            </tr>
-          </thead>
-          {checklist.map(item => {
-            const sectionProgress = calculateSectionProgress(
-              item.entityType,
-              item.entityIndex,
-              item.requiredDocuments,
-            );
-            const isComplete = sectionProgress.percentage === 100;
-            const sectionKey = `${item.entityType}-${item.entityIndex}`;
-            const isCollapsed = collapsedSections.has(sectionKey);
-
-            return (
-            <tbody key={`${item.entityType}.${item.entityKey}`}>
-              <tr
-                className={clsx('sticky z-10 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors')}
-                style={{ top: `${headerHeight}px` }}
-                onClick={() => toggleSection(sectionKey)}
-              >
-                <th colSpan={7} className="px-4 py-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon
-                        name={isCollapsed ? 'chevron-right' : 'chevron-down'}
-                        style="solid"
-                        className="w-4 h-4 text-gray-500 transition-transform"
-                      />
-                      <Icon
-                        name={item.entityType === 'request' ? 'folder-open' : 'file-certificate'}
-                        style="solid"
-                        className="w-4 h-4 text-gray-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">{item.entityKey}</span>
-                      <span className="text-xs text-gray-400">
-                        ({item.requiredDocuments.length} documents)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isComplete ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
-                          <Icon name="check" style="solid" className="w-3 h-3" />
-                          Complete
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
-                          <Icon name="clock" style="regular" className="w-3 h-3" />
-                          {sectionProgress.uploaded}/{sectionProgress.required} required
-                        </span>
-                      )}
-                    </div>
-                  </div>
+      {/* Empty state when no documents and no required placeholders */}
+      {totalUploadedCount === 0 && requiredStats.total === 0 ? (
+        <div className="h-96 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
+          <Icon name="folder-open" style="regular" className="w-16 h-16 text-gray-300 mb-4" />
+          <h3 className="text-lg font-medium text-gray-600 mb-2">No documents yet</h3>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            Upload documents using the file input above. Select files and assign them to the
+            appropriate document type in the assignment modal.
+          </p>
+        </div>
+      ) : (
+        <div className="h-96 overflow-auto rounded-lg">
+          <table className="table table-fixed w-full">
+            <thead ref={headerRef} className="sticky top-0 z-20 bg-primary-50">
+              <tr>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-12">
+                  {!isReadOnly && (
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={input => {
+                        if (input) {
+                          input.indeterminate = someSelected;
+                        }
+                      }}
+                      onChange={e => handleSelectAll(e.target.checked)}
+                      className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                      title={allSelected ? 'Deselect all' : 'Select all'}
+                    />
+                  )}
                 </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-40">
+                  Document type
+                </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-52">
+                  File name
+                </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-28">
+                  Uploaded
+                </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-12">Set</th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24"></th>
               </tr>
-              {!isCollapsed && item.requiredDocuments.map((docInfo, docIndex) => {
-                const document = getDocumentForSlot(
-                  item.entityType,
-                  item.entityIndex,
-                  docInfo.type,
-                );
-                const docId = getDocumentId(item.entityType, item.entityIndex, docInfo.type);
-                const isSelected = selectedDocuments.has(docId);
+            </thead>
+            {sections.map(section => {
+              const sectionKey = `${section.entityType}-${section.entityIndex}`;
+              const isCollapsed = collapsedSections.has(sectionKey);
+              const uploadedCount = section.documents.filter(d => d.fileName).length;
+              const requiredCount = section.documents.filter(d => d.isRequired).length;
+              const requiredCompleted = section.documents.filter(
+                d => d.isRequired && d.fileName,
+              ).length;
 
-                return (
-                  <DocumentRow
-                    key={`${item.entityType}.${item.entityIndex}.${docInfo.type}`}
-                    document={document}
-                    documentType={docInfo.displayName}
-                    documentTypeCode={docInfo.type}
-                    isRequired={docInfo.isRequired}
-                    entityType={item.entityType}
-                    entityIndex={item.entityIndex}
-                    docTypeIndex={docIndex}
-                    isSelected={isSelected}
-                    onSelect={selected =>
-                      handleSelectDocument(
-                        item.entityType,
-                        item.entityIndex,
-                        docInfo.type,
-                        selected,
-                      )
-                    }
-                    onUpload={(file, docType) =>
-                      handleUpload(file, docType, item.entityType, item.entityIndex)
-                    }
-                    onDelete={doc => handleDelete(doc, item.entityType, item.entityIndex)}
-                    onEdit={doc => handleEdit(doc, item.entityType, item.entityIndex)}
-                    onReplace={doc => handleReplace(doc, item.entityType, item.entityIndex)}
-                    onView={handleView}
-                  />
-                );
-              })}
-            </tbody>
-          );
-          })}
-        </table>
-      </div>
+              return (
+                <tbody key={`${section.entityType}.${section.entityKey}`}>
+                  <tr
+                    className={clsx(
+                      'sticky z-10 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors',
+                    )}
+                    style={{ top: `${headerHeight}px` }}
+                    onClick={() => toggleSection(sectionKey)}
+                  >
+                    <th colSpan={6} className="px-4 py-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Icon
+                            name={isCollapsed ? 'chevron-right' : 'chevron-down'}
+                            style="solid"
+                            className="w-4 h-4 text-gray-500 transition-transform"
+                          />
+                          <Icon
+                            name={
+                              section.entityType === 'request' ? 'folder-open' : 'file-certificate'
+                            }
+                            style="solid"
+                            className="w-4 h-4 text-gray-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {section.entityKey}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            ({uploadedCount} uploaded)
+                          </span>
+                          {requiredCount > 0 && (
+                            <span
+                              className={clsx(
+                                'text-xs px-1.5 py-0.5 rounded',
+                                requiredCompleted === requiredCount
+                                  ? 'bg-success/10 text-success'
+                                  : 'bg-amber-100 text-amber-700',
+                              )}
+                            >
+                              Required: {requiredCompleted}/{requiredCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </th>
+                  </tr>
+                  {!isCollapsed &&
+                    (section.documents.length > 0 ? (
+                      section.documents.map(doc => {
+                        const docId = getDocumentId(
+                          section.entityType,
+                          section.entityIndex,
+                          doc.documentType || '',
+                          doc.set,
+                        );
+                        const isSelected = selectedDocuments.has(docId);
+
+                        return (
+                          <UploadedDocumentRow
+                            key={`${section.entityType}.${section.entityIndex}.${doc.documentType}.${doc.set}`}
+                            document={doc}
+                            entityType={section.entityType}
+                            entityIndex={section.entityIndex}
+                            isSelected={isSelected}
+                            onSelect={selected =>
+                              handleSelectDocument(
+                                section.entityType,
+                                section.entityIndex,
+                                doc.documentType || '',
+                                doc.set,
+                                selected,
+                              )
+                            }
+                            onDelete={d => handleDelete(d, section.entityType, section.entityIndex)}
+                            onEdit={d => handleEdit(d, section.entityType, section.entityIndex)}
+                            onReplace={d =>
+                              handleReplace(d, section.entityType, section.entityIndex)
+                            }
+                            onView={handleView}
+                            onUpload={d =>
+                              handleUploadToSlot(d, section.entityType, section.entityIndex)
+                            }
+                            readOnly={isReadOnly}
+                          />
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-6 text-center">
+                          <span className="text-sm text-gray-400">No documents in this section</span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              );
+            })}
+          </table>
+        </div>
+      )}
 
       {/* Hidden file input for replace functionality */}
-      <input
-        ref={replaceFileInputRef}
-        type="file"
-        className="hidden"
-        accept=".pdf,.png,.jpg,.jpeg"
-        onChange={handleReplaceFileSelected}
-      />
+      {!isReadOnly && (
+        <input
+          ref={replaceFileInputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.png,.jpg,.jpeg"
+          onChange={handleReplaceFileSelected}
+        />
+      )}
+
+      {/* Hidden file input for upload to slot functionality */}
+      {!isReadOnly && (
+        <input
+          ref={uploadFileInputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.png,.jpg,.jpeg"
+          onChange={handleUploadFileSelected}
+        />
+      )}
 
       {/* Edit modal */}
       {editingDocument && (

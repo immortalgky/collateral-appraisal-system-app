@@ -5,14 +5,17 @@ import { useAppraisalContext } from '../../context/AppraisalContext';
 import { useGetMarketSurvey } from '../../api';
 import FormCard from '@shared/components/sections/FormCard';
 
+import type { MarketComparableDtoType } from '@/shared/schemas/v1';
+
 interface MarketSurveyItem {
   id: string;
-  surveyNumber: string;
-  surveyName: string;
-  templateDesc: string;
-  collateralType: string;
-  createdAt?: string;
-  status?: string;
+  comparableNumber: string;
+  propertyType: string;
+  dataSource?: string;
+  transactionType?: string | null;
+  transactionDate?: string | null;
+  transactionPrice?: number | null;
+  status?: string | null;
 }
 
 export const MarketsTab = () => {
@@ -63,8 +66,17 @@ export const MarketsTab = () => {
     );
   }
 
-  // API returns an array of market surveys directly
-  const surveys: MarketSurveyItem[] = (marketSurveys as MarketSurveyItem[] | undefined) || [];
+  // Transform API response to match component interface
+  const surveys: MarketSurveyItem[] = (marketSurveys as MarketComparableDtoType[] | undefined)?.map(item => ({
+    id: item.id ?? '',
+    comparableNumber: item.comparableNumber ?? '',
+    propertyType: item.propertyType ?? '',
+    dataSource: item.dataSource,
+    transactionType: item.transactionType,
+    transactionDate: item.transactionDate,
+    transactionPrice: item.transactionPrice,
+    status: item.status,
+  })) || [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -103,10 +115,11 @@ export const MarketsTab = () => {
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-primary/5 border-b border-gray-100 text-xs font-medium text-primary uppercase tracking-wider">
-            <div className="col-span-2">Survey No.</div>
-            <div className="col-span-3">Name</div>
-            <div className="col-span-3">Template</div>
-            <div className="col-span-2">Type</div>
+            <div className="col-span-2">Comparable No.</div>
+            <div className="col-span-2">Property Type</div>
+            <div className="col-span-2">Data Source</div>
+            <div className="col-span-2">Transaction Type</div>
+            <div className="col-span-2">Price</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
 
@@ -119,17 +132,28 @@ export const MarketsTab = () => {
                 onClick={() => handleViewSurvey(survey.id)}
               >
                 <div className="col-span-2 flex items-center">
-                  <span className="text-sm font-medium text-gray-900">{survey.surveyNumber}</span>
-                </div>
-                <div className="col-span-3 flex items-center">
-                  <span className="text-sm text-gray-700 truncate">{survey.surveyName}</span>
-                </div>
-                <div className="col-span-3 flex items-center">
-                  <span className="text-sm text-gray-500 truncate">{survey.templateDesc}</span>
+                  <span className="text-sm font-medium text-gray-900">{survey.comparableNumber}</span>
                 </div>
                 <div className="col-span-2 flex items-center">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                    {survey.collateralType}
+                    {survey.propertyType}
+                  </span>
+                </div>
+                <div className="col-span-2 flex items-center">
+                  <span className="text-sm text-gray-600 truncate">{survey.dataSource || '-'}</span>
+                </div>
+                <div className="col-span-2 flex items-center">
+                  <span className="text-sm text-gray-600 truncate">{survey.transactionType || '-'}</span>
+                </div>
+                <div className="col-span-2 flex items-center">
+                  <span className="text-sm text-gray-700">
+                    {survey.transactionPrice
+                      ? new Intl.NumberFormat('th-TH', {
+                          style: 'currency',
+                          currency: 'THB',
+                          maximumFractionDigits: 0
+                        }).format(survey.transactionPrice)
+                      : '-'}
                   </span>
                 </div>
                 <div className="col-span-2 flex items-center justify-end gap-2">

@@ -8,6 +8,7 @@ interface DeleteConfirmationModalProps {
   onConfirm: () => void;
   title?: string;
   message?: string;
+  isLoading?: boolean;
 }
 
 export const DeleteConfirmationModal = ({
@@ -16,6 +17,7 @@ export const DeleteConfirmationModal = ({
   onConfirm,
   title = 'Delete Property',
   message = 'Are you sure you want to delete this property? This action cannot be undone.',
+  isLoading = false,
 }: DeleteConfirmationModalProps) => {
   const handleConfirm = () => {
     onConfirm();
@@ -39,8 +41,8 @@ export const DeleteConfirmationModal = ({
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" variant="danger" onClick={handleConfirm}>
-            Delete
+          <Button type="button" variant="danger" onClick={handleConfirm} disabled={isLoading}>
+            {isLoading ? 'Deleting...' : 'Delete'}
           </Button>
         </div>
       </div>

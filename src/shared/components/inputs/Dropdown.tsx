@@ -3,18 +3,16 @@ import {
   ListboxButton as HeadlessListboxButton,
   ListboxOption as HeadlessListboxOption,
   ListboxOptions as HeadlessListboxOptions,
-  ListboxSelectedOption as HeadlessListboxSelectedOption,
 } from '@headlessui/react';
-import { forwardRef, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { forwardRef, useMemo, type ReactNode, type SelectHTMLAttributes } from 'react';
 import Icon from '../Icon';
 import clsx from 'clsx';
-import { useParameters } from '../../api/parameters';
-import type { ParameterParams } from '@/shared/types/api';
+import { useParameterOptions } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
 
 type DropdownProps = DropdownBaseProps &
-  AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
+  AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -27,6 +25,7 @@ interface ListBoxProps {
   value: string | null | unknown;
   onChange?: (value: any) => void;
   placeholder: string;
+  selectedLabel?: string;
   children: ReactNode;
   disabled?: boolean;
   error?: string;
@@ -38,7 +37,7 @@ interface ListBoxOptionProps {
 }
 
 export type ListBoxItem = {
-  value: string;
+  value: string | undefined;
   label: string;
   id?: string | number;
 };
@@ -46,7 +45,7 @@ export type ListBoxItem = {
 const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
   (
     {
-      queryParameters,
+      group,
       options,
       value,
       onChange,
@@ -61,17 +60,17 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
   ) => {
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
-    const { data: fetchedOptions } = useParameters(queryParameters);
-    const dropdownOptions =
-      options !== undefined
-        ? options
-        : Array.isArray(fetchedOptions)
-          ? fetchedOptions.map(p => {
-              return { value: p.code, label: p.description, id: p.code };
-            })
-          : [];
+    const parameterOptions = useParameterOptions(group ?? '');
+    const dropdownOptions = useMemo(() => {
+      const base = options !== undefined ? options : parameterOptions;
+      return [{ value: undefined, label: placeholder, id: '' }, ...base];
+    }, [options, parameterOptions, placeholder]);
+
     const isControlled = onChange !== undefined && value !== undefined;
-    const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
+    const selectedOption = useMemo(
+      () => dropdownOptions.find(opt => opt.value === value) ?? null,
+      [dropdownOptions, value],
+    );
     const selectedOnChange = (opt: ListBoxItem) => {
       if (isControlled) {
         onChange(opt.value);
@@ -91,6 +90,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
           value={value === undefined ? undefined : selectedOption}
           onChange={onChange === undefined ? undefined : selectedOnChange}
           placeholder={placeholder}
+          selectedLabel={selectedOption?.label}
           disabled={isDisabled}
           error={error}
         >
@@ -107,36 +107,34 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 );
 
 const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
-  ({ placeholder, children, disabled, error, ...props }, ref) => {
+  ({ placeholder, selectedLabel, children, disabled, error, ...props }, ref) => {
     return (
-      <HeadlessListBox disabled={disabled} {...props}>
-        <HeadlessListboxButton
-          ref={ref}
-          className={clsx(
-            'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
-            'focus:outline-none focus:ring-2',
-            disabled
-              ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-              : 'bg-white hover:border-gray-300',
-            error
-              ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
-              : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
-          )}
-        >
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-            <Icon style="regular" name="chevron-down" className="size-3.5" />
-          </div>
-          <HeadlessListboxSelectedOption
-            placeholder={<div className="px-3 py-2 text-gray-400">{placeholder}</div>}
-            options={children}
-          />
-        </HeadlessListboxButton>
-        <HeadlessListboxOptions
-          anchor="bottom"
-          className="w-(--button-width) bg-white rounded-lg border border-gray-200 shadow-lg mt-1 py-1 z-50"
-        >
-          {children}
-        </HeadlessListboxOptions>
+      <HeadlessListBox disabled={disabled} by="value" {...props}>
+        <div className="relative">
+          <HeadlessListboxButton
+            ref={ref}
+            className={clsx(
+              'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
+              'focus:outline-none focus:ring-2',
+              disabled
+                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
+                : 'bg-white hover:border-gray-300',
+              error
+                ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
+                : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
+            )}
+          >
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+              <Icon style="regular" name="chevron-down" className="size-3.5" />
+            </div>
+            <div className="px-3 py-2">
+              {selectedLabel || <span className="text-gray-400">{placeholder}</span>}
+            </div>
+          </HeadlessListboxButton>
+          <HeadlessListboxOptions className="absolute left-0 mt-1 w-full bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50">
+            {children}
+          </HeadlessListboxOptions>
+        </div>
       </HeadlessListBox>
     );
   },

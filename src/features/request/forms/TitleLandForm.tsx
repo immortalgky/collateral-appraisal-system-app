@@ -1,45 +1,84 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 
 interface TitleLandFormProps {
   index: number;
   variant?: 'land' | 'landAndBuilding';
 }
 
-const TitleLandForm = ({ index, variant = 'land' }: TitleLandFormProps) => {
-  const fields = variant === 'land' ? landLandVariantFields : landFields;
-  return <FormFields fields={fields} namePrefix={'titles'} index={index} />;
+const TitleLandForm = ({ index }: TitleLandFormProps) => {
+  return <FormFields fields={landFields} namePrefix={'titles'} index={index} />;
 };
 
 const landFields: FormField[] = [
   {
+    type: 'dropdown',
+    label: 'Title Type',
+    name: 'titleType',
+    options: [
+      { value: 'DEED', label: 'Title Deed' },
+      { value: 'NS3', label: 'Nor Sor 3' },
+      { value: 'NS3K', label: 'Nor Sor 3 K' },
+      { value: 'NS3KO', label: 'Nor Sor 3 Ko' },
+      { value: 'RIGHT', label: 'Document of possessory rights to land' },
+      { value: 'OTH', label: 'Other' },
+    ],
+    wrapperClassName: 'col-span-2',
+  },
+  {
     type: 'text-input',
-    label: 'Title No',
-    name: 'titleNo',
-    wrapperClassName: 'col-span-6',
-    required: true,
+    label: 'Title Number',
+    name: 'titleNumber',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Book Number',
+    name: 'bookNumber',
+    wrapperClassName: 'col-span-1',
+  },
+  {
+    type: 'text-input',
+    label: 'Page Number',
+    name: 'pageNumber',
+    wrapperClassName: 'col-span-1',
+  },
+  {
+    type: 'text-input',
+    label: 'Rawang',
+    name: 'rawang',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Land Parcel Number',
+    name: 'landParcelNumber',
+    wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Survey Number',
+    name: 'surveyNumber',
+    wrapperClassName: 'col-span-2',
   },
   {
     type: 'number-input',
     label: 'Rai',
     name: 'areaRai',
-    wrapperClassName: 'col-span-1',
-    required: true,
+    wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
   },
   {
     type: 'number-input',
     label: 'Ngan',
     name: 'areaNgan',
-    wrapperClassName: 'col-span-1',
-    required: true,
+    wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
   },
   {
     type: 'number-input',
     label: 'Wa',
     name: 'areaSquareWa',
-    wrapperClassName: 'col-span-1',
-    required: true,
+    wrapperClassName: 'col-span-2',
     decimalPlaces: 2,
   },
   {
@@ -47,16 +86,13 @@ const landFields: FormField[] = [
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
-    required: true,
   },
   {
     type: 'textarea',
     label: 'Title Detail',
-    name: 'titleDetail',
+    name: 'notes',
     wrapperClassName: 'col-span-6',
   },
 ];
-
-const landLandVariantFields = landFields.slice(0, 4).concat(landFields.slice(5));
 
 export default TitleLandForm;

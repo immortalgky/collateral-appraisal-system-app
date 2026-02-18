@@ -10,6 +10,7 @@ interface MoveToGroupModalProps {
   onSubmit: (targetGroupId: string) => void;
   groups: PropertyGroup[];
   currentGroupId: string;
+  isLoading?: boolean;
 }
 
 export const MoveToGroupModal = ({
@@ -18,6 +19,7 @@ export const MoveToGroupModal = ({
   onSubmit,
   groups,
   currentGroupId,
+  isLoading = false,
 }: MoveToGroupModalProps) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
@@ -86,9 +88,9 @@ export const MoveToGroupModal = ({
             type="button"
             variant="primary"
             onClick={handleSubmit}
-            disabled={!selectedGroupId}
+            disabled={!selectedGroupId || isLoading}
           >
-            Move Property
+            {isLoading ? 'Moving...' : 'Move Property'}
           </Button>
         </div>
       </div>

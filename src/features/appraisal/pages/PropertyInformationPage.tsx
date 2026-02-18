@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
-import { PropertiesTab, MarketsTab, GalleryTab, LawsRegulationTab } from '../components/tabs';
+import {
+  GalleryTab,
+  LawsRegulationTab,
+  MarketsTab,
+  PhotosTab,
+  PropertiesTab,
+} from '../components/tabs';
 import ListMarketSurveyPage from './ListMarketSurveyPage';
 
-// Photo tab removed - photos are now managed at collateral level in each collateral page
-type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
+type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws';
 type ViewMode = 'grid' | 'list';
 
 interface Tab {
@@ -18,6 +23,7 @@ const TABS: Tab[] = [
   { id: 'properties', label: 'Properties', icon: 'buildings' },
   { id: 'markets', label: 'Markets', icon: 'chart-line' },
   { id: 'gallery', label: 'Gallery', icon: 'images' },
+  { id: 'photos', label: 'Photos', icon: 'camera' },
   { id: 'laws', label: 'Laws', icon: 'gavel' },
 ];
 
@@ -33,6 +39,8 @@ export default function PropertyInformationPage() {
         return <ListMarketSurveyPage />;
       case 'gallery':
         return <GalleryTab />;
+      case 'photos':
+        return <PhotosTab />;
       case 'laws':
         return <LawsRegulationTab />;
       default:

@@ -10,7 +10,6 @@ import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import PropertyInformationPage from '@/features/appraisal/pages/PropertyInformationPage';
 import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistPage';
-import LandDetailPage from '@/features/appraisal/pages/LandDetailPage';
 import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
@@ -20,8 +19,10 @@ import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
 import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
-import CollateralPhotoPage from '@/features/appraisal/pages/CollateralPhotoPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
+import { ProtectedRoute } from '@features/auth/components';
+import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
+import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -57,7 +58,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: <ProtectedRoute component={<HomePage />} />,
       },
       {
         path: 'login',
@@ -117,13 +118,21 @@ export const router = createBrowserRouter([
         element: <CreateLandBuildingPage />,
       },
       {
+        path: 'land-building-pma',
+        element: <LandBuildingPMAPage />,
+      },
+      {
+        path: 'condo-pma',
+        element: <CondoPMAPage />,
+      },
+      {
         path: 'dev/property-information',
         element: <PropertyInformationPage />,
       },
-      {
-        path: 'dev/land-detail',
-        element: <LandDetailPage />,
-      },
+      // {
+      //   path: 'dev/land-detail',
+      //   element: <LandDetailPage />,
+      // },
       // Catch-all route for 404 pages
       {
         path: '*',
@@ -169,20 +178,12 @@ export const router = createBrowserRouter([
             element: <CreateLandPage />,
           },
           {
-            path: 'land/:propertyId/photos',
-            element: <CollateralPhotoPage />,
-          },
-          {
             path: 'building/new',
             element: <CreateBuildingPage />,
           },
           {
             path: 'building/:propertyId',
             element: <CreateBuildingPage />,
-          },
-          {
-            path: 'building/:propertyId/photos',
-            element: <CollateralPhotoPage />,
           },
           {
             path: 'condo/new',
@@ -193,8 +194,8 @@ export const router = createBrowserRouter([
             element: <CreateCondoPage />,
           },
           {
-            path: 'condo/:propertyId/photos',
-            element: <CollateralPhotoPage />,
+            path: 'condo/:propertyId/pma',
+            element: <CondoPMAPage />,
           },
           {
             path: 'land-building/new',
@@ -205,8 +206,8 @@ export const router = createBrowserRouter([
             element: <CreateLandBuildingPage />,
           },
           {
-            path: 'land-building/:propertyId/photos',
-            element: <CollateralPhotoPage />,
+            path: 'land-building/:propertyId/pma',
+            element: <LandBuildingPMAPage />,
           },
         ],
       },

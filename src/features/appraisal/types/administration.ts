@@ -51,18 +51,28 @@ export interface ExternalCompany {
 
 /**
  * Current assignment information (read-only display)
+ * Matches AssignmentDto from API
  */
 export interface CurrentAssignment {
   id: string;
-  assigneeId: string;
-  assigneeName: string;
-  assigneeType: AssignmentType;
-  status: AssignmentStatus;
-  assignedById: string;
-  assignedByName: string;
-  assignedAt: string; // ISO datetime
-  requireQuotation?: boolean;
-  quotationStatus?: 'pending' | 'received' | 'approved' | 'rejected';
+  appraisalId: string;
+  assignmentType: string;
+  assignmentStatus: string;
+  assigneeUserId: string | null;
+  assigneeCompanyId: string | null;
+  externalAppraiserName: string | null;
+  externalAppraiserLicense: string | null;
+  assignmentMethod: string;
+  reassignmentNumber: number;
+  progressPercent: number;
+  assignedAt: string;
+  assignedBy: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  rejectionReason: string | null;
+  cancellationReason: string | null;
+  internalAppraiserId: string | null;
+  createdOn: string | null;
 }
 
 /**
@@ -77,32 +87,15 @@ export interface AssignmentFormData {
   // Selected entities for display
   selectedStaff: InternalStaff | null;
   selectedCompany: ExternalCompany | null;
+  // External only - internal staff to follow up
+  followupStaffId: string | null;
+  selectedFollowupStaff: InternalStaff | null;
   // External only
   requireQuotation: boolean;
   // Notes/remarks
   remarks: string;
 }
 
-/**
- * API request payload for assignment
- */
-export interface CreateAssignmentRequest {
-  appraisalId: string;
-  assignmentType: AssignmentType;
-  assignmentMethod: AssignmentMethod;
-  assigneeId: string | null; // null for round-robin
-  requireQuotation?: boolean;
-  remarks?: string;
-}
-
-/**
- * API response for assignment
- */
-export interface AssignmentResponse {
-  success: boolean;
-  assignment: CurrentAssignment;
-  message?: string;
-}
 
 /**
  * Quotation status
@@ -117,25 +110,31 @@ export type QuotationStatus =
 
 /**
  * Quotation record for listing
+ * Matches QuotationDto from API
  */
 export interface Quotation {
   id: string;
-  quotationId: string; // Display ID like QUO-2024-001234
-  appraisalCount: number; // No Of Appraisal Report
-  quotedCount: number; // No of quoted
-  createdOn: string; // ISO datetime
-  cutOffTime: string; // ISO datetime
-  status: QuotationStatus;
+  quotationNumber: string;
+  requestDate: string;
+  dueDate: string;
+  status: string;
+  requestedByName: string;
+  totalAppraisals: number;
+  totalCompaniesInvited: number;
+  totalQuotationsReceived: number;
 }
 
 /**
  * API request payload for creating a new quotation
+ * Matches CreateQuotationRequest from API
  */
 export interface CreateQuotationRequest {
-  appraisalId: string;
-  companyIds: string[]; // Multiple companies can be selected
-  cutOffDate: string; // ISO datetime
-  remarks?: string;
+  quotationNumber: string;
+  dueDate: string;
+  requestedBy: string;
+  requestedByName: string;
+  description?: string | null;
+  specialRequirements?: string | null;
 }
 
 /**

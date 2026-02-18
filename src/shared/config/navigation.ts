@@ -265,6 +265,20 @@ export const navigationConfig: NavItem[] = [
         iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
+      {
+        name: 'Land and Building PMA',
+        href: '/land-building-pma',
+        icon: 'house',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
+      {
+        name: 'Condominium PMA',
+        href: '/condo-pma',
+        icon: 'house',
+        iconColor: 'text-orange-500',
+        iconStyle: 'solid',
+      },
     ],
   },
 ];

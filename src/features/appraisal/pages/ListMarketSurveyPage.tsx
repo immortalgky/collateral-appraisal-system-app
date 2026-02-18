@@ -2,6 +2,7 @@ import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MarketSurveyTable from '../components/tables/MarketSurveyTable';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useGetMarketSurvey } from '../api';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ const ListMarketSurveyPage = () => {
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market survey data
   const { data: marketSurvey, isLoading } = useGetMarketSurvey('appraisalId');
+  const collateralTypes = useParametersByGroup('collateralType');
   const items = marketSurvey?.result?.items;
 
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
@@ -26,6 +28,11 @@ const ListMarketSurveyPage = () => {
     });
     setIsOpenModal(true);
   };
+
+  const getParameterValues = (parameters: any[] | undefined, group: string) => {
+    return parameters?.find(p => p.parameterGroup === group)?.values ?? [];
+  };
+
   // Handle selection of market survey for editing
   const handleEditSelect = (item: any) => {
     navigate(`/market-comparable/detail?id=${item.id}`, {

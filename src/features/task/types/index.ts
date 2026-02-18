@@ -85,44 +85,35 @@ export const Movement = {
 
 export type MovementType = (typeof Movement)[keyof typeof Movement];
 
-// Main Task interface
+// Main Task interface - matches API TaskItemType from v1.ts
 export interface Task {
   id: string;
-  appraisalReportNo: string;
-  referenceNo?: string;
-  customerName: string;
-  taskType: TaskTypeType;
-  purpose: TaskPurposeType;
-  propertyType: PropertyTypeType;
-  status: TaskStatusType;
-  kanbanStatus: KanbanStatusType;
-  priority: TaskPriorityType;
-  action: TaskActionType;
-  assignee?: Assignee;
-  commentCount: number;
-  timeInfo?: string; // e.g., "1 / 0.7 / 0.3"
-  appointmentDate?: string;
-  requestDate?: string;
-  movement?: MovementType;
-  ola?: number;
-  olaActual?: number;
-  olaDifference?: number;
-  dueDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  appraisalNumber: string | null;
+  customerName: string | null;
+  taskType: string | null;
+  purpose: string | null;
+  propertyType: string | null;
+  status: string | null;
+  appointmentDateTime: string | null;
+  assigneeUserId: string | null;
+  requestedAt: string | null;
+  receivedDate: string | null;
+  movement: string | null;
+  slaDays: number;
+  olaActual: number;
+  olaDiff: number;
+  priority: string | null;
 }
 
 // Grouping options for Kanban view
-export type GroupByField = 'kanbanStatus' | 'status' | 'purpose' | 'taskType' | 'priority';
+export type GroupByField = 'status' | 'purpose' | 'taskType' | 'priority';
 
 // Paginated response type
 export interface TaskListResponse {
-  result: {
-    items: Task[];
-    count: number;
-    pageNumber: number;
-    pageSize: number;
-  };
+  items: Task[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
 }
 
 // Query params for task listing

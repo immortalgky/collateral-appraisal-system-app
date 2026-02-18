@@ -68,16 +68,11 @@ export interface ApiError extends ProblemDetails {
 }
 
 export interface Parameter {
-  parId: number;
   group: string;
   country: string;
   language: string;
   code: string;
   description: string;
-  active: string;
-  seqNo: string;
+  isActive: boolean;
+  seqNo: number;
 }
-
-export type ParameterParams = Partial<Parameter>;
-
-export type ParametersResponse = Parameter[];

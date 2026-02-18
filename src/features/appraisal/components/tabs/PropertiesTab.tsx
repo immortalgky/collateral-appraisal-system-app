@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   closestCenter,
@@ -6,13 +6,25 @@ import {
   type DragEndEvent,
   DragOverlay,
   type DragStartEvent,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
+import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
-import { usePropertyStore } from '../../store';
+import { usePropertyClipboardStore } from '../../store';
+import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
+import {
+  useAddPropertyToGroup,
+  useCreatePropertyGroup,
+  useDeletePropertyGroup,
+  useMovePropertyToGroup,
+  useRemovePropertyFromGroup,
+  useReorderPropertiesInGroup,
+  useUpdatePropertyGroup,
+} from '../../api/propertyGroup';
 import { GroupContainer } from '../GroupContainer';
 import { MoveToGroupModal } from '../MoveToGroupModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
@@ -22,15 +34,36 @@ import type { PropertyItem } from '../../types';
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
   const typeMap: Record<string, string> = {
-    'Building': 'building',
-    'Condominium': 'condo',
+    Building: 'building',
+    Condo: 'condo',
     'Land and building': 'land-building',
-    'Lands': 'land',
+    Lands: 'land',
     'Lease Agreement Building': 'building',
     'Lease Agreement Land and building': 'land-building',
     'Lease Agreement Lands': 'land',
+    L: 'land',
+    B: 'building',
+    LB: 'land-building',
+    U: 'condo',
   };
   return typeMap[type] || 'land';
+};
+
+// Map property type to description
+const getPropertyDescription = (type: string) => {
+  const typeMap: Record<string, string> = {
+    L: 'Land',
+    B: 'Building',
+    LB: 'Land & Building',
+    U: 'Condo',
+  };
+  return typeMap[type] || 'Unknown type';
+};
+
+// Only measure droppables before a drag starts — prevents ResizeObserver
+// from firing on trivial CSS changes (hover states) and causing re-render loops.
+const MEASURING_CONFIG = {
+  droppable: { strategy: MeasuringStrategy.BeforeDragging },
 };
 
 type ViewMode = 'grid' | 'list';
@@ -52,17 +85,28 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
 
-  const {
-    groups,
-    clipboard,
-    addGroup,
-    deleteGroup,
-    deleteProperty,
-    movePropertyToGroup,
-    reorderPropertiesInGroup,
-    copyProperty,
-    pasteProperty,
-  } = usePropertyStore();
+  // API data
+  const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
+
+  // Keep a stable ref to groups so DndContext callbacks don't change when groups change.
+  // Changing onDragEnd/onDragStart triggers DndContext context updates which re-render
+  // all useDroppable/useSortable consumers — bypassing React.memo and causing infinite loops.
+  const groupsRef = useRef(groups);
+  groupsRef.current = groups;
+
+  // Clipboard (UI-only state)
+  const { clipboard, copyProperty, clearClipboard } = usePropertyClipboardStore();
+
+  // Mutations
+  const createGroupMutation = useCreatePropertyGroup();
+  const updateGroupMutation = useUpdatePropertyGroup();
+  const deleteGroupMutation = useDeletePropertyGroup();
+  const removePropertyMutation = useRemovePropertyFromGroup();
+  const addPropertyToGroupMutation = useAddPropertyToGroup();
+  const moveMutation = useMovePropertyToGroup();
+  const reorderMutation = useReorderPropertiesInGroup();
+
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
   const [activeProperty, setActiveProperty] = useState<PropertyItem | null>(null);
 
@@ -92,102 +136,256 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
+  // ==================== Mutation Handlers ====================
+
+  const handleAddGroup = useCallback(() => {
+    if (!appraisalId) return;
+    const groupNumber = groupsRef.current.length + 1;
+    createGroupMutation.mutate(
+      { appraisalId, groupName: `Group ${groupNumber}` },
+      {
+        onError: () => {
+          toast.error('Failed to create group');
+        },
+      },
+    );
+  }, [appraisalId, createGroupMutation]);
+
+  const handleRenameGroup = useCallback(
+    (groupId: string, newName: string) => {
+      if (!appraisalId) return;
+      const group = groupsRef.current.find(g => g.id === groupId);
+      if (!group) return;
+      updateGroupMutation.mutate(
+        {
+          appraisalId,
+          groupId,
+          groupName: newName,
+          useSystemCalc: group.useSystemCalc ?? false,
+          description: group.description ?? null,
+        },
+        {
+          onError: () => {
+            toast.error('Failed to rename group');
+          },
+        },
+      );
+    },
+    [appraisalId, updateGroupMutation],
+  );
+
+  const handleDeleteGroup = useCallback(
+    (groupId: string) => {
+      if (!appraisalId) return;
+      setDeletingGroupId(groupId);
+      deleteGroupMutation.mutate(
+        { appraisalId, groupId },
+        {
+          onSuccess: () => {
+            setDeletingGroupId(null);
+          },
+          onError: () => {
+            setDeletingGroupId(null);
+            toast.error('Failed to delete group');
+          },
+        },
+      );
+    },
+    [appraisalId, deleteGroupMutation],
+  );
+
+  const handleRemoveProperty = useCallback(
+    (groupId: string, propertyId: string) => {
+      if (!appraisalId) return;
+      removePropertyMutation.mutate(
+        { appraisalId, groupId, propertyId },
+        {
+          onError: () => {
+            toast.error('Failed to remove property from group');
+          },
+        },
+      );
+    },
+    [appraisalId, removePropertyMutation],
+  );
+
+  const handleMoveProperty = useCallback(
+    (
+      fromGroupId: string,
+      toGroupId: string,
+      propertyId: string,
+      targetPosition?: number,
+    ) => {
+      if (!appraisalId) return;
+      moveMutation.mutate(
+        {
+          appraisalId,
+          sourceGroupId: fromGroupId,
+          propertyId,
+          targetGroupId: toGroupId,
+          targetPosition: targetPosition ?? null,
+        },
+        {
+          onError: () => {
+            toast.error('Failed to move property');
+          },
+        },
+      );
+    },
+    [appraisalId, moveMutation],
+  );
+
+  const handlePasteProperty = useCallback(
+    (groupId: string) => {
+      if (!appraisalId || !clipboard) return;
+      // Add the copied property to the target group
+      addPropertyToGroupMutation.mutate(
+        { appraisalId, groupId, propertyId: clipboard.id },
+        {
+          onSuccess: () => {
+            clearClipboard();
+          },
+          onError: () => {
+            toast.error('Failed to paste property');
+          },
+        },
+      );
+    },
+    [appraisalId, clipboard, addPropertyToGroupMutation, clearClipboard],
+  );
+
+  // ==================== Drag & Drop ====================
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const property = active.data.current?.property as PropertyItem;
     setActiveProperty(property);
-  };
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    if (!over) {
-      setActiveProperty(null);
-      return;
-    }
+      if (!over) {
+        setActiveProperty(null);
+        return;
+      }
 
-    const activeGroupId = active.data.current?.groupId as string;
-    const activeId = active.id as string;
-    const overData = over.data.current;
-    const overId = over.id as string;
+      const currentGroups = groupsRef.current;
+      const activeGroupId = active.data.current?.groupId as string;
+      const activeId = active.id as string;
+      const overData = over.data.current;
+      const overId = over.id as string;
 
-    // Check if we're dropping over another property item
-    if (overData?.type === 'property') {
-      const overGroupId = overData.groupId as string;
+      // Check if we're dropping over another property item
+      if (overData?.type === 'property') {
+        const overGroupId = overData.groupId as string;
 
-      // Reordering within the same group
-      if (activeGroupId === overGroupId) {
-        const group = groups.find(g => g.id === activeGroupId);
-        if (group) {
-          const oldIndex = group.items.findIndex(item => item.id === activeId);
-          const newIndex = group.items.findIndex(item => item.id === overId);
-
-          if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-            reorderPropertiesInGroup(activeGroupId, oldIndex, newIndex);
+        if (activeGroupId === overGroupId) {
+          // Reordering within the same group
+          const group = currentGroups.find(g => g.id === activeGroupId);
+          if (group && appraisalId) {
+            const ids = group.items.map(i => i.id);
+            const fromIndex = ids.indexOf(activeId);
+            const toIndex = ids.indexOf(overId);
+            if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+              const reordered = [...ids];
+              reordered.splice(fromIndex, 1);
+              reordered.splice(toIndex, 0, activeId);
+              reorderMutation.mutate(
+                { appraisalId, groupId: activeGroupId, orderedPropertyIds: reordered },
+                { onError: () => toast.error('Failed to reorder properties') },
+              );
+            }
           }
+        } else {
+          // Cross-group drop on a property — compute target position
+          const targetGroup = currentGroups.find(g => g.id === overGroupId);
+          const targetIndex = targetGroup?.items.findIndex(i => i.id === overId) ?? -1;
+          handleMoveProperty(
+            activeGroupId,
+            overGroupId,
+            activeId,
+            targetIndex >= 0 ? targetIndex : undefined,
+          );
         }
-      } else {
-        // Moving between groups - drop on another item
-        movePropertyToGroup(activeGroupId, overGroupId, activeId);
       }
-    }
-    // Check if we're dropping over a group container
-    else if (overData?.type === 'group' || groups.some(g => g.id === overId)) {
-      // Get the target group ID (either from data or from the over ID itself)
-      const toGroupId = overData?.type === 'group' ? overId : groups.find(g => g.id === overId)?.id;
+      // Check if we're dropping over a group container
+      else if (overData?.type === 'group' || currentGroups.some(g => g.id === overId)) {
+        const toGroupId =
+          overData?.type === 'group' ? overId : currentGroups.find(g => g.id === overId)?.id;
 
-      if (toGroupId && activeGroupId !== toGroupId) {
-        movePropertyToGroup(activeGroupId, toGroupId, activeId);
+        if (toGroupId && activeGroupId !== toGroupId) {
+          handleMoveProperty(activeGroupId, toGroupId, activeId);
+        }
       }
-    }
 
-    setActiveProperty(null);
-  };
+      setActiveProperty(null);
+    },
+    [appraisalId, reorderMutation, handleMoveProperty],
+  );
 
-  // Context menu handler (for grid view)
-  const handleContextMenu = (e: React.MouseEvent, property: PropertyItem, groupId: string) => {
-    e.preventDefault();
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      property,
-      groupId,
-    });
-  };
+  // ==================== Context Menu & Actions ====================
 
-  // Action handlers (shared between grid context menu and table action menu)
-  const handleEditProperty = (property: PropertyItem, groupId: string) => {
-    if (appraisalId) {
-      const routeSegment = getRouteSegment(property.type);
-      navigate(`/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`);
-    }
-  };
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, property: PropertyItem, groupId: string) => {
+      e.preventDefault();
+      setContextMenu({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        property,
+        groupId,
+      });
+    },
+    [],
+  );
 
-  const handleMoveToProperty = (property: PropertyItem, groupId: string) => {
-    setMoveModalState({
-      isOpen: true,
-      property,
-      fromGroupId: groupId,
-    });
-  };
+  const handleEditProperty = useCallback(
+    (property: PropertyItem, groupId: string) => {
+      if (appraisalId) {
+        const routeSegment = getRouteSegment(property.type);
+        navigate(
+          `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+        );
+      }
+    },
+    [appraisalId, navigate],
+  );
 
-  const handleCopyProperty = (property: PropertyItem) => {
-    copyProperty(property);
-  };
+  const handleMoveToProperty = useCallback(
+    (property: PropertyItem, groupId: string) => {
+      setMoveModalState({
+        isOpen: true,
+        property,
+        fromGroupId: groupId,
+      });
+    },
+    [],
+  );
 
-  const handleDeleteProperty = (property: PropertyItem, groupId: string) => {
-    setDeleteModalState({
-      isOpen: true,
-      property,
-      groupId,
-    });
-  };
+  const handleCopyProperty = useCallback(
+    (property: PropertyItem) => {
+      copyProperty(property);
+    },
+    [copyProperty],
+  );
 
-  // Context menu handlers (use state from context menu)
+  const handleDeleteProperty = useCallback(
+    (property: PropertyItem, groupId: string) => {
+      setDeleteModalState({
+        isOpen: true,
+        property,
+        groupId,
+      });
+    },
+    [],
+  );
+
+  // Context menu handlers
   const handleEdit = () => {
     if (contextMenu.property && contextMenu.groupId) {
       handleEditProperty(contextMenu.property, contextMenu.groupId);
@@ -202,7 +400,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   const handleMoveSubmit = (toGroupId: string) => {
     if (moveModalState.property && moveModalState.fromGroupId) {
-      movePropertyToGroup(moveModalState.fromGroupId, toGroupId, moveModalState.property.id);
+      handleMoveProperty(moveModalState.fromGroupId, toGroupId, moveModalState.property.id);
     }
   };
 
@@ -214,7 +412,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   const handlePaste = () => {
     if (contextMenu.groupId && clipboard) {
-      pasteProperty(contextMenu.groupId);
+      handlePasteProperty(contextMenu.groupId);
     }
   };
 
@@ -226,7 +424,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   const handleDeleteConfirm = () => {
     if (deleteModalState.property && deleteModalState.groupId) {
-      deleteProperty(deleteModalState.groupId, deleteModalState.property.id);
+      handleRemoveProperty(deleteModalState.groupId, deleteModalState.property.id);
     }
   };
 
@@ -261,6 +459,46 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     },
   ];
 
+  // ==================== Loading & Error States ====================
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-9 w-40 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-9 w-36 bg-gray-200 rounded-lg animate-pulse" />
+        </div>
+        <div className="space-y-4 flex-1">
+          {[1, 2].map(i => (
+            <div key={i} className="border border-gray-200 rounded-lg bg-white p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                {[1, 2].map(j => (
+                  <div key={j} className="h-28 bg-gray-100 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-red-50 rounded-xl border-2 border-dashed border-red-200">
+        <Icon name="exclamation-triangle" className="text-4xl mb-3 text-red-400" />
+        <p className="text-sm font-medium text-red-500">Failed to load property groups</p>
+        <p className="text-xs text-red-400 mt-1">Please try refreshing the page</p>
+      </div>
+    );
+  }
+
+  // ==================== Render ====================
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Toolbar */}
@@ -294,8 +532,17 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         </div>
 
         {/* Add New Group Button */}
-        <Button variant="primary" onClick={addGroup} className="flex items-center gap-2">
-          <Icon name="plus" />
+        <Button
+          variant="primary"
+          onClick={handleAddGroup}
+          className="flex items-center gap-2"
+          disabled={createGroupMutation.isPending}
+        >
+          {createGroupMutation.isPending ? (
+            <Icon name="spinner" className="animate-spin" />
+          ) : (
+            <Icon name="plus" />
+          )}
           Add New Group
         </Button>
       </div>
@@ -306,13 +553,16 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        measuring={MEASURING_CONFIG}
       >
         <div className="space-y-4 flex-1 overflow-y-auto">
           {groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
               <Icon name="layer-group" className="text-4xl mb-3" />
               <p className="text-sm font-medium text-gray-500">No property groups yet</p>
-              <p className="text-xs text-gray-400 mt-1">Click "Add New Group" to create your first group</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Click "Add New Group" to create your first group
+              </p>
             </div>
           ) : (
             groups.map(group => (
@@ -320,14 +570,16 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 key={group.id}
                 group={group}
                 viewMode={viewMode}
-                onDeleteGroup={deleteGroup}
+                onDeleteGroup={handleDeleteGroup}
+                onRenameGroup={handleRenameGroup}
                 onContextMenu={handleContextMenu}
                 onEdit={handleEditProperty}
                 onMoveTo={handleMoveToProperty}
                 onCopy={handleCopyProperty}
-                onPaste={pasteProperty}
+                onPaste={handlePasteProperty}
                 onDelete={handleDeleteProperty}
                 hasClipboard={!!clipboard}
+                isDeletingGroup={deletingGroupId === group.id}
               />
             ))
           )}
@@ -368,12 +620,12 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                   </h3>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
-                      <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
+                      <Icon
+                        name="ruler-combined"
+                        className="text-gray-400 text-[10px]"
+                        style="solid"
+                      />
                       <span>{activeProperty.area}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Icon name="baht-sign" className="text-gray-400 text-[10px]" style="solid" />
-                      <span className="truncate">{activeProperty.priceRange}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
@@ -383,7 +635,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 </div>
                 <div className="flex justify-end">
                   <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
-                    {activeProperty.type}
+                    {getPropertyDescription(activeProperty.type)}
                   </span>
                 </div>
               </div>
@@ -405,12 +657,14 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         onSubmit={handleMoveSubmit}
         groups={groups}
         currentGroupId={moveModalState.fromGroupId || ''}
+        isLoading={moveMutation.isPending}
       />
 
       <DeleteConfirmationModal
         isOpen={deleteModalState.isOpen}
         onClose={() => setDeleteModalState({ isOpen: false, property: null, groupId: null })}
         onConfirm={handleDeleteConfirm}
+        isLoading={removePropertyMutation.isPending}
       />
 
       {/* Context Menu (for grid view) */}

@@ -10,31 +10,8 @@ export interface AppraisalData {
 
   // Status & Workflow
   status?: string;
-  workflowStage?: string;
-
-  // Request summary (for right menu display)
-  purpose?: string;
+  appraisalType?: string;
   priority?: string;
-
-  // Requestor info
-  requestor?: {
-    id: string;
-    name: string;
-    avatar: string | null;
-  } | null;
-
-  // Appointment
-  appointmentDateTime?: string | null;
-  appointmentLocation?: string | null;
-
-  // Property Location
-  propertyLatitude?: number | null;
-  propertyLongitude?: number | null;
-
-  // Fee info
-  feePaymentType?: string | null;
-  paymentStatus?: string | null;
-  totalAppraisalFee?: number | null;
 }
 
 interface AppraisalContextValue {

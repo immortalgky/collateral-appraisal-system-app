@@ -3,7 +3,6 @@ import type { FormStringToggleOption } from '../inputs/FormStringToggle';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { CheckboxOption } from '../inputs/CheckboxGroup';
 import type { AtLeastOne } from '@/shared/types';
-import type { ParameterParams } from '@/shared/types/api';
 
 // =============================================================================
 // Conditional Field Types
@@ -84,6 +83,8 @@ interface BaseFormField {
   wrapperClassName?: string;
   /** Disable the input */
   disabled?: boolean;
+  /** Value to set when field is disabled */
+  disabledValue?: unknown;
   /** Mark as required (shows asterisk, overrides schema) */
   required?: boolean;
 
@@ -98,6 +99,10 @@ interface BaseFormField {
   disableWhen?: ConditionInput;
   /** Enable field when condition is met (overrides disabled) */
   enableWhen?: ConditionInput;
+
+  // Conditional required state
+  /** Make field required when condition is met (shows asterisk and validates) */
+  requiredWhen?: ConditionInput;
 }
 
 // =============================================================================
@@ -166,7 +171,7 @@ export interface SelectInputField extends BaseFormField {
 }
 
 export type DropdownField = BaseDropdownField &
-  AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
+  AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
 interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';

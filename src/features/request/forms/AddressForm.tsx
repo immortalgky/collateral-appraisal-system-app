@@ -90,12 +90,14 @@ const contactFields: FormField[] = [
     label: 'Contact Person Name',
     name: 'contactPersonName',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Contact Person Phone No',
     name: 'contactPersonPhone',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'dropdown',

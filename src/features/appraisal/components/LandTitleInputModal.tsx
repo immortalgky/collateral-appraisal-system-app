@@ -9,7 +9,7 @@ interface HeaderField {
   name: string;
   label: string;
   type?: 'text-input' | 'number-input' | 'dropdown' | 'radio-group' | 'date-input';
-  colSpan: number;
+  colSpan?: number;
   disabled?: boolean;
   options?: ListBoxItem[] | RadioOption[];
   required?: boolean;
@@ -32,14 +32,14 @@ const LandTitleModal = ({
   onConfirm,
 }: LandTitleModalProps) => {
   const { watch, setValue } = popupForm;
-  const pricePerSqWa = watch('pricePerSquareWa');
-  const totalSqWa = watch('totalSqWa');
+  const pricePerSqWa = watch('governmentPricePerSqWa');
+  const squareWa = watch('squareWa');
 
   useEffect(() => {
     const price = Number(pricePerSqWa) || 0;
-    const sqwa = Number(totalSqWa) || 0;
+    const sqwa = Number(squareWa) || 0;
     setValue('governmentPrice', price * sqwa);
-  }, [pricePerSqWa, totalSqWa, setValue]);
+  }, [pricePerSqWa, squareWa, setValue]);
 
   const fields: FormField[] = headers.map(h => {
     const baseProps = {
@@ -90,7 +90,7 @@ const LandTitleModal = ({
   return (
     <FormProvider {...popupForm}>
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow-xl h-4/5 w-4/5 flex flex-col">
+        <div className="bg-white p-6 rounded-xl shadow-xl w-3/5 flex flex-col">
           <h2 className="text-lg font-semibold mb-2 shrink-0">Land Detail</h2>
           <div className="h-[0.1px] bg-gray-300 my-2 col-span-5"></div>
 

@@ -1,8 +1,9 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
+import { useAuthStore } from '@features/auth/store.ts';
 
 const searchFilters = [
   { id: 'all', label: 'All', icon: 'layer-group', color: 'gray' },
@@ -25,6 +26,7 @@ export default function Navbar({
 }: {
   userNavigation: Record<string, string>[];
 }): React.ReactNode {
+  const currentUser = useAuthStore(state => state.user);
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -68,9 +70,7 @@ export default function Navbar({
             <div
               className={clsx(
                 'relative flex items-center rounded-xl transition-all',
-                searchFocused
-                  ? 'bg-white shadow-sm'
-                  : 'bg-gray-50 hover:bg-gray-100',
+                searchFocused ? 'bg-white shadow-sm' : 'bg-gray-50 hover:bg-gray-100',
               )}
             >
               {/* Filter Badge */}
@@ -105,7 +105,6 @@ export default function Navbar({
                 className="block w-full bg-transparent py-2.5 pl-2 pr-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none ring-0 border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none"
                 style={{ outline: 'none', boxShadow: 'none' }}
               />
-
             </div>
 
             {/* Filter Dropdown */}
@@ -128,7 +127,12 @@ export default function Navbar({
                           className={clsx(
                             'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
                             isActive
-                              ? [colorStyle.activeBg, colorStyle.text, 'ring-1 ring-inset', `ring-${filter.color}-200`]
+                              ? [
+                                  colorStyle.activeBg,
+                                  colorStyle.text,
+                                  'ring-1 ring-inset',
+                                  `ring-${filter.color}-200`,
+                                ]
                               : 'bg-gray-50 text-gray-600 hover:bg-gray-100',
                           )}
                         >
@@ -152,7 +156,11 @@ export default function Navbar({
                         type="button"
                         className="flex items-center gap-3 w-full px-2 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <Icon name="clock-rotate-left" style="regular" className="size-4 text-gray-400" />
+                        <Icon
+                          name="clock-rotate-left"
+                          style="regular"
+                          className="size-4 text-gray-400"
+                        />
                         {item}
                       </button>
                     ))}
@@ -192,14 +200,20 @@ export default function Navbar({
               <span className="sr-only">Open user menu</span>
               <img
                 alt=""
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                src={currentUser?.avatarUrl || '/default-avatar.png'}
                 className="size-9 rounded-xl object-cover ring-2 ring-gray-100"
               />
               <span className="hidden lg:flex lg:flex-col lg:items-start">
-                <span className="text-sm font-semibold text-gray-900">Tom Cook</span>
-                <span className="text-xs text-gray-500">Administrator</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`}
+                </span>
+                <span className="text-xs text-gray-500">{currentUser?.position}</span>
               </span>
-              <Icon name="chevron-down" style="solid" className="hidden lg:block size-4 text-gray-400" />
+              <Icon
+                name="chevron-down"
+                style="solid"
+                className="hidden lg:block size-4 text-gray-400"
+              />
             </MenuButton>
             <MenuItems
               transition
@@ -207,8 +221,8 @@ export default function Navbar({
             >
               {/* User info header */}
               <div className="px-4 py-3 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">Tom Cook</p>
-                <p className="text-xs text-gray-500 truncate">tom.cook@lhbank.co.th</p>
+                <p className="text-sm font-medium text-gray-900">{`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`}</p>
+                <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
               </div>
               {userNavigation.map(item => (
                 <MenuItem key={item.name}>
@@ -217,7 +231,13 @@ export default function Navbar({
                     className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
                   >
                     <Icon
-                      name={item.name === 'Your profile' ? 'user' : item.name === 'Settings' ? 'gear' : 'arrow-right-from-bracket'}
+                      name={
+                        item.name === 'Your profile'
+                          ? 'user'
+                          : item.name === 'Settings'
+                            ? 'gear'
+                            : 'arrow-right-from-bracket'
+                      }
                       style="regular"
                       className="size-4 text-gray-400"
                     />

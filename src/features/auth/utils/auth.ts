@@ -22,8 +22,10 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 
 export async function redirectToLogin() {
   const clientId = 'spa';
-  const redirectUri = 'https://localhost:3000/callback';
-  const authorizeUrl = 'https://localhost:7111/connect/authorize';
+  const baseApiUrl = import.meta.env.VITE_API_URL;
+  const baseAppUrl = import.meta.env.VITE_APP_URL;
+  const redirectUri = `${baseAppUrl}/callback`;
+  const authorizeUrl = `${baseApiUrl}/connect/authorize`;
 
   const state = generateRandomString();
   const codeVerifier = generateRandomString();

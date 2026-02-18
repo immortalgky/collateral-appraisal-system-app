@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetTasks, useGetTasksForKanban } from '../api';
-import type { Task, GroupByField } from '../types';
+import type { GroupByField, Task, TaskListResponse } from '../types';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Badge from '@/shared/components/Badge';
@@ -29,25 +29,24 @@ interface ContextMenuState {
 }
 
 type SortField =
-  | 'appraisalReportNo'
+  | 'appraisalNumber'
   | 'customerName'
   | 'taskType'
   | 'purpose'
   | 'propertyType'
   | 'status'
-  | 'appointmentDate'
-  | 'requestDate'
+  | 'appointmentDateTime'
+  | 'requestedAt'
   | 'movement'
-  | 'ola'
+  | 'slaDays'
   | 'olaActual'
-  | 'olaDifference'
+  | 'olaDiff'
   | 'priority';
 type SortDirection = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
 
 // Group by options for Kanban view
 const groupByOptions: { value: GroupByField; label: string }[] = [
-  { value: 'kanbanStatus', label: 'Task Status' },
   { value: 'status', label: 'Appraisal Status' },
   { value: 'purpose', label: 'Purpose' },
   { value: 'taskType', label: 'Task Type' },
@@ -61,11 +60,11 @@ function TaskListingPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // Group by state for Kanban view
-  const [groupBy, setGroupBy] = useState<GroupByField>('kanbanStatus');
+  const [groupBy, setGroupBy] = useState<GroupByField>('status');
 
   // Pagination state (for list view)
   const [pageNumber, setPageNumber] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(25);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -166,8 +165,8 @@ function TaskListingPage() {
   const isError = viewMode === 'list' ? isListError : isKanbanError;
   const error = viewMode === 'list' ? listError : kanbanError;
 
-  // Extract paginated result for list view
-  const paginatedResult = listData?.result ?? listData;
+  // Extract paginated result for the list view
+  const paginatedResult: TaskListResponse | undefined = listData;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -194,8 +193,8 @@ function TaskListingPage() {
         navigate(`/appraisal/${contextMenu.taskId}`);
         break;
       case 'copyReportNo':
-        if (task) {
-          navigator.clipboard.writeText(task.appraisalReportNo);
+        if (task && task.appraisalNumber) {
+          navigator.clipboard.writeText(task.appraisalNumber);
         }
         break;
     }
@@ -348,12 +347,12 @@ function TaskListingPage() {
               <thead className="sticky top-0 z-20 bg-gray-50">
                 <tr className="border-b border-gray-200">
                   <th
-                    onClick={() => handleSort('appraisalReportNo')}
+                    onClick={() => handleSort('appraisalNumber')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full"
                   >
                     <div className="flex items-center gap-1.5">
                       Appraisal Number
-                      <SortIcon field="appraisalReportNo" />
+                      <SortIcon field="appraisalNumber" />
                     </div>
                   </th>
                   <th
@@ -402,21 +401,21 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('appointmentDate')}
+                    onClick={() => handleSort('appointmentDateTime')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
                       Appointment Date
-                      <SortIcon field="appointmentDate" />
+                      <SortIcon field="appointmentDateTime" />
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('requestDate')}
+                    onClick={() => handleSort('requestedAt')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
                       Request Date
-                      <SortIcon field="requestDate" />
+                      <SortIcon field="requestedAt" />
                     </div>
                   </th>
                   <th
@@ -429,12 +428,12 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('ola')}
+                    onClick={() => handleSort('slaDays')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
                       OLA
-                      <SortIcon field="ola" />
+                      <SortIcon field="slaDays" />
                     </div>
                   </th>
                   <th
@@ -447,12 +446,12 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('olaDifference')}
+                    onClick={() => handleSort('olaDiff')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
                       OLA (Difference)
-                      <SortIcon field="olaDifference" />
+                      <SortIcon field="olaDiff" />
                     </div>
                   </th>
                   <th
@@ -522,13 +521,8 @@ function TaskListingPage() {
                             }}
                             className="font-medium text-primary hover:underline cursor-pointer"
                           >
-                            {task.appraisalReportNo}
+                            {task.appraisalNumber}
                           </span>
-                          {task.referenceNo && (
-                            <span className="text-xs text-gray-400 block font-normal">
-                              (Ref. {task.referenceNo})
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.customerName}</td>
@@ -539,13 +533,15 @@ function TaskListingPage() {
                         <Badge type="status" value={task.status} size="sm" />
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.appointmentDate)}
+                        {formatDate(task.appointmentDateTime ?? undefined)}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-600">{formatDate(task.requestDate)}</td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {formatDate(task.requestedAt ?? undefined)}
+                      </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.movement || '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.ola ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-gray-600">{task.slaDays ?? '-'}</td>
                       <td className="px-3 py-2.5 text-gray-600">{task.olaActual ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.olaDifference ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-gray-600">{task.olaDiff ?? '-'}</td>
                       <td className="px-3 py-2.5">
                         <Badge type="priority" value={task.priority} size="sm" />
                       </td>

@@ -1,4 +1,5 @@
-import { type Control, type FieldValues, useController, useFormContext } from 'react-hook-form';
+import { type Control, type FieldValues, useController, useFormContext, useWatch } from 'react-hook-form';
+import { useMemo } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -20,12 +21,7 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import type {
-  FormField,
-  FieldCondition,
-  FieldConditions,
-  ConditionInput,
-} from './types';
+import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types'; // =============================================================================
 
 // =============================================================================
 // Condition Evaluation Utilities
@@ -55,11 +51,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
  * - $root.fieldName → absolute path (fieldName)
  * - fieldName → relative path (namePrefix[index].fieldName)
  */
-function resolveFieldPath(
-  conditionField: string,
-  namePrefix: string,
-  index?: number
-): string {
+function resolveFieldPath(conditionField: string, namePrefix: string, index?: number): string {
   // Absolute path - strip $root. prefix
   if (conditionField.startsWith('$root.')) {
     return conditionField.slice(6);
@@ -86,13 +78,48 @@ function isFieldConditions(obj: unknown): obj is FieldConditions {
 }
 
 /**
+ * Extracts dependency field names from a condition input.
+ * Returns empty array for function conditions (rare/unsupported for targeted watch).
+ */
+function extractConditionFields(
+  input: ConditionInput | undefined,
+  namePrefix: string,
+  index?: number,
+): string[] {
+  if (!input) return [];
+  if (typeof input === 'function') return [];
+  if (isFieldConditions(input)) {
+    return input.conditions.map(c => resolveFieldPath(c.field, namePrefix, index));
+  }
+  return [resolveFieldPath(input.field, namePrefix, index)];
+}
+
+/**
+ * Sets a nested value in an object using dot-notation path.
+ * Inverse of getNestedValue — creates intermediate objects/arrays as needed.
+ */
+function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const normalizedPath = path.replace(/\[(\d+)\]/g, '.$1');
+  const keys = normalizedPath.split('.');
+  let current: any = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (current[key] == null || typeof current[key] !== 'object') {
+      current[key] = /^\d+$/.test(keys[i + 1]) ? [] : {};
+    }
+    current = current[key];
+  }
+  current[keys[keys.length - 1]] = value;
+}
+
+/**
  * Evaluates a single condition against form values.
  */
 function evaluateCondition(
   condition: FieldCondition,
   values: Record<string, unknown>,
   namePrefix: string,
-  index?: number
+  index?: number,
 ): boolean {
   const resolvedField = resolveFieldPath(condition.field, namePrefix, index);
   const value = getNestedValue(values, resolvedField);
@@ -132,7 +159,7 @@ function evaluateConditions(
   input: ConditionInput,
   values: Record<string, unknown>,
   namePrefix: string,
-  index?: number
+  index?: number,
 ): boolean {
   // Functional condition
   if (typeof input === 'function') {
@@ -153,21 +180,45 @@ function evaluateConditions(
 }
 
 // =============================================================================
-// Field Visibility Hook
+// Field State Hook
 // =============================================================================
 
-interface UseFieldVisibilityOptions {
+interface UseFieldStateOptions {
   field: FormField;
   namePrefix: string;
   index?: number;
 }
 
 /**
- * Hook to compute field visibility and disabled state based on conditions.
+ * Hook to compute field visibility, disabled, and required state based on conditions.
+ * Uses targeted useWatch to only subscribe to the specific fields that conditions depend on,
+ * preventing unnecessary re-renders when unrelated form fields change.
  */
-function useFieldVisibility({ field, namePrefix, index }: UseFieldVisibilityOptions) {
-  const { watch } = useFormContext();
-  const values = watch();
+function useFieldState({ field, namePrefix, index }: UseFieldStateOptions) {
+  const hasConditions = !!(field.showWhen || field.hideWhen || field.disableWhen || field.enableWhen || field.requiredWhen);
+
+  // Collect only the field names this field's conditions depend on
+  const watchFields = useMemo(() => {
+    if (!hasConditions) return [] as string[];
+    const fields: string[] = [];
+    for (const cond of [field.showWhen, field.hideWhen, field.disableWhen, field.enableWhen, field.requiredWhen]) {
+      fields.push(...extractConditionFields(cond, namePrefix, index));
+    }
+    return [...new Set(fields)];
+  }, [field.showWhen, field.hideWhen, field.disableWhen, field.enableWhen, field.requiredWhen, namePrefix, index, hasConditions]);
+
+  // Only subscribe to the specific fields that conditions reference
+  const watchedValues = useWatch({ name: watchFields });
+
+  // Build a values object that evaluateConditions can traverse via getNestedValue
+  const values = useMemo(() => {
+    if (!hasConditions || watchFields.length === 0) return {};
+    const obj: Record<string, unknown> = {};
+    watchFields.forEach((fieldName, i) => {
+      setNestedValue(obj, fieldName, Array.isArray(watchedValues) ? watchedValues[i] : watchedValues);
+    });
+    return obj;
+  }, [hasConditions, watchFields, watchedValues]);
 
   // Calculate visibility
   let isVisible = true;
@@ -185,7 +236,13 @@ function useFieldVisibility({ field, namePrefix, index }: UseFieldVisibilityOpti
     isDisabled = !evaluateConditions(field.enableWhen, values, namePrefix, index);
   }
 
-  return { isVisible, isDisabled };
+  // Calculate required state
+  let isRequired = field.required ?? false;
+  if (field.requiredWhen) {
+    isRequired = evaluateConditions(field.requiredWhen, values, namePrefix, index);
+  }
+
+  return { isVisible, isDisabled, isRequired };
 }
 
 // =============================================================================
@@ -277,8 +334,8 @@ function FieldRenderer({
   schema,
   globalShowCharCount,
 }: FieldRendererProps) {
-  // Check visibility and disabled state
-  const { isVisible, isDisabled } = useFieldVisibility({ field, namePrefix, index });
+  // Check visibility, disabled, and required state
+  const { isVisible, isDisabled, isRequired } = useFieldState({ field, namePrefix, index });
 
   // Build a full field name with prefix and index
   let name = field.name;
@@ -292,7 +349,10 @@ function FieldRenderer({
   const {
     field: fieldProps,
     fieldState: { error },
-  } = useController({ name, control });
+  } = useController({
+    name,
+    control,
+  });
 
   // Don't render if field is not visible
   if (!isVisible) {
@@ -310,7 +370,9 @@ function FieldRenderer({
     hideWhen: _hw,
     disableWhen: _dw,
     enableWhen: _ew,
+    requiredWhen: _rw,
     disabled: _d,
+    required: _r,
     ...passedField
   } = field;
 
@@ -323,215 +385,216 @@ function FieldRenderer({
           ...schemaProps,
           maxLength: passedField.maxLength ?? schemaProps.maxLength,
           minLength: passedField.minLength ?? schemaProps.minLength,
-          required: passedField.required ?? schemaProps.required,
+          required: isRequired,
           showCharCount: passedField.showCharCount ?? globalShowCharCount,
           disabled: isDisabled,
         };
         return <TextInput {...fieldProps} {...passedField} {...textProps} error={error?.message} />;
       }
 
-    case 'number-input': {
-      const numberProps = {
-        ...schemaProps,
-        min: passedField.min ?? schemaProps.min,
-        max: passedField.max ?? schemaProps.max,
-        required: passedField.required ?? schemaProps.required,
-        disabled: isDisabled,
-      };
-      return (
-        <NumberInput {...fieldProps} {...passedField} {...numberProps} error={error?.message} />
-      );
+      case 'number-input': {
+        const numberProps = {
+          ...schemaProps,
+          min: passedField.min ?? schemaProps.min,
+          max: passedField.max ?? schemaProps.max,
+          required: isRequired,
+          disabled: isDisabled,
+        };
+        return (
+          <NumberInput {...fieldProps} {...passedField} {...numberProps} error={error?.message} />
+        );
+      }
+
+      case 'date-input': {
+        const dateProps = {
+          required: isRequired,
+          disabled: isDisabled,
+        };
+        return <DateInput {...fieldProps} {...passedField} {...dateProps} error={error?.message} />;
+      }
+
+      case 'datetime-input': {
+        const dateTimeProps = {
+          required: isRequired,
+          disabled: isDisabled,
+        };
+        return (
+          <DateTimeInput
+            {...fieldProps}
+            {...passedField}
+            {...dateTimeProps}
+            error={error?.message}
+          />
+        );
+      }
+
+      case 'select-input': {
+        const selectProps = {
+          required: isRequired,
+          disabled: isDisabled,
+        };
+        return (
+          <SelectInput {...fieldProps} {...passedField} {...selectProps} error={error?.message} />
+        );
+      }
+
+      case 'dropdown': {
+        const dropdownProps = {
+          required: isRequired,
+          disabled: isDisabled,
+        };
+        return (
+          <Dropdown {...fieldProps} {...passedField} {...dropdownProps} error={error?.message} />
+        );
+      }
+
+      case 'boolean-toggle':
+        return (
+          <FormBooleanToggle
+            label={passedField.label}
+            options={passedField.options}
+            size={passedField.size}
+            name={name}
+            className={passedField.className}
+            disabled={isDisabled}
+          />
+        );
+
+      case 'string-toggle':
+        return (
+          <FormStringToggle
+            label={passedField.label}
+            options={passedField.options}
+            size={passedField.size}
+            name={name}
+            className={passedField.className}
+            disabled={isDisabled}
+          />
+        );
+
+      case 'textarea': {
+        const textareaProps = {
+          ...schemaProps,
+          maxLength: passedField.maxLength ?? schemaProps.maxLength,
+          required: isRequired,
+          showCharCount: passedField.showCharCount ?? globalShowCharCount,
+          disabled: isDisabled,
+        };
+        return (
+          <Textarea {...fieldProps} {...passedField} {...textareaProps} error={error?.message} />
+        );
+      }
+
+      case 'checkbox':
+        return (
+          <FormCheckbox
+            name={name}
+            label={passedField.label}
+            description={passedField.description}
+            disabled={isDisabled}
+            className={passedField.className}
+            size={passedField.size}
+          />
+        );
+
+      case 'checkbox-group':
+        return (
+          <FormCheckboxGroup
+            name={name}
+            label={passedField.label}
+            options={passedField.options}
+            disabled={isDisabled}
+            className={passedField.className}
+            size={passedField.size}
+            orientation={passedField.orientation}
+          />
+        );
+
+      case 'radio-group':
+        return (
+          <FormRadioGroup
+            name={name}
+            label={passedField.label}
+            options={passedField.options}
+            disabled={isDisabled}
+            className={passedField.className}
+            size={passedField.size}
+            orientation={passedField.orientation}
+          />
+        );
+
+      case 'switch':
+        return (
+          <FormSwitch
+            name={name}
+            label={passedField.label}
+            description={passedField.description}
+            disabled={isDisabled}
+            className={passedField.className}
+            size={passedField.size}
+            labelPosition={passedField.labelPosition}
+          />
+        );
+
+      case 'appraisal-selector':
+        return (
+          <AppraisalSelector
+            name={name}
+            label={passedField.label}
+            placeholder={passedField.placeholder}
+            idField={passedField.idField}
+            valueField={passedField.valueField}
+            dateField={passedField.dateField}
+            disabled={isDisabled}
+            error={error?.message}
+            className={passedField.className}
+          />
+        );
+
+      case 'location-selector': {
+        // Helper to prefix a field path - ONLY when index is defined (array context)
+        // Non-array usage (like AddressForm) uses absolute paths that don't need prefixing
+        const prefixFieldPath = (fieldPath: string | undefined): string | undefined => {
+          if (!fieldPath) return undefined;
+
+          // Only prefix in array context (when index is defined)
+          if (index === undefined) {
+            return fieldPath; // Return as-is for non-array usage
+          }
+
+          let prefixedPath = `${index}.${fieldPath}`;
+          if (namePrefix !== undefined && namePrefix.trim() !== '') {
+            prefixedPath = `${namePrefix}.${prefixedPath}`;
+          }
+          return prefixedPath;
+        };
+
+        const locationProps = {
+          required: isRequired,
+          disabled: isDisabled,
+        };
+        return (
+          <LocationSelector
+            name={name}
+            label={passedField.label}
+            placeholder={passedField.placeholder}
+            districtField={prefixFieldPath(passedField.districtField) ?? ''}
+            districtNameField={prefixFieldPath(passedField.districtNameField)}
+            provinceField={prefixFieldPath(passedField.provinceField) ?? ''}
+            provinceNameField={prefixFieldPath(passedField.provinceNameField)}
+            postcodeField={prefixFieldPath(passedField.postcodeField) ?? ''}
+            subDistrictNameField={prefixFieldPath(passedField.subDistrictNameField)}
+            error={error?.message}
+            className={passedField.className}
+            {...locationProps}
+          />
+        );
+      }
     }
-
-    case 'date-input': {
-      const dateProps = {
-        required: passedField.required ?? schemaProps.required,
-        disabled: isDisabled,
-      };
-      return <DateInput {...fieldProps} {...passedField} {...dateProps} error={error?.message} />;
-    }
-
-    case 'datetime-input': {
-      const dateTimeProps = {
-        required: passedField.required ?? schemaProps.required,
-        disabled: isDisabled,
-      };
-      return (
-        <DateTimeInput {...fieldProps} {...passedField} {...dateTimeProps} error={error?.message} />
-      );
-    }
-
-    case 'select-input': {
-      const selectProps = {
-        required: passedField.required ?? schemaProps.required,
-        disabled: isDisabled,
-      };
-      return (
-        <SelectInput {...fieldProps} {...passedField} {...selectProps} error={error?.message} />
-      );
-    }
-
-    case 'dropdown': {
-      const dropdownProps = {
-        required: passedField.required ?? schemaProps.required,
-        disabled: isDisabled,
-      };
-      return (
-        <Dropdown {...fieldProps} {...passedField} {...dropdownProps} error={error?.message} />
-      );
-    }
-
-    case 'boolean-toggle':
-      return (
-        <FormBooleanToggle
-          label={passedField.label}
-          options={passedField.options}
-          size={passedField.size}
-          name={name}
-          className={passedField.className}
-          disabled={isDisabled}
-        />
-      );
-
-    case 'string-toggle':
-      return (
-        <FormStringToggle
-          label={passedField.label}
-          options={passedField.options}
-          size={passedField.size}
-          name={name}
-          className={passedField.className}
-          disabled={isDisabled}
-        />
-      );
-
-    case 'textarea': {
-      const textareaProps = {
-        ...schemaProps,
-        maxLength: passedField.maxLength ?? schemaProps.maxLength,
-        required: passedField.required ?? schemaProps.required,
-        showCharCount: passedField.showCharCount ?? globalShowCharCount,
-        disabled: isDisabled,
-      };
-      return (
-        <Textarea {...fieldProps} {...passedField} {...textareaProps} error={error?.message} />
-      );
-    }
-
-    case 'checkbox':
-      return (
-        <FormCheckbox
-          name={name}
-          label={passedField.label}
-          description={passedField.description}
-          disabled={isDisabled}
-          className={passedField.className}
-          size={passedField.size}
-        />
-      );
-
-    case 'checkbox-group':
-      return (
-        <FormCheckboxGroup
-          name={name}
-          label={passedField.label}
-          options={passedField.options}
-          disabled={isDisabled}
-          className={passedField.className}
-          size={passedField.size}
-          orientation={passedField.orientation}
-        />
-      );
-
-    case 'radio-group':
-      return (
-        <FormRadioGroup
-          name={name}
-          label={passedField.label}
-          options={passedField.options}
-          disabled={isDisabled}
-          className={passedField.className}
-          size={passedField.size}
-          orientation={passedField.orientation}
-        />
-      );
-
-    case 'switch':
-      return (
-        <FormSwitch
-          name={name}
-          label={passedField.label}
-          description={passedField.description}
-          disabled={isDisabled}
-          className={passedField.className}
-          size={passedField.size}
-          labelPosition={passedField.labelPosition}
-        />
-      );
-
-    case 'appraisal-selector':
-      return (
-        <AppraisalSelector
-          name={name}
-          label={passedField.label}
-          placeholder={passedField.placeholder}
-          idField={passedField.idField}
-          valueField={passedField.valueField}
-          dateField={passedField.dateField}
-          disabled={isDisabled}
-          error={error?.message}
-          className={passedField.className}
-        />
-      );
-
-    case 'location-selector': {
-      // Helper to prefix a field path - ONLY when index is defined (array context)
-      // Non-array usage (like AddressForm) uses absolute paths that don't need prefixing
-      const prefixFieldPath = (fieldPath: string | undefined): string | undefined => {
-        if (!fieldPath) return undefined;
-
-        // Only prefix in array context (when index is defined)
-        if (index === undefined) {
-          return fieldPath; // Return as-is for non-array usage
-        }
-
-        let prefixedPath = `${index}.${fieldPath}`;
-        if (namePrefix !== undefined && namePrefix.trim() !== '') {
-          prefixedPath = `${namePrefix}.${prefixedPath}`;
-        }
-        return prefixedPath;
-      };
-
-      const locationProps = {
-        required: passedField.required ?? schemaProps.required,
-        disabled: isDisabled,
-      };
-      return (
-        <LocationSelector
-          name={name}
-          label={passedField.label}
-          placeholder={passedField.placeholder}
-          districtField={prefixFieldPath(passedField.districtField) ?? ''}
-          districtNameField={prefixFieldPath(passedField.districtNameField)}
-          provinceField={prefixFieldPath(passedField.provinceField) ?? ''}
-          provinceNameField={prefixFieldPath(passedField.provinceNameField)}
-          postcodeField={prefixFieldPath(passedField.postcodeField) ?? ''}
-          subDistrictNameField={prefixFieldPath(passedField.subDistrictNameField)}
-          error={error?.message}
-          className={passedField.className}
-          {...locationProps}
-        />
-      );
-    }
-  }
   };
 
   // Wrap the field component with the wrapper div
-  return (
-    <div className={clsx(field.wrapperClassName)}>
-      {renderFieldComponent()}
-    </div>
-  );
+  return <div className={clsx(field.wrapperClassName)}>{renderFieldComponent()}</div>;
 }
 
 // Re-export types for convenience

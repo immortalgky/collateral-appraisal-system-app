@@ -8,10 +8,44 @@ import clsx from 'clsx';
 import { type UploadDocumentResponse, useUploadDocument } from '../api';
 import FileAssignmentModal from './FileAssignmentModal';
 import { getDocumentCategory, getDocumentTypeInfo, type UploadedDocument } from '../types/document';
+import { useAuthStore } from '@/features/auth/store';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
 const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
+
+/**
+ * Merge new documents with existing documents, updating placeholders for required documents
+ * instead of creating duplicates.
+ */
+const mergeDocumentsWithPlaceholders = (
+  existingDocs: UploadedDocument[],
+  newDocs: UploadedDocument[],
+): UploadedDocument[] => {
+  const result = [...existingDocs];
+
+  newDocs.forEach(newDoc => {
+    // Find existing placeholder with same documentType that has no file
+    const placeholderIndex = result.findIndex(
+      doc => doc.documentType === newDoc.documentType && !doc.fileName,
+    );
+
+    if (placeholderIndex !== -1) {
+      // Update the placeholder with file data
+      result[placeholderIndex] = {
+        ...result[placeholderIndex],
+        ...newDoc,
+        // Preserve isRequired from the placeholder
+        isRequired: result[placeholderIndex].isRequired,
+      };
+    } else {
+      // No placeholder found, append as new document
+      result.push(newDoc);
+    }
+  });
+
+  return result;
+};
 
 interface UploadProgress {
   fileName: string;
@@ -25,6 +59,7 @@ interface CreateRequestFileInputProps {
 
 const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputProps) => {
   const { setValue, watch } = useFormContext();
+  const currentUser = useAuthStore(state => state.user);
   const { mutate: uploadDocuments, isPending } = useUploadDocument();
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<(UploadDocumentResponse & { file: File })[]>(
@@ -196,8 +231,8 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
           filePath: null,
           createdWorkstation: null,
           isRequired: docTypeInfo?.isRequired || false,
-          uploadedBy: null,
-          uploadedByName: null,
+          uploadedBy: currentUser?.username || null,
+          uploadedByName: currentUser?.name || null,
           file: assignment.file,
         };
 
@@ -211,19 +246,21 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
         }
       });
 
-      // Update form state
+      // Update form state - merge with existing placeholders
       if (requestDocs.length > 0) {
-        const currentDocs = watch('documents') || [];
-        setValue('documents', [...currentDocs, ...requestDocs], {
+        const currentDocs: UploadedDocument[] = watch('documents') || [];
+        const mergedDocs = mergeDocumentsWithPlaceholders(currentDocs, requestDocs);
+        setValue('documents', mergedDocs, {
           shouldDirty: true,
         });
       }
 
-      // Update title documents
+      // Update title documents - merge with existing placeholders
       Object.entries(titleDocsMap).forEach(([index, docs]) => {
         const titleIndex = parseInt(index);
-        const currentTitleDocs = watch(`titles.${titleIndex}.documents`) || [];
-        setValue(`titles.${titleIndex}.documents`, [...currentTitleDocs, ...docs], {
+        const currentTitleDocs: UploadedDocument[] = watch(`titles.${titleIndex}.documents`) || [];
+        const mergedDocs = mergeDocumentsWithPlaceholders(currentTitleDocs, docs);
+        setValue(`titles.${titleIndex}.documents`, mergedDocs, {
           shouldDirty: true,
         });
       });
