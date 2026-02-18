@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
@@ -10,6 +10,7 @@ export interface Photo {
   fileName: string;
   file?: File;
   url?: string;
+  fullSrc?: string;
   isUploading?: boolean;
 }
 
@@ -32,6 +33,10 @@ interface ContextMenuState {
   photoId: string | null;
 }
 
+const CARD_WIDTH = 144; // w-36
+const UPLOAD_BTN_WIDTH = 148; // w-[148px]
+const GAP = 8; // gap-2
+
 const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   photos,
   onUpload,
@@ -50,6 +55,33 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     photoId: null,
   });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Track container width with ResizeObserver
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Calculate how many photo cards fit
+  const maxVisible = useMemo(() => {
+    if (containerWidth === 0 || photos.length === 0) return photos.length;
+    const availableForPhotos = containerWidth - UPLOAD_BTN_WIDTH - GAP;
+    if (availableForPhotos <= 0) return 0;
+    const count = Math.floor((availableForPhotos + GAP) / (CARD_WIDTH + GAP));
+    return Math.max(1, count);
+  }, [containerWidth, photos.length]);
+
+  const hasOverflow = photos.length > maxVisible;
+  const visiblePhotos = hasOverflow ? photos.slice(0, maxVisible) : photos;
+  const remainingCount = photos.length - maxVisible + 1;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -64,38 +96,30 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     e.target.value = '';
   };
 
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent, photoId: string) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setContextMenu({
-        isOpen: true,
-        x: e.clientX,
-        y: e.clientY,
-        photoId,
-      });
-    },
-    [],
-  );
+  const handleContextMenu = useCallback((e: React.MouseEvent, photoId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY,
+      photoId,
+    });
+  }, []);
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(prev => ({ ...prev, isOpen: false, photoId: null }));
   }, []);
 
-  const handleDoubleClick = useCallback(
+  const handleClick = useCallback(
     (photo: Photo) => {
-      if (!photo.isUploading) {
+      if (onSelect) {
+        onSelect(selectedId === photo.id ? null : photo.id);
+      } else if (!photo.isUploading) {
         onPreview(photo);
       }
     },
-    [onPreview],
-  );
-
-  const handleClick = useCallback(
-    (photoId: string) => {
-      onSelect?.(selectedId === photoId ? null : photoId);
-    },
-    [onSelect, selectedId],
+    [onSelect, selectedId, onPreview],
   );
 
   const handleContextMenuAction = useCallback(
@@ -121,14 +145,11 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   );
 
   // Close context menu when clicking outside
-  const handleContainerClick = useCallback(
-    () => {
-      if (contextMenu.isOpen) {
-        closeContextMenu();
-      }
-    },
-    [contextMenu.isOpen, closeContextMenu],
-  );
+  const handleContainerClick = useCallback(() => {
+    if (contextMenu.isOpen) {
+      closeContextMenu();
+    }
+  }, [contextMenu.isOpen, closeContextMenu]);
 
   const getPhotoUrl = useCallback((photo: Photo) => {
     if (photo.file) {
@@ -138,11 +159,8 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative flex items-center gap-2 overflow-x-auto pb-2"
-      onClick={handleContainerClick}
-    >
+    <div className="relative min-w-0" onClick={handleContainerClick}>
+      <div ref={containerRef} className="flex items-center gap-2 overflow-hidden pb-2">
       {/* Upload Button */}
       <FileInput
         onChange={handleFileChange}
@@ -166,9 +184,10 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       </FileInput>
 
       {/* Photo Thumbnails */}
-      {photos.map(photo => {
+      {visiblePhotos.map((photo, index) => {
         const isSelected = selectedId === photo.id;
         const isThumbnail = thumbnailId === photo.id;
+        const isLastAndOverflow = hasOverflow && index === visiblePhotos.length - 1;
 
         return (
           <div
@@ -177,12 +196,11 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               'relative w-36 h-28 shrink-0 rounded-lg overflow-hidden cursor-pointer',
               'transition-all duration-200',
               isSelected && 'ring-4 ring-primary',
-              isThumbnail && !isSelected && 'ring-2 ring-amber-400',
+              isThumbnail && !isSelected && !isLastAndOverflow && 'ring-2 ring-amber-400',
               photo.isUploading && 'opacity-60',
             )}
-            onClick={() => handleClick(photo.id)}
-            onDoubleClick={() => handleDoubleClick(photo)}
-            onContextMenu={e => handleContextMenu(e, photo.id)}
+            onClick={() => (isLastAndOverflow ? onPreview(photo) : handleClick(photo))}
+            onContextMenu={e => !isLastAndOverflow && handleContextMenu(e, photo.id)}
           >
             {photo.isUploading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
@@ -194,7 +212,6 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 alt={photo.fileName}
                 className="w-full h-full object-cover"
                 onLoad={e => {
-                  // Revoke object URL after image loads to prevent memory leaks
                   if (photo.file) {
                     URL.revokeObjectURL((e.target as HTMLImageElement).src);
                   }
@@ -202,10 +219,17 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               />
             )}
 
-            {/* Thumbnail Badge */}
-            {isThumbnail && !photo.isUploading && (
+            {/* "+N" overlay on last visible card when overflow */}
+            {isLastAndOverflow && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <span className="text-white text-lg font-semibold">+{remainingCount}</span>
+              </div>
+            )}
+
+            {/* Cover Badge */}
+            {isThumbnail && !photo.isUploading && !isLastAndOverflow && (
               <div className="absolute top-1 left-1 bg-amber-400 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-                Thumbnail
+                Cover
               </div>
             )}
 
@@ -218,6 +242,8 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           </div>
         );
       })}
+
+      </div>
 
       {/* Context Menu */}
       {contextMenu.isOpen && contextMenu.photoId && (
@@ -250,7 +276,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               onClick={() => handleContextMenuAction('thumbnail')}
             >
               <Icon name="image" style="regular" className="w-4 h-4" />
-              {thumbnailId === contextMenu.photoId ? 'Remove as thumbnail' : 'Set as thumbnail'}
+              {thumbnailId === contextMenu.photoId ? 'Remove as cover' : 'Set as cover'}
             </button>
             <div className="border-t border-gray-100 my-1" />
             <button

@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -39,9 +40,14 @@ interface PropertyCardProps {
   onContextMenu: (e: React.MouseEvent, property: PropertyItem, groupId: string) => void;
 }
 
-export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardProps) => {
+export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: PropertyCardProps) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
+
+  const sortableData = useMemo(
+    () => ({ type: 'property' as const, property, groupId }),
+    [property, groupId],
+  );
 
   const {
     attributes,
@@ -53,11 +59,7 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
     isDragging,
   } = useSortable({
     id: property.id,
-    data: {
-      type: 'property',
-      property,
-      groupId,
-    },
+    data: sortableData,
   });
 
   const style = {
@@ -105,6 +107,8 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
             <img
               src={property.image}
               alt={property.address}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -161,4 +165,4 @@ export const PropertyCard = ({ property, groupId, onContextMenu }: PropertyCardP
       </div>
     </div>
   );
-};
+});

@@ -1,4 +1,5 @@
-import { type Control, type FieldValues, useController, useFormContext } from 'react-hook-form';
+import { type Control, type FieldValues, useController, useFormContext, useWatch } from 'react-hook-form';
+import { useMemo } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -74,6 +75,41 @@ function isFieldConditions(obj: unknown): obj is FieldConditions {
     'conditions' in obj &&
     Array.isArray((obj as FieldConditions).conditions)
   );
+}
+
+/**
+ * Extracts dependency field names from a condition input.
+ * Returns empty array for function conditions (rare/unsupported for targeted watch).
+ */
+function extractConditionFields(
+  input: ConditionInput | undefined,
+  namePrefix: string,
+  index?: number,
+): string[] {
+  if (!input) return [];
+  if (typeof input === 'function') return [];
+  if (isFieldConditions(input)) {
+    return input.conditions.map(c => resolveFieldPath(c.field, namePrefix, index));
+  }
+  return [resolveFieldPath(input.field, namePrefix, index)];
+}
+
+/**
+ * Sets a nested value in an object using dot-notation path.
+ * Inverse of getNestedValue — creates intermediate objects/arrays as needed.
+ */
+function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const normalizedPath = path.replace(/\[(\d+)\]/g, '.$1');
+  const keys = normalizedPath.split('.');
+  let current: any = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (current[key] == null || typeof current[key] !== 'object') {
+      current[key] = /^\d+$/.test(keys[i + 1]) ? [] : {};
+    }
+    current = current[key];
+  }
+  current[keys[keys.length - 1]] = value;
 }
 
 /**
@@ -155,10 +191,34 @@ interface UseFieldStateOptions {
 
 /**
  * Hook to compute field visibility, disabled, and required state based on conditions.
+ * Uses targeted useWatch to only subscribe to the specific fields that conditions depend on,
+ * preventing unnecessary re-renders when unrelated form fields change.
  */
 function useFieldState({ field, namePrefix, index }: UseFieldStateOptions) {
-  const { watch } = useFormContext();
-  const values = watch();
+  const hasConditions = !!(field.showWhen || field.hideWhen || field.disableWhen || field.enableWhen || field.requiredWhen);
+
+  // Collect only the field names this field's conditions depend on
+  const watchFields = useMemo(() => {
+    if (!hasConditions) return [] as string[];
+    const fields: string[] = [];
+    for (const cond of [field.showWhen, field.hideWhen, field.disableWhen, field.enableWhen, field.requiredWhen]) {
+      fields.push(...extractConditionFields(cond, namePrefix, index));
+    }
+    return [...new Set(fields)];
+  }, [field.showWhen, field.hideWhen, field.disableWhen, field.enableWhen, field.requiredWhen, namePrefix, index, hasConditions]);
+
+  // Only subscribe to the specific fields that conditions reference
+  const watchedValues = useWatch({ name: watchFields });
+
+  // Build a values object that evaluateConditions can traverse via getNestedValue
+  const values = useMemo(() => {
+    if (!hasConditions || watchFields.length === 0) return {};
+    const obj: Record<string, unknown> = {};
+    watchFields.forEach((fieldName, i) => {
+      setNestedValue(obj, fieldName, Array.isArray(watchedValues) ? watchedValues[i] : watchedValues);
+    });
+    return obj;
+  }, [hasConditions, watchFields, watchedValues]);
 
   // Calculate visibility
   let isVisible = true;

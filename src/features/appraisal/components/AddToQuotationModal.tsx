@@ -4,7 +4,7 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { useGetPendingQuotations, useAddToQuotation } from '../api/administration';
-import type { Quotation, QuotationStatus } from '../types/administration';
+import type { Quotation } from '../types/administration';
 
 interface AddToQuotationModalProps {
   isOpen: boolean;
@@ -47,17 +47,17 @@ const AddToQuotationModal = ({
     );
   };
 
-  const getStatusBadge = (status: QuotationStatus) => {
-    const statusConfig: Record<QuotationStatus, { label: string; className: string }> = {
-      draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
-      pending: { label: 'Pending', className: 'bg-amber-100 text-amber-700' },
-      quoted: { label: 'Quoted', className: 'bg-blue-100 text-blue-700' },
-      approved: { label: 'Approved', className: 'bg-green-100 text-green-700' },
-      rejected: { label: 'Rejected', className: 'bg-red-100 text-red-700' },
-      expired: { label: 'Expired', className: 'bg-gray-100 text-gray-500' },
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { label: string; className: string }> = {
+      Draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
+      Pending: { label: 'Pending', className: 'bg-amber-100 text-amber-700' },
+      Quoted: { label: 'Quoted', className: 'bg-blue-100 text-blue-700' },
+      Approved: { label: 'Approved', className: 'bg-green-100 text-green-700' },
+      Rejected: { label: 'Rejected', className: 'bg-red-100 text-red-700' },
+      Expired: { label: 'Expired', className: 'bg-gray-100 text-gray-500' },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status] ?? { label: status, className: 'bg-gray-100 text-gray-700' };
     return (
       <span
         className={clsx(
@@ -133,18 +133,18 @@ const AddToQuotationModal = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-medium text-gray-900">
-                          {quotation.quotationId}
+                          {quotation.quotationNumber}
                         </span>
                         {getStatusBadge(quotation.status)}
                       </div>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <Icon name="file-lines" style="regular" className="size-3" />
-                          {quotation.appraisalCount} appraisals
+                          {quotation.totalAppraisals} appraisals
                         </span>
                         <span className="flex items-center gap-1">
                           <Icon name="clock" style="regular" className="size-3" />
-                          Cut-off: {formatDateTime(quotation.cutOffTime)}
+                          Due: {formatDateTime(quotation.dueDate)}
                         </span>
                       </div>
                     </div>

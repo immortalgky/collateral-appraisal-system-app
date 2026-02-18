@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
+import { useEffect, useRef, useState } from 'react';
+import { type SubmitHandler, useForm } from 'react-hook-form';
+import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -12,7 +13,7 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import {
-  useCreateLandBuildingRequest,
+  useCreateLandAndBuildingProperty,
   useGetLandAndBuildingPropertyById,
   useUpdateLandAndBuildingProperty,
 } from '../api';
@@ -25,6 +26,7 @@ import {
 } from '../schemas/form';
 import toast from 'react-hot-toast';
 import { mapLandAndBuildingPropertyResponseToForm } from '../utils/mappers';
+import PropertyPhotoSection, { type PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 
 // TODO: Add proper defaults when schema is finalized
 
@@ -35,8 +37,9 @@ const CreateLandBuildingPage = () => {
   const isEditMode = Boolean(propertyId);
 
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
-
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId') ?? undefined;
+  const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
 
   const methods = useForm<createLandAndBuildingFormType>({
     defaultValues: createLandAndBuildingFormDefault,
@@ -58,7 +61,7 @@ const CreateLandBuildingPage = () => {
 
   // const { mutate } = useCreateLandAndBuildingProperty();
   const { mutate: createLandAndBuildingProperties, isPending: isCreating } =
-    useCreateLandBuildingRequest();
+    useCreateLandAndBuildingProperty();
   const { mutate: updateLandAndBuildingProperties, isPending: isUpdating } =
     useUpdateLandAndBuildingProperty();
 
@@ -72,15 +75,14 @@ const CreateLandBuildingPage = () => {
     if (isEditMode && propertyId) {
       updateLandAndBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          propertyId,
+          data: data as any,
+        },
         {
           onSuccess: () => {
             toast.success('Property land and building updated successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
@@ -91,18 +93,19 @@ const CreateLandBuildingPage = () => {
     } else {
       createLandAndBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          groupId,
+          data: data as any,
+        },
         {
-          onSuccess: response => {
-            toast.success('Property land and building updated successfully');
+          onSuccess: async (response: any) => {
+            await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
+            toast.success('Property land and building created successfully');
             setSaveAction(null);
             navigate(`/appraisal/${appraisalId}/property/land-building/${response.id}`);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
             setSaveAction(null);
           },
         },
@@ -120,10 +123,10 @@ const CreateLandBuildingPage = () => {
     if (isEditMode && propertyId) {
       updateLandAndBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          propertyId,
+          data: data as any,
+        },
         {
           onSuccess: () => {
             toast.success('Draft saved successfully');
@@ -138,12 +141,13 @@ const CreateLandBuildingPage = () => {
     } else {
       createLandAndBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          groupId,
+          data: data as any,
+        },
         {
-          onSuccess: response => {
+          onSuccess: async (response: any) => {
+            await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.id) {
@@ -162,9 +166,6 @@ const CreateLandBuildingPage = () => {
   // Tab selection state (Land or Building)
   const [activeTab, setActiveTab] = useState<'land' | 'building'>('land');
 
-  // Only show Photos tab if we have a propertyId (not for new)
-  const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -180,6 +181,7 @@ const CreateLandBuildingPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
+            { label: 'Photos', id: 'photos', icon: 'images' },
             {
               label: 'Land',
               id: 'land-section',
@@ -196,7 +198,7 @@ const CreateLandBuildingPage = () => {
         />
       </div>
 
-      <FormProvider {...methods}>
+      <FormProvider methods={methods} schema={createLandAndBuildingForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -211,6 +213,24 @@ const CreateLandBuildingPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Photos Section */}
+                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                    </div>
+                    <div className="h-px bg-gray-200 mb-4" />
+                    {appraisalId && (
+                      <PropertyPhotoSection
+                        ref={photoSectionRef}
+                        appraisalId={appraisalId}
+                        propertyId={propertyId}
+                      />
+                    )}
+                  </Section>
+
                   {/* Land Tab Content */}
                   <div
                     id="land-section"

@@ -9,7 +9,7 @@ interface HeaderField {
   name: string;
   label: string;
   type?: 'text-input' | 'number-input' | 'dropdown' | 'radio-group' | 'date-input';
-  colSpan: number;
+  colSpan?: number;
   disabled?: boolean;
   options?: ListBoxItem[] | RadioOption[];
   required?: boolean;
@@ -32,14 +32,14 @@ const LandTitleModal = ({
   onConfirm,
 }: LandTitleModalProps) => {
   const { watch, setValue } = popupForm;
-  const pricePerSqWa = watch('pricePerSquareWa');
-  const totalSqWa = watch('totalSqWa');
+  const pricePerSqWa = watch('governmentPricePerSqWa');
+  const squareWa = watch('squareWa');
 
   useEffect(() => {
     const price = Number(pricePerSqWa) || 0;
-    const sqwa = Number(totalSqWa) || 0;
+    const sqwa = Number(squareWa) || 0;
     setValue('governmentPrice', price * sqwa);
-  }, [pricePerSqWa, totalSqWa, setValue]);
+  }, [pricePerSqWa, squareWa, setValue]);
 
   const fields: FormField[] = headers.map(h => {
     const baseProps = {

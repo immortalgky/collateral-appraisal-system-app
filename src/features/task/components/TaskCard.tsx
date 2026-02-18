@@ -26,10 +26,7 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
       {/* Card Header */}
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <div>
-          <span className="font-semibold text-gray-900 text-sm">{task.appraisalReportNo}</span>
-          {task.referenceNo && (
-            <span className="text-xs text-gray-500 ml-1">(Ref. {task.referenceNo})</span>
-          )}
+          <span className="font-semibold text-gray-900 text-sm">{task.appraisalNumber}</span>
         </div>
         <Badge type="status" value={task.status} size="sm" />
       </div>
@@ -82,11 +79,13 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
       {/* Card Footer */}
       <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
         <span className="text-xs text-gray-500">
-          {new Date(task.createdAt).toLocaleDateString('th-TH', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })}
+          {task.requestedAt
+            ? new Date(task.requestedAt).toLocaleDateString('th-TH', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })
+            : '-'}
         </span>
         <button
           onClick={e => {

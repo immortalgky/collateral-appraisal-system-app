@@ -25,6 +25,7 @@ export const useUIStore = create<UIStore>(set => ({
 
 export const useParameterStore = create<ParameterStore>(set => ({
   parameters: {},
+  isLoaded: false,
   setParameters: (params: Parameter[]) => {
     const mapped: StoredParameters = {};
     for (const param of params) {
@@ -37,6 +38,7 @@ export const useParameterStore = create<ParameterStore>(set => ({
     }
     set({
       parameters: mapped,
+      isLoaded: true,
     });
   },
 }));

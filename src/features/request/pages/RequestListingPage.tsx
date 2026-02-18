@@ -328,57 +328,55 @@ function RequestListingPage() {
                   </td>
                 </tr>
               ) : (
-                requests
-                  .filter(request => request.status === 'DRAFT' || request.status === 'NEW')
-                  .map(request => (
-                    <tr
-                      key={request.id}
-                      onDoubleClick={() => request.id && handleDoubleClick(request.id)}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
-                      title="Double-click to open"
-                    >
-                      <td className="px-4 py-2.5">
-                        <span className="font-medium text-gray-900">
-                          {request.requestNumber || '-'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge type="status" value={request.status} />
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-600">
-                        <ParameterDisplay group="PURPOSE" code={request.purpose} />
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge type="channel" value={request.channel}>
-                          <ParameterDisplay group="CHANNEL" code={request.channel} />
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge type="priority" value={request.priority} />
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-600">
-                        {request.requestor?.username || '-'}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={e => request.id && handleEdit(e, request.id)}
-                            className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-primary transition-colors"
-                            title="Edit"
-                          >
-                            <Icon style="regular" name="pen-to-square" className="size-4" />
-                          </button>
-                          <button
-                            onClick={e => request.id && handleDelete(e, request.id)}
-                            className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                            title="Delete"
-                          >
-                            <Icon style="regular" name="trash-can" className="size-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                requests.map(request => (
+                  <tr
+                    key={request.id}
+                    onDoubleClick={() => request.id && handleDoubleClick(request.id)}
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    title="Double-click to open"
+                  >
+                    <td className="px-4 py-2.5">
+                      <span className="font-medium text-gray-900">
+                        {request.requestNumber || '-'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge type="status" value={request.status} />
+                    </td>
+                    <td className="px-4 py-2.5 text-gray-600">
+                      <ParameterDisplay group="PURPOSE" code={request.purpose} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge type="channel" value={request.channel}>
+                        <ParameterDisplay group="CHANNEL" code={request.channel} />
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge type="priority" value={request.priority} />
+                    </td>
+                    <td className="px-4 py-2.5 text-gray-600">
+                      {request.requestor?.username || '-'}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={e => request.id && handleEdit(e, request.id)}
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-primary transition-colors"
+                          title="Edit"
+                        >
+                          <Icon style="regular" name="pen-to-square" className="size-4" />
+                        </button>
+                        <button
+                          onClick={e => request.id && handleDelete(e, request.id)}
+                          className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                          title="Delete"
+                        >
+                          <Icon style="regular" name="trash-can" className="size-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

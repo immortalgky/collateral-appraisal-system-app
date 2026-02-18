@@ -35,7 +35,7 @@ export const assignmentFormSchema = z
     assignmentType: z.enum(['internal', 'external'], {
       required_error: 'Please select an assignment type',
     }),
-    assignmentMethod: z.enum(['manual', 'roundRobin', 'quotation'], {
+    assignmentMethod: z.enum(['manual', 'roundrobin', 'quotation'], {
       required_error: 'Please select an assignment method',
     }),
     staffId: z.string().nullable(),
@@ -62,7 +62,7 @@ export const assignmentFormSchema = z
     {
       message: 'Please select an assignee',
       path: ['staffId'], // Will show on staffId field
-    }
+    },
   )
   .refine(
     data => {
@@ -75,7 +75,7 @@ export const assignmentFormSchema = z
     {
       message: 'Please select an internal followup staff',
       path: ['followupStaffId'],
-    }
+    },
   );
 
 export type AssignmentFormType = z.infer<typeof assignmentFormSchema>;

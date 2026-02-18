@@ -11,6 +11,7 @@ export type UIStore = {
 
 export type ParameterStore = {
   parameters: StoredParameters;
+  isLoaded: boolean;
   setParameters: (parameters: Parameter[]) => void;
 };
 

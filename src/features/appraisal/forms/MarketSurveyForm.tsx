@@ -2,7 +2,7 @@ import { FormFields, type FormField } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useGetMarketSurveyTemplate, useSurveyTemplateFactors } from '../api';
 import { useEffect } from 'react';
-import type { GetMarketSurveyTemplateResponseType } from '@/shared/forms/marketSurvey';
+import type { MarketComparableFactorDtoType } from '@/shared/schemas/v1';
 
 const MarketSurveyForm = () => {
   const { getValues, setValue } = useFormContext();
@@ -14,8 +14,8 @@ const MarketSurveyForm = () => {
 
   const surveyTemplateOptions =
     templates?.map((t: any) => ({
-      label: t.templateDesc,
-      value: t.surveyTemplateCode,
+      label: t.description || t.templateName,
+      value: t.templateCode,
     })) ?? [];
 
   const surveyTemplateCode = useWatch({
@@ -87,7 +87,7 @@ const MarketSurveyForm = () => {
             return (
               <div key={fac.factorCode} className="grid grid-cols-4 gap-6">
                 <div className="col-span-1">
-                  <p>{fac.factorDesc}</p>
+                  <p>{fac.factorName}</p>
                 </div>
                 <div className="col-span-3">
                   <div className="grid grid-cols-12 gap-4">
@@ -135,7 +135,7 @@ const surveyNameField: FormField[] = [
 ];
 
 const buildFormField = (
-  fac: GetMarketSurveyTemplateResponseType,
+  fac: MarketComparableFactorDtoType,
   index: number,
   parameterOptions: Record<string, { value: string; label: string }[]>
 ): FormField => {
@@ -146,7 +146,7 @@ const buildFormField = (
         name: `marketSurveyData.[${index}].${fac.fieldName}`,
         label: '',
         wrapperClassName: 'col-span-6',
-        options: parameterOptions[fac.parameterGroup] ?? [],
+        options: parameterOptions[fac.parameterGroup ?? ''] ?? [],
       };
 
     case 'radio-group':
@@ -154,7 +154,7 @@ const buildFormField = (
         type: 'radio-group',
         name: `marketSurveyData.[${index}].${fac.fieldName}`,
         orientation: 'horizontal',
-        options: parameterOptions[fac.parameterGroup] ?? [],
+        options: parameterOptions[fac.parameterGroup ?? ''] ?? [],
         wrapperClassName: 'col-span-12',
       };
 
@@ -163,7 +163,7 @@ const buildFormField = (
         type: 'checkbox-group',
         name: `marketSurveyData.[${index}].${fac.fieldName}`,
         orientation: 'horizontal',
-        options: parameterOptions[fac.parameterGroup] ?? [],
+        options: parameterOptions[fac.parameterGroup ?? ''] ?? [],
         wrapperClassName: 'col-span-12',
       };
 
@@ -172,7 +172,7 @@ const buildFormField = (
         type: 'boolean-toggle',
         name: `marketSurveyData.[${index}].${fac.fieldName}`,
         label: '',
-        options: fac.options,
+        options: ['No', 'Yes'] as [string, string],
         wrapperClassName: 'col-span-6',
       };
 
@@ -227,20 +227,17 @@ const mockParameterOptions = [
   },
 ];
 
-const defaultMarketSurveyData = (factors: GetMarketSurveyTemplateResponseType[]) => {
+const defaultMarketSurveyData = (factors: MarketComparableFactorDtoType[]) => {
   return factors.map(fac => ({
-    marketSurveyId: fac.marketSurveyId,
+    factorId: fac.id,
     factorCode: fac.factorCode,
-    factorDesc: fac.factorDesc,
+    factorName: fac.factorName,
     fieldName: fac.fieldName,
     dataType: fac.dataType,
     parameterGroup: fac.parameterGroup ?? '',
     fieldLength: fac.fieldLength ?? 0,
     fieldDecimal: fac.fieldDecimal ?? 0,
-    mandatory: 'N',
-    displaySeq: 0,
     value: '',
-    measurementUnit: '',
     otherRemark: '',
   }));
 };

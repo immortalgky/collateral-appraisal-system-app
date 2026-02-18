@@ -1,43 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { schemas } from '@shared/schemas/v1';
+import type { z } from 'zod';
 import type { PropertyType } from '../types';
 
 // ==================== Type Definitions ====================
 
-// Loose types that match what the API actually returns.
-// We avoid strict Zod .parse() so a single unexpected field doesn't crash the whole page.
-
-export interface PropertyGroupDto {
-  id: string;
-  groupNumber: number;
-  groupName: string;
-  description: string | null;
-  useSystemCalc: boolean;
-  propertyCount: number;
-  [key: string]: unknown; // passthrough
-}
-
-export interface GetPropertyGroupsResponse {
-  groups: PropertyGroupDto[];
-  [key: string]: unknown;
-}
-
-export interface PropertyGroupItemDto {
-  propertyId: string;
-  sequenceInGroup: number;
-  propertyType?: string; // comes via .passthrough()
-  [key: string]: unknown;
-}
-
-export interface GetPropertyGroupByIdResponse {
-  id: string;
-  groupNumber: number;
-  groupName: string;
-  description: string | null;
-  useSystemCalc: boolean;
-  properties: PropertyGroupItemDto[];
-  [key: string]: unknown;
-}
+export type PropertyGroupDto = z.infer<typeof schemas.PropertyGroupDto>;
+export type GetPropertyGroupsResponse = z.infer<typeof schemas.GetPropertyGroupsResponse>;
+export type PropertyGroupItemDto = z.infer<typeof schemas.PropertyGroupItemDto>;
+export type GetPropertyGroupByIdResponse = z.infer<typeof schemas.GetPropertyGroupByIdResponse>;
 
 // ==================== Query Keys ====================
 
@@ -245,6 +217,76 @@ export const useRemovePropertyFromGroup = () => {
       });
       queryClient.invalidateQueries({
         queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.groupId),
+      });
+    },
+  });
+};
+
+// ==================== Reorder & Move ====================
+
+/**
+ * Reorder properties within a group
+ * PUT /appraisals/{appraisalId}/property-groups/{groupId}/reorder-properties
+ */
+export const useReorderPropertiesInGroup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId: string;
+      orderedPropertyIds: string[];
+    }) => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/property-groups/${params.groupId}/reorder-properties`,
+        { orderedPropertyIds: params.orderedPropertyIds },
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.groupId),
+      });
+    },
+  });
+};
+
+/**
+ * Move a property to another group (atomic operation)
+ * POST /appraisals/{appraisalId}/properties/{propertyId}/move-to-group
+ */
+export const useMovePropertyToGroup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      sourceGroupId: string;
+      propertyId: string;
+      targetGroupId: string;
+      targetPosition?: number | null;
+    }) => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/move-to-group`,
+        {
+          targetGroupId: params.targetGroupId,
+          targetPosition: params.targetPosition ?? null,
+        },
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.sourceGroupId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.targetGroupId),
       });
     },
   });

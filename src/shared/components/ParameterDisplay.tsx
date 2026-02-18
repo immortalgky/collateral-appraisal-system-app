@@ -1,4 +1,4 @@
-import { useLocaleStore, useParameterStore } from '../store';
+import { useParameterDescription } from '../utils/parameterUtils';
 
 type DisplayFormat = 'description' | 'code-description';
 
@@ -29,15 +29,9 @@ const ParameterDisplay = ({
   fallback = '-',
   className,
 }: ParameterDisplayProps) => {
-  const { parameters } = useParameterStore();
-  const { country, language } = useLocaleStore();
+  const description = useParameterDescription(group, code);
 
   if (!code) return <span className={className}>{fallback}</span>;
-
-  const key = `${group}.${country}.${language}`;
-  const params = parameters[key];
-  const param = params?.find(p => p.code === code);
-  const description = param?.description || code;
 
   const label = format === 'code-description' ? `${code} - ${description}` : description;
 

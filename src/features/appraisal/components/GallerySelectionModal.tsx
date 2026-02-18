@@ -64,7 +64,7 @@ export const GallerySelectionModal = ({
       image =>
         image.fileName?.toLowerCase().includes(query) ||
         image.description?.toLowerCase().includes(query) ||
-        image.groupName?.toLowerCase().includes(query)
+        image.photoCategory?.toLowerCase().includes(query)
     );
   }, [images, searchQuery]);
 
@@ -239,7 +239,7 @@ export const GallerySelectionModal = ({
                     )}
                   >
                     <img
-                      src={image.src}
+                      src={image.thumbnailSrc || image.src}
                       alt={image.alt}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -275,9 +275,9 @@ export const GallerySelectionModal = ({
                       <p className="text-white text-sm font-medium truncate">
                         {image.fileName || image.alt}
                       </p>
-                      {image.groupName && (
+                      {image.photoCategory && (
                         <p className="text-white/70 text-xs truncate mt-0.5">
-                          {image.groupName}
+                          {image.photoCategory}
                         </p>
                       )}
                     </div>
