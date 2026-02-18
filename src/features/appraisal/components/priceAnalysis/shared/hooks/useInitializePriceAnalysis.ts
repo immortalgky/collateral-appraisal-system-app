@@ -2,7 +2,7 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, type GetPropertyGroupByIdResponse } from '@/features/appraisal/api';
 import { GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
-import { useGetPricingAnalysis } from '../../api/api';
+import { useGetAllFactors, useGetPricingAnalysis } from '../../api/api';
 import { MAPPED_MARKET_COMPARABLE_DATA } from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
 import {
   GetMarketComparableByIdResponse,
@@ -222,8 +222,11 @@ export function useInitializePriceAnalysis({
     retry: 1,
   });
 
-  // Step: 5 Fetch price analysis selection data
+  // Step 5: Fetch price analysis selection data
   const pricingSelectionQuery = useGetPricingAnalysis(groupId);
+
+  // Step 6: Fetch all factors
+  const allFactorQuery = useGetAllFactors();
 
   // Step 5: Assemble wait until all data finished
   const isLoadingGroupDetails = groupDetailQuery.isLoading;
@@ -231,6 +234,7 @@ export function useInitializePriceAnalysis({
   const isLoadingMarketSurveyDetails = marketSurveyDetailQueries.some(q => q.isLoading);
   const isLoadingPricingConfiguration = pricingConfigurationQuery.isLoading;
   const isLoadingPricingSelection = pricingSelectionQuery.isLoading;
+  const isLoadingAllFactor = allFactorQuery.isLoading;
 
   // Only groups-level and group-detail-level errors are fatal.
   // Property detail errors are non-fatal — the property just shows minimal info.
@@ -239,7 +243,8 @@ export function useInitializePriceAnalysis({
     isLoadingPropertyDetails ||
     isLoadingMarketSurveyDetails ||
     isLoadingPricingConfiguration ||
-    isLoadingPricingSelection;
+    isLoadingPricingSelection ||
+    isLoadingAllFactor;
   const error = pricingConfigurationQuery.error;
 
   // Build a lookup map for property details

@@ -74,6 +74,8 @@ export function useSaveEditingSelection() {
     return pricingIdEntries;
   };
 
+  const isSuccess = addApproach.isSuccess && addMethod.isSuccess;
+
   return {
     save,
     addApproach,

@@ -2,6 +2,7 @@ import { unknown } from 'zod';
 import type { Approach, GroupDetails, Method } from '../type';
 import type {
   FactorDataType,
+  GetComparativeFactorsResponseType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../../../schemas/v1';
@@ -39,6 +40,7 @@ export type PriceAnalysisSelectorState = {
   marketSurveys?: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
   methodTemplates?: TemplateDetailType[];
+  comparativeFactors?: GetComparativeFactorsResponseType;
 };
 
 export type PriceAnalysisSelectorAction =
@@ -67,11 +69,12 @@ export type PriceAnalysisSelectorAction =
   | {
       type: 'CALCULATION_ENTER';
       payload: {
-        allFactors: FactorDataType[];
-        templates: TemplateDetailType[];
         approachId: string;
         methodId: string;
         methodType: string;
+        allFactors: FactorDataType[];
+        templates?: TemplateDetailType[];
+        comparativeFactors?: GetComparativeFactorsResponseType;
       };
     };
 

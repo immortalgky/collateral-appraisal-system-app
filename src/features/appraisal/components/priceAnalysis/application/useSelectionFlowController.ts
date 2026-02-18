@@ -110,19 +110,26 @@ export function useSelectionFlowController(opts: {
     return { appr, method };
   }, [state, calcKey]);
 
-  /** (3.1) Fetch template that belonging to method*/
-  const templateQuery = useGetPricingTemplate(state.activeMethod?.methodType);
+  /** (3.1) Fetch template that belonging to method when methodType is existed */
+  const templateQuery = useGetPricingTemplate(calcKey?.methodType);
 
   /** (3.2) Fetch comparative factors only when user initiated calculation and IDs exist */
   const comparativeFactorsQuery = useGetComparativeFactors(
     opts.appraisalId,
     state.activeMethod?.methodId,
   );
+
   const isEditMode = Boolean(comparativeFactorsQuery.data);
 
+  /** (4) mange result
+   * (4.1) If got comparative value, mapping, pass to calculation section.
+   * (4.2) If not, start new calulcation.
+   */
   useEffect(() => {
     if (!calcKey) return;
     if (!calcIds) return; // safety
+
+    /** Guard template data in case that we not allow user to do calculation if not choose method. so, if don't have any method to query, user still cannot do calculation */
     if (!templateQuery.data) return;
 
     // if (comparativeQ.isLoading) return;
@@ -142,9 +149,21 @@ export function useSelectionFlowController(opts: {
       return;
     }
 
-    /** if got comparative value, mapping, pass to calculation section.
-     * if not, initail data
-     */
+    /** (4.1) if got comparative value, mapping, pass to calculation section. */
+    if (comparativeFactorsQuery.data) {
+      dispatch({
+        type: 'CALCULATION_ENTER',
+        payload: {
+          allFactors: ALL_FACTORS,
+          templates: templateQuery.data.templates as TemplateDetailType[],
+          approachId: appr.id,
+          methodId: method.id,
+          methodType: method.methodType,
+          com
+        },
+      });
+      return;
+    }
 
     dispatch({
       type: 'CALCULATION_ENTER',
@@ -236,12 +255,14 @@ export function useSelectionFlowController(opts: {
       }
 
       console.log('Saving selection', selections);
+      /*
       const pricingIds: Array<{ approachId: string; methodIds: Array<{ id: string }> }> =
         await saveEditingSelection({
           pricingAnalysisId: opts.pricingAnalysisId,
           groupId: opts.groupId,
           selections,
         });
+      */
 
       dispatch({ type: 'EDIT_SAVE' });
 

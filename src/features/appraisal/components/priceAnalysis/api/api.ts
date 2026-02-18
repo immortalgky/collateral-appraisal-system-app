@@ -10,6 +10,7 @@ import {
   type AddPriceAnalysisApproachResponseType,
   type AddPriceAnalysisMethodRequestType,
   type AddPriceAnalysisMethodResponseType,
+  type FactorDataType,
   GetComparativeFactorsResponse,
   type GetComparativeFactorsResponseType,
   GetMarketComparablesResponse,
@@ -28,6 +29,7 @@ import {
   WQS_TEMPLATES,
 } from '../data/templatesData';
 import { MAPPED_MARKET_COMPARABLE_DATA } from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
+import { ALL_FACTORS } from '../data/allFactorsData';
 
 export function useGetPropertyGroupById(appraisalId: string, groupId: string) {
   return useQuery({
@@ -319,6 +321,22 @@ export function useGetPriceAnalysisTemplates(methodType: string) {
       if (methodType === 'DC_MARKET')
         return GetPricingTemplateByMethodResponse.parse(WQS_TEMPLATES);
       return GetPricingTemplateByMethodResponse.parse(null);
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    retry: 1,
+  });
+}
+
+export function useGetAllFactors() {
+  const queryKey = ['all-factors'];
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<FactorDataType> => {
+      // MOCK delay:
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return ALL_FACTORS;
     },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
