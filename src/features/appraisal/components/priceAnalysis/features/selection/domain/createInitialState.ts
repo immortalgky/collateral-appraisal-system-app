@@ -1,8 +1,8 @@
 import type { GetPricingAnalysisResponseType, PriceAnalysisConfigType } from '../../../schemas/v1';
-import type { Approach } from '../type';
+import type { Approach, Method } from '../type';
 
 export function createInitialState(
-  priceAnalysisConfig: PriceAnalysisConfigType,
+  priceAnalysisConfig: PriceAnalysisConfigType[],
   priceAnalysisData: GetPricingAnalysisResponseType,
 ): Approach[] {
   console.log(priceAnalysisData);
@@ -10,7 +10,7 @@ export function createInitialState(
   const apiApproaches = priceAnalysisData?.approaches ?? [];
   const apiApproachByType = new Map(apiApproaches.map(a => [a.approachType, a]));
 
-  return (priceAnalysisConfig.approaches ?? []).map(confAppr => {
+  return priceAnalysisConfig.map((confAppr: PriceAnalysisConfigType) => {
     const apiAppr = apiApproachByType.get(confAppr.approachType);
 
     const apiMethods = apiAppr?.methods ?? [];
@@ -24,12 +24,12 @@ export function createInitialState(
       appraisalValue: apiAppr?.appraisalValue ?? confAppr.appraisalValue ?? 0,
       isCandidated: apiAppr?.isCandidated ?? false,
 
-      methods: (confAppr.methods ?? []).map(confMethod => {
+      methods: confAppr.methods.map(confMethod => {
         const apiMethod = apiMethodByType.get(confMethod.methodType);
 
         return {
           // If backend has its own method id, prefer it when present (useful for update/delete)
-          id: apiMethod?.id ?? null,
+          id: apiMethod?.id ?? undefined,
           methodType: confMethod.methodType,
           label: confMethod.label ?? '',
           icon: confMethod.icon ?? 'image',
@@ -39,7 +39,7 @@ export function createInitialState(
           isCandidated: apiMethod?.isCandidated ?? false,
           appraisalValue: apiMethod?.appraisalValue ?? confMethod.appraisalValue ?? 0,
         };
-      }),
+      }) as Method[],
     };
-  });
+  }) as Approach[];
 }

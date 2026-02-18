@@ -1,22 +1,25 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, type GetPropertyGroupByIdResponse } from '@/features/appraisal/api';
-import { APPROACHES_QUERY_RESPONSE, GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../../data/data';
-import { MAPPED_MARKET_COMPARABLE_DATA } from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
+import { APPROACHES_QUERY_RESPONSE, GET_PROPERTY_GROUP_BY_ID_RESPONSE } from '../data/data';
+import {
+  MAPPED_MARKET_COMPARABLE_DATA,
+  MARKET_COMPARABLES,
+} from '@features/appraisal/components/priceAnalysis/data/marketSurveyData.ts';
 import {
   type FactorDataType,
   GetMarketComparableByIdResponse,
-  type GetMarketComparablesByIdResponseType,
+  type GetMarketComparableByIdResponseType,
   GetMarketComparablesResponse,
   type GetMarketComparablesResponseType,
   GetPricingAnalysisResponse,
   type GetPricingAnalysisResponseType,
-  PriceAnalysisConfig,
-  type PriceAnalysisConfigType,
+  PriceAnalysisConfigResponse,
+  type PriceAnalysisConfigResponseType,
 } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 import { PROPERTIES } from '@features/appraisal/components/priceAnalysis/data/propertiesData.ts';
 import type { PropertyItem, PropertyType } from '@features/appraisal/types';
-import { ALL_FACTORS } from '../../data/allFactorsData';
+import { ALL_FACTORS } from '../data/allFactorsData';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -165,7 +168,7 @@ export function useInitializePriceAnalysis({
       // return data;
 
       await new Promise(resolve => setTimeout(resolve, 3000));
-      const parse = GetMarketComparablesResponse.safeParse(GET_PROPERTY_GROUP_BY_ID_RESPONSE);
+      const parse = GetMarketComparablesResponse.safeParse(MARKET_COMPARABLES);
       if (!parse.success) {
         throw parse.error;
       }
@@ -188,11 +191,12 @@ export function useInitializePriceAnalysis({
 
   // Step 3.1: For each market survey, fetch its detail
   const mapping_mock_survey_data = new Map(MAPPED_MARKET_COMPARABLE_DATA.map(s => [s.id, s]));
+  console.log('all entries', allMarketSurveyEntries);
   const marketSurveyDetailQueries = useQueries({
     queries: allMarketSurveyEntries.map(entry => {
       return {
         queryKey: ['pricing-market', entry.id, appraisalId],
-        queryFn: async (): Promise<GetMarketComparablesByIdResponseType> => {
+        queryFn: async (): Promise<GetMarketComparableByIdResponseType> => {
           // const { data } = await axios.get(`/market-comparables/${entry.id}`);
           // return data as Record<string, unknown>;
           const parse = GetMarketComparableByIdResponse.safeParse(
@@ -201,6 +205,7 @@ export function useInitializePriceAnalysis({
           if (!parse.success) {
             throw parse.error;
           }
+          console.log(parse.data);
           return parse.data;
         },
         enabled: !!appraisalId && !!entry.id,
@@ -214,7 +219,7 @@ export function useInitializePriceAnalysis({
   /** fetch price analysis configuration on json file. The configuration file consist of 1 approach can include which method */
   const pricingConfigurationQuery = useQuery({
     queryKey: ['price-analysis-config'],
-    queryFn: async (): Promise<PriceAnalysisConfigType> => {
+    queryFn: async (): Promise<PriceAnalysisConfigResponseType> => {
       const res = await fetch(
         '/src/features/appraisal/components/priceAnalysis/data/priceAnalysis.config.json',
         { cache: 'no-store' },
@@ -225,7 +230,7 @@ export function useInitializePriceAnalysis({
       }
 
       const json = await res.json();
-      const parsed = PriceAnalysisConfig.safeParse(json);
+      const parsed = PriceAnalysisConfigResponse.safeParse(json);
       if (!parsed.success) {
         throw parsed.error;
       }
@@ -240,11 +245,18 @@ export function useInitializePriceAnalysis({
   });
 
   // Step 5: Fetch price analysis selection data
+  /** TODO: right now, GetPricingAnalysis not return methods */
   const pricingSelectionQuery = useQuery({
     queryKey: ['price-analysis', pricingAnalysisId],
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
-      // const { data } = await axios.get(`/price-analysis/${id}`);
-      // return GetPricingAnalysisResponse.parse(data);
+      // const { data } = await axios.get(`/pricing-analysis/${pricingAnalysisId}`);
+      // const parse = GetPricingAnalysisResponse.safeParse(data);
+      //
+      // if (!parse.success) {
+      //   console.log(parse.error);
+      //   throw parse.error;
+      // }
+      // return parse.data;
 
       // MOCK delay:
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -304,12 +316,12 @@ export function useInitializePriceAnalysis({
     }
   }
 
-  const groupDetail = groupDetailQuery?.data;
-  const properties = groupDetail?.properties ?? [];
-  const marketSurveyDetails = marketSurveyDetailQueries?.map(q => q.data);
-  const pricingConfiguration = pricingConfigurationQuery?.data;
-  const pricingSelection = pricingSelectionQuery?.data ?? [];
-  const allFactors = allFactorQuery?.data;
+  const groupDetail = groupDetailQuery.data;
+  const properties = groupDetail?.properties;
+  const marketSurveyDetails = marketSurveyDetailQueries.map(q => q.data);
+  const pricingConfiguration = pricingConfigurationQuery.data?.approaches;
+  const pricingSelection = pricingSelectionQuery.data;
+  const allFactors = allFactorQuery.data;
 
   const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
   const _property = PROPERTIES[0];

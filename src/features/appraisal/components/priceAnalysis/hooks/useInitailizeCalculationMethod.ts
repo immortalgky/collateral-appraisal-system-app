@@ -4,13 +4,13 @@ import {
   GetPricingTemplateByMethodResponse,
   type GetComparativeFactorsResponseType,
   type GetPricingTemplatesByMethodResponseType,
-} from '../../schemas/v1';
+} from '../schemas/v1';
 import axios from '@shared/api/axiosInstance';
 import {
   DIRECT_COMPARISON_TEMPLATES,
   SALE_GRID_TEMPLATES,
   WQS_TEMPLATES,
-} from '../../data/templatesData';
+} from '../data/templatesData';
 
 interface useInitializeCalculationMethodProps {
   appraisalId: string;
@@ -26,7 +26,7 @@ export function useInitializeCalculationMethod({
   const pricingTemplateQuery = useQuery({
     queryKey: ['price-analysis-template', methodType],
     queryFn: async (): Promise<GetPricingTemplatesByMethodResponseType> => {
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       let parse;
       switch (methodType) {

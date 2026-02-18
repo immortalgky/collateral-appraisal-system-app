@@ -9,10 +9,10 @@ import { useMemo } from 'react';
 import type {
   FactorDataType,
   MarketComparableDataType,
+  MarketComparableDetailType,
   TemplateDetailType,
   TemplateFactorDataType,
 } from '../../schemas/v1';
-import { readFactorValue } from '../../domain/readFactorValue';
 import type { ComparativeFactorFormType } from '../../features/wqs/schemas/wqsForm';
 
 interface ComparativeSurveySectionProps {
@@ -83,15 +83,7 @@ export function ComparativeSurveySection({
                 .filter(
                   (f: FactorDataType) =>
                     f.factorCode === selected.factorCode ||
-                    !comparativeFactors.some(
-                      (q: any) =>
-                        q.factorCode ===
-                        readFactorValue({
-                          dataType: f.dataType,
-                          fieldDecimal: f.fieldDecimal,
-                          value: f.value,
-                        }),
-                    ),
+                    !comparativeFactors.some((q: any) => q.factorCode === f.factorCode),
                 )
                 .map((f: FactorDataType) => ({
                   label: f.factorName ?? '',
@@ -99,7 +91,7 @@ export function ComparativeSurveySection({
                 }));
               return (
                 <tr
-                  key={compFact.factorCode}
+                  key={compFact.factorCode ?? rowIndex}
                   className="hover:bg-gray-50 cursor-default transition-colors"
                 >
                   <td
@@ -112,8 +104,7 @@ export function ComparativeSurveySection({
                       className="truncate"
                       title={getFactorDesciption(compFact.factorCode) ?? ''}
                     >
-                      {template?.comparativeFactors.find((t: TemplateFactorDataType) => {
-                        console.log(t.factorCode, compFact.factorCode);
+                      {template?.comparativeFactors?.find((t: TemplateFactorDataType) => {
                         return t.factorCode === compFact.factorCode;
                       }) ? (
                         <RHFInputCell
@@ -130,7 +121,7 @@ export function ComparativeSurveySection({
                       )}
                     </div>
                   </td>
-                  {comparativeMarketSurveys.map((survey: any) => {
+                  {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
                     return (
                       <td key={survey.id} className="px-3 py-2.5 font-medium ">
                         {
@@ -138,7 +129,9 @@ export function ComparativeSurveySection({
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) =>
-                              survey.factors.find((factor: any) => factor.id === value)?.value ?? ''
+                              survey.factorData?.find(
+                                (factor: FactorDataType) => factor.factorCode === value,
+                              )?.value ?? ''
                             }
                           />
                         }

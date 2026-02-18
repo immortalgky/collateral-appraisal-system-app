@@ -338,54 +338,50 @@ const MarketComparableDetailDto = z
   .passthrough();
 
 export const GetMarketComparableByIdRequest = z.object({}).passthrough();
-export const GetMarketComparableByIdResponse = z
-  .object({
-    marketComparables: z.array(MarketComparableDetailDto).nullable().optional(),
-  })
-  .passthrough();
+export const GetMarketComparableByIdResponse = MarketComparableDetailDto;
 
 export type MarketComparableDetailType = z.infer<typeof MarketComparableDetailDto>;
-export type GetMarketComparablesByIdRequestType = z.infer<typeof GetMarketComparableByIdRequest>;
-export type GetMarketComparablesByIdResponseType = z.infer<typeof GetMarketComparableByIdResponse>;
+export type GetMarketComparableByIdRequestType = z.infer<typeof GetMarketComparableByIdRequest>;
+export type GetMarketComparableByIdResponseType = z.infer<typeof GetMarketComparableByIdResponse>;
 
 /** ================================ */
 /** Query pricing analysis configuration */
 /** ================================ */
-export const PriceAnalysisConfig = z.object({
-  approaches: z.array(
-    z.object({
-      id: z.string(),
-      approachType: z.string(),
-      label: z.string(),
-      icon: z.string(),
-      appraisalValue: z.number().nullable().optional(),
-      methods: z.array(
-        z
-          .object({
-            id: z.string(),
-            methodType: z.string(),
-            icon: z.string(),
-            label: z.string(),
-            appraisalValue: z.number().nullable().optional(),
-            configurations: z.array(
-              z
-                .object({
-                  type: z.string(),
+const PriceAnalysisConfigDto = z.object({
+  id: z.string(),
+  approachType: z.string(),
+  label: z.string(),
+  icon: z.string(),
+  appraisalValue: z.number().nullable().optional(),
+  methods: z.array(
+    z
+      .object({
+        id: z.string(),
+        methodType: z.string(),
+        icon: z.string(),
+        label: z.string(),
+        appraisalValue: z.number().nullable().optional(),
+        configurations: z.array(
+          z
+            .object({
+              type: z.string(),
 
-                  // sale grid & direct configs
-                  showQualitativeSection: z.boolean().nullable().optional(),
-                  showInitialPriceSection: z.boolean().nullable().optional(),
-                  showSecondRevisionSection: z.boolean().nullable().optional(),
-                  showAdjustedValueSection: z.boolean().nullable().optional(),
-                  showAdjustedWeightSection: z.boolean().nullable().optional(),
-                  showAdjustFinalValueSection: z.boolean().nullable().optional(),
-                })
-                .passthrough(),
-            ),
-          })
-          .passthrough(),
-      ),
-    }),
+              // sale grid & direct configs
+              showQualitativeSection: z.boolean().nullable().optional(),
+              showInitialPriceSection: z.boolean().nullable().optional(),
+              showSecondRevisionSection: z.boolean().nullable().optional(),
+              showAdjustedValueSection: z.boolean().nullable().optional(),
+              showAdjustedWeightSection: z.boolean().nullable().optional(),
+              showAdjustFinalValueSection: z.boolean().nullable().optional(),
+            })
+            .passthrough(),
+        ),
+      })
+      .passthrough(),
   ),
+}).passthrough();
+export const PriceAnalysisConfigResponse = z.object({
+  approaches: z.array(PriceAnalysisConfigDto),
 });
-export type PriceAnalysisConfigType = z.infer<typeof PriceAnalysisConfig>;
+export type PriceAnalysisConfigType = z.infer<typeof PriceAnalysisConfigDto>;
+export type PriceAnalysisConfigResponseType = z.infer<typeof PriceAnalysisConfigResponse>;

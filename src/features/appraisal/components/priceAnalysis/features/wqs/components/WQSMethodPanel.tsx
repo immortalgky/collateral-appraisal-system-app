@@ -81,7 +81,7 @@ export function WQSMethodPanel({
   allFactors,
   onCalculationMethodDirty,
 }: WQSMethodPanelProps) {
-  console.log(templates);
+  console.log(marketSurveys);
   const methods = useForm<WQSRequestType>({
     mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
@@ -112,14 +112,14 @@ export function WQSMethodPanel({
   };
 
   /** Template selector handler */
-  const [comparativeSurveys, setComparativeSurveys] = useState<Record<string, unknown>[]>([]);
-  const handleOnSelectComparativeMarketSurvey = (surveys: Record<string, unknown>[]) => {
+  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
     setComparativeSurveys([...surveys]);
   };
 
   const [collateralTypeId, setCollateralTypeId] = useState<string>('');
   const [pricingTemplateId, setPricingTemplateId] = useState<string>('');
-  const [pricingTemplate, setPricingTemplate] = useState<WQSTemplate | undefined>();
+  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
   const handleOnGenerate = () => {
@@ -170,19 +170,11 @@ export function WQSMethodPanel({
       template: pricingTemplate,
       reset: reset,
     });
-  }, [
-    collateralTypeId,
-    comparativeSurveys,
-    isGenerated,
-    methodId,
-    methodType,
-    pricingTemplate,
-    property,
-    reset,
-  ]);
+  }, [collateralTypeId, isGenerated, methodId, methodType, property, reset]);
 
   useEffect(() => {
     console.log('comparative change!');
+    console.log(marketSurveys);
     setWQSInitialValueOnSelectSurvey({
       collateralType: collateralTypeId,
       methodId: methodId,

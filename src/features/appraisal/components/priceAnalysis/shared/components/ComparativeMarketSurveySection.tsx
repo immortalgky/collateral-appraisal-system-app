@@ -36,7 +36,7 @@ export function ComparativeMarketSurveySection({
           <button
             type="button"
             onClick={() => handleOnClickAddComparativeSurvey(true)}
-            className="w-[200px] border border-dashed border-primary text-primary font-medium hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
+            className="w-[250px] border border-dashed border-primary text-primary font-medium hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
           >
             Add Comparative Data
           </button>

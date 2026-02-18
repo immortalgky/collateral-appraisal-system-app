@@ -37,31 +37,22 @@ export function useSaveEditingSelection() {
 
   const save = async (input: {
     pricingAnalysisId: string;
-    groupId: string;
     selections: Array<{ approachType: string; methodTypes: string[] }>;
   }) => {
-    console.log(
-      'check parameters',
-      input.pricingAnalysisId,
-      input.groupId,
-      input.selections.length,
-    );
-    if (!input.pricingAnalysisId || !input.groupId || input.selections.length === 0) return [];
-
-    console.log('pass condition');
+    if (!input.pricingAnalysisId || input.selections.length === 0) return [];
 
     const pricingIdEntries: Array<{ approachId: string; methodIds: Array<{ id: string }> }> = [];
 
     for (const sel of input.selections) {
       const addApproachRes = await addApproach.mutateAsync({
-        id: input.pricingAnalysisId,
+        pricingAnalysisId: input.pricingAnalysisId,
         request: { approachType: mapToServerApproachType(sel.approachType) },
       });
 
       const methodIdEntries: Array<{ id: string }> = [];
       for (const methodType of sel.methodTypes) {
         const addMethodRes = await addMethod.mutateAsync({
-          id: input.pricingAnalysisId,
+          pricingAnalysisId: input.pricingAnalysisId,
           approachId: addApproachRes.id,
           request: { methodType: mapToServerMethodType(methodType) },
         });

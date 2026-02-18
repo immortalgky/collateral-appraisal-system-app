@@ -2,36 +2,28 @@ import { WQSMethodPanel } from '../features/wqs/components/WQSMethodPanel';
 import { SaleAdjustmentGridPanel } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridPanel.tsx';
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
 import { DirectComparisonPanel } from '../features/directComparison/components/DirectComparisonPanel';
+import type { PriceAnalysisSelectorState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
 
 interface MethodSectionRendererProps {
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  allFactors: FactorDataType[];
-  marketSurveys: MarketComparableDetailType[];
-  templates: TemplateDetailType[];
+  state: PriceAnalysisSelectorState;
   onCalculationMethodDirty: (check: boolean) => void;
 }
 
 export function MethodSectionRenderer({
-  methodId,
-  methodType,
-  property,
-  allFactors,
-  marketSurveys,
-  templates,
+  state,
   onCalculationMethodDirty,
 }: MethodSectionRendererProps) {
-  switch (methodType) {
+  console.log('surveys', state.marketSurveys);
+  switch (state.activeMethod?.methodType) {
     case 'WQS_MARKET': {
       return (
         <WQSMethodPanel
-          methodId={methodId}
-          methodType={methodType}
-          property={property}
-          marketSurveys={marketSurveys}
-          templates={templates}
-          allFactors={allFactors}
+          methodId={state.activeMethod?.methodId}
+          methodType={state.activeMethod?.methodType}
+          property={state.property}
+          marketSurveys={state.marketSurveys}
+          templates={state.methodTemplates}
+          allFactors={state.allFactors}
           onCalculationMethodDirty={onCalculationMethodDirty}
         />
       );
@@ -39,23 +31,23 @@ export function MethodSectionRenderer({
     case 'SAG_MARKET':
       return (
         <SaleAdjustmentGridPanel
-          methodId={methodId}
-          methodType={methodType}
-          property={property}
-          marketSurveys={marketSurveys}
-          templates={templates}
-          allFactors={allFactors}
+          methodId={state.activeMethod?.methodId}
+          methodType={state.activeMethod?.methodType}
+          property={state.property}
+          marketSurveys={state.marketSurveys}
+          templates={state.methodTemplates}
+          allFactors={state.allFactors}
         />
       );
     case 'DC_MARKET':
       return (
         <DirectComparisonPanel
-          methodId={methodId}
-          methodType={methodType}
-          property={property}
-          marketSurveys={marketSurveys}
-          templates={templates}
-          allFactors={allFactors}
+          methodId={state.activeMethod?.methodId}
+          methodType={state.activeMethod?.methodType}
+          property={state.property}
+          marketSurveys={state.marketSurveys}
+          templates={state.methodTemplates}
+          allFactors={state.allFactors}
         />
       );
     default:

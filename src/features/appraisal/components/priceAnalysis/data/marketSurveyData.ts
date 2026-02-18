@@ -1,5 +1,67 @@
-import type { MarketComparableDetailType } from '../schemas/v1';
+import type {
+  GetMarketComparablesResponseType,
+  MarketComparableDataType,
+  MarketComparableDetailType,
+} from '../schemas/v1';
 
+export const MARKET_COMPARABLES: GetMarketComparablesResponseType = {
+  marketComparables: [
+    {
+      id: '00000000-0000-0000-0000-000000000000',
+      comparableNumber: '0',
+      propertyType: 'L',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      comparableNumber: '0',
+      propertyType: 'L',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      comparableNumber: '0',
+      propertyType: 'L',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000003',
+      comparableNumber: '0',
+      propertyType: 'LB',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000004',
+      comparableNumber: '0',
+      propertyType: 'LB',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000005',
+      comparableNumber: '0',
+      propertyType: 'LB',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000006',
+      comparableNumber: '0',
+      propertyType: 'C',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000007',
+      comparableNumber: '0',
+      propertyType: 'C',
+      surveyName: 'Survey 1',
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000008',
+      comparableNumber: '0',
+      propertyType: 'C',
+      surveyName: 'Survey 1',
+    },
+  ],
+};
 export const MAPPED_MARKET_COMPARABLE_DATA: MarketComparableDetailType[] = [
   {
     id: '00000000-0000-0000-0000-000000000000',

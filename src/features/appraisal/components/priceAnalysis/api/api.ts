@@ -151,14 +151,17 @@ export function useAddPriceAnalysisApproach() {
 
   return useMutation({
     mutationFn: async ({
-      id,
+      pricingAnalysisId,
       request,
     }: {
-      id: string;
+      pricingAnalysisId: string;
       request: AddPriceAnalysisApproachRequestType;
     }): Promise<AddPriceAnalysisApproachResponseType> => {
       console.log('fire add approach');
-      const { data: response } = await axios.post(`/pricing-analysis/${id}/approaches`, request);
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/approaches`,
+        request,
+      );
       return response;
     },
     onSuccess: (data, variables) => {
@@ -166,7 +169,55 @@ export function useAddPriceAnalysisApproach() {
       console.log('success:', data);
 
       // (Recommended) invalidate the specific thing you changed
-      queryClient.invalidateQueries({ queryKey: ['price-analysis', variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['price-analysis', variables.pricingAnalysisId],
+      });
+    },
+
+    onError: error => {
+      // error = thrown error (axios error, etc.)
+      console.log('error:', error);
+    },
+
+    onSettled: () => {
+      // runs on both success + error (great for cleanup / closing modal)
+      console.log('done (success or error)');
+    },
+  });
+}
+
+/**
+ * Hook for adding methods to price analysis
+ * POST /appraisal/ ...
+ * @returns
+ */
+export function useAddPriceAnalysisMethod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      approachId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      approachId: string;
+      request: AddPriceAnalysisMethodRequestType;
+    }): Promise<AddPriceAnalysisMethodResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/approaches/${approachId}/methods`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      // data = API response
+      console.log('success:', data);
+
+      // (Recommended) invalidate the specific thing you changed
+      queryClient.invalidateQueries({
+        queryKey: ['price-analysis', variables.pricingAnalysisId],
+      });
     },
 
     onError: error => {
@@ -211,50 +262,6 @@ export function useSaveComparativeAnalysis() {
     },
     onError: (error: any) => {
       console.log(error);
-    },
-  });
-}
-
-/**
- * Hook for adding methods to price analysis
- * POST /appraisal/ ...
- * @returns
- */
-export function useAddPriceAnalysisMethod() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      id,
-      approachId,
-      request,
-    }: {
-      id: string;
-      approachId: string;
-      request: AddPriceAnalysisMethodRequestType;
-    }): Promise<AddPriceAnalysisMethodResponseType> => {
-      const { data: response } = await axios.post(
-        `/pricing-analysis/${id}/approaches/${approachId}/methods`,
-        request,
-      );
-      return response;
-    },
-    onSuccess: (data, variables) => {
-      // data = API response
-      console.log('success:', data);
-
-      // (Recommended) invalidate the specific thing you changed
-      queryClient.invalidateQueries({ queryKey: ['price-analysis', variables.id] });
-    },
-
-    onError: error => {
-      // error = thrown error (axios error, etc.)
-      console.log('error:', error);
-    },
-
-    onSettled: () => {
-      // runs on both success + error (great for cleanup / closing modal)
-      console.log('done (success or error)');
     },
   });
 }

@@ -129,12 +129,7 @@ export function PriceAnalysisTab({
           />
           {!isLoadingCalculationMethodData && (
             <MethodSectionRenderer
-              allFactors={priceAnalysisState.allFactors}
-              methodId={priceAnalysisState.activeMethod?.methodId}
-              methodType={priceAnalysisState.activeMethod?.methodType}
-              property={priceAnalysisState.property}
-              templates={priceAnalysisState.methodTemplates}
-              marketSurveys={priceAnalysisState.marketSurveys}
+              state={state}
               onCalculationMethodDirty={handleOnCalculationMethodDirty}
             />
           )}

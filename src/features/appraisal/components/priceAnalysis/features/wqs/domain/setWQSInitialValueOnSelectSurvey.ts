@@ -1,13 +1,23 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
-import type { WQSRequestType } from '../schemas/wqsForm';
+import type {
+  ComparativeFactorFormType,
+  WQSCalculationType,
+  WQSRequestType,
+} from '../schemas/wqsForm';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
 
 interface WQSInitialValueOnSelectSurveyProps {
   collateralType: string;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  template?: Record<string, unknown>;
-  comparativeSurveys: Record<string, unknown>[];
+  template?: TemplateDetailType;
+  comparativeSurveys: MarketComparableDetailType[];
   reset: UseFormReset<WQSRequestType>;
   getValues: UseFormGetValues<WQSRequestType>;
 }
@@ -24,9 +34,9 @@ export function setWQSInitialValueOnSelectSurvey({
   if (!methodId || !methodType || !property || !comparativeSurveys || !reset) return;
 
   const currentFormValue = getValues();
-
   if (!currentFormValue) return;
 
+  console.log('reset initialValueOnSelectSurvey', currentFormValue);
   reset(
     {
       ...currentFormValue,
@@ -49,8 +59,13 @@ export function setWQSInitialValueOnSelectSurvey({
         totalCollateralScore: 0,
         totalWeightedCollateralScore: 0,
       },
-      WQSCalculations: comparativeSurveys.map(survey => {
-        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+      WQSCalculations: comparativeSurveys.map((survey: MarketComparableDetailType) => {
+        const surveyMap = new Map(
+          survey.factorData?.map((s: FactorDataType) => [
+            s.factorCode,
+            readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
+          ]),
+        );
         return {
           marketId: survey.id.toString(),
           offeringPrice: surveyMap.get('17') ?? 0,
@@ -63,7 +78,7 @@ export function setWQSInitialValueOnSelectSurvey({
           sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
           numberOfYears: 10, // TODO: convert selling date to number of year
         };
-      }),
+      }) as WQSCalculationType[],
     },
     { isDirty: true },
   );

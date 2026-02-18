@@ -7,20 +7,16 @@ import {
   useSelectionState,
 } from '@features/appraisal/components/priceAnalysis/features/selection/domain/selectionContext.tsx';
 import toast from 'react-hot-toast';
-import {
-  useGetComparativeFactors,
-  useGetPricingTemplate,
-} from '@features/appraisal/components/priceAnalysis/api/api.ts';
 import { createInitialState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/createInitialState.ts';
 import type {
   Approach,
   Method,
 } from '@features/appraisal/components/priceAnalysis/features/selection/type.ts';
-import { useInitializePriceAnalysis } from '../shared/hooks/useInitializePriceAnalysis';
+import { useInitializePriceAnalysis } from '../hooks/useInitializePriceAnalysis';
 import { ALL_FACTORS } from '../data/allFactorsData';
 import { useSaveEditingSelection } from '@features/appraisal/components/priceAnalysis/features/selection/domain/saveEditingSelection.ts';
 import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
-import { useInitializeCalculationMethod } from '../shared/hooks/useInitailizeCalculationMethod';
+import { useInitializeCalculationMethod } from '../hooks/useInitailizeCalculationMethod';
 
 type MethodKey = { approachType: string; methodType: string };
 type StartCalculationArgs = { approachId: string; methodId: string; methodType: string }; // what ActiveMethodPanel needs
@@ -274,14 +270,11 @@ export function useSelectionFlowController(opts: {
       }
 
       console.log('Saving selection', selections);
-      /*
       const pricingIds: Array<{ approachId: string; methodIds: Array<{ id: string }> }> =
         await saveEditingSelection({
           pricingAnalysisId: opts.pricingAnalysisId,
-          groupId: opts.groupId,
           selections,
         });
-      */
 
       dispatch({ type: 'EDIT_SAVE' });
 
@@ -371,6 +364,8 @@ export function useSelectionFlowController(opts: {
   };
 
   const saveCalculation = () => {};
+
+  console.log(initialData.pricingSelection);
 
   return {
     state,
