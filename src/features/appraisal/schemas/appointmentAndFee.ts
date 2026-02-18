@@ -5,7 +5,7 @@ import { z } from 'zod';
  */
 export const FeeItemSchema = z.object({
   id: z.string(),
-  type: z.enum(['appraisal', 'other']),
+  type: z.enum(['01', '02', '99']),
   description: z.string().min(1, 'Description is required'),
   amount: z.number().min(0, 'Amount must be non-negative'),
 });
@@ -69,13 +69,14 @@ export const appointmentAndFeeFormDefaults = {
 export const RescheduleFormSchema = z.object({
   dateTime: z.string().min(1, 'Date and time is required'),
   location: z.string().min(1, 'Location is required'),
+  reason: z.string().optional(),
 });
 
 /**
  * Schema for add fee modal
  */
 export const AddFeeFormSchema = z.object({
-  type: z.enum(['appraisal', 'other']),
+  type: z.enum(['01', '02', '99']),
   description: z.string().min(1, 'Description is required'),
   amount: z.number().min(0, 'Amount must be non-negative'),
 });

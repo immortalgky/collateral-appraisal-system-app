@@ -1,22 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-// import axios from '@shared/api/axiosInstance'; // TODO: Uncomment when API is ready
+import axios from '@shared/api/axiosInstance';
 import type {
-  CreatePhotoTopicRequest,
-  CreatePhotoTopicResponse,
-  UpdatePhotoTopicRequest,
-  UpdatePhotoTopicResponse,
-  DeletePhotoTopicResponse,
-  GetPhotoTopicsResponse,
-  CreatePhotoUploadSessionResponse,
-  UploadPhotoRequest,
-  UploadPhotoResponse,
-  GetGalleryPhotosParams,
-  GetGalleryPhotosResponse,
-  DeletePhotoResponse,
-  UpdatePhotoRequest,
-  UpdatePhotoResponse,
-  AssignPhotosToCollateralRequest,
-  AssignPhotosToCollateralResponse,
+  GetPhotoTopicsResultType,
+  CreatePhotoTopicRequestType,
+  CreatePhotoTopicResultType,
+  UpdatePhotoTopicRequestType,
+  UpdatePhotoTopicResultType,
+  AssignPhotoToTopicRequestType,
+  AssignPhotoToTopicResultType,
+} from '@shared/schemas/v1';
+import type {
   // Collateral Photo Types
   CollateralType,
   CollateralPhotoTopic,
@@ -38,51 +31,20 @@ import { DEFAULT_TOPICS_BY_TYPE } from '../types/photo';
 
 // ==================== Photo Topic APIs ====================
 
+export const photoTopicKeys = {
+  all: (appraisalId: string) => ['appraisal', appraisalId, 'photo-topics'] as const,
+};
+
 /**
  * Hook for fetching photo topics for an appraisal
  * GET /appraisals/{appraisalId}/photo-topics
  */
 export const useGetPhotoTopics = (appraisalId: string | undefined) => {
   return useQuery({
-    queryKey: ['photo-topics', appraisalId],
-    queryFn: async (): Promise<GetPhotoTopicsResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.get(`/appraisals/${appraisalId}/photo-topics`);
-      // return data;
-
-      // Mock data for development
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return {
-        topics: [
-          {
-            id: 'topic-1',
-            appraisalId: appraisalId!,
-            name: 'Area in front of the project',
-            layout: 2,
-            order: 1,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          {
-            id: 'topic-2',
-            appraisalId: appraisalId!,
-            name: 'Area in front of the collateral',
-            layout: 2,
-            order: 2,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          {
-            id: 'topic-3',
-            appraisalId: appraisalId!,
-            name: 'Collateral',
-            layout: 2,
-            order: 3,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ],
-      };
+    queryKey: ['appraisal', appraisalId, 'photo-topics'],
+    queryFn: async (): Promise<GetPhotoTopicsResultType> => {
+      const { data } = await axios.get(`/appraisals/${appraisalId}/photo-topics`);
+      return data;
     },
     enabled: !!appraisalId,
   });
@@ -96,279 +58,105 @@ export const useCreatePhotoTopic = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreatePhotoTopicRequest): Promise<CreatePhotoTopicResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.post(`/appraisals/${request.appraisalId}/photo-topics`, request);
-      // return data;
-
-      // Mock response
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return {
-        isSuccess: true,
-        topic: {
-          id: `topic-${Date.now()}`,
-          appraisalId: request.appraisalId,
-          name: request.name,
-          layout: request.layout || 2,
-          order: 999,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      };
+    mutationFn: async ({
+      appraisalId,
+      ...body
+    }: CreatePhotoTopicRequestType & { appraisalId: string }): Promise<CreatePhotoTopicResultType> => {
+      const { data } = await axios.post(`/appraisals/${appraisalId}/photo-topics`, body);
+      return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['photo-topics', variables.appraisalId] });
+      queryClient.invalidateQueries({
+        queryKey: photoTopicKeys.all(variables.appraisalId),
+      });
     },
   });
 };
 
 /**
  * Hook for updating a photo topic
- * PUT /photo-topics/{topicId}
+ * PUT /appraisals/{appraisalId}/photo-topics/{topicId}
  */
 export const useUpdatePhotoTopic = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: UpdatePhotoTopicRequest): Promise<UpdatePhotoTopicResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.put(`/photo-topics/${request.topicId}`, request);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return {
-        isSuccess: true,
-        topic: {
-          id: request.topicId,
-          appraisalId: '',
-          name: request.name || '',
-          layout: request.layout || 2,
-          order: request.order || 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      };
+    mutationFn: async ({
+      appraisalId,
+      topicId,
+      ...body
+    }: UpdatePhotoTopicRequestType & {
+      appraisalId: string;
+      topicId: string;
+    }): Promise<UpdatePhotoTopicResultType> => {
+      const { data } = await axios.put(
+        `/appraisals/${appraisalId}/photo-topics/${topicId}`,
+        body
+      );
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photo-topics'] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: photoTopicKeys.all(variables.appraisalId),
+      });
     },
   });
 };
 
 /**
  * Hook for deleting a photo topic
- * DELETE /photo-topics/{topicId}
+ * DELETE /appraisals/{appraisalId}/photo-topics/{topicId}
  */
 export const useDeletePhotoTopic = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (_topicId: string): Promise<DeletePhotoTopicResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.delete(`/photo-topics/${topicId}`);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return { isSuccess: true };
+    mutationFn: async ({
+      appraisalId,
+      topicId,
+    }: {
+      appraisalId: string;
+      topicId: string;
+    }): Promise<void> => {
+      await axios.delete(`/appraisals/${appraisalId}/photo-topics/${topicId}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photo-topics'] });
-      queryClient.invalidateQueries({ queryKey: ['gallery-photos'] });
-    },
-  });
-};
-
-// ==================== Photo Upload APIs ====================
-
-/**
- * Hook for creating a photo upload session
- * POST /appraisals/{appraisalId}/photo-upload-session
- */
-export const useCreatePhotoUploadSession = () => {
-  return useMutation({
-    mutationFn: async (_appraisalId: string): Promise<CreatePhotoUploadSessionResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.post(`/appraisals/${appraisalId}/photo-upload-session`);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 100));
-      return {
-        sessionId: `session-${Date.now()}`,
-        expiresAt: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-      };
-    },
-  });
-};
-
-/**
- * Hook for uploading a photo
- * POST /photo-upload
- */
-export const useUploadPhoto = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (request: UploadPhotoRequest): Promise<UploadPhotoResponse> => {
-      // TODO: Replace with actual API call
-      // const formData = new FormData();
-      // formData.append('file', request.file);
-      // formData.append('sessionId', request.sessionId);
-      // formData.append('topicId', request.topicId);
-      // formData.append('category', request.category);
-      // if (request.description) formData.append('description', request.description);
-      // const { data } = await axios.post('/photo-upload', formData, {
-      //   headers: { 'Content-Type': 'multipart/form-data' },
-      // });
-      // return data;
-
-      // Mock response with data URL
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(request.file);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: photoTopicKeys.all(variables.appraisalId),
       });
-
-      return {
-        isSuccess: true,
-        photo: {
-          id: `photo-${Date.now()}`,
-          appraisalId: '',
-          topicId: request.topicId,
-          fileName: `${Date.now()}_${request.file.name}`,
-          originalFileName: request.file.name,
-          description: request.description,
-          category: request.category,
-          filePath: dataUrl,
-          fileSize: request.file.size,
-          mimeType: request.file.type,
-          isUsed: false,
-          uploadedAt: new Date().toISOString(),
-          uploadedBy: 'current-user',
-        },
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gallery-photos'] });
     },
   });
 };
 
-// ==================== Gallery Photo APIs ====================
-
 /**
- * Hook for fetching gallery photos
- * GET /appraisals/{appraisalId}/photos
+ * Hook for assigning/unassigning a gallery photo to a topic
+ * PUT /appraisals/{appraisalId}/gallery/{photoId}/assign-topic
  */
-export const useGetGalleryPhotos = (params: GetGalleryPhotosParams) => {
-  return useQuery({
-    queryKey: ['gallery-photos', params],
-    queryFn: async (): Promise<GetGalleryPhotosResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.get(`/appraisals/${params.appraisalId}/photos`, { params });
-      // return data;
-
-      // Mock empty response for development
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return {
-        photos: [],
-        totalCount: 0,
-        pageNumber: params.pageNumber || 0,
-        pageSize: params.pageSize || 20,
-      };
-    },
-    enabled: !!params.appraisalId,
-  });
-};
-
-/**
- * Hook for deleting a photo
- * DELETE /photos/{photoId}
- */
-export const useDeletePhoto = () => {
+export const useAssignPhotoToTopic = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (_photoId: string): Promise<DeletePhotoResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.delete(`/photos/${photoId}`);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return { isSuccess: true };
+    mutationFn: async ({
+      appraisalId,
+      photoId,
+      ...body
+    }: AssignPhotoToTopicRequestType & {
+      appraisalId: string;
+      photoId: string;
+    }): Promise<AssignPhotoToTopicResultType> => {
+      const { data } = await axios.put(
+        `/appraisals/${appraisalId}/gallery/${photoId}/assign-topic`,
+        body
+      );
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gallery-photos'] });
-    },
-  });
-};
-
-/**
- * Hook for updating a photo
- * PUT /photos/{photoId}
- */
-export const useUpdatePhoto = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (request: UpdatePhotoRequest): Promise<UpdatePhotoResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.put(`/photos/${request.photoId}`, request);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return {
-        isSuccess: true,
-        photo: {
-          id: request.photoId,
-          appraisalId: '',
-          topicId: request.topicId || '',
-          fileName: '',
-          originalFileName: '',
-          description: request.description,
-          category: request.category || 'other',
-          filePath: '',
-          fileSize: 0,
-          mimeType: '',
-          isUsed: false,
-          uploadedAt: new Date().toISOString(),
-          uploadedBy: 'current-user',
-        },
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gallery-photos'] });
-    },
-  });
-};
-
-/**
- * Hook for assigning photos to a collateral
- * POST /collaterals/{collateralId}/photos
- */
-export const useAssignPhotosToCollateral = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (
-      request: AssignPhotosToCollateralRequest
-    ): Promise<AssignPhotosToCollateralResponse> => {
-      // TODO: Replace with actual API call
-      // const { data } = await axios.post(`/collaterals/${request.collateralId}/photos`, {
-      //   photoIds: request.photoIds,
-      // });
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return {
-        isSuccess: true,
-        assignedCount: request.photoIds.length,
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gallery-photos'] });
-      queryClient.invalidateQueries({ queryKey: ['collateral'] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: photoTopicKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'gallery'],
+      });
     },
   });
 };

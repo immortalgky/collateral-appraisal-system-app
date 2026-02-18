@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -9,7 +9,9 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../context/AppraisalContext';
 import { MapPreview } from './MapPreview';
 import { useAuthStore } from '@/features/auth/store';
-import { useAddComment, useUpdateComment, useDeleteComment, useGetComments } from '@/features/request/api';
+import { useAddComment, useUpdateComment, useDeleteComment, useGetComments, useGetRequestById } from '@/features/request/api';
+import { useGetAppointments } from '../api/appointment';
+import { useGetAppraisalFees } from '../api/fee';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
 
 interface AppraisalRightMenuProps {
@@ -25,10 +27,30 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
 
   const queryClient = useQueryClient();
   const { appraisal, isLoading } = useAppraisalContext();
+  const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
   const currentUser = useAuthStore((state) => state.user);
 
-  // API queries and mutations
+  // Fetch related data
+  const { data: requestData } = useGetRequestById(requestId);
+  const { data: appointments = [] } = useGetAppointments(appraisalId ?? '');
+  const { data: fees = [] } = useGetAppraisalFees(appraisalId ?? '');
+
+  // Derive latest appointment (most recent by appointmentDateTime)
+  const latestAppointment = useMemo(() => {
+    if (appointments.length === 0) return null;
+    return [...appointments].sort((a, b) =>
+      new Date(b.appointmentDateTime).getTime() - new Date(a.appointmentDateTime).getTime()
+    )[0];
+  }, [appointments]);
+
+  // Derive fee summary (first fee record)
+  const feeSummary = useMemo(() => {
+    if (fees.length === 0) return null;
+    return fees[0];
+  }, [fees]);
+
+  // API queries and mutations for comments
   const { data: commentsData, isLoading: isCommentsLoading } = useGetComments(requestId);
   const comments = commentsData?.comments ?? [];
   const addCommentMutation = useAddComment();
@@ -155,19 +177,6 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
     }
   };
 
-  // Get workflow stage label
-  const getWorkflowStageLabel = (stage: string | undefined): string => {
-    const stages: Record<string, string> = {
-      pending_assignment: 'Pending Assignment',
-      assigned: 'Assigned',
-      field_inspection: 'Field Inspection',
-      data_entry: 'Data Entry',
-      review: 'Under Review',
-      approved: 'Approved',
-      completed: 'Completed',
-    };
-    return stages[stage?.toLowerCase().replace(/\s+/g, '_') || ''] || stage || 'Not started';
-  };
 
   if (isLoading || !appraisal) {
     return (
@@ -246,31 +255,31 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
       )}>
         {activeTab === 'overview' ? (
           <div className="flex flex-col gap-5">
-            {/* Status & Workflow */}
+            {/* Status & Type */}
             <div>
-              <SidebarLabel>Status & Workflow</SidebarLabel>
+              <SidebarLabel>Status</SidebarLabel>
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge type="status" value={appraisal.status || 'draft'} />
                 </div>
                 <InfoRow
                   icon="diagram-project"
-                  label="Stage"
-                  value={getWorkflowStageLabel(appraisal.workflowStage)}
-                  muted={!appraisal.workflowStage}
+                  label="Type"
+                  value={appraisal.appraisalType || 'Not set'}
+                  muted={!appraisal.appraisalType}
                 />
               </div>
             </div>
 
-            {/* Purpose */}
+            {/* Purpose (from request) */}
             <div>
               <SidebarLabel>Purpose</SidebarLabel>
               <div className="mt-2">
                 <InfoRow
                   icon="bullseye"
                   label="Type"
-                  value={appraisal.purpose || 'Not set'}
-                  muted={!appraisal.purpose}
+                  value={requestData?.purpose || 'Not set'}
+                  muted={!requestData?.purpose}
                 />
               </div>
             </div>
@@ -283,70 +292,88 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
               </div>
             </div>
 
-            {/* Requestor */}
+            {/* Requestor (from request) */}
             <div>
               <SidebarLabel>Requestor</SidebarLabel>
               <div className="mt-2">
                 <PersonRow
                   label="Requested by"
-                  name={appraisal.requestor?.name || 'Not set'}
-                  avatar={appraisal.requestor?.avatar || null}
+                  name={requestData?.requestor?.username || 'Not set'}
+                  avatar={null}
                 />
               </div>
             </div>
 
-            {/* Appointment */}
+            {/* Appointment (from appointments API) */}
             <div>
               <SidebarLabel>Appointment</SidebarLabel>
               <div className="mt-2 space-y-2">
                 <InfoRow
                   icon="calendar"
                   label="Date/Time"
-                  value={formatDateTime(appraisal.appointmentDateTime)}
-                  muted={!appraisal.appointmentDateTime}
+                  value={formatDateTime(latestAppointment?.appointmentDateTime)}
+                  muted={!latestAppointment?.appointmentDateTime}
                 />
                 <InfoRow
                   icon="location-dot"
                   label="Location"
-                  value={appraisal.appointmentLocation || 'Not set'}
-                  muted={!appraisal.appointmentLocation}
+                  value={latestAppointment?.locationDetail || 'Not set'}
+                  muted={!latestAppointment?.locationDetail}
+                />
+                <InfoRow
+                  icon="circle-check"
+                  label="Status"
+                  value={latestAppointment?.status || 'Not set'}
+                  muted={!latestAppointment?.status}
+                />
+                <InfoRow
+                  icon="user"
+                  label="Contact"
+                  value={latestAppointment?.contactPerson || 'Not set'}
+                  muted={!latestAppointment?.contactPerson}
                 />
               </div>
             </div>
 
-            {/* Fee Information */}
+            {/* Fee Information (from fees API) */}
             <div>
               <SidebarLabel>Fee Information</SidebarLabel>
               <div className="mt-2 space-y-2">
                 <InfoRow
-                  icon="credit-card"
-                  label="Payment Type"
-                  value={appraisal.feePaymentType || 'Not set'}
-                  muted={!appraisal.feePaymentType}
-                />
-                <InfoRow
                   icon="circle-check"
                   label="Payment Status"
-                  value={appraisal.paymentStatus || 'Pending'}
-                  muted={!appraisal.paymentStatus}
+                  value={feeSummary?.paymentStatus || 'Not set'}
+                  muted={!feeSummary?.paymentStatus}
                 />
                 <InfoRow
                   icon="baht-sign"
                   label="Total Fee"
-                  value={formatCurrency(appraisal.totalAppraisalFee)}
-                  muted={appraisal.totalAppraisalFee === null || appraisal.totalAppraisalFee === undefined}
+                  value={formatCurrency(feeSummary?.totalFeeAfterVAT)}
+                  muted={feeSummary?.totalFeeAfterVAT == null}
+                />
+                <InfoRow
+                  icon="baht-sign"
+                  label="Customer Payable"
+                  value={formatCurrency(feeSummary?.customerPayableAmount)}
+                  muted={feeSummary?.customerPayableAmount == null}
+                />
+                <InfoRow
+                  icon="baht-sign"
+                  label="Outstanding"
+                  value={formatCurrency(feeSummary?.outstandingAmount)}
+                  muted={feeSummary?.outstandingAmount == null}
                 />
               </div>
             </div>
 
-            {/* Property Location Map */}
+            {/* Property Location Map (from latest appointment coordinates) */}
             <div>
               <SidebarLabel>Property Location</SidebarLabel>
               <div className="mt-2">
                 <MapPreview
-                  latitude={appraisal.propertyLatitude}
-                  longitude={appraisal.propertyLongitude}
-                  address={appraisal.appointmentLocation}
+                  latitude={latestAppointment?.latitude ?? null}
+                  longitude={latestAppointment?.longitude ?? null}
+                  address={latestAppointment?.locationDetail ?? null}
                 />
               </div>
             </div>

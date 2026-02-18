@@ -1,4 +1,4 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import type { ReactNode } from 'react';
 
@@ -233,7 +233,7 @@ const condoFields: FormField[] = [
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-4',
-    required: true,
+    requiredWhen: { field: 'isOwnerVerified', is: true },
     disableWhen: { field: 'isOwnerVerified', is: false },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },

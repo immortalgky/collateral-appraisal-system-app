@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useFormReadOnly } from '../form/context';
 import AddressAutocomplete from './AddressAutocomplete';
@@ -46,6 +46,10 @@ const LocationSelector = ({
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
 
+  // Stable ref for setValue to avoid re-triggering effects when its reference changes
+  const setValueRef = useRef(setValue);
+  setValueRef.current = setValue;
+
   const [selectedAddress, setSelectedAddress] = useState<ThaiAddress | null>(null);
 
   // Watch sub-district code for form state
@@ -62,24 +66,26 @@ const LocationSelector = ({
 
   // Sync selectedAddress when form is reset with API data
   useEffect(() => {
-    if (!selectedAddress && subDistrictCode) {
+    if (subDistrictCode) {
       const found = findAddressBySubDistrictCode(subDistrictCode);
       if (found) {
         setSelectedAddress(found);
 
         // Populate name fields for display when loading from API
         if (subDistrictNameField) {
-          setValue(subDistrictNameField, found.subDistrictName);
+          setValueRef.current(subDistrictNameField, found.subDistrictName);
         }
         if (districtNameField) {
-          setValue(districtNameField, found.districtName);
+          setValueRef.current(districtNameField, found.districtName);
         }
         if (provinceNameField) {
-          setValue(provinceNameField, found.provinceName);
+          setValueRef.current(provinceNameField, found.provinceName);
         }
       }
+    } else {
+      setSelectedAddress(null);
     }
-  }, [subDistrictCode, selectedAddress, setValue, subDistrictNameField, districtNameField, provinceNameField]);
+  }, [subDistrictCode, subDistrictNameField, districtNameField, provinceNameField]);
 
   const handleAddressSelect = (address: ThaiAddress | null) => {
     setSelectedAddress(address);

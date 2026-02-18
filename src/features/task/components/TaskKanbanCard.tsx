@@ -37,7 +37,9 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
     }
   };
 
-  const purposeColor = purposeColors[task.purpose] || { bg: 'bg-gray-500', text: 'text-white' };
+  const purposeColor = task.purpose
+    ? purposeColors[task.purpose] || { bg: 'bg-gray-500', text: 'text-white' }
+    : { bg: 'bg-gray-500', text: 'text-white' };
 
   return (
     <div
@@ -71,7 +73,9 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
       {/* Customer Name & Date */}
       <div className="px-3 pb-2">
         <h3 className="text-base font-semibold text-gray-900 line-clamp-1">{task.customerName}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">{formatDateTime(task.createdAt)}</p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {task.requestedAt ? formatDateTime(task.requestedAt) : '-'}
+        </p>
       </div>
 
       {/* Details Grid */}
@@ -79,7 +83,7 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
         {/* Row 1 */}
         <div className="flex items-center gap-1.5 text-gray-600">
           <Icon style="regular" name="file-lines" className="size-3.5 text-gray-400" />
-          <span className="truncate">{task.appraisalReportNo}</span>
+          <span className="truncate">{task.appraisalNumber}</span>
         </div>
         <div className="flex items-center gap-1.5 text-gray-600">
           <Icon style="regular" name="clipboard-list" className="size-3.5 text-gray-400" />
@@ -93,7 +97,9 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
         </div>
         <div className="flex items-center gap-1.5 text-gray-600">
           <Icon style="regular" name="clock" className="size-3.5 text-gray-400" />
-          <span className="truncate">{task.timeInfo || '-'}</span>
+          <span className="truncate">
+            {task.appointmentDateTime ? formatDateTime(task.appointmentDateTime) : '-'}
+          </span>
         </div>
 
         {/* Row 3 */}
@@ -103,37 +109,21 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
         </div>
         <div className="flex items-center gap-1.5 text-gray-600">
           <Icon style="regular" name="share" className="size-3.5 text-gray-400" />
-          <span className="truncate">{task.action}</span>
+          <span className="truncate">{task.movement || '-'}</span>
         </div>
       </div>
 
-      {/* Footer with assignee and comments */}
+      {/* Footer with assignee */}
       <div className="px-3 py-2 border-t border-gray-100 flex items-center justify-between">
         {/* Assignee */}
-        {task.assignee ? (
+        {task.assigneeUserId ? (
           <div className="flex items-center gap-2">
-            {task.assignee.avatar ? (
-              <img
-                src={task.assignee.avatar}
-                alt={task.assignee.name}
-                className="size-6 rounded-full object-cover"
-              />
-            ) : (
-              <div className="size-6 rounded-full bg-gray-200 flex items-center justify-center">
-                <Icon style="solid" name="user" className="size-3 text-gray-500" />
-              </div>
-            )}
+            <div className="size-6 rounded-full bg-gray-200 flex items-center justify-center">
+              <Icon style="solid" name="user" className="size-3 text-gray-500" />
+            </div>
           </div>
         ) : (
           <div className="size-6" />
-        )}
-
-        {/* Comments */}
-        {task.commentCount > 0 && (
-          <div className="flex items-center gap-1 text-gray-500">
-            <Icon style="regular" name="comment" className="size-3.5" />
-            <span className="text-xs">{task.commentCount}</span>
-          </div>
         )}
       </div>
     </div>

@@ -1,7 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -11,33 +12,22 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
-import {
-  useCreateBuildingRequest,
-  useGetBuildingPropertyById,
-  useUpdateBuildingProperty,
-} from '../api';
-import {
-  createBuildingForm,
-  createBuildingFormDefault,
-  type createBuildingFormType,
-} from '../schemas/form';
-import { useEffect, useState } from 'react';
+import { useCreateBuildingProperty, useGetBuildingPropertyById, useUpdateBuildingProperty, } from '../api';
+import { createBuildingForm, createBuildingFormDefault, type createBuildingFormType, } from '../schemas/form';
 import { mapBuildingPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
-
-interface BuildingPageProp {
-  readOnly?: boolean;
-}
+import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
 
 const CreateBuildingPage = () => {
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId') ?? undefined;
+  const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
 
   const isEditMode = Boolean(propertyId);
-
-  const location = useLocation();
 
   const methods = useForm<createBuildingFormType>({
     defaultValues: createBuildingFormDefault,
@@ -54,7 +44,7 @@ const CreateBuildingPage = () => {
     }
   }, [isEditMode, propertyData, reset]);
 
-  const { mutate: createBuildingProperties, isPending: isCreating } = useCreateBuildingRequest();
+  const { mutate: createBuildingProperties, isPending: isCreating } = useCreateBuildingProperty();
   const { mutate: updateBuildingProperties, isPending: isUpdating } = useUpdateBuildingProperty();
 
   const isPending = isCreating || isUpdating;
@@ -67,15 +57,14 @@ const CreateBuildingPage = () => {
     if (isEditMode && propertyId) {
       updateBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          propertyId,
+          data,
+        },
         {
           onSuccess: () => {
             toast.success('Property building updated successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
@@ -86,18 +75,19 @@ const CreateBuildingPage = () => {
     } else {
       createBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          groupId,
+          data,
+        },
         {
-          onSuccess: response => {
-            toast.success('Property building updated successfully');
+          onSuccess: async (response: any) => {
+            await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
+            toast.success('Property building created successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property/land/${response.id}`);
+            navigate(`/appraisal/${appraisalId}/property/building/${response.id}`);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
             setSaveAction(null);
           },
         },
@@ -114,10 +104,10 @@ const CreateBuildingPage = () => {
     if (isEditMode && propertyId) {
       updateBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          propertyId,
+          data,
+        },
         {
           onSuccess: () => {
             toast.success('Draft saved successfully');
@@ -132,16 +122,17 @@ const CreateBuildingPage = () => {
     } else {
       createBuildingProperties(
         {
-          ...data,
-          apprId: appraisalId,
-          propertyId: propertyId,
-        } as any,
+          appraisalId: appraisalId!,
+          groupId,
+          data,
+        },
         {
-          onSuccess: response => {
+          onSuccess: async (response: any) => {
+            await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.id) {
-              navigate(`/appraisa/${appraisalId}/property/land/${response.id}`);
+              navigate(`/appraisal/${appraisalId}/property/building/${response.id}`);
             }
           },
           onError: (error: any) => {
@@ -152,9 +143,6 @@ const CreateBuildingPage = () => {
       );
     }
   };
-
-  // Only show Photos tab if we have a propertyId (not for new)
-  const photosHref = propertyId ? `${location.pathname}/photos` : undefined;
 
   if (isLoading) {
     return (
@@ -171,10 +159,8 @@ const CreateBuildingPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
+            { label: 'Photos', id: 'photos', icon: 'images' },
             { label: 'Building', id: 'properties-section', icon: 'building' },
-            ...(propertyId
-              ? [{ label: 'Photos', id: 'photos', icon: 'images', href: photosHref }]
-              : []),
           ]}
         />
       </div>
@@ -194,6 +180,24 @@ const CreateBuildingPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Photos Section */}
+                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                    </div>
+                    <div className="h-px bg-gray-200 mb-4" />
+                    {appraisalId && (
+                      <PropertyPhotoSection
+                        ref={photoSectionRef}
+                        appraisalId={appraisalId}
+                        propertyId={propertyId}
+                      />
+                    )}
+                  </Section>
+
                   {/* Building Information Header */}
                   <Section id="properties-section" anchor>
                     <div className="flex items-center gap-3 mb-4">

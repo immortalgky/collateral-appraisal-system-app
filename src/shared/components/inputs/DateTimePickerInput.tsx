@@ -1,6 +1,6 @@
 import { forwardRef, useId, useRef, useState, useEffect } from 'react';
 import { DayPicker } from 'react-day-picker';
-import { format, isValid, parse, setHours, setMinutes } from 'date-fns';
+import { format, formatISO, isValid, parse, setHours, setMinutes } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
@@ -159,7 +159,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
         if (isValid(parsed)) {
           setMonth(parsed);
           setTimeValue(format(parsed, 'HH:mm'));
-          onChange?.(parsed.toISOString());
+          onChange?.(formatISO(parsed));
         }
       } else if (maskedValue === '') {
         onChange?.(null);
@@ -175,7 +175,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       if (date) {
         const dateWithTime = applyTimeToDate(date, timeValue);
         setInputValue(format(dateWithTime, DATETIME_FORMAT));
-        onChange?.(dateWithTime.toISOString());
+        onChange?.(formatISO(dateWithTime));
       } else {
         setInputValue('');
         onChange?.(null);
@@ -189,7 +189,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       if (selectedDate) {
         const dateWithTime = applyTimeToDate(selectedDate, newTime);
         setInputValue(format(dateWithTime, DATETIME_FORMAT));
-        onChange?.(dateWithTime.toISOString());
+        onChange?.(formatISO(dateWithTime));
       }
     };
 
