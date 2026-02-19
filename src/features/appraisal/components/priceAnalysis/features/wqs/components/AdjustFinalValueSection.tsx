@@ -38,16 +38,16 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       </div>
       <div className="grid grid-cols-12">
         <div className="col-span-3">Coefficient of decision</div>
-        <div className="col-span-3 text-right">
+        <div className="col-span-5 text-right">
           <RHFInputCell
             fieldName={finalValueCoefficientOfDecisionPath()}
             inputType="display"
             accessor={({ value }) => {
               const coeff = toFiniteNumber(value);
               return coeff < 0.85 ? (
-                <div className="flex flex-rows gap-2 justify-between items-center text-danger">
-                  <span>{value}</span>
-                  <span>{'Consider for the market survey data'}</span>
+                <div className="grid grid-cols-5 gap-0 justify-between items-center text-danger">
+                  <span className="col-span-2">{value}</span>
+                  <span className="col-span-3">{'Consider for the market survey data'}</span>
                 </div>
               ) : (
                 <div>

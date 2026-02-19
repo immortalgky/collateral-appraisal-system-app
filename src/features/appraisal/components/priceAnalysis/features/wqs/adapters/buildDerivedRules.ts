@@ -1,4 +1,6 @@
 import type { DerivedFieldRule } from '../../../components/useDerivedFieldArray';
+import { readFactorValue } from '../../../domain/readFactorValue';
+import type { MarketComparableDetailType } from '../../../schemas/v1';
 import { calcAdjustedValueFromSellingPrice } from '../../saleAdjustmentGrid/domain/calculations';
 import { shouldAutoDefault } from '../../saleAdjustmentGrid/domain/shouldAutoDefault';
 import {
@@ -13,11 +15,12 @@ import {
 } from '../domain/calculations';
 import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
+import type { WQSScoreFormType } from '../schemas/wqsForm';
 import { wqsFieldPath } from './fieldPath';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
-  surveys: Survey[];
-  scoringRows: any[];
+  surveys: MarketComparableDetailType[];
+  scoringRows: WQSScoreFormType[];
 }): DerivedFieldRule[] {
   const { surveys = [], scoringRows = [] } = args;
 
@@ -86,11 +89,10 @@ export function buildWQSScoringSurveyDerivedRules(args: {
 }
 
 export function buildWQSCalculationDerivedRules(args: {
-  surveys: Survey[];
-  property: Record<string, any>;
+  surveys: MarketComparableDetailType[];
 }): DerivedFieldRule[] {
   /** Calculation section */
-  const { surveys = [], property } = args;
+  const { surveys = [] } = args;
   const {
     calculationAdjustedValue: calculationAdjustedValuePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
@@ -101,7 +103,7 @@ export function buildWQSCalculationDerivedRules(args: {
   } = wqsFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
-    .map((s, columnIndex) => {
+    .map((survey: MarketComparableDetailType, columnIndex: number) => {
       return [
         {
           targetPath: calculationAdjustedValuePath({ column: columnIndex }),
@@ -111,27 +113,40 @@ export function buildWQSCalculationDerivedRules(args: {
             calculationAdjustmentYearPath({ column: columnIndex }),
           ],
           compute: ({ getValues }) => {
-            const offeringPrice = s.factors?.find(f => f.id === '17')?.value;
-            if (offeringPrice) {
-              console.log(offeringPrice);
+            const offeringPrice = survey.factorData?.find(f => f.factorCode === '17');
+            const offeringPriceValue = offeringPrice
+              ? readFactorValue({
+                  dataType: offeringPrice.dataType,
+                  fieldDecimal: offeringPrice.fieldDecimal,
+                  value: offeringPrice.value,
+                })
+              : undefined;
+            if (offeringPriceValue) {
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValue(
-                offeringPrice,
+                offeringPriceValue,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
               );
             }
-            const sellingPrice = s.factors?.find(f => f.id === '21')?.value;
-            if (sellingPrice) {
+            const sellingPrice = survey.factorData?.find(f => f.factorCode === '21');
+            const sellingPriceValue = sellingPrice
+              ? readFactorValue({
+                  dataType: sellingPrice.dataType,
+                  fieldDecimal: sellingPrice.fieldDecimal,
+                  value: sellingPrice.value,
+                })
+              : undefined;
+            if (sellingPriceValue) {
               const numberOfYears =
                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
-                sellingPrice,
+                sellingPriceValue,
                 numberOfYears,
                 sellingPriceAdjustmentYearPct,
               );
@@ -160,11 +175,10 @@ export function buildWQSCalculationDerivedRules(args: {
 }
 
 export function buildWQSTotalScoreRules(args: {
-  surveys: Survey[];
-  property: Record<string, any>;
-  scoringRows: any[];
+  surveys: MarketComparableDetailType[];
+  scoringRows: WQSScoreFormType[];
 }) {
-  const { surveys, property, scoringRows } = args;
+  const { surveys, scoringRows } = args;
 
   const {
     scoringFactorWeight: scoringFactorWeightPath,
@@ -217,7 +231,7 @@ export function buildWQSTotalScoreRules(args: {
       },
     },
     ...surveys
-      .map((s, columnIndex) => {
+      .map((_, columnIndex: number) => {
         return [
           {
             targetPath: totalSurveyScorePath({ column: columnIndex }),
@@ -292,11 +306,10 @@ export function buildWQSTotalScoreRules(args: {
 }
 
 export function buildWQSFinalValueDerivedRules(args: {
-  surveys: Survey[];
-  property: Record<string, any>;
+  surveys: MarketComparableDetailType[];
 }): DerivedFieldRule[] {
   /** Calculation section */
-  const { surveys = [], property } = args;
+  const { surveys = [] } = args;
   const {
     totalWeightedSurveyScore: totalWeightedSurveyScorePath,
     totalWeightedCollateralScore: totalWeightedCollateralScorePath,
@@ -341,6 +354,7 @@ export function buildWQSFinalValueDerivedRules(args: {
             known_ys: surveyCalculate,
             known_xs: surveyScores,
           }) ?? 0;
+        console.log('forecastResult: ', forecastResult);
         return round2(toFiniteNumber(forecastResult));
       },
     },
@@ -351,7 +365,6 @@ export function buildWQSFinalValueDerivedRules(args: {
         const target = finalValueFinalValueRoundedPath();
         const curr = getValues(target) ?? 0;
         const { isDirty } = getFieldState(target, formState);
-        console.log(isDirty);
         return shouldAutoDefault({ value: curr, isDirty });
       },
       compute: ({ getValues }) => {

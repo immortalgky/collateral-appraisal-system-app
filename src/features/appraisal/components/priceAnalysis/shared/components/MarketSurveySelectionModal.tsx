@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useState } from 'react';
 import { getFactorDesciption } from '../domain/getFactorDescription';
 import type { FactorDataType, MarketComparableDetailType } from '../../schemas/v1';
+import { readFactorValue } from '../../domain/readFactorValue';
 
 interface MarketSurveySelectionModalProps {
   surveys: MarketComparableDetailType[];
@@ -74,7 +75,11 @@ export const MarketSurveySelectionModal = ({
                       <span className="font-semibold capitalize">
                         {getFactorDesciption(factor.factorCode)}:
                       </span>{' '}
-                      {factor.value ?? '-'}
+                      {readFactorValue({
+                        dataType: factor.dataType,
+                        fieldDecimal: factor.fieldDecimal,
+                        value: factor.value,
+                      }) ?? '-'}
                     </div>
                   ))}
                 </div>

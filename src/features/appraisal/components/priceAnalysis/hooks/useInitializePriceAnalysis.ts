@@ -105,6 +105,9 @@ export function useInitializePriceAnalysis({
   groupId: string;
   pricingAnalysisId: string;
 }) {
+  // Step 5: Fetch price analysis selection data
+  /** TODO: right now, GetPricingAnalysis not return methods */
+
   // Step 1: For a group, fetch group detail (to get property IDs + types)
   const groupDetailQuery = useQuery({
     queryKey: propertyGroupKeys.detail(appraisalId!, groupId),
@@ -112,7 +115,7 @@ export function useInitializePriceAnalysis({
       // const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
       // return data;
 
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return GET_PROPERTY_GROUP_BY_ID_RESPONSE;
     },
     enabled: !!appraisalId && !!groupId,
@@ -141,7 +144,7 @@ export function useInitializePriceAnalysis({
     }
   }
 
-  // Step 2: For each property, fetch its detail (non-fatal — failures are gracefully handled)
+  // // Step 2: For each property, fetch its detail (non-fatal — failures are gracefully handled)
   const propertyDetailQueries = useQueries({
     queries: allPropertyEntries.map(entry => {
       const endpoint = typeToDetailEndpoint[entry.propertyType];
@@ -244,14 +247,14 @@ export function useInitializePriceAnalysis({
     retry: 1,
   });
 
-  // Step 5: Fetch price analysis selection data
-  /** TODO: right now, GetPricingAnalysis not return methods */
+  // // Step 5: Fetch price analysis selection data
+  // /** TODO: right now, GetPricingAnalysis not return methods */
   const pricingSelectionQuery = useQuery({
     queryKey: ['price-analysis', pricingAnalysisId],
     queryFn: async (): Promise<GetPricingAnalysisResponseType> => {
       // const { data } = await axios.get(`/pricing-analysis/${pricingAnalysisId}`);
       // const parse = GetPricingAnalysisResponse.safeParse(data);
-      //
+
       // if (!parse.success) {
       //   console.log(parse.error);
       //   throw parse.error;
@@ -259,7 +262,7 @@ export function useInitializePriceAnalysis({
       // return parse.data;
 
       // MOCK delay:
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const parsed = GetPricingAnalysisResponse.safeParse(APPROACHES_QUERY_RESPONSE);
       if (!parsed.success) {
         console.error('PricingAnalysis schema error', parsed.error.flatten());
@@ -279,7 +282,7 @@ export function useInitializePriceAnalysis({
     queryKey: ['all-factors'],
     queryFn: async (): Promise<FactorDataType> => {
       // MOCK delay:
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return ALL_FACTORS;
     },
     refetchOnWindowFocus: false,
@@ -307,7 +310,7 @@ export function useInitializePriceAnalysis({
     isLoadingAllFactor;
   const error = pricingConfigurationQuery.error;
 
-  // Build a lookup map for property details
+  // // Build a lookup map for property details
   const propertyDetailMap = new Map<string, Record<string, unknown>>();
   for (let i = 0; i < allPropertyEntries.length; i++) {
     const detail = propertyDetailQueries[i]?.data;
@@ -322,6 +325,8 @@ export function useInitializePriceAnalysis({
   const pricingConfiguration = pricingConfigurationQuery.data?.approaches;
   const pricingSelection = pricingSelectionQuery.data;
   const allFactors = allFactorQuery.data;
+
+  console.log('pricing analysis', pricingSelection);
 
   const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
   const _property = PROPERTIES[0];

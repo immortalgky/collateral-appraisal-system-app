@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
 import { MethodFooterActions } from '../../../components/MethodFooterActions';
-import { WQSDto, type WQSRequestType } from '../schemas/wqsForm';
+import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import { COLLATERAL_TYPE } from '../../../data/data';
 import toast from 'react-hot-toast';
@@ -82,7 +82,7 @@ export function WQSMethodPanel({
   onCalculationMethodDirty,
 }: WQSMethodPanelProps) {
   console.log(marketSurveys);
-  const methods = useForm<WQSRequestType>({
+  const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
   });
@@ -96,7 +96,7 @@ export function WQSMethodPanel({
   } = methods;
 
   /** Form handler */
-  const handleOnSubmit = (value: WQSRequestType) => {
+  const handleOnSubmit = (value: WQSFormType) => {
     reset(value);
     toast.success('Saved!');
   };
@@ -144,7 +144,7 @@ export function WQSMethodPanel({
     setPricingTemplateId(templateId);
   };
 
-  const onInvalid: SubmitErrorHandler<WQSRequestType> = errs => {
+  const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
     const messages = flattenRHFErrors(errs);
 
     toast.error(

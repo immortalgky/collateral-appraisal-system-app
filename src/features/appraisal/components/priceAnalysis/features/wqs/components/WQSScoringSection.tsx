@@ -1,6 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { wqsFieldPath } from '../adapters/fieldPath';
-import type { WQSTemplate } from '../../../data/data';
 import clsx from 'clsx';
 import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
@@ -13,7 +12,12 @@ import {
 import { useDerivedFields, type DerivedFieldRule } from '../../../components/useDerivedFieldArray';
 import { useMemo } from 'react';
 import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
-import type { MarketComparableDataType, TemplateDetailType } from '../../../schemas/v1';
+import type {
+  FactorDataType,
+  MarketComparableDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '../../../schemas/v1';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -56,6 +60,7 @@ export function WQSScoringSection({
     calculationOfferingPrice: calculationOfferingPricePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
+    calculationSellingPrice: calculationSellingPricePath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
@@ -209,7 +214,7 @@ export function WQSScoringSection({
               >
                 Score
               </td>
-              {comparativeSurveys.map((survey: any) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return (
                   <th
                     key={survey.id}
@@ -252,8 +257,8 @@ export function WQSScoringSection({
                   <tr key={factor.id}>
                     <td className={clsx('bg-white border-r', leftColumnBody)}>
                       <div className="truncate">
-                        {template?.calculationFactors.find(
-                          t => t.factorId === factor.factorCode,
+                        {template?.calculationFactors?.find(
+                          t => t.factorCode === factor.factorCode,
                         ) ? (
                           <RHFInputCell
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
@@ -372,8 +377,8 @@ export function WQSScoringSection({
                     </td>
                     <td className={clsx('bg-white', bgGradientLeft, rightColumnBody)}>
                       {/* if rowIndex > template factors length, show delete button */}
-                      {!template?.calculationFactors.find(
-                        t => t.factorId === factor.factorCode,
+                      {!template?.calculationFactors?.find(
+                        t => t.factorCode === factor.factorCode,
                       ) && (
                         <div className="flex flex-row justify-center items-center">
                           <button
@@ -579,13 +584,13 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
                   <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                     <RHFInputCell
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => value.toLocaleString()}
+                      accessor={({ value }) => (value ? value.toLocaleString() : '')}
                     />
                   </td>
                 );
@@ -617,8 +622,10 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
-                const offeringPrice = survey.factors?.find((f: any) => f.id === '17')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const offeringPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '17',
+                );
                 if (!offeringPrice)
                   return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -655,8 +662,10 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
-                const offeringPrice = survey.factors?.find((f: any) => f.id === '17')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const offeringPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '17',
+                );
                 if (!offeringPrice)
                   return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -692,12 +701,20 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any) => {
-                const sellingPrice = survey.factors?.find((f: any) => f.id === '21')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const sellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '21',
+                );
                 if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
                   <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
-                    {sellingPrice.toLocaleString()}
+                    <RHFInputCell
+                      fieldName={calculationSellingPricePath({ column: columnIndex })}
+                      inputType="display"
+                      accessor={({ value }) => {
+                        return value ? value.toLocaleString() : '';
+                      }}
+                    />
                   </td>
                 );
               })}
@@ -723,7 +740,7 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
                   <td key={survey.id} className={clsx('text-right', surveyStyle)}>
                     <RHFInputCell
@@ -757,8 +774,10 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
-                const sellingPrice = survey.factors?.find((f: any) => f.id === '21')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const sellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '21',
+                );
                 if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
                   <td key={survey.id} className={clsx(surveyStyle)}>
@@ -796,8 +815,10 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
-                const sellingPrice = survey.factors?.find((f: any) => f.id === '21')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const sellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '21',
+                );
                 if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
                   <td key={survey.id} className={clsx('text-right', surveyStyle)}>
@@ -833,14 +854,14 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : 0;
+                        return value ? value.toLocaleString() : '';
                       }}
                     />
                   </td>

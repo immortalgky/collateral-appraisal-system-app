@@ -42,7 +42,9 @@ const WQSCalculation = z
     sellingPriceMeasurementUnit: z.string().nullable(),
     // sellingDate: z.date(), TODO
     sellingPriceAdjustmentYear: z.number().nullable(),
+    totalAdjustedSellingPrice: z.number().nullable(),
     numberOfYears: z.number().nullable(),
+    adjustedValue: z.number(),
   })
   .passthrough();
 
@@ -100,6 +102,13 @@ export const WQSDto = z
   })
   .passthrough();
 
+export type WQSSurveyScoreFormType = z.infer<typeof WQSSurveyScore>;
+export type WQSScoreFormType = z.infer<typeof WQSScore>;
+export type WQSCalculationFormType = z.infer<typeof WQSCalculation>;
+export type WQSFinalValueFormType = z.infer<typeof WQSFinalValue>;
+export type TotalSurveyScoreFormType = z.infer<typeof TotalSurveyScore>;
+export type WQSTotalScoreFormType = z.infer<typeof WQSTotalScore>;
+
 export type ComparativeFactorFormType = z.infer<typeof ComparativeFactors>;
 export type WQSCalculationType = z.infer<typeof WQSCalculation>;
-export type WQSRequestType = z.infer<typeof WQSDto>;
+export type WQSFormType = z.infer<typeof WQSDto>;

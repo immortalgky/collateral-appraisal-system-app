@@ -245,20 +245,22 @@ export function useSelectionFlowController(opts: {
     // Build API payload using natural keys (types). Backend generates IDs.
     const selections =
       state.editDraft
-        .filter((a: any) => a.methods.some((m: any) => m.isSelected))
-        .map((a: any) => ({
+        .filter((a: Approach) => a.methods.some((m: Method) => m.isSelected))
+        .map((a: Approach) => ({
           approachType: a.approachType,
-          methodTypes: a.methods.filter((m: any) => m.isSelected).map((m: any) => m.methodType),
+          methodTypes: a.methods
+            .filter((m: Method) => m.isSelected)
+            .map((m: Method) => m.methodType),
         }))
         .sort((a, b) => a.approachType.localeCompare(b.approachType)) ?? [];
 
     const prevSelections =
       state.summarySelected
-        .map((a: any) => ({
+        .map((a: Approach) => ({
           approachType: a.approachType,
-          methodTypes: a.methods.map((m: any) => m.methodType),
+          methodTypes: a.methods.map((m: Method) => m.methodType),
         }))
-        .sort((a, b) => a.approachType.toLocaleCompare(b.approachType)) ?? [];
+        .sort((a, b) => a.approachType.localeCompare(b.approachType)) ?? [];
 
     /** compare has any changes or not */
     const isEqualSelection = JSON.stringify(selections) === JSON.stringify(prevSelections);
@@ -270,11 +272,10 @@ export function useSelectionFlowController(opts: {
       }
 
       console.log('Saving selection', selections);
-      const pricingIds: Array<{ approachId: string; methodIds: Array<{ id: string }> }> =
-        await saveEditingSelection({
-          pricingAnalysisId: opts.pricingAnalysisId,
-          selections,
-        });
+      await saveEditingSelection({
+        pricingAnalysisId: opts.pricingAnalysisId,
+        selections,
+      });
 
       dispatch({ type: 'EDIT_SAVE' });
 

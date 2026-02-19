@@ -2,7 +2,7 @@ import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
 import type {
   ComparativeFactorFormType,
   WQSCalculationType,
-  WQSRequestType,
+  WQSFormType,
 } from '../schemas/wqsForm';
 import type {
   FactorDataType,
@@ -18,8 +18,8 @@ interface WQSInitialValueOnSelectSurveyProps {
   property: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDetailType[];
-  reset: UseFormReset<WQSRequestType>;
-  getValues: UseFormGetValues<WQSRequestType>;
+  reset: UseFormReset<WQSFormType>;
+  getValues: UseFormGetValues<WQSFormType>;
 }
 export function setWQSInitialValueOnSelectSurvey({
   collateralType,

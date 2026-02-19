@@ -45,6 +45,8 @@ export const wqsFieldPath = {
     `WQSCalculations.${arg.column}.offeringPriceAdjustmentPct`,
   calculationOfferingPriceAdjustmentAmt: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.offeringPriceAdjustmentAmt`,
+  calculationSellingPrice: (arg: { column: number }) =>
+    `WQSCalculations.${arg.column}.sellingPrice`,
   calculationNumberOfYears: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.numberOfYears`,
   calculationAdjustmentYear: (arg: { column: number }) =>

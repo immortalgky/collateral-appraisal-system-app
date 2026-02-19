@@ -1,6 +1,6 @@
 import type { UseFormReset } from 'react-hook-form';
 import type { WQSTemplate } from '../../../data/data';
-import type { WQSRequestType } from '../schemas/wqsForm';
+import type { WQSFormType } from '../schemas/wqsForm';
 import type { MarketComparableDataType, TemplateDetailType } from '../../../schemas/v1';
 
 interface setWQSInitialValueProps {
@@ -10,7 +10,7 @@ interface setWQSInitialValueProps {
   property: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDataType[];
-  reset: UseFormReset<WQSRequestType>;
+  reset: UseFormReset<WQSFormType>;
 }
 export function setWQSInitialValue({
   collateralType,
