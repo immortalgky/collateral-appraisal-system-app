@@ -20,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { isAxiosError } from 'axios';
 import { propertyGroupKeys } from './propertyGroup';
+import { data } from 'react-router-dom';
 
 // ─── Create Hooks ────────────────────────────────────────────────
 
@@ -255,6 +256,7 @@ export const useUpdateCondoProperty = () => {
         `/appraisals/${params.appraisalId}/properties/${params.propertyId}/condo-detail`,
         params.data,
       );
+      console.log(data);
       return data;
     },
     onSuccess: (_, variables) => {

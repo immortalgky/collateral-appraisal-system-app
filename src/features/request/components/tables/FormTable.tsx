@@ -159,7 +159,7 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
   const hasSumRow = sumColumns.length > 0 && !isEmpty;
 
   return (
-    <div className="overflow-hidden">
+    <div className="">
       <table className="table w-full table-fixed">
         <thead>
           <tr className="bg-primary/10">
@@ -185,7 +185,10 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
         <tbody className="divide-y divide-gray-100">
           {isEmpty ? (
             <tr>
-              <td colSpan={isReadOnly ? headers.length : headers.length + 1} className="py-8 text-center">
+              <td
+                colSpan={isReadOnly ? headers.length : headers.length + 1}
+                className="py-8 text-center"
+              >
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                     <Icon style="regular" name="inbox" className="size-6 text-gray-400" />
@@ -436,13 +439,7 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
       return <NumberInput {...field} decimalPlaces={decimalPlaces} />;
     }
     if (header.inputType === 'dropdown' && header.options) {
-      return (
-        <Dropdown
-          value={field.value}
-          onChange={field.onChange}
-          options={header.options}
-        />
-      );
+      return <Dropdown value={field.value} onChange={field.onChange} options={header.options} />;
     }
     return <Input type={header.inputType} {...field} />;
   };
