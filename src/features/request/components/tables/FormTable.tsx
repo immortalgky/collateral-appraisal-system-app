@@ -159,7 +159,7 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
   const hasSumRow = sumColumns.length > 0 && !isEmpty;
 
   return (
-    <div className="overflow-hidden">
+    <div className="">
       <table className="table w-full table-fixed">
         <thead>
           <tr className="bg-primary/10">
