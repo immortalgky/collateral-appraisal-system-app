@@ -1,9 +1,10 @@
 interface MarketSurveyItem {
-  id: string | number;
-  surveyNumber: string;
-  surveyName: string;
-  templateDesc: string;
-  collateralType: string;
+  id?: string;
+  comparableNumber?: string;
+  propertyType?: string;
+  dataSource?: string;
+  status?: string;
+  [key: string]: unknown;
 }
 
 interface MarketSurveyTableProps {
@@ -47,10 +48,11 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
                 onDoubleClick={() => onSelect(item)}
                 className="border-b-1 border-misc-1 hover:bg-gray-50"
               >
-                <td className="px-4 py-4">{item.surveyNumber}</td>
-                <td className="px-4 py-4">{item.surveyName}</td>
-                <td className="px-4 py-4">{item.templateDesc}</td>
-                <td className="px-4 py-4">{item.collateralType}</td>
+                {headers.map((header, index) => (
+                  <td key={index} className="px-4 py-4">
+                    {String(item[header.name] ?? '-')}
+                  </td>
+                ))}
               </tr>
             ))
           )}

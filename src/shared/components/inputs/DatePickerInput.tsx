@@ -1,6 +1,6 @@
 import { forwardRef, useId, useRef, useState, useEffect } from 'react';
 import { DayPicker } from 'react-day-picker';
-import { format, isValid, parse } from 'date-fns';
+import { format, formatISO, isValid, parse } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
@@ -151,7 +151,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
         const parsed = parse(maskedValue, DATE_FORMAT, new Date());
         if (isValid(parsed)) {
           setMonth(parsed);
-          onChange?.(parsed.toISOString());
+          onChange?.(formatISO(parsed));
         }
       } else if (maskedValue === '') {
         onChange?.(null);
@@ -161,7 +161,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const handleDaySelect = (date: Date | undefined) => {
       if (date) {
         setInputValue(format(date, DATE_FORMAT));
-        onChange?.(date.toISOString());
+        onChange?.(formatISO(date));
       } else {
         setInputValue('');
         onChange?.(null);

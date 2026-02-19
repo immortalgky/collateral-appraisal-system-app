@@ -4,11 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
-import Dropdown from '@shared/components/inputs/Dropdown';
 import TextInput from '@shared/components/inputs/TextInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import { AddFeeFormSchema } from '../schemas/appointmentAndFee';
-import { FEE_ITEM_TYPE_OPTIONS } from '../types/appointmentAndFee';
 import type { FeeItem } from '../types/appointmentAndFee';
 
 type AddFeeFormData = z.infer<typeof AddFeeFormSchema>;
@@ -36,24 +34,22 @@ export default function AddFeeModal({
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setValue,
     watch,
+    setValue,
   } = useForm<AddFeeFormData>({
     resolver: zodResolver(AddFeeFormSchema),
     defaultValues: {
-      type: defaultValues?.type || 'appraisal',
+      type: defaultValues?.type || '99',
       description: defaultValues?.description || '',
       amount: defaultValues?.amount || 0,
     },
   });
 
-  const selectedType = watch('type');
-
   // Reset form when modal opens with new default values
   useEffect(() => {
     if (isOpen) {
       reset({
-        type: defaultValues?.type || 'appraisal',
+        type: defaultValues?.type || '99',
         description: defaultValues?.description || '',
         amount: defaultValues?.amount || 0,
       });
@@ -78,16 +74,8 @@ export default function AddFeeModal({
       size="md"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
-        {/* Fee Type */}
-        <Dropdown
-          name="type"
-          label="Fee Type"
-          required
-          options={FEE_ITEM_TYPE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
-          value={selectedType}
-          onChange={value => setValue('type', value as 'appraisal' | 'other')}
-          error={errors.type?.message}
-        />
+        {/* Fee Type - locked to the current value (add always uses "Other") */}
+        <input type="hidden" {...register('type')} />
 
         {/* Description */}
         <TextInput
@@ -103,7 +91,9 @@ export default function AddFeeModal({
           label="Amount"
           required
           decimalPlaces={2}
-          {...register('amount', { valueAsNumber: true })}
+          name="amount"
+          value={watch('amount')}
+          onChange={e => setValue('amount', e.target.value ?? 0)}
           error={errors.amount?.message}
         />
 

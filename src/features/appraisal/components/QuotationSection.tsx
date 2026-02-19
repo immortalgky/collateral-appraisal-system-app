@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import { useGetAppraisalQuotations } from '../api/administration';
-import type { Quotation, QuotationStatus } from '../types/administration';
+import type { Quotation } from '../types/administration';
 
 interface QuotationSectionProps {
   appraisalId: string;
@@ -14,17 +14,17 @@ const QuotationSection = ({ appraisalId, onAddToExisting, onCreateNew }: Quotati
   // Fetch quotations that this appraisal belongs to
   const { data: quotations = [], isLoading } = useGetAppraisalQuotations(appraisalId, !!appraisalId);
 
-  const getStatusBadge = (status: QuotationStatus) => {
-    const statusConfig: Record<QuotationStatus, { label: string; className: string }> = {
-      draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
-      pending: { label: 'Pending', className: 'bg-amber-100 text-amber-700' },
-      quoted: { label: 'Quoted', className: 'bg-blue-100 text-blue-700' },
-      approved: { label: 'Approved', className: 'bg-green-100 text-green-700' },
-      rejected: { label: 'Rejected', className: 'bg-red-100 text-red-700' },
-      expired: { label: 'Expired', className: 'bg-gray-100 text-gray-500' },
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { label: string; className: string }> = {
+      Draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
+      Pending: { label: 'Pending', className: 'bg-amber-100 text-amber-700' },
+      Quoted: { label: 'Quoted', className: 'bg-blue-100 text-blue-700' },
+      Approved: { label: 'Approved', className: 'bg-green-100 text-green-700' },
+      Rejected: { label: 'Rejected', className: 'bg-red-100 text-red-700' },
+      Expired: { label: 'Expired', className: 'bg-gray-100 text-gray-500' },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status] ?? { label: status, className: 'bg-gray-100 text-gray-700' };
     return (
       <span
         className={clsx(
@@ -122,21 +122,21 @@ const QuotationSection = ({ appraisalId, onAddToExisting, onCreateNew }: Quotati
               quotations.map((quotation: Quotation) => (
                 <tr key={quotation.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-purple-600">{quotation.quotationId}</span>
+                    <span className="text-sm font-medium text-purple-600">{quotation.quotationNumber}</span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-sm text-gray-900">{quotation.appraisalCount}</span>
+                    <span className="text-sm text-gray-900">{quotation.totalAppraisals}</span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="text-sm text-gray-900">
-                      {quotation.quotedCount}/{quotation.appraisalCount}
+                      {quotation.totalQuotationsReceived}/{quotation.totalAppraisals}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-600">{formatDate(quotation.createdOn)}</span>
+                    <span className="text-sm text-gray-600">{formatDate(quotation.requestDate)}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-600">{formatDateTime(quotation.cutOffTime)}</span>
+                    <span className="text-sm text-gray-600">{formatDateTime(quotation.dueDate)}</span>
                   </td>
                   <td className="px-4 py-3 text-center">{getStatusBadge(quotation.status)}</td>
                 </tr>

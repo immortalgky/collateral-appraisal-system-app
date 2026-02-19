@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   closestCenter,
@@ -6,6 +6,7 @@ import {
   type DragEndEvent,
   DragOverlay,
   type DragStartEvent,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -19,7 +20,10 @@ import {
   useAddPropertyToGroup,
   useCreatePropertyGroup,
   useDeletePropertyGroup,
+  useMovePropertyToGroup,
   useRemovePropertyFromGroup,
+  useReorderPropertiesInGroup,
+  useUpdatePropertyGroup,
 } from '../../api/propertyGroup';
 import { GroupContainer } from '../GroupContainer';
 import { MoveToGroupModal } from '../MoveToGroupModal';
@@ -56,6 +60,12 @@ const getPropertyDescription = (type: string) => {
   return typeMap[type] || 'Unknown type';
 };
 
+// Only measure droppables before a drag starts — prevents ResizeObserver
+// from firing on trivial CSS changes (hover states) and causing re-render loops.
+const MEASURING_CONFIG = {
+  droppable: { strategy: MeasuringStrategy.BeforeDragging },
+};
+
 type ViewMode = 'grid' | 'list';
 
 interface ContextMenuState {
@@ -78,14 +88,23 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
 
+  // Keep a stable ref to groups so DndContext callbacks don't change when groups change.
+  // Changing onDragEnd/onDragStart triggers DndContext context updates which re-render
+  // all useDroppable/useSortable consumers — bypassing React.memo and causing infinite loops.
+  const groupsRef = useRef(groups);
+  groupsRef.current = groups;
+
   // Clipboard (UI-only state)
   const { clipboard, copyProperty, clearClipboard } = usePropertyClipboardStore();
 
   // Mutations
   const createGroupMutation = useCreatePropertyGroup();
+  const updateGroupMutation = useUpdatePropertyGroup();
   const deleteGroupMutation = useDeletePropertyGroup();
   const removePropertyMutation = useRemovePropertyFromGroup();
   const addPropertyToGroupMutation = useAddPropertyToGroup();
+  const moveMutation = useMovePropertyToGroup();
+  const reorderMutation = useReorderPropertiesInGroup();
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
@@ -122,9 +141,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   // ==================== Mutation Handlers ====================
 
-  const handleAddGroup = () => {
+  const handleAddGroup = useCallback(() => {
     if (!appraisalId) return;
-    const groupNumber = groups.length + 1;
+    const groupNumber = groupsRef.current.length + 1;
     createGroupMutation.mutate(
       { appraisalId, groupName: `Group ${groupNumber}` },
       {
@@ -133,164 +152,238 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         },
       },
     );
-  };
+  }, [appraisalId, createGroupMutation]);
 
-  const handleDeleteGroup = (groupId: string) => {
-    if (!appraisalId) return;
-    setDeletingGroupId(groupId);
-    deleteGroupMutation.mutate(
-      { appraisalId, groupId },
-      {
-        onSuccess: () => {
-          setDeletingGroupId(null);
+  const handleRenameGroup = useCallback(
+    (groupId: string, newName: string) => {
+      if (!appraisalId) return;
+      const group = groupsRef.current.find(g => g.id === groupId);
+      if (!group) return;
+      updateGroupMutation.mutate(
+        {
+          appraisalId,
+          groupId,
+          groupName: newName,
+          useSystemCalc: group.useSystemCalc ?? false,
+          description: group.description ?? null,
         },
-        onError: () => {
-          setDeletingGroupId(null);
-          toast.error('Failed to delete group');
+        {
+          onError: () => {
+            toast.error('Failed to rename group');
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [appraisalId, updateGroupMutation],
+  );
 
-  const handleRemoveProperty = (groupId: string, propertyId: string) => {
-    if (!appraisalId) return;
-    removePropertyMutation.mutate(
-      { appraisalId, groupId, propertyId },
-      {
-        onError: () => {
-          toast.error('Failed to remove property from group');
+  const handleDeleteGroup = useCallback(
+    (groupId: string) => {
+      if (!appraisalId) return;
+      setDeletingGroupId(groupId);
+      deleteGroupMutation.mutate(
+        { appraisalId, groupId },
+        {
+          onSuccess: () => {
+            setDeletingGroupId(null);
+          },
+          onError: () => {
+            setDeletingGroupId(null);
+            toast.error('Failed to delete group');
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [appraisalId, deleteGroupMutation],
+  );
 
-  const handleMoveProperty = (fromGroupId: string, toGroupId: string, propertyId: string) => {
-    if (!appraisalId) return;
-    // Remove from old group, then add to new group
-    removePropertyMutation.mutate(
-      { appraisalId, groupId: fromGroupId, propertyId },
-      {
-        onSuccess: () => {
-          addPropertyToGroupMutation.mutate(
-            { appraisalId, groupId: toGroupId, propertyId },
-            {
-              onError: () => {
-                toast.error(
-                  'Failed to move property. It was removed but could not be added to the new group.',
-                );
-              },
-            },
-          );
+  const handleRemoveProperty = useCallback(
+    (groupId: string, propertyId: string) => {
+      if (!appraisalId) return;
+      removePropertyMutation.mutate(
+        { appraisalId, groupId, propertyId },
+        {
+          onError: () => {
+            toast.error('Failed to remove property from group');
+          },
         },
-        onError: () => {
-          toast.error('Failed to move property');
-        },
-      },
-    );
-  };
+      );
+    },
+    [appraisalId, removePropertyMutation],
+  );
 
-  const handlePasteProperty = (groupId: string) => {
-    if (!appraisalId || !clipboard) return;
-    // Add the copied property to the target group
-    addPropertyToGroupMutation.mutate(
-      { appraisalId, groupId, propertyId: clipboard.id },
-      {
-        onSuccess: () => {
-          clearClipboard();
+  const handleMoveProperty = useCallback(
+    (
+      fromGroupId: string,
+      toGroupId: string,
+      propertyId: string,
+      targetPosition?: number,
+    ) => {
+      if (!appraisalId) return;
+      moveMutation.mutate(
+        {
+          appraisalId,
+          sourceGroupId: fromGroupId,
+          propertyId,
+          targetGroupId: toGroupId,
+          targetPosition: targetPosition ?? null,
         },
-        onError: () => {
-          toast.error('Failed to paste property');
+        {
+          onError: () => {
+            toast.error('Failed to move property');
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [appraisalId, moveMutation],
+  );
+
+  const handlePasteProperty = useCallback(
+    (groupId: string) => {
+      if (!appraisalId || !clipboard) return;
+      // Add the copied property to the target group
+      addPropertyToGroupMutation.mutate(
+        { appraisalId, groupId, propertyId: clipboard.id },
+        {
+          onSuccess: () => {
+            clearClipboard();
+          },
+          onError: () => {
+            toast.error('Failed to paste property');
+          },
+        },
+      );
+    },
+    [appraisalId, clipboard, addPropertyToGroupMutation, clearClipboard],
+  );
 
   // ==================== Drag & Drop ====================
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const property = active.data.current?.property as PropertyItem;
     setActiveProperty(property);
-  };
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    if (!over) {
+      if (!over) {
+        setActiveProperty(null);
+        return;
+      }
+
+      const currentGroups = groupsRef.current;
+      const activeGroupId = active.data.current?.groupId as string;
+      const activeId = active.id as string;
+      const overData = over.data.current;
+      const overId = over.id as string;
+
+      // Check if we're dropping over another property item
+      if (overData?.type === 'property') {
+        const overGroupId = overData.groupId as string;
+
+        if (activeGroupId === overGroupId) {
+          // Reordering within the same group
+          const group = currentGroups.find(g => g.id === activeGroupId);
+          if (group && appraisalId) {
+            const ids = group.items.map(i => i.id);
+            const fromIndex = ids.indexOf(activeId);
+            const toIndex = ids.indexOf(overId);
+            if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+              const reordered = [...ids];
+              reordered.splice(fromIndex, 1);
+              reordered.splice(toIndex, 0, activeId);
+              reorderMutation.mutate(
+                { appraisalId, groupId: activeGroupId, orderedPropertyIds: reordered },
+                { onError: () => toast.error('Failed to reorder properties') },
+              );
+            }
+          }
+        } else {
+          // Cross-group drop on a property — compute target position
+          const targetGroup = currentGroups.find(g => g.id === overGroupId);
+          const targetIndex = targetGroup?.items.findIndex(i => i.id === overId) ?? -1;
+          handleMoveProperty(
+            activeGroupId,
+            overGroupId,
+            activeId,
+            targetIndex >= 0 ? targetIndex : undefined,
+          );
+        }
+      }
+      // Check if we're dropping over a group container
+      else if (overData?.type === 'group' || currentGroups.some(g => g.id === overId)) {
+        const toGroupId =
+          overData?.type === 'group' ? overId : currentGroups.find(g => g.id === overId)?.id;
+
+        if (toGroupId && activeGroupId !== toGroupId) {
+          handleMoveProperty(activeGroupId, toGroupId, activeId);
+        }
+      }
+
       setActiveProperty(null);
-      return;
-    }
-
-    const activeGroupId = active.data.current?.groupId as string;
-    const activeId = active.id as string;
-    const overData = over.data.current;
-    const overId = over.id as string;
-
-    // Check if we're dropping over another property item
-    if (overData?.type === 'property') {
-      const overGroupId = overData.groupId as string;
-
-      // Reordering within the same group (local reorder - no API endpoint yet)
-      if (activeGroupId === overGroupId) {
-        // TODO: call reorder API when available
-      } else {
-        // Moving between groups - drop on another item
-        handleMoveProperty(activeGroupId, overGroupId, activeId);
-      }
-    }
-    // Check if we're dropping over a group container
-    else if (overData?.type === 'group' || groups.some(g => g.id === overId)) {
-      const toGroupId = overData?.type === 'group' ? overId : groups.find(g => g.id === overId)?.id;
-
-      if (toGroupId && activeGroupId !== toGroupId) {
-        handleMoveProperty(activeGroupId, toGroupId, activeId);
-      }
-    }
-
-    setActiveProperty(null);
-  };
+    },
+    [appraisalId, reorderMutation, handleMoveProperty],
+  );
 
   // ==================== Context Menu & Actions ====================
 
-  const handleContextMenu = (e: React.MouseEvent, property: PropertyItem, groupId: string) => {
-    e.preventDefault();
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      property,
-      groupId,
-    });
-  };
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, property: PropertyItem, groupId: string) => {
+      e.preventDefault();
+      setContextMenu({
+        visible: true,
+        x: e.clientX,
+        y: e.clientY,
+        property,
+        groupId,
+      });
+    },
+    [],
+  );
 
-  const handleEditProperty = (property: PropertyItem, groupId: string) => {
-    if (appraisalId) {
-      const routeSegment = getRouteSegment(property.type);
-      navigate(
-        `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
-      );
-    }
-  };
+  const handleEditProperty = useCallback(
+    (property: PropertyItem, groupId: string) => {
+      if (appraisalId) {
+        const routeSegment = getRouteSegment(property.type);
+        navigate(
+          `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+        );
+      }
+    },
+    [appraisalId, navigate],
+  );
 
-  const handleMoveToProperty = (property: PropertyItem, groupId: string) => {
-    setMoveModalState({
-      isOpen: true,
-      property,
-      fromGroupId: groupId,
-    });
-  };
+  const handleMoveToProperty = useCallback(
+    (property: PropertyItem, groupId: string) => {
+      setMoveModalState({
+        isOpen: true,
+        property,
+        fromGroupId: groupId,
+      });
+    },
+    [],
+  );
 
-  const handleCopyProperty = (property: PropertyItem) => {
-    copyProperty(property);
-  };
+  const handleCopyProperty = useCallback(
+    (property: PropertyItem) => {
+      copyProperty(property);
+    },
+    [copyProperty],
+  );
 
-  const handleDeleteProperty = (property: PropertyItem, groupId: string) => {
-    setDeleteModalState({
-      isOpen: true,
-      property,
-      groupId,
-    });
-  };
+  const handleDeleteProperty = useCallback(
+    (property: PropertyItem, groupId: string) => {
+      setDeleteModalState({
+        isOpen: true,
+        property,
+        groupId,
+      });
+    },
+    [],
+  );
 
   // Context menu handlers
   const handleEdit = () => {
@@ -466,6 +559,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        measuring={MEASURING_CONFIG}
       >
         <div className="space-y-4 flex-1 overflow-y-auto">
           {groups.length === 0 ? (
@@ -483,6 +577,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 group={group}
                 viewMode={viewMode}
                 onDeleteGroup={handleDeleteGroup}
+                onRenameGroup={handleRenameGroup}
                 onContextMenu={handleContextMenu}
                 onEdit={handleEditProperty}
                 onMoveTo={handleMoveToProperty}
@@ -569,7 +664,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         onSubmit={handleMoveSubmit}
         groups={groups}
         currentGroupId={moveModalState.fromGroupId || ''}
-        isLoading={removePropertyMutation.isPending || addPropertyToGroupMutation.isPending}
+        isLoading={moveMutation.isPending}
       />
 
       <DeleteConfirmationModal

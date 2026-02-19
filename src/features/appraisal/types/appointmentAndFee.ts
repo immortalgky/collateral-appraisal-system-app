@@ -6,7 +6,7 @@ import type { AppointmentAndFeeFormSchema } from '../schemas/appointmentAndFee';
  */
 export interface FeeItem {
   id: string;
-  type: 'appraisal' | 'other';
+  type: '01' | '02' | '99';
   description: string;
   amount: number;
 }
@@ -67,8 +67,9 @@ export const FEE_TYPE_OPTIONS = [
  * Fee item type options
  */
 export const FEE_ITEM_TYPE_OPTIONS = [
-  { value: 'appraisal', label: 'Appraisal fee' },
-  { value: 'other', label: 'Other' },
+  { value: '01', label: 'Appraisal Fee' },
+  { value: '02', label: 'Inspection Fee' },
+  { value: '99', label: 'Other' },
 ] as const;
 
 /**

@@ -1,13 +1,12 @@
 import { Outlet, useLocation, useParams } from 'react-router-dom';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
 import ErrorBoundary from '@shared/components/ErrorBoundary';
 import Logo from '@assets/logo-lh-bank.svg';
-import { useAllParameters } from '@shared/api/parameters';
-import { useParameterStore } from '@shared/store';
+import { useParametersQuery } from '@shared/api/parameters';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
 import { useGetAppraisalById } from '@features/appraisal/api';
@@ -40,11 +39,18 @@ const propertySubRouteLabels: Record<string, { label: string; icon: string }> = 
   'land-building': { label: 'Land & Building', icon: 'house-chimney' },
 };
 
+/**
+ * Non-rendering component that handles parameter loading.
+ * useParametersQuery fetches once and hydrates the Zustand store inside queryFn.
+ */
+function ParameterLoader() {
+  useParametersQuery();
+  return null;
+}
+
 function AppraisalLayout() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const location = useLocation();
-  const { data: parametersData, isSuccess: isParametersSuccess } = useAllParameters();
-  const { setParameters } = useParameterStore();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
   });
@@ -57,17 +63,11 @@ function AppraisalLayout() {
     error: appraisalError,
   } = useGetAppraisalById(appraisalId);
 
-  useEffect(() => {
-    if (isParametersSuccess && parametersData !== undefined) {
-      setParameters(parametersData);
-    }
-  }, [parametersData, isParametersSuccess, setParameters]);
-
   // Build breadcrumb items based on the current route
   const breadcrumbItems = useMemo(() => {
-    const appraisalNo =
-      appraisalData?.appraisalReportNo || appraisalData?.appraisalId || appraisalId;
+    const appraisalNo = appraisalData?.appraisalNumber || appraisalData?.id || appraisalId;
     const items = [
+      { label: 'Task', href: '/tasks', icon: 'list-check' },
       { label: appraisalNo || '...', href: `/appraisal/${appraisalId}`, icon: 'file-certificate' },
     ];
 
@@ -109,13 +109,25 @@ function AppraisalLayout() {
     return null;
   }
 
-  // Prepare context value
-  const contextValue = {
-    appraisal: appraisalData ?? null,
-    isLoading: isAppraisalLoading,
-    isError: isAppraisalError,
-    error: appraisalError as Error | null,
-  };
+  // Prepare context value - map API response to AppraisalData shape
+  const contextValue = useMemo(
+    () => ({
+      appraisal: appraisalData
+        ? {
+            appraisalId: appraisalData.id ?? appraisalId ?? '',
+            requestId: appraisalData.requestId ?? '',
+            appraisalReportNo: appraisalData.appraisalNumber ?? undefined,
+            status: appraisalData.status ?? undefined,
+            appraisalType: appraisalData.appraisalType ?? undefined,
+            priority: appraisalData.priority ?? undefined,
+          }
+        : null,
+      isLoading: isAppraisalLoading,
+      isError: isAppraisalError,
+      error: appraisalError as Error | null,
+    }),
+    [appraisalData, appraisalId, isAppraisalLoading, isAppraisalError, appraisalError],
+  );
 
   // Show loading skeleton while fetching appraisal data
   if (isAppraisalLoading) {
@@ -163,6 +175,7 @@ function AppraisalLayout() {
 
   return (
     <AppraisalProvider value={contextValue}>
+      <ParameterLoader />
       <div className="h-screen flex flex-col">
         <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
@@ -172,10 +185,10 @@ function AppraisalLayout() {
 
           <div className="flex-1 flex min-h-0">
             {/* Main Content */}
-            <main className="py-4 flex-1 flex flex-col min-h-0">
-              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 overflow-x-hidden">
+            <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0">
+              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 min-w-0">
                 <Breadcrumb items={breadcrumbItems} className="mb-4 shrink-0" />
-                <div className="flex-1 min-h-0 overflow-x-hidden">
+                <div className="flex-1 min-h-0 min-w-0">
                   <ErrorBoundary>
                     <Outlet />
                   </ErrorBoundary>

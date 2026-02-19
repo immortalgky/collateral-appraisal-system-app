@@ -1,47 +1,76 @@
 import { useState } from 'react';
-import { useFormContext, useFieldArray } from 'react-hook-form';
 import { format, parseISO } from 'date-fns';
-import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
-import NumberInput from '@shared/components/inputs/NumberInput';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
-import type { AppointmentAndFeeFormType, PaymentRecord } from '../types/appointmentAndFee';
+import type { AppraisalFeeDtoType, AppraisalFeeItemDtoType } from '@shared/schemas/v1';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import AddPaymentModal from './AddPaymentModal';
+
+interface PaymentInformationSectionProps {
+  items: AppraisalFeeItemDtoType[];
+  fee?: AppraisalFeeDtoType | null;
+  onRecordPayment?: (data: {
+    paymentAmount: number;
+    paymentDate: string;
+    paymentMethod?: string;
+    paymentReference?: string;
+    remarks?: string;
+  }) => void;
+  onUpdatePayment?: (
+    paymentId: string,
+    data: { paymentAmount: number; paymentDate: string },
+  ) => void;
+  onRemovePayment?: (paymentId: string) => void;
+  isPaymentPending?: boolean;
+}
 
 /**
  * Payment Information section with status, payment details, and history
  */
-export default function PaymentInformationSection() {
+export default function PaymentInformationSection({
+  items,
+  fee,
+  onRecordPayment,
+  onUpdatePayment,
+  onRemovePayment,
+  isPaymentPending,
+}: PaymentInformationSectionProps) {
   const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(true);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
-  const [deletingPaymentIndex, setDeletingPaymentIndex] = useState<number | null>(null);
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
+  const [inspectionFee, setInspectionFee] = useState<number>(fee?.inspectionFeeAmount ?? 0);
 
-  const { control, watch, setValue } = useFormContext<AppointmentAndFeeFormType>();
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'payments',
-  });
+  const bankAbsorbAmount = fee?.bankAbsorbAmount ?? 0;
+  const payments = fee?.paymentHistory ?? [];
 
-  const feeItems = watch('fee.items') || [];
-  const payments = watch('payments') || [];
-  const bankAbsorbAmount = watch('fee.bankAbsorbAmount') || 0;
-  const inspectionFee = watch('fee.inspectionFee');
-
-  // Calculate totals
-  const subtotal = feeItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-  const vat = subtotal * (VAT_PERCENTAGE / 100);
+  // Calculate totals from items
+  const subtotal = items.reduce((sum, item) => sum + (item.feeAmount || 0), 0);
+  const vatRate = fee?.vatRate ?? VAT_PERCENTAGE;
+  const vat = subtotal * (vatRate / 100);
   const totalFee = subtotal + vat;
-
-  // Calculate payment totals
-  const totalPaid = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-  const remaining = totalFee - totalPaid - bankAbsorbAmount;
+  const totalPaid = fee?.totalPaidAmount ?? 0;
+  const remaining = fee?.outstandingAmount ?? totalFee - totalPaid - bankAbsorbAmount;
 
   // Calculate payment percentage for progress bar
   const paymentPercentage = totalFee > 0 ? Math.min((totalPaid / totalFee) * 100, 100) : 0;
 
   // Determine payment status
   const getPaymentStatus = () => {
+    if (fee) {
+      switch (fee.paymentStatus.toLowerCase()) {
+        case 'paid':
+          return { label: 'Paid', color: 'success' };
+        case 'partial':
+        case 'partiallypaid':
+          return { label: 'Partial', color: 'warning' };
+        case 'notpaid':
+        case 'unpaid':
+          return { label: 'Not Paid', color: 'danger' };
+        default:
+          return { label: fee.paymentStatus, color: 'gray' };
+      }
+    }
     if (totalFee <= 0) return { label: 'No Fee', color: 'gray' };
     if (remaining <= 0) return { label: 'Paid', color: 'success' };
     if (totalPaid > 0) return { label: 'Partial', color: 'warning' };
@@ -67,28 +96,38 @@ export default function PaymentInformationSection() {
     }
   };
 
-  const handleAddPayment = (data: Omit<PaymentRecord, 'id'>) => {
-    const newPayment: PaymentRecord = {
-      ...data,
-      id: crypto.randomUUID(),
-    };
-    append(newPayment);
-    setIsAddPaymentModalOpen(false);
-    toast.success('Payment added successfully');
-  };
+  const editingPayment = editingPaymentId
+    ? (payments.find(p => p.id === editingPaymentId) ?? null)
+    : null;
 
-  const handleDeletePayment = () => {
-    if (deletingPaymentIndex !== null) {
-      remove(deletingPaymentIndex);
-      setDeletingPaymentIndex(null);
-      toast.success('Payment deleted successfully');
+  const handlePaymentSubmit = (data: { paymentDate: string; amount: number }) => {
+    if (editingPaymentId && onUpdatePayment) {
+      onUpdatePayment(editingPaymentId, {
+        paymentAmount: data.amount,
+        paymentDate: data.paymentDate,
+      });
+      setEditingPaymentId(null);
+    } else if (onRecordPayment) {
+      onRecordPayment({
+        paymentAmount: data.amount,
+        paymentDate: data.paymentDate,
+      });
+      setIsAddPaymentModalOpen(false);
     }
   };
 
+  const handleDeletePayment = () => {
+    if (deletingPaymentId && onRemovePayment) {
+      onRemovePayment(deletingPaymentId);
+    }
+    setDeletingPaymentId(null);
+  };
+
   const getDeletingPaymentDescription = () => {
-    if (deletingPaymentIndex === null) return '';
-    const payment = payments[deletingPaymentIndex];
-    return `payment of ${formatCurrency(payment?.amount || 0)} on ${formatDate(payment?.paymentDate || '')}`;
+    if (!deletingPaymentId) return '';
+    const payment = payments.find(p => p.id === deletingPaymentId);
+    if (!payment) return '';
+    return `payment of ${formatCurrency(payment.paymentAmount)} on ${formatDate(payment.paymentDate)}`;
   };
 
   // Get progress bar color based on percentage
@@ -202,7 +241,6 @@ export default function PaymentInformationSection() {
                 isPaymentHistoryExpanded ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
               }`}
             >
-              {/* Empty State for Payments */}
               {payments.length === 0 ? (
                 <div className="bg-blue-50/50 rounded-lg px-4 py-6 text-center">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
@@ -213,33 +251,46 @@ export default function PaymentInformationSection() {
               ) : (
                 <>
                   {/* Table Header */}
-                  <div className="grid grid-cols-[1fr_1fr_40px] gap-2 pb-2 border-b border-gray-200">
+                  <div className="grid grid-cols-[1fr_1fr_60px] gap-2 pb-2 border-b border-gray-200">
                     <span className="text-xs text-gray-500">Payment Date</span>
                     <span className="text-xs text-gray-500 text-right">Amount</span>
                     <span />
                   </div>
 
                   {/* Payment Rows */}
-                  {payments.map((payment, index) => (
+                  {payments.map(payment => (
                     <div
-                      key={fields[index]?.id || index}
-                      className="grid grid-cols-[1fr_1fr_40px] gap-2 py-2 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors animate-fadeIn"
+                      key={payment.id}
+                      className="grid grid-cols-[1fr_1fr_60px] gap-2 py-2 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors animate-fadeIn"
                     >
                       <span className="text-sm text-gray-600">
                         {formatDate(payment.paymentDate)}
                       </span>
                       <span className="text-sm text-gray-600 text-right">
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency(payment.paymentAmount)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingPaymentIndex(index)}
-                        className="text-gray-400 hover:text-danger transition-colors p-1"
-                        aria-label={`Delete payment of ${formatCurrency(payment.amount)}`}
-                        title="Delete payment"
-                      >
-                        <Icon name="trash" style="regular" className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingPaymentId(payment.id)}
+                          className="text-gray-400 hover:text-secondary transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
+                          aria-label={`Edit payment of ${formatCurrency(payment.paymentAmount)}`}
+                          title="Edit payment"
+                          disabled={isPaymentPending}
+                        >
+                          <Icon name="pen" style="regular" className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingPaymentId(payment.id)}
+                          className="text-gray-400 hover:text-danger transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
+                          aria-label={`Delete payment of ${formatCurrency(payment.paymentAmount)}`}
+                          title="Delete payment"
+                          disabled={isPaymentPending}
+                        >
+                          <Icon name="trash" style="regular" className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </>
@@ -249,7 +300,8 @@ export default function PaymentInformationSection() {
               <button
                 type="button"
                 onClick={() => setIsAddPaymentModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 mt-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-colors"
+                disabled={isPaymentPending}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 mt-3 border-2 border-dashed rounded-lg transition-colors ${isPaymentPending ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400'}`}
               >
                 <Icon name="circle-plus" style="solid" className="w-4 h-4" />
                 <span className="text-sm font-medium">Add Payment</span>
@@ -271,6 +323,16 @@ export default function PaymentInformationSection() {
             <span className="text-sm text-gray-800">{formatCurrency(bankAbsorbAmount)}</span>
           </div>
 
+          {/* Customer Payable (only shown when API data is available) */}
+          {fee && (
+            <div className="flex justify-between items-center border-b border-gray-200 pb-3">
+              <span className="text-xs font-medium text-gray-500">Customer payable</span>
+              <span className="text-sm text-gray-800">
+                {formatCurrency(fee.customerPayableAmount)}
+              </span>
+            </div>
+          )}
+
           {/* Remaining */}
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-gray-500">Remaining</span>
@@ -284,28 +346,37 @@ export default function PaymentInformationSection() {
       </div>
 
       {/* Inspection Fee Input */}
-      <NumberInput
-        label="Inspection Fee"
-        required
-        decimalPlaces={2}
-        value={inspectionFee || 0}
-        onChange={e => {
-          const value = e.target.value ?? 0;
-          setValue('fee.inspectionFee', value);
-        }}
-      />
+      {/*<NumberInput*/}
+      {/*  label="Inspection Fee"*/}
+      {/*  required*/}
+      {/*  decimalPlaces={2}*/}
+      {/*  value={fee?.inspectionFeeAmount ?? inspectionFee}*/}
+      {/*  onChange={e => {*/}
+      {/*    const value = e.target.value ?? 0;*/}
+      {/*    setInspectionFee(value);*/}
+      {/*  }}*/}
+      {/*/>*/}
 
-      {/* Add Payment Modal */}
+      {/* Add / Edit Payment Modal */}
       <AddPaymentModal
-        isOpen={isAddPaymentModalOpen}
-        onClose={() => setIsAddPaymentModalOpen(false)}
-        onSubmit={handleAddPayment}
+        isOpen={isAddPaymentModalOpen || editingPaymentId !== null}
+        onClose={() => {
+          setIsAddPaymentModalOpen(false);
+          setEditingPaymentId(null);
+        }}
+        onSubmit={handlePaymentSubmit}
+        defaultValues={
+          editingPayment
+            ? { paymentDate: editingPayment.paymentDate, amount: editingPayment.paymentAmount }
+            : null
+        }
+        isEditing={editingPaymentId !== null}
       />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={deletingPaymentIndex !== null}
-        onClose={() => setDeletingPaymentIndex(null)}
+        isOpen={deletingPaymentId !== null}
+        onClose={() => setDeletingPaymentId(null)}
         onConfirm={handleDeletePayment}
         title="Delete Payment"
         message={`Are you sure you want to delete this ${getDeletingPaymentDescription()}? This action cannot be undone.`}

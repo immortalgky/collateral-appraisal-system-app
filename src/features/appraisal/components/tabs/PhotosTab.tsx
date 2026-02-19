@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo, useLayoutEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
@@ -7,19 +7,19 @@ import { useParams } from 'react-router-dom';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
-import type { GalleryImage } from '../../types/gallery';
-import type { PhotoTopic, Photo } from '../../types/photo';
+import PhotoPreviewModal from '../PhotoPreviewModal';
+import type { GalleryImage, TopicPhotoDisplay } from '../../types/gallery';
+import { toGalleryImage, toTopicPhotoDisplay } from '../../types/gallery';
+import type { PhotoTopicDtoType } from '@shared/schemas/v1';
 import {
   useGetPhotoTopics,
   useCreatePhotoTopic,
   useUpdatePhotoTopic,
   useDeletePhotoTopic,
-  useCreatePhotoUploadSession,
-  useUploadPhoto,
-  useGetGalleryPhotos,
-  useDeletePhoto,
+  useAssignPhotoToTopic,
 } from '../../api/photo';
-import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
+import { useGetGalleryPhotos, useAddGalleryPhoto } from '../../api/gallery';
+import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 
 const LAYOUT_OPTIONS = [
   { value: 1 as const, label: '1', icon: 'square' },
@@ -31,20 +31,18 @@ const LAYOUT_OPTIONS = [
 const TopicItem = ({
   topic,
   isSelected,
-  photoCount,
   onSelect,
   onDelete,
   onEdit,
 }: {
-  topic: PhotoTopic;
+  topic: PhotoTopicDtoType;
   isSelected: boolean;
-  photoCount: number;
   onSelect: () => void;
   onDelete: () => void;
   onEdit: (name: string) => void;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(topic.name);
+  const [editName, setEditName] = useState(topic.topicName);
 
   const handleSave = () => {
     if (editName.trim()) {
@@ -100,7 +98,7 @@ const TopicItem = ({
                   isSelected ? 'text-white' : 'text-gray-800'
                 )}
               >
-                {topic.name}
+                {topic.topicName}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
                 <span
@@ -109,13 +107,13 @@ const TopicItem = ({
                     isSelected ? 'text-white/70' : 'text-gray-400'
                   )}
                 >
-                  {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+                  {topic.photoCount} {topic.photoCount === 1 ? 'photo' : 'photos'}
                 </span>
               </div>
             </div>
 
             {/* Photo Count Badge */}
-            {photoCount > 0 && (
+            {topic.photoCount > 0 && (
               <div
                 className={clsx(
                   'px-2 py-0.5 rounded-full text-xs font-medium',
@@ -124,7 +122,7 @@ const TopicItem = ({
                     : 'bg-emerald-100 text-emerald-600'
                 )}
               >
-                {photoCount}
+                {topic.photoCount}
               </div>
             )}
 
@@ -139,7 +137,7 @@ const TopicItem = ({
                 type="button"
                 onClick={e => {
                   e.stopPropagation();
-                  setEditName(topic.name);
+                  setEditName(topic.topicName);
                   setIsEditing(true);
                 }}
                 className={clsx(
@@ -177,39 +175,22 @@ const TopicItem = ({
 // PhotoCard Component - Enhanced with better hover effects
 const PhotoCard = ({
   photo,
-  isThumbnail,
   onDelete,
   onView,
-  onSetThumbnail,
 }: {
-  photo: Photo;
-  isThumbnail: boolean;
+  photo: TopicPhotoDisplay;
   onDelete: () => void;
   onView: () => void;
-  onSetThumbnail: () => void;
 }) => {
   return (
     <div className="group relative">
-      {/* Thumbnail Badge */}
-      {isThumbnail && (
-        <div className="absolute -top-2 -left-2 z-10 px-2.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-lg shadow-lg shadow-amber-500/30 flex items-center gap-1.5">
-          <Icon name="star" style="solid" className="text-[10px]" />
-          Cover
-        </div>
-      )}
-
       {/* Image Container */}
       <div
-        className={clsx(
-          'relative aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 cursor-pointer transition-all duration-300',
-          isThumbnail
-            ? 'ring-2 ring-amber-400 ring-offset-2 shadow-lg shadow-amber-500/20'
-            : 'hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1'
-        )}
+        className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1"
         onClick={onView}
       >
         <img
-          src={photo.filePath}
+          src={photo.thumbnailSrc}
           alt={photo.fileName}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -219,19 +200,6 @@ const PhotoCard = ({
 
         {/* Quick Actions */}
         <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          {!isThumbnail && (
-            <button
-              type="button"
-              onClick={e => {
-                e.stopPropagation();
-                onSetThumbnail();
-              }}
-              className="p-2 bg-white/95 backdrop-blur-sm rounded-lg text-amber-500 hover:bg-amber-500 hover:text-white shadow-lg transition-all duration-200 hover:scale-110"
-              title="Set as cover photo"
-            >
-              <Icon name="star" className="text-sm" />
-            </button>
-          )}
           <button
             type="button"
             onClick={e => {
@@ -258,194 +226,7 @@ const PhotoCard = ({
 
         {/* File Info */}
         <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <p className="text-white text-sm font-medium truncate drop-shadow-lg">{photo.originalFileName || photo.fileName}</p>
-          {photo.description && (
-            <p className="text-white/80 text-xs truncate mt-0.5">{photo.description}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Photo Preview Modal Component with navigation and keyboard support
-const PhotoPreviewModal = ({
-  photo,
-  photos,
-  isThumbnail,
-  onClose,
-  onNavigate,
-  onSetThumbnail,
-  onDelete,
-}: {
-  photo: Photo;
-  photos: Photo[];
-  isThumbnail: boolean;
-  onClose: () => void;
-  onNavigate: (photo: Photo) => void;
-  onSetThumbnail: () => void;
-  onDelete: () => void;
-}) => {
-  const currentIndex = photos.findIndex(p => p.id === photo.id);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < photos.length - 1;
-
-  const goToPrev = useCallback(() => {
-    if (hasPrev) {
-      onNavigate(photos[currentIndex - 1]);
-    }
-  }, [hasPrev, currentIndex, photos, onNavigate]);
-
-  const goToNext = useCallback(() => {
-    if (hasNext) {
-      onNavigate(photos[currentIndex + 1]);
-    }
-  }, [hasNext, currentIndex, photos, onNavigate]);
-
-  // Keyboard navigation
-  useLayoutEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'Escape':
-          onClose();
-          break;
-        case 'ArrowLeft':
-          goToPrev();
-          break;
-        case 'ArrowRight':
-          goToNext();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, goToPrev, goToNext]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md"
-      onClick={onClose}
-    >
-      {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
-        {/* Photo Counter */}
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl text-white/90 text-sm font-medium">
-            <Icon name="image" className="mr-2" />
-            {currentIndex + 1} / {photos.length}
-          </div>
-          {isThumbnail && (
-            <div className="px-3 py-1.5 bg-amber-500/90 backdrop-blur-sm rounded-lg text-white text-xs font-semibold flex items-center gap-1.5">
-              <Icon name="star" style="solid" className="text-[10px]" />
-              Cover Photo
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          {!isThumbnail && (
-            <button
-              type="button"
-              onClick={e => {
-                e.stopPropagation();
-                onSetThumbnail();
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-500/90 hover:bg-amber-500 backdrop-blur-sm rounded-xl text-white text-sm font-medium transition-all hover:scale-105"
-              title="Set as cover photo"
-            >
-              <Icon name="star" className="text-sm" />
-              Set as Cover
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/80 hover:bg-red-500 backdrop-blur-sm rounded-xl text-white text-sm font-medium transition-all hover:scale-105"
-            title="Delete photo"
-          >
-            <Icon name="trash" className="text-sm" />
-            Delete
-          </button>
-          <div className="w-px h-6 bg-white/20 mx-1" />
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-white transition-colors"
-            title="Close (Esc)"
-          >
-            <Icon name="xmark" className="text-lg" />
-          </button>
-        </div>
-      </div>
-
-      {/* Navigation Arrows */}
-      {hasPrev && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            goToPrev();
-          }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl text-white transition-all hover:scale-110 group"
-          title="Previous"
-        >
-          <Icon name="chevron-left" className="text-2xl group-hover:-translate-x-0.5 transition-transform" />
-        </button>
-      )}
-      {hasNext && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            goToNext();
-          }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl text-white transition-all hover:scale-110 group"
-          title="Next"
-        >
-          <Icon name="chevron-right" className="text-2xl group-hover:translate-x-0.5 transition-transform" />
-        </button>
-      )}
-
-      {/* Image */}
-      <img
-        src={photo.filePath}
-        alt={photo.fileName}
-        className="max-w-[85vw] max-h-[80vh] object-contain rounded-xl shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      />
-
-      {/* Bottom Info Bar */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-        <div className="flex items-center justify-center">
-          <div className="bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-xl flex items-center gap-4 max-w-2xl">
-            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-              <Icon name="image" className="text-white/70" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-medium truncate">{photo.originalFileName || photo.fileName}</p>
-              {photo.description && (
-                <p className="text-sm text-white/60 mt-0.5 truncate">{photo.description}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Keyboard hints */}
-        <div className="flex items-center justify-center gap-4 mt-3 text-white/40 text-xs">
-          <span className="flex items-center gap-1.5">
-            <kbd className="px-2 py-0.5 bg-white/10 rounded">&#8592;</kbd>
-            <kbd className="px-2 py-0.5 bg-white/10 rounded">&#8594;</kbd>
-            Navigate
-          </span>
-          <span className="flex items-center gap-1.5">
-            <kbd className="px-2 py-0.5 bg-white/10 rounded">Esc</kbd>
-            Close
-          </span>
+          <p className="text-white text-sm font-medium truncate drop-shadow-lg">{photo.caption || photo.fileName}</p>
         </div>
       </div>
     </div>
@@ -498,42 +279,33 @@ export const PhotosTab = () => {
   // Get appraisalId from URL params
   const { appraisalId } = useParams<{ appraisalId: string }>();
 
-  // Get property groups from API
-  const { groups } = useEnrichedPropertyGroups(appraisalId);
-
   // API hooks for topics
   const { data: topicsData, isLoading: isLoadingTopics } = useGetPhotoTopics(appraisalId);
   const { mutate: createTopic } = useCreatePhotoTopic();
   const { mutate: updateTopic } = useUpdatePhotoTopic();
   const { mutate: deleteTopic, isPending: isDeletingTopic } = useDeletePhotoTopic();
+  const { mutateAsync: assignPhotoToTopic, isPending: isAssigningPhoto } = useAssignPhotoToTopic();
 
-  // API hooks for photos
-  const { mutateAsync: createUploadSession } = useCreatePhotoUploadSession();
-  const { mutate: uploadPhoto } = useUploadPhoto();
-  const { data: photosData } = useGetGalleryPhotos({ appraisalId: appraisalId || '' });
-  const { mutate: deletePhoto, isPending: isRemovingPhoto } = useDeletePhoto();
-
-  // Local state for newly uploaded photos (before API refresh)
-  const [localPhotos, setLocalPhotos] = useState<Photo[]>([]);
-
-  // Combine API photos with local photos
-  const photos = [...(photosData?.photos || []), ...localPhotos];
+  // API hooks for gallery (upload flow)
+  const { data: galleryData } = useGetGalleryPhotos(appraisalId);
+  const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
+  const { mutateAsync: uploadDocument } = useUploadDocument();
 
   const topics = topicsData?.topics || [];
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
-  const [localLayouts, setLocalLayouts] = useState<Record<string, 1 | 2 | 3>>({});
+  const [localLayouts, setLocalLayouts] = useState<Record<string, number>>({});
   const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
   const [isDragging, setIsDragging] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<Photo | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<TopicPhotoDisplay | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     type: 'topic' | 'photo';
     id: string;
     name: string;
   } | null>(null);
-  const [thumbnailPhotoId, setThumbnailPhotoId] = useState<string | null>(null);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSessionIdRef = useRef<string | null>(null);
@@ -549,37 +321,22 @@ export const PhotosTab = () => {
   const selectedTopicRaw = topics.find(t => t.id === selectedTopicId);
   // Merge local layout state with topic data
   const selectedTopic = selectedTopicRaw
-    ? { ...selectedTopicRaw, layout: localLayouts[selectedTopicRaw.id] || selectedTopicRaw.layout }
+    ? { ...selectedTopicRaw, displayColumns: localLayouts[selectedTopicRaw.id] ?? selectedTopicRaw.displayColumns }
     : undefined;
-  const topicPhotos = photos.filter(p => p.topicId === selectedTopicId);
+
+  // Photos come from the selected topic's embedded photos array
+  const topicPhotos: TopicPhotoDisplay[] = useMemo(
+    () => (selectedTopic?.photos ?? []).map(toTopicPhotoDisplay),
+    [selectedTopic?.photos]
+  );
 
   // Get gallery images for "Choose from Gallery" modal
   const galleryImages: GalleryImage[] = useMemo(
-    () =>
-      groups.flatMap(group =>
-        group.items
-          .filter(item => item.image)
-          .map(item => ({
-            id: item.id,
-            src: item.image!,
-            alt: item.address,
-            fileName: `${item.type}_${item.id}.jpg`,
-            description: item.address,
-            propertyType: item.type,
-            groupName: group.name,
-            isUsed: false,
-            size: Math.floor(Math.random() * 5000000) + 100000,
-            uploadedAt: new Date(),
-          }))
-      ),
-    [groups]
+    () => (galleryData?.photos ?? []).map(toGalleryImage),
+    [galleryData]
   );
 
-  const getPhotoCountForTopic = (topicId: string) => {
-    return photos.filter(p => p.topicId === topicId).length;
-  };
-
-  const totalPhotos = photos.length;
+  const totalPhotos = topics.reduce((sum, t) => sum + t.photoCount, 0);
 
   /**
    * Get or create an upload session for photo uploads.
@@ -593,11 +350,7 @@ export const PhotosTab = () => {
       return sessionPromiseRef.current;
     }
 
-    if (!appraisalId) {
-      throw new Error('Appraisal ID is required');
-    }
-
-    sessionPromiseRef.current = createUploadSession(appraisalId)
+    sessionPromiseRef.current = createUploadSession()
       .then(response => {
         uploadSessionIdRef.current = response.sessionId;
         return response.sessionId;
@@ -608,13 +361,15 @@ export const PhotosTab = () => {
       });
 
     return sessionPromiseRef.current;
-  }, [createUploadSession, appraisalId]);
+  }, []);
 
   const handleAddTopic = () => {
     if (newTopicName.trim() && appraisalId) {
       createTopic({
         appraisalId,
-        name: newTopicName.trim(),
+        topicName: newTopicName.trim(),
+        sortOrder: topics.length + 1,
+        displayColumns: 2,
       });
       setNewTopicName('');
       setIsAddingTopic(false);
@@ -623,12 +378,40 @@ export const PhotosTab = () => {
   };
 
   const handleEditTopic = (topicId: string, name: string) => {
-    updateTopic({ topicId, name });
+    if (!appraisalId) return;
+    const topic = topics.find(t => t.id === topicId);
+    if (!topic) return;
+    updateTopic({
+      appraisalId,
+      topicId,
+      topicName: name,
+      sortOrder: topic.sortOrder,
+      displayColumns: topic.displayColumns,
+    });
   };
 
-  const handleDeleteTopic = () => {
-    if (deleteConfirm?.type === 'topic') {
-      deleteTopic(deleteConfirm.id);
+  const handleDeleteTopic = async () => {
+    if (deleteConfirm?.type === 'topic' && appraisalId) {
+      const topic = topics.find(t => t.id === deleteConfirm.id);
+      // Unassign all photos from the topic first
+      if (topic?.photos.length) {
+        try {
+          await Promise.all(
+            topic.photos.map(photo =>
+              assignPhotoToTopic({
+                appraisalId,
+                photoId: photo.id,
+                photoTopicId: null,
+              })
+            )
+          );
+        } catch {
+          toast.error('Failed to unassign photos from topic');
+          setDeleteConfirm(null);
+          return;
+        }
+      }
+      deleteTopic({ appraisalId, topicId: deleteConfirm.id });
       if (selectedTopicId === deleteConfirm.id) {
         const remaining = topics.filter(t => t.id !== deleteConfirm.id);
         setSelectedTopicId(remaining[0]?.id || '');
@@ -637,18 +420,24 @@ export const PhotosTab = () => {
     }
   };
 
-  const handleLayoutChange = (layout: 1 | 2 | 3) => {
-    if (selectedTopicId) {
+  const handleLayoutChange = (layout: number) => {
+    if (selectedTopicId && appraisalId && selectedTopicRaw) {
       // Update local state immediately for responsive UI
       setLocalLayouts(prev => ({ ...prev, [selectedTopicId]: layout }));
       // Also call API to persist
-      updateTopic({ topicId: selectedTopicId, layout });
+      updateTopic({
+        appraisalId,
+        topicId: selectedTopicId,
+        topicName: selectedTopicRaw.topicName,
+        sortOrder: selectedTopicRaw.sortOrder,
+        displayColumns: layout,
+      });
     }
   };
 
   const handleFileSelect = useCallback(
     async (files: FileList) => {
-      if (!selectedTopicId) {
+      if (!selectedTopicId || !appraisalId) {
         toast.error('Please select a topic first');
         return;
       }
@@ -664,31 +453,40 @@ export const PhotosTab = () => {
       try {
         const sessionId = await getOrCreateSession();
 
-        imageFiles.forEach(file => {
-          uploadPhoto(
-            {
-              sessionId,
+        for (const file of imageFiles) {
+          try {
+            // Step 1: Upload the document
+            const uploadResult = await uploadDocument({
+              uploadSessionId: sessionId,
               file,
-              topicId: selectedTopicId,
-              category: 'other',
-            },
-            {
-              onSuccess: result => {
-                // Add to local photos for immediate display
-                setLocalPhotos(prev => [...prev, result.photo]);
-                toast.success(`Uploaded ${file.name}`);
-              },
-              onError: () => {
-                toast.error(`Failed to upload ${file.name}`);
-              },
-            }
-          );
-        });
+              documentType: 'GAL_PHOTO',
+              documentCategory: 'gallery',
+            });
+
+            // Step 2: Register in gallery with topic assignment
+            await addGalleryPhoto({
+              appraisalId,
+              documentId: uploadResult.documentId,
+              photoType: 'general',
+              uploadedBy: 'current-user',
+              photoCategory: null,
+              caption: null,
+              latitude: null,
+              longitude: null,
+              capturedAt: null,
+              photoTopicId: selectedTopicId,
+            });
+
+            toast.success(`Uploaded ${file.name}`);
+          } catch {
+            toast.error(`Failed to upload ${file.name}`);
+          }
+        }
       } catch {
         toast.error('Failed to create upload session');
       }
     },
-    [selectedTopicId, getOrCreateSession, uploadPhoto]
+    [selectedTopicId, appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto]
   );
 
   const handleUploadFromDevice = (files: FileList) => {
@@ -699,43 +497,41 @@ export const PhotosTab = () => {
     setShowGalleryModal(true);
   };
 
-  const handleGallerySelect = (selectedImages: GalleryImage[]) => {
+  const handleGallerySelect = async (selectedImages: GalleryImage[]) => {
     if (!selectedTopicId || !appraisalId) return;
 
-    // Create Photo objects from gallery images
-    selectedImages.forEach(image => {
-      const newPhoto: Photo = {
-        id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        appraisalId,
-        topicId: selectedTopicId,
-        fileName: image.fileName || image.alt,
-        originalFileName: image.fileName || image.alt,
-        description: image.description,
-        category: 'other',
-        filePath: image.src,
-        fileSize: image.size || 0,
-        mimeType: 'image/jpeg',
-        isUsed: true,
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: 'current-user',
-      };
-      setLocalPhotos(prev => [...prev, newPhoto]);
-    });
+    let successCount = 0;
+    for (const image of selectedImages) {
+      try {
+        await assignPhotoToTopic({
+          appraisalId,
+          photoId: image.id,
+          photoTopicId: selectedTopicId,
+        });
+        successCount++;
+      } catch {
+        toast.error(`Failed to assign photo`);
+      }
+    }
 
-    toast.success(`Added ${selectedImages.length} photo${selectedImages.length !== 1 ? 's' : ''}`);
-  };
-
-  const handleDeletePhoto = () => {
-    if (deleteConfirm?.type === 'photo') {
-      deletePhoto(deleteConfirm.id);
-      setLocalPhotos(prev => prev.filter(p => p.id !== deleteConfirm.id));
-      setDeleteConfirm(null);
+    if (successCount > 0) {
+      toast.success(`Added ${successCount} photo${successCount !== 1 ? 's' : ''}`);
     }
   };
 
-  const handleSetThumbnail = (photoId: string) => {
-    setThumbnailPhotoId(photoId);
-    toast.success('Cover photo updated');
+  const handleRemovePhoto = async () => {
+    if (deleteConfirm?.type === 'photo' && appraisalId) {
+      try {
+        await assignPhotoToTopic({
+          appraisalId,
+          photoId: deleteConfirm.id,
+          photoTopicId: null,
+        });
+      } catch {
+        toast.error('Failed to remove photo from topic');
+      }
+      setDeleteConfirm(null);
+    }
   };
 
   // Drag & Drop handlers
@@ -846,10 +642,9 @@ export const PhotosTab = () => {
               key={topic.id}
               topic={topic}
               isSelected={topic.id === selectedTopicId}
-              photoCount={getPhotoCountForTopic(topic.id)}
               onSelect={() => setSelectedTopicId(topic.id)}
               onDelete={() =>
-                setDeleteConfirm({ type: 'topic', id: topic.id, name: topic.name })
+                setDeleteConfirm({ type: 'topic', id: topic.id, name: topic.topicName })
               }
               onEdit={name => handleEditTopic(topic.id, name)}
             />
@@ -886,7 +681,7 @@ export const PhotosTab = () => {
                   <Icon name="images" style="solid" className="text-emerald-600 text-sm" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-800">{selectedTopic.name}</h4>
+                  <h4 className="text-sm font-semibold text-gray-800">{selectedTopic.topicName}</h4>
                   <p className="text-xs text-gray-400">
                     {topicPhotos.length} photo{topicPhotos.length !== 1 ? 's' : ''}
                   </p>
@@ -906,7 +701,7 @@ export const PhotosTab = () => {
                     onClick={() => handleLayoutChange(option.value)}
                     className={clsx(
                       'w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200',
-                      selectedTopic?.layout === option.value
+                      selectedTopic?.displayColumns === option.value
                         ? 'bg-white text-emerald-600 shadow-sm'
                         : 'text-gray-400 hover:text-gray-600'
                     )}
@@ -951,7 +746,7 @@ export const PhotosTab = () => {
                   <Icon name="cloud-arrow-down" className="text-3xl text-emerald-600" />
                 </div>
                 <p className="text-xl font-semibold text-emerald-700">Drop photos here</p>
-                <p className="text-sm text-emerald-500 mt-1">Release to upload to "{selectedTopic?.name}"</p>
+                <p className="text-sm text-emerald-500 mt-1">Release to upload to "{selectedTopic?.topicName}"</p>
               </div>
             </div>
           ) : (
@@ -967,12 +762,10 @@ export const PhotosTab = () => {
                 <PhotoCard
                   key={photo.id}
                   photo={photo}
-                  isThumbnail={photo.id === thumbnailPhotoId}
                   onDelete={() =>
-                    setDeleteConfirm({ type: 'photo', id: photo.id, name: photo.originalFileName || photo.fileName })
+                    setDeleteConfirm({ type: 'photo', id: photo.id, name: photo.caption || photo.fileName })
                   }
                   onView={() => setPreviewPhoto(photo)}
-                  onSetThumbnail={() => handleSetThumbnail(photo.id)}
                 />
               ))}
             </div>
@@ -1024,7 +817,7 @@ export const PhotosTab = () => {
       <ConfirmDialog
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
-        onConfirm={deleteConfirm?.type === 'topic' ? handleDeleteTopic : handleDeletePhoto}
+        onConfirm={deleteConfirm?.type === 'topic' ? handleDeleteTopic : handleRemovePhoto}
         title={deleteConfirm?.type === 'topic' ? 'Delete Topic' : 'Remove Photo'}
         message={
           deleteConfirm?.type === 'topic'
@@ -1033,7 +826,7 @@ export const PhotosTab = () => {
         }
         confirmText="Delete"
         variant="danger"
-        isLoading={isDeletingTopic || isRemovingPhoto}
+        isLoading={isDeletingTopic || isAssigningPhoto}
       />
 
       {/* Photo Preview Modal - Enhanced with navigation */}
@@ -1041,14 +834,10 @@ export const PhotosTab = () => {
         <PhotoPreviewModal
           photo={previewPhoto}
           photos={topicPhotos}
-          isThumbnail={previewPhoto.id === thumbnailPhotoId}
           onClose={() => setPreviewPhoto(null)}
           onNavigate={setPreviewPhoto}
-          onSetThumbnail={() => {
-            handleSetThumbnail(previewPhoto.id);
-          }}
           onDelete={() => {
-            setDeleteConfirm({ type: 'photo', id: previewPhoto.id, name: previewPhoto.originalFileName || previewPhoto.fileName });
+            setDeleteConfirm({ type: 'photo', id: previewPhoto.id, name: previewPhoto.caption || previewPhoto.fileName });
             setPreviewPhoto(null);
           }}
         />

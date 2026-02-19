@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,6 +20,7 @@ interface RescheduleModalProps {
   };
   /** Whether this is a new appointment (not a reschedule) */
   isNewAppointment?: boolean;
+  isLoading?: boolean;
 }
 
 /**
@@ -30,23 +32,37 @@ export default function RescheduleModal({
   onSubmit,
   defaultValues,
   isNewAppointment = false,
+  isLoading = false,
 }: RescheduleModalProps) {
   const methods = useForm<RescheduleFormData>({
     resolver: zodResolver(RescheduleFormSchema),
     defaultValues: {
       dateTime: defaultValues?.dateTime || '',
       location: defaultValues?.location || '',
+      reason: '',
     },
   });
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
     watch,
     setValue,
   } = methods;
+
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        dateTime: defaultValues?.dateTime || '',
+        location: defaultValues?.location || '',
+        reason: '',
+      });
+    }
+    // Only reset when modal opens, not when defaultValues reference changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const dateTime = watch('dateTime');
 
@@ -57,7 +73,6 @@ export default function RescheduleModal({
 
   const handleFormSubmit = (data: RescheduleFormData) => {
     onSubmit(data);
-    handleClose();
   };
 
   const modalTitle = isNewAppointment ? 'Schedule Appointment' : 'Reschedule Appointment';
@@ -86,12 +101,23 @@ export default function RescheduleModal({
             error={errors.location?.message}
           />
 
+          {/* Reason Input - only shown when rescheduling */}
+          {!isNewAppointment && (
+            <Textarea
+              label="Reason for Rescheduling"
+              rows={2}
+              placeholder="Enter reason for rescheduling (optional)"
+              {...register('reason')}
+              error={errors.reason?.message}
+            />
+          )}
+
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button type="button" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
+            <Button type="submit" variant="primary" isLoading={isLoading}>
               {submitButtonText}
             </Button>
           </div>

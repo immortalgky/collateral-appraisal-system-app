@@ -17,7 +17,7 @@ interface CreateQuotationModalProps {
 const CreateQuotationModal = ({
   isOpen,
   onClose,
-  appraisalId,
+  appraisalId: _appraisalId,
   onSuccess,
 }: CreateQuotationModalProps) => {
   const [selectedCompanies, setSelectedCompanies] = useState<ExternalCompany[]>([]);
@@ -58,10 +58,12 @@ const CreateQuotationModal = ({
 
     createQuotation(
       {
-        appraisalId,
-        companyIds: selectedCompanies.map(c => c.id),
-        cutOffDate: cutOffDateTime,
-        remarks: remarks || undefined,
+        quotationNumber: `QUO-${Date.now()}`,
+        dueDate: cutOffDateTime,
+        requestedBy: '00000000-0000-0000-0000-000000000000',
+        requestedByName: 'Current User',
+        description: remarks || null,
+        specialRequirements: null,
       },
       {
         onSuccess: () => {

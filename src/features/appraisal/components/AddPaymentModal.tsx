@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,22 +7,28 @@ import Button from '@shared/components/Button';
 import DateInput from '@shared/components/inputs/DateInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import { AddPaymentFormSchema } from '../schemas/appointmentAndFee';
-import type { PaymentRecord } from '../types/appointmentAndFee';
 
 type AddPaymentFormData = z.infer<typeof AddPaymentFormSchema>;
 
 interface AddPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<PaymentRecord, 'id'>) => void;
+  onSubmit: (data: AddPaymentFormData) => void;
+  defaultValues?: { paymentDate: string; amount: number } | null;
+  isEditing?: boolean;
 }
 
 /**
- * Modal for adding a payment record
+ * Modal for adding or editing a payment record
  */
-export default function AddPaymentModal({ isOpen, onClose, onSubmit }: AddPaymentModalProps) {
+export default function AddPaymentModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  defaultValues,
+  isEditing = false,
+}: AddPaymentModalProps) {
   const {
-    register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
@@ -37,6 +44,13 @@ export default function AddPaymentModal({ isOpen, onClose, onSubmit }: AddPaymen
 
   const paymentDate = watch('paymentDate');
 
+  // Reset form with default values when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      reset(defaultValues ?? { paymentDate: '', amount: 0 });
+    }
+  }, [isOpen, defaultValues, reset]);
+
   const handleClose = () => {
     reset();
     onClose();
@@ -48,7 +62,7 @@ export default function AddPaymentModal({ isOpen, onClose, onSubmit }: AddPaymen
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Payment" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={isEditing ? 'Edit Payment' : 'Add Payment'} size="sm">
       <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
         {/* Payment Date */}
         <DateInput
@@ -64,7 +78,9 @@ export default function AddPaymentModal({ isOpen, onClose, onSubmit }: AddPaymen
           label="Amount"
           required
           decimalPlaces={2}
-          {...register('amount', { valueAsNumber: true })}
+          name="amount"
+          value={watch('amount')}
+          onChange={e => setValue('amount', e.target.value ?? 0)}
           error={errors.amount?.message}
         />
 
@@ -74,7 +90,7 @@ export default function AddPaymentModal({ isOpen, onClose, onSubmit }: AddPaymen
             Cancel
           </Button>
           <Button type="submit" variant="primary" isLoading={isSubmitting}>
-            Add Payment
+            {isEditing ? 'Save' : 'Add Payment'}
           </Button>
         </div>
       </form>

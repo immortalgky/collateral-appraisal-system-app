@@ -6,30 +6,36 @@ import type {
   createLandFormType,
   landAndBuildingPMAFormType,
 } from '@/features/appraisal/schemas/form';
-import type { GetLandPropertyByIdResultType } from '@/features/appraisal/api';
-import type { GetBuildingPropertyByIdResultType } from '@/shared/forms/typeBuilding';
+import type {
+  GetLandPropertyResponseType,
+  GetBuildingPropertyResponseType,
+  GetCondoPropertyResponseType,
+  GetLandAndBuildingPropertyResponseType,
+} from '@shared/schemas/v1';
 import type {
   GetCondoPMAPropertyByIdResultType,
-  GetCondoPropertyByIdResultType,
 } from '@/shared/forms/typeCondo';
 import type {
   GetLandAndBuildingPMAPropertyByIdResultType,
-  GetLandAndBuildingPropertyByIdResultType,
 } from '@/shared/forms/typeLandBuilding';
+import type { CurrentAssignment } from '@features/appraisal/types/administration';
+import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 
 export const mapLandPropertyResponseToForm = (
-  response: GetLandPropertyByIdResultType,
+  response: GetLandPropertyResponseType,
 ): createLandFormType => {
+  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
   return {
+    titles: (response as any).titles ?? [],
     propertyName: response.propertyName ?? '',
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
     subDistrict: response.subDistrict ?? '',
-    subDistrictName: '',
+    subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
-    districtName: '',
+    districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
-    provinceName: '',
+    provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
     landDescription: response.landDescription ?? '',
     isOwnerVerified: response.isOwnerVerified ?? false,
@@ -106,7 +112,7 @@ export const mapLandPropertyResponseToForm = (
 };
 
 export const mapBuildingPropertyResponseToForm = (
-  response: GetBuildingPropertyByIdResultType,
+  response: GetBuildingPropertyResponseType,
 ): createBuildingFormType => {
   return {
     ownerName: response.ownerName ?? '',
@@ -127,7 +133,7 @@ export const mapBuildingPropertyResponseToForm = (
     buildingTypeOther: response.buildingTypeOther ?? '',
     numberOfFloors: response.numberOfFloors ?? 0,
     decorationType: response.decorationType ?? '',
-    decorationTypeOther: response.decorationtypeOther ?? '',
+    decorationTypeOther: response.decorationTypeOther ?? '',
     isEncroachingOthers: response.isEncroachingOthers ?? false,
     encroachingOthersRemark: response.encroachingOthersRemark ?? '',
     encroachingOthersArea: response.encroachingOthersArea ?? 0,
@@ -165,7 +171,7 @@ export const mapBuildingPropertyResponseToForm = (
 };
 
 export const mapCondoPropertyResponseToForm = (
-  response: GetCondoPropertyByIdResultType,
+  response: GetCondoPropertyResponseType,
 ): createCondoFormType => {
   return {
     ownerName: response.ownerName ?? '',
@@ -239,25 +245,27 @@ export const mapCondoPropertyResponseToForm = (
 
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forcedSalePrice ?? 0,
+    forcedSalePrice: response.forceSellingPrice ?? 0,
 
     remark: response.remark ?? '',
   };
 };
 
 export const mapLandAndBuildingPropertyResponseToForm = (
-  response: GetLandAndBuildingPropertyByIdResultType,
+  response: GetLandAndBuildingPropertyResponseType,
 ): createLandAndBuildingFormType => {
+  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
   return {
+    titles: (response as any).titles ?? [],
     propertyName: response.propertyName ?? '',
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
     subDistrict: response.subDistrict ?? '',
-    subDistrictName: '',
+    subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
-    districtName: '',
+    districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
-    provinceName: '',
+    provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
     landDescription: response.landDescription ?? '',
     isOwnerVerified: response.isOwnerVerified ?? false,
@@ -276,8 +284,8 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
     plotLocationType: response.plotLocationType ?? [],
-    plotLocationTypeOther: response.plotLocationTypeOther ?? '',
-    landFillType: response.landFillType ?? [],
+    plotLocationTypeOther: response.plotLocationOther ?? '',
+    landFillType: response.landFillType ?? '',
     landFillTypeOther: response.landFillTypeOther ?? '',
     landFillPercent: response.landFillPercent ?? 0,
     soilLevel: response.soilLevel ?? 0,
@@ -374,13 +382,14 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
-    remark: response.remark ?? '',
+    remark: response.buildingRemark ?? '',
   };
 };
 
 export const mapLandAndBuildingPMAPropertyResponseToForm = (
   response: GetLandAndBuildingPMAPropertyByIdResultType,
 ): landAndBuildingPMAFormType => {
+  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
   return {
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
@@ -395,17 +404,18 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
     areaNgan: response.areaNgan ?? 0,
     areaSquareWa: response.areaSquareWa ?? 0,
     subDistrict: response.subDistrict ?? '',
-    subDistrictName: '',
+    subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
-    districtName: '',
+    districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
-    provinceName: '',
+    provinceName: addressLookup?.provinceName ?? '',
   };
 };
 
 export const mapCondoPMAPropertyResponseToForm = (
   response: GetCondoPMAPropertyByIdResultType,
 ): condoPMAFormType => {
+  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
   return {
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
@@ -417,10 +427,27 @@ export const mapCondoPMAPropertyResponseToForm = (
     buildingNumber: response.buildingNumber ?? '',
     condoName: response.condoName ?? '',
     subDistrict: response.subDistrict ?? '',
-    subDistrictName: '',
+    subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
-    districtName: '',
+    districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
-    provinceName: '',
+    provinceName: addressLookup?.provinceName ?? '',
+  };
+};
+
+export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
+  return {
+    assignmentType: response.assignmentType.toLowerCase() as 'internal' | 'external',
+    assignmentMethod: response.assignmentMethod.toLowerCase() as
+      | 'manual'
+      | 'roundrobin'
+      | 'quotation',
+    staffId: response.assigneeUserId ?? null,
+    companyId: response.assigneeCompanyId ?? null,
+    followupStaffId: response.internalAppraiserId ?? null,
+    selectedStaff: null as null,
+    selectedCompany: null as null,
+    selectedFollowupStaff: null as null,
+    remarks: '',
   };
 };

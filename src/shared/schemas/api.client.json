@@ -183,7 +183,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetRequestByIdResult"
+                  "$ref": "#/components/schemas/GetRequestByIdResponse"
                 }
               }
             }
@@ -302,7 +302,7 @@
       }
     },
     "/requests/{id}/submit": {
-      "patch": {
+      "post": {
         "tags": ["Requests"],
         "summary": "Submit a request",
         "description": "Submits a request for processing.",
@@ -318,16 +318,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitRequestRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -394,7 +384,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetRequestResult"
+                  "$ref": "#/components/schemas/GetRequestsResponse"
                 }
               }
             }
@@ -1112,6 +1102,66 @@
         }
       }
     },
+    "/auth/profile": {
+      "patch": {
+        "tags": ["Auth"],
+        "summary": "Update current user profile",
+        "description": "Updates the profile information of the currently authenticated user",
+        "operationId": "UpdateProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/token": {
       "post": {
         "tags": ["Api"],
@@ -1201,6 +1251,36 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current authenticated user",
+        "description": "Returns the current user's profile including roles and permissions",
+        "operationId": "GetCurrentUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1510,7 +1590,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UploadDocumentResult"
+                  "$ref": "#/components/schemas/UploadDocumentResponse"
                 }
               }
             }
@@ -1596,9 +1676,55 @@
         }
       }
     },
+    "/documents/{id}/download": {
+      "get": {
+        "tags": ["Documents"],
+        "operationId": "DownloadDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "download",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/workflow/kickstart": {
       "post": {
-        "tags": ["Api"],
+        "tags": ["Workflow"],
+        "summary": "Kickstart workflow",
+        "description": "Starts a new workflow for a request.",
+        "operationId": "KickstartWorkflow",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1611,7 +1737,34 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KickstartWorkflowResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "Get all tasks",
+        "description": "Retrieves all workflow tasks with pagination support.",
+        "operationId": "GetTasks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTasksResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3074,7 +3227,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SaveComparativeAnalysisResult"
+                  "$ref": "#/components/schemas/SaveComparativeAnalysisResponse"
                 }
               }
             }
@@ -3344,7 +3497,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetComparativeFactorsResult"
+                  "$ref": "#/components/schemas/GetComparativeFactorsResponse"
                 }
               }
             }
@@ -3776,7 +3929,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetMarketComparableTemplateByIdResult"
+                  "$ref": "#/components/schemas/GetMarketComparableTemplateByIdResponse"
                 }
               }
             }
@@ -3899,7 +4052,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetMarketComparableTemplatesResult"
+                  "$ref": "#/components/schemas/GetMarketComparableTemplatesResponse"
                 }
               }
             }
@@ -4038,7 +4191,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SetMarketComparableFactorDataResponse"
+                }
               }
             }
           },
@@ -4351,7 +4506,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateMarketComparableFactorResult"
+                  "$ref": "#/components/schemas/UpdateMarketComparableFactorResponse"
                 }
               }
             }
@@ -4433,10 +4588,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MarketComparableFactorDto"
-                  }
+                  "$ref": "#/components/schemas/GetMarketComparableFactorsResponse"
                 }
               }
             }
@@ -4481,6 +4633,490 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}/payments/{paymentId}": {
+      "put": {
+        "tags": ["Api"],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Api"],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}/items/{feeItemId}": {
+      "put": {
+        "tags": ["Api"],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeeItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Api"],
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}": {
+      "patch": {
+        "tags": ["Api"],
+        "parameters": [
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}/items/{itemId}/reject": {
+      "patch": {
+        "tags": ["Fee"],
+        "summary": "Reject fee item",
+        "description": "Reject a pending fee item with a reason.",
+        "operationId": "RejectFeeItem",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectFeeItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}/payments": {
+      "post": {
+        "tags": ["Fee"],
+        "summary": "Record payment",
+        "description": "Record a payment against an appraisal fee.",
+        "operationId": "RecordPayment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees": {
+      "get": {
+        "tags": ["Fee"],
+        "summary": "Get appraisal fees",
+        "description": "Get all fees and their items for an appraisal.",
+        "operationId": "GetAppraisalFees",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAppraisalFeesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}/items/{itemId}/approve": {
+      "patch": {
+        "tags": ["Fee"],
+        "summary": "Approve fee item",
+        "description": "Approve a pending fee item.",
+        "operationId": "ApproveFeeItem",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveFeeItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/fees/{feeId}/items": {
+      "post": {
+        "tags": ["Fee"],
+        "summary": "Add fee item",
+        "description": "Add an individual fee item (e.g. Travel Fee, Urgent Fee) to an existing appraisal fee.",
+        "operationId": "AddFeeItem",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "feeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFeeItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddFeeItemResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4656,10 +5292,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DocumentTypeDto"
-                  }
+                  "$ref": "#/components/schemas/GetDocumentTypesResponse"
                 }
               }
             }
@@ -4687,7 +5320,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateDocumentTypeResult"
+                  "$ref": "#/components/schemas/CreateDocumentTypeResponse"
                 }
               }
             }
@@ -4726,10 +5359,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DocumentRequirementDto"
-                  }
+                  "$ref": "#/components/schemas/GetDocumentRequirementsResponse"
                 }
               }
             }
@@ -4848,7 +5478,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateTemplateResult"
+                  "$ref": "#/components/schemas/UpdateTemplateResponse"
                 }
               }
             }
@@ -4897,7 +5527,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTemplateByIdResult"
+                  "$ref": "#/components/schemas/GetTemplateByIdResponse"
                 }
               }
             }
@@ -5011,10 +5641,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TemplateDto"
-                  }
+                  "$ref": "#/components/schemas/GetTemplatesResponse"
                 }
               }
             }
@@ -5042,7 +5669,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateTemplateResult"
+                  "$ref": "#/components/schemas/CreateTemplateResponse"
                 }
               }
             }
@@ -5093,7 +5720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddFactorToTemplateResult"
+                  "$ref": "#/components/schemas/AddFactorToTemplateResponse2"
                 }
               }
             }
@@ -5195,6 +5822,222 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/assignments/{assignmentId}/reject": {
+      "patch": {
+        "tags": ["Assignment"],
+        "summary": "Reject assignment",
+        "description": "Reject an appraisal assignment with a reason.",
+        "operationId": "RejectAssignment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/assignments": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "Get assignments",
+        "description": "Get all assignments for an appraisal.",
+        "operationId": "GetAssignments",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAssignmentsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Assignment"],
+        "summary": "Assign appraisal",
+        "description": "Assign an appraisal to an internal user or external company.",
+        "operationId": "AssignAppraisal",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignAppraisalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignAppraisalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/assignments/{assignmentId}/cancel": {
+      "patch": {
+        "tags": ["Assignment"],
+        "summary": "Cancel assignment",
+        "description": "Cancel an appraisal assignment with a reason.",
+        "operationId": "CancelAssignment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
           },
           "400": {
             "description": "Bad Request",
@@ -5607,6 +6450,107 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/photo-topics/{topicId}": {
+      "put": {
+        "tags": ["PhotoTopic"],
+        "summary": "Update a photo topic",
+        "description": "Updates an existing photo topic's name, sort order, and display columns.",
+        "operationId": "UpdatePhotoTopic",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "topicId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePhotoTopicRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePhotoTopicResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["PhotoTopic"],
+        "summary": "Delete a photo topic",
+        "description": "Deletes a photo topic. Fails if the topic still has photos assigned.",
+        "operationId": "DeletePhotoTopic",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "topicId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals/{appraisalId}/properties/{propertyId}/machinery-detail": {
       "put": {
         "tags": ["Appraisal Properties"],
@@ -5940,6 +6884,127 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/gallery/{photoId}": {
+      "put": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Update gallery photo details",
+        "description": "Updates category, caption, GPS coordinates, and captured date for a gallery photo.",
+        "operationId": "UpdateGalleryPhoto",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGalleryPhotoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateGalleryPhotoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Remove photo from gallery",
+        "description": "Removes a photo from the appraisal gallery and deletes any property photo mappings linked to it.",
+        "operationId": "RemoveGalleryPhoto",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals/{appraisalId}/properties/{propertyId}/condo-detail": {
       "put": {
         "tags": ["Appraisal Properties"],
@@ -6162,6 +7227,289 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/gallery/property-links/{mappingId}/unset-thumbnail": {
+      "put": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Unset property thumbnail",
+        "description": "Removes the thumbnail designation from the specified photo mapping.",
+        "operationId": "UnsetPropertyThumbnail",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsetPropertyThumbnailResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery/{photoId}/unmark-from-report": {
+      "post": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Unmark photo from report",
+        "description": "Removes a gallery photo from the appraisal report.",
+        "operationId": "UnmarkPhotoFromReport",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnmarkPhotoFromReportResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery/property-links/{mappingId}": {
+      "delete": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Unlink photo from property",
+        "description": "Removes a photo-to-property mapping.",
+        "operationId": "UnlinkPhotoFromProperty",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery/property-links/{mappingId}/set-thumbnail": {
+      "put": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Set property thumbnail",
+        "description": "Sets the specified photo mapping as the thumbnail for its property. Automatically unsets any existing thumbnail.",
+        "operationId": "SetPropertyThumbnail",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mappingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetPropertyThumbnailResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/property-groups/{groupId}/reorder-properties": {
+      "put": {
+        "tags": ["Appraisal"],
+        "summary": "Reorder properties in group",
+        "description": "Reorder properties within a group by providing the full ordered list of property IDs.",
+        "operationId": "ReorderPropertiesInGroup",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderPropertiesInGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderPropertiesInGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals/{appraisalId}/property-groups/{groupId}/properties/{propertyId}": {
       "delete": {
         "tags": ["Appraisal"],
@@ -6204,6 +7552,216 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RemovePropertyFromGroupResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/properties/{propertyId}/move-to-group": {
+      "put": {
+        "tags": ["Appraisal"],
+        "summary": "Move property to another group",
+        "description": "Move a property from its current group to a different group at an optional position.",
+        "operationId": "MovePropertyToGroup",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovePropertyToGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovePropertyToGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery/{photoId}/mark-for-report": {
+      "post": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Mark photo for report",
+        "description": "Marks a gallery photo to be included in the appraisal report under the specified section.",
+        "operationId": "MarkPhotoForReport",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkPhotoForReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkPhotoForReportResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery/{photoId}/property-links": {
+      "post": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Link photo to property",
+        "description": "Creates a mapping between a gallery photo and a specific property detail section.",
+        "operationId": "LinkPhotoToProperty",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkPhotoToPropertyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkPhotoToPropertyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -6321,11 +7879,171 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/photo-topics": {
+      "get": {
+        "tags": ["PhotoTopic"],
+        "summary": "Get photo topics with photos",
+        "description": "Returns all photo topics for the appraisal with their assigned photos, ordered by sort order.",
+        "operationId": "GetPhotoTopics",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPhotoTopicsResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["PhotoTopic"],
+        "summary": "Create a photo topic",
+        "description": "Creates a new photo topic for organizing gallery photos in the appraisal.",
+        "operationId": "CreatePhotoTopic",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePhotoTopicRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePhotoTopicResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery": {
+      "get": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Get all photos in appraisal gallery",
+        "description": "Returns all photos for the specified appraisal, ordered by photo number.",
+        "operationId": "GetGalleryPhotos",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetGalleryPhotosResult"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["AppraisalGallery"],
+        "summary": "Add photo to appraisal gallery",
+        "description": "Uploads a photo reference to the appraisal gallery. Document must be uploaded first via Document API.",
+        "operationId": "AddGalleryPhoto",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddGalleryPhotoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddGalleryPhotoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals": {
       "get": {
         "tags": ["Appraisal"],
         "summary": "Get all appraisals",
-        "description": "Retrieves all appraisals with pagination support.",
+        "description": "Retrieves all appraisals with pagination and optional filtering by status, priority, appraisal type, and assignee.",
         "operationId": "GetAppraisals",
         "parameters": [
           {
@@ -6344,6 +8062,35 @@
               "type": "integer",
               "format": "int32",
               "default": 10
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "appraisalType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigneeUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -6688,6 +8435,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -6745,6 +8500,14 @@
             "name": "appraisalId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -6810,6 +8573,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -6871,6 +8642,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -6906,6 +8685,66 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/gallery/{photoId}/assign-topic": {
+      "put": {
+        "tags": ["PhotoTopic"],
+        "summary": "Assign photo to topic",
+        "description": "Assigns a gallery photo to a topic, or unassigns it by passing null.",
+        "operationId": "AssignPhotoToTopic",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignPhotoToTopicRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignPhotoToTopicResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6963,6 +8802,285 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/appointments/{appointmentId}/reschedule": {
+      "patch": {
+        "tags": ["Appointment"],
+        "summary": "Reschedule appointment",
+        "description": "Reschedule an appointment to a new date/time.",
+        "operationId": "RescheduleAppointment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appointmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/appointments": {
+      "get": {
+        "tags": ["Appointment"],
+        "summary": "Get appointments",
+        "description": "Get all appointments for an appraisal.",
+        "operationId": "GetAppointments",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAppointmentsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Appointment"],
+        "summary": "Create appointment",
+        "description": "Create a new property survey appointment for an assignment.",
+        "operationId": "CreateAppointment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAppointmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/appointments/{appointmentId}/cancel": {
+      "patch": {
+        "tags": ["Appointment"],
+        "summary": "Cancel appointment",
+        "description": "Cancel an appointment with an optional reason.",
+        "operationId": "CancelAppointment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appointmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/appointments/{appointmentId}/approve": {
+      "patch": {
+        "tags": ["Appointment"],
+        "summary": "Approve appointment",
+        "description": "Approve a pending appointment.",
+        "operationId": "ApproveAppointment",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appointmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
           },
           "400": {
             "description": "Bad Request",
@@ -7333,7 +9451,7 @@
           }
         }
       },
-      "AddFactorToTemplateResult": {
+      "AddFactorToTemplateResponse2": {
         "required": [
           "templateFactorId",
           "templateId",
@@ -7367,6 +9485,96 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          }
+        }
+      },
+      "AddFeeItemRequest": {
+        "required": ["feeCode", "feeDescription", "feeAmount"],
+        "type": "object",
+        "properties": {
+          "feeCode": {
+            "type": "string"
+          },
+          "feeDescription": {
+            "type": "string"
+          },
+          "feeAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "AddFeeItemResult": {
+        "required": ["itemId"],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "AddGalleryPhotoRequest": {
+        "required": ["documentId", "photoType", "uploadedBy"],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photoType": {
+            "type": "string"
+          },
+          "uploadedBy": {
+            "type": "string"
+          },
+          "photoCategory": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time",
+            "default": null,
+            "nullable": true
+          },
+          "photoTopicId": {
+            "type": "string",
+            "format": "uuid",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "AddGalleryPhotoResponse": {
+        "required": ["id", "photoNumber"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photoNumber": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -7594,6 +9802,82 @@
         },
         "nullable": true
       },
+      "AppointmentDto2": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appointmentDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "proposedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "locationDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rescheduleCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "appointedBy": {
+            "type": "string"
+          },
+          "contactPerson": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdOn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
       "AppraisalDto": {
         "type": "object",
         "properties": {
@@ -7636,9 +9920,156 @@
             "type": "integer",
             "format": "int32"
           },
-          "createdOn": {
+          "createdAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "appointmentDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "assigneeUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "assignmentStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "assignedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AppraisalFeeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "feePaymentType": {
+            "type": "string"
+          },
+          "feeNotes": {
+            "type": "string"
+          },
+          "totalFeeBeforeVAT": {
+            "type": "number",
+            "format": "double"
+          },
+          "vatRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "vatAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalFeeAfterVAT": {
+            "type": "number",
+            "format": "double"
+          },
+          "bankAbsorbAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "customerPayableAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalPaidAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstandingAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentStatus": {
+            "type": "string"
+          },
+          "inspectionFeeAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppraisalFeeItemDto"
+            }
+          },
+          "paymentHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentHistoryDto"
+            }
+          }
+        }
+      },
+      "AppraisalFeeItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalFeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "feeCode": {
+            "type": "string"
+          },
+          "feeDescription": {
+            "type": "string"
+          },
+          "feeAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "requiresApproval": {
+            "type": "boolean"
+          },
+          "approvalStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedBy": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rejectionReason": {
+            "type": "string",
             "nullable": true
           }
         }
@@ -7653,6 +10084,160 @@
           },
           "approachType": {
             "type": "string"
+          }
+        }
+      },
+      "ApproveAppointmentRequest": {
+        "required": ["approvedBy"],
+        "type": "object",
+        "properties": {
+          "approvedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "ApproveFeeItemRequest": {
+        "required": ["approvedBy"],
+        "type": "object",
+        "properties": {
+          "approvedBy": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "AssignAppraisalRequest": {
+        "required": ["assignmentType"],
+        "type": "object",
+        "properties": {
+          "assignmentType": {
+            "type": "string"
+          },
+          "assigneeUserId": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "assigneeCompanyId": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "assignmentMethod": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "internalAppraiserId": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "assignedBy": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "AssignAppraisalResponse": {
+        "required": ["assignmentId"],
+        "type": "object",
+        "properties": {
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "AssignmentDto": {
+        "required": [
+          "id",
+          "appraisalId",
+          "assignmentType",
+          "assignmentStatus",
+          "assigneeUserId",
+          "assigneeCompanyId",
+          "internalAppraiserId",
+          "assignmentMethod",
+          "reassignmentNumber",
+          "progressPercent",
+          "assignedAt",
+          "assignedBy",
+          "startedAt",
+          "completedAt",
+          "rejectionReason",
+          "cancellationReason",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentType": {
+            "type": "string"
+          },
+          "assignmentStatus": {
+            "type": "string"
+          },
+          "assigneeUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assigneeCompanyId": {
+            "type": "string",
+            "nullable": true
+          },
+          "internalAppraiserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assignmentMethod": {
+            "type": "string"
+          },
+          "reassignmentNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "progressPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assignedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assignedBy": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "cancellationReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -7680,6 +10265,32 @@
           },
           "overrideProperties": {
             "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "AssignPhotoToTopicRequest": {
+        "required": ["photoTopicId"],
+        "type": "object",
+        "properties": {
+          "photoTopicId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "AssignPhotoToTopicResult": {
+        "required": ["photoId", "photoTopicId"],
+        "type": "object",
+        "properties": {
+          "photoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photoTopicId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         }
@@ -7831,6 +10442,29 @@
             "format": "double",
             "default": null,
             "nullable": true
+          }
+        }
+      },
+      "CancelAppointmentRequest": {
+        "required": ["changedBy"],
+        "type": "object",
+        "properties": {
+          "changedBy": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "CancelAssignmentRequest": {
+        "required": ["reason"],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -8413,6 +11047,48 @@
           "longitude": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "CreateAppointmentRequest": {
+        "required": ["assignmentId", "appointmentDateTime", "appointedBy"],
+        "type": "object",
+        "properties": {
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appointmentDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "appointedBy": {
+            "type": "string"
+          },
+          "locationDetail": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "contactPerson": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "CreateAppointmentResponse": {
+        "required": ["appointmentId"],
+        "type": "object",
+        "properties": {
+          "appointmentId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -9279,7 +11955,7 @@
           }
         }
       },
-      "CreateDocumentTypeResult": {
+      "CreateDocumentTypeResponse": {
         "required": ["id", "code", "name"],
         "type": "object",
         "properties": {
@@ -10111,6 +12787,14 @@
             "type": "string",
             "default": null,
             "nullable": true
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandTitleItemRequest"
+            },
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -10562,6 +13246,14 @@
             "type": "string",
             "default": null,
             "nullable": true
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandTitleItemRequest"
+            },
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -10968,6 +13660,34 @@
           }
         }
       },
+      "CreatePhotoTopicRequest": {
+        "required": ["topicName", "sortOrder"],
+        "type": "object",
+        "properties": {
+          "topicName": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "displayColumns": {
+            "type": "integer",
+            "format": "int32",
+            "default": 1
+          }
+        }
+      },
+      "CreatePhotoTopicResult": {
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "CreatePricingAnalysisResponse": {
         "required": ["id", "status"],
         "type": "object",
@@ -11183,7 +13903,7 @@
           }
         }
       },
-      "CreateTemplateResult": {
+      "CreateTemplateResponse": {
         "required": [
           "templateId",
           "templateCode",
@@ -12020,9 +14740,101 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "totalSellingPrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
           }
         },
         "nullable": true
+      },
+      "GalleryPhotoDto": {
+        "required": [
+          "id",
+          "documentId",
+          "photoNumber",
+          "photoType",
+          "photoCategory",
+          "caption",
+          "latitude",
+          "longitude",
+          "capturedAt",
+          "uploadedAt",
+          "isUsedInReport",
+          "reportSection",
+          "photoTopicId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photoNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "photoType": {
+            "type": "string"
+          },
+          "photoCategory": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isUsedInReport": {
+            "type": "boolean"
+          },
+          "reportSection": {
+            "type": "string",
+            "nullable": true
+          },
+          "photoTopicId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "GetAppointmentsResponse": {
+        "required": ["appointments"],
+        "type": "object",
+        "properties": {
+          "appointments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppointmentDto2"
+            }
+          }
+        }
       },
       "GetAppraisalByIdResponse": {
         "type": "object",
@@ -12103,12 +14915,36 @@
           }
         }
       },
+      "GetAppraisalFeesResponse": {
+        "required": ["fees"],
+        "type": "object",
+        "properties": {
+          "fees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppraisalFeeDto"
+            }
+          }
+        }
+      },
       "GetAppraisalsResponse": {
         "required": ["result"],
         "type": "object",
         "properties": {
           "result": {
             "$ref": "#/components/schemas/PaginatedResultOfAppraisalDto"
+          }
+        }
+      },
+      "GetAssignmentsResponse": {
+        "required": ["assignments"],
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssignmentDto"
+            }
           }
         }
       },
@@ -12519,7 +15355,7 @@
           }
         }
       },
-      "GetComparativeFactorsResult": {
+      "GetComparativeFactorsResponse": {
         "required": [
           "pricingAnalysisId",
           "methodId",
@@ -12958,6 +15794,42 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CollateralDocumentGroupDto"
+            }
+          }
+        }
+      },
+      "GetDocumentRequirementsResponse": {
+        "required": ["requirements"],
+        "type": "object",
+        "properties": {
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentRequirementDto"
+            }
+          }
+        }
+      },
+      "GetDocumentTypesResponse": {
+        "required": ["documentTypes"],
+        "type": "object",
+        "properties": {
+          "documentTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentTypeDto"
+            }
+          }
+        }
+      },
+      "GetGalleryPhotosResult": {
+        "required": ["photos"],
+        "type": "object",
+        "properties": {
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GalleryPhotoDto"
             }
           }
         }
@@ -14071,6 +16943,13 @@
           "remark": {
             "type": "string",
             "nullable": true
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandTitleItemData"
+            },
+            "nullable": true
           }
         }
       },
@@ -14278,6 +17157,18 @@
           }
         }
       },
+      "GetMarketComparableFactorsResponse": {
+        "required": ["factors"],
+        "type": "object",
+        "properties": {
+          "factors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketComparableFactorDto"
+            }
+          }
+        }
+      },
       "GetMarketComparablesResponse": {
         "required": ["result"],
         "type": "object",
@@ -14287,7 +17178,7 @@
           }
         }
       },
-      "GetMarketComparableTemplateByIdResult": {
+      "GetMarketComparableTemplateByIdResponse": {
         "required": ["template"],
         "type": "object",
         "properties": {
@@ -14296,7 +17187,7 @@
           }
         }
       },
-      "GetMarketComparableTemplatesResult": {
+      "GetMarketComparableTemplatesResponse": {
         "required": ["templates"],
         "type": "object",
         "properties": {
@@ -14330,6 +17221,18 @@
         "properties": {
           "result": {
             "$ref": "#/components/schemas/PaginatedResultOfPermissionDto"
+          }
+        }
+      },
+      "GetPhotoTopicsResult": {
+        "required": ["topics"],
+        "type": "object",
+        "properties": {
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PhotoTopicDto"
+            }
           }
         }
       },
@@ -14578,7 +17481,7 @@
           }
         }
       },
-      "GetRequestByIdResult": {
+      "GetRequestByIdResponse": {
         "type": "object",
         "properties": {
           "id": {
@@ -14586,16 +17489,19 @@
             "format": "uuid"
           },
           "requestNumber": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string"
           },
           "purpose": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "channel": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "requestor": {
             "$ref": "#/components/schemas/UserInfoDto"
@@ -14604,37 +17510,42 @@
             "$ref": "#/components/schemas/UserInfoDto"
           },
           "priority": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isPma": {
             "type": "boolean"
           },
           "detail": {
-            "$ref": "#/components/schemas/RequestDetailDto2"
+            "$ref": "#/components/schemas/RequestDetailDto"
           },
           "customers": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestCustomerDto"
-            }
+            },
+            "nullable": true
           },
           "properties": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestPropertyDto"
-            }
+            },
+            "nullable": true
           },
           "titles": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestTitleDto"
-            }
+            },
+            "nullable": true
           },
           "documents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestDocumentDto"
-            }
+            },
+            "nullable": true
           }
         }
       },
@@ -14690,12 +17601,39 @@
           }
         }
       },
-      "GetRequestResult": {
+      "GetRequestListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "nullable": true
+          },
+          "channel": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "GetRequestsResponse": {
         "required": ["result"],
         "type": "object",
         "properties": {
           "result": {
-            "$ref": "#/components/schemas/PaginatedResultOfRequestDto"
+            "$ref": "#/components/schemas/PaginatedResultOfGetRequestListItem"
           }
         }
       },
@@ -14889,7 +17827,16 @@
           }
         }
       },
-      "GetTemplateByIdResult": {
+      "GetTasksResponse": {
+        "required": ["result"],
+        "type": "object",
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/PaginatedResultOfTaskItem"
+          }
+        }
+      },
+      "GetTemplateByIdResponse": {
         "required": [
           "id",
           "templateCode",
@@ -14925,6 +17872,18 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TemplateFactorDto2"
+            }
+          }
+        }
+      },
+      "GetTemplatesResponse": {
+        "required": ["templates"],
+        "type": "object",
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateDto"
             }
           }
         }
@@ -15452,6 +18411,16 @@
           }
         }
       },
+      "KickstartWorkflowResponse": {
+        "required": ["correlationId"],
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "LandTitleAreaDto": {
         "required": ["rai", "ngan", "wa", "totalAreaInSqWa"],
         "type": "object",
@@ -15567,6 +18536,225 @@
           }
         }
       },
+      "LandTitleItemData": {
+        "required": ["id", "titleNumber", "titleType"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "titleNumber": {
+            "type": "string"
+          },
+          "titleType": {
+            "type": "string"
+          },
+          "bookNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "pageNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "landParcelNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "surveyNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "mapSheetNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "rawang": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "aerialMapName": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "aerialMapNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "rai": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "ngan": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "squareWa": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "hasBoundaryMarker": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "boundaryMarkerRemark": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "isDocumentValidated": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "isMissingFromSurvey": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "governmentPricePerSqWa": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "governmentPrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "LandTitleItemRequest": {
+        "required": ["titleNumber", "titleType"],
+        "type": "object",
+        "properties": {
+          "titleNumber": {
+            "type": "string"
+          },
+          "titleType": {
+            "type": "string"
+          },
+          "bookNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "pageNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "landParcelNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "surveyNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "mapSheetNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "rawang": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "aerialMapName": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "aerialMapNumber": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "rai": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "ngan": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "squareWa": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "hasBoundaryMarker": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "boundaryMarkerRemark": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "isDocumentValidated": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "isMissingFromSurvey": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "governmentPricePerSqWa": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "governmentPrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
       "LinkComparableRequest": {
         "required": ["marketComparableId", "displaySequence"],
         "type": "object",
@@ -15630,6 +18818,36 @@
           "comparableCode": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "LinkPhotoToPropertyRequest": {
+        "required": ["appraisalPropertyId", "photoPurpose", "sectionReference", "linkedBy"],
+        "type": "object",
+        "properties": {
+          "appraisalPropertyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photoPurpose": {
+            "type": "string"
+          },
+          "sectionReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "LinkPhotoToPropertyResponse": {
+        "required": ["mappingId"],
+        "type": "object",
+        "properties": {
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -16051,6 +19269,107 @@
           }
         }
       },
+      "MarkPhotoForReportRequest": {
+        "required": ["reportSection"],
+        "type": "object",
+        "properties": {
+          "reportSection": {
+            "type": "string"
+          }
+        }
+      },
+      "MarkPhotoForReportResult": {
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "MeResponse": {
+        "required": [
+          "id",
+          "username",
+          "email",
+          "firstName",
+          "lastName",
+          "avatarUrl",
+          "position",
+          "department",
+          "roles",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MovePropertyToGroupRequest": {
+        "required": ["targetGroupId", "targetPosition"],
+        "type": "object",
+        "properties": {
+          "targetGroupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetPosition": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "MovePropertyToGroupResponse": {
+        "required": ["success"],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "NotificationDto": {
         "required": [
           "id",
@@ -16169,6 +19488,30 @@
           }
         }
       },
+      "PaginatedResultOfGetRequestListItem": {
+        "required": ["items", "count", "pageNumber", "pageSize"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GetRequestListItem"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PaginatedResultOfMarketComparableDto": {
         "required": ["items", "count", "pageNumber", "pageSize"],
         "type": "object",
@@ -16241,30 +19584,6 @@
           }
         }
       },
-      "PaginatedResultOfRequestDto": {
-        "required": ["items", "count", "pageNumber", "pageSize"],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestDto"
-            }
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
       "PaginatedResultOfRoleDto": {
         "required": ["items", "count", "pageNumber", "pageSize"],
         "type": "object",
@@ -16289,6 +19608,51 @@
           }
         }
       },
+      "PaginatedResultOfTaskItem": {
+        "required": ["items", "count", "pageNumber", "pageSize"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskItem"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PaymentHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalFeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "paymentAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PermissionDto": {
         "required": ["id", "permissionCode", "description"],
         "type": "object",
@@ -16302,6 +19666,37 @@
           },
           "description": {
             "type": "string"
+          }
+        }
+      },
+      "PhotoTopicDto": {
+        "required": ["id", "topicName", "sortOrder", "displayColumns", "photoCount", "photos"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "topicName": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "displayColumns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "photoCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicPhotoDto"
+            }
           }
         }
       },
@@ -16367,16 +19762,59 @@
         }
       },
       "PropertyGroupItemDto": {
-        "required": ["propertyId", "sequenceInGroup"],
         "type": "object",
         "properties": {
           "propertyId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "sequenceInGroup": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
+          },
+          "propertyType": {
+            "type": "string",
+            "nullable": true
+          },
+          "appraisalDetailId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "propertyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "area": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyPhotoDto"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "PropertyPhotoDto": {
+        "required": ["documentId", "isThumbnail"],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isThumbnail": {
+            "type": "boolean"
           }
         }
       },
@@ -16440,6 +19878,35 @@
           "totalFactorDiffPct": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        }
+      },
+      "RecordPaymentRequest": {
+        "required": ["paymentAmount", "paymentDate"],
+        "type": "object",
+        "properties": {
+          "paymentAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "paymentReference": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "default": null,
             "nullable": true
           }
         }
@@ -16517,7 +19984,18 @@
         }
       },
       "RegisterUserRequest": {
-        "required": ["username", "password", "email", "permissions", "roles"],
+        "required": [
+          "username",
+          "password",
+          "email",
+          "firstName",
+          "lastName",
+          "avatarUrl",
+          "position",
+          "department",
+          "permissions",
+          "roles"
+        ],
         "type": "object",
         "properties": {
           "username": {
@@ -16528,6 +20006,24 @@
           },
           "email": {
             "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
           },
           "permissions": {
             "type": "array",
@@ -16554,6 +20050,28 @@
           }
         }
       },
+      "RejectAssignmentRequest": {
+        "required": ["reason"],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectFeeItemRequest": {
+        "required": ["rejectedBy", "reason"],
+        "type": "object",
+        "properties": {
+          "rejectedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
       "RemovePropertyFromGroupResponse": {
         "required": ["success"],
         "type": "object",
@@ -16568,6 +20086,28 @@
         "type": "object",
         "properties": {
           "isSuccess": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReorderPropertiesInGroupRequest": {
+        "required": ["orderedPropertyIds"],
+        "type": "object",
+        "properties": {
+          "orderedPropertyIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "ReorderPropertiesInGroupResponse": {
+        "required": ["success"],
+        "type": "object",
+        "properties": {
+          "success": {
             "type": "boolean"
           }
         }
@@ -16780,66 +20320,6 @@
           }
         }
       },
-      "RequestDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "requestNumber": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "purpose": {
-            "type": "string"
-          },
-          "channel": {
-            "type": "string"
-          },
-          "requestor": {
-            "$ref": "#/components/schemas/UserInfoDto"
-          },
-          "creator": {
-            "$ref": "#/components/schemas/UserInfoDto"
-          },
-          "priority": {
-            "type": "string"
-          },
-          "isPma": {
-            "type": "boolean"
-          },
-          "detail": {
-            "$ref": "#/components/schemas/RequestDetailDto2"
-          },
-          "customers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestCustomerDto"
-            }
-          },
-          "properties": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestPropertyDto"
-            }
-          },
-          "documents": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestDocumentDto"
-            }
-          },
-          "titles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestTitleDto"
-            }
-          }
-        }
-      },
       "RequestPropertyDto": {
         "required": ["propertyType", "buildingType", "sellingPrice"],
         "type": "object",
@@ -16881,7 +20361,7 @@
             "type": "string",
             "nullable": true
           },
-          "filename": {
+          "fileName": {
             "type": "string",
             "nullable": true
           },
@@ -17103,6 +20583,24 @@
           }
         }
       },
+      "RescheduleAppointmentRequest": {
+        "required": ["changedBy", "newDateTime"],
+        "type": "object",
+        "properties": {
+          "changedBy": {
+            "type": "string"
+          },
+          "newDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
       "RoleDto": {
         "required": ["id", "name", "description", "permissions"],
         "type": "object",
@@ -17149,7 +20647,7 @@
           }
         }
       },
-      "SaveComparativeAnalysisResult": {
+      "SaveComparativeAnalysisResponse": {
         "required": [
           "pricingAnalysisId",
           "methodId",
@@ -17339,6 +20837,25 @@
           }
         }
       },
+      "SetMarketComparableFactorDataResponse": {
+        "required": ["success"],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SetPropertyThumbnailResult": {
+        "required": ["mappingId"],
+        "type": "object",
+        "properties": {
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "SimulateTaskAssignmentRequest": {
         "type": "object",
         "properties": {
@@ -17509,22 +21026,102 @@
           }
         }
       },
-      "SubmitRequestRequest": {
-        "required": ["id"],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
       "SubmitRequestResponse": {
         "required": ["isSuccess"],
         "type": "object",
         "properties": {
           "isSuccess": {
             "type": "boolean"
+          }
+        }
+      },
+      "TaskItem": {
+        "required": [
+          "id",
+          "appraisalNumber",
+          "customerName",
+          "taskType",
+          "purpose",
+          "propertyType",
+          "status",
+          "appointmentDateTime",
+          "assigneeUserId",
+          "requestedAt",
+          "receivedDate",
+          "movement",
+          "slaDays",
+          "olaActual",
+          "olaDiff",
+          "priority"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "taskType": {
+            "type": "string",
+            "nullable": true
+          },
+          "purpose": {
+            "type": "string",
+            "nullable": true
+          },
+          "propertyType": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "appointmentDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "assigneeUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "receivedDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "movement": {
+            "type": "string",
+            "nullable": true
+          },
+          "slaDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "olaActual": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "olaDiff": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -17676,6 +21273,28 @@
           }
         }
       },
+      "TopicPhotoDto": {
+        "required": ["id", "documentId", "photoNumber", "caption"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photoNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "TransitionDefinition": {
         "type": "object",
         "properties": {
@@ -17702,6 +21321,26 @@
       },
       "TransitionType": {
         "enum": ["Normal", "Conditional", "Exception", "Timeout"]
+      },
+      "UnmarkPhotoFromReportResult": {
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UnsetPropertyThumbnailResult": {
+        "required": ["mappingId"],
+        "type": "object",
+        "properties": {
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "UpdateApproachRequest": {
         "type": "object",
@@ -18891,6 +22530,31 @@
           }
         }
       },
+      "UpdateFeeItemRequest": {
+        "required": ["feeCode", "feeDescription", "feeAmount"],
+        "type": "object",
+        "properties": {
+          "feeCode": {
+            "type": "string"
+          },
+          "feeDescription": {
+            "type": "string"
+          },
+          "feeAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "UpdateFeeRequest": {
+        "required": ["feePaymentType"],
+        "type": "object",
+        "properties": {
+          "feePaymentType": {
+            "type": "string"
+          }
+        }
+      },
       "UpdateFinalValueRequest": {
         "required": ["finalValue", "finalValueRounded"],
         "type": "object",
@@ -19014,6 +22678,45 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          }
+        }
+      },
+      "UpdateGalleryPhotoRequest": {
+        "required": ["photoCategory", "caption", "latitude", "longitude", "capturedAt"],
+        "type": "object",
+        "properties": {
+          "photoCategory": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateGalleryPhotoResponse": {
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -19430,6 +23133,14 @@
           "pondDepth": {
             "type": "number",
             "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandTitleItemData"
+            },
             "default": null,
             "nullable": true
           },
@@ -20141,6 +23852,14 @@
             "type": "string",
             "default": null,
             "nullable": true
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandTitleItemData"
+            },
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -20337,7 +24056,7 @@
           }
         }
       },
-      "UpdateMarketComparableFactorResult": {
+      "UpdateMarketComparableFactorResponse": {
         "required": ["id"],
         "type": "object",
         "properties": {
@@ -20428,6 +24147,47 @@
           }
         }
       },
+      "UpdatePaymentRequest": {
+        "required": ["paymentAmount", "paymentDate"],
+        "type": "object",
+        "properties": {
+          "paymentAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "paymentDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdatePhotoTopicRequest": {
+        "required": ["topicName", "sortOrder", "displayColumns"],
+        "type": "object",
+        "properties": {
+          "topicName": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "displayColumns": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UpdatePhotoTopicResult": {
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "UpdatePricingAnalysisRequest": {
         "required": ["marketValue", "appraisedValue", "forcedSaleValue"],
         "type": "object",
@@ -20454,6 +24214,74 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "UpdateProfileRequest": {
+        "required": ["firstName", "lastName", "avatarUrl", "position", "department"],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateProfileResponse": {
+        "required": [
+          "id",
+          "username",
+          "email",
+          "firstName",
+          "lastName",
+          "avatarUrl",
+          "position",
+          "department"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -20594,7 +24422,7 @@
           }
         }
       },
-      "UpdateTemplateResult": {
+      "UpdateTemplateResponse": {
         "required": [
           "id",
           "templateCode",
@@ -20994,7 +24822,7 @@
           }
         }
       },
-      "UploadDocumentResult": {
+      "UploadDocumentResponse": {
         "required": ["isSuccess", "documentId", "fileName", "fileSize"],
         "type": "object",
         "properties": {
@@ -21128,10 +24956,10 @@
       "name": "Permission"
     },
     {
-      "name": "Api"
+      "name": "Auth"
     },
     {
-      "name": "Auth"
+      "name": "Api"
     },
     {
       "name": "MarkNotificationAsReadEndpoint"
@@ -21144,6 +24972,12 @@
     },
     {
       "name": "Documents"
+    },
+    {
+      "name": "Workflow"
+    },
+    {
+      "name": "Tasks"
     },
     {
       "name": "Workflows"
@@ -21170,6 +25004,9 @@
       "name": "MarketComparableFactors"
     },
     {
+      "name": "Fee"
+    },
+    {
       "name": "Document Types"
     },
     {
@@ -21182,10 +25019,22 @@
       "name": "Committee"
     },
     {
+      "name": "Assignment"
+    },
+    {
       "name": "Appraisal Properties"
     },
     {
       "name": "Appraisal"
+    },
+    {
+      "name": "PhotoTopic"
+    },
+    {
+      "name": "AppraisalGallery"
+    },
+    {
+      "name": "Appointment"
     },
     {
       "name": "Test Notifications"

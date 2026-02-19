@@ -14,7 +14,6 @@ import FormRadioGroup from '../inputs/FormRadioGroup';
 import FormSwitch from '../inputs/FormSwitch';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { AtLeastOne } from '@/shared/types';
-import type { ParameterParams } from '@/shared/types/api';
 
 interface FormSectionProps {
   fields: FormField[];
@@ -64,7 +63,7 @@ interface SelectInputField extends BaseFormField {
 }
 
 type DropdownField = BaseDropdownField &
-  AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
+  AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
 interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';
