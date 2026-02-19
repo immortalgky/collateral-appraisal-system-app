@@ -8,6 +8,7 @@ import {
   PhotosTab,
   PropertiesTab,
 } from '../components/tabs';
+import ListMarketSurveyPage from './ListMarketSurveyPage';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws';
 type ViewMode = 'grid' | 'list';
@@ -35,7 +36,7 @@ export default function PropertyInformationPage() {
       case 'properties':
         return <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} />;
       case 'markets':
-        return <MarketsTab />;
+        return <ListMarketSurveyPage />;
       case 'gallery':
         return <GalleryTab />;
       case 'photos':

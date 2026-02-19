@@ -232,7 +232,7 @@ export const navigationConfig: NavItem[] = [
       },
       {
         name: 'Market Survey',
-        href: '/market-survey',
+        href: '/market-comparables',
         icon: 'magnifying-glass-location',
         iconColor: 'text-orange-500',
         iconStyle: 'solid',

@@ -65,9 +65,3 @@ export const requestTitleDtoDefaults = {
     noOfMachine: '' as unknown as number,
   },
 };
-
-export const createMarketSurveyRequestDefault: CreateMarketSurveyRequestType = {
-  surveyName: '',
-  surveyTemplateCode: 'LD1',
-  marketSurveyData: [],
-};

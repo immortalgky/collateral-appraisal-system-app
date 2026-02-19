@@ -3676,6 +3676,34 @@ const SimulateTransitionCompletedRequest = z
   })
   .partial()
   .passthrough();
+const UpdateMarketComparableRequest = z
+  .object({
+    factorData: z.array(FactorDataDto),
+    note: z.string().nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    sourceInfo: z.string().nullable().optional(),
+    surveyName: z.string(),
+    templateId: z.string().uuid().nullable().optional(),
+  })
+  .passthrough();
+const GetMarketComparableTemplateFactorResponse = z
+  .object({
+    factorId: z.string().uuid(),
+    factorCode: z.string(),
+    value: z.any(),
+    otherRemarks: z.string(),
+    factorName: z.string(),
+    fieldName: z.string(),
+    dataType: z.string(),
+    fieldLength: z.coerce.number(),
+    fieldDecimal: z.coerce.number(),
+    parameterGroup: z.string(),
+    isActive: z.boolean(),
+    displaySeq: z.coerce.number().int(),
+  })
+  .passthrough();
+const DeleteMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const UpdateMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schemas = {
   AddressDto,
@@ -4006,6 +4034,10 @@ export const schemas = {
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
+  UpdateMarketComparableRequest,
+  DeleteMarketComparableResponse,
+  GetMarketComparableTemplateFactorResponse,
+  UpdateMarketComparableResponse,
 };
 
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
@@ -4086,6 +4118,15 @@ export type MarketComparableFactorDtoType = z.infer<typeof MarketComparableFacto
 export type GetMarketComparableFactorsResponseType = z.infer<
   typeof GetMarketComparableFactorsResponse
 >;
+export type UpdateMarketComparableRequestType = z.infer<typeof UpdateMarketComparableRequest>;
+export type UpdateMarketComparableResponseType = z.infer<typeof UpdateMarketComparableResponse>;
+export type GetMarketComparableTemplateFactorResponseType = z.infer<
+  typeof GetMarketComparableTemplateFactorResponse
+>;
+export type GetMarketComparableTemplateByIdResponseType = z.infer<
+  typeof GetMarketComparableTemplateByIdResponse
+>;
+export type DeleteMarketComparableResponseType = z.infer<typeof DeleteMarketComparableResponse>;
 
 // Appointment types
 export type AppointmentDto2Type = z.infer<typeof AppointmentDto2>;

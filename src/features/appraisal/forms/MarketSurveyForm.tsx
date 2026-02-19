@@ -1,30 +1,62 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useGetMarketSurveyTemplate, useSurveyTemplateFactors } from '../api';
-import { useEffect } from 'react';
-import type { MarketComparableFactorDtoType } from '@/shared/schemas/v1';
+import { useEffect, useState } from 'react';
+import type { GetMarketComparableTemplateFactorResponseType } from '@/shared/schemas/v1';
+import { useGetMarketSurveyTemplateById, useGetMarketSurveyTemplateByPropertyType } from '../api';
+import { useSearchParams } from 'react-router-dom';
 
 const MarketSurveyForm = () => {
   const { getValues, setValue } = useFormContext();
-  const collateralType = useWatch({
-    name: 'collateralType',
-  });
+  const [isTemplateChanged, setIsTemplateChanged] = useState(false);
+  const [searchParams] = useSearchParams();
 
-  const { data: templates = [] } = useGetMarketSurveyTemplate(collateralType);
+  // Watch property type to fetch templates
+  const propertyType =
+    useWatch({
+      name: 'propertyType',
+    }) || searchParams.get('propertyType');
 
+  // Fetch survey templates based on property type
+  const { data, isLoading } = useGetMarketSurveyTemplateByPropertyType(propertyType || undefined);
+
+  const templates = data?.templates ?? [];
+
+  // Prepare survey template options for dropdown
   const surveyTemplateOptions =
-    templates?.map((t: any) => ({
-      label: t.description || t.templateName,
+    templates.map((t: any) => ({
+      label: t.templateName,
       value: t.templateCode,
     })) ?? [];
 
-  const surveyTemplateCode = useWatch({
-    name: 'surveyTemplateCode',
+  // Watch survey template code to fetch factors
+  const templateCode = useWatch({
+    name: 'templateCode',
   });
 
-  const { data: factor = [], isLoading } = useSurveyTemplateFactors(surveyTemplateCode);
+  const selectedTemplate = templates?.find(t => t.templateCode === templateCode);
+  const { data: template, isLoading: getMarketLoading } = useGetMarketSurveyTemplateById(
+    selectedTemplate?.id,
+  );
+  const factors = template?.template.factors ?? [];
 
-  // mock parameter options
+  // Watch market survey data to determine edit mode
+  const factorData = useWatch({
+    name: 'factorData',
+  });
+  const isEditMode = !!factorData?.length;
+
+  // Initialize market surveytemplate code
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!templates?.length) return;
+    const current = getValues('templateCode');
+    if (current) return;
+    setValue('templateCode', templates[0].templateCode);
+    setValue('propertyType', templates[0].propertyType);
+  }, [templates, isEditMode, getValues, setValue]);
+
+  // Map Option
+  // TODO: remove mock parameter options
   const parameterOptions = mockParameterOptions.reduce(
     (acc, group) => {
       acc[group.parameterGroup] = group.values.map(v => ({
@@ -33,59 +65,129 @@ const MarketSurveyForm = () => {
       }));
       return acc;
     },
-    {} as Record<string, { value: string; label: string }[]>
+    {} as Record<string, { value: string; label: string }[]>,
   );
 
+  // Initialize market survey data field
   useEffect(() => {
-    if (!factor.length) return;
-    setValue('marketSurveyData', defaultMarketSurveyData(factor));
-  }, [factor, getValues, setValue]);
+    if (!templateCode) return;
+    if (!factors.length) return;
 
-  const templateField: FormField[] = [
+    // edit mode + haven't change template
+    if (isEditMode && !isTemplateChanged) return;
+
+    const oldData = getValues('factorData') ?? [];
+
+    const defaultData = defaultMarketSurveyData(factors, oldData);
+
+    setValue('factorData', defaultData, { shouldDirty: true });
+  }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue]);
+
+  useEffect(() => {
+    if (!templateCode) return;
+    setIsTemplateChanged(true);
+    setValue('templateId', selectedTemplate?.id || null);
+  }, [templateCode, selectedTemplate]);
+
+  const staticFields: FormField[] = [
     {
       type: 'dropdown',
-      name: 'surveyTemplateCode',
+      name: 'propertyType',
+      label: '',
+      options: [
+        { value: 'Land', label: 'Lands' },
+        { value: 'LandAndBuilding', label: 'Land and Building' },
+        { value: 'Building', label: 'Building' },
+        { value: 'Condo', label: 'Condominium' },
+        { value: 'LeaseLand', label: 'Lease Agreement Lands' },
+        { value: 'LeaseBuilding', label: 'Lease Agreement Building' },
+        { value: 'LeaseLandAndBuilding', label: 'Lease Agreement Land and Building' },
+        { value: 'Machine', label: 'Machinery' },
+      ],
+      wrapperClassName: 'col-span-6',
+      required: true,
+      disabled: true,
+    },
+    {
+      type: 'dropdown',
+      name: 'templateCode',
       label: '',
       options: surveyTemplateOptions,
       wrapperClassName: 'col-span-6',
       required: true,
     },
+    {
+      type: 'text-input',
+      name: 'surveyName',
+      label: '',
+      wrapperClassName: 'col-span-6',
+      required: true,
+    },
+    {
+      type: 'date-input',
+      name: 'infoDateTime',
+      label: '',
+      wrapperClassName: 'col-span-6',
+    },
+    {
+      type: 'text-input',
+      name: 'sourceInfo',
+      label: '',
+      wrapperClassName: 'col-span-6',
+    },
+  ];
+
+  const formStaticSections = [
+    {
+      label: 'Property Type',
+      fields: staticFields.filter(f => f.name === 'propertyType'),
+    },
+    {
+      label: 'Template',
+      fields: staticFields.filter(f => f.name === 'templateCode'),
+    },
+    {
+      label: 'Survey Name',
+      fields: staticFields.filter(f => f.name === 'surveyName'),
+    },
+    {
+      label: 'Information Date / Time',
+      fields: staticFields.filter(f => f.name === 'infoDateTime'),
+    },
+    {
+      label: 'Source of Information',
+      fields: staticFields.filter(f => f.name === 'sourceInfo'),
+    },
+  ];
+
+  const remark: FormField[] = [
+    { type: 'textarea', name: 'notes', label: '', wrapperClassName: 'col-span-6' },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-6">
-      <div className="col-span-1">
-        <p>Collateral Type</p>
-      </div>
-      <div className="col-span-3">
-        <div className="grid grid-cols-12 gap-4">
-          <FormFields fields={collateralTypeField} />
+    <div>
+      {formStaticSections.map(section => (
+        <div key={section.label} className="grid grid-cols-4 gap-6 mb-6">
+          <div className="col-span-1">
+            <p>{section.label}</p>
+          </div>
+          <div className="col-span-3">
+            <div className="grid grid-cols-12 gap-4">
+              <FormFields fields={section.fields} />
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="col-span-1">
-        <p>Template</p>
-      </div>
-      <div className="col-span-3">
-        <div className="grid grid-cols-12 gap-4">
-          <FormFields fields={templateField} />
+      ))}
+      {isLoading || getMarketLoading ? (
+        <div className="w-full flex justify-center col-span-4">
+          <span className="loading loading-spinner text-primary"></span>
         </div>
-      </div>
-      <div className="col-span-1">
-        <p>Survey Name</p>
-      </div>
-      <div className="col-span-3">
-        <div className="grid grid-cols-12 gap-4">
-          <FormFields fields={surveyNameField} />
-        </div>
-      </div>
-      {isLoading ? (
-        <span className="loading loading-spinner text-primary"></span>
       ) : (
-        <div className="grid col-span-4 gap-6">
-          {factor.map((fac, index) => {
+        <div>
+          {factors.map((fac: any, index: number) => {
             const fields: FormField[] = [buildFormField(fac, index, parameterOptions)];
             return (
-              <div key={fac.factorCode} className="grid grid-cols-4 gap-6">
+              <div key={fac.factorCode} className="grid grid-cols-4 gap-6 mb-6">
                 <div className="col-span-1">
                   <p>{fac.factorName}</p>
                 </div>
@@ -99,87 +201,66 @@ const MarketSurveyForm = () => {
           })}
         </div>
       )}
+      <div className="grid grid-cols-4 gap-6 mb-6">
+        <div className="col-span-1">
+          <p>Remark</p>
+        </div>
+        <div className="col-span-3">
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={remark} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-const collateralTypeField: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'collateralType',
-    label: '',
-    options: [
-      { value: 'L', label: 'Lands' },
-      { value: 'LB', label: 'Land and Building' },
-      { value: 'B', label: 'Building' },
-      { value: 'U', label: 'Condominium' },
-      { value: 'LS', label: 'Lease Agreement Lands' },
-      { value: 'BS', label: 'Lease Agreement Building' },
-      { value: 'LBS', label: 'Lease Agreement Land and Building' },
-      { value: 'MC', label: 'Machinery' },
-    ],
-    wrapperClassName: 'col-span-6',
-    required: true,
-    disabled: true,
-  },
-];
-
-const surveyNameField: FormField[] = [
-  {
-    type: 'text-input',
-    name: 'surveyName',
-    label: '',
-    wrapperClassName: 'col-span-6',
-    required: true,
-  },
-];
-
 const buildFormField = (
-  fac: MarketComparableFactorDtoType,
+  fac: GetMarketComparableTemplateFactorResponseType,
   index: number,
-  parameterOptions: Record<string, { value: string; label: string }[]>
+  parameterOptions: Record<string, { value: string; label: string }[]>,
 ): FormField => {
   switch (fac.dataType) {
-    case 'dropdown':
+    case 'Dropdown':
       return {
         type: 'dropdown',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-6',
-        options: parameterOptions[fac.parameterGroup ?? ''] ?? [],
+        options: parameterOptions[fac.parameterGroup] ?? [],
       };
 
-    case 'radio-group':
+    case 'Radio':
       return {
         type: 'radio-group',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `factorData.[${index}].value`,
         orientation: 'horizontal',
-        options: parameterOptions[fac.parameterGroup ?? ''] ?? [],
+        options: parameterOptions[fac.parameterGroup] ?? [],
         wrapperClassName: 'col-span-12',
       };
 
-    case 'checkbox-group':
+    case 'CheckboxGroup':
       return {
         type: 'checkbox-group',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `factorData.[${index}].value`,
         orientation: 'horizontal',
-        options: parameterOptions[fac.parameterGroup ?? ''] ?? [],
+        options: parameterOptions[fac.parameterGroup] ?? [],
         wrapperClassName: 'col-span-12',
       };
 
-    case 'boolean-toggle':
+    case 'Checkbox':
       return {
-        type: 'boolean-toggle',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
-        label: '',
-        options: ['No', 'Yes'] as [string, string],
-        wrapperClassName: 'col-span-6',
+        type: 'checkbox-group',
+        name: `factorData.[${index}].value`,
+        orientation: 'horizontal',
+        options: parameterOptions[fac.parameterGroup] ?? [],
+        wrapperClassName: 'col-span-12',
       };
 
-    case 'number-input':
+    case 'Numeric':
       return {
         type: 'number-input',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-6',
       };
@@ -187,7 +268,7 @@ const buildFormField = (
     default:
       return {
         type: 'text-input',
-        name: `marketSurveyData.[${index}].${fac.fieldName}`,
+        name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-6',
       };
@@ -225,21 +306,64 @@ const mockParameterOptions = [
       { code: 'DILAPIDATED', description: 'Dilapidated' },
     ],
   },
+  {
+    parameterGroup: 'PLOT_LOCATION_OPTIONS',
+    values: [
+      { code: 'ShowHouse', description: 'Show House' },
+      { code: 'PrivateZone', description: 'Private Zone' },
+      { code: 'CornerPlot', description: 'Corner Plot' },
+      { code: 'NearClubhouse', description: 'Near Clubhouse' },
+    ],
+  },
+  {
+    parameterGroup: 'LAND_SHAPE_OPTIONS',
+    values: [
+      {
+        code: 'LANDSHAPE_1',
+        description:
+          'A shape with soil, space is appropriate for development made a very beneficial',
+      },
+      {
+        code: 'LANDSHAPE_2',
+        description: 'A shape with soil, space is appropriate for development benefit and medium',
+      },
+      {
+        code: 'LANDSHAPE_3',
+        description: 'A shape with soil, space, there are no appropriate development benefits',
+      },
+      {
+        code: 'Rectangle',
+        description: 'Rectangle shape',
+      },
+    ],
+  },
 ];
 
-const defaultMarketSurveyData = (factors: MarketComparableFactorDtoType[]) => {
-  return factors.map(fac => ({
-    factorId: fac.id,
-    factorCode: fac.factorCode,
-    factorName: fac.factorName,
-    fieldName: fac.fieldName,
-    dataType: fac.dataType,
-    parameterGroup: fac.parameterGroup ?? '',
-    fieldLength: fac.fieldLength ?? 0,
-    fieldDecimal: fac.fieldDecimal ?? 0,
-    value: '',
-    otherRemark: '',
-  }));
+const defaultMarketSurveyData = (
+  newFactors: GetMarketComparableTemplateFactorResponseType[],
+  oldData: any[] = [],
+) => {
+  return newFactors.map(fac => {
+    const old = oldData.find(d => d.factorCode === fac.factorCode);
+
+    return {
+      factorId: fac.factorId,
+      factorCode: fac.factorCode,
+      factorDesc: fac.factorDesc,
+      fieldName: fac.fieldName,
+      dataType: fac.dataType,
+      parameterGroup: fac.parameterGroup ?? '',
+      fieldLength: fac.fieldLength ?? 0,
+      fieldDecimal: fac.fieldDecimal ?? 2,
+      value:
+        old?.value ??
+        (fac.dataType === 'checkbox-group'
+          ? fac.value || []
+          : fac.dataType === 'number-input'
+            ? fac.value || ''
+            : ''),
+    };
+  });
 };
 
 export default MarketSurveyForm;
