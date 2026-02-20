@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /** select surveys section */
-const ComparativeFactors = z
+const ComparativeFactor = z
   .object({
     factorCode: z.string(),
   })
@@ -92,7 +92,7 @@ export const WQSDto = z
     collateralType: z.string(),
     pricingTemplateCode: z.string(),
     comparativeSurveys: z.array(ComparativeSurveys),
-    comparativeFactors: z.array(ComparativeFactors),
+    comparativeFactors: z.array(ComparativeFactor),
     WQSScores: z.array(WQSScore),
     WQSTotalScores: WQSTotalScore,
     WQSCalculations: z.array(WQSCalculation),
@@ -109,6 +109,6 @@ export type WQSFinalValueFormType = z.infer<typeof WQSFinalValue>;
 export type TotalSurveyScoreFormType = z.infer<typeof TotalSurveyScore>;
 export type WQSTotalScoreFormType = z.infer<typeof WQSTotalScore>;
 
-export type ComparativeFactorFormType = z.infer<typeof ComparativeFactors>;
+export type ComparativeFactorFormType = z.infer<typeof ComparativeFactor>;
 export type WQSCalculationType = z.infer<typeof WQSCalculation>;
 export type WQSFormType = z.infer<typeof WQSDto>;

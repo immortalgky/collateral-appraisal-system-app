@@ -329,7 +329,7 @@ export function useInitializePriceAnalysis({
   console.log('pricing analysis', pricingSelection);
 
   const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
-  const _property = PROPERTIES[0];
+  const _property = PROPERTIES[1];
   const initialData = {
     groupDetail: _groupDetail, // groupDetail
     properties: _property, // properties

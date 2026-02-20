@@ -227,7 +227,11 @@ export type GetComparativeFactorsResponseType = z.infer<typeof GetComparativeFac
 /** ================================ */
 /** Query method's template by method type */
 /** ================================ */
-const TemplateFactorDataDto = z
+const TemplateComparativeFactorDto = z.object({
+  id: z.string().uuid(),
+  factorCode: z.string(),
+});
+const TemplateCalculationFactorDto = z
   .object({
     id: z.string().uuid(),
     factorCode: z.string(),
@@ -241,8 +245,8 @@ const TemplateDetailDto = z
     templateCode: z.string(),
     templateName: z.string(),
     collateralType: z.string(),
-    comparativeFactors: z.array(TemplateFactorDataDto).optional().nullable(),
-    calculationFactors: z.array(TemplateFactorDataDto).optional().nullable(),
+    comparativeFactors: z.array(TemplateComparativeFactorDto).optional().nullable(),
+    calculationFactors: z.array(TemplateCalculationFactorDto).optional().nullable(),
   })
   .optional();
 
@@ -253,7 +257,8 @@ export const GetPricingTemplateByMethodResponse = z
   })
   .passthrough();
 
-export type TemplateFactorDataType = z.infer<typeof TemplateFactorDataDto>;
+export type TemplateComparativeFactorType = z.infer<typeof TemplateComparativeFactorDto>;
+export type TemplateCalculationFactorType = z.infer<typeof TemplateCalculationFactorDto>;
 export type TemplateDetailType = z.infer<typeof TemplateDetailDto>;
 export type GetPricingTemplatesByMethodRequestType = z.infer<
   typeof GetPricingTemplateByMethodRequest

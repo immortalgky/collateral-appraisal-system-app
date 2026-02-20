@@ -13,14 +13,17 @@ import {
 } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/calculations.ts';
 import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
+import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
 import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
+import type { MarketComparableDetailType } from '../../../schemas/v1';
+import type { SaleAdjustmentGridQualitativeFormType } from '../../../schemas/saleAdjustmentGridForm';
+import { readFactorValue } from '../../../domain/readFactorValue';
 type SurveyFactor = { id: string; value?: number | string | null };
 type Survey = { factors?: SurveyFactor[] };
 
 export function buildSaleGridQualitativeDerivedRules(args: {
-  surveys: Survey[];
-  qualitativeRows: any[];
+  surveys: MarketComparableDetailType[];
+  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
   const { qualitativeRows, surveys } = args;
 
@@ -32,7 +35,7 @@ export function buildSaleGridQualitativeDerivedRules(args: {
 }
 
 export function buildSaleGridCalculationDerivedRules(args: {
-  surveys: Survey[];
+  surveys: MarketComparableDetailType[];
   property: Record<string, any>;
 }): DerivedFieldRule[] {
   /** Calculation section */
@@ -61,7 +64,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
   } = saleGridFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
-    .map((s, columnIndex) => {
+    .map((survey: MarketComparableDetailType, columnIndex: number) => {
       return [
         {
           targetPath: calculationAdjustedValuePath({ column: columnIndex }),
@@ -71,26 +74,41 @@ export function buildSaleGridCalculationDerivedRules(args: {
             calculationAdjustmentYearPath({ column: columnIndex }),
           ],
           compute: ({ getValues }) => {
-            const offeringPrice = s.factors?.find(f => f.id === '17')?.value;
-            if (offeringPrice) {
+            const offeringPrice = survey.factorData?.find(f => f.factorCode === '17');
+            const offeringPriceValue = offeringPrice
+              ? readFactorValue({
+                  dataType: offeringPrice.dataType,
+                  fieldDecimal: offeringPrice.fieldDecimal,
+                  value: offeringPrice.value,
+                })
+              : undefined;
+            if (offeringPriceValue) {
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
+              console.log(offeringPriceValue);
               return calcAdjustedValue(
-                offeringPrice,
+                offeringPriceValue,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
               );
             }
-            const sellingPrice = s.factors?.find(f => f.id === '21')?.value;
-            if (sellingPrice) {
+            const sellingPrice = survey.factorData?.find(f => f.factorCode === '21');
+            const sellingPriceValue = sellingPrice
+              ? readFactorValue({
+                  dataType: sellingPrice.dataType,
+                  fieldDecimal: sellingPrice.fieldDecimal,
+                  value: sellingPrice.value,
+                })
+              : undefined;
+            if (sellingPriceValue) {
               const numberOfYears =
                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
-                sellingPrice,
+                sellingPriceValue,
                 numberOfYears,
                 sellingPriceAdjustmentYearPct,
               );
@@ -117,9 +135,15 @@ export function buildSaleGridCalculationDerivedRules(args: {
           deps: [],
           compute: () => {
             const propertyLandArea = getPropertyValueByFactorCode('05', property) ?? 0;
-            const surveyLandArea = s.factors?.find(f => f.id === '05')?.value ?? 0;
+            const findSurveyLandArea = survey.factorData?.find(f => f.id === '05');
+            const surveyLandArea = findSurveyLandArea
+              ? readFactorValue({
+                  dataType: findSurveyLandArea.dataType,
+                  fieldDecimal: findSurveyLandArea.fieldDecimal,
+                  value: findSurveyLandArea.value,
+                })
+              : 0;
             const landDiff = calcDiff(propertyLandArea, surveyLandArea);
-            console.log(landDiff);
             return landDiff;
           },
         },
@@ -138,7 +162,14 @@ export function buildSaleGridCalculationDerivedRules(args: {
           deps: [],
           compute: () => {
             const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
-            const surveyUsableArea = s.factors?.find(f => f.id === '12')?.value ?? 0;
+            const findSurveyUsableArea = survey.factorData?.find(f => f.id === '12');
+            const surveyUsableArea = findSurveyUsableArea
+              ? readFactorValue({
+                  dataType: findSurveyUsableArea.dataType,
+                  fieldDecimal: findSurveyUsableArea.fieldDecimal,
+                  value: findSurveyUsableArea.value,
+                })
+              : 0;
             const usableAreaDiff = calcDiff(propertyUsableArea, surveyUsableArea);
 
             return usableAreaDiff;
@@ -248,13 +279,13 @@ export function buildSaleGridCalculationDerivedRules(args: {
         },
       ];
     })
-    .flat();
+    .flat() as DerivedFieldRule[];
   return rules;
 }
 
 export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
-  surveys: Survey[];
-  qualitativeRows: any[];
+  surveys: MarketComparableDetailType[];
+  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows } = args;
 
@@ -264,16 +295,14 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   } = saleGridFieldPath;
 
   return qualitativeRows
-    .map((_, rowIndex) =>
-      surveys.map((_, columnIndex) => {
-        console.log(adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }));
+    .map((_, rowIndex: number) =>
+      surveys.map((_, columnIndex: number) => {
         return {
           targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
           deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
           compute: ({ getValues }) => {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
-            console.log(level);
             return qualitativeDefaultPercent(level) ?? null;
           },
         };
@@ -283,8 +312,8 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
 }
 
 export function buildSaleGridAdjustmentFactorAmountRules(args: {
-  surveys: Survey[];
-  qualitativeRows: any[];
+  surveys: MarketComparableDetailType[];
+  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows } = args;
 
@@ -317,7 +346,9 @@ export function buildSaleGridAdjustmentFactorAmountRules(args: {
     .flat();
 }
 
-export function buildSaleGridFinalValueRules(arg: { surveys: Survey[] }): DerivedFieldRule[] {
+export function buildSaleGridFinalValueRules(arg: {
+  surveys: MarketComparableDetailType[];
+}): DerivedFieldRule[] {
   const {
     finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
@@ -329,16 +360,19 @@ export function buildSaleGridFinalValueRules(arg: { surveys: Survey[] }): Derive
     {
       targetPath: finalValuePath(),
       deps: [
-        ...surveys.map((s, columnIndex) =>
+        ...surveys.map((_, columnIndex: number) =>
           calculationWeightAdjustValuePath({ column: columnIndex }),
         ),
       ],
       compute: ({ getValues }) => {
-        const totalWeightedAdjustValue = surveys.reduce((acc, curr, columnIndex) => {
-          const weightedAdjustValue =
-            getValues(calculationWeightAdjustValuePath({ column: columnIndex })) ?? 0;
-          return acc + weightedAdjustValue;
-        }, 0);
+        const totalWeightedAdjustValue = surveys.reduce(
+          (acc: number, curr, columnIndex: number) => {
+            const weightedAdjustValue =
+              getValues(calculationWeightAdjustValuePath({ column: columnIndex })) ?? 0;
+            return acc + weightedAdjustValue;
+          },
+          0,
+        );
         return Number.isFinite(totalWeightedAdjustValue)
           ? parseFloat(totalWeightedAdjustValue.toFixed(2))
           : 0;

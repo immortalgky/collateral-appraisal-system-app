@@ -46,12 +46,19 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
               const coeff = toFiniteNumber(value);
               return coeff < 0.85 ? (
                 <div className="grid grid-cols-5 gap-0 justify-between items-center text-danger">
-                  <span className="col-span-2">{value}</span>
-                  <span className="col-span-3">{'Consider for the market survey data'}</span>
+                  <div className="col-span-2">
+                    <span>{value}</span>
+                  </div>
+                  <div className="col-span-3">
+                    <span>{'Consider for the market survey data'}</span>
+                  </div>
                 </div>
               ) : (
-                <div>
-                  <span>{value}</span>
+                <div className="grid grid-cols-5 gap-0">
+                  <div className="col-span-2">
+                    <span>{value}</span>
+                  </div>
+                  <div className="col-span-3"></div>
                 </div>
               );
             }}

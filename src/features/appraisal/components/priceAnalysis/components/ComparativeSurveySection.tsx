@@ -14,6 +14,7 @@ import type {
   TemplateFactorDataType,
 } from '../schemas/v1';
 import type { ComparativeFactorFormType } from '../schemas/wqsForm';
+import { readFactorValue } from '../domain/readFactorValue';
 
 interface ComparativeSurveySectionProps {
   comparativeMarketSurveys: MarketComparableDataType[];
@@ -30,7 +31,7 @@ export function ComparativeSurveySection({
   fieldPath,
 }: ComparativeSurveySectionProps) {
   const {
-    comparativeFactor: comparativeFactorPath,
+    comparativeFactors: comparativeFactorsPath,
     comparativeFactorsFactorCode: comparativeFactorsFactorCodePath,
   } = fieldPath;
 
@@ -41,11 +42,11 @@ export function ComparativeSurveySection({
     remove: removeComparativeSurveyFactors,
   } = useFieldArray({
     control,
-    name: comparativeFactorPath(),
+    name: comparativeFactorsPath(),
   });
 
   const comparativeFactors = useMemo(() => {
-    return getValues(comparativeFactorPath()) as ComparativeFactorFormType[];
+    return getValues(comparativeFactorsPath());
   }, [comparativeSurveyFactors]);
 
   const factorColumnStyle =
@@ -132,11 +133,20 @@ export function ComparativeSurveySection({
                           <RHFInputCell
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) =>
-                              survey.factorData?.find(
+                            accessor={({ value }) => {
+                              const factorData = survey.factorData?.find(
                                 (factor: FactorDataType) => factor.factorCode === value,
-                              )?.value ?? ''
-                            }
+                              );
+                              if (factorData) {
+                                const factorValue = readFactorValue({
+                                  dataType: factorData.dataType,
+                                  fieldDecimal: factorData.fieldDecimal,
+                                  value: factorData.value,
+                                });
+                                return factorValue ?? '';
+                              }
+                              return '';
+                            }}
                           />
                         }
                       </td>

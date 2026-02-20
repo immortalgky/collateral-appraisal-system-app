@@ -18,6 +18,7 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas/v1';
+import type { ComparativeFactorFormType, WQSScoreFormType } from '../schemas/wqsForm';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -33,10 +34,11 @@ export function WQSScoringSection({
   isLoading = true,
 }: WQSScoringSectionProps) {
   const {
+    comparativeFactors: comparativeFactorsPath,
+
     /** scoring section path */
     scoringFactors: scoringFactorsPath,
     scoringFactorCode: scoringFactorCodePath,
-    comparativeFactor: comparativeFactorPath,
     scoringFactorWeight: scoringFactorWeightPath,
     scoringFactorIntensity: scoringFactorIntensityPath,
     scoringFactorWeightedIntensity: scoringFactorWeightedIntensityPath,
@@ -69,7 +71,7 @@ export function WQSScoringSection({
 
   const { control, getValues } = useFormContext();
   const {
-    fields: scoringFactors,
+    fields: scoringFactorFields,
     append: appendScoringFactor,
     remove: removeScoringFactor,
   } = useFieldArray({
@@ -77,8 +79,12 @@ export function WQSScoringSection({
     name: scoringFactorsPath(),
   });
 
-  const comparativeFactors = useWatch({ name: comparativeFactorPath() }) ?? [];
-  const wqsScoringFactors = useWatch({ name: scoringFactorsPath() }) ?? [];
+  const scoringFactors = useMemo(() => {
+    return (getValues(scoringFactorsPath()) as WQSScoreFormType[]) ?? [];
+  }, [scoringFactorFields]);
+
+  const comparativeFactors =
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorFormType[]) ?? [];
 
   const handleAddRow = () => {
     appendScoringFactor({
@@ -102,27 +108,27 @@ export function WQSScoringSection({
     removeScoringFactor(rowIndex);
   };
 
+  /** Rules */
   const scoringSurveyRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSScoringSurveyDerivedRules({
       surveys: comparativeSurveys,
       scoringRows: scoringFactors,
     });
-  }, [comparativeSurveys, scoringFactors]);
+  }, [comparativeSurveys, scoringFactors, property]);
 
   const totalScoreRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSTotalScoreRules({
       surveys: comparativeSurveys,
-      property: property,
       scoringRows: scoringFactors,
     });
-  }, [comparativeSurveys, scoringFactors]);
+  }, [comparativeSurveys, scoringFactors, property]);
 
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
-    return buildWQSCalculationDerivedRules({ surveys: comparativeSurveys, property: property });
-  }, [comparativeSurveys]);
+    return buildWQSCalculationDerivedRules({ surveys: comparativeSurveys });
+  }, [comparativeSurveys, property]);
 
   const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
-    return buildWQSFinalValueDerivedRules({ surveys: comparativeSurveys, property: property });
+    return buildWQSFinalValueDerivedRules({ surveys: comparativeSurveys });
   }, [comparativeSurveys, property]);
 
   useDerivedFields({ rules: scoringSurveyRules });
@@ -241,20 +247,20 @@ export function WQSScoringSection({
               </tr>
             ) : (
               /** scoring section */
-              scoringFactors.map((factor: any, rowIndex: number) => {
-                const selected = wqsScoringFactors[rowIndex]?.factorCode ?? '';
-                const options = (comparativeFactors ?? [])
+              scoringFactors.map((factor, rowIndex: number) => {
+                const selected = factor.factorCode ?? '';
+                const options = comparativeFactors
                   .filter(
-                    (compFact: any) =>
+                    compFact =>
                       compFact.factorCode === selected ||
-                      !wqsScoringFactors.some((q: any) => q.factorCode === compFact.factorCode),
+                      !scoringFactors.some(q => q.factorCode === compFact.factorCode),
                   )
-                  .map((f: any) => ({
+                  .map(f => ({
                     label: getFactorDesciption(f.factorCode) ?? '',
                     value: f.factorCode,
                   }));
                 return (
-                  <tr key={factor.id}>
+                  <tr key={factor.factorCode}>
                     <td className={clsx('bg-white border-r', leftColumnBody)}>
                       <div className="truncate">
                         {template?.calculationFactors?.find(
@@ -263,7 +269,9 @@ export function WQSScoringSection({
                           <RHFInputCell
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) => getFactorDesciption(value.toString())}
+                            accessor={({ value }) =>
+                              value ? getFactorDesciption(value.toString()) : ''
+                            }
                           />
                         ) : (
                           <RHFInputCell
@@ -308,42 +316,44 @@ export function WQSScoringSection({
                       />
                     </td>
 
-                    {comparativeSurveys.map((survey: any, columnIndex: number) => {
-                      return (
-                        <td key={survey.id} className={clsx(surveyStyle)}>
-                          <div className="flex flex-row justitfy-between items-center gap-2">
-                            <div className="w-[100px]">
-                              <RHFInputCell
-                                fieldName={scoringFactorSurveySurveyScorePath({
-                                  row: rowIndex,
-                                  column: columnIndex,
-                                })}
-                                inputType="number"
-                                onUserChange={v => {
-                                  if (v == null) return null;
-                                  const intensity = getValues(
-                                    scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                                  );
-                                  if (v > intensity) return intensity;
-                                  if (v < 0) return 0;
-                                  return v;
-                                }}
-                              />
+                    {comparativeSurveys.map(
+                      (survey: MarketComparableDetailType, columnIndex: number) => {
+                        return (
+                          <td key={survey.id} className={clsx(surveyStyle)}>
+                            <div className="flex flex-row justitfy-between items-center gap-2">
+                              <div className="w-[100px]">
+                                <RHFInputCell
+                                  fieldName={scoringFactorSurveySurveyScorePath({
+                                    row: rowIndex,
+                                    column: columnIndex,
+                                  })}
+                                  inputType="number"
+                                  onUserChange={v => {
+                                    if (v == null) return null;
+                                    const intensity = getValues(
+                                      scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
+                                    );
+                                    if (v > intensity) return intensity;
+                                    if (v < 0) return 0;
+                                    return v;
+                                  }}
+                                />
+                              </div>
+                              <div className="w-[80px] text-right">
+                                <RHFInputCell
+                                  fieldName={scoringFactorSurveyWeightedSurveyScorePath({
+                                    row: rowIndex,
+                                    column: columnIndex,
+                                  })}
+                                  inputType="display"
+                                  accessor={({ value }) => value.toLocaleString() ?? 0}
+                                />
+                              </div>
                             </div>
-                            <div className="w-[80px] text-right">
-                              <RHFInputCell
-                                fieldName={scoringFactorSurveyWeightedSurveyScorePath({
-                                  row: rowIndex,
-                                  column: columnIndex,
-                                })}
-                                inputType="display"
-                                accessor={({ value }) => value.toLocaleString() ?? 0}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                      );
-                    })}
+                          </td>
+                        );
+                      },
+                    )}
 
                     <td className={clsx('bg-white border-b border-gray-300', bgGradientLeft)}>
                       <div className="flex flex-row justitfy-between items-center gap-2">
@@ -426,7 +436,7 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any) => {
+              {comparativeSurveys.map(survey => {
                 return <td key={survey.id} className={clsx(surveyStyle)}></td>;
               })}
               <td className={clsx('border-b border-gray-300')}></td>
@@ -474,7 +484,7 @@ export function WQSScoringSection({
                   }}
                 />
               </td>
-              {comparativeSurveys.map((survey: any, columnIndex: number) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
                   <td key={survey.id} className={clsx(surveyStyle)}>
                     <div className={'flex flex-rows justify-between items-center'}>
@@ -557,7 +567,7 @@ export function WQSScoringSection({
                   bgGradient,
                 )}
               ></td>
-              {comparativeSurveys.map((survey: any) => {
+              {comparativeSurveys.map(survey => {
                 return <td key={survey.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200 border-b border-gray-300')}></td>

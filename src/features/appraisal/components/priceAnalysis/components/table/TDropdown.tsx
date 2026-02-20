@@ -10,6 +10,7 @@ import clsx from 'clsx';
 import { useFormReadOnly } from '@/shared/components/form';
 import { Icon } from '@/shared/components';
 import type { AtLeastOne } from '@/shared/types';
+import { useParameters } from './useParameters';
 
 type DropdownProps = DropdownBaseProps &
   AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;

@@ -1,4 +1,4 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useMemo } from 'react';
 import { Icon } from '@/shared/components';
 import {
@@ -6,39 +6,50 @@ import {
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
-import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
+import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
 import {
   buildSaleGridAdjustmentFactorAmountRules,
   buildSaleGridAdjustmentFactorDefaultPercentRules,
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
   buildSaleGridQualitativeDerivedRules,
-} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildDerivedRules.ts';
+} from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildSaleAdjustmentGridDerivedRules';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import clsx from 'clsx';
-import { SecondRevision } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SecondRevision.tsx';
+import { SaleAdjustmentGridSecondRevision } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridSecondRevision';
 import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
 import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateCalculationFactorType,
+  TemplateComparativeFactorType,
+  TemplateDetailType,
+} from '../../../schemas/v1';
+import type {
+  ComparativeFactorsFormType,
+  SaleAdjustmentGridQualitativeFormType,
+} from '../../../schemas/saleAdjustmentGridForm';
+import { readFactorValue } from '../../../domain/readFactorValue';
 
-interface QualitativeTableProps {
-  saleAdjustmentGridQualitatives: Record<string, any>[];
-  comparativeFactors: Record<string, any>[];
-  comparativeSurveys: Record<string, any>[];
+interface SaleAdjustmentGridScoringSectionProps {
+  comparativeSurveys: MarketComparableDetailType[];
   property: Record<string, any>;
-  template: Record<string, any>;
+  template: TemplateDetailType;
   isLoading: boolean;
 }
-export const QualitativeTable = ({
-  saleAdjustmentGridQualitatives = [],
-  comparativeFactors = [],
+export const SaleAdjustmentGridScoringSection = ({
   comparativeSurveys = [],
   property,
   template,
   isLoading = true,
-}: QualitativeTableProps) => {
+}: SaleAdjustmentGridScoringSectionProps) => {
   /** field paths */
   const {
+    comparativeFactors: comparativeFactorsPath,
+
     /** qualitative */
+    qualitatives: qualitativesPath,
     qualitativeLevel: qualitativeLevelPath,
     qualitativeFactorCode: qualitativeFactorCodePath,
 
@@ -46,6 +57,7 @@ export const QualitativeTable = ({
     calculationOfferingPrice: calculationOfferingPricePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
+    calculationSellingPrice: calculationSellingPricePath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
@@ -59,6 +71,7 @@ export const QualitativeTable = ({
     calculationWeightAdjustValue: calculationWeightAdjustValuePath,
 
     /** adjust percent */
+    adjustmentFactors: adjustmentFactorsPath,
     adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
     adjustmentFactorsRemark: adjustmentFactorsRemarkPath,
@@ -70,12 +83,12 @@ export const QualitativeTable = ({
 
   const { control, getValues } = useFormContext();
   const {
-    fields: qualitativeFactors,
+    fields: qualitativeFactorFields,
     append: appendQualitativeFactor,
     remove: removeQualitativeFactor,
   } = useFieldArray({
     control,
-    name: 'saleAdjustmentGridQualitatives',
+    name: qualitativesPath(),
   });
 
   const {
@@ -84,8 +97,15 @@ export const QualitativeTable = ({
     remove: removeAdjustmentFactor,
   } = useFieldArray({
     control,
-    name: 'saleAdjustmentGridAdjustmentFactors',
+    name: adjustmentFactorsPath(),
   });
+
+  const qualitativeFactors = useMemo(() => {
+    return (getValues(qualitativesPath()) as SaleAdjustmentGridQualitativeFormType[]) ?? [];
+  }, [qualitativeFactorFields]);
+
+  const comparativeFactors =
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
 
   const handleAddRow = () => {
     appendQualitativeFactor({
@@ -112,7 +132,7 @@ export const QualitativeTable = ({
     /** Adjustment factors which initial by Qualitative part */
     let rules = buildSaleGridQualitativeDerivedRules({
       surveys: comparativeSurveys,
-      qualitativeRows: saleAdjustmentGridQualitatives,
+      qualitativeRows: qualitativeFactors,
     });
 
     rules = [...rules, ...buildSaleGridFinalValueRules({ surveys: comparativeSurveys })];
@@ -195,15 +215,15 @@ export const QualitativeTable = ({
               </th>
             </tr>
             <tr className="border-b border-gray-300">
-              {comparativeSurveys.map(col => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return (
                   <th
-                    key={col.id}
+                    key={survey.id}
                     className={
                       'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[40px] h-[45px] min-h-[45px] max-h-[45px] z-23 whitespace-nowrap'
                     }
                   >
-                    <div>{col.surveyName}</div>
+                    <div>{survey.surveyName}</div>
                   </th>
                 );
               })}
@@ -211,104 +231,119 @@ export const QualitativeTable = ({
           </thead>
 
           <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr>
-                <td colSpan={comparativeSurveys.length + 3}>Loading</td>
-              </tr>
-            ) : (
-              qualitativeFactors.map((f, rowIndex) => {
-                const selected = saleAdjustmentGridQualitatives[rowIndex]?.factorCode ?? '';
-                const qualitativeFactors = (comparativeFactors ?? [])
-                  .filter(
-                    f =>
-                      f.factorCode === selected ||
-                      !saleAdjustmentGridQualitatives.some(q => q.factorCode === f.factorCode),
-                  )
-                  .map(f => ({
-                    label: getFactorDesciption(f.factorCode) ?? '',
-                    value: f.factorCode,
-                  }));
-                return (
-                  <tr key={f.id}>
-                    <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                      <div className="truncate">
-                        {template?.qualitativeFactors.find(t => t.factorId === f.factorCode) ? (
+            {/* qualitative section */}
+            {qualitativeFactors.map((factor, rowIndex: number) => {
+              const selected = factor.factorCode ?? '';
+              const options = comparativeFactors
+                .filter(
+                  compFact =>
+                    compFact.factorCode === selected ||
+                    !qualitativeFactors.some(q => q.factorCode === factor.factorCode),
+                )
+                .map(compFact => ({
+                  label: getFactorDesciption(compFact.factorCode) ?? '',
+                  value: compFact.factorCode,
+                }));
+              return (
+                <tr key={factor.factorCode}>
+                  <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+                    <div className="truncate">
+                      {(template?.comparativeFactors ?? []).find(
+                        (t: TemplateComparativeFactorType) => t.factorCode === factor.factorCode,
+                      ) ? (
+                        <RHFInputCell
+                          fieldName={qualitativeFactorCodePath({ row: rowIndex })}
+                          inputType="display"
+                          accessor={({ value }) =>
+                            value ? getFactorDesciption(value.toString()) : ''
+                          }
+                        />
+                      ) : (
+                        <RHFInputCell
+                          fieldName={qualitativeFactorCodePath({ row: rowIndex })}
+                          inputType="select"
+                          options={options}
+                        />
+                      )}
+                    </div>
+                  </td>
+
+                  {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                    return (
+                      <td key={survey.id} className={clsx(surveyColumnBody)}>
+                        <div className="flex flex-row justitfy-between items-center gap-2">
+                          <div className="w-[150px]">
+                            <RHFInputCell
+                              fieldName={qualitativeLevelPath({
+                                row: rowIndex,
+                                column: columnIndex,
+                              })}
+                              inputType="select"
+                              // can config
+                              options={[
+                                { label: 'Equal', value: 'E' },
+                                { label: 'Inferior', value: 'I' },
+                                { label: 'Better', value: 'B' },
+                              ]}
+                            />
+                          </div>
                           <RHFInputCell
                             fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                             inputType="display"
-                            accessor={({ value }) => getFactorDesciption(value)}
-                          />
-                        ) : (
-                          <RHFInputCell
-                            fieldName={qualitativeFactorCodePath({ row: rowIndex })}
-                            inputType="select"
-                            options={qualitativeFactors}
-                          />
-                        )}
-                      </div>
-                    </td>
-
-                    {comparativeSurveys.map((col, columnIndex) => {
-                      return (
-                        <td key={col.id} className={clsx(surveyColumnBody)}>
-                          <div className="flex flex-row justitfy-between items-center gap-2">
-                            <div className="w-[150px]">
-                              <RHFInputCell
-                                fieldName={qualitativeLevelPath({
-                                  row: rowIndex,
-                                  column: columnIndex,
-                                })}
-                                inputType="select"
-                                // can config
-                                options={[
-                                  { label: 'Equal', value: 'E' },
-                                  { label: 'Inferior', value: 'I' },
-                                  { label: 'Better', value: 'B' },
-                                ]}
-                              />
-                            </div>
-                            <RHFInputCell
-                              fieldName={qualitativeFactorCodePath({ row: rowIndex })}
-                              inputType="display"
-                              accessor={({ value }) =>
-                                col.factors?.find(f => f.id === value)?.value ?? ''
+                            accessor={({ value }) => {
+                              const factorData = survey.factorData?.find(
+                                (factor: FactorDataType) => factor.factorCode === value,
+                              );
+                              if (factorData) {
+                                const factorValue = readFactorValue({
+                                  dataType: factorData.dataType,
+                                  fieldDecimal: factorData.fieldDecimal,
+                                  value: factorData.value,
+                                });
+                                return factorValue ?? '';
                               }
-                            />
-                          </div>
-                        </td>
-                      );
-                    })}
-
-                    <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}>
-                      <RHFInputCell
-                        fieldName={qualitativeFactorCodePath({ row: rowIndex })}
-                        inputType="display"
-                        accessor={({ value }) => {
-                          return getPropertyValueByFactorCode(value, property) ?? '';
-                        }}
-                      />
-                    </td>
-                    <td className={clsx('bg-white', actionColumnBody)}>
-                      {/* if rowIndex > template factors length, show delete button */}
-                      {!template?.qualitativeFactors.find(t => t.factorId === f.factorCode) && (
-                        <div className="flex flex-row justify-center items-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleRemoveRow(rowIndex);
+                              return '';
                             }}
-                            className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
-                            title="Delete"
-                          >
-                            <Icon style="solid" name="trash" className="size-3.5" />
-                          </button>
+                          />
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                      </td>
+                    );
+                  })}
+
+                  <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}>
+                    <RHFInputCell
+                      fieldName={qualitativeFactorCodePath({ row: rowIndex })}
+                      inputType="display"
+                      accessor={({ value }) => {
+                        return value
+                          ? getPropertyValueByFactorCode(value.toString(), property)
+                          : '';
+                      }}
+                    />
+                  </td>
+                  <td className={clsx('bg-white', actionColumnBody)}>
+                    {/* if rowIndex > template factors length, show delete button */}
+                    {!template?.calculationFactors?.find(
+                      (calFact: TemplateCalculationFactorType) =>
+                        calFact.factorCode === factor.factorCode,
+                    ) && (
+                      <div className="flex flex-row justify-center items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleRemoveRow(rowIndex);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
+                          title="Delete"
+                        >
+                          <Icon style="solid" name="trash" className="size-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <button
@@ -319,8 +354,8 @@ export const QualitativeTable = ({
                   + Add More Factors
                 </button>
               </td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx(surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+                return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-white', actionColumnBody)}></td>
@@ -329,8 +364,8 @@ export const QualitativeTable = ({
             {/* initial value */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Initial Price</td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-gray-200', actionColumnBody)}></td>
@@ -339,13 +374,16 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Offering Price</span>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right')}>
                     <RHFInputCell
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => value.toLocaleString()}
+                      accessor={({ value }) => {
+                        console.log(value);
+                        return value ? value.toLocaleString() : '';
+                      }}
                     />
                   </td>
                 );
@@ -360,12 +398,14 @@ export const QualitativeTable = ({
                   <span>(%)</span>
                 </div>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                const offeringPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '17',
+                );
                 if (!offeringPrice)
-                  return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
+                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
-                  <td key={s.id} className={'border-b border-r border-gray-300'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     <RHFInputCell
                       fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
                       inputType="number"
@@ -383,12 +423,14 @@ export const QualitativeTable = ({
                   <span>(Amount)</span>
                 </div>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const offeringPrice = s.factors?.find(f => f.id === '17')?.value ?? '';
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                const offeringPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '17',
+                );
                 if (!offeringPrice)
-                  return <td key={s.id} className={'border-b border-r border-gray-300'}></td>;
+                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody)}>
+                  <td key={survey.id} className={clsx(surveyColumnBody)}>
                     <RHFInputCell
                       fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
                       inputType="number"
@@ -403,12 +445,21 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Selling Price</span>
               </td>
-              {comparativeSurveys.map(s => {
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
-                if (!sellingPrice) return <td key={s.id} className={clsx(surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const sellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '21',
+                );
+                if (!sellingPrice)
+                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody, 'text-right')}>
-                    {sellingPrice.toLocaleString()}
+                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right')}>
+                    <RHFInputCell
+                      fieldName={calculationSellingPricePath({ column: columnIndex })}
+                      inputType="display"
+                      accessor={({ value }) => {
+                        return value ? value.toLocaleString() : '';
+                      }}
+                    />
                   </td>
                 );
               })}
@@ -417,9 +468,9 @@ export const QualitativeTable = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx('text-right', surveyColumnBody)}>
+                  <td key={survey.id} className={clsx('text-right', surveyColumnBody)}>
                     <RHFInputCell
                       fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
                       inputType="display"
@@ -434,11 +485,14 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 Adjusted Selling Price
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
-                if (!sellingPrice) return <td key={s.id} className={clsx(surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                const sellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '21',
+                );
+                if (!sellingPrice)
+                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody)}>
+                  <td key={survey.id} className={clsx(surveyColumnBody)}>
                     <RHFInputCell
                       fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
                       inputType="number"
@@ -456,11 +510,14 @@ export const QualitativeTable = ({
                   <span>(%)</span>
                 </div>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
-                const sellingPrice = s.factors?.find(f => f.id === '21')?.value ?? '';
-                if (!sellingPrice) return <td key={s.id} className={clsx(surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                const sellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '21',
+                );
+                if (!sellingPrice)
+                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={s.id} className={clsx('text-right', surveyColumnBody)}>
+                  <td key={survey.id} className={clsx('text-right', surveyColumnBody)}>
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -476,9 +533,9 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Adjusted Value</span>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 return (
-                  <td key={s.id} className={'border-b border-r border-gray-300 text-right'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300 text-right'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
@@ -494,37 +551,39 @@ export const QualitativeTable = ({
             </tr>
 
             {/* 2nd revision */}
-            {(template.collateralTypeId === 'LB' || template.collateralTypeId === 'C') && (
-              <SecondRevision
+            {(template?.collateralType === 'LB' || template?.collateralType === 'C') && (
+              <SaleAdjustmentGridSecondRevision
                 comparativeSurveys={comparativeSurveys}
-                collateralType={template.collateralTypeId}
+                collateralType={template.collateralType}
               />
             )}
 
             {/* adjust factors */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjusted Value</td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-gray-200', actionColumnBody)}></td>
             </tr>
-            {qualitativeFactors.map((f, rowIndex) => {
+            {qualitativeFactors.map((factor, rowIndex) => {
               return (
-                <tr key={f.id}>
+                <tr key={factor.factorCode}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     {
                       <RHFInputCell
                         fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
-                        accessor={({ value }) => getFactorDesciption(value) ?? ''}
+                        accessor={({ value }) =>
+                          value ? getFactorDesciption(value.toString()) : ''
+                        }
                       />
                     }
                   </td>
-                  {comparativeSurveys.map((s, columnIndex) => {
+                  {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                     return (
-                      <td key={s.id} className={clsx(surveyColumnBody)}>
+                      <td key={survey.id} className={clsx(surveyColumnBody)}>
                         <div className="flex flex-row justify-between items-center">
                           <div className="w-[100px]">
                             {getValues(
@@ -606,9 +665,9 @@ export const QualitativeTable = ({
                   <span>{'(%)'}</span>
                 </div>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right')}>
                     <div className="flex flex-row justify-between items-center">
                       <div>
                         <RHFInputCell
@@ -637,9 +696,9 @@ export const QualitativeTable = ({
                   <span>Total of Adjusted Value</span>
                 </div>
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right')}>
                     <RHFInputCell
                       fieldName={calculationTotalAdjustValuePath({ column: columnIndex })}
                       inputType="display"
@@ -657,8 +716,8 @@ export const QualitativeTable = ({
             {/* adjust weighted */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjust Weight</td>
-              {comparativeSurveys.map(col => {
-                return <td key={col.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-gray-200', actionColumnBody)}></td>
@@ -667,9 +726,9 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 Weighting factor for data reliability
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody)}>
+                  <td key={survey.id} className={clsx(surveyColumnBody)}>
                     <div className="flex flex-row justify-between items-center">
                       <RHFInputCell
                         fieldName={calculationWeightPath({ column: columnIndex })}
@@ -686,9 +745,9 @@ export const QualitativeTable = ({
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 Weighted Adjusted Value
               </td>
-              {comparativeSurveys.map((s, columnIndex) => {
+              {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 return (
-                  <td key={s.id} className={clsx(surveyColumnBody, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right')}>
                     <RHFInputCell
                       fieldName={calculationWeightAdjustValuePath({ column: columnIndex })}
                       inputType="display"
@@ -706,8 +765,8 @@ export const QualitativeTable = ({
             {/* final value */}
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Final Value</td>
-              {comparativeSurveys.map(s => {
-                return <td key={s.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-200 text-right', collateralColumnBody, bgGradientLeft)}>
                 <div>
@@ -726,8 +785,8 @@ export const QualitativeTable = ({
               <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>
                 {'Final Value (Rounded)'}
               </td>
-              {comparativeSurveys.map(s => {
-                return <td key={s.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+              {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}>
                 <RHFInputCell fieldName={finalValueRoundedPath()} inputType="number" />

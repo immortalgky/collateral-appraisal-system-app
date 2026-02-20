@@ -1,14 +1,24 @@
-import type { SaleAdjustmentGridTemplate } from '@features/appraisal/components/priceAnalysis/data/data.ts';
 import type { UseFormReset } from 'react-hook-form';
-import type { SaleAdjustmentGridType } from '../../../schemas/saleAdjustmentGridForm';
+import type {
+  SaleAdjustmentGridCalculationFormType,
+  SaleAdjustmentGridType,
+} from '../../../schemas/saleAdjustmentGridForm';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateCalculationFactorType,
+  TemplateComparativeFactorType,
+  TemplateDetailType,
+} from '../../../schemas/v1';
+import { readFactorValue } from '../../../domain/readFactorValue';
 
 interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
-  template?: SaleAdjustmentGridTemplate;
-  comparativeSurveys: Record<string, unknown>[];
+  template?: TemplateDetailType;
+  comparativeSurveys: MarketComparableDetailType[];
   reset: UseFormReset<SaleAdjustmentGridType>;
 }
 export function setSaleAdjustmentGridInitialValue({
@@ -30,7 +40,7 @@ export function setSaleAdjustmentGridInitialValue({
         collateralType: undefined,
         pricingTemplateCode: undefined,
         comparativeSurveys: [
-          ...comparativeSurveys.map((survey, columnIndex) => ({
+          ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType, columnIndex) => ({
             marketId: survey.id,
             displaySeq: columnIndex + 1,
           })),
@@ -40,8 +50,17 @@ export function setSaleAdjustmentGridInitialValue({
         saleAdjustmentGridQualitatives: [],
 
         saleAdjustmentGridCalculations: [
-          ...comparativeSurveys.map(survey => {
-            const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+          ...((comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => {
+            const surveyMap = new Map(
+              (survey?.factorData ?? []).map((factor: FactorDataType) => [
+                survey.id,
+                readFactorValue({
+                  dataType: factor.dataType,
+                  fieldDecimal: factor.fieldDecimal,
+                  value: factor.value,
+                }),
+              ]),
+            );
             return {
               marketId: survey.id,
               offeringPrice: surveyMap.get('17') ?? 0,
@@ -53,8 +72,18 @@ export function setSaleAdjustmentGridInitialValue({
               sellingDate: surveyMap.get('22') ?? '',
               sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
               numberOfYears: 10, // TODO: convert selling date to number of year
+              adjustedValue: 0,
+
+              // adjusted value
+              factorDiffPct: 0,
+              factorDiffAmt: 0,
+              totalAdjustValue: 0,
+
+              // adjust weight
+              weight: 0,
+              weightedAdjustValue: 0,
             };
-          }),
+          }) as SaleAdjustmentGridCalculationFormType[]),
         ],
         saleAdjustmentGridAdjustmentFactors: [],
         saleAdjustmentGridFinalValue: {
@@ -73,37 +102,62 @@ export function setSaleAdjustmentGridInitialValue({
       collateralType: collateralType,
       pricingTemplateCode: template.templateCode,
       comparativeSurveys: [
-        ...comparativeSurveys.map((survey, columnIndex) => ({
+        ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType, columnIndex) => ({
           marketId: survey.id,
           displaySeq: columnIndex + 1,
         })),
       ],
-      comparativeFactors: template.comparativeFactors.map(compFact => ({
-        factorCode: compFact.factorId,
-      })),
+      comparativeFactors: (template.comparativeFactors ?? []).map(
+        (compFact: TemplateComparativeFactorType) => ({
+          factorCode: compFact.factorCode,
+        }),
+      ),
 
-      saleAdjustmentGridQualitatives: template.qualitativeFactors.map(q => ({
-        factorCode: q.factorId,
-        qualitatives: comparativeSurveys.map(s => ({ qualitativeLevel: 'E' })),
-      })),
+      saleAdjustmentGridQualitatives: (template.calculationFactors ?? []).map(
+        (calcFact: TemplateCalculationFactorType) => ({
+          factorCode: calcFact.factorCode,
+          qualitatives: (comparativeSurveys ?? []).map(() => ({
+            qualitativeLevel: 'E',
+          })),
+        }),
+      ),
 
       saleAdjustmentGridCalculations: [
-        ...comparativeSurveys.map(survey => {
-          const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+        ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => {
+          const surveyMap = new Map(
+            (survey.factorData ?? []).map(s => [
+              s.id,
+              readFactorValue({
+                dataType: s.dataType,
+                fieldDecimal: s.fieldDecimal,
+                value: s.value,
+              }),
+            ]),
+          );
           return {
             marketId: survey.id,
             offeringPrice: surveyMap.get('17') ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
             offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
+            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? 0,
             sellingPrice: surveyMap.get('21') ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: surveyMap.get('22') ?? '',
             sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
             numberOfYears: 10, // TODO: convert selling date to number of year
+            adjustedValue: 0,
+
+            // adjusted value
+            factorDiffPct: 0,
+            factorDiffAmt: 0,
+            totalAdjustValue: 0,
+
+            // adjust weight
+            weight: 0,
+            weightedAdjustValue: 0,
           };
         }),
-      ],
+      ] as SaleAdjustmentGridCalculationFormType[],
       saleAdjustmentGridAdjustmentFactors: [],
       saleAdjustmentGridFinalValue: {
         finalValue: 0,

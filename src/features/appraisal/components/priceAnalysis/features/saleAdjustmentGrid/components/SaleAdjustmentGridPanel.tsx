@@ -12,29 +12,35 @@ import { MethodFooterActions } from '@features/appraisal/components/priceAnalysi
 import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValue.ts';
 import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
 import { flattenRHFErrors } from '../../../domain/flattenRHFErrors';
-import { SaleAdjustmentGridSection } from './SaleAdjustmentGridSection';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
+import { SaleAdjustmentGrid } from './SaleAdjustmentGrid';
+import {
+  SaveComparativeAnalysisRequest,
+  type MarketComparableDetailType,
+  type TemplateDetailType,
 } from '../../../schemas/v1';
+import { useSaveComparativeAnalysis } from '../../../api/api';
+import { mapSaleAdjustmentGridFormToSubmitSchama } from '../../../domain/mapSaleAdjustmentGridFormToSubmitSchema';
+import type { PriceAnalysisSelectorState } from '../../selection/domain/useReducer';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface SaleAdjustmentGridPanelProps {
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  templates?: TemplateDetailType[];
-  allFactors: FactorDataType[];
-  marketSurveys: MarketComparableDetailType[];
+  state: PriceAnalysisSelectorState;
+  onCalculationMethodDirty: (check: boolean) => void;
+  onCancelCalculationMethod: () => void;
 }
 export function SaleAdjustmentGridPanel({
-  methodId,
-  methodType,
-  property,
-  marketSurveys,
-  templates,
-  allFactors,
+  state,
+  onCalculationMethodDirty,
+  onCancelCalculationMethod,
 }: SaleAdjustmentGridPanelProps) {
+  const {
+    activeMethod: { pricingAnalysisId, methodId, methodType } = {},
+    property,
+    marketSurveys,
+    allFactors,
+    methodTemplates: templates,
+  } = state;
+
   const methods = useForm<SaleAdjustmentGridType>({
     mode: 'onSubmit',
     resolver: zodResolver(SaleAdjustmentGridDto),
@@ -48,10 +54,58 @@ export function SaleAdjustmentGridPanel({
     formState: { errors, isDirty },
   } = methods;
 
+  /** Template selector handler */
+  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
+    setComparativeSurveys([...surveys]);
+  };
+
+  const [collateralType, setCollateralType] = useState<string>('');
+  const [pricingTemplateType, setPricingTemplateType] = useState<string>('');
+  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
+  const [isGenerated, setIsGenerated] = useState<boolean>(false);
+
+  /** cancel calulation dialog state */
+  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
+
+  /** mutate submit api */
+  const {
+    mutate: submitComparativeAnalysisMutate,
+    isSuccess: isSubmitComparativeAnalysisSuccess,
+    error,
+  } = useSaveComparativeAnalysis();
+
   /** Form handler */
   const handleOnSubmit = (value: SaleAdjustmentGridType) => {
-    reset(value);
-    toast.success('Saved!');
+    if (!!pricingAnalysisId && !!methodId) {
+      const submitSchema = mapSaleAdjustmentGridFormToSubmitSchama({
+        SaleAdjustmentGridForm: value,
+      });
+
+      const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
+
+      if (!parse.success) {
+        toast.error(parse.error.message);
+        return;
+      }
+
+      submitComparativeAnalysisMutate({
+        id: pricingAnalysisId,
+        methodId: methodId,
+        request: submitSchema,
+      });
+
+      if (isSubmitComparativeAnalysisSuccess) {
+        toast.success('Saved!');
+        reset(value);
+        return;
+      }
+
+      toast.error(error);
+      return;
+    }
+
+    toast.error('Pricing analysis ID or method Id not found!');
   };
 
   const handleOnSaveDraft = () => {
@@ -60,27 +114,16 @@ export function SaleAdjustmentGridPanel({
     reset(currentValue);
   };
 
-  const handleOnCancel = () => {
-    // waning confirmation, the hide method section
-  };
-
-  /** Template selector handler */
-  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
-  const handleOnSelectComparativeMarketSurvey = (surveys: Record<string, unknown>[]) => {
-    setComparativeSurveys([...surveys]);
-  };
-
-  const [collateralTypeId, setCollateralTypeId] = useState<string>('');
-  const [pricingTemplateId, setPricingTemplateId] = useState<string>('');
-  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
-  const [isGenerated, setIsGenerated] = useState<boolean>(false);
-
+  /** template selection handler */
   const handleOnGenerate = () => {
-    // if (!collateralTypeId || !pricingTemplateId) return;
+    // validate to select collateral type and template
+    // if (!collateralType || !pricingTemplateType) return;
 
     setIsGenerated(false);
     // set template that belong to selected template
-    setPricingTemplate(templates?.find(template => template.templateCode === pricingTemplateId));
+    setPricingTemplate(
+      (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
+    );
     // reset comparative surveys to empty list when generate
     setComparativeSurveys([]);
 
@@ -89,33 +132,27 @@ export function SaleAdjustmentGridPanel({
     setIsGenerated(true);
   };
 
-  const handleOnSelectCollateralType = (collateralTypeId: string) => {
-    setCollateralTypeId(collateralTypeId);
+  const handleOnSelectCollateralType = (collateralType: string) => {
+    setCollateralType(collateralType);
   };
 
   const handleOnSelectTemplate = (templateId: string) => {
-    setPricingTemplateId(templateId);
+    setPricingTemplateType(templateId);
   };
 
-  useEffect(() => {
-    setSaleAdjustmentGridInitialValue({
-      collateralType: collateralTypeId,
-      methodId: methodId,
-      methodType: methodType,
-      comparativeSurveys: comparativeSurveys,
-      property: property,
-      template: pricingTemplate,
-      reset: reset,
-    });
-  }, [collateralTypeId, isGenerated, methodId, methodType, pricingTemplate, property, reset]);
+  /** cancel calculation handler */
+  const handleOnCancelCalculationMethod = () => {
+    setisShowCanceledDialog(true);
+  };
 
-  useEffect(() => {
-    setSaleAdjustmentGridInitialValueOnSelectSurvey({
-      comparativeSurveys: comparativeSurveys,
-      setValue: setValue,
-      getValues: getValues,
-    });
-  }, [comparativeSurveys.length]);
+  const handleOnConfirmCancelCalculationMethod = () => {
+    onCancelCalculationMethod();
+    setisShowCanceledDialog(false);
+  };
+
+  const handleOnDenyCancelCalculationMethod = () => {
+    setisShowCanceledDialog(false);
+  };
 
   const onInvalid: SubmitErrorHandler<SaleAdjustmentGridType> = errs => {
     const messages = flattenRHFErrors(errs);
@@ -133,6 +170,44 @@ export function SaleAdjustmentGridPanel({
     );
   };
 
+  useEffect(() => {
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      setSaleAdjustmentGridInitialValue({
+        collateralType: collateralType,
+        methodId: methodId,
+        methodType: methodType,
+        comparativeSurveys: comparativeSurveys,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
+      });
+    }
+  }, [collateralType, isGenerated, methodId, methodType, property, reset]);
+
+  useEffect(() => {
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      setSaleAdjustmentGridInitialValueOnSelectSurvey({
+        comparativeSurveys: comparativeSurveys,
+        setValue: setValue,
+        getValues: getValues,
+      });
+    }
+  }, [comparativeSurveys.length]);
+
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    onCalculationMethodDirty(isDirty);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, onCalculationMethodDirty]);
+
   return (
     <FormProvider {...methods}>
       <form
@@ -145,15 +220,15 @@ export function SaleAdjustmentGridPanel({
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
-            value: collateralTypeId,
+            value: collateralType,
             options: COLLATERAL_TYPE,
           }}
           template={{
             onSelectTemplate: handleOnSelectTemplate,
-            value: pricingTemplateId,
+            value: pricingTemplateType,
             options:
-              templates
-                ?.filter(template => template.collateralTypeId === collateralTypeId)
+              (templates ?? [])
+                .filter(template => template?.collateralType === collateralType)
                 .map(template => ({
                   value: template.templateCode,
                   label: template.templateName,
@@ -162,7 +237,7 @@ export function SaleAdjustmentGridPanel({
         />
         {isGenerated && (
           <div className="flex-1 min-h-0">
-            <SaleAdjustmentGridSection
+            <SaleAdjustmentGrid
               {...methods}
               property={property}
               marketSurveys={marketSurveys}
@@ -172,12 +247,17 @@ export function SaleAdjustmentGridPanel({
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
             />
             <MethodFooterActions
-              isLoading={isGenerated}
               onSaveDraft={handleOnSaveDraft}
-              onCancel={handleOnCancel}
+              onCancel={handleOnCancelCalculationMethod}
             />
           </div>
         )}
+        <ConfirmDialog
+          isOpen={isShowCanceledDialog}
+          onClose={handleOnDenyCancelCalculationMethod}
+          onConfirm={handleOnConfirmCancelCalculationMethod}
+          message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
+        />
       </form>
     </FormProvider>
   );

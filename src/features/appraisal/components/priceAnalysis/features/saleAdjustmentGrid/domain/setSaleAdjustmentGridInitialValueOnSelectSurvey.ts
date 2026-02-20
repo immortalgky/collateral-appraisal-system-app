@@ -1,9 +1,14 @@
 import type { UseFormGetValues, UseFormSetValue } from 'react-hook-form';
-import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
-import type { SaleAdjustmentGridType } from '../../../schemas/saleAdjustmentGridForm';
+import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
+import type {
+  SaleAdjustmentGridQualitativeFormType,
+  SaleAdjustmentGridType,
+} from '../../../schemas/saleAdjustmentGridForm';
+import type { FactorDataType, MarketComparableDetailType } from '../../../schemas/v1';
+import { readFactorValue } from '../../../domain/readFactorValue';
 
 interface SetSaleAdjustmentGridInitialValueOnSelectSurveyProps {
-  comparativeSurveys: Record<string, unknown>[];
+  comparativeSurveys: MarketComparableDetailType[];
   setValue: UseFormSetValue<SaleAdjustmentGridType>;
   getValues: UseFormGetValues<SaleAdjustmentGridType>;
 }
@@ -18,11 +23,13 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
     calculations: calculationsPath,
     adjustmentFactors: adjustmentFactorsPath,
   } = saleGridFieldPath;
-  const qualitativeFactors = getValues(qualitativesPath()) ?? [];
+
+  const qualitativeFactors =
+    (getValues(qualitativesPath()) as SaleAdjustmentGridQualitativeFormType[]) ?? [];
 
   setValue(
     comparativeSurveysPath(),
-    comparativeSurveys.map((survey, index) => ({
+    (comparativeSurveys ?? []).map((survey, index) => ({
       marketId: survey.id,
       displaySeq: index + 1,
     })),
@@ -32,13 +39,15 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
   setValue(
     qualitativesPath(),
     [
-      ...qualitativeFactors.map(f => ({
-        ...f,
-        qualitatives: comparativeSurveys.map(survey => ({
-          marketId: survey.id,
-          qualitativeLevel: 'E', // TODO: can config
-        })),
-      })),
+      ...qualitativeFactors.map((factor: SaleAdjustmentGridQualitativeFormType) => {
+        return {
+          ...factor,
+          qualitatives: comparativeSurveys.map((survey: MarketComparableDetailType) => ({
+            marketId: survey.id,
+            qualitativeLevel: 'E', // TODO: can config
+          })),
+        };
+      }),
     ],
     { shouldDirty: false },
   );
@@ -46,8 +55,18 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
   setValue(
     calculationsPath(),
     [
-      ...comparativeSurveys.map(survey => {
-        const surveyMap = new Map(survey.factors.map(s => [s.id, s.value]));
+      ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => {
+        const surveyMap = new Map(
+          (survey.factorData ?? []).map((factor: FactorDataType) => [
+            factor.factorCode,
+            readFactorValue({
+              dataType: factor.dataType,
+              fieldDecimal: factor.fieldDecimal,
+              value: factor.value,
+            }),
+          ]),
+        );
+        console.log('set offring price: ', surveyMap.get('17'));
         return {
           marketId: survey.id,
           offeringPrice: surveyMap.get('17') ?? 0,
@@ -70,8 +89,8 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
   setValue(
     adjustmentFactorsPath(),
     [
-      ...qualitativeFactors.map(f => ({
-        factorCode: f.factorCode,
+      ...(qualitativeFactors ?? []).map((factor: SaleAdjustmentGridQualitativeFormType) => ({
+        factorCode: factor.factorCode,
         surveys: comparativeSurveys.map(survey => ({
           marketId: survey.id,
           adjustPercent: 0,

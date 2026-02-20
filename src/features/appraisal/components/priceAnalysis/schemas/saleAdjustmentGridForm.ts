@@ -45,7 +45,7 @@ const SaleAdjustmentGridCalculation = z
     usableAreaPrice: z.number().nullable().optional(),
     usableAreaPriceMeasureUnit: z.number().nullable().optional(),
     buildingValueIncreaseDecrease: z.number().nullable().optional(),
-    totalSecondRevision: z.number().nullable(),
+    totalSecondRevision: z.number().nullable().optional(),
 
     // adjusted value
     factorDiffPct: z.number(),
@@ -104,4 +104,10 @@ export const SaleAdjustmentGridDto = z
   })
   .passthrough();
 
+export type SaleAdjustmentGridCalculationFormType = z.infer<typeof SaleAdjustmentGridCalculation>;
+export type SaleAdjustmentGridQualitativeSurveyFormType = z.infer<
+  typeof SaleAdjustmentGridQualitativeSurvey
+>;
+export type ComparativeFactorsFormType = z.infer<typeof ComparativeFactors>;
+export type SaleAdjustmentGridQualitativeFormType = z.infer<typeof SaleAdjustmentGridQualitative>;
 export type SaleAdjustmentGridType = z.infer<typeof SaleAdjustmentGridDto>;

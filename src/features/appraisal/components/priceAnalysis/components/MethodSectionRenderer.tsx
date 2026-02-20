@@ -20,12 +20,6 @@ export function MethodSectionRenderer({
       return (
         <WQSMethodPanel
           state={state}
-          methodId={state.activeMethod?.methodId}
-          methodType={state.activeMethod?.methodType}
-          property={state.property}
-          marketSurveys={state.marketSurveys}
-          templates={state.methodTemplates}
-          allFactors={state.allFactors}
           onCalculationMethodDirty={onCalculationMethodDirty}
           onCancelCalculationMethod={onCancelCalculationMethod}
         />
@@ -34,12 +28,9 @@ export function MethodSectionRenderer({
     case 'SAG_MARKET':
       return (
         <SaleAdjustmentGridPanel
-          methodId={state.activeMethod?.methodId}
-          methodType={state.activeMethod?.methodType}
-          property={state.property}
-          marketSurveys={state.marketSurveys}
-          templates={state.methodTemplates}
-          allFactors={state.allFactors}
+          state={state}
+          onCalculationMethodDirty={onCalculationMethodDirty}
+          onCancelCalculationMethod={onCancelCalculationMethod}
         />
       );
     case 'DC_MARKET':

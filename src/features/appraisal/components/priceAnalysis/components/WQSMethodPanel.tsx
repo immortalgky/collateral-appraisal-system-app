@@ -12,7 +12,6 @@ import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { WQS } from './WQS';
 import {
   SaveComparativeAnalysisRequest,
-  type FactorDataType,
   type MarketComparableDetailType,
   type TemplateDetailType,
 } from '../schemas/v1';
@@ -105,8 +104,8 @@ export function WQSMethodPanel({
     setComparativeSurveys([...surveys]);
   };
 
-  const [collateralTypeId, setCollateralTypeId] = useState<string>('');
-  const [pricingTemplateId, setPricingTemplateId] = useState<string>('');
+  const [collateralType, setCollateralType] = useState<string>('');
+  const [pricingTemplateType, setPricingTemplateType] = useState<string>('');
   const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
@@ -148,7 +147,6 @@ export function WQSMethodPanel({
       return;
     }
 
-    console.log(pricingAnalysisId, methodId);
     toast.error('Pricing analysis ID or method Id not found!');
   };
 
@@ -160,12 +158,13 @@ export function WQSMethodPanel({
 
   /** template selection handler */
   const handleOnGenerate = () => {
-    if (!collateralTypeId || !pricingTemplateId) return;
+    // validate to select collateral type and template
+    // if (!collateralType || !pricingTemplateType) return;
 
     setIsGenerated(false);
     // set template that belong to selected template
     setPricingTemplate(
-      (templates ?? []).find(template => template?.templateCode === pricingTemplateId),
+      (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
     );
     // reset comparative surveys to empty list when generate
     setComparativeSurveys([]);
@@ -175,12 +174,12 @@ export function WQSMethodPanel({
     setIsGenerated(true);
   };
 
-  const handleOnSelectCollateralType = (collateralTypeId: string) => {
-    setCollateralTypeId(collateralTypeId);
+  const handleOnSelectCollateralType = (collateralType: string) => {
+    setCollateralType(collateralType);
   };
 
   const handleOnSelectTemplate = (templateId: string) => {
-    setPricingTemplateId(templateId);
+    setPricingTemplateType(templateId);
   };
 
   /** cancel calculation handler */
@@ -216,7 +215,7 @@ export function WQSMethodPanel({
   useEffect(() => {
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
       setWQSInitialValue({
-        collateralType: collateralTypeId,
+        collateralType: collateralType,
         methodId: methodId,
         methodType: methodType,
         comparativeSurveys: comparativeSurveys,
@@ -225,12 +224,12 @@ export function WQSMethodPanel({
         reset: reset,
       });
     }
-  }, [collateralTypeId, isGenerated, methodId, methodType, property, reset]);
+  }, [collateralType, isGenerated, methodId, methodType, property, reset]);
 
   useEffect(() => {
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
       setWQSInitialValueOnSelectSurvey({
-        collateralType: collateralTypeId,
+        collateralType: collateralType,
         methodId: methodId,
         methodType: methodType,
         comparativeSurveys: comparativeSurveys,
@@ -268,15 +267,15 @@ export function WQSMethodPanel({
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
-            value: collateralTypeId,
+            value: collateralType,
             options: COLLATERAL_TYPE,
           }}
           template={{
             onSelectTemplate: handleOnSelectTemplate,
-            value: pricingTemplateId,
+            value: pricingTemplateType,
             options:
               (templates ?? [])
-                .filter(template => template?.collateralType === collateralTypeId)
+                .filter(template => template?.collateralType === collateralType)
                 .map(template => {
                   return {
                     value: template?.templateCode ?? '',
@@ -302,13 +301,13 @@ export function WQSMethodPanel({
             />
           </div>
         )}
+        <ConfirmDialog
+          isOpen={isShowCanceledDialog}
+          onClose={handleOnDenyCancelCalculationMethod}
+          onConfirm={handleOnConfirmCancelCalculationMethod}
+          message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
+        />
       </form>
-      <ConfirmDialog
-        isOpen={isShowCanceledDialog}
-        onClose={handleOnDenyCancelCalculationMethod}
-        onConfirm={handleOnConfirmCancelCalculationMethod}
-        message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
-      />
     </FormProvider>
   );
 }

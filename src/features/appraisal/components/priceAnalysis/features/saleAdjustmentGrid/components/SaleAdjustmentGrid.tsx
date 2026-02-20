@@ -3,10 +3,10 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../../../schemas/v1';
-import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
 import { ComparativeMarketSurveySection } from '@/features/appraisal/components/priceAnalysis/components/ComparativeMarketSurveySection';
-import { saleGridFieldPath } from '../adapters/fieldPath';
+import { saleGridFieldPath } from '../adapters/saleAdjustmentGridfieldPath';
+import { SaleAdjustmentGridScoringSection } from './SaleAdjustmentGridScoringSection';
 /**
  * NOTE:
  *
@@ -20,7 +20,7 @@ import { saleGridFieldPath } from '../adapters/fieldPath';
  *
  */
 
-interface SaleAdjustmentGridSectionProps {
+interface SaleAdjustmentGridProps {
   property: Record<string, unknown>;
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
@@ -29,15 +29,16 @@ interface SaleAdjustmentGridSectionProps {
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 
-export const SaleAdjustmentGridSection = ({
+export const SaleAdjustmentGrid = ({
   property,
   marketSurveys,
   comparativeMarketSurveys,
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
-}: SaleAdjustmentGridSectionProps) => {
+}: SaleAdjustmentGridProps) => {
   const fieldPath = saleGridFieldPath;
+
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <div
@@ -61,10 +62,11 @@ export const SaleAdjustmentGridSection = ({
                   Calculation of Appraisal Value
                 </div>
                 <div className="px-4 mt-4">
-                  <SaleAdjustmentGridCalculationSection
+                  <SaleAdjustmentGridScoringSection
+                    comparativeSurveys={comparativeMarketSurveys}
                     property={property}
                     template={template}
-                    comparativeSurveys={comparativeMarketSurveys}
+                    isLoading={false}
                   />
                 </div>
               </div>

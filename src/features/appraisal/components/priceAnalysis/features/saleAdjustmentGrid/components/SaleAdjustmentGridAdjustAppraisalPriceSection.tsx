@@ -2,7 +2,7 @@ import {
   useDerivedFields,
   type DerivedFieldRule,
 } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/fieldPath.ts';
+import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
 

@@ -1,6 +1,6 @@
 export const wqsFieldPath = {
   /** comparative factor section */
-  comparativeFactor: () => `comparativeFactors`,
+  comparativeFactors: () => `comparativeFactors`,
   comparativeFactorsFactorCode: (arg: { row: number }) =>
     `comparativeFactors.${arg.row}.factorCode`,
 

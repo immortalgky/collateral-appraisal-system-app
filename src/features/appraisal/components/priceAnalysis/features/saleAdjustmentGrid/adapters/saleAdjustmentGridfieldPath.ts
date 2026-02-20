@@ -1,9 +1,9 @@
 export const saleGridFieldPath = {
-  /** comparative surveys */
+  /** comparative survey section */
   comparativeSurveys: () => `comparativeSurveys`,
 
   /** comparative factor section */
-  comparativeFactors: (arg: { row: number }) => `comparativeFactors.${arg.row}.factorCode`,
+  comparativeFactors: () => `comparativeFactors`,
   comparativeFactorsFactorCode: (arg: { row: number }) =>
     `comparativeFactors.${arg.row}.factorCode`,
 
@@ -25,6 +25,8 @@ export const saleGridFieldPath = {
     `saleAdjustmentGridCalculations.${arg.column}.offeringPriceAdjustmentPct`,
   calculationOfferingPriceAdjustmentAmt: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.offeringPriceAdjustmentAmt`,
+  calculationSellingPrice: (arg: { column: number }) =>
+    `saleAdjustmentGridCalculations.${arg.column}.sellingPrice`,
   calculationNumberOfYears: (arg: { column: number }) =>
     `saleAdjustmentGridCalculations.${arg.column}.numberOfYears`,
   calculationAdjustmentYear: (arg: { column: number }) =>

@@ -370,7 +370,7 @@ export function useSelectionFlowController(opts: {
   const cancelCalculationMethod = () => {
     console.log('cancel!');
     dispatch({ type: 'CALCULATION_CANCEL' });
-    opts.closeSelectionPanel?.();
+    opts.openSelectionPanel?.();
   };
 
   console.log(initialData.pricingSelection);

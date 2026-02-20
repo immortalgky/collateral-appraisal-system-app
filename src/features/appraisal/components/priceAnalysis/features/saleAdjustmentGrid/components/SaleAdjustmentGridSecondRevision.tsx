@@ -1,14 +1,16 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import { saleGridFieldPath } from '../adapters/fieldPath';
+import { saleGridFieldPath } from '../adapters/saleAdjustmentGridfieldPath';
+import type { MarketComparableDetailType } from '../../../schemas/v1';
 
-export function SecondRevision({
+interface SaleAdjustmentGridSecondRevisionProps {
+  comparativeSurveys: MarketComparableDetailType[];
+  collateralType: string;
+}
+export function SaleAdjustmentGridSecondRevision({
   comparativeSurveys = [],
   collateralType,
-}: {
-  comparativeSurveys: Record<string, any>[];
-  collateralType: string;
-}): React.ReactNode {
+}: SaleAdjustmentGridSecondRevisionProps) {
   /** field paths */
   const {
     calculationLandAreaDiff: calculationLandAreaDiffPath,
@@ -37,8 +39,8 @@ export function SecondRevision({
     <>
       <tr>
         <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>2nd Revision</td>
-        {comparativeSurveys.map(col => {
-          return <td key={col.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
+        {comparativeSurveys.map((survey: MarketComparableDetailType) => {
+          return <td key={survey.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
         })}
         <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
         <td className={clsx('bg-gray-200', actionColumnBody)}></td>
@@ -52,16 +54,16 @@ export function SecondRevision({
                 <span>{'(Sq. Wa)'}</span>
               </div>
             </td>
-            {comparativeSurveys.map((s, columnIndex) => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle)}>
+                <td key={survey.id} className={clsx(surveyStyle)}>
                   <div className="flex flex-row justify-end">
                     <RHFInputCell
                       fieldName={calculationLandAreaDiffPath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
                         console.log(value);
-                        return value ? value.toLocaleString() : value;
+                        return value ? value.toLocaleString() : '';
                       }}
                     />
                   </div>
@@ -83,14 +85,14 @@ export function SecondRevision({
                 </div>
               </div>
             </td>
-            {comparativeSurveys.map(s => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                   <RHFInputCell
                     fieldName={calculationLandPricePath()}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : 0;
+                      return value ? value.toLocaleString() : '';
                     }}
                   />
                 </td>
@@ -106,14 +108,14 @@ export function SecondRevision({
                 <span>{'(Baht)'}</span>
               </div>
             </td>
-            {comparativeSurveys.map((s, columnIndex) => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                   <RHFInputCell
                     fieldName={calculationLandValueIncreaseDecreasePath({ column: columnIndex })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : 0;
+                      return value ? value.toLocaleString() : '';
                     }}
                   />
                 </td>
@@ -133,14 +135,14 @@ export function SecondRevision({
                 <span>{'(Sq. Meter)'}</span>
               </div>
             </td>
-            {comparativeSurveys.map((s, columnIndex) => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                   <RHFInputCell
                     fieldName={calculationUsableAreaDiffPath({ column: columnIndex })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : 0;
+                      return value ? value.toLocaleString() : '';
                     }}
                   />
                 </td>
@@ -161,13 +163,13 @@ export function SecondRevision({
                 </div>
               </div>
             </td>
-            {comparativeSurveys.map(s => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                   <RHFInputCell
                     fieldName={`usableAreaPrice`}
                     inputType="display"
-                    accessor={({ value }) => (value ? value.toLocaleString() : 0)}
+                    accessor={({ value }) => (value ? value.toLocaleString() : '')}
                   />
                 </td>
               );
@@ -182,16 +184,16 @@ export function SecondRevision({
                 <span>{'(Baht)'}</span>
               </div>
             </td>
-            {comparativeSurveys.map((s, columnIndex) => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                   <RHFInputCell
                     fieldName={calculationBuildingValueIncreaseDecreasePath({
                       column: columnIndex,
                     })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : value;
+                      return value ? value.toLocaleString() : '';
                     }}
                   />
                 </td>
@@ -204,14 +206,14 @@ export function SecondRevision({
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
               <span>Total of 2nd Revision</span>
             </td>
-            {comparativeSurveys.map((s, columnIndex) => {
+            {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
-                <td key={s.id} className={clsx(surveyStyle, 'text-right')}>
+                <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
                   <RHFInputCell
                     fieldName={calculationTotalSecondRevisionPath({ column: columnIndex })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : value;
+                      return value ? value.toLocaleString() : '';
                     }}
                   />
                 </td>
