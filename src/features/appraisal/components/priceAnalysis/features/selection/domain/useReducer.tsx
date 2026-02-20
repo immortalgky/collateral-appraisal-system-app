@@ -44,6 +44,7 @@ export type PriceAnalysisSelectorState = {
   property?: Record<string, unknown>;
   marketSurveys?: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
+
   methodTemplates?: TemplateDetailType[];
   comparativeFactors?: GetComparativeFactorsResponseType;
 };
@@ -387,6 +388,7 @@ export function approachMethodReducer(
       };
     }
 
+    /** clear active method */
     case 'CALCULATION_CANCEL': {
       return {
         ...state,

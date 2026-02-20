@@ -17,23 +17,31 @@ import { MethodFooterActions } from '../../../components/MethodFooterActions';
 import { DirectComparisonSection } from './DirectComparisonSection';
 import { setDirectComparisonInitialValueOnSelectSurvey } from '../domain/setDirectComparisonInitialValueOnSelectSurvey';
 import { setDirectComparisonInitialValue } from '../domain/setDirectComparisonInitialValue';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import type { PriceAnalysisSelectorState } from '../../selection/domain/useReducer';
 
 interface DirectComparisonPanelProps {
+  state: PriceAnalysisSelectorState;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
   templates?: TemplateDetailType[];
   allFactors: FactorDataType[];
   marketSurveys: MarketComparableDetailType[];
+  onCancelCalculationMethod: () => void;
 }
 export function DirectComparisonPanel({
+  state,
   methodId,
   methodType,
   property,
   marketSurveys,
   templates,
   allFactors,
+  onCancelCalculationMethod,
 }: DirectComparisonPanelProps) {
+  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
+
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
     resolver: zodResolver(DirectComparisonDto),
@@ -59,13 +67,22 @@ export function DirectComparisonPanel({
     reset(currentValue);
   };
 
-  const handleOnCancel = () => {
-    // waning confirmation, the hide method section
+  const handleOnCancelCalculationMethod = () => {
+    setisShowCanceledDialog(true);
+  };
+
+  const handleOnConfirmCancelCalculationMethod = () => {
+    onCancelCalculationMethod();
+    setisShowCanceledDialog(false);
+  };
+
+  const handleOnDenyCancelCalculationMethod = () => {
+    setisShowCanceledDialog(false);
   };
 
   /** Template selector handler */
   const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
-  const handleOnSelectComparativeMarketSurvey = (surveys: Record<string, unknown>[]) => {
+  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
     setComparativeSurveys([...surveys]);
   };
 
@@ -169,15 +186,21 @@ export function DirectComparisonPanel({
               template={pricingTemplate}
               allFactors={allFactors}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+              onCancelCalculationMethod={onC}
             />
             <MethodFooterActions
-              isLoading={isGenerated}
               onSaveDraft={handleOnSaveDraft}
-              onCancel={handleOnCancel}
+              onCancel={handleOnCancelCalculationMethod}
             />
           </div>
         )}
       </form>
+      <ConfirmDialog
+        isOpen={isShowCanceledDialog}
+        onClose={handleOnDenyCancelCalculationMethod}
+        onConfirm={handleOnConfirmCancelCalculationMethod}
+        message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
+      />
     </FormProvider>
   );
 }

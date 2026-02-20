@@ -1,9 +1,5 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
-import type {
-  ComparativeFactorFormType,
-  WQSCalculationType,
-  WQSFormType,
-} from '../schemas/wqsForm';
+import type { WQSCalculationType, WQSFormType } from '../schemas/wqsForm';
 import type {
   FactorDataType,
   MarketComparableDetailType,
@@ -74,7 +70,7 @@ export function setWQSInitialValueOnSelectSurvey({
           offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
           sellingPrice: surveyMap.get('21') ?? 0,
           sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          sellingDate: surveyMap.get('22') ?? '',
+          // sellingDate: surveyMap.get('22') ?? '',
           sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
           numberOfYears: 10, // TODO: convert selling date to number of year
         };

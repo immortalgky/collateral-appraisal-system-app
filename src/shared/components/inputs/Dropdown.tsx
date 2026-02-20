@@ -11,8 +11,7 @@ import { useParameterOptions } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
 
-type DropdownProps = DropdownBaseProps &
-  AtLeastOne<{ group: string; options: ListBoxItem[] }>;
+type DropdownProps = DropdownBaseProps & AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -58,6 +57,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     },
     ref,
   ) => {
+    console.log('drop down options: ', options);
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');

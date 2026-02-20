@@ -1,5 +1,4 @@
 import { Dropdown, NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
-import { Input } from '@headlessui/react';
 import clsx from 'clsx';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 
@@ -70,12 +69,7 @@ export const RHFInputCell = ({
   }
 
   if (inputType === 'select') {
-    const dropdownProps = {
-      required: false,
-      disabled: false,
-    };
-
-    return <Dropdown {...field} {...dropdownProps} options={options} error={error?.message} />; // TODO error message on validation
+    return <Dropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
   }
 
   if (inputType === 'toggle') {

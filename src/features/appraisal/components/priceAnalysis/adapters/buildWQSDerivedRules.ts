@@ -354,7 +354,16 @@ export function buildWQSFinalValueDerivedRules(args: {
             known_ys: surveyCalculate,
             known_xs: surveyScores,
           }) ?? 0;
-        console.log('forecastResult: ', forecastResult);
+        console.log(
+          'forecastResult: ',
+          forecastResult,
+          'collateral Score: ',
+          collateralScore,
+          'survey calculatation: ',
+          surveyCalculate,
+          'survey Scores',
+          surveyScores,
+        );
         return round2(toFiniteNumber(forecastResult));
       },
     },

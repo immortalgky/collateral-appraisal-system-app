@@ -1,6 +1,6 @@
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
 import { useState } from 'react';
-import { ComparativeSurveySection } from './WQSComparativeSurveySection';
+import { ComparativeSurveySection } from './ComparativeSurveySection';
 import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
 
 interface ComparativeMarketSurveySectionProps {
@@ -25,6 +25,7 @@ export function ComparativeMarketSurveySection({
   const handleOnClickAddComparativeSurvey = (check: boolean) => {
     setShowMarketSurveySelection(check);
   };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="text-lg border-b border-neutral-300 py-2">Comparative Analysis</div>

@@ -1,5 +1,4 @@
 import type { UseFormReset } from 'react-hook-form';
-import type { WQSTemplate } from '../data/data';
 import type { WQSFormType } from '../schemas/wqsForm';
 import type { MarketComparableDataType, TemplateDetailType } from '../schemas/v1';
 
@@ -61,7 +60,7 @@ export function setWQSInitialValue({
       template.comparativeFactors?.map(compFact => ({
         factorCode: compFact.factorCode,
       })) ?? [],
-    WQSScores: template.calculationFactors.map(calFact => ({
+    WQSScores: template.calculationFactors?.map(calFact => ({
       factorCode: calFact.factorCode,
       weight: calFact.weight,
       intensity: calFact.intensity,

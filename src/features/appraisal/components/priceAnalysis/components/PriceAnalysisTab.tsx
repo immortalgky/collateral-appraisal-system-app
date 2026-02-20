@@ -67,7 +67,7 @@ export function PriceAnalysisTab({
     groupId: groupId,
     pricingAnalysisId: pricingAnalysisId,
     closeSelectionPanel: handleOnCloseSelectionPanel,
-    openSelectionPanel: 
+    openSelectionPanel: handleOnOpenSelectionPanel,
   });
 
   const { state: priceAnalysisState } = useMemo(() => {

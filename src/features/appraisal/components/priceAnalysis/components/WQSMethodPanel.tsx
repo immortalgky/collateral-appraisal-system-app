@@ -70,26 +70,22 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface WQSMethodPanelProps {
   state: PriceAnalysisSelectorState;
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  templates?: TemplateDetailType[];
-  allFactors: FactorDataType[];
-  marketSurveys: MarketComparableDetailType[];
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
 export function WQSMethodPanel({
   state,
-  methodId,
-  methodType,
-  property,
-  marketSurveys,
-  templates,
-  allFactors,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: WQSMethodPanelProps) {
+  const {
+    activeMethod: { pricingAnalysisId, methodId, methodType } = {},
+    property,
+    marketSurveys,
+    allFactors,
+    methodTemplates: templates,
+  } = state;
+
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
@@ -103,6 +99,21 @@ export function WQSMethodPanel({
     formState: { errors, isDirty },
   } = methods;
 
+  /** Template selector states handler */
+  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
+    setComparativeSurveys([...surveys]);
+  };
+
+  const [collateralTypeId, setCollateralTypeId] = useState<string>('');
+  const [pricingTemplateId, setPricingTemplateId] = useState<string>('');
+  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
+  const [isGenerated, setIsGenerated] = useState<boolean>(false);
+
+  /** cancel calulation dialog state */
+  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
+
+  /** mutate submit api */
   const {
     mutate: submitComparativeAnalysisMutate,
     isSuccess: isSubmitComparativeAnalysisSuccess,
@@ -111,8 +122,6 @@ export function WQSMethodPanel({
 
   /** Form handler */
   const handleOnSubmit = (value: WQSFormType) => {
-    const pricingAnalysisId = state.activeMethod?.pricingAnalysisId;
-    const methodId = state.activeMethod?.methodId;
     if (!!pricingAnalysisId && !!methodId) {
       const submitSchema = mapWQSFormToSubmitSchema({ WQSForm: value });
 
@@ -149,23 +158,15 @@ export function WQSMethodPanel({
     reset(currentValue);
   };
 
-  /** Template selector handler */
-  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
-  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    setComparativeSurveys([...surveys]);
-  };
-
-  const [collateralTypeId, setCollateralTypeId] = useState<string>('');
-  const [pricingTemplateId, setPricingTemplateId] = useState<string>('');
-  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
-  const [isGenerated, setIsGenerated] = useState<boolean>(false);
-
+  /** template selection handler */
   const handleOnGenerate = () => {
-    if (!collateralTypeId || !collateralTypeId) return;
+    if (!collateralTypeId || !pricingTemplateId) return;
 
     setIsGenerated(false);
     // set template that belong to selected template
-    setPricingTemplate(templates?.find(template => template.templateCode === pricingTemplateId));
+    setPricingTemplate(
+      (templates ?? []).find(template => template?.templateCode === pricingTemplateId),
+    );
     // reset comparative surveys to empty list when generate
     setComparativeSurveys([]);
 
@@ -182,6 +183,7 @@ export function WQSMethodPanel({
     setPricingTemplateId(templateId);
   };
 
+  /** cancel calculation handler */
   const handleOnCancelCalculationMethod = () => {
     setisShowCanceledDialog(true);
   };
@@ -194,8 +196,6 @@ export function WQSMethodPanel({
   const handleOnDenyCancelCalculationMethod = () => {
     setisShowCanceledDialog(false);
   };
-
-  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
 
   const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
     const messages = flattenRHFErrors(errs);
@@ -214,30 +214,32 @@ export function WQSMethodPanel({
   };
 
   useEffect(() => {
-    setWQSInitialValue({
-      collateralType: collateralTypeId,
-      methodId: methodId,
-      methodType: methodType,
-      comparativeSurveys: comparativeSurveys,
-      property: property,
-      template: pricingTemplate,
-      reset: reset,
-    });
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      setWQSInitialValue({
+        collateralType: collateralTypeId,
+        methodId: methodId,
+        methodType: methodType,
+        comparativeSurveys: comparativeSurveys,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
+      });
+    }
   }, [collateralTypeId, isGenerated, methodId, methodType, property, reset]);
 
   useEffect(() => {
-    console.log('comparative change!');
-    console.log(marketSurveys);
-    setWQSInitialValueOnSelectSurvey({
-      collateralType: collateralTypeId,
-      methodId: methodId,
-      methodType: methodType,
-      comparativeSurveys: comparativeSurveys,
-      property: property,
-      template: pricingTemplate,
-      reset: reset,
-      getValues: getValues,
-    });
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      setWQSInitialValueOnSelectSurvey({
+        collateralType: collateralTypeId,
+        methodId: methodId,
+        methodType: methodType,
+        comparativeSurveys: comparativeSurveys,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
+        getValues: getValues,
+      });
+    }
   }, [comparativeSurveys.length]);
 
   // Warn user about unsaved changes before leaving

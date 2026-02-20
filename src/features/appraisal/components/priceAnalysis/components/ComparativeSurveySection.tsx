@@ -102,26 +102,28 @@ export function ComparativeSurveySection({
                       factorColumnStyle,
                     )}
                   >
-                    <div
-                      className="truncate"
-                      title={getFactorDesciption(compFact.factorCode) ?? ''}
-                    >
-                      {template?.comparativeFactors?.find((t: TemplateFactorDataType) => {
-                        return t.factorCode === compFact.factorCode;
-                      }) ? (
+                    {template?.comparativeFactors?.find((t: TemplateFactorDataType) => {
+                      return t.factorCode === compFact.factorCode;
+                    }) ? (
+                      <div
+                        className="truncate"
+                        title={getFactorDesciption(compFact.factorCode) ?? ''}
+                      >
                         <RHFInputCell
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="display"
                           accessor={({ value }) => getFactorDesciption(value.toString())}
                         />
-                      ) : (
+                      </div>
+                    ) : (
+                      <div>
                         <RHFInputCell
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={options}
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </td>
                   {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
                     return (
