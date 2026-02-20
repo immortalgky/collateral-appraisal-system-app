@@ -1,6 +1,7 @@
-import { Dropdown, NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
+import { NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
 import clsx from 'clsx';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
+import TDropdown from './TDropdown';
 
 export function toNumber(v: any): number | null {
   if (v == null) return null;
@@ -69,7 +70,7 @@ export const RHFInputCell = ({
   }
 
   if (inputType === 'select') {
-    return <Dropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
+    return <TDropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
   }
 
   if (inputType === 'toggle') {
