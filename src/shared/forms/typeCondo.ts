@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const AreaDetailDto = z
   .object({
-    areaDetail: z.string().optional(),
-    area: z.coerce.number(),
+    areaDescription: z.string().optional(),
+    areaSize: z.coerce.number(),
   })
   .passthrough();
 

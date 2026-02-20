@@ -1,6 +1,6 @@
 import FormTable from '@/features/request/components/tables/FormTable';
 import Input from '@/shared/components/Input';
-import type { AreaDetailDtoType } from '@/shared/forms/typeCondo';
+import type { AreaDetailDtoType } from '@/shared/schemas/v1';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 
 interface CondoAreaDetailFormProps {
@@ -35,12 +35,12 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
 }
 
 const propertiesTableHeader = [
-  { name: 'areaDetail', label: 'Area Detail' },
-  { name: 'area', label: 'Area', inputType: 'number' as const },
+  { name: 'areaDescription', label: 'Area Detail' },
+  { name: 'areaSize', label: 'Area', inputType: 'number' as const },
 ];
-
 function calcTotalArea(properties: AreaDetailDtoType[]): number {
-  return properties.reduce((acc, property) => acc + convertToNumber(property.area, 0), 0);
+  if (!properties || !Array.isArray(properties)) return 0;
+  return properties.reduce((acc, property) => acc + convertToNumber(property.areaSize, 0), 0);
 }
 
 function convertToNumber(n: any, fallback: number): number {

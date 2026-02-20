@@ -12,19 +12,17 @@ import type {
   GetCondoPropertyResponseType,
   GetLandAndBuildingPropertyResponseType,
 } from '@shared/schemas/v1';
-import type {
-  GetCondoPMAPropertyByIdResultType,
-} from '@/shared/forms/typeCondo';
-import type {
-  GetLandAndBuildingPMAPropertyByIdResultType,
-} from '@/shared/forms/typeLandBuilding';
+import type { GetCondoPMAPropertyByIdResultType } from '@/shared/forms/typeCondo';
+import type { GetLandAndBuildingPMAPropertyByIdResultType } from '@/shared/forms/typeLandBuilding';
 import type { CurrentAssignment } from '@features/appraisal/types/administration';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 
 export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyResponseType,
 ): createLandFormType => {
-  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
+  const addressLookup = response.subDistrict
+    ? findAddressBySubDistrictCode(response.subDistrict)
+    : undefined;
   return {
     titles: (response as any).titles ?? [],
     propertyName: response.propertyName ?? '',
@@ -229,6 +227,7 @@ export const mapCondoPropertyResponseToForm = (
     roofType: response.roofType ?? '',
     roofTypeOther: response.roofTypeOther ?? '',
 
+    condoAreaDetails: response.condoAreaDetails ?? [],
     totalBuildingArea: response.totalBuildingArea ?? 0,
 
     isExpropriated: response.isExpropriated ?? false,
@@ -254,7 +253,9 @@ export const mapCondoPropertyResponseToForm = (
 export const mapLandAndBuildingPropertyResponseToForm = (
   response: GetLandAndBuildingPropertyResponseType,
 ): createLandAndBuildingFormType => {
-  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
+  const addressLookup = response.subDistrict
+    ? findAddressBySubDistrictCode(response.subDistrict)
+    : undefined;
   return {
     titles: (response as any).titles ?? [],
     propertyName: response.propertyName ?? '',
@@ -389,7 +390,9 @@ export const mapLandAndBuildingPropertyResponseToForm = (
 export const mapLandAndBuildingPMAPropertyResponseToForm = (
   response: GetLandAndBuildingPMAPropertyByIdResultType,
 ): landAndBuildingPMAFormType => {
-  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
+  const addressLookup = response.subDistrict
+    ? findAddressBySubDistrictCode(response.subDistrict)
+    : undefined;
   return {
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
@@ -415,7 +418,9 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
 export const mapCondoPMAPropertyResponseToForm = (
   response: GetCondoPMAPropertyByIdResultType,
 ): condoPMAFormType => {
-  const addressLookup = response.subDistrict ? findAddressBySubDistrictCode(response.subDistrict) : undefined;
+  const addressLookup = response.subDistrict
+    ? findAddressBySubDistrictCode(response.subDistrict)
+    : undefined;
   return {
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
