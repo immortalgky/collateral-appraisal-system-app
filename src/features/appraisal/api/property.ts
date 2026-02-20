@@ -256,7 +256,6 @@ export const useUpdateCondoProperty = () => {
         `/appraisals/${params.appraisalId}/properties/${params.propertyId}/condo-detail`,
         params.data,
       );
-      console.log(data);
       return data;
     },
     onSuccess: (_, variables) => {

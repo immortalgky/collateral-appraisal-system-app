@@ -165,9 +165,8 @@ export const createBuildingForm = z.object({
 
 const AreaDetailDto = z
   .object({
-    appraisalPropertyId: z.string().uuid(),
-    areaDescription: z.string(),
-    areaSize: z.coerce.number(),
+    areaDescription: z.string().nullable(),
+    areaSize: z.coerce.number().nullable(),
   })
   .passthrough();
 
@@ -227,7 +226,7 @@ export const createCondoForm = z.object({
   roofType: z.string().nullable(),
   roofTypeOther: z.string().nullable(),
 
-  condoAreaDetail: z.array(AreaDetailDto).nullable(),
+  condoAreaDetails: z.array(AreaDetailDto).nullable(),
   totalBuildingArea: z.coerce.number(),
 
   isExpropriated: z.boolean(),

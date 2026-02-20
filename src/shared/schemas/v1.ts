@@ -2782,7 +2782,7 @@ const GetCondoPropertyResponse = z
     bathroomFloorMaterialTypeOther: z.string().nullable(),
     roofType: z.string().nullable(),
     roofTypeOther: z.string().nullable(),
-    condoAreaDetail: z.array(AreaDetailDto).nullable(),
+    condoAreaDetails: z.array(AreaDetailDto).nullable(),
     totalBuildingArea: z.number().nullable(),
     isExpropriated: z.boolean().nullable(),
     expropriationRemark: z.string().nullable(),
