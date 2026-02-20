@@ -1,23 +1,23 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { wqsFieldPath } from '../adapters/fieldPath';
+import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
-import { RHFInputCell } from '../../../components/table/RHFInputCell';
+import { RHFInputCell } from './table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import {
   buildWQSCalculationDerivedRules,
   buildWQSFinalValueDerivedRules,
   buildWQSScoringSurveyDerivedRules,
   buildWQSTotalScoreRules,
-} from '../adapters/buildDerivedRules';
-import { useDerivedFields, type DerivedFieldRule } from '../../../components/useDerivedFieldArray';
+} from '../adapters/buildWQSDerivedRules';
+import { useDerivedFields, type DerivedFieldRule } from './useDerivedFieldArray';
 import { useMemo } from 'react';
-import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
+import { getFactorDesciption } from '../shared/domain/getFactorDescription';
 import type {
   FactorDataType,
   MarketComparableDataType,
   MarketComparableDetailType,
   TemplateDetailType,
-} from '../../../schemas/v1';
+} from '../schemas/v1';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];

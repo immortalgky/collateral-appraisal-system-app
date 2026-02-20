@@ -250,15 +250,15 @@ export function useSaveComparativeAnalysis() {
       methodId: string;
       request: SaveComparativeAnalysisRequestType;
     }): Promise<SaveComparativeAnalysisResponseType> => {
-      const { data: response } = await axios.post(
+      const { data: response } = await axios.put(
         `/pricing-analysis/${id}/methods/${methodId}/comparative-analysis`,
         request,
       );
       return response;
     },
-    onSuccess: data => {
+    onSuccess: (data, variables) => {
       console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['priceAnalysis'] });
+      queryClient.invalidateQueries({ queryKey: ['priceAnalysis', variables.id] });
     },
     onError: (error: any) => {
       console.log(error);

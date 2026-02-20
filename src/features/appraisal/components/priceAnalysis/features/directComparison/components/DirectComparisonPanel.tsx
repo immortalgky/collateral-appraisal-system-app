@@ -10,9 +10,9 @@ import type {
   TemplateDetailType,
 } from '../../../schemas/v1';
 import { useEffect, useState } from 'react';
-import { flattenRHFErrors } from '../../wqs/domain/flattenRHFErrors';
+import { flattenRHFErrors } from '../../../domain/flattenRHFErrors';
 import toast from 'react-hot-toast';
-import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
+import { PriceAnalysisTemplateSelector } from '../../../components/PriceAnalysisTemplateSelector';
 import { MethodFooterActions } from '../../../components/MethodFooterActions';
 import { DirectComparisonSection } from './DirectComparisonSection';
 import { setDirectComparisonInitialValueOnSelectSurvey } from '../domain/setDirectComparisonInitialValueOnSelectSurvey';

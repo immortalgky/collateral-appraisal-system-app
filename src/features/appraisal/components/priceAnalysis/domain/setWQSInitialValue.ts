@@ -1,7 +1,7 @@
 import type { UseFormReset } from 'react-hook-form';
-import type { WQSTemplate } from '../../../data/data';
+import type { WQSTemplate } from '../data/data';
 import type { WQSFormType } from '../schemas/wqsForm';
-import type { MarketComparableDataType, TemplateDetailType } from '../../../schemas/v1';
+import type { MarketComparableDataType, TemplateDetailType } from '../schemas/v1';
 
 interface setWQSInitialValueProps {
   collateralType: string;

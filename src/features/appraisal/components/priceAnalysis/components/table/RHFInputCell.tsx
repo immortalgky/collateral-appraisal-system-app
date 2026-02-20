@@ -70,7 +70,12 @@ export const RHFInputCell = ({
   }
 
   if (inputType === 'select') {
-    return <Dropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
+    const dropdownProps = {
+      required: false,
+      disabled: false,
+    };
+
+    return <Dropdown {...field} {...dropdownProps} options={options} error={error?.message} />; // TODO error message on validation
   }
 
   if (inputType === 'toggle') {

@@ -2,7 +2,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import { RHFInputCell } from '../../../components/table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/features/directComparison/adapters/fieldPath.ts';
+import { directComparisonPath } from '@/features/appraisal/components/priceAnalysis/features/directComparison/adapters/directComparisonFieldPath';
 import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
 import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
 

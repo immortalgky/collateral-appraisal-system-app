@@ -4,13 +4,13 @@ import z from 'zod';
 /** GetPropertyGroupById */
 /** ================================ */
 const PropertyGroupItemDto = z
-  .object({ propertyId: z.string(), sequenceInGroup: z.number() })
+  .object({ propertyId: z.string().uuid(), sequenceInGroup: z.number() })
   .passthrough();
 
 export const GetPropertyGroupByIdRequest = z.object({}).passthrough();
 export const GetPropertyGroupByIdResponse = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     groupNumber: z.number(),
     groupName: z.string(),
     description: z.string().nullable().optional(),
@@ -38,8 +38,8 @@ export type AddPriceAnalysisApproachResponseType = z.infer<typeof AddPriceAnalys
 
 const ComparativeFactorInputDto = z
   .object({
-    id: z.string().nullable().optional(),
-    factorId: z.string(),
+    id: z.string().uuid().nullable().optional(),
+    factorId: z.string().uuid(),
     displaySequence: z.number(),
     isSelectedForScoring: z.boolean(),
     remarks: z.string().nullable().optional(),
@@ -47,9 +47,9 @@ const ComparativeFactorInputDto = z
   .passthrough();
 const FactorScoreInputDto = z
   .object({
-    id: z.string().nullable().optional(),
-    factorId: z.string(),
-    marketComparableId: z.string().nullable().optional(),
+    id: z.string().uuid().nullable().optional(),
+    factorId: z.string().uuid(),
+    marketComparableId: z.string().uuid().nullable().optional(),
     factorWeight: z.number(),
     displaySequence: z.number(),
     value: z.string().nullable().optional(),
@@ -60,7 +60,7 @@ const FactorScoreInputDto = z
   .passthrough();
 const CalculationInputDto = z
   .object({
-    marketComparableId: z.string(),
+    marketComparableId: z.string().uuid(),
     offeringPrice: z.number().nullable().optional(),
     offeringPriceUnit: z.string().nullable().optional(),
     adjustOfferPricePct: z.number().nullable().optional(),
@@ -74,17 +74,17 @@ const CalculationInputDto = z
   })
   .passthrough();
 
-const SaveComparativeAnalysisRequest = z
+export const SaveComparativeAnalysisRequest = z
   .object({
     comparativeFactors: z.array(ComparativeFactorInputDto),
     factorScores: z.array(FactorScoreInputDto),
     calculations: z.array(CalculationInputDto),
   })
   .passthrough();
-const SaveComparativeAnalysisResponse = z
+export const SaveComparativeAnalysisResponse = z
   .object({
-    pricingAnalysisId: z.string(),
-    methodId: z.string(),
+    pricingAnalysisId: z.string().uuid(),
+    methodId: z.string().uuid(),
     comparativeFactorsCount: z.number(),
     factorScoresCount: z.number(),
     calculationsCount: z.number(),
@@ -112,7 +112,7 @@ export type AddPriceAnalysisMethodResponseType = z.infer<typeof AddPriceAnalysis
 /** ================================ */
 const MethodDto = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     methodType: z.string(),
     isCandidated: z.boolean(),
     appraisalValue: z.number().nullable().optional(),
@@ -121,7 +121,7 @@ const MethodDto = z
 
 const ApproachDto = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     approachType: z.string(),
     appraisalValue: z.number().nullable().optional(),
     isCandidated: z.boolean(),
@@ -132,8 +132,8 @@ const ApproachDto = z
 export const GetPricingAnalysisRequest = z.object({ id: z.string() }).passthrough();
 export const GetPricingAnalysisResponse = z
   .object({
-    id: z.string(),
-    propertyGroupId: z.string(),
+    id: z.string().uuid(),
+    propertyGroupId: z.string().uuid(),
     status: z.string(),
     finalMarketValue: z.number().nullable().optional(), // not sure
     finalAppraisedValue: z.number().nullable().optional(),
@@ -153,8 +153,8 @@ export type GetPricingAnalysisResponseType = z.infer<typeof GetPricingAnalysisRe
 /** ================================ */
 export const linkedComparableDto = z
   .object({
-    linkId: z.string(),
-    marketComparableId: z.string(),
+    linkId: z.string().uuid(),
+    marketComparableId: z.string().uuid(),
     displaySequence: z.number(),
     comparableName: z.string().nullable().optional(),
     comparableCode: z.string().nullable().optional(),
@@ -163,8 +163,8 @@ export const linkedComparableDto = z
 
 export const ComparativeFactorDto = z
   .object({
-    id: z.string(),
-    factorId: z.string(),
+    id: z.string().uuid().nullable().optional(),
+    factorId: z.string().uuid(),
     factorName: z.string().nullable().optional(),
     factorCode: z.string().nullable().optional(),
     displaySequence: z.number(),
@@ -175,10 +175,10 @@ export const ComparativeFactorDto = z
 
 export const FactorScoreDto = z
   .object({
-    id: z.string(),
-    factorId: z.string(),
+    id: z.string().uuid().nullable().optional(),
+    factorId: z.string().uuid(),
     factorName: z.string().nullable().optional(),
-    marketComparableId: z.string().nullable().optional(),
+    marketComparableId: z.string().uuid().nullable().optional(),
     comparableName: z.string().nullable().optional(),
     factorWeight: z.number(),
     displaySequence: z.number(),
@@ -192,8 +192,8 @@ export const FactorScoreDto = z
 
 export const CalculationDto = z
   .object({
-    id: z.string(),
-    marketComparableId: z.string(),
+    id: z.string().uuid(),
+    marketComparableId: z.string().uuid(),
     comparableName: z.string().nullable().optional(),
     offeringPrice: z.number().nullable().optional(),
     offeringPriceUnit: z.string().nullable().optional(),
@@ -211,8 +211,8 @@ export const CalculationDto = z
 export const GetComparativeFactorsRequest = z.object({}).passthrough();
 export const GetComparativeFactorsResponse = z
   .object({
-    priceAnalysisId: z.string(),
-    methodId: z.string(),
+    priceAnalysisId: z.string().uuid(),
+    methodId: z.string().uuid(),
     methodType: z.string(),
     linkedComparables: z.array(linkedComparableDto),
     comparativeFactors: z.array(ComparativeFactorDto),
@@ -220,6 +220,7 @@ export const GetComparativeFactorsResponse = z
     calculations: z.array(CalculationDto),
   })
   .passthrough();
+export type FactorScoreType = z.infer<typeof FactorScoreDto>;
 export type GetComparativeFactorsRequestType = z.infer<typeof GetComparativeFactorsRequest>;
 export type GetComparativeFactorsResponseType = z.infer<typeof GetComparativeFactorsResponse>;
 
@@ -228,7 +229,7 @@ export type GetComparativeFactorsResponseType = z.infer<typeof GetComparativeFac
 /** ================================ */
 const TemplateFactorDataDto = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     factorCode: z.string(),
     weight: z.number().nullable().optional(),
     intensity: z.number().nullable().optional(),
@@ -266,7 +267,7 @@ export type GetPricingTemplatesByMethodResponseType = z.infer<
 /** ================================ */
 const MarketComparableDataDto = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     comparableNumber: z.string(),
     propertyType: z.string(),
     surveyName: z.string(),
@@ -294,7 +295,7 @@ export type GetMarketComparablesResponseType = z.infer<typeof GetMarketComparabl
 /** ================================ */
 const FactorDataDto = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     factorCode: z.string(),
     factorName: z.string(),
     fieldName: z.string(),
@@ -310,7 +311,7 @@ export type FactorDataType = z.infer<typeof FactorDataDto>;
 
 const MarketComparableDetailDto = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     comparableNumber: z.string(),
     propertyType: z.string(),
     surveyName: z.string(),
@@ -323,7 +324,7 @@ const MarketComparableDetailDto = z
     notes: z.string().nullable().optional(),
 
     // Template Reference
-    templateId: z.string().nullable().optional(),
+    templateId: z.string().uuid().nullable().optional(),
 
     // Audit
     createdOn: z.string().datetime().nullable().optional(),
@@ -347,39 +348,41 @@ export type GetMarketComparableByIdResponseType = z.infer<typeof GetMarketCompar
 /** ================================ */
 /** Query pricing analysis configuration */
 /** ================================ */
-const PriceAnalysisConfigDto = z.object({
-  id: z.string(),
-  approachType: z.string(),
-  label: z.string(),
-  icon: z.string(),
-  appraisalValue: z.number().nullable().optional(),
-  methods: z.array(
-    z
-      .object({
-        id: z.string(),
-        methodType: z.string(),
-        icon: z.string(),
-        label: z.string(),
-        appraisalValue: z.number().nullable().optional(),
-        configurations: z.array(
-          z
-            .object({
-              type: z.string(),
+const PriceAnalysisConfigDto = z
+  .object({
+    id: z.string(),
+    approachType: z.string(),
+    label: z.string(),
+    icon: z.string(),
+    appraisalValue: z.number().nullable().optional(),
+    methods: z.array(
+      z
+        .object({
+          id: z.string(),
+          methodType: z.string(),
+          icon: z.string(),
+          label: z.string(),
+          appraisalValue: z.number().nullable().optional(),
+          configurations: z.array(
+            z
+              .object({
+                type: z.string(),
 
-              // sale grid & direct configs
-              showQualitativeSection: z.boolean().nullable().optional(),
-              showInitialPriceSection: z.boolean().nullable().optional(),
-              showSecondRevisionSection: z.boolean().nullable().optional(),
-              showAdjustedValueSection: z.boolean().nullable().optional(),
-              showAdjustedWeightSection: z.boolean().nullable().optional(),
-              showAdjustFinalValueSection: z.boolean().nullable().optional(),
-            })
-            .passthrough(),
-        ),
-      })
-      .passthrough(),
-  ),
-}).passthrough();
+                // sale grid & direct configs
+                showQualitativeSection: z.boolean().nullable().optional(),
+                showInitialPriceSection: z.boolean().nullable().optional(),
+                showSecondRevisionSection: z.boolean().nullable().optional(),
+                showAdjustedValueSection: z.boolean().nullable().optional(),
+                showAdjustedWeightSection: z.boolean().nullable().optional(),
+                showAdjustFinalValueSection: z.boolean().nullable().optional(),
+              })
+              .passthrough(),
+          ),
+        })
+        .passthrough(),
+    ),
+  })
+  .passthrough();
 export const PriceAnalysisConfigResponse = z.object({
   approaches: z.array(PriceAnalysisConfigDto),
 });

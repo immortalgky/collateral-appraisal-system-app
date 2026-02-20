@@ -1,11 +1,7 @@
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '../../schemas/v1';
-import { ComparativeSurveySection } from './ComparativeSurveySection';
-import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
 import { useState } from 'react';
+import { ComparativeSurveySection } from './WQSComparativeSurveySection';
+import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
 
 interface ComparativeMarketSurveySectionProps {
   property: Record<string, unknown>;
@@ -13,6 +9,7 @@ interface ComparativeMarketSurveySectionProps {
   comparativeMarketSurveys: MarketComparableDetailType[];
   template?: TemplateDetailType;
   allFactors: FactorDataType[];
+  fieldPath: Record<string, any>;
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 export function ComparativeMarketSurveySection({
@@ -21,13 +18,13 @@ export function ComparativeMarketSurveySection({
   property,
   marketSurveys,
   comparativeMarketSurveys,
+  fieldPath,
   onSelectComparativeMarketSurvey,
 }: ComparativeMarketSurveySectionProps) {
   const [isShowMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
   const handleOnClickAddComparativeSurvey = (check: boolean) => {
     setShowMarketSurveySelection(check);
   };
-
   return (
     <div className="flex flex-col gap-4">
       <div className="text-lg border-b border-neutral-300 py-2">Comparative Analysis</div>
@@ -45,6 +42,7 @@ export function ComparativeMarketSurveySection({
             property={property}
             allFactors={allFactors}
             template={template}
+            fieldPath={fieldPath}
           />
         </div>
         {isShowMarketSurveySelection && (

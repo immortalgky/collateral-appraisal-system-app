@@ -34,7 +34,8 @@ export function useSelectionFlowController(opts: {
   groupId: string;
   pricingAnalysisId: string;
   // UI boundary callbacks (keeps controller decoupled from specific components)
-  closeSelectionPanel?: () => void; // e.g. close accordion
+  closeSelectionPanel?: () => void;
+  openSelectionPanel?: () => void;
 }) {
   console.log('Check useSelectionFlowController refresh!');
 
@@ -83,6 +84,7 @@ export function useSelectionFlowController(opts: {
       dispatch({
         type: 'INIT',
         payload: {
+          pricingAnalysisId: opts.pricingAnalysisId,
           approaches,
           groupDetails: groupDetail,
           property: properties,
@@ -324,6 +326,7 @@ export function useSelectionFlowController(opts: {
     dispatch({
       type: 'CALCULATION_SELECTED',
       payload: {
+        pricingAnalysisId: opts.pricingAnalysisId,
         approachId: appr.id,
         approachType: appr.approachType,
         methodId: method.id,
@@ -364,7 +367,11 @@ export function useSelectionFlowController(opts: {
     // pops up to confirm
   };
 
-  const saveCalculation = () => {};
+  const cancelCalculationMethod = () => {
+    console.log('cancel!');
+    dispatch({ type: 'CALCULATION_CANCEL' });
+    opts.closeSelectionPanel?.();
+  };
 
   console.log(initialData.pricingSelection);
 
@@ -388,6 +395,9 @@ export function useSelectionFlowController(opts: {
     selectCandidateApproach,
     startCalculation,
     saveSummary,
+
+    // calculation
+    cancelCalculationMethod,
 
     // confirm dialog state
     confirm: {

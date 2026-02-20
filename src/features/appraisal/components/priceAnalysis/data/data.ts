@@ -5,7 +5,7 @@ import type {
 
 /** approach and method query response */
 export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
-  id: '019c6ccf-013b-7f92-956e-0ed0ace1df15',
+  id: '019c6cc2-cd4a-7f3a-8360-85b0b14ff63d',
   propertyGroupId: 'ec87433e-f36b-1410-8bff-00c20893b8c7',
   status: '',
   finalMarketValue: 0,
@@ -13,25 +13,25 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
   finalForcedSaleValue: 0,
   approaches: [
     {
-      id: '00000000-0000-0000-0000-000000000001',
+      id: '7F9F433E-F36B-1410-8382-00F1875B7717',
       approachType: 'MARAPPR',
       appraisalValue: 10000000,
       isCandidated: false,
       methods: [
         {
-          id: '00000000-0000-0000-0000-000000000000',
+          id: '819F433E-F36B-1410-8382-00F1875B7717',
           methodType: 'WQS_MARKET',
           isCandidated: false,
           appraisalValue: 0,
         },
         {
-          id: '00000000-0000-0000-0000-000000000001',
+          id: '889F433E-F36B-1410-8382-00F1875B7717',
           methodType: 'SAG_MARKET',
           isCandidated: false,
           appraisalValue: 0,
         },
         {
-          id: '00000000-0000-0000-0000-000000000002',
+          id: '8A9F433E-F36B-1410-8382-00F1875B7717',
           methodType: 'DC_MARKET',
           isCandidated: false,
           appraisalValue: 0,

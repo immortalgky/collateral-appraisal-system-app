@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { RHFInputCell } from '../../../components/table/RHFInputCell';
-import { wqsFieldPath } from '../adapters/fieldPath';
-import { toFiniteNumber } from '../domain/calculations';
+import { RHFInputCell } from './table/RHFInputCell';
+import { wqsFieldPath } from '../adapters/wqsFieldPath';
+import { toFiniteNumber } from '../domain/wqsCalculations';
 
 export const AdjustFinalValueSection = ({ property }: { property: Record<string, unknown> }) => {
   const {

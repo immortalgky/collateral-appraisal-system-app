@@ -33,7 +33,13 @@ export type PriceAnalysisSelectorState = {
 
   systemCalculationMode: SystemCalculationMode;
 
-  activeMethod?: { approachId: string; approachType: string; methodId: string; methodType: string };
+  activeMethod?: {
+    pricingAnalysisId?: string;
+    approachId?: string;
+    approachType?: string;
+    methodId?: string;
+    methodType?: string;
+  };
   groupDetails?: GroupDetails;
   property?: Record<string, unknown>;
   marketSurveys?: MarketComparableDetailType[];
@@ -67,7 +73,13 @@ export type PriceAnalysisSelectorAction =
   | { type: 'SUMMARY_SAVE' }
   | {
       type: 'CALCULATION_SELECTED';
-      payload: { approachId: string; approachType: string; methodId: string; methodType: string };
+      payload: {
+        pricingAnalysisId: string;
+        approachId: string;
+        approachType: string;
+        methodId: string;
+        methodType: string;
+      };
     }
   | {
       type: 'CALCULATION_ENTER';
@@ -79,6 +91,9 @@ export type PriceAnalysisSelectorAction =
         templates?: TemplateDetailType[];
         comparativeFactors?: GetComparativeFactorsResponseType;
       };
+    }
+  | {
+      type: 'CALCULATION_CANCEL';
     };
 
 /** filter out approaches and methods that are not selected in editing mode
@@ -355,6 +370,7 @@ export function approachMethodReducer(
       return {
         ...state,
         activeMethod: {
+          pricingAnalysisId: action.payload.pricingAnalysisId,
           approachId: action.payload.approachId,
           approachType: action.payload.approachType,
           methodId: action.payload.methodId,
@@ -368,6 +384,19 @@ export function approachMethodReducer(
         ...state,
         allFactors: action.payload.allFactors,
         methodTemplates: action.payload.templates,
+      };
+    }
+
+    case 'CALCULATION_CANCEL': {
+      return {
+        ...state,
+        activeMethod: {
+          ...state.activeMethod,
+          approachId: undefined,
+          approachType: undefined,
+          methodId: undefined,
+          methodType: undefined,
+        },
       };
     }
 

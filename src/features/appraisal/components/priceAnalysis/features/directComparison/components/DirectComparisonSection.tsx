@@ -2,14 +2,15 @@ import { Button, CancelButton, Icon } from '@shared/components';
 import { ComparativeSurveySection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/ComparativeSurveySection.tsx';
 import { DirectComparisonCalculationSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonCalculationSection.tsx';
 import { DirectComparisonAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/directComparison/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
-import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
-import { MarketSurveySelectionModal } from '../../../shared/components/MarketSurveySelectionModal';
+import { PriceAnalysisTemplateSelector } from '../../../components/PriceAnalysisTemplateSelector';
+import { MarketSurveySelectionModal } from '../../../components/MarketSurveySelectionModal';
 import type {
   FactorDataType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../../../schemas/v1';
-import { ComparativeMarketSurveySection } from '../../../shared/components/ComparativeMarketSurveySection';
+import { ComparativeMarketSurveySection } from '../../../components/ComparativeMarketSurveySection';
+import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 
 /**
  * NOTE:
@@ -41,6 +42,7 @@ export const DirectComparisonSection = ({
   allFactors,
   onSelectComparativeMarketSurvey,
 }: DirectComparisonSectionProps) => {
+  const fieldPath = directComparisonPath;
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <div
@@ -53,6 +55,7 @@ export const DirectComparisonSection = ({
           property={property}
           marketSurveys={marketSurveys}
           comparativeMarketSurveys={comparativeMarketSurveys}
+          fieldPath={fieldPath}
           onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
         />
         {comparativeMarketSurveys.length > 0 && (

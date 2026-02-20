@@ -1,11 +1,8 @@
-import { AdjustFinalValueSection } from './AdjustFinalValueSection';
-import { ComparativeMarketSurveySection } from '../../../shared/components/ComparativeMarketSurveySection';
-import { WQSScoringSection } from '@features/appraisal/components/priceAnalysis/features/wqs/components/WQSScoringSection.tsx';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '../../../schemas/v1';
+import { AdjustFinalValueSection } from './WQSAdjustFinalValueSection';
+import { ComparativeMarketSurveySection } from './ComparativeMarketSurveySection';
+import { WQSScoringSection } from '@/features/appraisal/components/priceAnalysis/components/WQSScoringSection';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
+import { wqsFieldPath } from '../adapters/wqsFieldPath';
 
 interface WQSProps {
   property: Record<string, unknown>;
@@ -23,6 +20,7 @@ export const WQS = ({
   allFactors,
   onSelectComparativeMarketSurvey,
 }: WQSProps) => {
+  const fieldPath = wqsFieldPath;
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <div
@@ -36,6 +34,7 @@ export const WQS = ({
             property={property}
             marketSurveys={marketSurveys}
             comparativeMarketSurveys={comparativeMarketSurveys}
+            fieldPath={fieldPath}
             onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
           />
           {comparativeMarketSurveys.length > 0 && (

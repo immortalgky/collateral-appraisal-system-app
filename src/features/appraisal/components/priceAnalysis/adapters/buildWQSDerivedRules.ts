@@ -1,8 +1,8 @@
-import type { DerivedFieldRule } from '../../../components/useDerivedFieldArray';
-import { readFactorValue } from '../../../domain/readFactorValue';
-import type { MarketComparableDetailType } from '../../../schemas/v1';
-import { calcAdjustedValueFromSellingPrice } from '../../saleAdjustmentGrid/domain/calculations';
-import { shouldAutoDefault } from '../../saleAdjustmentGrid/domain/shouldAutoDefault';
+import type { DerivedFieldRule } from '../components/useDerivedFieldArray';
+import { readFactorValue } from '../domain/readFactorValue';
+import type { MarketComparableDetailType } from '../schemas/v1';
+import { calcAdjustedValueFromSellingPrice } from '../features/saleAdjustmentGrid/domain/calculations';
+import { shouldAutoDefault } from '../features/saleAdjustmentGrid/domain/shouldAutoDefault';
 import {
   calcAdjustedValue,
   calcAdjustValueFromSellingPrice,
@@ -12,11 +12,11 @@ import {
   round2,
   toFiniteNumber,
   toNumberArray,
-} from '../domain/calculations';
+} from '../domain/wqsCalculations';
 import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
 import type { WQSScoreFormType } from '../schemas/wqsForm';
-import { wqsFieldPath } from './fieldPath';
+import { wqsFieldPath } from './wqsFieldPath';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
   surveys: MarketComparableDetailType[];

@@ -1,10 +1,10 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { getFactorDesciption } from '../domain/getFactorDescription';
-import { getPropertyValueByFactorCode } from '../domain/getPropertyValueByFactorCode';
-import { wqsFieldPath } from '../../features/wqs/adapters/fieldPath';
-import { RHFInputCell } from '../../components/table/RHFInputCell';
+import { getFactorDesciption } from '../shared/domain/getFactorDescription';
+import { getPropertyValueByFactorCode } from '../shared/domain/getPropertyValueByFactorCode';
+import { wqsFieldPath } from '../adapters/wqsFieldPath';
+import { RHFInputCell } from './table/RHFInputCell';
 import { useMemo } from 'react';
 import type {
   FactorDataType,
@@ -12,25 +12,27 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
   TemplateFactorDataType,
-} from '../../schemas/v1';
-import type { ComparativeFactorFormType } from '../../features/wqs/schemas/wqsForm';
+} from '../schemas/v1';
+import type { ComparativeFactorFormType } from '../schemas/wqsForm';
 
 interface ComparativeSurveySectionProps {
   comparativeMarketSurveys: MarketComparableDataType[];
   property: Record<string, unknown>;
   allFactors: FactorDataType[];
   template?: TemplateDetailType;
+  fieldPath: Record<string, any>;
 }
 export function ComparativeSurveySection({
   comparativeMarketSurveys,
   property,
   allFactors,
   template,
+  fieldPath,
 }: ComparativeSurveySectionProps) {
   const {
     comparativeFactor: comparativeFactorPath,
     comparativeFactorsFactorCode: comparativeFactorsFactorCodePath,
-  } = wqsFieldPath;
+  } = fieldPath;
 
   const { control, getValues } = useFormContext();
   const {

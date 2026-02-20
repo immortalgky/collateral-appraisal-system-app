@@ -24,12 +24,16 @@ export function PriceAnalysisTab({
     isOpen: isPriceAnalysisAccordionOpen,
     onToggle: onPriceAnalysisAccordionChange,
     onClose: onPriceAnalysisAccordianClose,
+    onOpen: onPriceAnalysisAccordianOpen,
   } = useDisclosure({ defaultIsOpen: true });
 
   /** function to close price analysis page */
   const handleOnCloseSelectionPanel = () => {
-    console.log('close accordian');
     onPriceAnalysisAccordianClose();
+  };
+
+  const handleOnOpenSelectionPanel = () => {
+    onPriceAnalysisAccordianOpen();
   };
 
   const {
@@ -53,6 +57,9 @@ export function PriceAnalysisTab({
     startCalculation,
     saveSummary,
 
+    // calculation
+    cancelCalculationMethod,
+
     // confirm dialog state
     confirm,
   } = useSelectionFlowController({
@@ -60,6 +67,7 @@ export function PriceAnalysisTab({
     groupId: groupId,
     pricingAnalysisId: pricingAnalysisId,
     closeSelectionPanel: handleOnCloseSelectionPanel,
+    openSelectionPanel: 
   });
 
   const { state: priceAnalysisState } = useMemo(() => {
@@ -131,6 +139,7 @@ export function PriceAnalysisTab({
             <MethodSectionRenderer
               state={state}
               onCalculationMethodDirty={handleOnCalculationMethodDirty}
+              onCancelCalculationMethod={cancelCalculationMethod}
             />
           )}
         </div>

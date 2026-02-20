@@ -1,20 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
-import { PriceAnalysisTemplateSelector } from '../../../shared/components/PriceAnalysisTemplateSelector';
-import { MethodFooterActions } from '../../../components/MethodFooterActions';
+import { PriceAnalysisTemplateSelector } from './PriceAnalysisTemplateSelector';
+import { MethodFooterActions } from './MethodFooterActions';
 import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
-import { COLLATERAL_TYPE } from '../../../data/data';
+import { COLLATERAL_TYPE } from '../data/data';
 import toast from 'react-hot-toast';
 import { setWQSInitialValueOnSelectSurvey } from '../domain/setWQSInitialValueOnSelectSurvey';
 import { setWQSInitialValue } from '../domain/setWQSInitialValue';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { WQS } from './WQS';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '../../../schemas/v1';
+import {
+  SaveComparativeAnalysisRequest,
+  type FactorDataType,
+  type MarketComparableDetailType,
+  type TemplateDetailType,
+} from '../schemas/v1';
+import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
+import { useSaveComparativeAnalysis } from '../api/api';
+import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 /**
  * => default collateral type, template => generate => query factors in template
@@ -64,6 +69,7 @@ import type {
  */
 
 interface WQSMethodPanelProps {
+  state: PriceAnalysisSelectorState;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
@@ -71,8 +77,10 @@ interface WQSMethodPanelProps {
   allFactors: FactorDataType[];
   marketSurveys: MarketComparableDetailType[];
   onCalculationMethodDirty: (check: boolean) => void;
+  onCancelCalculationMethod: () => void;
 }
 export function WQSMethodPanel({
+  state,
   methodId,
   methodType,
   property,
@@ -80,8 +88,8 @@ export function WQSMethodPanel({
   templates,
   allFactors,
   onCalculationMethodDirty,
+  onCancelCalculationMethod,
 }: WQSMethodPanelProps) {
-  console.log(marketSurveys);
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(WQSDto),
@@ -95,20 +103,50 @@ export function WQSMethodPanel({
     formState: { errors, isDirty },
   } = methods;
 
+  const {
+    mutate: submitComparativeAnalysisMutate,
+    isSuccess: isSubmitComparativeAnalysisSuccess,
+    error,
+  } = useSaveComparativeAnalysis();
+
   /** Form handler */
   const handleOnSubmit = (value: WQSFormType) => {
-    reset(value);
-    toast.success('Saved!');
+    const pricingAnalysisId = state.activeMethod?.pricingAnalysisId;
+    const methodId = state.activeMethod?.methodId;
+    if (!!pricingAnalysisId && !!methodId) {
+      const submitSchema = mapWQSFormToSubmitSchema({ WQSForm: value });
+
+      const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
+
+      if (!parse.success) {
+        toast.error(parse.error.message);
+        return;
+      }
+
+      submitComparativeAnalysisMutate({
+        id: pricingAnalysisId,
+        methodId: methodId,
+        request: submitSchema,
+      });
+
+      if (isSubmitComparativeAnalysisSuccess) {
+        toast.success('Saved!');
+        reset(value);
+        return;
+      }
+
+      toast.error(error);
+      return;
+    }
+
+    console.log(pricingAnalysisId, methodId);
+    toast.error('Pricing analysis ID or method Id not found!');
   };
 
   const handleOnSaveDraft = () => {
     const currentValue = getValues();
     console.log(currentValue);
     reset(currentValue);
-  };
-
-  const handleOnCancel = () => {
-    // waning confirmation, the hide method section
   };
 
   /** Template selector handler */
@@ -143,6 +181,21 @@ export function WQSMethodPanel({
   const handleOnSelectTemplate = (templateId: string) => {
     setPricingTemplateId(templateId);
   };
+
+  const handleOnCancelCalculationMethod = () => {
+    setisShowCanceledDialog(true);
+  };
+
+  const handleOnConfirmCancelCalculationMethod = () => {
+    onCancelCalculationMethod();
+    setisShowCanceledDialog(false);
+  };
+
+  const handleOnDenyCancelCalculationMethod = () => {
+    setisShowCanceledDialog(false);
+  };
+
+  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
 
   const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
     const messages = flattenRHFErrors(errs);
@@ -241,10 +294,19 @@ export function WQSMethodPanel({
               allFactors={allFactors}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
             />
-            <MethodFooterActions onSaveDraft={handleOnSaveDraft} onCancel={handleOnCancel} />
+            <MethodFooterActions
+              onSaveDraft={handleOnSaveDraft}
+              onCancel={handleOnCancelCalculationMethod}
+            />
           </div>
         )}
       </form>
+      <ConfirmDialog
+        isOpen={isShowCanceledDialog}
+        onClose={handleOnDenyCancelCalculationMethod}
+        onConfirm={handleOnConfirmCancelCalculationMethod}
+        message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
+      />
     </FormProvider>
   );
 }

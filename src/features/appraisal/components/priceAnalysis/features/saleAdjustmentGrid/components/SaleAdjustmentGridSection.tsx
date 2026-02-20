@@ -5,7 +5,8 @@ import type {
 } from '../../../schemas/v1';
 import { SaleAdjustmentGridCalculationSection } from './SaleAdjustmentGridCalculationSection';
 import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
-import { ComparativeMarketSurveySection } from '@features/appraisal/components/priceAnalysis/shared/components/ComparativeMarketSurveySection.tsx';
+import { ComparativeMarketSurveySection } from '@/features/appraisal/components/priceAnalysis/components/ComparativeMarketSurveySection';
+import { saleGridFieldPath } from '../adapters/fieldPath';
 /**
  * NOTE:
  *
@@ -36,6 +37,7 @@ export const SaleAdjustmentGridSection = ({
   allFactors,
   onSelectComparativeMarketSurvey,
 }: SaleAdjustmentGridSectionProps) => {
+  const fieldPath = saleGridFieldPath;
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <div
@@ -49,6 +51,7 @@ export const SaleAdjustmentGridSection = ({
             property={property}
             marketSurveys={marketSurveys}
             comparativeMarketSurveys={comparativeMarketSurveys}
+            fieldPath={fieldPath}
             onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
           />
           {comparativeMarketSurveys.length > 0 && (

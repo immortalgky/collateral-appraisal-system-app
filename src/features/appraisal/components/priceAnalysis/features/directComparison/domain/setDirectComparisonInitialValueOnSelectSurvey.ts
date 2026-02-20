@@ -1,6 +1,6 @@
 import type { UseFormGetValues, UseFormSetValue } from 'react-hook-form';
 import type { DirectComparisonType } from '../../../schemas/directComparisonForm';
-import { directComparisonPath } from '../adapters/fieldPath';
+import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 import { toFactorMap } from '../../../domain/toFactorMap';
 import type { MarketComparableDetailType } from '../../../schemas/v1';
 

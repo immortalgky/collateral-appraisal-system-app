@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { directComparisonTemplate } from '../../../data/data';
 import { QualitativeTable } from './QualitativeTable';
-import { directComparisonPath } from '../adapters/fieldPath';
+import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 
 interface DirectComparisonCalculationSectionProps {
   property: Record<string, any>;

@@ -7,11 +7,11 @@ import {
 } from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
 import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
-import { PriceAnalysisTemplateSelector } from '@features/appraisal/components/priceAnalysis/shared/components/PriceAnalysisTemplateSelector.tsx';
+import { PriceAnalysisTemplateSelector } from '@/features/appraisal/components/priceAnalysis/components/PriceAnalysisTemplateSelector';
 import { MethodFooterActions } from '@features/appraisal/components/priceAnalysis/components/MethodFooterActions.tsx';
 import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValue.ts';
 import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
-import { flattenRHFErrors } from '../../wqs/domain/flattenRHFErrors';
+import { flattenRHFErrors } from '../../../domain/flattenRHFErrors';
 import { SaleAdjustmentGridSection } from './SaleAdjustmentGridSection';
 import type {
   FactorDataType,
