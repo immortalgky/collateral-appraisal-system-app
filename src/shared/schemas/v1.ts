@@ -3702,6 +3702,7 @@ const UpdateSummaryDecisionRequest = z
   .object({
     dateTime: z.string().datetime({ offset: true }).nullable(),
     appraisalPrice: z.coerce.number().nullable(),
+    decision: z.string().nullable(),
     buildingInsurancePrice: z.coerce.number().nullable(),
     forcedSalePrice: z.coerce.number().nullable(),
     priceVerification: z.boolean(),
@@ -3709,6 +3710,7 @@ const UpdateSummaryDecisionRequest = z
     remark: z.string().nullable(),
     opinionAppraiser: z.string().nullable(),
     opinionCommittee: z.string().nullable(),
+    remarkDecision: z.string().nullable(),
     specialAssumption: z.string().nullable(),
   })
   .partial()

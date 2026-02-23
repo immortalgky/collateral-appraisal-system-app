@@ -12,9 +12,8 @@ import type {
   GetBuildingPropertyResponseType,
   GetCondoPropertyResponseType,
   GetLandAndBuildingPropertyResponseType,
+  GetSummaryDecisionResponseType,
 } from '@shared/schemas/v1';
-import type { GetCondoPMAPropertyByIdResultType } from '@/shared/forms/typeCondo';
-import type { GetLandAndBuildingPMAPropertyByIdResultType } from '@/shared/forms/typeLandBuilding';
 import type { CurrentAssignment } from '@features/appraisal/types/administration';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 
@@ -228,7 +227,7 @@ export const mapCondoPropertyResponseToForm = (
     roofType: response.roofType ?? '',
     roofTypeOther: response.roofTypeOther ?? '',
 
-    condoAreaDetails: response.condoAreaDetails ?? [],
+    areaDetails: response.condoAreaDetails ?? [],
     totalBuildingArea: response.totalBuildingArea ?? 0,
 
     isExpropriated: response.isExpropriated ?? false,
@@ -465,12 +464,14 @@ export const mapSummaryDecisionResponseToForm = (
     dateTime: response.dateTime ?? '',
     appraisalPrice: response.appraisalPrice ?? 0,
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    decision: '',
     forcedSalePrice: response.forcedSalePrice ?? 0,
     priceVerification: response.priceVerification ?? true,
     groupValuations: response.groupValuations ?? [],
     landTitle: response.landTitle ?? [],
     condition: response.condition ?? '',
     remark: response.remark ?? '',
+    remarkDecision: '',
     opinionAppraiser: response.opinionAppraiser ?? '',
     opinionCommittee: response.opinionCommittee ?? '',
     specialAssumption: response.specialAssumption ?? '',
