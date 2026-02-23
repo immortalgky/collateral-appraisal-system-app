@@ -810,6 +810,7 @@ const UpdateCollateralRequest = z
     landTitles: z.array(LandTitleDto).nullable(),
   })
   .passthrough();
+
 const UpdateCollateralResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 const CollateralEngagementDto = z
   .object({
@@ -2648,6 +2649,14 @@ const UpdateGalleryPhotoRequest = z
   })
   .passthrough();
 const UpdateGalleryPhotoResponse = z.object({ id: z.string().uuid() }).passthrough();
+const AreaDetailDto = z
+  .object({
+    appraisalPropertyId: z.string().uuid(),
+    areaDescription: z.string().nullable(),
+    areaSize: z.coerce.number().nullable(),
+  })
+  .passthrough();
+
 const UpdateCondoPropertyRequest = z
   .object({
     propertyName: z.string().nullable().default(null),
@@ -2773,6 +2782,7 @@ const GetCondoPropertyResponse = z
     bathroomFloorMaterialTypeOther: z.string().nullable(),
     roofType: z.string().nullable(),
     roofTypeOther: z.string().nullable(),
+    condoAreaDetails: z.array(AreaDetailDto).nullable(),
     totalBuildingArea: z.number().nullable(),
     isExpropriated: z.boolean().nullable(),
     expropriationRemark: z.string().nullable(),
@@ -3509,6 +3519,7 @@ const CreateCondoPropertyRequest = z
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
     roofType: z.string().nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
+    condoAreaDetail: z.array(AreaDetailDto).nullable(),
     totalBuildingArea: z.number().nullable().default(null),
     isExpropriated: z.boolean().nullable().default(null),
     expropriationRemark: z.string().nullable().default(null),
@@ -4035,6 +4046,9 @@ export type GetCondoPropertyResponseType = z.infer<typeof GetCondoPropertyRespon
 export type GetLandAndBuildingPropertyResponseType = z.infer<
   typeof GetLandAndBuildingPropertyResponse
 >;
+
+// CondoAppraisalAreaDetail Type
+export type AreaDetailDtoType = z.infer<typeof AreaDetailDto>;
 
 // Property Update response types
 // export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;
