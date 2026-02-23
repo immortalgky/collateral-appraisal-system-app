@@ -75,7 +75,7 @@ function CondoDetailForm() {
 
       <SectionRow title="Area Details" icon="chart-area">
         <div className="col-span-12">
-          <CondoAreaDetailForm name={'condoAreaDetails'} />
+          <CondoAreaDetailForm name={'areaDetails'} />
         </div>
       </SectionRow>
 

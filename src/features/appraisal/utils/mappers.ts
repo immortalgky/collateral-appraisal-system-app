@@ -227,7 +227,7 @@ export const mapCondoPropertyResponseToForm = (
     roofType: response.roofType ?? '',
     roofTypeOther: response.roofTypeOther ?? '',
 
-    condoAreaDetails: response.condoAreaDetails ?? [],
+    areaDetails: response.areaDetails ?? [],
     totalBuildingArea: response.totalBuildingArea ?? 0,
 
     isExpropriated: response.isExpropriated ?? false,
