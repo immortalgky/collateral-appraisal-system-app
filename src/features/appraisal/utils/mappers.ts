@@ -165,6 +165,12 @@ export const mapBuildingPropertyResponseToForm = (
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
     remark: response.remark ?? '',
+    surfaces: (response as any).surfaces ?? [],
+    depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
+      ...item,
+      depreciationMethod: item.depreciationMethod ?? 'Gross',
+      depreciationPeriods: item.depreciationPeriods ?? [],
+    })),
   };
 };
 
@@ -384,6 +390,12 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
     remark: response.buildingRemark ?? '',
+    surfaces: (response as any).surfaces ?? [],
+    depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
+      ...item,
+      depreciationMethod: item.depreciationMethod ?? 'Gross',
+      depreciationPeriods: item.depreciationPeriods ?? [],
+    })),
   };
 };
 
@@ -437,6 +449,43 @@ export const mapCondoPMAPropertyResponseToForm = (
     districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
+  };
+};
+
+const mapDepreciationDetailsToApi = (depreciationDetails: any[]) => {
+  return depreciationDetails.map(({ seq, ...item }) => ({
+    ...item,
+    id: item.id ?? null,
+    depreciationMethod: item.depreciationMethod ?? 'Gross',
+    depreciationPeriods: (item.depreciationPeriods ?? []).map(({ ...period }: any) => ({
+      ...period,
+      id: period.id ?? null,
+    })),
+  }));
+};
+
+const mapSurfacesToApi = (surfaces: any[]) => {
+  return surfaces.map(({ ...item }) => ({
+    ...item,
+    id: item.id ?? null,
+  }));
+};
+
+export const mapBuildingFormDataToApiPayload = (data: createBuildingFormType) => {
+  const { surfaces, depreciationDetails, ...rest } = data;
+  return {
+    ...rest,
+    surfaces: mapSurfacesToApi(surfaces ?? []),
+    depreciationDetails: mapDepreciationDetailsToApi(depreciationDetails ?? []),
+  };
+};
+
+export const mapLandAndBuildingFormDataToApiPayload = (data: createLandAndBuildingFormType) => {
+  const { surfaces, depreciationDetails, ...rest } = data;
+  return {
+    ...rest,
+    surfaces: mapSurfacesToApi(surfaces ?? []),
+    depreciationDetails: mapDepreciationDetailsToApi(depreciationDetails ?? []),
   };
 };
 

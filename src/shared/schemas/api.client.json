@@ -7423,7 +7423,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateAppendixLayoutResponse"
+                  "$ref": "#/components/schemas/UpdateAppendixLayoutResult"
                 }
               }
             }
@@ -7952,7 +7952,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RemoveAppendixDocumentResponse"
+                  "$ref": "#/components/schemas/RemoveAppendixDocumentResult"
                 }
               }
             }
@@ -8631,7 +8631,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetAppraisalAppendicesResponse"
+                  "$ref": "#/components/schemas/GetAppraisalAppendicesResult"
                 }
               }
             }
@@ -9300,7 +9300,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAppendixDocumentResponse"
+                  "$ref": "#/components/schemas/AddAppendixDocumentResult"
                 }
               }
             }
@@ -9746,7 +9746,7 @@
           }
         }
       },
-      "AddAppendixDocumentResponse": {
+      "AddAppendixDocumentResult": {
         "required": ["documentId", "appendixId"],
         "type": "object",
         "properties": {
@@ -10319,8 +10319,8 @@
         },
         "nullable": true
       },
-      "AppendixDocumentResponse": {
-        "required": ["id", "galleryPhotoId", "documentId", "displaySequence"],
+      "AppendixDocumentDto": {
+        "required": ["id", "galleryPhotoId", "displaySequence"],
         "type": "object",
         "properties": {
           "id": {
@@ -10328,10 +10328,6 @@
             "format": "uuid"
           },
           "galleryPhotoId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "documentId": {
             "type": "string",
             "format": "uuid"
           },
@@ -10433,7 +10429,7 @@
           }
         }
       },
-      "AppraisalAppendixResponse": {
+      "AppraisalAppendixDto": {
         "required": [
           "id",
           "appendixTypeId",
@@ -10470,7 +10466,7 @@
           "documents": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AppendixDocumentResponse"
+              "$ref": "#/components/schemas/AppendixDocumentDto"
             }
           }
         }
@@ -11779,26 +11775,6 @@
           }
         }
       },
-      "CondoAppraisalAreaDetailDto": {
-        "required": ["id", "areaDescription", "areaSize"],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "areaDescription": {
-            "type": "string",
-            "nullable": true
-          },
-          "areaSize": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          }
-        }
-      },
       "ContactDto": {
         "required": ["contactPersonName", "contactPersonPhone", "dealerCode"],
         "type": "object",
@@ -12593,14 +12569,6 @@
           },
           "roofTypeOther": {
             "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "areaDetails": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CondoAppraisalAreaDetailDto"
-            },
             "default": null,
             "nullable": true
           },
@@ -15848,14 +15816,14 @@
           }
         }
       },
-      "GetAppraisalAppendicesResponse": {
+      "GetAppraisalAppendicesResult": {
         "required": ["items"],
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AppraisalAppendixResponse"
+              "$ref": "#/components/schemas/AppraisalAppendixDto"
             }
           }
         }
@@ -16498,7 +16466,6 @@
           "bathroomFloorMaterialTypeOther",
           "roofType",
           "roofTypeOther",
-          "areaDetails",
           "totalBuildingArea",
           "isExpropriated",
           "expropriationRemark",
@@ -16745,13 +16712,6 @@
           },
           "roofTypeOther": {
             "type": "string",
-            "nullable": true
-          },
-          "areaDetails": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CondoAppraisalAreaDetailDto"
-            },
             "nullable": true
           },
           "totalBuildingArea": {
@@ -21233,7 +21193,7 @@
           }
         }
       },
-      "RemoveAppendixDocumentResponse": {
+      "RemoveAppendixDocumentResult": {
         "required": ["success"],
         "type": "object",
         "properties": {
@@ -22595,7 +22555,7 @@
           }
         }
       },
-      "UpdateAppendixLayoutResponse": {
+      "UpdateAppendixLayoutResult": {
         "required": ["appendixId", "layoutColumns"],
         "type": "object",
         "properties": {
@@ -23493,14 +23453,6 @@
           },
           "roofTypeOther": {
             "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "areaDetails": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CondoAppraisalAreaDetailDto"
-            },
             "default": null,
             "nullable": true
           },

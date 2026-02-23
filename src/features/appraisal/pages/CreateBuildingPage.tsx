@@ -12,11 +12,21 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
-import { useCreateBuildingProperty, useGetBuildingPropertyById, useUpdateBuildingProperty, } from '../api';
-import { createBuildingForm, createBuildingFormDefault, type createBuildingFormType, } from '../schemas/form';
-import { mapBuildingPropertyResponseToForm } from '../utils/mappers';
+import {
+  useCreateBuildingProperty,
+  useGetBuildingPropertyById,
+  useUpdateBuildingProperty,
+} from '../api/property';
+import {
+  createBuildingForm,
+  createBuildingFormDefault,
+  type createBuildingFormType,
+} from '../schemas/form';
+import { mapBuildingPropertyResponseToForm, mapBuildingFormDataToApiPayload } from '../utils/mappers';
 import toast from 'react-hot-toast';
-import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
+import PropertyPhotoSection, {
+  type PropertyPhotoSectionRef,
+} from '../components/PropertyPhotoSection';
 
 const CreateBuildingPage = () => {
   const navigate = useNavigate();
@@ -53,13 +63,14 @@ const CreateBuildingPage = () => {
 
   const onSubmit: SubmitHandler<createBuildingFormType> = data => {
     setSaveAction('submit');
+    const payload = mapBuildingFormDataToApiPayload(data);
 
     if (isEditMode && propertyId) {
       updateBuildingProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data,
+          data: payload,
         },
         {
           onSuccess: () => {
@@ -77,7 +88,7 @@ const CreateBuildingPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data,
+          data: payload,
         },
         {
           onSuccess: async (response: any) => {
@@ -100,13 +111,14 @@ const CreateBuildingPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
+    const payload = mapBuildingFormDataToApiPayload(data);
 
     if (isEditMode && propertyId) {
       updateBuildingProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data,
+          data: payload,
         },
         {
           onSuccess: () => {
@@ -124,7 +136,7 @@ const CreateBuildingPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data,
+          data: payload,
         },
         {
           onSuccess: async (response: any) => {

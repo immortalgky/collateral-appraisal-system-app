@@ -12,7 +12,11 @@ import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useCreateLandProperty, useGetLandPropertyById, useUpdateLandProperty } from '../api';
+import {
+  useCreateLandProperty,
+  useGetLandPropertyById,
+  useUpdateLandProperty,
+} from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
 import { createLandForm, createLandFormDefault, type createLandFormType } from '../schemas/form';
 import { mapLandPropertyResponseToForm } from '../utils/mappers';

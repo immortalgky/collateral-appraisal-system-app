@@ -1,11 +1,10 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { useDerivedFieldArray, type ComputeCtx, type DerivedRule } from './useDerivedFieldArray';
+import { type ComputeCtx, type DerivedRule, useDerivedFieldArray } from './useDerivedFieldArray';
 import TextInputCell from './TextInputCell';
 import NumberInputCell from './NumberInputCell';
-import RowNumberCell from './RowNumberCell';
 import DisplayCell from './DisplayCell';
 import DerivedCell from './DerivedCell';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -30,6 +29,19 @@ interface BuildingDetailProps {
   disableEditBtn?: boolean;
   disableAddRowBtn?: boolean;
   readonlyFields?: string[];
+  onRequestAdd?: () => void;
+  onRowClick?: (index: number) => void;
+  striped?: boolean;
+  tableClassName?: string;
+  rowGrouping?: {
+    field: string;
+    groups: {
+      value: any;
+      label: string;
+      className?: string;
+      subtotalClassName?: string;
+    }[];
+  };
 }
 
 export type FormTableHeader =
@@ -131,6 +143,11 @@ const BuildingDetailTable = ({
   disableEditBtn = false,
   disableAddRowBtn = false,
   readonlyFields = [],
+  onRequestAdd,
+  onRowClick,
+  striped = false,
+  tableClassName,
+  rowGrouping,
 }: BuildingDetailProps) => {
   const { getValues, control } = useFormContext();
   const { append, remove } = useFieldArray({
@@ -150,7 +167,7 @@ const BuildingDetailTable = ({
     return headers
       .filter(
         (header): header is FormTableDerivedHeader =>
-          'compute' in header && 'name' in header && header.compute !== undefined
+          'compute' in header && 'name' in header && header.compute !== undefined,
       )
       .map((header): DerivedRule => {
         return { targetKey: header.name, compute: header.compute!, normalize: header.normalize };
@@ -176,6 +193,11 @@ const BuildingDetailTable = ({
   };
 
   const handleAddRow = () => {
+    if (onRequestAdd) {
+      onRequestAdd();
+      return;
+    }
+
     let newRow: Record<string, any> = {};
 
     if (defaultValue != undefined) {
@@ -208,11 +230,138 @@ const BuildingDetailTable = ({
   const canEdit = !disableEditBtn;
   const canSave = !disableSaveBtn;
 
+  const visibleColCount = headers.filter(h => h.type !== 'group').length + 1;
+
+  const renderDataRow = (originalIndex: number, rowClassName?: string, displayRowNumber?: number) => (
+    <tr
+      key={originalIndex}
+      className={clsx(
+        'hover:bg-gray-50 transition-colors',
+        onRowClick && 'cursor-pointer',
+        rowClassName,
+      )}
+      onClick={() => onRowClick?.(originalIndex)}
+    >
+      {headers.map((header, inner_index) => {
+        const h = header as any;
+        return TableBody({
+          type: header.type,
+          header: header,
+          rows: values,
+          row: values[originalIndex],
+          rowIndex: originalIndex,
+          arrayName: name,
+          editIndex: editIndex,
+          control: control,
+          inner_index: inner_index,
+          fieldName: h.name,
+          outScopeFields,
+          value: h.value,
+          render: h.render,
+          modifier: h.modifier,
+          isComputed: h.isComputed,
+          isReadonly: readonlyFields.includes(h.name),
+          displayRowNumber,
+        });
+      })}
+      <td className="py-1 px-1.5 sticky right-0 z-21 bg-white border-neutral-3 border-l border-b">
+        <div className="flex gap-0.5 justify-center">
+          {editIndex === originalIndex ? (
+            canSave ? (
+              <button
+                type="button"
+                onClick={() => handleSave()}
+                className="w-6 h-6 flex items-center justify-center rounded bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                title="Save"
+              >
+                <Icon style="solid" name="check" className="size-3" />
+              </button>
+            ) : canEdit ? (
+              <button
+                type="button"
+                onClick={() => handleEdit(originalIndex)}
+                className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                title="Edit"
+              >
+                <Icon style="solid" name="pen" className="size-2.5" />
+              </button>
+            ) : null
+          ) : canEdit ? (
+            <button
+              type="button"
+              onClick={() => handleEdit(originalIndex)}
+              className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+              title="Edit"
+            >
+              <Icon style="solid" name="pen" className="size-2.5" />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => handleDeleteRow(originalIndex)}
+            className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+            title="Delete"
+          >
+            <Icon style="solid" name="trash" className="size-2.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
+  const renderSubtotalRow = (groupRows: any[], subtotalClassName?: string) => (
+    <tr className={clsx('border-t border-neutral-3', subtotalClassName)}>
+      {headers
+        .filter((h): h is Exclude<FormTableHeader, { type: 'group' }> => h.type !== 'group')
+        .map((header, colIdx) => {
+          const h = header as any;
+          const footerFn = h.footer;
+
+          if (!footerFn) {
+            return (
+              <td
+                key={colIdx}
+                className={clsx('py-1.5 px-2 border-b border-neutral-3', alignClass(header.align))}
+              />
+            );
+          }
+
+          let content: React.ReactNode;
+          switch (header.type) {
+            case 'derived':
+              content = footerFn({ rows: groupRows });
+              break;
+            case 'input-number':
+              content = footerFn(groupRows);
+              break;
+            case 'input-text':
+            case 'display':
+              content = footerFn(groupRows.map((v: any) => v[h.name]));
+              break;
+            default:
+              content = '';
+          }
+
+          return (
+            <td
+              key={colIdx}
+              className={clsx('py-1.5 px-2 border-b border-neutral-3', alignClass(header.align))}
+            >
+              <span className="inline-flex items-center justify-center text-xs font-medium">
+                {content}
+              </span>
+            </td>
+          );
+        })}
+      <td className="py-1.5 px-2 sticky right-0 border-b border-neutral-3" />
+    </tr>
+  );
+
   return (
     <>
       <div className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip">
         <div className="w-full h-full overflow-auto">
-          <table className="table-fixed w-full h-full border-separate border-spacing-0">
+          <table className={clsx('table-fixed w-full h-full border-separate border-spacing-0', tableClassName)}>
             <thead>
               <tr className="bg-primary-700">
                 {headers.map((header, index) => {
@@ -223,9 +372,7 @@ const BuildingDetailTable = ({
                     'text-white text-xs font-medium py-2 px-2 text-center w-16 bg-primary sticky top-0 right-0 z-21 border-l border-neutral-3',
                   )}
                   rowSpan={headers.some((h: FormTableHeader) => h.type === 'group') ? 2 : 1}
-                >
-
-                </th>
+                ></th>
               </tr>
               {headers.find(h => 'groupName' in h && h.type === 'group') ? (
                 <tr className="bg-primary-700">
@@ -249,79 +396,46 @@ const BuildingDetailTable = ({
             </thead>
             <tbody className="divide-y divide-neutral-3">
               {!isEmpty &&
-                values.map((field: Record<string, any>, index: number) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    {headers.map((header, inner_index) => {
-                      const h = header as any;
-                      return TableBody({
-                        type: header.type,
-                        header: header,
-                        rows: values,
-                        row: field,
-                        rowIndex: index,
-                        arrayName: name,
-                        editIndex: editIndex,
-                        control: control,
-                        inner_index: inner_index,
-                        fieldName: h.name,
-                        outScopeFields,
-                        value: h.value,
-                        render: h.render,
-                        modifier: h.modifier,
-                        isComputed: h.isComputed,
-                        isReadonly: readonlyFields.includes(h.name),
+                (rowGrouping
+                  ? rowGrouping.groups.map((group) => {
+                      const groupIndices: number[] = [];
+                      values.forEach((_row: any, i: number) => {
+                        if (_row[rowGrouping.field] === group.value) groupIndices.push(i);
                       });
-                    })}
-                    <td className="py-1 px-1.5 sticky right-0 z-21 bg-white border-neutral-3 border-l border-b">
-                      <div className="flex gap-0.5 justify-center">
-                        {editIndex === index ? (
-                          canSave ? (
-                            <button
-                              type="button"
-                              onClick={() => handleSave()}
-                              className="w-6 h-6 flex items-center justify-center rounded bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
-                              title="Save"
+
+                      if (groupIndices.length === 0) return null;
+
+                      const groupRows = groupIndices.map(i => values[i]);
+
+                      return (
+                        <Fragment key={String(group.value)}>
+                          <tr className={clsx(group.className)}>
+                            <td
+                              colSpan={visibleColCount}
+                              className="py-1.5 px-3 text-xs font-semibold border-b border-neutral-3"
                             >
-                              <Icon style="solid" name="check" className="size-3" />
-                            </button>
-                          ) : canEdit ? (
-                            <button
-                              type="button"
-                              onClick={() => handleEdit(index)}
-                              className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                              title="Edit"
-                            >
-                              <Icon style="solid" name="pen" className="size-2.5" />
-                            </button>
-                          ) : null
-                        ) : canEdit ? (
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(index)}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                            title="Edit"
-                          >
-                            <Icon style="solid" name="pen" className="size-2.5" />
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRow(index)}
-                          className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-2.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                              {group.label} ({groupIndices.length})
+                            </td>
+                          </tr>
+                          {groupIndices.map((idx, i) => renderDataRow(idx, undefined, i + 1))}
+                          {renderSubtotalRow(groupRows, group.subtotalClassName)}
+                        </Fragment>
+                      );
+                    })
+                  : values.map((_field: Record<string, any>, index: number) =>
+                      renderDataRow(
+                        index,
+                        striped && index % 2 === 1 ? 'bg-gray-50/50' : undefined,
+                      ),
+                    ))}
             </tbody>
             {!isEmpty && (
               <tfoot className="bg-gray-50 border-t-2 border-gray-200">
                 <tr>
                   {headers
-                    .filter((h): h is Exclude<FormTableHeader, { type: 'group' }> => h.type !== 'group')
+                    .filter(
+                      (h): h is Exclude<FormTableHeader, { type: 'group' }> => h.type !== 'group',
+                    )
                     .map((header, inner_index) => {
                       const h = header as any;
                       return TableFooter({
@@ -415,7 +529,8 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
           )}
           colSpan={
             headers.filter(
-              (h: FormTableHeader) => 'groupName' in h && h.type !== 'group' && h.groupName === header.groupName,
+              (h: FormTableHeader) =>
+                'groupName' in h && h.type !== 'group' && h.groupName === header.groupName,
             ).length
           }
           title={header.tooltip}
@@ -459,10 +574,11 @@ interface TableBodyProps {
   control: any;
   outScopeFields?: Record<string, any>;
   value: any;
-  render?: (value: number | string | boolean) => React.ReactNode;
+  render?: (value: any) => React.ReactNode;
   modifier?: (value: number | string | boolean) => number | string | boolean;
   isComputed?: boolean;
   isReadonly?: boolean;
+  displayRowNumber?: number;
 }
 
 const TableBody = ({
@@ -481,6 +597,7 @@ const TableBody = ({
   render,
   modifier,
   isReadonly = false,
+  displayRowNumber,
 }: TableBodyProps) => {
   switch (type) {
     case 'display': {
@@ -513,6 +630,7 @@ const TableBody = ({
             fieldName={fieldName}
             control={control}
             isEditing={editIndex === rowIndex}
+            row={rows[rowIndex]}
             render={render}
             modifier={modifier}
           />
@@ -572,10 +690,11 @@ const TableBody = ({
           key={inner_index}
           className={clsx(
             'py-1.5 px-2 whitespace-nowrap truncate border-b border-neutral-3 text-xs',
+            alignClass(header.align),
             header.className,
           )}
         >
-          <RowNumberCell rowIndex={rowIndex} />
+          {displayRowNumber ?? rowIndex + 1}
         </td>
       );
     default:
@@ -594,13 +713,7 @@ interface TableFooterProps {
   footer?: (value: any) => any;
 }
 
-const TableFooter = ({
-  type,
-  header,
-  rows,
-  inner_index,
-  footer,
-}: TableFooterProps) => {
+const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterProps) => {
   switch (type) {
     case 'derived':
       return (
