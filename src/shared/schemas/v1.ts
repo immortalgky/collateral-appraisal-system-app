@@ -341,6 +341,37 @@ const CreateDraftRequestRequest = z
   })
   .passthrough();
 const CreateDraftRequestResponse = z.object({ id: z.string().uuid() }).passthrough();
+const DocumentItemDto = z
+  .object({
+    id: z.string().uuid(),
+    documentId: z.string().uuid().nullable(),
+    documentType: z.string().nullable(),
+    fileName: z.string().nullable(),
+    filePath: z.string().nullable(),
+    notes: z.string().nullable(),
+    isRequired: z.boolean(),
+    uploadedBy: z.string().nullable(),
+    uploadedByName: z.string().nullable(),
+    uploadedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const DocumentSectionDto = z
+  .object({
+    titleId: z.string().uuid().nullable(),
+    titleIdentifier: z.string().nullable(),
+    collateralType: z.string().nullable(),
+    totalDocuments: z.number().int(),
+    uploadedDocuments: z.number().int(),
+    documents: z.array(DocumentItemDto),
+  })
+  .passthrough();
+const GetRequestDocumentsByRequestIdResponse = z
+  .object({
+    totalDocuments: z.number().int(),
+    totalUploaded: z.number().int(),
+    sections: z.array(DocumentSectionDto),
+  })
+  .passthrough();
 const UpdateRequestCommentRequest = z.object({ comment: z.string() }).passthrough();
 const UpdateRequestCommentResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 const RemoveRequestCommentResponse = z.object({ isSuccess: z.boolean() }).passthrough();
@@ -520,6 +551,18 @@ const NotificationDto = z
 const GetUserNotificationsResponse = z
   .object({ notifications: z.array(NotificationDto) })
   .passthrough();
+const ParameterDto = z
+  .object({
+    parId: z.number().int().nullable(),
+    group: z.string().nullable(),
+    country: z.string().nullable(),
+    language: z.string().nullable(),
+    code: z.string().nullable(),
+    description: z.string().nullable(),
+    isActive: z.boolean().nullable(),
+    seqNo: z.number().int().nullable(),
+  })
+  .passthrough();
 const DocumentLink = z
   .object({
     entityType: z.string(),
@@ -537,10 +580,18 @@ const CreateUploadSessionResponse = z
   .passthrough();
 const UploadDocumentResponse = z
   .object({
-    isSuccess: z.boolean(),
     documentId: z.string().uuid(),
     fileName: z.string(),
+    fileExtension: z.string(),
     fileSize: z.number().int(),
+    mimeType: z.string(),
+    storageUrl: z.string(),
+    documentType: z.string(),
+    documentCategory: z.string(),
+    description: z.string().nullable(),
+    uploadedBy: z.string(),
+    uploadedByName: z.string(),
+    uploadedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
 const KickstartWorkflowRequest = z.object({ requestId: z.number().int() }).passthrough();
@@ -1396,78 +1447,29 @@ const AddFactorToTemplateRequest = z
   })
   .passthrough();
 const AddFactorToTemplateResponse = z.object({ templateFactorId: z.string().uuid() }).passthrough();
-const FactorDataItem = z
+const UpdateMarketComparableRequest = z
   .object({
-    factorId: z.string().uuid(),
-    value: z.string().nullable(),
-    otherRemarks: z.string().nullish().default(null),
-  })
-  .passthrough();
-const SetMarketComparableFactorDataRequest = z
-  .object({ factorData: z.array(FactorDataItem) })
-  .passthrough();
-const SetMarketComparableFactorDataResponse = z.object({ success: z.boolean() }).passthrough();
-const MarketComparableDto = z
-  .object({
-    id: z.string().uuid(),
-    comparableNumber: z.string(),
     propertyType: z.string(),
-    province: z.string(),
-    district: z.string().nullable(),
-    subDistrict: z.string().nullable(),
-    address: z.string().nullable(),
-    transactionType: z.string().nullable(),
-    transactionDate: z.string().datetime({ offset: true }).nullable(),
-    transactionPrice: z.number().nullable(),
-    pricePerUnit: z.number().nullable(),
-    unitType: z.string().nullable(),
-    dataSource: z.string(),
-    dataConfidence: z.string().nullable(),
-    isVerified: z.boolean(),
-    status: z.string(),
-    surveyDate: z.string().datetime({ offset: true }),
-    createdOn: z.string().datetime({ offset: true }).nullable(),
-  })
-  .partial()
-  .passthrough();
-const PaginatedResultOfMarketComparableDto = z
-  .object({
-    items: z.array(MarketComparableDto),
-    count: z.number().int(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-  })
-  .passthrough();
-const GetMarketComparablesResponse = z
-  .object({ result: PaginatedResultOfMarketComparableDto })
-  .passthrough();
-const CreateMarketComparableRequest = z
-  .object({
-    comparableNumber: z.string(),
-    propertyType: z.string(),
-    province: z.string(),
-    dataSource: z.string(),
-    surveyDate: z.string().datetime({ offset: true }),
-    district: z.string().nullish().default(null),
-    subDistrict: z.string().nullish().default(null),
-    address: z.string().nullish().default(null),
-    latitude: z.number().nullish().default(null),
-    longitude: z.number().nullish().default(null),
-    transactionType: z.string().nullish().default(null),
-    transactionDate: z.string().datetime({ offset: true }).nullish().default(null),
-    transactionPrice: z.number().nullish().default(null),
-    pricePerUnit: z.number().nullish().default(null),
-    unitType: z.string().nullish().default(null),
-    description: z.string().nullish().default(null),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullish().default(null),
+    sourceInfo: z.string().nullish().default(null),
     notes: z.string().nullish().default(null),
     templateId: z.string().uuid().nullish().default(null),
   })
   .passthrough();
-const CreateMarketComparableResponse = z.object({ id: z.string().uuid() }).passthrough();
+const UpdateMarketComparableResponse = z.object({ success: z.boolean() }).passthrough();
+const FactorDataType = z.unknown();
 const FactorDataDto = z
   .object({
     id: z.string().uuid(),
     factorId: z.string().uuid(),
+    factorCode: z.string(),
+    factorName: z.string(),
+    fieldName: z.string(),
+    dataType: FactorDataType,
+    fieldLength: z.number().int().nullable(),
+    fieldDecimal: z.number().int().nullable(),
+    parameterGroup: z.string().nullable(),
     value: z.string().nullable(),
     otherRemarks: z.string().nullable(),
   })
@@ -1488,27 +1490,9 @@ const MarketComparableDetailDto = z
     id: z.string().uuid(),
     comparableNumber: z.string(),
     propertyType: z.string(),
-    province: z.string(),
-    district: z.string().nullable(),
-    subDistrict: z.string().nullable(),
-    address: z.string().nullable(),
-    latitude: z.number().nullable(),
-    longitude: z.number().nullable(),
-    transactionType: z.string().nullable(),
-    transactionDate: z.string().datetime({ offset: true }).nullable(),
-    transactionPrice: z.number().nullable(),
-    pricePerUnit: z.number().nullable(),
-    unitType: z.string().nullable(),
-    dataSource: z.string(),
-    dataConfidence: z.string().nullable(),
-    isVerified: z.boolean(),
-    verifiedAt: z.string().datetime({ offset: true }).nullable(),
-    verifiedBy: z.string().uuid().nullable(),
-    status: z.string(),
-    expiryDate: z.string().datetime({ offset: true }).nullable(),
-    surveyDate: z.string().datetime({ offset: true }),
-    surveyedBy: z.string().uuid().nullable(),
-    description: z.string().nullable(),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullable(),
+    sourceInfo: z.string().nullable(),
     notes: z.string().nullable(),
     templateId: z.string().uuid().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
@@ -1523,6 +1507,54 @@ const MarketComparableDetailDto = z
 const GetMarketComparableByIdResponse = z
   .object({ marketComparable: MarketComparableDetailDto })
   .passthrough();
+const FactorDataItem = z
+  .object({
+    factorId: z.string().uuid(),
+    value: z.string().nullable(),
+    otherRemarks: z.string().nullish().default(null),
+  })
+  .passthrough();
+const SetMarketComparableFactorDataRequest = z
+  .object({ factorData: z.array(FactorDataItem) })
+  .passthrough();
+const SetMarketComparableFactorDataResponse = z.object({ success: z.boolean() }).passthrough();
+const MarketComparableDto = z
+  .object({
+    id: z.string().uuid(),
+    comparableNumber: z.string(),
+    propertyType: z.string(),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullable(),
+    sourceInfo: z.string().nullable(),
+    notes: z.string().nullable(),
+    createdOn: z.string().datetime({ offset: true }).nullable(),
+  })
+  .partial()
+  .passthrough();
+const PaginatedResultOfMarketComparableDto = z
+  .object({
+    items: z.array(MarketComparableDto),
+    count: z.number().int(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+  })
+  .passthrough();
+const GetMarketComparablesResponse = z
+  .object({ result: PaginatedResultOfMarketComparableDto })
+  .passthrough();
+const CreateMarketComparableRequest = z
+  .object({
+    comparableNumber: z.string(),
+    propertyType: z.string(),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullish().default(null),
+    sourceInfo: z.string().nullish().default(null),
+    notes: z.string().nullish().default(null),
+    templateId: z.string().uuid().nullish().default(null),
+  })
+  .passthrough();
+const CreateMarketComparableResponse = z.object({ id: z.string().uuid() }).passthrough();
+const DeleteMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 const AddMarketComparableImageRequest = z
   .object({
     documentId: z.string().uuid(),
@@ -2368,6 +2400,45 @@ const GetLandPropertyResponse = z
   })
   .partial()
   .passthrough();
+const DepreciationPeriodItemData = z
+  .object({
+    atYear: z.number().int(),
+    toYear: z.number().int(),
+    depreciationPerYear: z.number(),
+    totalDepreciationPct: z.number(),
+    priceDepreciation: z.number(),
+  })
+  .passthrough();
+const DepreciationItemData = z
+  .object({
+    id: z.string().uuid().nullable(),
+    depreciationMethod: z.string(),
+    areaDescription: z.string().nullish().default(null),
+    area: z.number().optional().default(0),
+    year: z.number().int().optional().default(0),
+    isBuilding: z.boolean().optional().default(true),
+    pricePerSqMBeforeDepreciation: z.number().optional().default(0),
+    priceBeforeDepreciation: z.number().optional().default(0),
+    pricePerSqMAfterDepreciation: z.number().optional().default(0),
+    priceAfterDepreciation: z.number().optional().default(0),
+    depreciationYearPct: z.number().optional().default(0),
+    totalDepreciationPct: z.number().optional().default(0),
+    priceDepreciation: z.number().optional().default(0),
+    depreciationPeriods: z.array(DepreciationPeriodItemData).nullish().default(null),
+  })
+  .passthrough();
+const SurfaceItemData = z
+  .object({
+    id: z.string().uuid().nullable(),
+    fromFloorNumber: z.number().int(),
+    toFloorNumber: z.number().int(),
+    floorType: z.string().nullish().default(null),
+    floorStructureType: z.string().nullish().default(null),
+    floorStructureTypeOther: z.string().nullish().default(null),
+    floorSurfaceType: z.string().nullish().default(null),
+    floorSurfaceTypeOther: z.string().nullish().default(null),
+  })
+  .passthrough();
 const UpdateLandAndBuildingPropertyRequest = z
   .object({
     propertyName: z.string().nullable().default(null),
@@ -2499,8 +2570,50 @@ const UpdateLandAndBuildingPropertyRequest = z
     forcedSalePrice: z.number().nullable().default(null),
     landRemark: z.string().nullable().default(null),
     buildingRemark: z.string().nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
+  .passthrough();
+const BuildingAppraisalDepreciationPeriodDto = z
+  .object({
+    id: z.string().uuid(),
+    atYear: z.number().int(),
+    toYear: z.number().int(),
+    depreciationPerYear: z.number(),
+    totalDepreciationPct: z.number(),
+    priceDepreciation: z.number(),
+  })
+  .passthrough();
+const BuildingAppraisalDepreciationDetailDto = z
+  .object({
+    id: z.string().uuid(),
+    areaDescription: z.string().nullable(),
+    area: z.number(),
+    pricePerSqMBeforeDepreciation: z.number(),
+    priceBeforeDepreciation: z.number(),
+    year: z.number().int(),
+    isBuilding: z.boolean(),
+    depreciationMethod: z.string(),
+    depreciationYearPct: z.number(),
+    totalDepreciationPct: z.number(),
+    priceDepreciation: z.number(),
+    pricePerSqMAfterDepreciation: z.number(),
+    priceAfterDepreciation: z.number(),
+    depreciationPeriods: z.array(BuildingAppraisalDepreciationPeriodDto),
+  })
+  .passthrough();
+const BuildingAppraisalSurfaceDto = z
+  .object({
+    id: z.string().uuid(),
+    fromFloorNumber: z.number().int(),
+    toFloorNumber: z.number().int(),
+    floorType: z.string().nullable(),
+    floorStructureType: z.string().nullable(),
+    floorStructureTypeOther: z.string().nullable(),
+    floorSurfaceType: z.string().nullable(),
+    floorSurfaceTypeOther: z.string().nullable(),
+  })
   .passthrough();
 const GetLandAndBuildingPropertyResponse = z
   .object({
@@ -2587,6 +2700,7 @@ const GetLandAndBuildingPropertyResponse = z
     pondDepth: z.number().nullable(),
     hasBuilding: z.boolean().nullable(),
     hasBuildingOther: z.string().nullable(),
+    titles: z.array(LandTitleItemData).nullable(),
     buildingNumber: z.string().nullable(),
     modelName: z.string().nullable(),
     builtOnTitleNumber: z.string().nullable(),
@@ -2636,6 +2750,8 @@ const GetLandAndBuildingPropertyResponse = z
     forcedSalePrice: z.number().nullable(),
     landRemark: z.string().nullable(),
     buildingRemark: z.string().nullable(),
+    depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
+    surfaces: z.array(BuildingAppraisalSurfaceDto),
   })
   .passthrough();
 const UpdateGalleryPhotoRequest = z
@@ -2849,6 +2965,8 @@ const UpdateBuildingPropertyRequest = z
     sellingPrice: z.number().nullable().default(null),
     forcedSalePrice: z.number().nullable().default(null),
     remark: z.string().nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -2913,16 +3031,68 @@ const GetBuildingPropertyResponse = z
     sellingPrice: z.number().nullable(),
     forcedSalePrice: z.number().nullable(),
     remark: z.string().nullable(),
+    depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
+    surfaces: z.array(BuildingAppraisalSurfaceDto),
   })
+  .passthrough();
+const UpdateAppendixLayoutRequest = z.object({ layoutColumns: z.number().int() }).passthrough();
+const UpdateAppendixLayoutResult = z
+  .object({ appendixId: z.string().uuid(), layoutColumns: z.number().int() })
   .passthrough();
 const UnsetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
 const UnmarkPhotoFromReportResult = z.object({ id: z.string().uuid() }).passthrough();
 const SetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
+const LawAndRegulationImageInput = z
+  .object({
+    id: z.string().uuid().nullable(),
+    documentId: z.string().uuid(),
+    displaySequence: z.number().int(),
+    fileName: z.string(),
+    filePath: z.string(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  })
+  .passthrough();
+const LawAndRegulationItemInput = z
+  .object({
+    id: z.string().uuid().nullable(),
+    headerCode: z.string(),
+    remark: z.string().nullable(),
+    images: z.array(LawAndRegulationImageInput),
+  })
+  .passthrough();
+const SaveLawAndRegulationsRequest = z
+  .object({ items: z.array(LawAndRegulationItemInput) })
+  .passthrough();
+const SaveLawAndRegulationsResponse = z
+  .object({ appraisalId: z.string().uuid(), itemCount: z.number().int(), success: z.boolean() })
+  .passthrough();
+const LawAndRegulationImageDto = z
+  .object({
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+    displaySequence: z.number().int(),
+    fileName: z.string(),
+    filePath: z.string(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  })
+  .passthrough();
+const LawAndRegulationDto = z
+  .object({
+    id: z.string().uuid(),
+    headerCode: z.string(),
+    remark: z.string().nullable(),
+    images: z.array(LawAndRegulationImageDto),
+  })
+  .passthrough();
+const GetLawAndRegulationsResult = z.object({ items: z.array(LawAndRegulationDto) }).passthrough();
 const ReorderPropertiesInGroupRequest = z
   .object({ orderedPropertyIds: z.array(z.string().uuid()) })
   .passthrough();
 const ReorderPropertiesInGroupResponse = z.object({ success: z.boolean() }).passthrough();
 const RemovePropertyFromGroupResponse = z.object({ success: z.boolean() }).passthrough();
+const RemoveAppendixDocumentResult = z.object({ success: z.boolean() }).passthrough();
 const MovePropertyToGroupRequest = z
   .object({ targetGroupId: z.string().uuid(), targetPosition: z.number().int().nullable() })
   .passthrough();
@@ -2996,7 +3166,7 @@ const GalleryPhotoDto = z
     uploadedAt: z.string().datetime({ offset: true }),
     isUsedInReport: z.boolean(),
     reportSection: z.string().nullable(),
-    photoTopicId: z.string().uuid().nullable(),
+    photoTopicIds: z.array(z.string().uuid()),
   })
   .passthrough();
 const GetGalleryPhotosResult = z.object({ photos: z.array(GalleryPhotoDto) }).passthrough();
@@ -3010,7 +3180,7 @@ const AddGalleryPhotoRequest = z
     latitude: z.number().nullish().default(null),
     longitude: z.number().nullish().default(null),
     capturedAt: z.string().datetime({ offset: true }).nullish().default(null),
-    photoTopicId: z.string().uuid().nullish().default(null),
+    photoTopicIds: z.array(z.string().uuid()).nullish().default(null),
   })
   .passthrough();
 const AddGalleryPhotoResponse = z
@@ -3077,6 +3247,28 @@ const GetAppraisalByIdResponse = z
     updatedBy: z.string().nullable(),
   })
   .partial()
+  .passthrough();
+const AppendixDocumentDto = z
+  .object({
+    id: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
+    documentId: z.string().uuid(),
+    displaySequence: z.number().int(),
+  })
+  .passthrough();
+const AppraisalAppendixDto = z
+  .object({
+    id: z.string().uuid(),
+    appendixTypeId: z.string().uuid(),
+    appendixTypeCode: z.string(),
+    appendixTypeName: z.string(),
+    sortOrder: z.number().int(),
+    layoutColumns: z.number().int(),
+    documents: z.array(AppendixDocumentDto),
+  })
+  .passthrough();
+const GetAppraisalAppendicesResponse = z
+  .object({ items: z.array(AppraisalAppendixDto) })
   .passthrough();
 const CreateVesselPropertyRequest = z
   .object({
@@ -3399,7 +3591,7 @@ const CreateLandAndBuildingPropertyRequest = z
     buildingAge: z.number().int().nullable().default(null),
     constructionYear: z.number().int().nullable().default(null),
     residentialRemark: z.string().nullable().default(null),
-    buildingCondition: z.string().nullable().default(null),
+    buildingConditionType: z.string().nullable().default(null),
     isUnderConstruction: z.boolean().nullable().default(null),
     constructionCompletionPercent: z.number().nullable().default(null),
     constructionLicenseExpirationDate: z
@@ -3414,8 +3606,8 @@ const CreateLandAndBuildingPropertyRequest = z
     buildingAreaUnit: z.string().nullable().default(null),
     usableArea: z.number().nullable().default(null),
     numberOfFloors: z.number().int().nullable().default(null),
-    buildingMaterial: z.string().nullable().default(null),
-    buildingStyle: z.string().nullable().default(null),
+    buildingMaterialType: z.string().nullable().default(null),
+    buildingStyleType: z.string().nullable().default(null),
     isResidential: z.boolean().nullable().default(null),
     constructionStyleType: z.string().nullable().default(null),
     constructionStyleRemark: z.string().nullable().default(null),
@@ -3452,6 +3644,8 @@ const CreateLandAndBuildingPropertyRequest = z
     landRemark: z.string().nullable().default(null),
     buildingRemark: z.string().nullable().default(null),
     titles: z.array(LandTitleItemRequest).nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -3589,6 +3783,8 @@ const CreateBuildingPropertyRequest = z
     sellingPrice: z.number().nullable().default(null),
     forcedSalePrice: z.number().nullable().default(null),
     remark: z.string().nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -3596,13 +3792,19 @@ const CreateBuildingPropertyResponse = z
   .object({ propertyId: z.string().uuid(), detailId: z.string().uuid() })
   .passthrough();
 const AssignPhotoToTopicRequest = z
-  .object({ photoTopicId: z.string().uuid().nullable() })
+  .object({ photoTopicIds: z.array(z.string().uuid()) })
   .passthrough();
 const AssignPhotoToTopicResult = z
-  .object({ photoId: z.string().uuid(), photoTopicId: z.string().uuid().nullable() })
+  .object({ photoId: z.string().uuid(), photoTopicIds: z.array(z.string().uuid()) })
   .passthrough();
 const AddPropertyToGroupRequest = z.object({ propertyId: z.string().uuid() }).passthrough();
 const AddPropertyToGroupResponse = z.object({ success: z.boolean() }).passthrough();
+const AddAppendixDocumentRequest = z
+  .object({ galleryPhotoId: z.string().uuid(), displaySequence: z.number().int() })
+  .passthrough();
+const AddAppendixDocumentResult = z
+  .object({ documentId: z.string().uuid(), appendixId: z.string().uuid() })
+  .passthrough();
 const RescheduleAppointmentRequest = z
   .object({
     changedBy: z.string(),
@@ -3676,34 +3878,6 @@ const SimulateTransitionCompletedRequest = z
   })
   .partial()
   .passthrough();
-const UpdateMarketComparableRequest = z
-  .object({
-    factorData: z.array(FactorDataDto),
-    note: z.string().nullable().optional(),
-    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
-    sourceInfo: z.string().nullable().optional(),
-    surveyName: z.string(),
-    templateId: z.string().uuid().nullable().optional(),
-  })
-  .passthrough();
-const GetMarketComparableTemplateFactorResponse = z
-  .object({
-    factorId: z.string().uuid(),
-    factorCode: z.string(),
-    value: z.any(),
-    otherRemarks: z.string(),
-    factorName: z.string(),
-    fieldName: z.string(),
-    dataType: z.string(),
-    fieldLength: z.coerce.number(),
-    fieldDecimal: z.coerce.number(),
-    parameterGroup: z.string(),
-    isActive: z.boolean(),
-    displaySeq: z.coerce.number().int(),
-  })
-  .passthrough();
-const DeleteMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-const UpdateMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 
 export const schemas = {
   AddressDto,
@@ -3738,6 +3912,9 @@ export const schemas = {
   CreateRequestResponse,
   CreateDraftRequestRequest,
   CreateDraftRequestResponse,
+  DocumentItemDto,
+  DocumentSectionDto,
+  GetRequestDocumentsByRequestIdResponse,
   UpdateRequestCommentRequest,
   UpdateRequestCommentResponse,
   RemoveRequestCommentResponse,
@@ -3774,6 +3951,7 @@ export const schemas = {
   NotificationType,
   NotificationDto,
   GetUserNotificationsResponse,
+  ParameterDto,
   DocumentLink,
   Input,
   CreateUploadSessionResponse,
@@ -3883,6 +4061,13 @@ export const schemas = {
   CreateMarketComparableTemplateResponse,
   AddFactorToTemplateRequest,
   AddFactorToTemplateResponse,
+  UpdateMarketComparableRequest,
+  UpdateMarketComparableResponse,
+  FactorDataType,
+  FactorDataDto,
+  ImageDto,
+  MarketComparableDetailDto,
+  GetMarketComparableByIdResponse,
   FactorDataItem,
   SetMarketComparableFactorDataRequest,
   SetMarketComparableFactorDataResponse,
@@ -3891,10 +4076,7 @@ export const schemas = {
   GetMarketComparablesResponse,
   CreateMarketComparableRequest,
   CreateMarketComparableResponse,
-  FactorDataDto,
-  ImageDto,
-  MarketComparableDetailDto,
-  GetMarketComparableByIdResponse,
+  DeleteMarketComparableResponse,
   AddMarketComparableImageRequest,
   AddMarketComparableImageResponse,
   UpdateMarketComparableFactorRequest,
@@ -3966,7 +4148,13 @@ export const schemas = {
   LandTitleItemData,
   UpdateLandPropertyRequest,
   GetLandPropertyResponse,
+  DepreciationPeriodItemData,
+  DepreciationItemData,
+  SurfaceItemData,
   UpdateLandAndBuildingPropertyRequest,
+  BuildingAppraisalDepreciationPeriodDto,
+  BuildingAppraisalDepreciationDetailDto,
+  BuildingAppraisalSurfaceDto,
   GetLandAndBuildingPropertyResponse,
   UpdateGalleryPhotoRequest,
   UpdateGalleryPhotoResponse,
@@ -3974,12 +4162,22 @@ export const schemas = {
   GetCondoPropertyResponse,
   UpdateBuildingPropertyRequest,
   GetBuildingPropertyResponse,
+  UpdateAppendixLayoutRequest,
+  UpdateAppendixLayoutResult,
   UnsetPropertyThumbnailResult,
   UnmarkPhotoFromReportResult,
   SetPropertyThumbnailResult,
+  LawAndRegulationImageInput,
+  LawAndRegulationItemInput,
+  SaveLawAndRegulationsRequest,
+  SaveLawAndRegulationsResponse,
+  LawAndRegulationImageDto,
+  LawAndRegulationDto,
+  GetLawAndRegulationsResult,
   ReorderPropertiesInGroupRequest,
   ReorderPropertiesInGroupResponse,
   RemovePropertyFromGroupResponse,
+  RemoveAppendixDocumentResult,
   MovePropertyToGroupRequest,
   MovePropertyToGroupResponse,
   MarkPhotoForReportRequest,
@@ -4005,6 +4203,9 @@ export const schemas = {
   CreateAppraisalRequest,
   CreateAppraisalResponse,
   GetAppraisalByIdResponse,
+  AppendixDocumentDto,
+  AppraisalAppendixDto,
+  GetAppraisalAppendicesResponse,
   CreateVesselPropertyRequest,
   CreateVesselPropertyResponse,
   CreateVehiclePropertyRequest,
@@ -4024,6 +4225,8 @@ export const schemas = {
   AssignPhotoToTopicResult,
   AddPropertyToGroupRequest,
   AddPropertyToGroupResponse,
+  AddAppendixDocumentRequest,
+  AddAppendixDocumentResult,
   RescheduleAppointmentRequest,
   AppointmentDto2,
   GetAppointmentsResponse,
@@ -4034,10 +4237,6 @@ export const schemas = {
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
-  UpdateMarketComparableRequest,
-  DeleteMarketComparableResponse,
-  GetMarketComparableTemplateFactorResponse,
-  UpdateMarketComparableResponse,
 };
 
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
@@ -4120,9 +4319,6 @@ export type GetMarketComparableFactorsResponseType = z.infer<
 >;
 export type UpdateMarketComparableRequestType = z.infer<typeof UpdateMarketComparableRequest>;
 export type UpdateMarketComparableResponseType = z.infer<typeof UpdateMarketComparableResponse>;
-export type GetMarketComparableTemplateFactorResponseType = z.infer<
-  typeof GetMarketComparableTemplateFactorResponse
->;
 export type GetMarketComparableTemplateByIdResponseType = z.infer<
   typeof GetMarketComparableTemplateByIdResponse
 >;

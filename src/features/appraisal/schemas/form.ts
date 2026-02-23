@@ -108,6 +108,38 @@ export const createLandForm = z.object({
   remark: z.string().nullable().optional(),
 });
 
+const surfaceFormItem = z.object({
+  fromFloorNumber: z.coerce.number().nullable().optional(),
+  toFloorNumber: z.coerce.number().nullable().optional(),
+  floorType: z.string().nullable().optional(),
+  floorStructureType: z.string().nullable().optional(),
+  floorSurfaceType: z.string().nullable().optional(),
+});
+
+const depreciationPeriodFormItem = z.object({
+  atYear: z.coerce.number().nullable().optional(),
+  toYear: z.coerce.number().nullable().optional(),
+  depreciationPerYear: z.coerce.number().nullable().optional(),
+  totalDepreciationPct: z.coerce.number().nullable().optional(),
+  priceDepreciation: z.coerce.number().nullable().optional(),
+});
+
+const depreciationFormItem = z.object({
+  areaDescription: z.string().nullable().optional(),
+  area: z.coerce.number().nullable().optional(),
+  isBuilding: z.boolean().nullable().optional(),
+  year: z.coerce.number().nullable().optional(),
+  pricePerSqMBeforeDepreciation: z.coerce.number().nullable().optional(),
+  priceBeforeDepreciation: z.coerce.number().nullable().optional(),
+  depreciationMethod: z.string().nullable().optional(),
+  depreciationYearPct: z.coerce.number().nullable().optional(),
+  totalDepreciationPct: z.coerce.number().nullable().optional(),
+  priceDepreciation: z.coerce.number().nullable().optional(),
+  pricePerSqMAfterDepreciation: z.coerce.number().nullable().optional(),
+  priceAfterDepreciation: z.coerce.number().nullable().optional(),
+  depreciationPeriods: z.array(depreciationPeriodFormItem).nullable().optional(),
+});
+
 export const createBuildingForm = z.object({
   ownerName: z.string().min(1, 'Owner name is required.'),
   propertyName: z.string().nullable(),
@@ -119,7 +151,7 @@ export const createBuildingForm = z.object({
   buildingConditionType: z.string(),
   isUnderConstruction: z.boolean(),
   constructionCompletionPercent: z.coerce.number(),
-  constructionLicenseExpirationDate: z.string().datetime({ offset: true }),
+  constructionLicenseExpirationDate: z.string().datetime({ local: true, offset: true }),
   isAppraisable: z.boolean(),
   hasObligation: z.boolean(),
   obligationDetails: z.string(),
@@ -161,6 +193,8 @@ export const createBuildingForm = z.object({
   sellingPrice: z.coerce.number().nullable(),
   forcedSalePrice: z.coerce.number().nullable(),
   remark: z.string().nullable(),
+  surfaces: z.array(surfaceFormItem).nullable().optional(),
+  depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
 });
 
 export const createCondoForm = z.object({
@@ -328,7 +362,7 @@ export const createLandAndBuildingForm = z.object({
   buildingConditionType: z.string(),
   isUnderConstruction: z.boolean(),
   constructionCompletionPercent: z.coerce.number(),
-  constructionLicenseExpirationDate: z.string().datetime({ offset: true }),
+  constructionLicenseExpirationDate: z.string().datetime({ local: true, offset: true }),
   isAppraisable: z.boolean(),
   buildingType: z.string().nullable(),
   buildingTypeOther: z.string().nullable(),
@@ -368,6 +402,8 @@ export const createLandAndBuildingForm = z.object({
   sellingPrice: z.coerce.number().nullable(),
   forcedSalePrice: z.coerce.number().nullable(),
   remark: z.string().nullable(),
+  surfaces: z.array(surfaceFormItem).nullable().optional(),
+  depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
 });
 
 export const landAndBuildingPMAForm = z.object({
@@ -426,11 +462,11 @@ export const factorDataDto = z
   })
   .passthrough();
 
-export const createMarketSurveyForm = z
+export const createMarketComparableForm = z
   .object({
     factorData: z.array(factorDataDto).nullable().optional(),
     note: z.string().nullable().optional(),
-    infoDateTime: z.string().datetime({ local: true }).nullable().optional(),
+    infoDateTime: z.string().datetime({ local: true, offset: true }).nullable().optional(),
     sourceInfo: z.string().nullable().optional(),
     surveyName: z.string(),
     templateId: z.string().uuid().nullable().optional(),
@@ -444,7 +480,7 @@ export type createLandFormType = z.infer<typeof createLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
 export type landAndBuildingPMAFormType = z.infer<typeof landAndBuildingPMAForm>;
 export type condoPMAFormType = z.infer<typeof condoPMAForm>;
-export type createMarketSurveyFormType = z.infer<typeof createMarketSurveyForm>;
+export type createMarketComparableFormType = z.infer<typeof createMarketComparableForm>;
 
 //===============================================================
 
@@ -586,6 +622,8 @@ export const createBuildingFormDefault: createBuildingFormType = {
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',
+  surfaces: [],
+  depreciationDetails: [],
 };
 
 export const createCondoFormDefault: createCondoFormType = {
@@ -782,6 +820,8 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',
+  surfaces: [],
+  depreciationDetails: [],
 };
 
 export const landAndBuildingPMAFormDefault: landAndBuildingPMAFormType = {
@@ -823,7 +863,7 @@ export const condoPMAFormDefault: condoPMAFormType = {
   provinceName: '',
 };
 
-export const createMarketSurveyFormDefault: createMarketSurveyFormType = {
+export const createMarketComparableFormDefault: createMarketComparableFormType = {
   factorData: [],
   surveyName: '',
   templateId: '',

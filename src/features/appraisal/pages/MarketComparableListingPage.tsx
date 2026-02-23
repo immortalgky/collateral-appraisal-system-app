@@ -1,20 +1,20 @@
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import MarketSurveyTable from '../components/tables/MarketSurveyTable';
+import MarketComparableTable from '../components/tables/MarketComparableTable';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
-import { useGetMarketSurvey } from '../api';
+import { useGetMarketComparables } from '../api/marketComparable';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
 
-const ListMarketSurveyPage = () => {
+const MarketComparableListingPage = () => {
   const { isOpen, onToggle } = useDisclosure();
-  // Fetch market survey data
-  const { data: marketSurvey, isLoading } = useGetMarketSurvey('appraisalId');
+  // Fetch market comparable data
+  const { data: marketComparables, isLoading } = useGetMarketComparables('appraisalId');
   const collateralTypes = useParametersByGroup('collateralType');
-  const items = marketSurvey?.result?.items;
+  const items = marketComparables?.result?.items;
 
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -33,7 +33,7 @@ const ListMarketSurveyPage = () => {
     return parameters?.find(p => p.parameterGroup === group)?.values ?? [];
   };
 
-  // Handle selection of market survey for editing
+  // Handle selection of market comparable for editing
   const handleEditSelect = (item: any) => {
     navigate(`/market-comparable/detail?id=${item.id}`, {
       state: {
@@ -41,7 +41,7 @@ const ListMarketSurveyPage = () => {
       },
     });
   };
-  // Handle selection of collateral type for creating new market survey
+  // Handle selection of collateral type for creating new market comparable
   const handleCreateSelect = (item: any) => {
     navigate(`/market-comparable/detail?propertyType=${item.code}`);
     setIsOpenModal(false);
@@ -58,9 +58,9 @@ const ListMarketSurveyPage = () => {
   return (
     <div>
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">Market Surveys</h3>
+        <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
         <p className="text-xs text-gray-500 mt-0.5">
-          {items?.length} survey{items?.length !== 1 ? 's' : ''} linked to this appraisal
+          {items?.length} comparable{items?.length !== 1 ? 's' : ''} linked to this appraisal
         </p>
       </div>
 
@@ -74,7 +74,7 @@ const ListMarketSurveyPage = () => {
           <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden pt-3">
             <div className="flex-auto flex flex-col gap-6">
               <Section anchor className="flex flex-col gap-6">
-                <MarketSurveyTable headers={headers} data={items} onSelect={handleEditSelect} />
+                <MarketComparableTable headers={headers} data={items} onSelect={handleEditSelect} />
               </Section>
             </div>
             <div className="border-t border-gray-100 sticky bottom-0 pt-3">
@@ -82,13 +82,13 @@ const ListMarketSurveyPage = () => {
                 type="button"
                 onClick={handleOpenModal}
                 className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
-                    border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1 
+                    border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1
                     transition-colors rounded-lg"
               >
                 <div className="w-6 h-6 rounded-full bg-neutral-5 flex items-center justify-center">
                   <Icon style="solid" name="circle-plus" className="size-3 text-neutral-5" />
                 </div>
-                Add market survey
+                Add market comparable
               </button>
             </div>
             {isOpenModal && (
@@ -121,10 +121,10 @@ const parameters = {
 };
 
 const headers = [
-  { name: 'surveyNumber', label: 'Survey No.' },
-  { name: 'surveyName', label: 'Survey Name' },
+  { name: 'comparableNumber', label: 'Comparable No.' },
+  { name: 'surveyName', label: 'Comparable Name' },
   { name: 'propertyType', label: 'Property Type' },
-  { name: 'createdOn', label: 'Create On' },
+  { name: 'createdOn', label: 'Created On' },
 ];
 
-export default ListMarketSurveyPage;
+export default MarketComparableListingPage;

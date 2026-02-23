@@ -64,6 +64,7 @@ export interface UploadDocumentResult {
   documentId: string;
   fileName: string;
   fileSize: number;
+  storageUrl: string;
 }
 
 export interface UploadDocumentParams {

@@ -1,10 +1,8 @@
 import { Icon } from '@/shared/components';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
-import { useDeleteMarketSurvey } from '../../api';
 
-interface MarketSurveyItem {
+interface MarketComparableItem {
   id: string;
   comparableNumber: string;
   surveyName: string;
@@ -15,21 +13,21 @@ interface MarketSurveyItem {
   createdOn: string;
 }
 
-interface MarketSurveyTableProps {
-  headers: MarketSurveyTableHeader[];
-  data: MarketSurveyItem[];
+interface MarketComparableTableProps {
+  headers: MarketComparableTableHeader[];
+  data: MarketComparableItem[];
   parameters?: [];
   onSelect: (item: any) => void;
 }
 
-type MarketSurveyTableHeader = MarketSurveyTableRegularHeader;
+type MarketComparableTableHeader = MarketComparableTableRegularHeader;
 
-interface MarketSurveyTableRegularHeader {
+interface MarketComparableTableRegularHeader {
   name: string;
   label: string;
 }
 
-const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) => {
+const MarketComparableTable = ({ headers, data, onSelect }: MarketComparableTableProps) => {
   const isEmpty = !data || data.length === 0;
 
   // Delete confirmation state
@@ -37,24 +35,9 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
     isOpen: false,
     id: null,
   });
-  const deleteMarket = useDeleteMarketSurvey();
 
   const handleDelete = (id: string) => {
     setDeleteConfirm({ isOpen: true, id: id });
-  };
-
-  const handleConfirmDelete = () => {
-    if (deleteConfirm.id) {
-      deleteMarket.mutate(deleteConfirm.id, {
-        onSuccess: () => {
-          toast.success('Market survey deleted successfully');
-        },
-        onError: (error: any) => {
-          toast.error(error.apiError?.detail || 'Failed to delete market. Please try again.');
-        },
-      });
-      setDeleteConfirm({ isOpen: false, id: null });
-    }
   };
 
   return (
@@ -124,7 +107,7 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
-        onConfirm={handleConfirmDelete}
+        onConfirm={() => {}}
         title="Delete Market Comparable"
         message="Are you sure you want to delete this market comparable? This action cannot be undone."
         confirmText="Delete"
@@ -135,4 +118,4 @@ const MarketSurveyTable = ({ headers, data, onSelect }: MarketSurveyTableProps) 
   );
 };
 
-export default MarketSurveyTable;
+export default MarketComparableTable;

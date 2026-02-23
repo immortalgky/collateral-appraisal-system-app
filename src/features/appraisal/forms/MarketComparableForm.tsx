@@ -1,11 +1,13 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useEffect, useState } from 'react';
-import type { GetMarketComparableTemplateFactorResponseType } from '@/shared/schemas/v1';
-import { useGetMarketSurveyTemplateById, useGetMarketSurveyTemplateByPropertyType } from '../api';
+import {
+  useGetMarketComparableTemplateById,
+  useGetMarketComparableTemplateByPropertyType,
+} from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
 
-const MarketSurveyForm = () => {
+const MarketComparableForm = () => {
   const { getValues, setValue } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
   const [searchParams] = useSearchParams();
@@ -16,36 +18,37 @@ const MarketSurveyForm = () => {
       name: 'propertyType',
     }) || searchParams.get('propertyType');
 
-  // Fetch survey templates based on property type
-  const { data, isLoading } = useGetMarketSurveyTemplateByPropertyType(propertyType || undefined);
-
+  // Fetch comparable templates based on property type
+  const { data, isLoading } = useGetMarketComparableTemplateByPropertyType(
+    propertyType || undefined,
+  );
   const templates = data?.templates ?? [];
 
-  // Prepare survey template options for dropdown
-  const surveyTemplateOptions =
+  // Prepare comparable template options for dropdown
+  const comparableTemplateOptions =
     templates.map((t: any) => ({
       label: t.templateName,
       value: t.templateCode,
     })) ?? [];
 
-  // Watch survey template code to fetch factors
+  // Watch comparable template code to fetch factors
   const templateCode = useWatch({
     name: 'templateCode',
   });
 
   const selectedTemplate = templates?.find(t => t.templateCode === templateCode);
-  const { data: template, isLoading: getMarketLoading } = useGetMarketSurveyTemplateById(
+  const { data: template, isLoading: getMarketLoading } = useGetMarketComparableTemplateById(
     selectedTemplate?.id,
   );
   const factors = template?.template.factors ?? [];
 
-  // Watch market survey data to determine edit mode
+  // Watch market comparable data to determine edit mode
   const factorData = useWatch({
     name: 'factorData',
   });
   const isEditMode = !!factorData?.length;
 
-  // Initialize market surveytemplate code
+  // Initialize market comparable template code
   useEffect(() => {
     if (isEditMode) return;
     if (!templates?.length) return;
@@ -68,7 +71,7 @@ const MarketSurveyForm = () => {
     {} as Record<string, { value: string; label: string }[]>,
   );
 
-  // Initialize market survey data field
+  // Initialize market comparable data field
   useEffect(() => {
     if (!templateCode) return;
     if (!factors.length) return;
@@ -78,7 +81,7 @@ const MarketSurveyForm = () => {
 
     const oldData = getValues('factorData') ?? [];
 
-    const defaultData = defaultMarketSurveyData(factors, oldData);
+    const defaultData = defaultMarketComparableData(factors, oldData);
 
     setValue('factorData', defaultData, { shouldDirty: true });
   }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue]);
@@ -112,7 +115,7 @@ const MarketSurveyForm = () => {
       type: 'dropdown',
       name: 'templateCode',
       label: '',
-      options: surveyTemplateOptions,
+      options: comparableTemplateOptions,
       wrapperClassName: 'col-span-6',
       required: true,
     },
@@ -147,7 +150,7 @@ const MarketSurveyForm = () => {
       fields: staticFields.filter(f => f.name === 'templateCode'),
     },
     {
-      label: 'Survey Name',
+      label: 'Comparable Name',
       fields: staticFields.filter(f => f.name === 'surveyName'),
     },
     {
@@ -216,7 +219,7 @@ const MarketSurveyForm = () => {
 };
 
 const buildFormField = (
-  fac: GetMarketComparableTemplateFactorResponseType,
+  fac: any,
   index: number,
   parameterOptions: Record<string, { value: string; label: string }[]>,
 ): FormField => {
@@ -339,10 +342,7 @@ const mockParameterOptions = [
   },
 ];
 
-const defaultMarketSurveyData = (
-  newFactors: GetMarketComparableTemplateFactorResponseType[],
-  oldData: any[] = [],
-) => {
+const defaultMarketComparableData = (newFactors: any[], oldData: any[] = []) => {
   return newFactors.map(fac => {
     const old = oldData.find(d => d.factorCode === fac.factorCode);
 
@@ -366,4 +366,4 @@ const defaultMarketSurveyData = (
   });
 };
 
-export default MarketSurveyForm;
+export default MarketComparableForm;

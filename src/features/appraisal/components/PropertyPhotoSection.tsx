@@ -179,7 +179,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
             longitude: null,
             capturedAt: null,
             photoCategory: null,
-            photoTopicId: null,
+            photoTopicIds: null,
           });
 
           const galleryPhotoId = galleryResult.id;

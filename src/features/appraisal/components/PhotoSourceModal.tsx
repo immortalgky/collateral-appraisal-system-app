@@ -7,6 +7,7 @@ interface PhotoSourceModalProps {
   onUploadFromDevice: (files: FileList) => void;
   onChooseFromGallery: () => void;
   title?: string;
+  accept?: string;
 }
 
 export const PhotoSourceModal = ({
@@ -15,6 +16,7 @@ export const PhotoSourceModal = ({
   onUploadFromDevice,
   onChooseFromGallery,
   title = 'Add Photos',
+  accept = 'image/*',
 }: PhotoSourceModalProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,9 +76,7 @@ export const PhotoSourceModal = ({
               <Icon name="upload" className="text-xl text-primary" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">
-                Upload from Device
-              </p>
+              <p className="text-sm font-medium text-gray-900">Upload from Device</p>
               <p className="text-xs text-gray-500 mt-0.5">
                 Select photos from your computer or device
               </p>
@@ -97,12 +97,8 @@ export const PhotoSourceModal = ({
               <Icon name="images" className="text-xl text-purple-600" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">
-                Choose from Gallery
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Select from previously uploaded photos
-              </p>
+              <p className="text-sm font-medium text-gray-900">Choose from Gallery</p>
+              <p className="text-xs text-gray-500 mt-0.5">Select from previously uploaded photos</p>
             </div>
             <Icon
               name="chevron-right"
@@ -115,7 +111,7 @@ export const PhotoSourceModal = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={accept}
           multiple
           onChange={handleFileSelect}
           className="hidden"

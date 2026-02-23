@@ -11,7 +11,7 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CondoDetailForm from '../forms/CondoDetailForm';
-import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty } from '../api';
+import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty, } from '../api/property';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
 import {
@@ -8,7 +9,6 @@ import {
   PhotosTab,
   PropertiesTab,
 } from '../components/tabs';
-import ListMarketSurveyPage from './ListMarketSurveyPage';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws';
 type ViewMode = 'grid' | 'list';
@@ -27,8 +27,14 @@ const TABS: Tab[] = [
   { id: 'laws', label: 'Laws', icon: 'gavel' },
 ];
 
+const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
+
 export default function PropertyInformationPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('properties');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabId | null;
+  const initialTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'properties';
+
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const renderTabContent = () => {
@@ -36,7 +42,7 @@ export default function PropertyInformationPage() {
       case 'properties':
         return <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} />;
       case 'markets':
-        return <ListMarketSurveyPage />;
+        return <MarketsTab />;
       case 'gallery':
         return <GalleryTab />;
       case 'photos':

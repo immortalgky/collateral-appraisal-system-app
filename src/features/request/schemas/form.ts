@@ -38,7 +38,7 @@ const RequestDetailDto = z.object({
     dealerCode: z.string().nullable(),
   }),
   appointment: z.object({
-    appointmentDateTime: z.string().datetime({ local: true }),
+    appointmentDateTime: z.string().datetime({ local: true, offset: true }),
     appointmentLocation: z.string().min(1, 'Appointment location is required.'),
   }),
   fee: z.object({

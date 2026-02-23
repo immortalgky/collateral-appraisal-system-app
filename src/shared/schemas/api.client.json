@@ -480,6 +480,37 @@
         }
       }
     },
+    "/requests/{requestId}/documents": {
+      "get": {
+        "tags": ["Request Documents"],
+        "summary": "Get all documents for a request",
+        "description": "Retrieves all documents for a request, grouped by request-level and per-title sections.",
+        "operationId": "GetRequestDocumentsByRequestId",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRequestDocumentsByRequestIdResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/requests/{requestId}/comments/{commentId}": {
       "patch": {
         "tags": ["Request Comments"],
@@ -1452,9 +1483,12 @@
         }
       }
     },
-    "/parameter": {
+    "/parameters": {
       "get": {
-        "tags": ["Api"],
+        "tags": ["Parameter"],
+        "summary": "Get parameters",
+        "description": "Retrieve a list of parameters filtered by group, country, language, code, or active status.",
+        "operationId": "GetParameters",
         "parameters": [
           {
             "name": "ParId",
@@ -1517,7 +1551,27 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ParameterDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -4159,6 +4213,106 @@
         }
       }
     },
+    "/market-comparables/{id}": {
+      "put": {
+        "tags": ["MarketComparables"],
+        "summary": "Update an existing Market Comparable",
+        "description": "Updates an existing Market Comparable in the system.",
+        "operationId": "UpdateMarketComparable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMarketComparableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMarketComparableResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["MarketComparables"],
+        "summary": "Get market comparable by ID",
+        "description": "Retrieves a market comparable with full details including factor data and images.",
+        "operationId": "GetMarketComparableById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMarketComparableByIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/market-comparables/{id}/factor-data": {
       "put": {
         "tags": ["MarketComparables"],
@@ -4371,12 +4525,12 @@
         }
       }
     },
-    "/market-comparables/{id}": {
-      "get": {
+    "/market-comparable/{id}": {
+      "delete": {
         "tags": ["MarketComparables"],
-        "summary": "Get market comparable by ID",
-        "description": "Retrieves a market comparable with full details including factor data and images.",
-        "operationId": "GetMarketComparableById",
+        "summary": "Delete market comparable by ID",
+        "description": "Deletes a market comparable by its ID.",
+        "operationId": "DeleteMarketComparable",
         "parameters": [
           {
             "name": "id",
@@ -4394,7 +4548,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetMarketComparableByIdResponse"
+                  "$ref": "#/components/schemas/DeleteMarketComparableResponse"
                 }
               }
             }
@@ -7227,11 +7381,81 @@
         }
       }
     },
-    "/appraisals/{appraisalId}/gallery/property-links/{mappingId}/unset-thumbnail": {
+    "/appraisals/{appraisalId}/appendices/{appendixId}/layout": {
+      "put": {
+        "tags": ["Appendix"],
+        "summary": "Update appendix layout columns",
+        "description": "Updates the layout column count (1, 2, or 3) for a specific appendix.",
+        "operationId": "UpdateAppendixLayout",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appendixId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppendixLayoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateAppendixLayoutResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/properties/{propertyId}/photos/{photoId}/unset-thumbnail": {
       "put": {
         "tags": ["AppraisalGallery"],
         "summary": "Unset property thumbnail",
-        "description": "Removes the thumbnail designation from the specified photo mapping.",
+        "description": "Removes the thumbnail designation from the specified photo for the property.",
         "operationId": "UnsetPropertyThumbnail",
         "parameters": [
           {
@@ -7244,7 +7468,16 @@
             }
           },
           {
-            "name": "mappingId",
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
             "in": "path",
             "required": true,
             "schema": {
@@ -7390,11 +7623,11 @@
         }
       }
     },
-    "/appraisals/{appraisalId}/gallery/property-links/{mappingId}/set-thumbnail": {
+    "/appraisals/{appraisalId}/properties/{propertyId}/photos/{photoId}/set-thumbnail": {
       "put": {
         "tags": ["AppraisalGallery"],
         "summary": "Set property thumbnail",
-        "description": "Sets the specified photo mapping as the thumbnail for its property. Automatically unsets any existing thumbnail.",
+        "description": "Sets the specified photo as the thumbnail for the property. Automatically unsets any existing thumbnail.",
         "operationId": "SetPropertyThumbnail",
         "parameters": [
           {
@@ -7407,7 +7640,16 @@
             }
           },
           {
-            "name": "mappingId",
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
             "in": "path",
             "required": true,
             "schema": {
@@ -7423,6 +7665,106 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SetPropertyThumbnailResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/law-and-regulations": {
+      "put": {
+        "tags": ["LawAndRegulation"],
+        "summary": "Save law and regulations for an appraisal",
+        "description": "Batch saves all law and regulation entries. Items not in the request are deleted.",
+        "operationId": "SaveLawAndRegulations",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveLawAndRegulationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveLawAndRegulationsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["LawAndRegulation"],
+        "summary": "Get law and regulations for an appraisal",
+        "description": "Returns all law and regulation entries with their images for the given appraisal.",
+        "operationId": "GetLawAndRegulations",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLawAndRegulationsResult"
                 }
               }
             }
@@ -7552,6 +7894,65 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RemovePropertyFromGroupResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/appendices/{appendixId}/documents/{documentId}": {
+      "delete": {
+        "tags": ["Appendix"],
+        "summary": "Remove a document from an appendix",
+        "description": "Removes a document reference from the specified appendix.",
+        "operationId": "RemoveAppendixDocument",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appendixId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAppendixDocumentResult"
                 }
               }
             }
@@ -8207,6 +8608,37 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/appendices": {
+      "get": {
+        "tags": ["Appendix"],
+        "summary": "Get all appendices for an appraisal",
+        "description": "Returns all appendix entries with their documents, joined with appendix type names.",
+        "operationId": "GetAppraisalAppendices",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAppraisalAppendicesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisal/{appraisalId}/{propertyId}": {
       "delete": {
         "tags": ["Api"],
@@ -8700,7 +9132,7 @@
       "put": {
         "tags": ["PhotoTopic"],
         "summary": "Assign photo to topic",
-        "description": "Assigns a gallery photo to a topic, or unassigns it by passing null.",
+        "description": "Syncs a gallery photo's topic assignments. Pass desired topic IDs; old ones are removed, new ones are added.",
         "operationId": "AssignPhotoToTopic",
         "parameters": [
           {
@@ -8815,6 +9247,76 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/appendices/{appendixId}/documents": {
+      "post": {
+        "tags": ["Appendix"],
+        "summary": "Attach a document to an appendix",
+        "description": "Adds a document reference to the specified appendix.",
+        "operationId": "AddAppendixDocument",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "appendixId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddAppendixDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddAppendixDocumentResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9230,6 +9732,34 @@
           }
         }
       },
+      "AddAppendixDocumentRequest": {
+        "required": ["galleryPhotoId", "displaySequence"],
+        "type": "object",
+        "properties": {
+          "galleryPhotoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displaySequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AddAppendixDocumentResult": {
+        "required": ["documentId", "appendixId"],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appendixId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "AddApproachRequest": {
         "required": ["approachType"],
         "type": "object",
@@ -9556,9 +10086,12 @@
             "default": null,
             "nullable": true
           },
-          "photoTopicId": {
-            "type": "string",
-            "format": "uuid",
+          "photoTopicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
             "default": null,
             "nullable": true
           }
@@ -9786,6 +10319,24 @@
         },
         "nullable": true
       },
+      "AppendixDocumentDto": {
+        "required": ["id", "galleryPhotoId", "displaySequence"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "galleryPhotoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displaySequence": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "AppointmentDto": {
         "required": ["appointmentDateTime", "appointmentLocation"],
         "type": "object",
@@ -9875,6 +10426,48 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          }
+        }
+      },
+      "AppraisalAppendixDto": {
+        "required": [
+          "id",
+          "appendixTypeId",
+          "appendixTypeCode",
+          "appendixTypeName",
+          "sortOrder",
+          "layoutColumns",
+          "documents"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appendixTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appendixTypeCode": {
+            "type": "string"
+          },
+          "appendixTypeName": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "layoutColumns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppendixDocumentDto"
+            }
           }
         }
       },
@@ -10270,27 +10863,192 @@
         }
       },
       "AssignPhotoToTopicRequest": {
-        "required": ["photoTopicId"],
+        "required": ["photoTopicIds"],
         "type": "object",
         "properties": {
-          "photoTopicId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
+          "photoTopicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
       "AssignPhotoToTopicResult": {
-        "required": ["photoId", "photoTopicId"],
+        "required": ["photoId", "photoTopicIds"],
         "type": "object",
         "properties": {
           "photoId": {
             "type": "string",
             "format": "uuid"
           },
-          "photoTopicId": {
+          "photoTopicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "BuildingAppraisalDepreciationDetailDto": {
+        "required": [
+          "id",
+          "areaDescription",
+          "area",
+          "pricePerSqMBeforeDepreciation",
+          "priceBeforeDepreciation",
+          "year",
+          "isBuilding",
+          "depreciationMethod",
+          "depreciationYearPct",
+          "totalDepreciationPct",
+          "priceDepreciation",
+          "pricePerSqMAfterDepreciation",
+          "priceAfterDepreciation",
+          "depreciationPeriods"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "string",
-            "format": "uuid",
+            "format": "uuid"
+          },
+          "areaDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "area": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricePerSqMBeforeDepreciation": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceBeforeDepreciation": {
+            "type": "number",
+            "format": "double"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int16"
+          },
+          "isBuilding": {
+            "type": "boolean"
+          },
+          "depreciationMethod": {
+            "type": "string"
+          },
+          "depreciationYearPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalDepreciationPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceDepreciation": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricePerSqMAfterDepreciation": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceAfterDepreciation": {
+            "type": "number",
+            "format": "double"
+          },
+          "depreciationPeriods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingAppraisalDepreciationPeriodDto"
+            }
+          }
+        }
+      },
+      "BuildingAppraisalDepreciationPeriodDto": {
+        "required": [
+          "id",
+          "atYear",
+          "toYear",
+          "depreciationPerYear",
+          "totalDepreciationPct",
+          "priceDepreciation"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "atYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "depreciationPerYear": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalDepreciationPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceDepreciation": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "BuildingAppraisalSurfaceDto": {
+        "required": [
+          "id",
+          "fromFloorNumber",
+          "toFloorNumber",
+          "floorType",
+          "floorStructureType",
+          "floorStructureTypeOther",
+          "floorSurfaceType",
+          "floorSurfaceTypeOther"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromFloorNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toFloorNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "floorType": {
+            "type": "string",
+            "nullable": true
+          },
+          "floorStructureType": {
+            "type": "string",
+            "nullable": true
+          },
+          "floorStructureTypeOther": {
+            "type": "string",
+            "nullable": true
+          },
+          "floorSurfaceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "floorSurfaceTypeOther": {
+            "type": "string",
             "nullable": true
           }
         }
@@ -11422,6 +12180,22 @@
             "type": "string",
             "default": null,
             "nullable": true
+          },
+          "depreciationDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepreciationItemData"
+            },
+            "default": null,
+            "nullable": true
+          },
+          "surfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceItemData"
+            },
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -12518,7 +13292,7 @@
             "default": null,
             "nullable": true
           },
-          "buildingCondition": {
+          "buildingConditionType": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -12578,12 +13352,12 @@
             "default": null,
             "nullable": true
           },
-          "buildingMaterial": {
+          "buildingMaterialType": {
             "type": "string",
             "default": null,
             "nullable": true
           },
-          "buildingStyle": {
+          "buildingStyleType": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -12792,6 +13566,22 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LandTitleItemRequest"
+            },
+            "default": null,
+            "nullable": true
+          },
+          "depreciationDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepreciationItemData"
+            },
+            "default": null,
+            "nullable": true
+          },
+          "surfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceItemData"
             },
             "default": null,
             "nullable": true
@@ -13507,7 +14297,7 @@
         }
       },
       "CreateMarketComparableRequest": {
-        "required": ["comparableNumber", "propertyType", "province", "dataSource", "surveyDate"],
+        "required": ["comparableNumber", "propertyType", "surveyName"],
         "type": "object",
         "properties": {
           "comparableNumber": {
@@ -13516,72 +14306,16 @@
           "propertyType": {
             "type": "string"
           },
-          "province": {
+          "surveyName": {
             "type": "string"
           },
-          "dataSource": {
-            "type": "string"
-          },
-          "surveyDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "district": {
-            "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "subDistrict": {
-            "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "address": {
-            "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "latitude": {
-            "type": "number",
-            "format": "double",
-            "default": null,
-            "nullable": true
-          },
-          "longitude": {
-            "type": "number",
-            "format": "double",
-            "default": null,
-            "nullable": true
-          },
-          "transactionType": {
-            "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "transactionDate": {
+          "infoDateTime": {
             "type": "string",
             "format": "date-time",
             "default": null,
             "nullable": true
           },
-          "transactionPrice": {
-            "type": "number",
-            "format": "double",
-            "default": null,
-            "nullable": true
-          },
-          "pricePerUnit": {
-            "type": "number",
-            "format": "double",
-            "default": null,
-            "nullable": true
-          },
-          "unitType": {
-            "type": "string",
-            "default": null,
-            "nullable": true
-          },
-          "description": {
+          "sourceInfo": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -14391,6 +15125,15 @@
           }
         }
       },
+      "DeleteMarketComparableResponse": {
+        "required": ["isSuccess"],
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          }
+        }
+      },
       "DeletePermissionResponse": {
         "required": ["isSuccess"],
         "type": "object",
@@ -14427,6 +15170,114 @@
           }
         }
       },
+      "DepreciationItemData": {
+        "required": ["id", "depreciationMethod"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "depreciationMethod": {
+            "type": "string"
+          },
+          "areaDescription": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "area": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "year": {
+            "type": "integer",
+            "format": "int16",
+            "default": 0
+          },
+          "isBuilding": {
+            "type": "boolean",
+            "default": true
+          },
+          "pricePerSqMBeforeDepreciation": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "priceBeforeDepreciation": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "pricePerSqMAfterDepreciation": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "priceAfterDepreciation": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "depreciationYearPct": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "totalDepreciationPct": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "priceDepreciation": {
+            "type": "number",
+            "format": "double",
+            "default": 0
+          },
+          "depreciationPeriods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepreciationPeriodItemData"
+            },
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "DepreciationPeriodItemData": {
+        "required": [
+          "atYear",
+          "toYear",
+          "depreciationPerYear",
+          "totalDepreciationPct",
+          "priceDepreciation"
+        ],
+        "type": "object",
+        "properties": {
+          "atYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "depreciationPerYear": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalDepreciationPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceDepreciation": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "DocumentChecklistItemDto": {
         "type": "object",
         "properties": {
@@ -14449,6 +15300,64 @@
           },
           "notes": {
             "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "DocumentItemDto": {
+        "required": [
+          "id",
+          "documentId",
+          "documentType",
+          "fileName",
+          "filePath",
+          "notes",
+          "isRequired",
+          "uploadedBy",
+          "uploadedByName",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "documentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "filePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "uploadedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         }
@@ -14523,6 +15432,46 @@
           }
         }
       },
+      "DocumentSectionDto": {
+        "required": [
+          "titleId",
+          "titleIdentifier",
+          "collateralType",
+          "totalDocuments",
+          "uploadedDocuments",
+          "documents"
+        ],
+        "type": "object",
+        "properties": {
+          "titleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "titleIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "collateralType": {
+            "type": "string",
+            "nullable": true
+          },
+          "totalDocuments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uploadedDocuments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentItemDto"
+            }
+          }
+        }
+      },
       "DocumentTypeDto": {
         "type": "object",
         "properties": {
@@ -14574,6 +15523,32 @@
             "type": "string",
             "format": "uuid"
           },
+          "factorCode": {
+            "type": "string"
+          },
+          "factorName": {
+            "type": "string"
+          },
+          "fieldName": {
+            "type": "string"
+          },
+          "dataType": {
+            "$ref": "#/components/schemas/FactorDataType"
+          },
+          "fieldLength": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "fieldDecimal": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "parameterGroup": {
+            "type": "string",
+            "nullable": true
+          },
           "value": {
             "type": "string",
             "nullable": true
@@ -14602,6 +15577,9 @@
             "nullable": true
           }
         }
+      },
+      "FactorDataType": {
+        "enum": ["Text", "Numeric", "Dropdown", "Checkbox", "Date", "Radio"]
       },
       "FactorScoreDto": {
         "required": [
@@ -14764,7 +15742,7 @@
           "uploadedAt",
           "isUsedInReport",
           "reportSection",
-          "photoTopicId"
+          "photoTopicIds"
         ],
         "type": "object",
         "properties": {
@@ -14817,10 +15795,12 @@
             "type": "string",
             "nullable": true
           },
-          "photoTopicId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
+          "photoTopicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -14832,6 +15812,18 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AppointmentDto2"
+            }
+          }
+        }
+      },
+      "GetAppraisalAppendicesResult": {
+        "required": ["items"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppraisalAppendixDto"
             }
           }
         }
@@ -15008,7 +16000,9 @@
           "buildingInsurancePrice",
           "sellingPrice",
           "forcedSalePrice",
-          "remark"
+          "remark",
+          "depreciationDetails",
+          "surfaces"
         ],
         "type": "object",
         "properties": {
@@ -15273,6 +16267,18 @@
           "remark": {
             "type": "string",
             "nullable": true
+          },
+          "depreciationDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingAppraisalDepreciationDetailDto"
+            }
+          },
+          "surfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingAppraisalSurfaceDto"
+            }
           }
         }
       },
@@ -15919,6 +16925,7 @@
           "pondDepth",
           "hasBuilding",
           "hasBuildingOther",
+          "titles",
           "buildingNumber",
           "modelName",
           "builtOnTitleNumber",
@@ -15967,7 +16974,9 @@
           "sellingPrice",
           "forcedSalePrice",
           "landRemark",
-          "buildingRemark"
+          "buildingRemark",
+          "depreciationDetails",
+          "surfaces"
         ],
         "type": "object",
         "properties": {
@@ -16340,6 +17349,13 @@
             "type": "string",
             "nullable": true
           },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LandTitleItemData"
+            },
+            "nullable": true
+          },
           "buildingNumber": {
             "type": "string",
             "nullable": true
@@ -16566,6 +17582,18 @@
           "buildingRemark": {
             "type": "string",
             "nullable": true
+          },
+          "depreciationDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingAppraisalDepreciationDetailDto"
+            }
+          },
+          "surfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildingAppraisalSurfaceDto"
+            }
           }
         }
       },
@@ -16950,6 +17978,18 @@
               "$ref": "#/components/schemas/LandTitleItemData"
             },
             "nullable": true
+          }
+        }
+      },
+      "GetLawAndRegulationsResult": {
+        "required": ["items"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LawAndRegulationDto"
+            }
           }
         }
       },
@@ -17597,6 +18637,26 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestCommentDto"
+            }
+          }
+        }
+      },
+      "GetRequestDocumentsByRequestIdResponse": {
+        "required": ["totalDocuments", "totalUploaded", "sections"],
+        "type": "object",
+        "properties": {
+          "totalDocuments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalUploaded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentSectionDto"
             }
           }
         }
@@ -18755,6 +19815,134 @@
           }
         }
       },
+      "LawAndRegulationDto": {
+        "required": ["id", "headerCode", "remark", "images"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "headerCode": {
+            "type": "string"
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LawAndRegulationImageDto"
+            }
+          }
+        }
+      },
+      "LawAndRegulationImageDto": {
+        "required": [
+          "id",
+          "documentId",
+          "displaySequence",
+          "fileName",
+          "filePath",
+          "title",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displaySequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "LawAndRegulationImageInput": {
+        "required": [
+          "id",
+          "documentId",
+          "displaySequence",
+          "fileName",
+          "filePath",
+          "title",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displaySequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "LawAndRegulationItemInput": {
+        "required": ["id", "headerCode", "remark", "images"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "headerCode": {
+            "type": "string"
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LawAndRegulationImageInput"
+            }
+          }
+        }
+      },
       "LinkComparableRequest": {
         "required": ["marketComparableId", "displaySequence"],
         "type": "object",
@@ -18906,92 +20094,15 @@
           "propertyType": {
             "type": "string"
           },
-          "province": {
+          "surveyName": {
             "type": "string"
           },
-          "district": {
-            "type": "string",
-            "nullable": true
-          },
-          "subDistrict": {
-            "type": "string",
-            "nullable": true
-          },
-          "address": {
-            "type": "string",
-            "nullable": true
-          },
-          "latitude": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "longitude": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "transactionType": {
-            "type": "string",
-            "nullable": true
-          },
-          "transactionDate": {
+          "infoDateTime": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "transactionPrice": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "pricePerUnit": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "unitType": {
-            "type": "string",
-            "nullable": true
-          },
-          "dataSource": {
-            "type": "string"
-          },
-          "dataConfidence": {
-            "type": "string",
-            "nullable": true
-          },
-          "isVerified": {
-            "type": "boolean"
-          },
-          "verifiedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "verifiedBy": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "status": {
-            "type": "string"
-          },
-          "expiryDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "surveyDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "surveyedBy": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "description": {
+          "sourceInfo": {
             "type": "string",
             "nullable": true
           },
@@ -19049,60 +20160,21 @@
           "propertyType": {
             "type": "string"
           },
-          "province": {
+          "surveyName": {
             "type": "string"
           },
-          "district": {
-            "type": "string",
-            "nullable": true
-          },
-          "subDistrict": {
-            "type": "string",
-            "nullable": true
-          },
-          "address": {
-            "type": "string",
-            "nullable": true
-          },
-          "transactionType": {
-            "type": "string",
-            "nullable": true
-          },
-          "transactionDate": {
+          "infoDateTime": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "transactionPrice": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "pricePerUnit": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "unitType": {
+          "sourceInfo": {
             "type": "string",
             "nullable": true
           },
-          "dataSource": {
-            "type": "string"
-          },
-          "dataConfidence": {
+          "notes": {
             "type": "string",
             "nullable": true
-          },
-          "isVerified": {
-            "type": "boolean"
-          },
-          "status": {
-            "type": "string"
-          },
-          "surveyDate": {
-            "type": "string",
-            "format": "date-time"
           },
           "createdOn": {
             "type": "string",
@@ -19632,6 +20704,55 @@
           }
         }
       },
+      "ParameterDto": {
+        "required": [
+          "parId",
+          "group",
+          "country",
+          "language",
+          "code",
+          "description",
+          "isActive",
+          "seqNo"
+        ],
+        "type": "object",
+        "properties": {
+          "parId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "group": {
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "seqNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
       "PaymentHistoryDto": {
         "type": "object",
         "properties": {
@@ -20069,6 +21190,15 @@
           },
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "RemoveAppendixDocumentResult": {
+        "required": ["success"],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
           }
         }
       },
@@ -20683,6 +21813,35 @@
           }
         }
       },
+      "SaveLawAndRegulationsRequest": {
+        "required": ["items"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LawAndRegulationItemInput"
+            }
+          }
+        }
+      },
+      "SaveLawAndRegulationsResponse": {
+        "required": ["appraisalId", "itemCount", "success"],
+        "type": "object",
+        "properties": {
+          "appraisalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "SelectMethodResponse": {
         "required": ["id", "methodType", "status"],
         "type": "object",
@@ -21035,6 +22194,50 @@
           }
         }
       },
+      "SurfaceItemData": {
+        "required": ["id", "fromFloorNumber", "toFloorNumber"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "fromFloorNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toFloorNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "floorType": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "floorStructureType": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "floorStructureTypeOther": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "floorSurfaceType": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "floorSurfaceTypeOther": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
       "TaskItem": {
         "required": [
           "id",
@@ -21339,6 +22542,30 @@
           "mappingId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "UpdateAppendixLayoutRequest": {
+        "required": ["layoutColumns"],
+        "type": "object",
+        "properties": {
+          "layoutColumns": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UpdateAppendixLayoutResult": {
+        "required": ["appendixId", "layoutColumns"],
+        "type": "object",
+        "properties": {
+          "appendixId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "layoutColumns": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -21681,6 +22908,22 @@
           },
           "remark": {
             "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "depreciationDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepreciationItemData"
+            },
+            "default": null,
+            "nullable": true
+          },
+          "surfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceItemData"
+            },
             "default": null,
             "nullable": true
           }
@@ -23419,6 +24662,22 @@
             "type": "string",
             "default": null,
             "nullable": true
+          },
+          "depreciationDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepreciationItemData"
+            },
+            "default": null,
+            "nullable": true
+          },
+          "surfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceItemData"
+            },
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -24063,6 +25322,49 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "UpdateMarketComparableRequest": {
+        "required": ["propertyType", "surveyName"],
+        "type": "object",
+        "properties": {
+          "propertyType": {
+            "type": "string"
+          },
+          "surveyName": {
+            "type": "string"
+          },
+          "infoDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "default": null,
+            "nullable": true
+          },
+          "sourceInfo": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "templateId": {
+            "type": "string",
+            "format": "uuid",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "UpdateMarketComparableResponse": {
+        "required": ["success"],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
           }
         }
       },
@@ -24823,12 +26125,22 @@
         }
       },
       "UploadDocumentResponse": {
-        "required": ["isSuccess", "documentId", "fileName", "fileSize"],
+        "required": [
+          "documentId",
+          "fileName",
+          "fileExtension",
+          "fileSize",
+          "mimeType",
+          "storageUrl",
+          "documentType",
+          "documentCategory",
+          "description",
+          "uploadedBy",
+          "uploadedByName",
+          "uploadedAt"
+        ],
         "type": "object",
         "properties": {
-          "isSuccess": {
-            "type": "boolean"
-          },
           "documentId": {
             "type": "string",
             "format": "uuid"
@@ -24836,9 +26148,38 @@
           "fileName": {
             "type": "string"
           },
+          "fileExtension": {
+            "type": "string"
+          },
           "fileSize": {
             "type": "integer",
             "format": "int64"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "storageUrl": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "documentCategory": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadedBy": {
+            "type": "string"
+          },
+          "uploadedByName": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -24947,6 +26288,9 @@
       "name": "Requests"
     },
     {
+      "name": "Request Documents"
+    },
+    {
       "name": "Request Comments"
     },
     {
@@ -24969,6 +26313,9 @@
     },
     {
       "name": "GetUserNotificationsEndpoint"
+    },
+    {
+      "name": "Parameter"
     },
     {
       "name": "Documents"
@@ -25032,6 +26379,12 @@
     },
     {
       "name": "AppraisalGallery"
+    },
+    {
+      "name": "Appendix"
+    },
+    {
+      "name": "LawAndRegulation"
     },
     {
       "name": "Appointment"

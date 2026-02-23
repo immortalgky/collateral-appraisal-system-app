@@ -1,6 +1,6 @@
 import Icon from '@/shared/components/Icon';
 import { useState, useCallback } from 'react';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import SurfaceInputModal, { type SurfaceData } from './SurfaceInputModal';
 
 interface SurfaceTableProps {
@@ -52,13 +52,13 @@ const floorSurfaceLabels: Record<string, string> = {
 };
 
 const SurfaceTable = ({ name }: SurfaceTableProps) => {
-  const { control, getValues } = useFormContext();
+  const { control } = useFormContext();
   const { append, remove, update } = useFieldArray({
     control,
     name: name,
   });
 
-  const values = getValues(name) || [];
+  const values = useWatch({ name, control }) || [];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -184,10 +184,10 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                     {floorTypeLabels[row.floorType] || row.floorType || '-'}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    {floorStructureLabels[row.floorStructure] || row.floorStructure || '-'}
+                    {floorStructureLabels[row.floorStructureType] || row.floorStructureType || '-'}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    {floorSurfaceLabels[row.floorSurface] || row.floorSurface || '-'}
+                    {floorSurfaceLabels[row.floorSurfaceType] || row.floorSurfaceType || '-'}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-1 justify-end">

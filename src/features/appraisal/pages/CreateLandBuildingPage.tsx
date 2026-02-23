@@ -16,7 +16,7 @@ import {
   useCreateLandAndBuildingProperty,
   useGetLandAndBuildingPropertyById,
   useUpdateLandAndBuildingProperty,
-} from '../api';
+} from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import {
@@ -25,8 +25,10 @@ import {
   type createLandAndBuildingFormType,
 } from '../schemas/form';
 import toast from 'react-hot-toast';
-import { mapLandAndBuildingPropertyResponseToForm } from '../utils/mappers';
-import PropertyPhotoSection, { type PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
+import { mapLandAndBuildingPropertyResponseToForm, mapLandAndBuildingFormDataToApiPayload } from '../utils/mappers';
+import PropertyPhotoSection, {
+  type PropertyPhotoSectionRef,
+} from '../components/PropertyPhotoSection';
 
 // TODO: Add proper defaults when schema is finalized
 
@@ -71,13 +73,14 @@ const CreateLandBuildingPage = () => {
 
   const onSubmit: SubmitHandler<createLandAndBuildingFormType> = data => {
     setSaveAction('submit');
+    const payload = mapLandAndBuildingFormDataToApiPayload(data);
 
     if (isEditMode && propertyId) {
       updateLandAndBuildingProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: () => {
@@ -95,7 +98,7 @@ const CreateLandBuildingPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: async (response: any) => {
@@ -119,13 +122,14 @@ const CreateLandBuildingPage = () => {
     setSaveAction('draft');
 
     const data = getValues();
+    const payload = mapLandAndBuildingFormDataToApiPayload(data);
 
     if (isEditMode && propertyId) {
       updateLandAndBuildingProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: () => {
@@ -143,7 +147,7 @@ const CreateLandBuildingPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: async (response: any) => {
