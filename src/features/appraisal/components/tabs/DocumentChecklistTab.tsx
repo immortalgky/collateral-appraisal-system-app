@@ -1,150 +1,43 @@
-import { useState, useRef, useCallback } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import type { GalleryImage } from '../../types/gallery';
+import { toGalleryImage } from '../../types/gallery';
+import { useAppraisalContext } from '../../context/AppraisalContext';
 import {
-  APPENDIX_DOCUMENT_TYPES,
-  APPENDIX_DOCUMENT_TYPE_LABELS,
-  type AppendixDocumentType,
-  type AppendixDocument,
-  type RequestDocument,
-  type RequestDocumentGroup,
-} from '../../types/documentChecklist';
+  useAddAppendixDocument,
+  useAddGalleryPhoto,
+  useGetAppendices,
+  useGetRequestDocuments,
+  useRemoveAppendixDocument,
+  useUpdateAppendixLayout,
+} from '@features/appraisal/api';
+import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
+import { useGetGalleryPhotos } from '../../api/gallery';
+import type { AppendixDocumentDto, AppraisalAppendixDto, DocumentItemDto, } from '../../types/documentChecklist';
 
-// Mock data for development
-const MOCK_REQUEST_GROUPS: RequestDocumentGroup[] = [
-  {
-    entityType: 'title_chonot',
-    entityKey: 'xxxx',
-    displayKey: 'ฉ.xxxx',
-    documents: [
-      {
-        id: 'doc-1',
-        requestId: 'req-1',
-        entityType: 'title_chonot',
-        entityKey: 'xxxx',
-        documentType: 'Title Deed',
-        fileName: 'Title deed document.pdf',
-        filePath: '/uploads/title-deed.pdf',
-        fileSize: 1572864,
-        mimeType: 'application/pdf',
-        prefix: 'Title',
-        set: 1,
-        comment: 'Bacon ipsum dolor amet...',
-        uploadedAt: '2024-01-06T10:00:00Z',
-        uploadedBy: 'user-001',
-        uploadedByName: 'John Doe',
-      },
-    ],
-  },
-  {
-    entityType: 'title_regis',
-    entityKey: 'xxxx',
-    displayKey: 'Regis no xxxx',
-    documents: [
-      {
-        id: 'doc-2',
-        requestId: 'req-1',
-        entityType: 'title_regis',
-        entityKey: 'xxxx',
-        documentType: 'Registration document',
-        fileName: null,
-        filePath: null,
-        fileSize: null,
-        mimeType: null,
-        prefix: null,
-        set: 1,
-        comment: null,
-        uploadedAt: null,
-        uploadedBy: null,
-        uploadedByName: null,
-      },
-      {
-        id: 'doc-3',
-        requestId: 'req-1',
-        entityType: 'title_regis',
-        entityKey: 'xxxx',
-        documentType: 'Invoice',
-        fileName: null,
-        filePath: null,
-        fileSize: null,
-        mimeType: null,
-        prefix: null,
-        set: 1,
-        comment: null,
-        uploadedAt: null,
-        uploadedBy: null,
-        uploadedByName: null,
-      },
-    ],
-  },
-  {
-    entityType: 'request',
-    entityKey: 'xxxxxxx',
-    displayKey: '67xxxxxxx',
-    documents: [
-      {
-        id: 'doc-4',
-        requestId: 'req-1',
-        entityType: 'request',
-        entityKey: 'xxxxxxx',
-        documentType: 'Building plan',
-        fileName: 'Building plan.png',
-        filePath: '/uploads/building-plan.png',
-        fileSize: 4194304,
-        mimeType: 'image/png',
-        prefix: null,
-        set: 1,
-        comment: 'Bacon ipsum dolor amet...',
-        uploadedAt: '2024-01-06T10:00:00Z',
-        uploadedBy: 'user-001',
-        uploadedByName: 'John Doe',
-      },
-    ],
-  },
-];
-
-interface AppendixSectionState {
-  documentType: AppendixDocumentType;
-  label: string;
-  layout: 1 | 2 | 3;
-  documents: AppendixDocument[];
-  isExpanded: boolean;
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // Helper functions
-const formatDate = (dateString: string | null): string => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
+const getFileIcon = (fileName: string | null): { name: string; color: string } => {
+  if (!fileName) return { name: 'file', color: 'text-gray-400' };
 
-const formatFileSize = (bytes: number | null): string => {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
+  const name = fileName.toLowerCase();
 
-const getFileIcon = (mimeType: string | null, fileName: string | null): { name: string; color: string } => {
-  if (!mimeType && !fileName) return { name: 'file', color: 'text-gray-400' };
-
-  const type = mimeType?.toLowerCase() || '';
-  const name = fileName?.toLowerCase() || '';
-
-  if (type.includes('pdf') || name.endsWith('.pdf')) {
+  if (name.endsWith('.pdf')) {
     return { name: 'file-pdf', color: 'text-red-500' };
   }
-  if (type.includes('image') || name.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+  if (name.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
     return { name: 'file-image', color: 'text-blue-500' };
   }
-  if (type.includes('word') || name.match(/\.(doc|docx)$/)) {
+  if (name.match(/\.(doc|docx)$/)) {
     return { name: 'file-word', color: 'text-blue-600' };
   }
-  if (type.includes('excel') || type.includes('spreadsheet') || name.match(/\.(xls|xlsx)$/)) {
+  if (name.match(/\.(xls|xlsx)$/)) {
     return { name: 'file-excel', color: 'text-green-600' };
   }
   return { name: 'file', color: 'text-gray-500' };
@@ -155,7 +48,7 @@ const StatusBadge = ({ hasFile }: { hasFile: boolean }) => (
   <span
     className={clsx(
       'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
-      hasFile ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+      hasFile ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700',
     )}
   >
     <span className={clsx('w-1.5 h-1.5 rounded-full', hasFile ? 'bg-green-500' : 'bg-amber-500')} />
@@ -172,7 +65,7 @@ const ProgressBar = ({ uploaded, total }: { uploaded: number; total: number }) =
         <div
           className={clsx(
             'h-full rounded-full transition-all duration-300',
-            percentage === 100 ? 'bg-green-500' : 'bg-primary'
+            percentage === 100 ? 'bg-green-500' : 'bg-primary',
           )}
           style={{ width: `${percentage}%` }}
         />
@@ -187,12 +80,10 @@ const ProgressBar = ({ uploaded, total }: { uploaded: number; total: number }) =
 // Action Dropdown Component
 const ActionDropdown = ({
   onView,
-  onEdit,
   onDelete,
   isEditable = false,
 }: {
   onView?: () => void;
-  onEdit?: () => void;
   onDelete?: () => void;
   isEditable?: boolean;
 }) => {
@@ -225,19 +116,6 @@ const ActionDropdown = ({
                 View
               </button>
             )}
-            {isEditable && onEdit && (
-              <button
-                type="button"
-                onClick={() => {
-                  onEdit();
-                  setIsOpen(false);
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <Icon name="pen-to-square" className="text-gray-400" />
-                Edit
-              </button>
-            )}
             {isEditable && onDelete && (
               <button
                 type="button"
@@ -259,22 +137,24 @@ const ActionDropdown = ({
 };
 
 // Empty State Component
-const EmptyUploadState = ({ onUpload, isDragging }: { onUpload: () => void; isDragging?: boolean }) => (
+const EmptyUploadState = ({
+  onUpload,
+  isDragging,
+}: {
+  onUpload: () => void;
+  isDragging?: boolean;
+}) => (
   <div
     onClick={onUpload}
     className={clsx(
       'flex flex-col items-center justify-center py-8 cursor-pointer transition-all duration-200 rounded-xl',
-      isDragging
-        ? 'bg-primary/5 scale-[1.02] shadow-lg shadow-primary/10'
-        : 'hover:bg-gray-50'
+      isDragging ? 'bg-primary/5 scale-[1.02] shadow-lg shadow-primary/10' : 'hover:bg-gray-50',
     )}
   >
     <div
       className={clsx(
         'w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-200',
-        isDragging
-          ? 'bg-primary/10 text-primary animate-bounce'
-          : 'bg-gray-100 text-gray-400'
+        isDragging ? 'bg-primary/10 text-primary animate-bounce' : 'bg-gray-100 text-gray-400',
       )}
     >
       <Icon name="cloud-arrow-up" className="text-2xl" />
@@ -282,7 +162,7 @@ const EmptyUploadState = ({ onUpload, isDragging }: { onUpload: () => void; isDr
     <p
       className={clsx(
         'text-sm font-medium mb-1 transition-colors',
-        isDragging ? 'text-primary' : 'text-gray-600'
+        isDragging ? 'text-primary' : 'text-gray-600',
       )}
     >
       {isDragging ? 'Drop files here' : 'Click to upload'}
@@ -292,151 +172,268 @@ const EmptyUploadState = ({ onUpload, isDragging }: { onUpload: () => void; isDr
 );
 
 export const DocumentChecklistTab = () => {
-  const [requestGroups] = useState<RequestDocumentGroup[]>(MOCK_REQUEST_GROUPS);
-  const [appendixSections, setAppendixSections] = useState<AppendixSectionState[]>(
-    APPENDIX_DOCUMENT_TYPES.map(type => ({
-      documentType: type,
-      label: APPENDIX_DOCUMENT_TYPE_LABELS[type],
-      layout: 1,
-      documents: [],
-      isExpanded: false,
-    }))
-  );
+  const { appraisal } = useAppraisalContext();
+  const appraisalId = appraisal?.appraisalId;
+  const requestId = appraisal?.requestId;
+
+  // Queries
+  const { data: requestDocsData, isLoading: isLoadingRequestDocs } =
+    useGetRequestDocuments(requestId);
+  const { data: appendicesData, isLoading: isLoadingAppendices } = useGetAppendices(appraisalId);
+  const { data: galleryData } = useGetGalleryPhotos(appraisalId);
+
+  // Mutations
+  const addAppendixDocument = useAddAppendixDocument();
+  const removeAppendixDocument = useRemoveAppendixDocument();
+  const updateAppendixLayout = useUpdateAppendixLayout();
+  const { mutateAsync: uploadDocument } = useUploadDocument();
+  const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
+
+  // Local UI state
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [activeAppendixId, _setActiveAppendixId] = useState<string | null>(null);
+  const activeAppendixIdRef = useRef<string | null>(null);
+  const setActiveAppendixId = (id: string | null) => {
+    activeAppendixIdRef.current = id;
+    _setActiveAppendixId(id);
+  };
+  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
   const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
-  const [activeDocumentType, setActiveDocumentType] = useState<AppendixDocumentType | null>(null);
-  const [dragOverSection, setDragOverSection] = useState<AppendixDocumentType | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock gallery images
-  const galleryImages: GalleryImage[] = [];
+  // Upload session ref (created once per component lifetime)
+  const uploadSessionIdRef = useRef<string | null>(null);
+  const sessionPromiseRef = useRef<Promise<string> | null>(null);
 
-  // Calculate stats
-  const totalRequestDocs = requestGroups.reduce((sum, g) => sum + g.documents.length, 0);
-  const uploadedRequestDocs = requestGroups.reduce(
-    (sum, g) => sum + g.documents.filter(d => d.fileName).length,
-    0
+  // Derived data
+  const appendices = useMemo(() => appendicesData?.items ?? [], [appendicesData]);
+  const totalRequestDocs = requestDocsData?.totalDocuments ?? 0;
+  const uploadedRequestDocs = requestDocsData?.totalUploaded ?? 0;
+  const totalAppendixDocs = appendices.reduce((sum, a) => sum + a.documents.length, 0);
+
+  const galleryImages: GalleryImage[] = useMemo(
+    () => (galleryData?.photos ?? []).map(toGalleryImage),
+    [galleryData],
   );
-  const totalAppendixDocs = appendixSections.reduce((sum, s) => sum + s.documents.length, 0);
 
-  const handleToggleSection = (documentType: AppendixDocumentType) => {
-    setAppendixSections(prev =>
-      prev.map(section =>
-        section.documentType === documentType
-          ? { ...section, isExpanded: !section.isExpanded }
-          : section
-      )
-    );
+  const activeAppendix = appendices.find(a => a.id === activeAppendixId);
+
+  // Section expand/collapse
+  const handleToggleSection = (appendixId: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(appendixId)) {
+        next.delete(appendixId);
+      } else {
+        next.add(appendixId);
+      }
+      return next;
+    });
   };
 
   const handleExpandAll = () => {
-    setAppendixSections(prev => prev.map(section => ({ ...section, isExpanded: true })));
+    setExpandedSections(new Set(appendices.map(a => a.id)));
   };
 
   const handleCollapseAll = () => {
-    setAppendixSections(prev => prev.map(section => ({ ...section, isExpanded: false })));
+    setExpandedSections(new Set());
   };
 
-  const handleLayoutChange = (documentType: AppendixDocumentType, layout: 1 | 2 | 3) => {
-    setAppendixSections(prev =>
-      prev.map(section =>
-        section.documentType === documentType ? { ...section, layout } : section
-      )
+  // Layout change
+  const handleLayoutChange = (appendix: AppraisalAppendixDto, layoutColumns: number) => {
+    if (!appraisalId) return;
+    updateAppendixLayout.mutate(
+      { appraisalId, appendixId: appendix.id, layoutColumns },
+      {
+        onError: () => toast.error('Failed to update layout'),
+      },
     );
   };
 
-  const handleAddFiles = (documentType: AppendixDocumentType) => {
-    setActiveDocumentType(documentType);
+  // Get or create upload session (cached per component lifetime)
+  const getOrCreateSession = useCallback(async (): Promise<string> => {
+    if (uploadSessionIdRef.current) {
+      return uploadSessionIdRef.current;
+    }
+
+    if (sessionPromiseRef.current) {
+      return sessionPromiseRef.current;
+    }
+
+    sessionPromiseRef.current = createUploadSession()
+      .then(response => {
+        uploadSessionIdRef.current = response.sessionId;
+        return response.sessionId;
+      })
+      .catch(error => {
+        sessionPromiseRef.current = null;
+        throw error;
+      });
+
+    return sessionPromiseRef.current;
+  }, []);
+
+  // Upload flow: getOrCreateSession → uploadDocument → addAppendixDocument
+  const processFiles = useCallback(
+    async (files: FileList, appendixId: string) => {
+      if (!appraisalId) return;
+
+      // Clone files immediately — the FileList is emptied when the input resets
+      const fileArray = Array.from(files);
+      if (fileArray.length === 0) return;
+
+      try {
+        const sessionId = await getOrCreateSession();
+
+        for (const file of fileArray) {
+          // Step 1: Upload document to get documentId
+          const uploadResult = await uploadDocument({
+            uploadSessionId: sessionId,
+            file,
+            documentType: 'APPENDIX',
+            documentCategory: 'appendix',
+          });
+
+          // Step 2: Register as gallery photo to get galleryPhotoId
+          const galleryPhoto = await addGalleryPhoto({
+            appraisalId,
+            documentId: uploadResult.documentId,
+            photoType: 'general',
+            uploadedBy: 'current-user',
+            photoCategory: null,
+            caption: null,
+            latitude: null,
+            longitude: null,
+            capturedAt: null,
+            photoTopicIds: null,
+          });
+
+          // Step 3: Attach to appendix using galleryPhotoId
+          const appendix = appendices.find(a => a.id === appendixId);
+          const nextSequence = (appendix?.documents.length ?? 0) + 1;
+
+          await addAppendixDocument.mutateAsync({
+            appraisalId,
+            appendixId,
+            body: {
+              galleryPhotoId: galleryPhoto.id,
+              displaySequence: nextSequence,
+            },
+          });
+        }
+
+        toast.success('Files uploaded successfully');
+      } catch (error) {
+        console.error('Upload failed:', error);
+        toast.error('Failed to upload files');
+      }
+    },
+    [appraisalId, appendices, getOrCreateSession, uploadDocument, addGalleryPhoto, addAppendixDocument],
+  );
+
+  const handleAddFiles = (appendixId: string) => {
+    setActiveAppendixId(appendixId);
     setShowPhotoSourceModal(true);
   };
 
-  const processFiles = useCallback(
-    (files: FileList, documentType: AppendixDocumentType) => {
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const newDoc: AppendixDocument = {
-            id: `appendix-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            appraisalId: 'current-appraisal',
-            documentType: documentType,
-            fileName: file.name,
-            originalFileName: file.name,
-            filePath: reader.result as string,
-            fileSize: file.size,
-            mimeType: file.type,
-            prefix: null,
-            set: 1,
-            comment: null,
-            layout: 1,
-            uploadedAt: new Date().toISOString(),
-            uploadedBy: 'current-user',
-            uploadedByName: 'Current User',
-          };
-
-          setAppendixSections(prev =>
-            prev.map(section =>
-              section.documentType === documentType
-                ? { ...section, documents: [...section.documents, newDoc], isExpanded: true }
-                : section
-            )
-          );
-        };
-        reader.readAsDataURL(file);
-      });
-    },
-    []
-  );
-
   const handleUploadFromDevice = (files: FileList) => {
-    if (!activeDocumentType) return;
-    processFiles(files, activeDocumentType);
-    setActiveDocumentType(null);
+    const appendixId = activeAppendixIdRef.current;
+    if (!appendixId) return;
+    void processFiles(files, appendixId);
+    setActiveAppendixId(null);
   };
 
+  const transitionToGalleryRef = useRef(false);
   const handleChooseFromGallery = () => {
+    transitionToGalleryRef.current = true;
     setShowGalleryModal(true);
   };
 
-  const handleGallerySelect = (selectedImages: GalleryImage[]) => {
-    console.log('Selected from gallery:', selectedImages);
+  const handleGallerySelect = async (selectedImages: GalleryImage[]) => {
+    const appendixId = activeAppendixIdRef.current;
+    if (!appraisalId || !appendixId) return;
+
+    try {
+      for (const image of selectedImages) {
+        const appendix = appendices.find(a => a.id === appendixId);
+        const nextSequence = (appendix?.documents.length ?? 0) + 1;
+
+        await addAppendixDocument.mutateAsync({
+          appraisalId,
+          appendixId,
+          body: {
+            galleryPhotoId: image.id,
+            displaySequence: nextSequence,
+          },
+        });
+      }
+
+      toast.success('Files added from gallery');
+    } catch (error) {
+      console.error('Gallery select failed:', error);
+      toast.error('Failed to add files from gallery');
+    }
+
+    setActiveAppendixId(null);
   };
 
-  const handleDeleteDocument = (documentType: AppendixDocumentType, documentId: string) => {
-    setAppendixSections(prev =>
-      prev.map(section =>
-        section.documentType === documentType
-          ? { ...section, documents: section.documents.filter(d => d.id !== documentId) }
-          : section
-      )
+  // Delete appendix document
+  const handleDeleteDocument = (appendixId: string, documentId: string) => {
+    if (!appraisalId) return;
+    removeAppendixDocument.mutate(
+      { appraisalId, appendixId, documentId },
+      {
+        onSuccess: () => toast.success('Document removed'),
+        onError: () => toast.error('Failed to remove document'),
+      },
     );
   };
 
-  const handleViewDocument = (doc: RequestDocument | AppendixDocument) => {
-    console.log('View document:', doc);
+  const handleViewDocument = (doc: DocumentItemDto | AppendixDocumentDto) => {
+    if ('documentId' in doc && doc.documentId) {
+      window.open(`${API_BASE_URL}/documents/${doc.documentId}/download?download=false`, '_blank');
+    } else if ('filePath' in doc) {
+      const filePath = (doc as DocumentItemDto).filePath;
+      if (filePath) window.open(filePath, '_blank');
+    }
   };
 
-  const handlePreviewLayout = (documentType: AppendixDocumentType) => {
-    console.log('Preview layout for:', documentType);
+  const handlePreviewLayout = (appendixId: string) => {
+    console.log('Preview layout for:', appendixId);
   };
 
   // Drag & Drop handlers
-  const handleDragOver = (e: React.DragEvent, documentType: AppendixDocumentType) => {
+  const handleDragOver = (e: React.DragEvent, appendixId: string) => {
     e.preventDefault();
-    setDragOverSection(documentType);
+    setDragOverSection(appendixId);
   };
 
   const handleDragLeave = () => {
     setDragOverSection(null);
   };
 
-  const handleDrop = (e: React.DragEvent, documentType: AppendixDocumentType) => {
+  const handleDrop = (e: React.DragEvent, appendixId: string) => {
     e.preventDefault();
     setDragOverSection(null);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      processFiles(files, documentType);
+      void processFiles(files, appendixId);
     }
   };
+
+  const isLoading = isLoadingRequestDocs || isLoadingAppendices;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-500">Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 pb-8">
@@ -464,25 +461,26 @@ export const DocumentChecklistTab = () => {
           </div>
         </div>
 
-        {/* Document Groups */}
+        {/* Document Sections */}
         <div className="divide-y divide-gray-100">
-          {requestGroups.map(group => {
-            const uploadedCount = group.documents.filter(d => d.fileName).length;
+          {requestDocsData?.sections.map((section, sectionIdx) => {
+            const sectionLabel =
+              section.titleIdentifier ?? section.collateralType ?? `Section ${sectionIdx + 1}`;
             return (
-              <div key={`${group.entityType}-${group.entityKey}`}>
-                {/* Group Header */}
+              <div key={section.titleId ?? `section-${sectionIdx}`}>
+                {/* Section Header */}
                 <div className="px-6 py-3 bg-gray-50/50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">{group.displayKey}</span>
+                    <span className="text-sm font-medium text-gray-700">{sectionLabel}</span>
                     <span className="text-xs text-gray-400">
-                      ({uploadedCount}/{group.documents.length} uploaded)
+                      ({section.uploadedDocuments}/{section.totalDocuments} uploaded)
                     </span>
                   </div>
                 </div>
 
-                {/* Group Documents */}
-                {group.documents.map(doc => {
-                  const fileIcon = getFileIcon(doc.mimeType, doc.fileName);
+                {/* Section Documents */}
+                {section.documents.map(doc => {
+                  const fileIcon = getFileIcon(doc.fileName);
                   return (
                     <div
                       key={doc.id}
@@ -490,8 +488,15 @@ export const DocumentChecklistTab = () => {
                     >
                       {/* Document Type & Status */}
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-medium text-gray-900">{doc.documentType}</span>
-                        <StatusBadge hasFile={!!doc.fileName} />
+                        <span className="text-sm font-medium text-gray-900">
+                          {doc.documentType}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <StatusBadge hasFile={!!doc.fileName} />
+                          {doc.isRequired && (
+                            <span className="text-xs text-red-500 font-medium">Required</span>
+                          )}
+                        </div>
                       </div>
 
                       {/* File Info */}
@@ -503,9 +508,6 @@ export const DocumentChecklistTab = () => {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm text-gray-900 truncate">{doc.fileName}</p>
-                              <p className="text-xs text-gray-400">
-                                {formatFileSize(doc.fileSize)} &bull; {formatDate(doc.uploadedAt)}
-                              </p>
                             </div>
                           </>
                         ) : (
@@ -513,15 +515,21 @@ export const DocumentChecklistTab = () => {
                         )}
                       </div>
 
-                      {/* Comment */}
-                      <div className="text-sm text-gray-500 truncate" title={doc.comment || undefined}>
-                        {doc.comment || '-'}
+                      {/* Notes */}
+                      <div
+                        className="text-sm text-gray-500 truncate"
+                        title={doc.notes || undefined}
+                      >
+                        {doc.notes || '-'}
                       </div>
 
                       {/* Actions */}
                       <div className="flex justify-end">
                         {doc.fileName && (
-                          <ActionDropdown onView={() => handleViewDocument(doc)} isEditable={false} />
+                          <ActionDropdown
+                            onView={() => handleViewDocument(doc)}
+                            isEditable={false}
+                          />
                         )}
                       </div>
                     </div>
@@ -530,6 +538,12 @@ export const DocumentChecklistTab = () => {
               </div>
             );
           })}
+
+          {(!requestDocsData || requestDocsData.sections.length === 0) && (
+            <div className="px-6 py-8 text-center text-sm text-gray-400">
+              No request documents found
+            </div>
+          )}
         </div>
       </section>
 
@@ -560,51 +574,57 @@ export const DocumentChecklistTab = () => {
               >
                 Collapse All
               </button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  setActiveDocumentType(APPENDIX_DOCUMENT_TYPES[0]);
-                  setShowPhotoSourceModal(true);
-                }}
-                className="ml-2"
-              >
-                <Icon name="plus" className="mr-1.5" />
-                Add Files
-              </Button>
+              {appendices.length > 0 && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleAddFiles(appendices[0].id)}
+                  className="ml-2"
+                >
+                  <Icon name="plus" className="mr-1.5" />
+                  Add Files
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Appendix Sections */}
         <div className="divide-y divide-gray-100">
-          {appendixSections.map(section => {
-            const isDragOver = dragOverSection === section.documentType;
+          {appendices.map(appendix => {
+            const isExpanded = expandedSections.has(appendix.id);
+            const isDragOver = dragOverSection === appendix.id;
+            const sortedDocs = [...appendix.documents].sort(
+              (a, b) => a.displaySequence - b.displaySequence,
+            );
+
             return (
               <div
-                key={section.documentType}
-                onDragOver={e => handleDragOver(e, section.documentType)}
+                key={appendix.id}
+                onDragOver={e => handleDragOver(e, appendix.id)}
                 onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, section.documentType)}
+                onDrop={e => handleDrop(e, appendix.id)}
                 className={clsx('transition-colors', isDragOver && 'bg-primary/5')}
               >
-                {/* Section Header */}
+                {/* Appendix Header */}
                 <div
                   className={clsx(
                     'px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors',
-                    section.isExpanded && 'bg-gray-50/50'
+                    isExpanded && 'bg-gray-50/50',
                   )}
-                  onClick={() => handleToggleSection(section.documentType)}
+                  onClick={() => handleToggleSection(appendix.id)}
                 >
                   <div className="flex items-center gap-3">
                     <Icon
-                      name={section.isExpanded ? 'chevron-down' : 'chevron-right'}
+                      name={isExpanded ? 'chevron-down' : 'chevron-right'}
                       className="text-gray-400 text-sm transition-transform"
                     />
-                    <span className="text-sm font-medium text-gray-900">{section.label}</span>
-                    {section.documents.length > 0 && (
+                    <span className="text-sm font-medium text-gray-900">
+                      {appendix.appendixTypeName}
+                    </span>
+                    {appendix.documents.length > 0 && (
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                        {section.documents.length}
+                        {appendix.documents.length}
                       </span>
                     )}
                   </div>
@@ -618,12 +638,12 @@ export const DocumentChecklistTab = () => {
                           <button
                             key={num}
                             type="button"
-                            onClick={() => handleLayoutChange(section.documentType, num as 1 | 2 | 3)}
+                            onClick={() => handleLayoutChange(appendix, num)}
                             className={clsx(
                               'w-6 h-6 rounded text-xs font-medium transition-colors',
-                              section.layout === num
+                              appendix.layoutColumns === num
                                 ? 'bg-primary text-white'
-                                : 'text-gray-500 hover:bg-gray-100'
+                                : 'text-gray-500 hover:bg-gray-100',
                             )}
                           >
                             {num}
@@ -636,7 +656,7 @@ export const DocumentChecklistTab = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handlePreviewLayout(section.documentType)}
+                      onClick={() => handlePreviewLayout(appendix.id)}
                       className="text-xs"
                     >
                       <Icon name="eye" className="mr-1" />
@@ -646,7 +666,7 @@ export const DocumentChecklistTab = () => {
                     {/* Add Button */}
                     <button
                       type="button"
-                      onClick={() => handleAddFiles(section.documentType)}
+                      onClick={() => handleAddFiles(appendix.id)}
                       className="p-1.5 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                     >
                       <Icon name="circle-plus" style="solid" />
@@ -655,63 +675,36 @@ export const DocumentChecklistTab = () => {
                 </div>
 
                 {/* Section Content */}
-                {section.isExpanded && (
+                {isExpanded && (
                   <div className="border-t border-gray-100">
-                    {section.documents.length > 0 ? (
+                    {sortedDocs.length > 0 ? (
                       <div className="divide-y divide-gray-50">
-                        {section.documents.map(doc => {
-                          const fileIcon = getFileIcon(doc.mimeType, doc.fileName);
+                        {sortedDocs.map(doc => {
+                          const thumbnailUrl = `${API_BASE_URL}/documents/${doc.documentId}/download?download=false&size=large`;
                           return (
                             <div
                               key={doc.id}
-                              className="px-6 py-3 hover:bg-gray-50/50 transition-colors grid grid-cols-[1fr_120px_80px_60px_1fr_48px] gap-4 items-center ml-6"
+                              className="px-6 py-3 hover:bg-gray-50/50 transition-colors grid grid-cols-[1fr_48px] gap-4 items-center ml-6"
                             >
                               {/* File Info */}
                               <div className="flex items-center gap-3 min-w-0">
-                                <div
-                                  className={clsx(
-                                    'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
-                                    doc.mimeType?.includes('image')
-                                      ? 'bg-blue-50'
-                                      : doc.mimeType?.includes('pdf')
-                                        ? 'bg-red-50'
-                                        : 'bg-gray-50'
-                                  )}
-                                >
-                                  {doc.mimeType?.includes('image') && doc.filePath ? (
-                                    <img
-                                      src={doc.filePath}
-                                      alt={doc.fileName}
-                                      className="w-10 h-10 rounded-lg object-cover"
-                                    />
-                                  ) : (
-                                    <Icon name={fileIcon.name} className={clsx('text-lg', fileIcon.color)} />
-                                  )}
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-50">
+                                  <img
+                                    src={thumbnailUrl}
+                                    alt="Document"
+                                    className="w-10 h-10 rounded-lg object-cover"
+                                  />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-sm text-gray-900 truncate">{doc.fileName}</p>
-                                  <p className="text-xs text-gray-400">{formatFileSize(doc.fileSize)}</p>
+                                  <p className="text-sm text-gray-900 truncate">Document</p>
                                 </div>
                               </div>
-
-                              {/* Upload Date */}
-                              <div className="text-sm text-gray-500">{formatDate(doc.uploadedAt)}</div>
-
-                              {/* Prefix */}
-                              <div className="text-sm text-gray-500 text-center">{doc.prefix || '-'}</div>
-
-                              {/* Set */}
-                              <div className="text-sm text-gray-500 text-center">{doc.set}</div>
-
-                              {/* Comment */}
-                              <div className="text-sm text-gray-500 truncate">{doc.comment || '-'}</div>
 
                               {/* Actions */}
                               <div className="flex justify-end">
                                 <ActionDropdown
                                   onView={() => handleViewDocument(doc)}
-                                  onEdit={() => console.log('Edit:', doc.id)}
-                                  onDelete={() => handleDeleteDocument(section.documentType, doc.id)}
+                                  onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
                                   isEditable
                                 />
                               </div>
@@ -721,7 +714,7 @@ export const DocumentChecklistTab = () => {
                       </div>
                     ) : (
                       <EmptyUploadState
-                        onUpload={() => handleAddFiles(section.documentType)}
+                        onUpload={() => handleAddFiles(appendix.id)}
                         isDragging={isDragOver}
                       />
                     )}
@@ -730,6 +723,12 @@ export const DocumentChecklistTab = () => {
               </div>
             );
           })}
+
+          {appendices.length === 0 && (
+            <div className="px-6 py-8 text-center text-sm text-gray-400">
+              No appendix sections found
+            </div>
+          )}
         </div>
       </section>
 
@@ -748,17 +747,26 @@ export const DocumentChecklistTab = () => {
         isOpen={showPhotoSourceModal}
         onClose={() => {
           setShowPhotoSourceModal(false);
-          setActiveDocumentType(null);
+          // Don't clear activeAppendixId when transitioning to gallery modal
+          if (transitionToGalleryRef.current) {
+            transitionToGalleryRef.current = false;
+          } else {
+            setActiveAppendixId(null);
+          }
         }}
         onUploadFromDevice={handleUploadFromDevice}
         onChooseFromGallery={handleChooseFromGallery}
-        title={activeDocumentType ? `Add ${APPENDIX_DOCUMENT_TYPE_LABELS[activeDocumentType]}` : 'Add Files'}
+        title={activeAppendix ? `Add ${activeAppendix.appendixTypeName}` : 'Add Files'}
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
       />
 
       {/* Gallery Selection Modal */}
       <GallerySelectionModal
         isOpen={showGalleryModal}
-        onClose={() => setShowGalleryModal(false)}
+        onClose={() => {
+          setShowGalleryModal(false);
+          setActiveAppendixId(null);
+        }}
         onSelect={handleGallerySelect}
         images={galleryImages}
         multiSelect

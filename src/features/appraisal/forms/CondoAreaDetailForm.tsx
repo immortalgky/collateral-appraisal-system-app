@@ -1,51 +1,26 @@
 import FormTable from '@/features/request/components/tables/FormTable';
-import Input from '@/shared/components/Input';
-import type { AreaDetailDtoType } from '@/shared/forms/typeCondo';
-import { useController, useFormContext, useWatch } from 'react-hook-form';
 
 interface CondoAreaDetailFormProps {
   name: string;
 }
 function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
-  const { control } = useFormContext();
-  const {
-    field,
-    fieldState: { error },
-  } = useController({ name: name, control });
-
-  const properties = useWatch({ name: `${name}` });
-  const totalArea = calcTotalArea(properties);
-
   return (
     <div className="col-span-12 border-2 rounded-2xl border-gray-100">
-      <FormTable headers={propertiesTableHeader} name={`${name}`} />
-      <div className="px-6 pb-6">
-        <Input
-          type="number"
-          {...field}
-          label="Total Area (Sq. M.)"
-          value={totalArea}
-          error={error?.message}
-          readOnly
-          disabled
-        />
-      </div>
+      <FormTable headers={propertiesTableHeader} name={name} sumColumns={['areaSize']} />
     </div>
   );
 }
 
 const propertiesTableHeader = [
-  { name: 'areaDetail', label: 'Area Detail' },
-  { name: 'area', label: 'Area', inputType: 'number' as const },
+  { rowNumberColumn: true as const, label: '#' },
+  { name: 'areaDescription', label: 'Area Detail', width: '70%' },
+  {
+    name: 'areaSize',
+    label: 'Area (Sq. M.)',
+    inputType: 'number' as const,
+    width: '20%',
+    align: 'right' as const,
+  },
 ];
-
-function calcTotalArea(properties: AreaDetailDtoType[]): number {
-  return properties.reduce((acc, property) => acc + convertToNumber(property.area, 0), 0);
-}
-
-function convertToNumber(n: any, fallback: number): number {
-  const number = Number(n);
-  return isNaN(number) ? fallback : number;
-}
 
 export default CondoAreaDetailForm;

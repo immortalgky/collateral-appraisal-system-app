@@ -91,7 +91,7 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
       </SectionRow>
 
       <SectionRow title="Surface" icon="layer-group">
-        <SurfaceTable headers={surfaceTableHeader} name={'surface'} />
+        <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} />
       </SectionRow>
 
       <SectionRow title="Fence" icon="fence">
@@ -112,8 +112,8 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
           <BuildingDetail
             name={
               prefix != null
-                ? `${prefix}.buildingDepreciationDetails`
-                : 'buildingDepreciationDetails'
+                ? `${prefix}.depreciationDetails`
+                : 'depreciationDetails'
             }
           />
         </div>
@@ -551,7 +551,7 @@ const surfaceTableHeader = [
     ],
   },
   {
-    name: 'floorStructure',
+    name: 'floorStructureType',
     label: 'Floor Structure',
     inputType: 'dropdown' as const,
     options: [
@@ -561,7 +561,7 @@ const surfaceTableHeader = [
     ],
   },
   {
-    name: 'floorSurface',
+    name: 'floorSurfaceType',
     label: 'Floor Surface',
     inputType: 'dropdown' as const,
     options: [

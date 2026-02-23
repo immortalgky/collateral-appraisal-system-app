@@ -231,8 +231,8 @@ export const navigationConfig: NavItem[] = [
         iconStyle: 'solid',
       },
       {
-        name: 'Market Survey',
-        href: '/market-survey',
+        name: 'Market Comparable',
+        href: '/market-comparables',
         icon: 'magnifying-glass-location',
         iconColor: 'text-orange-500',
         iconStyle: 'solid',

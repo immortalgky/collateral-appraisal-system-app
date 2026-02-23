@@ -13,8 +13,8 @@ import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistP
 import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
-import CreateMarketSurveyPage from '@/features/appraisal/pages/CreateMarketSurveyPage';
-import ListMarketSurveyPage from '@/features/appraisal/pages/ListMarketSurveyPage';
+import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
+import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
 import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
 import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
@@ -92,14 +92,14 @@ export const router = createBrowserRouter([
         path: 'tasks',
         element: <TaskListingPage />,
       },
-      // Market Survey Routes
+      // Market Comparable Routes
       {
-        path: 'market-survey',
-        element: <ListMarketSurveyPage />,
+        path: 'market-comparables',
+        element: <MarketComparableListingPage />,
       },
       {
-        path: 'market-survey/detail',
-        element: <CreateMarketSurveyPage />,
+        path: 'market-comparable/detail',
+        element: <CreateMarketComparablePage />,
       },
       // Collateral Appraisal Routes
       {
@@ -213,6 +213,14 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/:propertyId/pma',
             element: <LandBuildingPMAPage />,
+          },
+          {
+            path: 'market-comparable/new',
+            element: <CreateMarketComparablePage />,
+          },
+          {
+            path: 'market-comparable/:marketComparableId',
+            element: <CreateMarketComparablePage />,
           },
         ],
       },

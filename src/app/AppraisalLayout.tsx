@@ -9,7 +9,7 @@ import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
-import { useGetAppraisalById } from '@features/appraisal/api';
+import { useGetAppraisalById } from '@features/appraisal/api/appraisal';
 import { DetailPageSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -37,6 +37,7 @@ const propertySubRouteLabels: Record<string, { label: string; icon: string }> = 
   building: { label: 'Building', icon: 'building' },
   condo: { label: 'Condominium', icon: 'city' },
   'land-building': { label: 'Land & Building', icon: 'house-chimney' },
+  'market-comparable': { label: 'Market Comparable', icon: 'magnifying-glass-location' },
 };
 
 /**
@@ -78,16 +79,26 @@ function AppraisalLayout() {
       const pageSegment = pathSegments[2]; // 'administration', 'property', etc.
       const pageInfo = routeLabels[pageSegment];
       if (pageInfo) {
+        // Handle nested property routes: /appraisal/:id/property/land/new
+        // Determine which tab the user came from so the breadcrumb links back correctly
+        let propertyHrefSuffix = '';
+        if (pageSegment === 'property' && pathSegments.length >= 4) {
+          const propertyType = pathSegments[3];
+          if (propertyType === 'market-comparable') {
+            propertyHrefSuffix = '?tab=markets';
+          }
+        }
+
         // Add page breadcrumb
         items.push({
           label: pageInfo.label,
-          href: `/appraisal/${appraisalId}/${pageSegment}`,
+          href: `/appraisal/${appraisalId}/${pageSegment}${propertyHrefSuffix}`,
           icon: pageInfo.icon,
         });
 
-        // Handle nested property routes: /appraisal/:id/property/land/new
+        // Add property sub-route breadcrumb
         if (pageSegment === 'property' && pathSegments.length >= 4) {
-          const propertyType = pathSegments[3]; // 'land', 'building', 'condo', 'land-building'
+          const propertyType = pathSegments[3]; // 'land', 'building', 'condo', 'land-building', 'market-comparable'
           const propertyInfo = propertySubRouteLabels[propertyType];
           if (propertyInfo) {
             const isNew = pathSegments[4] === 'new';

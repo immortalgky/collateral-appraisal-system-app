@@ -1,6 +1,7 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import type { ReactNode } from 'react';
+import CondoAreaDetailForm from './CondoAreaDetailForm';
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -71,12 +72,12 @@ function CondoDetailForm() {
       <SectionRow title="Roof" icon="tent">
         <FormFields fields={roofFormFields} />
       </SectionRow>
-      {/* 
+
       <SectionRow title="Area Details" icon="chart-area">
         <div className="col-span-12">
-          <CondoAreaDetailForm name={'condoDetail'} />
+          <CondoAreaDetailForm name={'areaDetails'} />
         </div>
-      </SectionRow> */}
+      </SectionRow>
 
       <SectionRow title="Expropriation" icon="file-invoice">
         <FormFields fields={expropriationFields} />
@@ -395,14 +396,13 @@ const ageHeightCondoFields: FormField[] = [
     label: 'Building Age (Years)',
     name: 'buildingAge',
     wrapperClassName: 'col-span-4',
-    required: false,
   },
   {
     type: 'number-input',
     label: 'Total Number of Floors',
     name: 'numberOfFloors',
     wrapperClassName: 'col-span-4',
-    required: false,
+    required: true,
   },
 ];
 

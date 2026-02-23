@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import { useAppraisalContext } from '../../context/AppraisalContext';
-import { useGetMarketSurvey } from '../../api';
+import { useGetMarketComparables } from '../../api/marketComparable';
 import FormCard from '@shared/components/sections/FormCard';
+import CollateralSelectModal from '../CollateralSelectModal';
 
 import type { MarketComparableDtoType } from '@/shared/schemas/v1';
 
-interface MarketSurveyItem {
+interface MarketComparableItem {
   id: string;
   comparableNumber: string;
   propertyType: string;
@@ -18,19 +20,40 @@ interface MarketSurveyItem {
   status?: string | null;
 }
 
+const propertyTypeOptions = [
+  { code: 'Land', description: 'Land' },
+  { code: 'Building', description: 'Building' },
+  { code: 'LandAndBuilding', description: 'Land and Building' },
+  { code: 'Condo', description: 'Condominium' },
+  { code: 'Machine', description: 'Machinery' },
+  { code: 'LS', description: 'Lease Agreement Lands' },
+  { code: 'BS', description: 'Lease Agreement Building' },
+  { code: 'LBS', description: 'Lease Agreement Land and Building' },
+];
+
 export const MarketsTab = () => {
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
 
-  const { data: marketSurveys, isLoading, isError } = useGetMarketSurvey(appraisalId);
+  const { data: marketComparables, isLoading, isError } = useGetMarketComparables(appraisalId);
 
-  const handleCreateSurvey = () => {
-    navigate('/market-survey/detail');
+  // Collateral type select modal state
+  const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenCreateModal = (e: React.MouseEvent) => {
+    setModalPosition({ x: e.clientX, y: e.clientY });
+    setIsModalOpen(true);
   };
 
-  const handleViewSurvey = (surveyId: string) => {
-    navigate(`/market-survey/detail?id=${surveyId}`);
+  const handleCreateSelect = (item: any) => {
+    setIsModalOpen(false);
+    navigate(`/appraisal/${appraisalId}/property/market-comparable/new?propertyType=${item.code}`);
+  };
+
+  const handleViewComparable = (comparableId: string) => {
+    navigate(`/appraisal/${appraisalId}/property/market-comparable/${comparableId}`);
   };
 
   if (isLoading) {
@@ -60,54 +83,59 @@ export const MarketsTab = () => {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-500">
         <Icon name="triangle-exclamation" className="text-4xl mb-3 text-red-400" />
-        <p className="text-sm font-medium">Failed to load market surveys</p>
+        <p className="text-sm font-medium">Failed to load market comparables</p>
         <p className="text-xs text-gray-400 mt-1">Please try again later</p>
       </div>
     );
   }
 
   // Transform API response to match component interface
-  const surveys: MarketSurveyItem[] = (marketSurveys as MarketComparableDtoType[] | undefined)?.map(item => ({
-    id: item.id ?? '',
-    comparableNumber: item.comparableNumber ?? '',
-    propertyType: item.propertyType ?? '',
-    dataSource: item.dataSource,
-    transactionType: item.transactionType,
-    transactionDate: item.transactionDate,
-    transactionPrice: item.transactionPrice,
-    status: item.status,
-  })) || [];
+  const comparables: MarketComparableItem[] =
+    (marketComparables as MarketComparableDtoType[] | undefined)?.map(item => ({
+      id: item.id ?? '',
+      comparableNumber: item.comparableNumber ?? '',
+      propertyType: item.propertyType ?? '',
+      dataSource: item.dataSource,
+      transactionType: item.transactionType,
+      transactionDate: item.transactionDate,
+      transactionPrice: item.transactionPrice,
+      status: item.status,
+    })) || [];
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Market Surveys</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            {surveys.length} survey{surveys.length !== 1 ? 's' : ''} linked to this appraisal
+            {comparables.length} comparable{comparables.length !== 1 ? 's' : ''} linked to this appraisal
           </p>
         </div>
-        <Button variant="primary" onClick={handleCreateSurvey} className="flex items-center gap-2">
+        <Button variant="primary" onClick={handleOpenCreateModal} className="flex items-center gap-2">
           <Icon name="plus" />
-          Create Survey
+          Create Comparable
         </Button>
       </div>
 
-      {/* Survey List */}
-      {surveys.length === 0 ? (
-        <FormCard title="Market Surveys" subtitle="Comparative market analysis">
+      {/* Comparable List */}
+      {comparables.length === 0 ? (
+        <FormCard title="Market Comparables" subtitle="Comparative market analysis">
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
               <Icon name="chart-line" className="text-2xl text-gray-300" />
             </div>
-            <p className="text-sm font-medium text-gray-500">No market surveys yet</p>
+            <p className="text-sm font-medium text-gray-500">No market comparables yet</p>
             <p className="text-xs text-gray-400 mt-1 mb-4">
-              Create a market survey to analyze comparable properties
+              Create a market comparable to analyze comparable properties
             </p>
-            <Button variant="outline" onClick={handleCreateSurvey} className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-2"
+            >
               <Icon name="plus" />
-              Create First Survey
+              Create First Comparable
             </Button>
           </div>
         </FormCard>
@@ -125,34 +153,38 @@ export const MarketsTab = () => {
 
           {/* Table Body */}
           <div className="divide-y divide-gray-100">
-            {surveys.map(survey => (
+            {comparables.map(comparable => (
               <div
-                key={survey.id}
+                key={comparable.id}
                 className="grid grid-cols-12 gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer group"
-                onClick={() => handleViewSurvey(survey.id)}
+                onClick={() => handleViewComparable(comparable.id)}
               >
                 <div className="col-span-2 flex items-center">
-                  <span className="text-sm font-medium text-gray-900">{survey.comparableNumber}</span>
-                </div>
-                <div className="col-span-2 flex items-center">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                    {survey.propertyType}
+                  <span className="text-sm font-medium text-gray-900">
+                    {comparable.comparableNumber}
                   </span>
                 </div>
                 <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-600 truncate">{survey.dataSource || '-'}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                    {comparable.propertyType}
+                  </span>
                 </div>
                 <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-600 truncate">{survey.transactionType || '-'}</span>
+                  <span className="text-sm text-gray-600 truncate">{comparable.dataSource || '-'}</span>
+                </div>
+                <div className="col-span-2 flex items-center">
+                  <span className="text-sm text-gray-600 truncate">
+                    {comparable.transactionType || '-'}
+                  </span>
                 </div>
                 <div className="col-span-2 flex items-center">
                   <span className="text-sm text-gray-700">
-                    {survey.transactionPrice
+                    {comparable.transactionPrice
                       ? new Intl.NumberFormat('th-TH', {
                           style: 'currency',
                           currency: 'THB',
-                          maximumFractionDigits: 0
-                        }).format(survey.transactionPrice)
+                          maximumFractionDigits: 0,
+                        }).format(comparable.transactionPrice)
                       : '-'}
                   </span>
                 </div>
@@ -161,10 +193,10 @@ export const MarketsTab = () => {
                     type="button"
                     onClick={e => {
                       e.stopPropagation();
-                      handleViewSurvey(survey.id);
+                      handleViewComparable(comparable.id);
                     }}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
-                    title="View survey"
+                    title="View comparable"
                   >
                     <Icon name="eye" style="solid" />
                   </button>
@@ -172,10 +204,10 @@ export const MarketsTab = () => {
                     type="button"
                     onClick={e => {
                       e.stopPropagation();
-                      handleViewSurvey(survey.id);
+                      handleViewComparable(comparable.id);
                     }}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Edit survey"
+                    title="Edit comparable"
                   >
                     <Icon name="pen-to-square" style="solid" />
                   </button>
@@ -184,6 +216,16 @@ export const MarketsTab = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Property Type Select Modal */}
+      {isModalOpen && (
+        <CollateralSelectModal
+          items={propertyTypeOptions}
+          position={modalPosition || { x: 0, y: 0 }}
+          onSelect={handleCreateSelect}
+          onCancel={() => setIsModalOpen(false)}
+        />
       )}
     </div>
   );

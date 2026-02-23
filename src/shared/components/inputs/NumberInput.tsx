@@ -232,7 +232,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                 : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
               isDisabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
-              rightIcon && 'pr-9',
+              rightIcon && 'pr-12',
               fullWidth && 'w-full',
               className,
             )}

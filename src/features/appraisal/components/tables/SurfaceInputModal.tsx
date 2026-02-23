@@ -10,8 +10,8 @@ export interface SurfaceData {
   fromFloorNumber: number | null;
   toFloorNumber: number | null;
   floorType: string;
-  floorStructure: string;
-  floorSurface: string;
+  floorStructureType: string;
+  floorSurfaceType: string;
 }
 
 interface SurfaceInputModalProps {
@@ -26,8 +26,8 @@ const defaultSurfaceData: SurfaceData = {
   fromFloorNumber: null,
   toFloorNumber: null,
   floorType: '',
-  floorStructure: '',
-  floorSurface: '',
+  floorStructureType: '',
+  floorSurfaceType: '',
 };
 
 const floorTypeOptions = [
@@ -39,7 +39,7 @@ const floorTypeOptions = [
   { value: 'PARQUET', label: 'Parquet' },
 ];
 
-const floorStructureOptions = [
+const floorStructureTypeOptions = [
   { value: 'CB', label: 'Cement Block' },
   { value: 'WOOD', label: 'Wood' },
   { value: 'IRON', label: 'Iron' },
@@ -47,7 +47,7 @@ const floorStructureOptions = [
   { value: 'STEEL', label: 'Steel' },
 ];
 
-const floorSurfaceOptions = [
+const floorSurfaceTypeOptions = [
   { value: 'CB', label: 'Cement Block' },
   { value: 'WOOD', label: 'Wood' },
   { value: 'IRON', label: 'Iron' },
@@ -88,8 +88,8 @@ const SurfaceInputModal = ({
   const fromFloorNumber = watch('fromFloorNumber');
   const toFloorNumber = watch('toFloorNumber');
   const floorType = watch('floorType');
-  const floorStructure = watch('floorStructure');
-  const floorSurface = watch('floorSurface');
+  const floorStructureType = watch('floorStructureType');
+  const floorSurfaceType = watch('floorSurfaceType');
 
   // Use portal to render modal outside parent form to avoid nested form issues
   return createPortal(
@@ -116,7 +116,7 @@ const SurfaceInputModal = ({
 
         {/* Form Content */}
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={(e) => { e.stopPropagation(); handleSubmit(onSubmit)(e); }}>
             <div className="px-6 py-5 space-y-5">
               {/* Floor Range */}
               <div>
@@ -160,9 +160,9 @@ const SurfaceInputModal = ({
                   Floor Structure
                 </label>
                 <Dropdown
-                  options={floorStructureOptions}
-                  value={floorStructure}
-                  onChange={value => setValue('floorStructure', value)}
+                  options={floorStructureTypeOptions}
+                  value={floorStructureType}
+                  onChange={value => setValue('floorStructureType', value)}
                   placeholder="Select floor structure"
                 />
               </div>
@@ -173,9 +173,9 @@ const SurfaceInputModal = ({
                   Floor Surface
                 </label>
                 <Dropdown
-                  options={floorSurfaceOptions}
-                  value={floorSurface}
-                  onChange={value => setValue('floorSurface', value)}
+                  options={floorSurfaceTypeOptions}
+                  value={floorSurfaceType}
+                  onChange={value => setValue('floorSurfaceType', value)}
                   placeholder="Select floor surface"
                 />
               </div>

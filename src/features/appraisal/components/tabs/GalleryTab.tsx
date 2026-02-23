@@ -746,7 +746,7 @@ export const GalleryTab = () => {
         latitude: null,
         longitude: null,
         capturedAt: null,
-        photoTopicId: null,
+        photoTopicIds: null,
       });
 
       setUploadingPhotos(prev => {

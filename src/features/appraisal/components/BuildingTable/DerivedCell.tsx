@@ -6,11 +6,12 @@ interface DerivedCellProps {
   fieldName: string;
   control: Control<FieldValues>;
   isEditing: boolean;
-  render?: (value: number | string | boolean) => React.ReactNode;
+  row?: Record<string, any>;
+  render?: (ctx: { value: any; row: any; rowIndex: number }) => React.ReactNode;
   modifier?: (v: number | string | boolean) => number | string | boolean;
 }
 
-const DerivedCell = ({ arrayName, rowIndex, fieldName, render, modifier }: DerivedCellProps) => {
+const DerivedCell = ({ arrayName, rowIndex, fieldName, row, render, modifier }: DerivedCellProps) => {
   const cellName = `${arrayName}.${rowIndex}.${fieldName}`;
 
   const value = useWatch({ name: cellName });
@@ -22,7 +23,7 @@ const DerivedCell = ({ arrayName, rowIndex, fieldName, render, modifier }: Deriv
   if (value != undefined) {
     if (modifier != undefined) {
       if (render != undefined) {
-        return render(modifier(value));
+        return render({ value: modifier(value), row: row ?? {}, rowIndex });
       }
       return (
         <span
@@ -33,7 +34,7 @@ const DerivedCell = ({ arrayName, rowIndex, fieldName, render, modifier }: Deriv
         </span>
       );
     } else if (render != undefined) {
-      return render(value);
+      return render({ value, row: row ?? {}, rowIndex });
     }
     return (
       <span

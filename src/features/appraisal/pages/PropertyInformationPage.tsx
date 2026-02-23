@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
 import {
@@ -26,8 +27,14 @@ const TABS: Tab[] = [
   { id: 'laws', label: 'Laws', icon: 'gavel' },
 ];
 
+const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
+
 export default function PropertyInformationPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('properties');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabId | null;
+  const initialTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'properties';
+
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const renderTabContent = () => {

@@ -401,7 +401,7 @@ export const PhotosTab = () => {
               assignPhotoToTopic({
                 appraisalId,
                 photoId: photo.id,
-                photoTopicId: null,
+                photoTopicIds: [],
               })
             )
           );
@@ -474,7 +474,7 @@ export const PhotosTab = () => {
               latitude: null,
               longitude: null,
               capturedAt: null,
-              photoTopicId: selectedTopicId,
+              photoTopicIds: [selectedTopicId],
             });
 
             toast.success(`Uploaded ${file.name}`);
@@ -506,7 +506,7 @@ export const PhotosTab = () => {
         await assignPhotoToTopic({
           appraisalId,
           photoId: image.id,
-          photoTopicId: selectedTopicId,
+          photoTopicIds: [selectedTopicId],
         });
         successCount++;
       } catch {
@@ -525,7 +525,7 @@ export const PhotosTab = () => {
         await assignPhotoToTopic({
           appraisalId,
           photoId: deleteConfirm.id,
-          photoTopicId: null,
+          photoTopicIds: [],
         });
       } catch {
         toast.error('Failed to remove photo from topic');
