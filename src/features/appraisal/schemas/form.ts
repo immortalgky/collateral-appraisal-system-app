@@ -614,7 +614,16 @@ export const createCondoFormDefault: createCondoFormType = {
   bathroomFloorMaterialTypeOther: '',
   roofType: '',
   roofTypeOther: '',
-  areaDetails: [],
+  areaDetails: [
+    {
+      areaDescription: 'Interior',
+      areaSize: 0,
+    },
+    {
+      areaDescription: 'Balcony',
+      areaSize: 0,
+    },
+  ],
   totalBuildingArea: 0,
   isExpropriated: false,
   expropriationRemark: '',
