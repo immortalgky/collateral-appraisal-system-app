@@ -80,8 +80,9 @@ export function ComparativeSurveySection({
             </tr>
           </thead>
           <tbody>
-            {comparativeFactors.map((compFact: any, rowIndex: number) => {
-              const selected = comparativeFactors[rowIndex];
+            {/* use comparativeSurveyFactors directly because we need to update it immediatly */}
+            {comparativeSurveyFactors.map((compFact: any, rowIndex: number) => {
+              const selected = comparativeSurveyFactors[rowIndex];
               const options = (allFactors ?? [])
                 .filter(
                   (f: FactorDataType) =>

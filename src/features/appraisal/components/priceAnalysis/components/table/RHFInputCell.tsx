@@ -1,4 +1,4 @@
-import { NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
+import { Dropdown, NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
 import clsx from 'clsx';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 import TDropdown from './TDropdown';
@@ -70,14 +70,22 @@ export const RHFInputCell = ({
   }
 
   if (inputType === 'select') {
-    return <TDropdown {...field} options={options ?? []} error={error?.message} />; // TODO error message on validation
+    // return (
+    //   <TDropdown
+    //     {...field}
+    //     value={field.value ?? ''}
+    //     options={options ?? []}
+    //     error={error?.message}
+    //   />
+    // ); // TODO error message on validation
+    return <Dropdown {...field} options={options ?? []} error={error?.message} />;
   }
 
   if (inputType === 'toggle') {
     return (
       <Toggle
         {...field}
-        options={toggle.options}
+        options={toggle.options ?? []}
         checked={field.value}
         onChange={e => {
           const next = onUserChange ? onUserChange(e as any) : e;

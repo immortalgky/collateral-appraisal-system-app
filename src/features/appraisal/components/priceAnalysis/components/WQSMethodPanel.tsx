@@ -99,6 +99,7 @@ export function WQSMethodPanel({
   } = methods;
 
   /** Template selector states handler */
+  /** market comparable must be initialize from database */
   const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
     setComparativeSurveys([...surveys]);

@@ -135,12 +135,14 @@ export function useInitializePriceAnalysis({
     const groupId = groupDetailQuery.data.id;
     const properties = groupDetailQuery.data.properties ?? [];
     for (const prop of properties) {
-      allPropertyEntries.push({
-        propertyId: prop.propertyId,
-        propertyType: prop.propertyType ?? 'Lands',
-        groupId,
-        sequenceInGroup: prop.sequenceInGroup,
-      });
+      if (!!prop.propertyId && !!prop.sequenceInGroup) {
+        allPropertyEntries.push({
+          propertyId: prop.propertyId,
+          propertyType: prop.propertyType ?? 'Lands',
+          groupId,
+          sequenceInGroup: prop.sequenceInGroup,
+        });
+      }
     }
   }
 
@@ -281,6 +283,8 @@ export function useInitializePriceAnalysis({
   const allFactorQuery = useQuery({
     queryKey: ['all-factors'],
     queryFn: async (): Promise<FactorDataType> => {
+      // const { data } = await axios.get(`/market-comparable-factors`);
+
       // MOCK delay:
       await new Promise(resolve => setTimeout(resolve, 1000));
       return ALL_FACTORS;

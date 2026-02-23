@@ -15,7 +15,7 @@ import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/
 import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
 import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
 import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
-import type { MarketComparableDetailType } from '../../../schemas/v1';
+import type { FactorDataType, MarketComparableDetailType } from '../../../schemas/v1';
 import type { SaleAdjustmentGridQualitativeFormType } from '../../../schemas/saleAdjustmentGridForm';
 import { readFactorValue } from '../../../domain/readFactorValue';
 type SurveyFactor = { id: string; value?: number | string | null };
@@ -87,7 +87,6 @@ export function buildSaleGridCalculationDerivedRules(args: {
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
-              console.log(offeringPriceValue);
               return calcAdjustedValue(
                 offeringPriceValue,
                 offeringPriceAdjustmentPct,
@@ -135,7 +134,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
           deps: [],
           compute: () => {
             const propertyLandArea = getPropertyValueByFactorCode('05', property) ?? 0;
-            const findSurveyLandArea = survey.factorData?.find(f => f.id === '05');
+            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '05');
             const surveyLandArea = findSurveyLandArea
               ? readFactorValue({
                   dataType: findSurveyLandArea.dataType,
@@ -162,7 +161,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
           deps: [],
           compute: () => {
             const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
-            const findSurveyUsableArea = survey.factorData?.find(f => f.id === '12');
+            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({
                   dataType: findSurveyUsableArea.dataType,
@@ -303,6 +302,7 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
           compute: ({ getValues }) => {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
+            console.log(`adjustment factors ${rowIndex} ${columnIndex}:`, level);
             return qualitativeDefaultPercent(level) ?? null;
           },
         };

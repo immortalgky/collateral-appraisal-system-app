@@ -192,7 +192,6 @@ export function useDerivedFields<
         const nextNorm = normalize(next);
 
         if (!equals(curr, nextNorm)) {
-          console.log(curr, nextNorm);
           setValue(r.targetPath as any, nextNorm as any, {
             shouldDirty: r.setValueOptions?.shouldDirty ?? false,
             shouldTouch: r.setValueOptions?.shouldTouch ?? false,

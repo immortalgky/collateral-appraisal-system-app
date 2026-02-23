@@ -71,7 +71,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
           : [];
 
     // to allow selecting placeholder
-    dropdownOptions = [{ value: undefined, label: placeholder, id: '' }, ...dropdownOptions];
+    dropdownOptions = [{ value: '', label: placeholder, id: '' }, ...dropdownOptions];
 
     const isControlled = onChange !== undefined && value !== undefined;
     const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;

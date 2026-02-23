@@ -96,6 +96,7 @@ export function setSaleAdjustmentGridInitialValue({
     return;
   }
 
+  console.log('check called on set initial value ');
   reset(
     {
       methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen

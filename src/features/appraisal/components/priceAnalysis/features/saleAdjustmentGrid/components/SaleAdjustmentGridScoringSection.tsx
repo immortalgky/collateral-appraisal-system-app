@@ -101,6 +101,7 @@ export const SaleAdjustmentGridScoringSection = ({
   });
 
   const qualitativeFactors = useMemo(() => {
+    console.log('qualitativeFactorFields change!');
     return (getValues(qualitativesPath()) as SaleAdjustmentGridQualitativeFormType[]) ?? [];
   }, [qualitativeFactorFields]);
 
@@ -119,6 +120,7 @@ export const SaleAdjustmentGridScoringSection = ({
         adjustPercent: 0,
         adjustAmount: 0,
       })),
+      remark: '',
     });
   };
 
@@ -232,13 +234,13 @@ export const SaleAdjustmentGridScoringSection = ({
 
           <tbody className="divide-y divide-gray-100">
             {/* qualitative section */}
-            {qualitativeFactors.map((factor, rowIndex: number) => {
+            {qualitativeFactorFields.map((factor, rowIndex: number) => {
               const selected = factor.factorCode ?? '';
               const options = comparativeFactors
                 .filter(
                   compFact =>
                     compFact.factorCode === selected ||
-                    !qualitativeFactors.some(q => q.factorCode === factor.factorCode),
+                    !qualitativeFactorFields.some(q => q.factorCode === compFact.factorCode),
                 )
                 .map(compFact => ({
                   label: getFactorDesciption(compFact.factorCode) ?? '',
@@ -248,7 +250,7 @@ export const SaleAdjustmentGridScoringSection = ({
                 <tr key={factor.factorCode}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     <div className="truncate">
-                      {(template?.comparativeFactors ?? []).find(
+                      {(template?.calculationFactors ?? []).find(
                         (t: TemplateComparativeFactorType) => t.factorCode === factor.factorCode,
                       ) ? (
                         <RHFInputCell
@@ -269,6 +271,15 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
 
                   {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                    console.log(
+                      'qualitative level: ',
+                      getValues(
+                        qualitativeLevelPath({
+                          row: rowIndex,
+                          column: columnIndex,
+                        }),
+                      ),
+                    );
                     return (
                       <td key={survey.id} className={clsx(surveyColumnBody)}>
                         <div className="flex flex-row justitfy-between items-center gap-2">
@@ -279,7 +290,6 @@ export const SaleAdjustmentGridScoringSection = ({
                                 column: columnIndex,
                               })}
                               inputType="select"
-                              // can config
                               options={[
                                 { label: 'Equal', value: 'E' },
                                 { label: 'Inferior', value: 'I' },
@@ -381,7 +391,6 @@ export const SaleAdjustmentGridScoringSection = ({
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        console.log(value);
                         return value ? value.toLocaleString() : '';
                       }}
                     />
@@ -567,7 +576,7 @@ export const SaleAdjustmentGridScoringSection = ({
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-gray-200', actionColumnBody)}></td>
             </tr>
-            {qualitativeFactors.map((factor, rowIndex) => {
+            {qualitativeFactorFields.map((factor, rowIndex) => {
               return (
                 <tr key={factor.factorCode}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>

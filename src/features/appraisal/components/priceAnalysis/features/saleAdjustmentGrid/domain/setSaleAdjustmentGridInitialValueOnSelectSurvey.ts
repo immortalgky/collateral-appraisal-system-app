@@ -41,7 +41,7 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
     [
       ...qualitativeFactors.map((factor: SaleAdjustmentGridQualitativeFormType) => {
         return {
-          ...factor,
+          factorCode: factor.factorCode,
           qualitatives: comparativeSurveys.map((survey: MarketComparableDetailType) => ({
             marketId: survey.id,
             qualitativeLevel: 'E', // TODO: can config
@@ -51,6 +51,7 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
     ],
     { shouldDirty: false },
   );
+  console.log('set initial qualitative', getValues(qualitativesPath()));
 
   setValue(
     calculationsPath(),
@@ -66,7 +67,6 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
             }),
           ]),
         );
-        console.log('set offring price: ', surveyMap.get('17'));
         return {
           marketId: survey.id,
           offeringPrice: surveyMap.get('17') ?? 0,

@@ -62,8 +62,7 @@ export function SaleAdjustmentGridSecondRevision({
                       fieldName={calculationLandAreaDiffPath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        console.log(value);
-                        return value ? value.toLocaleString() : '';
+                        return value ? value.toLocaleString() : value;
                       }}
                     />
                   </div>
@@ -142,7 +141,7 @@ export function SaleAdjustmentGridSecondRevision({
                     fieldName={calculationUsableAreaDiffPath({ column: columnIndex })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : '';
+                      return value ? value.toLocaleString() : value;
                     }}
                   />
                 </td>

@@ -6,7 +6,13 @@ const ComparativeFactors = z
   })
   .passthrough();
 
-const ComparativeSurveys = z.object({ marketId: z.string(), displaySeq: z.number() }).passthrough();
+const ComparativeSurveys = z
+  .object({
+    linkId: z.string().optional().nullable(),
+    marketId: z.string(),
+    displaySeq: z.number(),
+  })
+  .passthrough();
 
 const SaleAdjustmentGridQualitativeSurvey = z
   .object({
