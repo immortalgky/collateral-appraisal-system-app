@@ -26,6 +26,7 @@ interface FormTableRegularHeader {
   label: string;
   inputType?: 'text' | 'number' | 'dropdown';
   width?: string; // Optional fixed width like '150px' or '20%'
+  align?: 'left' | 'center' | 'right';
   decimalPlaces?: number; // For number inputs (default: 2)
   options?: ListBoxItem[]; // For dropdown input type
 }
@@ -166,8 +167,12 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
             {headers.map((header, index) => (
               <th
                 key={index}
-                className={`text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg ${isReadOnly && index === headers.length - 1 ? 'rounded-tr-lg' : ''}`}
-                style={{ width: 'width' in header ? header.width : 'auto', minWidth: '120px' }}
+                className={`text-primary text-sm font-semibold py-3 px-4 ${'align' in header && header.align ? `text-${header.align}` : 'text-left'} first:rounded-tl-lg ${isReadOnly && index === headers.length - 1 ? 'rounded-tr-lg' : ''}`}
+                style={
+                  'rowNumberColumn' in header
+                    ? { width: '60px' }
+                    : { width: 'width' in header ? header.width : 'auto', minWidth: '120px' }
+                }
               >
                 {header.label}
               </th>
@@ -287,13 +292,14 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
         {hasSumRow && (
           <tfoot>
             <tr className="bg-gray-50 border-t-2 border-gray-200">
-              {headers.map((header, index) => {
+              {(() => { let hasRenderedTotalLabel = false; return headers.map((header, index) => {
                 if ('name' in header && sumColumns.includes(header.name)) {
                   const currentTotal = totalFieldName
                     ? (watch(totalFieldName) ?? calculatedTotal)
                     : calculatedTotal;
+                  const alignClass = 'align' in header && header.align === 'right' ? 'text-right' : '';
                   return (
-                    <td key={index} className="py-3 px-4">
+                    <td key={index} className={`py-3 px-4 ${alignClass}`}>
                       {isReadOnly ? (
                         <span className="text-sm font-semibold text-gray-900 text-right block">
                           {formatNumber(currentTotal)}
@@ -344,13 +350,16 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
                           )}
                         </div>
                       ) : (
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-gray-900 block">
                           {formatNumber(calculatedTotal)}
                         </span>
                       )}
                     </td>
                   );
-                } else if (index === 0) {
+                } else if ('rowNumberColumn' in header) {
+                  return <td key={index} className="py-3 px-4" />;
+                } else if (!hasRenderedTotalLabel) {
+                  hasRenderedTotalLabel = true;
                   return (
                     <td key={index} className="py-3 px-4 text-sm font-semibold text-gray-600">
                       <div className="flex items-center gap-2">
@@ -367,7 +376,7 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
                 } else {
                   return <td key={index} className="py-3 px-4" />;
                 }
-              })}
+              }); })()}
               {!isReadOnly && <td className="py-3 px-4" />}
             </tr>
           </tfoot>
@@ -449,7 +458,7 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
       {editIndex === index ? (
         renderInput()
       ) : (
-        <div className={isNumber ? 'text-right' : ''}>{formatDisplayValue(value)}</div>
+        <div className={isNumber ? 'text-right' : 'truncate'}>{formatDisplayValue(value)}</div>
       )}
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
