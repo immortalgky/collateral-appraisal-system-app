@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
 import Sidebar, { MobileSidebar } from '@shared/components/Sidebar';
@@ -7,8 +7,7 @@ import Breadcrumb from '@shared/components/Breadcrumb';
 import ErrorBoundary from '@shared/components/ErrorBoundary';
 import Icon from '@shared/components/Icon';
 import Logo from '@assets/logo-lh-bank.svg';
-import { useAllParameters } from '@shared/api/parameters';
-import { useParameterStore } from '@shared/store';
+import { useParametersQuery } from '@shared/api/parameters';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
@@ -69,9 +68,16 @@ function RightMenuContainer({ portalRef }: { portalRef: React.RefObject<HTMLDivE
   );
 }
 
+/**
+ * Non-rendering component that handles parameter loading.
+ * useParametersQuery fetches once and hydrates the Zustand store inside queryFn.
+ */
+function ParameterLoader() {
+  useParametersQuery();
+  return null;
+}
+
 function Layout() {
-  const { data, isSuccess } = useAllParameters();
-  const { setParameters } = useParameterStore();
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
@@ -81,18 +87,13 @@ function Layout() {
   // Get role-based navigation
   const navigation = useNavigation();
 
-  useEffect(() => {
-    if (isSuccess && data !== undefined) {
-      setParameters(data);
-    }
-  }, [data, isSuccess, setParameters]);
-
   return (
     <RightMenuPortalProvider
       portalRef={rightMenuPortalRef}
       isOpen={isRightMenuOpen}
       onToggle={toggleRightMenu}
     >
+      <ParameterLoader />
       <div className="h-screen flex flex-col">
         <MobileSidebar navigation={navigation} logo={Logo} />
         <Sidebar navigation={navigation} logo={Logo} />

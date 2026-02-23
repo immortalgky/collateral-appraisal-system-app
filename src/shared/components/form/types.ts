@@ -3,7 +3,6 @@ import type { FormStringToggleOption } from '../inputs/FormStringToggle';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { CheckboxOption } from '../inputs/CheckboxGroup';
 import type { AtLeastOne } from '@/shared/types';
-import type { ParameterParams } from '@/shared/types/api';
 
 // =============================================================================
 // Conditional Field Types
@@ -172,7 +171,7 @@ export interface SelectInputField extends BaseFormField {
 }
 
 export type DropdownField = BaseDropdownField &
-  AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
+  AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
 interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';

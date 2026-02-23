@@ -10,7 +10,6 @@ import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import PropertyInformationPage from '@/features/appraisal/pages/PropertyInformationPage';
 import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistPage';
-import LandDetailPage from '@/features/appraisal/pages/LandDetailPage';
 import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';

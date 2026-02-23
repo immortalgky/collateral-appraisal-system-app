@@ -1,21 +1,32 @@
-import { useState, useEffect } from 'react';
-import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
-import Icon from '@shared/components/Icon';
 import { useAppraisalContext } from '../context/AppraisalContext';
-import {
-  AppointmentAndFeeFormSchema,
-  appointmentAndFeeFormDefaults,
-} from '../schemas/appointmentAndFee';
-import type { AppointmentAndFeeFormType } from '../types/appointmentAndFee';
+import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
 import RescheduleModal from '../components/RescheduleModal';
 import FeeInformationSection from '../components/FeeInformationSection';
 import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import {
+  useCancelAppointment,
+  useCreateAppointment,
+  useGetAppointments,
+  useRescheduleAppointment,
+} from '../api/appointment';
+import {
+  useAddFeeItem,
+  useApproveFeeItem,
+  useGetAppraisalFees,
+  useRecordPayment,
+  useRejectFeeItem,
+  useRemoveFeeItem,
+  useRemovePayment,
+  useUpdateAppraisalFee,
+  useUpdateFeeItem,
+  useUpdatePayment,
+} from '../api/fee';
 
 /**
  * Appointment & Fee page for the appraisal workflow
@@ -23,168 +34,273 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
  */
 export default function AppointmentAndFeePage() {
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isCancelAppointmentModalOpen, setIsCancelAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
+  const appraisalId = appraisal?.appraisalId ?? '';
+  const currentUser = useAuthStore(state => state.user);
 
-  // Initialize form with default values or data from context
-  const methods = useForm<AppointmentAndFeeFormType>({
-    defaultValues: {
-      ...appointmentAndFeeFormDefaults,
-      appointment: {
-        dateTime: appraisal?.appointmentDateTime || null,
-        location: appraisal?.appointmentLocation || null,
-      },
-    },
-    resolver: zodResolver(AppointmentAndFeeFormSchema),
-  });
+  // API hooks - Appointments
+  const { data: appointments = [] } = useGetAppointments(appraisalId);
+  const createAppointment = useCreateAppointment();
+  const rescheduleAppointment = useRescheduleAppointment();
+  const cancelAppointment = useCancelAppointment();
 
-  const {
-    handleSubmit,
-    watch,
-    setValue,
-    getValues,
-    formState: { isDirty },
-  } = methods;
+  // API hooks - Fees
+  const { data: fees = [] } = useGetAppraisalFees(appraisalId);
+  const addFeeItem = useAddFeeItem();
+  const updateFeeItem = useUpdateFeeItem();
+  const removeFeeItem = useRemoveFeeItem();
+  const recordPayment = useRecordPayment();
+  const updatePayment = useUpdatePayment();
+  const removePayment = useRemovePayment();
+  const approveFeeItem = useApproveFeeItem();
+  const rejectFeeItem = useRejectFeeItem();
+  const updateAppraisalFee = useUpdateAppraisalFee();
 
-  // Warn user about unsaved changes before leaving
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = '';
+  // Get the latest appointment (last in the array)
+  const latestAppointment = appointments.length > 0 ? appointments[appointments.length - 1] : null;
+  const isNewAppointment = !latestAppointment;
+
+  // Get the first fee record
+  const currentFee = fees.length > 0 ? fees[0] : null;
+
+  const handleReschedule = async (data: {
+    dateTime: string;
+    location: string;
+    reason?: string;
+  }) => {
+    try {
+      if (isNewAppointment) {
+        await createAppointment.mutateAsync({
+          appraisalId,
+          assignmentId: appraisal?.appraisalId ?? '',
+          appointmentDateTime: data.dateTime,
+          appointedBy: currentUser?.id ?? '',
+          locationDetail: data.location,
+          contactPerson: null,
+          contactPhone: null,
+        });
+        toast.success('Appointment scheduled');
+      } else {
+        await rescheduleAppointment.mutateAsync({
+          appraisalId,
+          appointmentId: latestAppointment!.id,
+          changedBy: currentUser?.id ?? '',
+          newDateTime: data.dateTime,
+          reason: data.reason || null,
+        });
+        toast.success('Appointment rescheduled');
       }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
-
-  // Watch appointment data for display
-  const appointmentDateTime = watch('appointment.dateTime');
-  const appointmentLocation = watch('appointment.location');
-
-  const onSubmit: SubmitHandler<AppointmentAndFeeFormType> = async data => {
-    setIsSubmitting(true);
-    try {
-      // TODO: Add API call to save data
-      console.log('Form submitted:', data);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-      toast.success('Appointment & Fee saved successfully');
+      setIsRescheduleModalOpen(false);
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to save. Please try again.');
-      console.error('Save error:', error);
-    } finally {
-      setIsSubmitting(false);
+      toast.error(error.apiError?.detail || 'Failed to update appointment. Please try again.');
     }
   };
 
-  const handleSaveDraft = async () => {
-    setIsSavingDraft(true);
+  const handleCancelAppointment = async () => {
+    if (!latestAppointment) return;
     try {
-      const data = getValues();
-      // TODO: Add API call to save draft
-      console.log('Save draft:', data);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-      toast.success('Draft saved successfully');
+      await cancelAppointment.mutateAsync({
+        appraisalId,
+        appointmentId: latestAppointment.id,
+        changedBy: currentUser?.id ?? '',
+        reason: null,
+      });
+      setIsCancelAppointmentModalOpen(false);
+      toast.success('Appointment cancelled');
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
-      console.error('Save draft error:', error);
-    } finally {
-      setIsSavingDraft(false);
+      toast.error(error.apiError?.detail || 'Failed to cancel appointment. Please try again.');
     }
   };
 
-  const handleCancel = () => {
-    if (isDirty) {
-      setIsCancelModalOpen(true);
-    } else {
-      navigate(-1);
+  const handleApproveFeeItem = async (feeId: string, itemId: string) => {
+    try {
+      await approveFeeItem.mutateAsync({
+        appraisalId,
+        feeId,
+        itemId,
+        approvedBy: currentUser?.id ?? '',
+      });
+      toast.success('Fee item approved');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to approve fee item.');
     }
   };
 
-  const handleConfirmCancel = () => {
-    setIsCancelModalOpen(false);
-    navigate(-1);
+  const handleRejectFeeItem = async (feeId: string, itemId: string, reason: string) => {
+    try {
+      await rejectFeeItem.mutateAsync({
+        appraisalId,
+        feeId,
+        itemId,
+        rejectedBy: currentUser?.id ?? '',
+        reason: reason || 'Rejected',
+      });
+      toast.success('Fee item rejected');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to reject fee item.');
+    }
   };
 
-  const handleReschedule = (data: { dateTime: string; location: string }) => {
-    const isNewAppointment = !appointmentDateTime;
-    setValue('appointment.dateTime', data.dateTime, { shouldDirty: true });
-    setValue('appointment.location', data.location, { shouldDirty: true });
-    setIsRescheduleModalOpen(false);
-    toast.success(isNewAppointment ? 'Appointment scheduled' : 'Appointment rescheduled');
+  const handleAddFeeItem = async (data: {
+    feeCode: string;
+    feeDescription: string;
+    feeAmount: number;
+  }) => {
+    if (!currentFee) return;
+    await addFeeItem.mutateAsync({
+      appraisalId,
+      feeId: currentFee.id,
+      ...data,
+    });
+  };
+
+  const handleUpdateFeeItem = async (
+    feeId: string,
+    feeItemId: string,
+    data: { feeCode: string; feeDescription: string; feeAmount: number },
+  ) => {
+    await updateFeeItem.mutateAsync({
+      appraisalId,
+      feeId,
+      feeItemId,
+      ...data,
+    });
+  };
+
+  const handleRemoveFeeItem = async (feeId: string, feeItemId: string) => {
+    await removeFeeItem.mutateAsync({
+      appraisalId,
+      feeId,
+      feeItemId,
+    });
+  };
+
+  const handleRecordPayment = async (data: {
+    paymentAmount: number;
+    paymentDate: string;
+    paymentMethod?: string;
+    paymentReference?: string;
+    remarks?: string;
+  }) => {
+    if (!currentFee) return;
+    try {
+      await recordPayment.mutateAsync({
+        appraisalId,
+        feeId: currentFee.id,
+        paymentAmount: data.paymentAmount,
+        paymentDate: data.paymentDate,
+        paymentMethod: data.paymentMethod || null,
+        paymentReference: data.paymentReference || null,
+        remarks: data.remarks || null,
+      });
+      toast.success('Payment recorded');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to record payment.');
+    }
+  };
+
+  const handleUpdatePayment = async (
+    paymentId: string,
+    data: { paymentAmount: number; paymentDate: string },
+  ) => {
+    if (!currentFee) return;
+    try {
+      await updatePayment.mutateAsync({
+        appraisalId,
+        feeId: currentFee.id,
+        paymentId,
+        ...data,
+      });
+      toast.success('Payment updated');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to update payment.');
+    }
+  };
+
+  const handleRemovePayment = async (paymentId: string) => {
+    if (!currentFee) return;
+    try {
+      await removePayment.mutateAsync({
+        appraisalId,
+        feeId: currentFee.id,
+        paymentId,
+      });
+      toast.success('Payment deleted');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to delete payment.');
+    }
+  };
+
+  const handleUpdateFeePaymentType = async (value: string) => {
+    if (!currentFee) return;
+    try {
+      await updateAppraisalFee.mutateAsync({
+        appraisalId,
+        feeId: currentFee.id,
+        feePaymentType: value,
+      });
+      toast.success('Fee type updated');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed to update fee type.');
+    }
   };
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Main Content - Scrollable */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="flex flex-col gap-6 pb-6 pr-4">
-              {/* Appointment Information Section */}
-              <AppointmentInfoCard
-                dateTime={appointmentDateTime}
-                location={appointmentLocation}
-                appraiser={appraisal?.requestor}
-                onReschedule={() => setIsRescheduleModalOpen(true)}
-              />
+      {/* Main Content - Scrollable */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex flex-col gap-6 pb-6 pr-4">
+          {/* Appointment Information Section */}
+          <AppointmentInfoCard
+            appointment={latestAppointment}
+            onReschedule={() => setIsRescheduleModalOpen(true)}
+            onCancel={() => setIsCancelAppointmentModalOpen(true)}
+          />
 
-              {/* Divider */}
-              <div className="border-b border-gray-200" />
+          {/* Divider */}
+          <div className="border-b border-gray-200" />
 
-              {/* Fee and Payment Section - Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
-                {/* Fee Information (Left Column) */}
-                <FeeInformationSection />
+          {/* Fee and Payment Section - Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
+            {/* Fee Information (Left Column) */}
+            <FeeInformationSection
+              items={currentFee?.items ?? []}
+              vatRate={currentFee?.vatRate}
+              feePaymentType={(currentFee as any)?.feePaymentType ?? null}
+              onUpdateFeePaymentType={handleUpdateFeePaymentType}
+              onAddFeeItem={handleAddFeeItem}
+              onUpdateFeeItem={handleUpdateFeeItem}
+              onRemoveFeeItem={handleRemoveFeeItem}
+              onApproveFeeItem={handleApproveFeeItem}
+              onRejectFeeItem={handleRejectFeeItem}
+              isFeePaymentTypeUpdating={updateAppraisalFee.isPending}
+            />
 
-                {/* Payment Information (Right Column) */}
-                <PaymentInformationSection />
-              </div>
-            </div>
+            {/* Payment Information (Right Column) */}
+            <PaymentInformationSection
+              items={currentFee?.items ?? []}
+              fee={currentFee}
+              onRecordPayment={handleRecordPayment}
+              onUpdatePayment={handleUpdatePayment}
+              onRemovePayment={handleRemovePayment}
+              isPaymentPending={
+                recordPayment.isPending || updatePayment.isPending || removePayment.isPending
+              }
+            />
           </div>
+        </div>
+      </div>
 
-          {/* Sticky Action Buttons */}
-          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" type="button" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                {isDirty && (
-                  <span className="text-xs text-warning flex items-center gap-1">
-                    <Icon name="circle-exclamation" style="solid" className="w-3 h-3" />
-                    Unsaved changes
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  type="button"
-                  disabled={!isDirty || isSavingDraft}
-                  onClick={handleSaveDraft}
-                  isLoading={isSavingDraft}
-                >
-                  {!isSavingDraft && (
-                    <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                  )}
-                  Save Draft
-                </Button>
-                <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
-                  {!isSubmitting && (
-                    <Icon style="solid" name="floppy-disk" className="size-4 mr-2" />
-                  )}
-                  Save
-                </Button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </FormProvider>
+      {/* Sticky Footer */}
+      <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center">
+          <Button variant="ghost" type="button" onClick={() => navigate(-1)}>
+            Cancel
+          </Button>
+        </div>
+      </div>
 
       {/* Reschedule / Schedule Modal */}
       <RescheduleModal
@@ -192,22 +308,23 @@ export default function AppointmentAndFeePage() {
         onClose={() => setIsRescheduleModalOpen(false)}
         onSubmit={handleReschedule}
         defaultValues={{
-          dateTime: appointmentDateTime,
-          location: appointmentLocation,
+          dateTime: latestAppointment?.appointmentDateTime ?? null,
+          location: latestAppointment?.locationDetail ?? null,
         }}
-        isNewAppointment={!appointmentDateTime}
+        isNewAppointment={isNewAppointment}
+        isLoading={createAppointment.isPending || rescheduleAppointment.isPending}
       />
 
-      {/* Cancel Confirmation Dialog */}
+      {/* Cancel Appointment Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={isCancelModalOpen}
-        onClose={() => setIsCancelModalOpen(false)}
-        onConfirm={handleConfirmCancel}
-        title="Discard Changes?"
-        message="You have unsaved changes. Are you sure you want to leave? All changes will be lost."
-        confirmText="Discard"
-        cancelText="Keep Editing"
-        variant="warning"
+        isOpen={isCancelAppointmentModalOpen}
+        onClose={() => setIsCancelAppointmentModalOpen(false)}
+        onConfirm={handleCancelAppointment}
+        title="Cancel Appointment?"
+        message="Are you sure you want to cancel this appointment? This action cannot be undone."
+        confirmText="Cancel Appointment"
+        cancelText="Keep Appointment"
+        variant="danger"
       />
     </div>
   );

@@ -49,15 +49,16 @@ const CreateMarketSurveyPage = () => {
 
   const { mutate } = useCreateMarketSurveyRequest();
 
+  // TODO: Restructure form to match CreateMarketComparableRequest schema
   const onSubmit: SubmitHandler<CreateMarketSurveyRequestType> = data => {
-    mutate(data);
+    mutate(data as any);
   };
 
   const { isOpen, onToggle } = useDisclosure();
 
   const handleSaveDraft = () => {
     const data = getValues();
-    mutate(data);
+    mutate(data as any);
   };
 
   useEffect(() => {

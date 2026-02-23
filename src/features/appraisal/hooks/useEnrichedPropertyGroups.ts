@@ -1,82 +1,61 @@
+import { useMemo, useRef } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import {
-  type GetPropertyGroupByIdResponse,
-  propertyGroupKeys,
-  useGetPropertyGroups,
-} from '../api/propertyGroup';
-import type { PropertyGroup, PropertyItem, PropertyType } from '../types';
+import { schemas } from '@shared/schemas/v1';
+import type { z } from 'zod';
+import { propertyGroupKeys, useGetPropertyGroups } from '../api/propertyGroup';
+import type { PropertyGroup, PropertyItem, PropertyPhoto, PropertyType } from '../types';
 
-// ==================== Type-to-Endpoint Mapping ====================
-
-const typeToDetailEndpoint: Record<string, string> = {
-  Lands: 'land-detail',
-  'Lease Agreement Lands': 'land-detail',
-  Building: 'building-detail',
-  'Lease Agreement Building': 'building-detail',
-  'Land and building': 'land-and-building-detail',
-  'Lease Agreement Land and building': 'land-and-building-detail',
-  Condominium: 'condo-detail',
-  Machine: 'machinery-detail',
-  Vehicle: 'vehicle-detail',
-  Vessel: 'vessel-detail',
-  L: 'land-detail',
-  U: 'condo-detail',
-  LB: 'land-and-building-detail',
-};
+type GetPropertyGroupByIdResponse = z.infer<typeof schemas.GetPropertyGroupByIdResponse>;
+type PropertyGroupItem = z.infer<typeof schemas.PropertyGroupItemDto>;
 
 // ==================== Helpers ====================
 
-function formatPrice(value: number | null | undefined): string {
-  if (value == null) return '';
-  return `฿${value.toLocaleString()}`;
+const LAND_TYPES = new Set([
+  'L',
+  'LB',
+  'Lands',
+  'Land and building',
+  'Lease Agreement Lands',
+  'Lease Agreement Land and building',
+]);
+
+function formatWaToRaiNganWa(totalWa: number): string {
+  const rai = Math.floor(totalWa / 400);
+  const ngan = Math.floor((totalWa % 400) / 100);
+  const wa = totalWa % 100;
+  return `${rai}-${ngan}-${wa} (${totalWa} sq.wa)`;
 }
 
-function buildPriceRange(
-  sellingPrice: number | null | undefined,
-  forcedSalePrice: number | null | undefined,
-): string {
-  const selling = formatPrice(sellingPrice);
-  const forced = formatPrice(forcedSalePrice);
-  if (selling && forced) return `${forced} - ${selling}`;
-  if (selling) return selling;
-  if (forced) return forced;
-  return '-';
+function formatArea(area: number | null | undefined, propertyType: string | undefined): string {
+  if (area == null) return '-';
+  if (propertyType && LAND_TYPES.has(propertyType)) return formatWaToRaiNganWa(area);
+  return `${area} sq.m.`;
 }
 
-function buildLocation(
-  subDistrict: string | null | undefined,
-  district: string | null | undefined,
-  province: string | null | undefined,
-): string {
-  return [subDistrict, district, province].filter(Boolean).join(', ') || '-';
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-function buildArea(detail: Record<string, unknown>): string {
-  if (detail.totalBuildingArea != null) return `${detail.totalBuildingArea} sq.m.`;
-  if (detail.usableArea != null) return `${detail.usableArea} sq.m.`;
-  return '-';
-}
+function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyItem {
+  const photos: PropertyPhoto[] = (item.photos ?? []).map(p => ({
+    documentId: p.documentId,
+    isThumbnail: p.isThumbnail,
+  }));
+  const thumbnailId =
+    photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;
 
-function mapDetailToPropertyItem(detail: Record<string, unknown>): PropertyItem {
   return {
-    id: detail.propertyId as string,
-    type: (detail.propertyType as PropertyType) || 'Lands',
-    address: (detail.propertyName as string) || '-',
-    area: buildArea(detail),
-    priceRange: buildPriceRange(
-      detail.sellingPrice as number | null,
-      detail.forcedSalePrice as number | null,
-    ),
-    location:
-      (detail.location as string) ||
-      buildLocation(
-        detail.subDistrict as string | null,
-        detail.district as string | null,
-        detail.province as string | null,
-      ),
-    sequenceNumber: detail.sequenceNumber as number | undefined,
-    detailId: (detail.detailId ?? detail.landDetailId) as string | undefined,
+    id: item.propertyId!,
+    type: (item.propertyType as PropertyType) || 'Lands',
+    image: thumbnailId
+      ? `${API_BASE_URL}/documents/${thumbnailId}/download?download=false&size=large`
+      : undefined,
+    photos,
+    address: item.propertyName || '-',
+    area: formatArea(item.area, item.propertyType ?? undefined),
+    priceRange: '-',
+    location: item.location || '-',
+    sequenceNumber: item.sequenceInGroup ?? undefined,
+    detailId: item.appraisalDetailId ?? undefined,
   };
 }
 
@@ -87,12 +66,16 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
   const {
     data: groupsData,
     isLoading: isLoadingGroups,
+    isFetching: isFetchingGroups,
     error: groupsError,
   } = useGetPropertyGroups(appraisalId);
 
-  const groupIds = groupsData?.groups?.map(g => g.id) ?? [];
+  const groupIds = useMemo(
+    () => groupsData?.groups?.map(g => g.id) ?? [],
+    [groupsData],
+  );
 
-  // Step 2: For each group, fetch group detail (to get property IDs + types)
+  // Step 2: For each group, fetch group detail (includes property summary fields)
   const groupDetailQueries = useQueries({
     queries: groupIds.map(groupId => ({
       queryKey: propertyGroupKeys.detail(appraisalId!, groupId),
@@ -105,107 +88,59 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
     })),
   });
 
-  // Collect all property entries with their types from group details
-  const allPropertyEntries: Array<{
-    propertyId: string;
-    propertyType: string;
-    groupId: string;
-    sequenceInGroup: number;
-  }> = [];
+  const isLoadingDetails = groupDetailQueries.some(r => r.isLoading);
+  const isFetchingDetails = groupDetailQueries.some(r => r.isFetching);
+  const detailsError = groupDetailQueries.find(r => r.error)?.error ?? null;
 
-  for (const query of groupDetailQueries) {
-    if (query.data) {
-      const groupId = query.data.id;
-      const properties = query.data.properties ?? [];
-      for (const prop of properties) {
-        allPropertyEntries.push({
-          propertyId: prop.propertyId,
-          propertyType: prop.propertyType ?? 'Lands',
-          groupId,
-          sequenceInGroup: prop.sequenceInGroup,
-        });
-      }
-    }
+  // Stable reference — only update when individual query data refs actually change.
+  // Cannot use useMemo with a dynamic deps array (React requires fixed-length deps),
+  // so we use a ref with shallow comparison instead.
+  const prevDetailDataRef = useRef<(GetPropertyGroupByIdResponse | undefined)[]>([]);
+  const rawDetailData = groupDetailQueries.map(r => r.data);
+  if (
+    rawDetailData.length !== prevDetailDataRef.current.length ||
+    rawDetailData.some((d, i) => d !== prevDetailDataRef.current[i])
+  ) {
+    prevDetailDataRef.current = rawDetailData;
   }
+  const groupDetailData = prevDetailDataRef.current;
 
-  // Step 3: For each property, fetch its detail (non-fatal — failures are gracefully handled)
-  const propertyDetailQueries = useQueries({
-    queries: allPropertyEntries.map(entry => {
-      const endpoint = typeToDetailEndpoint[entry.propertyType];
-      return {
-        queryKey: propertyGroupKeys.propertyDetail(appraisalId!, entry.propertyId),
-        queryFn: async () => {
-          const { data } = await axios.get(
-            `/appraisals/${appraisalId}/properties/${entry.propertyId}/${endpoint}`,
-          );
-          return data as Record<string, unknown>;
-        },
-        enabled: !!appraisalId && !!endpoint,
-        retry: 1,
-      };
-    }),
-  });
-
-  // Step 4: Assemble enriched groups
-  const isLoadingGroupDetails = groupDetailQueries.some(q => q.isLoading);
-  const isLoadingPropertyDetails = propertyDetailQueries.some(q => q.isLoading);
-
-  // Only groups-level and group-detail-level errors are fatal.
-  // Property detail errors are non-fatal — the property just shows minimal info.
-  const isLoading = isLoadingGroups || isLoadingGroupDetails;
-  const error = groupsError || groupDetailQueries.find(q => q.error)?.error || null;
-
-  // Build a lookup map for property details
-  const propertyDetailMap = new Map<string, Record<string, unknown>>();
-  for (let i = 0; i < allPropertyEntries.length; i++) {
-    const detail = propertyDetailQueries[i]?.data;
-    if (detail) {
-      propertyDetailMap.set(allPropertyEntries[i].propertyId, detail);
-    }
-  }
+  const isLoading = isLoadingGroups || isLoadingDetails;
+  const error = groupsError || detailsError;
 
   // Map to the PropertyGroup[] shape used by the frontend
-  const groups: PropertyGroup[] = (groupsData?.groups ?? []).map(apiGroup => {
-    const groupDetail = groupDetailQueries.find(q => q.data?.id === apiGroup.id)?.data;
-    const properties = groupDetail?.properties ?? [];
+  const groups: PropertyGroup[] = useMemo(
+    () =>
+      (groupsData?.groups ?? []).map(apiGroup => {
+        const groupDetail = groupDetailData.find(d => d?.id === apiGroup.id);
+        const properties = groupDetail?.properties ?? [];
 
-    // Sort by sequenceInGroup and map to PropertyItem
-    const items: PropertyItem[] = properties
-      .slice()
-      .sort((a, b) => a.sequenceInGroup - b.sequenceInGroup)
-      .map(prop => {
-        const detail = propertyDetailMap.get(prop.propertyId);
-        if (detail) {
-          return mapDetailToPropertyItem(detail);
-        }
-        // Fallback: property detail still loading or failed — show what we know
+        // Sort by sequenceInGroup and map to PropertyItem
+        const items: PropertyItem[] = properties
+          .slice()
+          .sort((a, b) => (a.sequenceInGroup ?? 0) - (b.sequenceInGroup ?? 0))
+          .map(mapGroupItemToPropertyItem);
+
         return {
-          id: prop.propertyId,
-          type: (prop.propertyType as PropertyType) || 'Lands',
-          address: prop.propertyType || 'Property',
-          area: '-',
-          priceRange: '-',
-          location: '-',
-          sequenceNumber: prop.sequenceInGroup,
+          id: apiGroup.id,
+          name: apiGroup.groupName,
+          items,
+          description: apiGroup.description,
+          groupNumber: apiGroup.groupNumber,
+          useSystemCalc: apiGroup.useSystemCalc,
         };
-      });
+      }),
+    [groupsData, groupDetailData],
+  );
 
-    return {
-      id: apiGroup.id,
-      name: apiGroup.groupName,
-      items,
-      description: apiGroup.description,
-      groupNumber: apiGroup.groupNumber,
-      useSystemCalc: apiGroup.useSystemCalc,
-    };
-  });
+  const isFetching = isFetchingGroups || isFetchingDetails;
 
   return {
     groups,
     isLoading,
+    isFetching,
     error,
     isLoadingGroups,
-    isLoadingGroupDetails,
-    isLoadingPropertyDetails,
+    isLoadingGroupDetails: isLoadingDetails,
   };
 }

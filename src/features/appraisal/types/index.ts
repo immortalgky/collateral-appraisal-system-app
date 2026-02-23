@@ -13,10 +13,16 @@ export const PropertyType = {
 
 export type PropertyType = typeof PropertyType[keyof typeof PropertyType];
 
+export interface PropertyPhoto {
+  documentId: string;
+  isThumbnail: boolean;
+}
+
 export interface PropertyItem {
   id: string;
   type: PropertyType;
   image?: string;
+  photos?: PropertyPhoto[];
   address: string;
   area: string;
   priceRange: string;

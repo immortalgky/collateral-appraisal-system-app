@@ -15,10 +15,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@/test/test-utils';
 import Dropdown, { type ListBoxItem } from './Dropdown';
 
-// Mock the useParameters hook since Dropdown uses it
-vi.mock('../../api/parameters', () => ({
-  useParameters: function useParameters() {
-    return { data: undefined, isLoading: false };
+// Mock the useParameterOptions hook since Dropdown uses it
+vi.mock('../../utils/parameterUtils', () => ({
+  useParameterOptions: function useParameterOptions() {
+    return [];
   },
 }));
 

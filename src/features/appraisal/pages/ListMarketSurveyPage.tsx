@@ -3,7 +3,8 @@ import AppHeader from '@/shared/components/sections/AppHeader';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MarketSurveyTable from '../components/tables/MarketSurveyTable';
-import { useGetMarketSurvey, useGetParameter } from '../api';
+import { useGetMarketSurvey } from '../api';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollateralSelectModal from '../components/CollateralSelectModal';
@@ -12,7 +13,7 @@ import Icon from '@/shared/components/Icon';
 const ListMarketSurveyPage = () => {
   const { isOpen, onToggle } = useDisclosure();
   const { data: marketSurvey, isLoading } = useGetMarketSurvey('appraisalId');
-  const { data: collateralTypes } = useGetParameter('collateralType');
+  const collateralTypes = useParametersByGroup('collateralType');
 
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -26,9 +27,6 @@ const ListMarketSurveyPage = () => {
     setIsOpenModal(true);
   };
 
-  const getParameterValues = (parameters: any[] | undefined, group: string) => {
-    return parameters?.find(p => p.parameterGroup === group)?.values ?? [];
-  };
   const handleEditSelect = (item: any) => {
     navigate(`/market-survey/detail?id=${item.id}`);
   };
@@ -59,7 +57,7 @@ const ListMarketSurveyPage = () => {
               <Section anchor className="flex flex-col gap-6">
                 <MarketSurveyTable
                   headers={headers}
-                  data={marketSurvey}
+                  data={marketSurvey ?? []}
                   onSelect={handleEditSelect}
                 />
               </Section>
@@ -80,7 +78,7 @@ const ListMarketSurveyPage = () => {
             </div>
             {isOpenModal && (
               <CollateralSelectModal
-                items={getParameterValues(collateralTypes, 'collateralType')}
+                items={collateralTypes}
                 position={modalPosition || { x: 0, y: 0 }}
                 onSelect={handleCreateSelect}
                 onCancel={() => setIsOpenModal(false)}
@@ -94,10 +92,10 @@ const ListMarketSurveyPage = () => {
 };
 
 const headers = [
-  { name: 'surveyNumber', label: 'Survey No.' },
-  { name: 'surveyName', label: 'Survey Name' },
-  { name: 'surveyTemplateCode', label: 'Template' },
-  { name: 'collateralType', label: 'Property Type' },
+  { name: 'comparableNumber', label: 'Comparable No.' },
+  { name: 'propertyType', label: 'Property Type' },
+  { name: 'dataSource', label: 'Data Source' },
+  { name: 'status', label: 'Status' },
 ];
 
 export default ListMarketSurveyPage;

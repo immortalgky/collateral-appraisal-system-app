@@ -1,23 +1,30 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
-import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ViewModeToggle, { type GalleryViewMode } from '../ViewModeToggle';
-import { PhotoGridView, PhotoListView, PhotoDisplayView } from '../gallery';
+import { PhotoGridView, PhotoListView } from '../gallery';
+import PhotoPreviewModal from '../PhotoPreviewModal';
 import type { GalleryImage } from '../../types/gallery';
+import { toGalleryImage } from '../../types/gallery';
 import {
-  useCreatePhotoUploadSession,
-  useUploadPhoto,
-  useDeletePhoto,
-  useAssignPhotosToCollateral,
-} from '../../api/photo';
+  useGetGalleryPhotos,
+  useAddGalleryPhoto,
+  useRemoveGalleryPhoto,
+  useMarkPhotoForReport,
+  useUnmarkPhotoFromReport,
+  useLinkPhotoToProperty,
+} from '../../api/gallery';
+import {
+  createUploadSession,
+  useUploadDocument,
+} from '@features/request/api/documents';
+import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
-import CollateralAssignmentModal from '../CollateralAssignmentModal';
 
-type SortOption = 'newest' | 'oldest' | 'name' | 'size';
+type SortOption = 'newest' | 'oldest' | 'name';
 type FilterStatus = 'all' | 'used' | 'unused';
 
 // Statistics Card Component
@@ -92,12 +99,16 @@ const FilterChip = ({
 const BulkActionToolbar = ({
   selectedCount,
   onDelete,
-  onAssign,
+  onMarkForReport,
+  onUnmarkFromReport,
+  onLinkToProperty,
   onDeselect,
 }: {
   selectedCount: number;
   onDelete: () => void;
-  onAssign: () => void;
+  onMarkForReport: () => void;
+  onUnmarkFromReport: () => void;
+  onLinkToProperty: () => void;
   onDeselect: () => void;
 }) => (
   <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
@@ -108,11 +119,27 @@ const BulkActionToolbar = ({
       <div className="w-px h-5 bg-gray-700" />
       <button
         type="button"
-        onClick={onAssign}
+        onClick={onLinkToProperty}
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 transition-colors text-sm font-medium"
       >
         <Icon name="link" className="text-xs" />
-        Assign to Collateral
+        Link to Property
+      </button>
+      <button
+        type="button"
+        onClick={onMarkForReport}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 transition-colors text-sm font-medium"
+      >
+        <Icon name="file-lines" className="text-xs" />
+        Mark for Report
+      </button>
+      <button
+        type="button"
+        onClick={onUnmarkFromReport}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 transition-colors text-sm font-medium"
+      >
+        <Icon name="file-circle-xmark" className="text-xs" />
+        Unmark
       </button>
       <button
         type="button"
@@ -150,9 +177,167 @@ const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => (
   </div>
 );
 
+// Mark for Report Modal
+const MarkForReportModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (section: string) => void;
+  isLoading: boolean;
+}) => {
+  const [section, setSection] = useState('');
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Mark for Report</h3>
+          <p className="text-sm text-gray-500 mt-1">Enter the report section name</p>
+        </div>
+        <div className="p-6">
+          <input
+            type="text"
+            value={section}
+            onChange={e => setSection(e.target.value)}
+            placeholder="e.g. Area in front of the project"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            autoFocus
+          />
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => onConfirm(section)}
+            disabled={!section.trim() || isLoading}
+            isLoading={isLoading}
+          >
+            Confirm
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Link to Property Modal
+const LinkToPropertyModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  properties,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (propertyId: string) => void;
+  isLoading: boolean;
+  properties: { id: string; detailId?: string; type: string; address: string; area: string; image?: string }[];
+}) => {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  if (!isOpen) return null;
+
+  const selected = properties.find(p => p.id === selectedId);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Link to Property</h3>
+          <p className="text-sm text-gray-500 mt-1">Select a property to use this photo as thumbnail</p>
+        </div>
+        <div className="p-6 max-h-96 overflow-y-auto">
+          {properties.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <Icon name="building" className="text-2xl text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-500">No properties available</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {properties.map(property => (
+                <button
+                  key={property.id}
+                  type="button"
+                  onClick={() => setSelectedId(property.id)}
+                  className={clsx(
+                    'w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3',
+                    selectedId === property.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                  )}
+                >
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                    {property.image ? (
+                      <img src={property.image} alt={property.address} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Icon name="image" className="text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                        {property.type}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 truncate">{property.address}</p>
+                    <p className="text-xs text-gray-500">{property.area}</p>
+                  </div>
+                  <div
+                    className={clsx(
+                      'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0',
+                      selectedId === property.id ? 'bg-primary border-primary' : 'border-gray-300'
+                    )}
+                  >
+                    {selectedId === property.id && (
+                      <Icon name="check" style="solid" className="text-[8px] text-white" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              if (selected) {
+                onConfirm(selected.id);
+              }
+            }}
+            disabled={!selectedId || isLoading}
+            isLoading={isLoading}
+          >
+            <Icon name="link" className="mr-2" />
+            Link Photo
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const GalleryTab = () => {
   const { appraisalId } = useParams<{ appraisalId: string }>();
-  const { groups } = useEnrichedPropertyGroups(appraisalId);
+  const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(new Set());
@@ -163,19 +348,20 @@ export const GalleryTab = () => {
   const [uploadingPhotos, setUploadingPhotos] = useState<Map<string, { file: File; progress: number }>>(new Map());
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; photoId: string | null }>({ isOpen: false, photoId: null });
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [markForReportOpen, setMarkForReportOpen] = useState(false);
+  const [linkToPropertyOpen, setLinkToPropertyOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSessionIdRef = useRef<string | null>(null);
   const sessionPromiseRef = useRef<Promise<string> | null>(null);
 
   // API hooks
-  const { mutateAsync: createUploadSession } = useCreatePhotoUploadSession();
-  const { mutate: uploadPhoto } = useUploadPhoto();
-  const { mutate: deletePhoto, isPending: isDeleting } = useDeletePhoto();
-  const { mutate: assignPhotos, isPending: isAssigning } = useAssignPhotosToCollateral();
-
-  // Mock appraisal ID (in real app, get from context/params)
-
+  const { mutateAsync: uploadDocument } = useUploadDocument();
+  const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
+  const { mutate: removeGalleryPhoto, isPending: isDeleting } = useRemoveGalleryPhoto();
+  const { mutate: markForReport, isPending: isMarking } = useMarkPhotoForReport();
+  const { mutate: unmarkFromReport } = useUnmarkPhotoFromReport();
+  const { mutate: linkPhotoToProperty, isPending: isLinking } = useLinkPhotoToProperty();
+  const { groups } = useEnrichedPropertyGroups(appraisalId);
 
   /**
    * Get or create an upload session for photo uploads.
@@ -190,7 +376,7 @@ export const GalleryTab = () => {
       return sessionPromiseRef.current;
     }
 
-    sessionPromiseRef.current = createUploadSession(appraisalId!)
+    sessionPromiseRef.current = createUploadSession()
       .then(response => {
         uploadSessionIdRef.current = response.sessionId;
         return response.sessionId;
@@ -201,28 +387,12 @@ export const GalleryTab = () => {
       });
 
     return sessionPromiseRef.current;
-  }, [createUploadSession, appraisalId]);
+  }, []);
 
-  // Collect all images from all properties
+  // Map API photos to UI model
   const allImages: GalleryImage[] = useMemo(
-    () =>
-      groups.flatMap(group =>
-        group.items
-          .filter(item => item.image)
-          .map(item => ({
-            id: item.id,
-            src: item.image!,
-            alt: item.address,
-            fileName: `${item.type}_${item.id}.jpg`,
-            description: item.address,
-            propertyType: item.type,
-            groupName: group.name,
-            isUsed: false,
-            size: Math.floor(Math.random() * 5000000) + 100000, // Mock file size
-            uploadedAt: new Date(),
-          }))
-      ),
-    [groups]
+    () => (galleryData?.photos ?? []).map(toGalleryImage),
+    [galleryData]
   );
 
   // Filter and sort images
@@ -236,15 +406,16 @@ export const GalleryTab = () => {
         img =>
           img.fileName?.toLowerCase().includes(query) ||
           img.description?.toLowerCase().includes(query) ||
-          img.groupName?.toLowerCase().includes(query)
+          img.caption?.toLowerCase().includes(query) ||
+          img.reportSection?.toLowerCase().includes(query)
       );
     }
 
-    // Filter by status - includes both isUsed and usedInCollaterals
+    // Filter by status
     if (filterStatus === 'used') {
-      result = result.filter(img => img.isUsed || (img.usedInCollaterals && img.usedInCollaterals.length > 0));
+      result = result.filter(img => img.isUsedInReport);
     } else if (filterStatus === 'unused') {
-      result = result.filter(img => !img.isUsed && (!img.usedInCollaterals || img.usedInCollaterals.length === 0));
+      result = result.filter(img => !img.isUsedInReport);
     }
 
     // Sort
@@ -258,20 +429,17 @@ export const GalleryTab = () => {
       case 'name':
         result.sort((a, b) => (a.fileName || '').localeCompare(b.fileName || ''));
         break;
-      case 'size':
-        result.sort((a, b) => (b.size || 0) - (a.size || 0));
-        break;
     }
 
     return result;
   }, [allImages, searchQuery, filterStatus, sortBy]);
 
-  // Statistics - includes both isUsed and usedInCollaterals
+  // Statistics
   const stats = useMemo(
     () => ({
       total: allImages.length,
-      used: allImages.filter(img => img.isUsed || (img.usedInCollaterals && img.usedInCollaterals.length > 0)).length,
-      unused: allImages.filter(img => !img.isUsed && (!img.usedInCollaterals || img.usedInCollaterals.length === 0)).length,
+      used: allImages.filter(img => img.isUsedInReport).length,
+      unused: allImages.filter(img => !img.isUsedInReport).length,
     }),
     [allImages]
   );
@@ -293,17 +461,20 @@ export const GalleryTab = () => {
   };
 
   const confirmSingleDelete = () => {
-    if (!deleteConfirm.photoId) return;
+    if (!deleteConfirm.photoId || !appraisalId) return;
 
-    deletePhoto(deleteConfirm.photoId, {
-      onSuccess: () => {
-        toast.success('Photo deleted successfully');
-        setDeleteConfirm({ isOpen: false, photoId: null });
-      },
-      onError: () => {
-        toast.error('Failed to delete photo');
-      },
-    });
+    removeGalleryPhoto(
+      { appraisalId, photoId: deleteConfirm.photoId },
+      {
+        onSuccess: () => {
+          toast.success('Photo deleted successfully');
+          setDeleteConfirm({ isOpen: false, photoId: null });
+        },
+        onError: () => {
+          toast.error('Failed to delete photo');
+        },
+      }
+    );
   };
 
   const handleImageEdit = (image: GalleryImage) => {
@@ -318,137 +489,287 @@ export const GalleryTab = () => {
   };
 
   const confirmBulkDelete = () => {
+    if (!appraisalId) return;
     const idsToDelete = Array.from(selectedImageIds);
     let deletedCount = 0;
     let failedCount = 0;
 
     idsToDelete.forEach(id => {
-      deletePhoto(id, {
-        onSuccess: () => {
-          deletedCount++;
-          if (deletedCount + failedCount === idsToDelete.length) {
-            if (failedCount === 0) {
-              toast.success(`Deleted ${deletedCount} photo(s)`);
-            } else {
-              toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
+      removeGalleryPhoto(
+        { appraisalId, photoId: id },
+        {
+          onSuccess: () => {
+            deletedCount++;
+            if (deletedCount + failedCount === idsToDelete.length) {
+              if (failedCount === 0) {
+                toast.success(`Deleted ${deletedCount} photo(s)`);
+              } else {
+                toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
+              }
+              setSelectedImageIds(new Set());
+              setBulkDeleteConfirm(false);
             }
-            setSelectedImageIds(new Set());
-            setBulkDeleteConfirm(false);
-          }
-        },
-        onError: () => {
-          failedCount++;
-          if (deletedCount + failedCount === idsToDelete.length) {
-            toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
-            setSelectedImageIds(new Set());
-            setBulkDeleteConfirm(false);
-          }
-        },
-      });
+          },
+          onError: () => {
+            failedCount++;
+            if (deletedCount + failedCount === idsToDelete.length) {
+              toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
+              setSelectedImageIds(new Set());
+              setBulkDeleteConfirm(false);
+            }
+          },
+        }
+      );
     });
   };
 
-  const handleBulkAssign = () => {
+  const handleBulkMarkForReport = () => {
     if (selectedImageIds.size === 0) {
       toast.error('Please select at least one photo');
       return;
     }
-    setAssignModalOpen(true);
+    setMarkForReportOpen(true);
   };
 
-  const handleAssignToCollateral = (collateralId: string) => {
-    const photoIds = Array.from(selectedImageIds);
+  const confirmMarkForReport = (section: string) => {
+    if (!appraisalId) return;
+    const ids = Array.from(selectedImageIds);
+    let successCount = 0;
+    let failCount = 0;
 
-    assignPhotos(
-      { collateralId, photoIds },
-      {
-        onSuccess: (response) => {
-          toast.success(`Assigned ${response.assignedCount} photo(s) to collateral`);
-          setSelectedImageIds(new Set());
-          setAssignModalOpen(false);
+    ids.forEach(photoId => {
+      markForReport(
+        { appraisalId, photoId, reportSection: section },
+        {
+          onSuccess: () => {
+            successCount++;
+            if (successCount + failCount === ids.length) {
+              toast.success(`Marked ${successCount} photo(s) for report`);
+              setSelectedImageIds(new Set());
+              setMarkForReportOpen(false);
+            }
+          },
+          onError: () => {
+            failCount++;
+            if (successCount + failCount === ids.length) {
+              toast.error(`Marked ${successCount}, failed ${failCount}`);
+              setSelectedImageIds(new Set());
+              setMarkForReportOpen(false);
+            }
+          },
+        }
+      );
+    });
+  };
+
+  const handleBulkUnmarkFromReport = () => {
+    if (!appraisalId || selectedImageIds.size === 0) return;
+    const ids = Array.from(selectedImageIds);
+    let successCount = 0;
+    let failCount = 0;
+
+    ids.forEach(photoId => {
+      unmarkFromReport(
+        { appraisalId, photoId },
+        {
+          onSuccess: () => {
+            successCount++;
+            if (successCount + failCount === ids.length) {
+              toast.success(`Unmarked ${successCount} photo(s) from report`);
+              setSelectedImageIds(new Set());
+            }
+          },
+          onError: () => {
+            failCount++;
+            if (successCount + failCount === ids.length) {
+              toast.error(`Unmarked ${successCount}, failed ${failCount}`);
+              setSelectedImageIds(new Set());
+            }
+          },
+        }
+      );
+    });
+  };
+
+  // Flatten properties from groups for the link-to-property modal
+  const allProperties = useMemo(
+    () =>
+      groups.flatMap(group =>
+        group.items.map(item => ({
+          id: item.id,
+          detailId: item.detailId,
+          type: item.type,
+          address: item.address,
+          area: item.area,
+          image: item.image,
+        }))
+      ),
+    [groups]
+  );
+
+  const handleBulkLinkToProperty = () => {
+    if (selectedImageIds.size === 0) {
+      toast.error('Please select at least one photo');
+      return;
+    }
+    setLinkToPropertyOpen(true);
+  };
+
+  const confirmLinkToProperty = (propertyId: string) => {
+    if (!appraisalId) return;
+    const ids = Array.from(selectedImageIds);
+    let successCount = 0;
+    let failCount = 0;
+
+    ids.forEach(photoId => {
+      linkPhotoToProperty(
+        {
+          appraisalId,
+          photoId,
+          appraisalPropertyId: propertyId,
+          photoPurpose: 'thumbnail',
+          sectionReference: null,
+          linkedBy: 'current-user',
         },
-        onError: () => {
-          toast.error('Failed to assign photos');
-        },
+        {
+          onSuccess: () => {
+            successCount++;
+            if (successCount + failCount === ids.length) {
+              toast.success(`Linked ${successCount} photo(s) to property`);
+              setSelectedImageIds(new Set());
+              setLinkToPropertyOpen(false);
+            }
+          },
+          onError: () => {
+            failCount++;
+            if (successCount + failCount === ids.length) {
+              toast.error(`Linked ${successCount}, failed ${failCount}`);
+              setSelectedImageIds(new Set());
+              setLinkToPropertyOpen(false);
+            }
+          },
+        }
+      );
+    });
+  };
+
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const dragCounterRef = useRef(0);
+  const onDropFilesRef = useRef<(files: File[]) => void>(() => {});
+
+  // Native drag events on the drop zone — avoids React re-render flickering
+  useEffect(() => {
+    const el = dropZoneRef.current;
+    if (!el) return;
+
+    const onDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current++;
+      if (dragCounterRef.current === 1) {
+        setIsDragging(true);
       }
-    );
-  };
+    };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+    const onDragOver = (e: DragEvent) => {
+      e.preventDefault();
+    };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+    const onDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current--;
+      if (dragCounterRef.current <= 0) {
+        dragCounterRef.current = 0;
+        setIsDragging(false);
+      }
+    };
+
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      if (files.length > 0) {
+        onDropFilesRef.current(files);
+      }
+    };
+
+    el.addEventListener('dragenter', onDragEnter);
+    el.addEventListener('dragover', onDragOver);
+    el.addEventListener('dragleave', onDragLeave);
+    el.addEventListener('drop', onDrop);
+
+    return () => {
+      el.removeEventListener('dragenter', onDragEnter);
+      el.removeEventListener('dragover', onDragOver);
+      el.removeEventListener('dragleave', onDragLeave);
+      el.removeEventListener('drop', onDrop);
+    };
+  }, []);
 
   /**
-   * Upload a single file
+   * Upload a single file using the three-step pipeline:
+   * 1. Get/create upload session
+   * 2. Upload document via useUploadDocument
+   * 3. Register in gallery via useAddGalleryPhoto
    */
   const uploadSingleFile = useCallback(async (file: File) => {
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error(`${file.name} is not an image file`);
       return;
     }
 
-    // Generate temporary ID for tracking
-    const tempId = `uploading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    if (!appraisalId) return;
 
-    // Add to uploading state
+    const tempId = `uploading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setUploadingPhotos(prev => new Map(prev).set(tempId, { file, progress: 0 }));
 
     try {
+      // Step 1: Get or create upload session
       const sessionId = await getOrCreateSession();
 
-      uploadPhoto(
-        {
-          sessionId,
-          file,
-          topicId: '', // Will be assigned later
-          category: 'other',
-        },
-        {
-          onSuccess: () => {
-            setUploadingPhotos(prev => {
-              const next = new Map(prev);
-              next.delete(tempId);
-              return next;
-            });
-            toast.success(`Uploaded ${file.name}`);
-          },
-          onError: () => {
-            setUploadingPhotos(prev => {
-              const next = new Map(prev);
-              next.delete(tempId);
-              return next;
-            });
-            toast.error(`Failed to upload ${file.name}`);
-          },
-        }
-      );
+      // Step 2: Upload the document
+      const uploadResult = await uploadDocument({
+        uploadSessionId: sessionId,
+        file,
+        documentType: 'GAL_PHOTO',
+        documentCategory: 'gallery',
+      });
+
+      // Step 3: Register in gallery
+      await addGalleryPhoto({
+        appraisalId,
+        documentId: uploadResult.documentId,
+        photoType: 'general',
+        uploadedBy: 'current-user',
+        photoCategory: null,
+        caption: null,
+        latitude: null,
+        longitude: null,
+        capturedAt: null,
+        photoTopicId: null,
+      });
+
+      setUploadingPhotos(prev => {
+        const next = new Map(prev);
+        next.delete(tempId);
+        return next;
+      });
+      toast.success(`Uploaded ${file.name}`);
     } catch {
       setUploadingPhotos(prev => {
         const next = new Map(prev);
         next.delete(tempId);
         return next;
       });
-      toast.error('Failed to create upload session');
+      toast.error(`Failed to upload ${file.name}`);
     }
-  }, [getOrCreateSession, uploadPhoto]);
+  }, [appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-
-    if (files.length === 0) return;
-
+  // Keep the ref in sync so the native drop handler can call uploadSingleFile
+  onDropFilesRef.current = (files: File[]) => {
     toast.success(`Uploading ${files.length} file(s)...`);
     files.forEach(file => uploadSingleFile(file));
-  }, [uploadSingleFile]);
+  };
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -470,8 +791,16 @@ export const GalleryTab = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Icon name="spinner" style="solid" className="text-2xl text-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div ref={dropZoneRef} className="flex flex-col gap-6 relative">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -503,8 +832,8 @@ export const GalleryTab = () => {
       {/* Statistics */}
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="Total Photos" value={stats.total} icon="image" color="blue" />
-        <StatCard label="Used in Collaterals" value={stats.used} icon="check-circle" color="green" />
-        <StatCard label="Unused" value={stats.unused} icon="clock" color="orange" />
+        <StatCard label="In Use" value={stats.used} icon="check-circle" color="green" />
+        <StatCard label="Not Used" value={stats.unused} icon="clock" color="orange" />
       </div>
 
       {/* Upload Progress */}
@@ -569,7 +898,6 @@ export const GalleryTab = () => {
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
                 <option value="name">Name</option>
-                <option value="size">Size</option>
               </select>
             </div>
           </div>
@@ -585,13 +913,13 @@ export const GalleryTab = () => {
               onClick={() => setFilterStatus('all')}
             />
             <FilterChip
-              label="Used"
+              label="In Use"
               isActive={filterStatus === 'used'}
               count={stats.used}
               onClick={() => setFilterStatus('used')}
             />
             <FilterChip
-              label="Unused"
+              label="Not Used"
               isActive={filterStatus === 'unused'}
               count={stats.unused}
               onClick={() => setFilterStatus('unused')}
@@ -623,28 +951,26 @@ export const GalleryTab = () => {
         </div>
       </div>
 
-      {/* Drop Zone (when dragging) */}
-      {isDragging && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-12 shadow-2xl border-2 border-dashed border-primary">
-            <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Icon name="cloud-arrow-down" className="text-3xl text-primary" />
-              </div>
-              <p className="text-xl font-semibold text-gray-900">Drop photos here</p>
-              <p className="text-sm text-gray-500 mt-2">Release to upload</p>
-            </div>
+      {/* Drop Zone Overlay (always rendered, visibility toggled) */}
+      <div
+        className={clsx(
+          'absolute inset-0 z-40 flex items-center justify-center border-2 border-dashed rounded-2xl transition-opacity pointer-events-none',
+          isDragging
+            ? 'opacity-100 border-emerald-400 bg-emerald-50/50'
+            : 'opacity-0 border-transparent'
+        )}
+      >
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <Icon name="cloud-arrow-down" className="text-3xl text-emerald-600" />
           </div>
+          <p className="text-xl font-semibold text-emerald-700">Drop photos here</p>
+          <p className="text-sm text-emerald-500 mt-1">Release to upload</p>
         </div>
-      )}
+      </div>
 
       {/* Gallery Content */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className="min-h-[400px]"
-      >
+      <div className="min-h-[400px]">
         {filteredImages.length === 0 ? (
           searchQuery || filterStatus !== 'all' ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -715,19 +1041,24 @@ export const GalleryTab = () => {
         <BulkActionToolbar
           selectedCount={selectedImageIds.size}
           onDelete={handleBulkDelete}
-          onAssign={handleBulkAssign}
+          onMarkForReport={handleBulkMarkForReport}
+          onUnmarkFromReport={handleBulkUnmarkFromReport}
+          onLinkToProperty={handleBulkLinkToProperty}
           onDeselect={() => setSelectedImageIds(new Set())}
         />
       )}
 
-      {/* Display Modal */}
+      {/* Preview Modal */}
       {selectedImage && (
-        <PhotoDisplayView
-          image={selectedImage}
-          images={filteredImages}
+        <PhotoPreviewModal
+          photo={selectedImage}
+          photos={filteredImages}
           onClose={handleCloseModal}
           onNavigate={handleNavigate}
-          onDelete={handleImageDelete}
+          onDelete={() => {
+            handleImageDelete(selectedImage);
+            setSelectedImage(null);
+          }}
         />
       )}
 
@@ -757,13 +1088,21 @@ export const GalleryTab = () => {
         isLoading={isDeleting}
       />
 
-      {/* Collateral Assignment Modal */}
-      <CollateralAssignmentModal
-        isOpen={assignModalOpen}
-        onClose={() => setAssignModalOpen(false)}
-        onAssign={handleAssignToCollateral}
-        selectedCount={selectedImageIds.size}
-        isLoading={isAssigning}
+      {/* Mark for Report Modal */}
+      <MarkForReportModal
+        isOpen={markForReportOpen}
+        onClose={() => setMarkForReportOpen(false)}
+        onConfirm={confirmMarkForReport}
+        isLoading={isMarking}
+      />
+
+      {/* Link to Property Modal */}
+      <LinkToPropertyModal
+        isOpen={linkToPropertyOpen}
+        onClose={() => setLinkToPropertyOpen(false)}
+        onConfirm={confirmLinkToProperty}
+        isLoading={isLinking}
+        properties={allProperties}
       />
     </div>
   );

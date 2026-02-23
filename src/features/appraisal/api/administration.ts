@@ -1,14 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-// import axios from '@shared/api/axiosInstance';
+import axios from '@shared/api/axiosInstance';
+import type { AssignAppraisalRequestType, AssignAppraisalResponseType } from '@shared/schemas/v1';
 import type {
-  CreateAssignmentRequest,
-  AssignmentResponse,
-  CurrentAssignment,
-  InternalStaff,
-  ExternalCompany,
-  Quotation,
-  CreateQuotationRequest,
   AddToQuotationRequest,
+  CreateQuotationRequest,
+  CurrentAssignment,
+  ExternalCompany,
+  InternalStaff,
+  Quotation,
 } from '../types/administration';
 
 // Mock data for development
@@ -114,19 +113,70 @@ const mockCompanyList: ExternalCompany[] = [
 ];
 
 /**
+ * Get a user by ID
+ * GET /users/{userId}
+ */
+export const useGetUserById = (userId: string | null) => {
+  return useQuery({
+    queryKey: ['users', userId],
+    queryFn: async (): Promise<InternalStaff> => {
+      // TODO: Replace with real API call
+      // const { data } = await axios.get(`/users/${userId}`);
+      // return data;
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return mockStaffList.find(s => s.id === userId) ?? {
+        id: userId!,
+        employeeId: '-',
+        name: 'Unknown Staff',
+        email: '-',
+        department: '-',
+        avatar: null,
+        currentWorkload: 0,
+      };
+    },
+    enabled: !!userId,
+  });
+};
+
+/**
+ * Get a company by ID
+ * GET /companies/{companyId}
+ */
+export const useGetCompanyById = (companyId: string | null) => {
+  return useQuery({
+    queryKey: ['companies', companyId],
+    queryFn: async (): Promise<ExternalCompany> => {
+      // TODO: Replace with real API call
+      // const { data } = await axios.get(`/companies/${companyId}`);
+      // return data;
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return mockCompanyList.find(c => c.id === companyId) ?? {
+        id: companyId!,
+        companyName: 'Unknown Company',
+        registrationNo: '-',
+        contactPerson: '-',
+        contactPhone: '-',
+        contactEmail: '-',
+        rating: 0,
+        activeAssignments: 0,
+      };
+    },
+    enabled: !!companyId,
+  });
+};
+
+/**
  * Get current assignment for an appraisal
- * GET /appraisals/{appraisalId}/assignment
+ * GET /appraisals/{appraisalId}/assignments
  */
 export const useGetAssignment = (appraisalId: string) => {
   return useQuery({
-    queryKey: ['appraisal', appraisalId, 'assignment'],
-    queryFn: async (): Promise<CurrentAssignment | null> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get(`/appraisals/${appraisalId}/assignment`);
-
-      // Mock: Return null for now (no assignment)
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return null;
+    queryKey: ['appraisal', appraisalId, 'assignments'],
+    queryFn: async (): Promise<CurrentAssignment[]> => {
+      const { data } = await axios.get(`/appraisals/${appraisalId}/assignments`);
+      return data.assignments ?? [];
     },
     enabled: !!appraisalId,
   });
@@ -134,47 +184,22 @@ export const useGetAssignment = (appraisalId: string) => {
 
 /**
  * Create new assignment
- * POST /appraisals/{appraisalId}/assignment
+ * POST /appraisals/{appraisalId}/assignments
  */
 export const useCreateAssignment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreateAssignmentRequest): Promise<AssignmentResponse> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.post(
-      //   `/appraisals/${request.appraisalId}/assignment`,
-      //   request
-      // );
-
-      // Mock response
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const assigneeName =
-        request.assignmentType === 'internal'
-          ? mockStaffList.find(s => s.id === request.assigneeId)?.name ?? 'System Assigned Staff'
-          : mockCompanyList.find(c => c.id === request.assigneeId)?.companyName ??
-            'System Assigned Company';
-
-      return {
-        success: true,
-        assignment: {
-          id: `assignment-${Date.now()}`,
-          assigneeId: request.assigneeId ?? 'system-assigned',
-          assigneeName,
-          assigneeType: request.assignmentType,
-          status: 'assigned',
-          assignedById: 'current-user',
-          assignedByName: 'Current Admin',
-          assignedAt: new Date().toISOString(),
-          requireQuotation: request.requireQuotation,
-        },
-        message: 'Assignment created successfully',
-      };
+    mutationFn: async (
+      request: AssignAppraisalRequestType & { appraisalId: string },
+    ): Promise<AssignAppraisalResponseType> => {
+      const { appraisalId, ...body } = request;
+      const { data } = await axios.post(`/appraisals/${appraisalId}/assignments`, body);
+      return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['appraisal', variables.appraisalId, 'assignment'],
+        queryKey: ['appraisal', variables.appraisalId, 'assignments'],
       });
     },
   });
@@ -204,7 +229,7 @@ export const useSearchStaff = (searchQuery: string, enabled = true) => {
           staff.name.toLowerCase().includes(query) ||
           staff.email.toLowerCase().includes(query) ||
           staff.employeeId.toLowerCase().includes(query) ||
-          staff.department.toLowerCase().includes(query)
+          staff.department.toLowerCase().includes(query),
       );
     },
     enabled: enabled && searchQuery.length >= 0,
@@ -234,122 +259,63 @@ export const useSearchCompanies = (searchQuery: string, enabled = true) => {
         company =>
           company.companyName.toLowerCase().includes(query) ||
           company.registrationNo.toLowerCase().includes(query) ||
-          company.contactPerson.toLowerCase().includes(query)
+          company.contactPerson.toLowerCase().includes(query),
       );
     },
     enabled: enabled && searchQuery.length >= 0,
   });
 };
 
-// Mock quotation data
-const mockQuotationList: Quotation[] = [
-  {
-    id: 'quo-001',
-    quotationId: 'QUO-2024-001234',
-    appraisalCount: 5,
-    quotedCount: 3,
-    createdOn: '2024-12-15T09:30:00Z',
-    cutOffTime: '2024-12-20T17:00:00Z',
-    status: 'pending',
-  },
-  {
-    id: 'quo-002',
-    quotationId: 'QUO-2024-001235',
-    appraisalCount: 3,
-    quotedCount: 3,
-    createdOn: '2024-12-10T14:00:00Z',
-    cutOffTime: '2024-12-18T17:00:00Z',
-    status: 'quoted',
-  },
-  {
-    id: 'quo-003',
-    quotationId: 'QUO-2024-001236',
-    appraisalCount: 8,
-    quotedCount: 8,
-    createdOn: '2024-12-05T10:15:00Z',
-    cutOffTime: '2024-12-12T17:00:00Z',
-    status: 'approved',
-  },
-  {
-    id: 'quo-004',
-    quotationId: 'QUO-2024-001237',
-    appraisalCount: 2,
-    quotedCount: 0,
-    createdOn: '2024-12-01T08:00:00Z',
-    cutOffTime: '2024-12-05T17:00:00Z',
-    status: 'expired',
-  },
-];
-
 /**
  * Get quotations that include this appraisal
- * GET /appraisals/{appraisalId}/quotations
+ * GET /quotations?AppraisalId={appraisalId}
  */
 export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = true) => {
   return useQuery({
-    queryKey: ['appraisal', appraisalId, 'quotations'],
+    queryKey: ['quotations', { appraisalId }],
     queryFn: async (): Promise<Quotation[]> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get(`/appraisals/${appraisalId}/quotations`);
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-      // Mock: Return quotations that this appraisal belongs to
-      // In real API, this would filter by appraisalId
-      return mockQuotationList.slice(0, 2); // Mock: show first 2 as "belonging" to this appraisal
+      const { data } = await axios.get('/quotations', {
+        params: { AppraisalId: appraisalId, PageNumber: 0, PageSize: 100 },
+      });
+      const result = data.quotations ?? data;
+      return result.items ?? [];
     },
     enabled: enabled && !!appraisalId,
   });
 };
 
 /**
- * Get pending quotations (status = 'pending' or 'draft') for adding appraisals
- * GET /quotations?status=pending
+ * Get pending quotations (status = 'Pending') for adding appraisals
+ * GET /quotations?Status=Pending
  */
 export const useGetPendingQuotations = (_companyId: string | null, enabled = true) => {
   return useQuery({
     queryKey: ['quotations', 'pending'],
     queryFn: async (): Promise<Quotation[]> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get('/quotations', {
-      //   params: { status: 'pending' },
-      // });
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return mockQuotationList.filter(q => q.status === 'pending' || q.status === 'draft');
+      const { data } = await axios.get('/quotations', {
+        params: { Status: 'Pending', PageNumber: 0, PageSize: 100 },
+      });
+      const result = data.quotations ?? data;
+      return result.items ?? [];
     },
     enabled,
   });
 };
 
 /**
- * Create a new quotation and send to multiple companies
+ * Create a new quotation
  * POST /quotations
  */
 export const useCreateQuotation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreateQuotationRequest): Promise<Quotation> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.post('/quotations', request);
-
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Create one quotation sent to multiple companies
-      return {
-        id: `quo-${Date.now()}`,
-        quotationId: `QUO-2024-${String(Date.now()).slice(-6)}`,
-        appraisalCount: 1,
-        quotedCount: 0,
-        createdOn: new Date().toISOString(),
-        cutOffTime: request.cutOffDate,
-        status: 'draft',
-      };
+    mutationFn: async (request: CreateQuotationRequest): Promise<{ id: string }> => {
+      const { data } = await axios.post('/quotations', request);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['quotations'],
-      });
+      queryClient.invalidateQueries({ queryKey: ['quotations'] });
     },
   });
 };

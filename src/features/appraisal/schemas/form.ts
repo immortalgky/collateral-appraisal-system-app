@@ -1,7 +1,31 @@
 import { z } from 'zod';
 import { GroupValuations, LandTitleDto } from '@/shared/schemas/v1';
 
+const landTitleItem = z.object({
+  titleNumber: z.string(),
+  titleType: z.string(),
+  bookNumber: z.string().nullable().optional(),
+  pageNumber: z.string().nullable().optional(),
+  landParcelNumber: z.string().nullable().optional(),
+  surveyNumber: z.string().nullable().optional(),
+  mapSheetNumber: z.string().nullable().optional(),
+  rawang: z.string().nullable().optional(),
+  aerialMapName: z.string().nullable().optional(),
+  aerialMapNumber: z.string().nullable().optional(),
+  rai: z.number().nullable().optional(),
+  ngan: z.number().nullable().optional(),
+  squareWa: z.number().nullable().optional(),
+  hasBoundaryMarker: z.boolean().nullable().optional(),
+  boundaryMarkerRemark: z.string().nullable().optional(),
+  isDocumentValidated: z.boolean().nullable().optional(),
+  isMissingFromSurvey: z.boolean().nullable().optional(),
+  governmentPricePerSqWa: z.number().nullable().optional(),
+  governmentPrice: z.number().nullable().optional(),
+  remark: z.string().nullable().optional(),
+});
+
 export const createLandForm = z.object({
+  titles: z.array(landTitleItem).nullable().optional(),
   propertyName: z.string().nullable().optional(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
@@ -140,6 +164,13 @@ export const createBuildingForm = z.object({
   remark: z.string().nullable(),
 });
 
+const AreaDetailDto = z
+  .object({
+    areaDescription: z.string().nullable(),
+    areaSize: z.coerce.number().nullable(),
+  })
+  .passthrough();
+
 export const createCondoForm = z.object({
   ownerName: z.string().min(1, 'Owner name is required.'),
 
@@ -196,6 +227,7 @@ export const createCondoForm = z.object({
   roofType: z.string().nullable(),
   roofTypeOther: z.string().nullable(),
 
+  condoAreaDetails: z.array(AreaDetailDto).nullable(),
   totalBuildingArea: z.coerce.number(),
 
   isExpropriated: z.boolean(),
@@ -218,6 +250,7 @@ export const createCondoForm = z.object({
 });
 
 export const createLandAndBuildingForm = z.object({
+  titles: z.array(landTitleItem).nullable().optional(),
   propertyName: z.string().nullable().optional(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
@@ -411,6 +444,7 @@ export type summaryDecisionFormType = z.infer<typeof summaryDecisionForm>;
 //===============================================================
 
 export const createLandFormDefault: createLandFormType = {
+  titles: [],
   propertyName: '',
   latitude: 0,
   longitude: 0,
@@ -597,6 +631,7 @@ export const createCondoFormDefault: createCondoFormType = {
   bathroomFloorMaterialTypeOther: '',
   roofType: '',
   roofTypeOther: '',
+  condoAreaDetail: [],
   totalBuildingArea: 0,
   isExpropriated: false,
   expropriationRemark: '',
@@ -615,6 +650,7 @@ export const createCondoFormDefault: createCondoFormType = {
 };
 
 export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
+  titles: [],
   propertyName: '',
   latitude: 0,
   longitude: 0,
