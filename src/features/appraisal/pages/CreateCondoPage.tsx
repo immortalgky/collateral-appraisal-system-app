@@ -15,7 +15,9 @@ import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
-import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
+import PropertyPhotoSection, {
+  type PropertyPhotoSectionRef,
+} from '../components/PropertyPhotoSection';
 
 const CreateCondoPage = () => {
   const navigate = useNavigate();
@@ -40,7 +42,6 @@ const CreateCondoPage = () => {
     if (isEditMode && propertyData) {
       const formValues = mapCondoPropertyResponseToForm(propertyData);
       reset(formValues);
-      console.log(formValues);
     }
   }, [isEditMode, propertyData, reset]);
 

@@ -197,6 +197,14 @@ export const createBuildingForm = z.object({
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
 });
 
+const AreaDetailDto = z
+  .object({
+    id: z.string().uuid().nullable(),
+    areaDescription: z.string().nullable(),
+    areaSize: z.coerce.number().nullable(),
+  })
+  .passthrough();
+
 export const createCondoForm = z.object({
   ownerName: z.string().min(1, 'Owner name is required.'),
 
@@ -253,6 +261,7 @@ export const createCondoForm = z.object({
   roofType: z.string().nullable(),
   roofTypeOther: z.string().nullable(),
 
+  areaDetails: z.array(AreaDetailDto).nullable(),
   totalBuildingArea: z.coerce.number(),
 
   isExpropriated: z.boolean(),
@@ -674,6 +683,7 @@ export const createCondoFormDefault: createCondoFormType = {
   bathroomFloorMaterialTypeOther: '',
   roofType: '',
   roofTypeOther: '',
+  areaDetails: [],
   totalBuildingArea: 0,
   isExpropriated: false,
   expropriationRemark: '',
