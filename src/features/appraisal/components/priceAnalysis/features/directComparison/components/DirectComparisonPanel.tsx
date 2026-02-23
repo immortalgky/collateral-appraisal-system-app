@@ -4,43 +4,42 @@ import {
   DirectComparisonDto,
   type DirectComparisonType,
 } from '../../../schemas/directComparisonForm';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
+import {
+  SaveComparativeAnalysisRequest,
+  type MarketComparableDetailType,
+  type TemplateDetailType,
 } from '../../../schemas/v1';
 import { useEffect, useState } from 'react';
 import { flattenRHFErrors } from '../../../domain/flattenRHFErrors';
 import toast from 'react-hot-toast';
 import { PriceAnalysisTemplateSelector } from '../../../components/PriceAnalysisTemplateSelector';
 import { MethodFooterActions } from '../../../components/MethodFooterActions';
-import { DirectComparisonSection } from './DirectComparisonSection';
+import { DirectComparison } from './DirectComparison';
 import { setDirectComparisonInitialValueOnSelectSurvey } from '../domain/setDirectComparisonInitialValueOnSelectSurvey';
 import { setDirectComparisonInitialValue } from '../domain/setDirectComparisonInitialValue';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { PriceAnalysisSelectorState } from '../../selection/domain/useReducer';
+import { useSaveComparativeAnalysis } from '../../../api/api';
+import { mapDirectComparisonFormToSubmitSchema } from '../../../domain/mapDirectComparisonFormToSubmitSchema';
+import { COLLATERAL_TYPE } from '../../../data/data';
 
 interface DirectComparisonPanelProps {
   state: PriceAnalysisSelectorState;
-  methodId: string;
-  methodType: string;
-  property: Record<string, unknown>;
-  templates?: TemplateDetailType[];
-  allFactors: FactorDataType[];
-  marketSurveys: MarketComparableDetailType[];
+  onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
 export function DirectComparisonPanel({
   state,
-  methodId,
-  methodType,
-  property,
-  marketSurveys,
-  templates,
-  allFactors,
+  onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DirectComparisonPanelProps) {
-  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
+  const {
+    activeMethod: { pricingAnalysisId, methodId, methodType } = {},
+    property,
+    marketSurveys,
+    allFactors,
+    methodTemplates: templates,
+  } = state;
 
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
@@ -55,10 +54,58 @@ export function DirectComparisonPanel({
     formState: { errors, isDirty },
   } = methods;
 
+  /** Template selector handler */
+  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
+    setComparativeSurveys([...surveys]);
+  };
+
+  const [collateralType, setCollateralType] = useState<string>('');
+  const [pricingTemplateType, setPricingTemplateType] = useState<string>('');
+  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
+  const [isGenerated, setIsGenerated] = useState<boolean>(false);
+
+  /** cancel calulation dialog state */
+  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
+
+  /** mutate submit api */
+  const {
+    mutate: submitComparativeAnalysisMutate,
+    isSuccess: isSubmitComparativeAnalysisSuccess,
+    error,
+  } = useSaveComparativeAnalysis();
+
   /** Form handler */
   const handleOnSubmit = (value: DirectComparisonType) => {
-    reset(value);
-    toast.success('Saved!');
+    if (!!pricingAnalysisId && !!methodId) {
+      const submitSchema = mapDirectComparisonFormToSubmitSchema({
+        DirectComparisonForm: value,
+      });
+
+      const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
+
+      if (!parse.success) {
+        toast.error(parse.error.message);
+        return;
+      }
+
+      submitComparativeAnalysisMutate({
+        id: pricingAnalysisId,
+        methodId: methodId,
+        request: submitSchema,
+      });
+
+      if (isSubmitComparativeAnalysisSuccess) {
+        toast.success('Saved!');
+        reset(value);
+        return;
+      }
+
+      toast.error(error);
+      return;
+    }
+
+    toast.error('Pricing analysis ID or method Id not found!');
   };
 
   const handleOnSaveDraft = () => {
@@ -67,6 +114,32 @@ export function DirectComparisonPanel({
     reset(currentValue);
   };
 
+  const handleOnGenerate = () => {
+    // validate to select collateral type and template
+    // if (!collateralType || !pricingTemplateType) return;
+
+    setIsGenerated(false);
+    // set template that belong to selected template
+    setPricingTemplate(
+      (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
+    );
+    // reset comparative surveys to empty list when generate
+    setComparativeSurveys([]);
+
+    // Mark as dirty because Generate creates a new unsaved configuration
+    setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
+    setIsGenerated(true);
+  };
+
+  const handleOnSelectCollateralType = (collateralType: string) => {
+    setCollateralType(collateralType);
+  };
+
+  const handleOnSelectTemplate = (templateId: string) => {
+    setPricingTemplateType(templateId);
+  };
+
+  /** cancel calculation handler */
   const handleOnCancelCalculationMethod = () => {
     setisShowCanceledDialog(true);
   };
@@ -79,59 +152,6 @@ export function DirectComparisonPanel({
   const handleOnDenyCancelCalculationMethod = () => {
     setisShowCanceledDialog(false);
   };
-
-  /** Template selector handler */
-  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
-  const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    setComparativeSurveys([...surveys]);
-  };
-
-  const [collateralTypeId, setCollateralTypeId] = useState<string>('');
-  const [pricingTemplateId, setPricingTemplateId] = useState<string>('');
-  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
-  const [isGenerated, setIsGenerated] = useState<boolean>(false);
-
-  const handleOnGenerate = () => {
-    // if (!collateralTypeId || !pricingTemplateId) return;
-
-    setIsGenerated(false);
-    // set template that belong to selected template
-    setPricingTemplate(templates?.find(template => template.templateCode === pricingTemplateId));
-    // reset comparative surveys to empty list when generate
-    setComparativeSurveys([]);
-
-    // Mark as dirty because Generate creates a new unsaved configuration
-    setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
-    setIsGenerated(true);
-  };
-
-  const handleOnSelectCollateralType = (collateralTypeId: string) => {
-    setCollateralTypeId(collateralTypeId);
-  };
-
-  const handleOnSelectTemplate = (templateId: string) => {
-    setPricingTemplateId(templateId);
-  };
-
-  useEffect(() => {
-    setDirectComparisonInitialValue({
-      collateralType: collateralTypeId,
-      methodId: methodId,
-      methodType: methodType,
-      comparativeSurveys: comparativeSurveys,
-      property: property,
-      template: pricingTemplate,
-      reset: reset,
-    });
-  }, [collateralTypeId, isGenerated, methodId, methodType, pricingTemplate, property, reset]);
-
-  useEffect(() => {
-    setDirectComparisonInitialValueOnSelectSurvey({
-      comparativeSurveys: comparativeSurveys,
-      setValue: setValue,
-      getValues: getValues,
-    });
-  }, [comparativeSurveys.length]);
 
   const onInvalid: SubmitErrorHandler<DirectComparisonType> = errs => {
     const messages = flattenRHFErrors(errs);
@@ -149,6 +169,44 @@ export function DirectComparisonPanel({
     );
   };
 
+  useEffect(() => {
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      setDirectComparisonInitialValue({
+        collateralType: collateralType,
+        methodId: methodId,
+        methodType: methodType,
+        comparativeSurveys: comparativeSurveys,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
+      });
+    }
+  }, [collateralType, isGenerated, methodId, methodType, property, reset]);
+
+  useEffect(() => {
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      setDirectComparisonInitialValueOnSelectSurvey({
+        comparativeSurveys: comparativeSurveys,
+        setValue: setValue,
+        getValues: getValues,
+      });
+    }
+  }, [comparativeSurveys.length]);
+
+  // Warn user about unsaved changes before leaving
+  useEffect(() => {
+    onCalculationMethodDirty(isDirty);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty, onCalculationMethodDirty]);
+
   return (
     <FormProvider {...methods}>
       <form
@@ -156,20 +214,20 @@ export function DirectComparisonPanel({
         className="flex flex-col h-full gap-4"
       >
         <PriceAnalysisTemplateSelector
-          icon="table"
-          methodName="Sale Adjustment Grid"
+          icon="house-building"
+          methodName="Direct Comparison"
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
-            value: collateralTypeId,
+            value: collateralType,
             options: COLLATERAL_TYPE,
           }}
           template={{
             onSelectTemplate: handleOnSelectTemplate,
-            value: pricingTemplateId,
+            value: pricingTemplateType,
             options:
-              templates
-                ?.filter(template => template.collateralTypeId === collateralTypeId)
+              (templates ?? [])
+                .filter(template => template?.collateralType === collateralType)
                 .map(template => ({
                   value: template.templateCode,
                   label: template.templateName,
@@ -178,7 +236,7 @@ export function DirectComparisonPanel({
         />
         {isGenerated && (
           <div className="flex-1 min-h-0">
-            <DirectComparisonSection
+            <DirectComparison
               {...methods}
               property={property}
               marketSurveys={marketSurveys}
@@ -186,7 +244,6 @@ export function DirectComparisonPanel({
               template={pricingTemplate}
               allFactors={allFactors}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
-              onCancelCalculationMethod={onC}
             />
             <MethodFooterActions
               onSaveDraft={handleOnSaveDraft}
@@ -194,13 +251,13 @@ export function DirectComparisonPanel({
             />
           </div>
         )}
+        <ConfirmDialog
+          isOpen={isShowCanceledDialog}
+          onClose={handleOnDenyCancelCalculationMethod}
+          onConfirm={handleOnConfirmCancelCalculationMethod}
+          message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
+        />
       </form>
-      <ConfirmDialog
-        isOpen={isShowCanceledDialog}
-        onClose={handleOnDenyCancelCalculationMethod}
-        onConfirm={handleOnConfirmCancelCalculationMethod}
-        message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
-      />
     </FormProvider>
   );
 }

@@ -18,8 +18,6 @@ import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueBy
 import type { FactorDataType, MarketComparableDetailType } from '../../../schemas/v1';
 import type { SaleAdjustmentGridQualitativeFormType } from '../../../schemas/saleAdjustmentGridForm';
 import { readFactorValue } from '../../../domain/readFactorValue';
-type SurveyFactor = { id: string; value?: number | string | null };
-type Survey = { factors?: SurveyFactor[] };
 
 export function buildSaleGridQualitativeDerivedRules(args: {
   surveys: MarketComparableDetailType[];

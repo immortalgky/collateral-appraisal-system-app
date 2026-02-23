@@ -88,9 +88,9 @@ export const WQSTotalScore = z
 
 export const WQSDto = z
   .object({
-    methodId: z.string(),
-    collateralType: z.string(),
-    pricingTemplateCode: z.string(),
+    methodId: z.string().nullable().optional(), // remove if select template is mandatory
+    collateralType: z.string().nullable().optional(), // remove if select template is mandatory
+    pricingTemplateCode: z.string().nullable().optional(), // remove if select template is mandatory
     comparativeSurveys: z.array(ComparativeSurveys),
     comparativeFactors: z.array(ComparativeFactor),
     WQSScores: z.array(WQSScore),

@@ -147,7 +147,7 @@ export function WQSScoringSection({
   const surveyStyle = 'px-3 py-2.5 border-b border-r border-gray-300';
 
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col border border-gray-300 rounded-xl">
+    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl">
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="table table-sm min-w-max border-separate border-spacing-0">
           <thead className="bg-neutral-50">
@@ -411,7 +411,7 @@ export function WQSScoringSection({
 
             {/* add new row */}
             <tr>
-              <td className={clsx('bg-white border-r', leftColumnBody)}>
+              <td className={clsx('bg-white border-r z-19', leftColumnBody)}>
                 <button
                   type="button"
                   onClick={() => handleAddRow()}

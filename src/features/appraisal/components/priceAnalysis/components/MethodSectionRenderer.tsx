@@ -36,12 +36,9 @@ export function MethodSectionRenderer({
     case 'DC_MARKET':
       return (
         <DirectComparisonPanel
-          methodId={state.activeMethod?.methodId}
-          methodType={state.activeMethod?.methodType}
-          property={state.property}
-          marketSurveys={state.marketSurveys}
-          templates={state.methodTemplates}
-          allFactors={state.allFactors}
+          state={state}
+          onCalculationMethodDirty={onCalculationMethodDirty}
+          onCancelCalculationMethod={onCancelCalculationMethod}
         />
       );
     default:

@@ -51,7 +51,6 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
     ],
     { shouldDirty: false },
   );
-  console.log('set initial qualitative', getValues(qualitativesPath()));
 
   setValue(
     calculationsPath(),

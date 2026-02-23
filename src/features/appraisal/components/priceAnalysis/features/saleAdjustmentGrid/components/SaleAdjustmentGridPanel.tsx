@@ -124,6 +124,8 @@ export function SaleAdjustmentGridPanel({
     setPricingTemplate(
       (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
     );
+    reset({});
+    console.log('check reset value!', getValues());
     // reset comparative surveys to empty list when generate
     setComparativeSurveys([]);
 
@@ -171,6 +173,7 @@ export function SaleAdjustmentGridPanel({
   };
 
   useEffect(() => {
+    console.log('Check inifinite refresh on initial!');
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
       setSaleAdjustmentGridInitialValue({
         collateralType: collateralType,
@@ -182,9 +185,20 @@ export function SaleAdjustmentGridPanel({
         reset: reset,
       });
     }
-  }, [collateralType, isGenerated, methodId, methodType, property, reset]);
+  }, [
+    collateralType,
+    comparativeSurveys,
+    isGenerated,
+    methodId,
+    methodType,
+    pricingTemplate,
+    property,
+    reset,
+  ]);
 
+  // useEffect must have active list in below, in order to update imedialy
   useEffect(() => {
+    console.log('Check inifinite refresh on select market survey!');
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
       setSaleAdjustmentGridInitialValueOnSelectSurvey({
         comparativeSurveys: comparativeSurveys,
@@ -192,7 +206,15 @@ export function SaleAdjustmentGridPanel({
         getValues: getValues,
       });
     }
-  }, [comparativeSurveys.length]);
+  }, [
+    comparativeSurveys,
+    comparativeSurveys.length,
+    getValues,
+    methodId,
+    methodType,
+    property,
+    setValue,
+  ]);
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {

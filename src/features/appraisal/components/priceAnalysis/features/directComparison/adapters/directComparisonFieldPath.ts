@@ -3,7 +3,7 @@ export const directComparisonPath = {
   comparativeSurveys: () => `comparativeSurveys`,
 
   /** comparative factor section */
-  comparativeFactor: () => `comparativeFactors`,
+  comparativeFactors: () => `comparativeFactors`,
   comparativeFactorsFactorCode: (arg: { row: number }) =>
     `comparativeFactors.${arg.row}.factorCode`,
 
@@ -25,6 +25,8 @@ export const directComparisonPath = {
     `directComparisonCalculations.${arg.column}.offeringPriceAdjustmentPct`,
   calculationOfferingPriceAdjustmentAmt: (arg: { column: number }) =>
     `directComparisonCalculations.${arg.column}.offeringPriceAdjustmentAmt`,
+  calculationSellingPrice: (arg: { column: number }) =>
+    `directComparisonCalculations.${arg.column}.sellingPrice`,
   calculationNumberOfYears: (arg: { column: number }) =>
     `directComparisonCalculations.${arg.column}.numberOfYears`,
   calculationAdjustmentYear: (arg: { column: number }) =>
@@ -55,6 +57,8 @@ export const directComparisonPath = {
     `directComparisonCalculations.${arg.column}.factorDiffPct`,
   calculationSumFactorAmt: (arg: { column: number }) =>
     `directComparisonCalculations.${arg.column}.factorDiffAmt`,
+  calculationTotalAdjustValue: (arg: { column: number }) =>
+    `directComparisonCalculations.${arg.column}.totalAdjustValue`,
 
   /** adjust factors section */
   adjustmentFactors: () => 'directComparisonAdjustmentFactors',
@@ -68,9 +72,6 @@ export const directComparisonPath = {
     `directComparisonAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustPercent`,
   adjustmentFactorsRemark: (arg: { row: number }) =>
     `directComparisonAdjustmentFactors.${arg.row}.remark` as const,
-
-  calculationTotalAdjustValue: (arg: { column: number }) =>
-    `directComparisonCalculations.${arg.column}.totalAdjustValue`,
 
   /** Final value section */
   finalValue: () => 'directComparisonFinalValue.finalValue',

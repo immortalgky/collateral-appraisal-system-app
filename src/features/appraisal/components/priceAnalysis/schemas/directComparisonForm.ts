@@ -6,7 +6,13 @@ const ComparativeFactors = z
   })
   .passthrough();
 
-const ComparativeSurveys = z.object({ marketId: z.string(), displaySeq: z.number() }).passthrough();
+const ComparativeSurveys = z
+  .object({
+    linkId: z.string().optional().nullable(),
+    marketId: z.string(),
+    displaySeq: z.number(),
+  })
+  .passthrough();
 
 const DirectComparisonQualitativeSurvey = z
   .object({
@@ -24,11 +30,11 @@ const DirectComparisonCalculation = z
   .object({
     marketId: z.string(),
     offeringPrice: z.number().nullable(),
-    // offeringPriceMeasurementUnit: z.string().nullable(),
+    offeringPriceMeasurementUnit: z.string().nullable(),
     offeringPriceAdjustmentPct: z.number().nullable(),
     offeringPriceAdjustmentAmt: z.number().nullable(),
     sellingPrice: z.number().nullable(),
-    // sellingPriceMeasurementUnit: z.string().nullable(),
+    sellingPriceMeasurementUnit: z.string().nullable(),
     // sellingDate: z.date(), TODO
     sellingPriceAdjustmentYear: z.number().nullable(),
     numberOfYears: z.number().nullable(),
@@ -36,25 +42,21 @@ const DirectComparisonCalculation = z
 
     // 2nd revision
     landAreaOfDeficient: z.number().nullable().optional(),
-    // landAreaOfDeficientMeasureUnit: z.number().nullable(),
+    landAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
     landPrice: z.number().nullable().optional(),
     landPriceMeasureUnit: z.number().nullable().optional(),
     landValueIncreaseDecrease: z.number().nullable().optional(),
     usableAreaOfDeficient: z.number().nullable().optional(),
-    // usableAreaOfDeficientMeasureUnit: z.number().nullable(),
+    usableAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
     usableAreaPrice: z.number().nullable().optional(),
     usableAreaPriceMeasureUnit: z.number().nullable().optional(),
     buildingValueIncreaseDecrease: z.number().nullable().optional(),
-    totalSecondRevision: z.number().nullable(),
+    totalSecondRevision: z.number().nullable().optional(),
 
     // adjusted value
     factorDiffPct: z.number(),
     factorDiffAmt: z.number(),
     totalAdjustValue: z.number(),
-
-    // adjust weight
-    weight: z.number(),
-    weightedAdjustValue: z.number(),
   })
   .passthrough();
 
@@ -75,6 +77,7 @@ const DirectComparisonAdjustmentPct = z
 
 const DirectComparisonAdjustmentFactor = z
   .object({
+    factorId: z.string(),
     factorCode: z.string(),
     surveys: z.array(DirectComparisonAdjustmentPct),
     remark: z.string().nullable().optional(),
@@ -84,8 +87,8 @@ const DirectComparisonAdjustmentFactor = z
 export const DirectComparisonDto = z
   .object({
     methodId: z.string(),
-    collateralType: z.string(),
-    pricingTemplateCode: z.string(),
+    collateralType: z.string().nullable().optional(), // remove nullable and optional if this field is required.
+    pricingTemplateCode: z.string().nullable().optional(), // remove nullable and optional if this field is required.
     comparativeSurveys: z.array(ComparativeSurveys),
     comparativeFactors: z.array(ComparativeFactors),
     /** Qualitative section */
@@ -104,4 +107,10 @@ export const DirectComparisonDto = z
   })
   .passthrough();
 
+export type DirectComparisonCalculationFormType = z.infer<typeof DirectComparisonCalculation>;
+export type DirectComparisonQualitativeSurveyFormType = z.infer<
+  typeof DirectComparisonQualitativeSurvey
+>;
+export type ComparativeFactorsFormType = z.infer<typeof ComparativeFactors>;
+export type DirectComparisonQualitativeFormType = z.infer<typeof DirectComparisonQualitative>;
 export type DirectComparisonType = z.infer<typeof DirectComparisonDto>;

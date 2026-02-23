@@ -71,13 +71,13 @@ export const saleGridFieldPath = {
   adjustmentFactorMarketId: (arg: { row: number; column: number }) =>
     `saleAdjustmentGridAdjustmentFactors.${arg.row}.surveys.${arg.column}.marketId`,
   adjustmentFactorsFactorCode: (arg: { row: number }) =>
-    `saleAdjustmentGridAdjustmentFactors.${arg.row}.factorCode` as const,
+    `saleAdjustmentGridAdjustmentFactors.${arg.row}.factorCode`,
   adjustmentFactorAdjustAmount: (arg: { row: number; column: number }) =>
     `saleAdjustmentGridAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustAmount`,
   adjustmentFactorAdjustPercent: (arg: { row: number; column: number }) =>
     `saleAdjustmentGridAdjustmentFactors.${arg.row}.surveys.${arg.column}.adjustPercent`,
   adjustmentFactorsRemark: (arg: { row: number }) =>
-    `saleAdjustmentGridAdjustmentFactors.${arg.row}.remark` as const,
+    `saleAdjustmentGridAdjustmentFactors.${arg.row}.remark`,
 
   /** Final value section */
   finalValue: () => 'saleAdjustmentGridFinalValue.finalValue',

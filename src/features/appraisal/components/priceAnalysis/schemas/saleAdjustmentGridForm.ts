@@ -29,25 +29,25 @@ const SaleAdjustmentGridQualitative = z.object({
 const SaleAdjustmentGridCalculation = z
   .object({
     marketId: z.string(),
-    offeringPrice: z.number().nullable(),
-    // offeringPriceMeasurementUnit: z.string().nullable(),
-    offeringPriceAdjustmentPct: z.number().nullable(),
-    offeringPriceAdjustmentAmt: z.number().nullable(),
-    sellingPrice: z.number().nullable(),
-    // sellingPriceMeasurementUnit: z.string().nullable(),
+    offeringPrice: z.number().nullable().optional(),
+    offeringPriceMeasurementUnit: z.string().nullable().optional(),
+    offeringPriceAdjustmentPct: z.number().nullable().optional(),
+    offeringPriceAdjustmentAmt: z.number().nullable().optional(),
+    sellingPrice: z.number().nullable().optional(),
+    sellingPriceMeasurementUnit: z.string().nullable().optional(),
     // sellingDate: z.date(), TODO
-    sellingPriceAdjustmentYear: z.number().nullable(),
-    numberOfYears: z.number().nullable(),
+    sellingPriceAdjustmentYear: z.number().nullable().optional(),
+    numberOfYears: z.number().nullable().optional(),
     adjustedValue: z.number(),
 
     // 2nd revision
     landAreaOfDeficient: z.number().nullable().optional(),
-    // landAreaOfDeficientMeasureUnit: z.number().nullable(),
+    landAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
     landPrice: z.number().nullable().optional(),
     landPriceMeasureUnit: z.number().nullable().optional(),
     landValueIncreaseDecrease: z.number().nullable().optional(),
     usableAreaOfDeficient: z.number().nullable().optional(),
-    // usableAreaOfDeficientMeasureUnit: z.number().nullable(),
+    usableAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
     usableAreaPrice: z.number().nullable().optional(),
     usableAreaPriceMeasureUnit: z.number().nullable().optional(),
     buildingValueIncreaseDecrease: z.number().nullable().optional(),
@@ -81,6 +81,7 @@ const SaleAdjustmentGridAdjustmentPct = z
 
 const SaleAdjustmentGridAdjustmentFactor = z
   .object({
+    factorId: z.string(),
     factorCode: z.string(),
     surveys: z.array(SaleAdjustmentGridAdjustmentPct),
     remark: z.string().nullable().optional(),
@@ -90,8 +91,8 @@ const SaleAdjustmentGridAdjustmentFactor = z
 export const SaleAdjustmentGridDto = z
   .object({
     methodId: z.string(),
-    collateralType: z.string(),
-    pricingTemplateCode: z.string(),
+    collateralType: z.string().nullable().optional(), // remove nullable and optional if this field is required.
+    pricingTemplateCode: z.string().nullable().optional(), // remove nullable and optional if this field is required.
     comparativeSurveys: z.array(ComparativeSurveys),
     comparativeFactors: z.array(ComparativeFactors),
     /** Qualitative section */

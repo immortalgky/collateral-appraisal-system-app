@@ -1,8 +1,12 @@
 import type { UseFormGetValues, UseFormSetValue } from 'react-hook-form';
-import type { DirectComparisonType } from '../../../schemas/directComparisonForm';
+import type {
+  DirectComparisonQualitativeFormType,
+  DirectComparisonType,
+} from '../../../schemas/directComparisonForm';
 import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 import { toFactorMap } from '../../../domain/toFactorMap';
 import type { MarketComparableDetailType } from '../../../schemas/v1';
+import type { SaleAdjustmentGridQualitativeFormType } from '../../../schemas/saleAdjustmentGridForm';
 
 interface SetDirectComparisonInitialValueOnSelectSurveyProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -20,7 +24,8 @@ export function setDirectComparisonInitialValueOnSelectSurvey({
     qualitatives: qualitativesPath,
     comparativeSurveys: comparativeSurveysPath,
   } = directComparisonPath;
-  const qualitativeFactors = getValues(qualitativesPath()) ?? [];
+  const qualitativeFactors =
+    (getValues(qualitativesPath()) as DirectComparisonQualitativeFormType[]) ?? [];
 
   setValue(
     comparativeSurveysPath(),
@@ -34,13 +39,15 @@ export function setDirectComparisonInitialValueOnSelectSurvey({
   setValue(
     qualitativesPath(),
     [
-      ...qualitativeFactors.map(f => ({
-        ...f,
-        qualitatives: comparativeSurveys.map(survey => ({
-          marketId: survey.id,
-          qualitativeLevel: 'E', // TODO: can config
-        })),
-      })),
+      ...qualitativeFactors.map((factor: SaleAdjustmentGridQualitativeFormType) => {
+        return {
+          factorCode: factor.factorCode,
+          qualitatives: comparativeSurveys.map((survey: MarketComparableDetailType) => ({
+            marketId: survey.id,
+            qualitativeLevel: 'E', // TODO: can config
+          })),
+        };
+      }),
     ],
     { shouldDirty: false },
   );
@@ -72,8 +79,8 @@ export function setDirectComparisonInitialValueOnSelectSurvey({
   setValue(
     adjustmentFactorsPath(),
     [
-      ...qualitativeFactors.map(f => ({
-        factorCode: f.factorCode,
+      ...(qualitativeFactors ?? []).map((factor: SaleAdjustmentGridQualitativeFormType) => ({
+        factorCode: factor.factorCode,
         surveys: comparativeSurveys.map(survey => ({
           marketId: survey.id,
           adjustPercent: 0,

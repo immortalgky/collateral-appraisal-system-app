@@ -45,18 +45,14 @@ export function ComparativeSurveySection({
     name: comparativeFactorsPath(),
   });
 
-  const comparativeFactors = useMemo(() => {
-    return getValues(comparativeFactorsPath());
-  }, [comparativeSurveyFactors]);
-
   const factorColumnStyle =
     'z-20 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
   const collateralColumnStyle =
     'text-left font-medium  px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap  sticky right-[70px] z-25 after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
 
   return (
-    <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg b overflow-hidden flex flex-col">
-      <div className="flex-1 min-h-0 overflow-auto">
+    <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg b flex flex-col">
+      <div className="flex-1 min-h-0">
         <table className="table table-sm min-w-max">
           <thead className="bg-gray-50 sticky top-0">
             <tr className="">
@@ -82,12 +78,12 @@ export function ComparativeSurveySection({
           <tbody>
             {/* use comparativeSurveyFactors directly because we need to update it immediatly */}
             {comparativeSurveyFactors.map((compFact: any, rowIndex: number) => {
-              const selected = comparativeSurveyFactors[rowIndex];
+              const selected = compFact.factorCode ?? '';
               const options = (allFactors ?? [])
                 .filter(
                   (f: FactorDataType) =>
-                    f.factorCode === selected.factorCode ||
-                    !comparativeFactors.some((q: any) => q.factorCode === f.factorCode),
+                    f.factorCode === selected ||
+                    !comparativeSurveyFactors.some((q: any) => q.factorCode === f.factorCode),
                 )
                 .map((f: FactorDataType) => ({
                   label: f.factorName ?? '',
@@ -184,7 +180,12 @@ export function ComparativeSurveySection({
               );
             })}
             <tr>
-              <td className={clsx('bg-white sticky left-0', factorColumnStyle)}>
+              <td
+                className={clsx(
+                  'bg-white sticky left-0',
+                  'z-15 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              >
                 <button
                   type="button"
                   onClick={() =>

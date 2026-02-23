@@ -36,13 +36,11 @@ interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
   property: Record<string, any>;
   template: TemplateDetailType;
-  isLoading: boolean;
 }
 export const SaleAdjustmentGridScoringSection = ({
   comparativeSurveys = [],
   property,
   template,
-  isLoading = true,
 }: SaleAdjustmentGridScoringSectionProps) => {
   /** field paths */
   const {
@@ -120,7 +118,6 @@ export const SaleAdjustmentGridScoringSection = ({
         adjustPercent: 0,
         adjustAmount: 0,
       })),
-      remark: '',
     });
   };
 
@@ -130,18 +127,6 @@ export const SaleAdjustmentGridScoringSection = ({
   };
 
   /** define rules */
-  const qualitativeRules: DerivedFieldRule<any>[] = useMemo(() => {
-    /** Adjustment factors which initial by Qualitative part */
-    let rules = buildSaleGridQualitativeDerivedRules({
-      surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactors,
-    });
-
-    rules = [...rules, ...buildSaleGridFinalValueRules({ surveys: comparativeSurveys })];
-
-    return rules;
-  }, [comparativeSurveys.length, qualitativeFactors.length]);
-
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
     const rules = buildSaleGridCalculationDerivedRules({
       surveys: comparativeSurveys,
@@ -154,21 +139,27 @@ export const SaleAdjustmentGridScoringSection = ({
   const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorDefaultPercentRules({
       surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactors,
+      qualitativeRows: qualitativeFactorFields,
     });
-  }, [comparativeSurveys.length, qualitativeFactors.length]);
+  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
 
   const adjustAmountRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorAmountRules({
       surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactors,
+      qualitativeRows: qualitativeFactorFields,
     });
-  }, [comparativeSurveys.length, qualitativeFactors.length, property]);
+  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
 
-  useDerivedFields({ rules: qualitativeRules });
+  const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildSaleGridFinalValueRules({
+      surveys: comparativeSurveys,
+    });
+  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+
   useDerivedFields({ rules: calculationRules });
   useDerivedFields({ rules: adjustPercentDefaultRules });
   useDerivedFields({ rules: adjustAmountRules });
+  useDerivedFields({ rules: finalValueRules });
 
   /** styles */
   const bgGradient =

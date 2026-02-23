@@ -15,11 +15,13 @@ import {
 import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/features/directComparison/domain/qualitativeDefault.ts';
 import { shouldAutoDefault } from '../domain/shouldAutoDefault';
 import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
-type SurveyFactor = { id: string; value?: number | string | null };
-type Survey = { factors?: SurveyFactor[] };
+import type { MarketComparableDetailType } from '../../../schemas/v1';
+import { readFactorValue } from '../../../domain/readFactorValue';
+import type { DirectComparisonQualitativeFormType } from '../../../schemas/directComparisonForm';
+import type { SaleAdjustmentGridQualitativeFormType } from '../../../schemas/saleAdjustmentGridForm';
 
 export function buildDirectComparisonCalculationDerivedRules(args: {
-  surveys: Survey[];
+  surveys: MarketComparableDetailType[];
   property: Record<string, any>;
 }): DerivedFieldRule[] {
   /** Calculation section */
@@ -46,7 +48,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
   } = directComparisonPath;
 
   const rules: DerivedFieldRule[] = surveys
-    .map((s, columnIndex) => {
+    .map((survey: MarketComparableDetailType, columnIndex: number) => {
       return [
         {
           targetPath: calculationAdjustedValuePath({ column: columnIndex }),
@@ -56,26 +58,40 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
             calculationAdjustmentYearPath({ column: columnIndex }),
           ],
           compute: ({ getValues }) => {
-            const offeringPrice = s.factors?.find(f => f.id === '17')?.value;
-            if (offeringPrice) {
+            const offeringPrice = survey.factorData?.find(f => f.factorCode === '17');
+            const offeringPriceValue = offeringPrice
+              ? readFactorValue({
+                  dataType: offeringPrice.dataType,
+                  fieldDecimal: offeringPrice.fieldDecimal,
+                  value: offeringPrice.value,
+                })
+              : undefined;
+            if (offeringPriceValue) {
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValue(
-                offeringPrice,
+                offeringPriceValue,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
               );
             }
-            const sellingPrice = s.factors?.find(f => f.id === '21')?.value;
-            if (sellingPrice) {
+            const sellingPrice = survey.factorData?.find(f => f.factorCode === '21');
+            const sellingPriceValue = sellingPrice
+              ? readFactorValue({
+                  dataType: sellingPrice.dataType,
+                  fieldDecimal: sellingPrice.fieldDecimal,
+                  value: sellingPrice.value,
+                })
+              : undefined;
+            if (sellingPriceValue) {
               const numberOfYears =
                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
-                sellingPrice,
+                sellingPriceValue,
                 numberOfYears,
                 sellingPriceAdjustmentYearPct,
               );
@@ -102,9 +118,15 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           deps: [],
           compute: () => {
             const propertyLandArea = getPropertyValueByFactorCode('05', property) ?? 0;
-            const surveyLandArea = s.factors?.find(f => f.id === '05')?.value ?? 0;
+            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '05');
+            const surveyLandArea = findSurveyLandArea
+              ? readFactorValue({
+                  dataType: findSurveyLandArea.dataType,
+                  fieldDecimal: findSurveyLandArea.fieldDecimal,
+                  value: findSurveyLandArea.value,
+                })
+              : 0;
             const landDiff = calcDiff(propertyLandArea, surveyLandArea);
-
             return landDiff;
           },
         },
@@ -123,7 +145,14 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           deps: [],
           compute: () => {
             const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
-            const surveyUsableArea = s.factors?.find(f => f.id === '12')?.value ?? 0;
+            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
+            const surveyUsableArea = findSurveyUsableArea
+              ? readFactorValue({
+                  dataType: findSurveyUsableArea.dataType,
+                  fieldDecimal: findSurveyUsableArea.fieldDecimal,
+                  value: findSurveyUsableArea.value,
+                })
+              : 0;
             const usableAreaDiff = calcDiff(propertyUsableArea, surveyUsableArea);
 
             return usableAreaDiff;
@@ -204,13 +233,13 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
         },
       ];
     })
-    .flat();
+    .flat() as DerivedFieldRule[];
   return rules;
 }
 
 export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
-  surveys: Survey[];
-  qualitativeRows: any[];
+  surveys: MarketComparableDetailType[];
+  qualitativeRows: DirectComparisonQualitativeFormType[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows } = args;
 
@@ -220,9 +249,8 @@ export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
   } = directComparisonPath;
 
   return qualitativeRows
-    .map((_, rowIndex) =>
-      surveys.map((_, columnIndex) => {
-        console.log(adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }));
+    .map((_, rowIndex: number) =>
+      surveys.map((_, columnIndex: number) => {
         return {
           targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
           deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
@@ -230,7 +258,7 @@ export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
             console.log(level);
-            return qualitativeDefaultPercent(level) ?? null;
+            return qualitativeDefaultPercent(level) ?? 0;
           },
         };
       }),
@@ -239,8 +267,8 @@ export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
 }
 
 export function buildDirectComparisonAdjustmentFactorAmountRules(args: {
-  surveys: Survey[];
-  qualitativeRows: any[];
+  surveys: MarketComparableDetailType[];
+  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows } = args;
 
@@ -274,7 +302,7 @@ export function buildDirectComparisonAdjustmentFactorAmountRules(args: {
 }
 
 export function buildDirectComparisonFinalValueRules(arg: {
-  surveys: Survey[];
+  surveys: MarketComparableDetailType[];
 }): DerivedFieldRule[] {
   const {
     finalValue: finalValuePath,
@@ -287,12 +315,12 @@ export function buildDirectComparisonFinalValueRules(arg: {
     {
       targetPath: finalValuePath(),
       deps: [
-        ...surveys.map((s, columnIndex) =>
+        ...surveys.map((_, columnIndex: number) =>
           calculationTotalAdjustValuePath({ column: columnIndex }),
         ),
       ],
       compute: ({ getValues }) => {
-        const totalValues = surveys.map((s, columnIndex) => {
+        const totalValues = surveys.map((_, columnIndex: number) => {
           const totalAdjustValue =
             getValues(calculationTotalAdjustValuePath({ column: columnIndex })) ?? 0;
           return totalAdjustValue;

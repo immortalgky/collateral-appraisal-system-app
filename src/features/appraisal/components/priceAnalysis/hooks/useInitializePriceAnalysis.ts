@@ -280,6 +280,7 @@ export function useInitializePriceAnalysis({
   });
 
   // Step 6: Fetch all factors
+  // replace by function ...
   const allFactorQuery = useQuery({
     queryKey: ['all-factors'],
     queryFn: async (): Promise<FactorDataType> => {

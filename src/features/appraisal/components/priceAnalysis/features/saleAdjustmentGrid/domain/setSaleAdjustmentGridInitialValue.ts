@@ -69,7 +69,7 @@ export function setSaleAdjustmentGridInitialValue({
               offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
               sellingPrice: surveyMap.get('21') ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              sellingDate: surveyMap.get('22') ?? '',
+              // sellingDate: surveyMap.get('22') ?? '',
               sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
               numberOfYears: 10, // TODO: convert selling date to number of year
               adjustedValue: 0,
@@ -96,7 +96,6 @@ export function setSaleAdjustmentGridInitialValue({
     return;
   }
 
-  console.log('check called on set initial value ');
   reset(
     {
       methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
@@ -140,7 +139,7 @@ export function setSaleAdjustmentGridInitialValue({
             offeringPrice: surveyMap.get('17') ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
             offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? 0,
+            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
             sellingPrice: surveyMap.get('21') ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: surveyMap.get('22') ?? '',
@@ -159,7 +158,16 @@ export function setSaleAdjustmentGridInitialValue({
           };
         }),
       ] as SaleAdjustmentGridCalculationFormType[],
-      saleAdjustmentGridAdjustmentFactors: [],
+      saleAdjustmentGridAdjustmentFactors: (template.calculationFactors ?? []).map(
+        (calcFact: TemplateCalculationFactorType) => {
+          console.log(calcFact.id);
+          return {
+            factorId: calcFact.id,
+            factorCode: calcFact.factorCode,
+            surveys: [],
+          };
+        },
+      ),
       saleAdjustmentGridFinalValue: {
         finalValue: 0,
         finalValueRounded: 0,
