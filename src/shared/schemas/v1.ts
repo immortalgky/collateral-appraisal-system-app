@@ -2764,6 +2764,13 @@ const UpdateGalleryPhotoRequest = z
   })
   .passthrough();
 const UpdateGalleryPhotoResponse = z.object({ id: z.string().uuid() }).passthrough();
+const CondoAppraisalAreaDetailDto = z
+  .object({
+    id: z.string().uuid().nullable(),
+    areaDescription: z.string().nullable(),
+    areaSize: z.number().nullable(),
+  })
+  .passthrough();
 const UpdateCondoPropertyRequest = z
   .object({
     propertyName: z.string().nullable().default(null),
@@ -2815,6 +2822,7 @@ const UpdateCondoPropertyRequest = z
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
     roofType: z.string().nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
+    areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable().default(null),
     totalBuildingArea: z.number().nullable().default(null),
     isExpropriated: z.boolean().nullable().default(null),
     expropriationRemark: z.string().nullable().default(null),
@@ -2889,6 +2897,7 @@ const GetCondoPropertyResponse = z
     bathroomFloorMaterialTypeOther: z.string().nullable(),
     roofType: z.string().nullable(),
     roofTypeOther: z.string().nullable(),
+    areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable(),
     totalBuildingArea: z.number().nullable(),
     isExpropriated: z.boolean().nullable(),
     expropriationRemark: z.string().nullable(),
@@ -3036,7 +3045,7 @@ const GetBuildingPropertyResponse = z
   })
   .passthrough();
 const UpdateAppendixLayoutRequest = z.object({ layoutColumns: z.number().int() }).passthrough();
-const UpdateAppendixLayoutResult = z
+const UpdateAppendixLayoutResponse = z
   .object({ appendixId: z.string().uuid(), layoutColumns: z.number().int() })
   .passthrough();
 const UnsetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
@@ -3092,7 +3101,7 @@ const ReorderPropertiesInGroupRequest = z
   .passthrough();
 const ReorderPropertiesInGroupResponse = z.object({ success: z.boolean() }).passthrough();
 const RemovePropertyFromGroupResponse = z.object({ success: z.boolean() }).passthrough();
-const RemoveAppendixDocumentResult = z.object({ success: z.boolean() }).passthrough();
+const RemoveAppendixDocumentResponse = z.object({ success: z.boolean() }).passthrough();
 const MovePropertyToGroupRequest = z
   .object({ targetGroupId: z.string().uuid(), targetPosition: z.number().int().nullable() })
   .passthrough();
@@ -3248,7 +3257,7 @@ const GetAppraisalByIdResponse = z
   })
   .partial()
   .passthrough();
-const AppendixDocumentDto = z
+const AppendixDocumentResponse = z
   .object({
     id: z.string().uuid(),
     galleryPhotoId: z.string().uuid(),
@@ -3256,7 +3265,7 @@ const AppendixDocumentDto = z
     displaySequence: z.number().int(),
   })
   .passthrough();
-const AppraisalAppendixDto = z
+const AppraisalAppendixResponse = z
   .object({
     id: z.string().uuid(),
     appendixTypeId: z.string().uuid(),
@@ -3264,11 +3273,11 @@ const AppraisalAppendixDto = z
     appendixTypeName: z.string(),
     sortOrder: z.number().int(),
     layoutColumns: z.number().int(),
-    documents: z.array(AppendixDocumentDto),
+    documents: z.array(AppendixDocumentResponse),
   })
   .passthrough();
 const GetAppraisalAppendicesResponse = z
-  .object({ items: z.array(AppraisalAppendixDto) })
+  .object({ items: z.array(AppraisalAppendixResponse) })
   .passthrough();
 const CreateVesselPropertyRequest = z
   .object({
@@ -3703,6 +3712,7 @@ const CreateCondoPropertyRequest = z
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
     roofType: z.string().nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
+    areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable().default(null),
     totalBuildingArea: z.number().nullable().default(null),
     isExpropriated: z.boolean().nullable().default(null),
     expropriationRemark: z.string().nullable().default(null),
@@ -3802,7 +3812,7 @@ const AddPropertyToGroupResponse = z.object({ success: z.boolean() }).passthroug
 const AddAppendixDocumentRequest = z
   .object({ galleryPhotoId: z.string().uuid(), displaySequence: z.number().int() })
   .passthrough();
-const AddAppendixDocumentResult = z
+const AddAppendixDocumentResponse = z
   .object({ documentId: z.string().uuid(), appendixId: z.string().uuid() })
   .passthrough();
 const RescheduleAppointmentRequest = z
@@ -4158,12 +4168,13 @@ export const schemas = {
   GetLandAndBuildingPropertyResponse,
   UpdateGalleryPhotoRequest,
   UpdateGalleryPhotoResponse,
+  CondoAppraisalAreaDetailDto,
   UpdateCondoPropertyRequest,
   GetCondoPropertyResponse,
   UpdateBuildingPropertyRequest,
   GetBuildingPropertyResponse,
   UpdateAppendixLayoutRequest,
-  UpdateAppendixLayoutResult,
+  UpdateAppendixLayoutResponse,
   UnsetPropertyThumbnailResult,
   UnmarkPhotoFromReportResult,
   SetPropertyThumbnailResult,
@@ -4177,7 +4188,7 @@ export const schemas = {
   ReorderPropertiesInGroupRequest,
   ReorderPropertiesInGroupResponse,
   RemovePropertyFromGroupResponse,
-  RemoveAppendixDocumentResult,
+  RemoveAppendixDocumentResponse,
   MovePropertyToGroupRequest,
   MovePropertyToGroupResponse,
   MarkPhotoForReportRequest,
@@ -4203,8 +4214,8 @@ export const schemas = {
   CreateAppraisalRequest,
   CreateAppraisalResponse,
   GetAppraisalByIdResponse,
-  AppendixDocumentDto,
-  AppraisalAppendixDto,
+  AppendixDocumentResponse,
+  AppraisalAppendixResponse,
   GetAppraisalAppendicesResponse,
   CreateVesselPropertyRequest,
   CreateVesselPropertyResponse,
@@ -4226,7 +4237,7 @@ export const schemas = {
   AddPropertyToGroupRequest,
   AddPropertyToGroupResponse,
   AddAppendixDocumentRequest,
-  AddAppendixDocumentResult,
+  AddAppendixDocumentResponse,
   RescheduleAppointmentRequest,
   AppointmentDto2,
   GetAppointmentsResponse,
