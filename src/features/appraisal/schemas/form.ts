@@ -226,7 +226,7 @@ export const createCondoForm = z.object({
   roofType: z.string().nullable(),
   roofTypeOther: z.string().nullable(),
 
-  condoAreaDetails: z.array(AreaDetailDto).nullable(),
+  areaDetails: z.array(AreaDetailDto).nullable(),
   totalBuildingArea: z.coerce.number(),
 
   isExpropriated: z.boolean(),
@@ -614,7 +614,16 @@ export const createCondoFormDefault: createCondoFormType = {
   bathroomFloorMaterialTypeOther: '',
   roofType: '',
   roofTypeOther: '',
-  condoAreaDetail: [],
+  areaDetails: [
+    {
+      areaDescription: 'Interior',
+      areaSize: 0,
+    },
+    {
+      areaDescription: 'Balcony',
+      areaSize: 0,
+    },
+  ],
   totalBuildingArea: 0,
   isExpropriated: false,
   expropriationRemark: '',

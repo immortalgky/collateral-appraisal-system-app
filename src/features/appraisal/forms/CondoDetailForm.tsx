@@ -74,9 +74,8 @@ function CondoDetailForm() {
       </SectionRow>
 
       <SectionRow title="Area Details" icon="chart-area">
-        <div className="col-span-12">
-          <CondoAreaDetailForm name={'condoAreaDetails'} />
-        </div>
+        <CondoAreaDetailForm name={'areaDetails'} />
+        <FormFields fields={totalBuildingArea} />
       </SectionRow>
 
       <SectionRow title="Expropriation" icon="file-invoice">
@@ -101,6 +100,16 @@ function CondoDetailForm() {
     </div>
   );
 }
+
+const totalBuildingArea: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Total Area (Sq. M.)',
+    name: 'totalBuildingArea',
+    wrapperClassName: 'col-span-3 col-start-10',
+    disabled: true,
+  },
+];
 
 const condoFields: FormField[] = [
   {
