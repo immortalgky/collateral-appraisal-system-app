@@ -66,7 +66,7 @@ export function calcAdjustedValue(
   return round2(price);
 }
 
-export function calcAdjustValueFromSellingPrice(
+export function calcAdjustedValueFromSellingPrice(
   sellingPriceAdjustmentPct: unknown,
   totalNumberOfYear: unknown,
 ): number {

@@ -1,17 +1,17 @@
-import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
-import { directComparisonPath } from '@/features/appraisal/components/priceAnalysis/features/directComparison/adapters/directComparisonFieldPath';
+import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/domain/shouldAutoDefault.ts';
+import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/adapters/saleAdjustmentGridfieldPath.ts';
 import {
   type DerivedFieldRule,
   useDerivedFields,
-} from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
+} from '@features/appraisal/components/priceAnalysis/adapters/useDerivedFieldArray.tsx';
+import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 
-export function DirectComparisonAdjustAppraisalPriceSection({ property }) {
+export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
   const {
     finalValueRounded: finalValueRoundedPath,
     appraisalPrice: appraisalPricePath,
     appraisalPriceRounded: appraisalPriceRoundedPath,
-  } = directComparisonPath;
+  } = saleGridFieldPath;
 
   const rules: DerivedFieldRule[] = [
     {

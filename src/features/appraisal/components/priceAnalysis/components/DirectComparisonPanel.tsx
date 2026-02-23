@@ -1,27 +1,24 @@
 import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  DirectComparisonDto,
-  type DirectComparisonType,
-} from '../../../schemas/directComparisonForm';
+import type { PriceAnalysisSelectorState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
+import { DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
+import { useEffect, useState } from 'react';
 import {
   SaveComparativeAnalysisRequest,
   type MarketComparableDetailType,
   type TemplateDetailType,
-} from '../../../schemas/v1';
-import { useEffect, useState } from 'react';
-import { flattenRHFErrors } from '../../../domain/flattenRHFErrors';
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import { useSaveComparativeAnalysis } from '@features/appraisal/components/priceAnalysis/api/api.ts';
+import { mapDirectComparisonFormToSubmitSchema } from '@features/appraisal/components/priceAnalysis/domain/mapDirectComparisonFormToSubmitSchema.ts';
 import toast from 'react-hot-toast';
-import { PriceAnalysisTemplateSelector } from '../../../components/PriceAnalysisTemplateSelector';
-import { MethodFooterActions } from '../../../components/MethodFooterActions';
-import { DirectComparison } from './DirectComparison';
-import { setDirectComparisonInitialValueOnSelectSurvey } from '../domain/setDirectComparisonInitialValueOnSelectSurvey';
-import { setDirectComparisonInitialValue } from '../domain/setDirectComparisonInitialValue';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import type { PriceAnalysisSelectorState } from '../../selection/domain/useReducer';
-import { useSaveComparativeAnalysis } from '../../../api/api';
-import { mapDirectComparisonFormToSubmitSchema } from '../../../domain/mapDirectComparisonFormToSubmitSchema';
-import { COLLATERAL_TYPE } from '../../../data/data';
+import { flattenRHFErrors } from '@features/appraisal/components/priceAnalysis/domain/flattenRHFErrors.ts';
+import { setDirectComparisonInitialValue } from '@features/appraisal/components/priceAnalysis/adapters/setDirectComparisonInitialValue.ts';
+import { setDirectComparisonInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/adapters/setDirectComparisonInitialValueOnSelectSurvey.ts';
+import { PriceAnalysisTemplateSelector } from '@features/appraisal/components/priceAnalysis/components/PriceAnalysisTemplateSelector.tsx';
+import { COLLATERAL_TYPE } from '@features/appraisal/components/priceAnalysis/data/data.ts';
+import { DirectComparison } from '@features/appraisal/components/priceAnalysis/components/DirectComparison.tsx';
+import { MethodFooterActions } from '@features/appraisal/components/priceAnalysis/components/MethodFooterActions.tsx';
+import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 
 interface DirectComparisonPanelProps {
   state: PriceAnalysisSelectorState;
@@ -161,7 +158,9 @@ export function DirectComparisonPanel({
         <div className="font-semibold">Please fix these fields</div>
         <ul className="mt-1 list-disc pl-5">
           {messages.slice(0, 6).map(m => (
-            <li key={m}>{m}</li>
+            <li key={m} className={'text-wrap'}>
+              {m}
+            </li>
           ))}
         </ul>
       </div>,
@@ -170,6 +169,7 @@ export function DirectComparisonPanel({
   };
 
   useEffect(() => {
+    console.log('Check infinite refresh on select market survey!');
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
       setDirectComparisonInitialValue({
         collateralType: collateralType,
@@ -181,9 +181,18 @@ export function DirectComparisonPanel({
         reset: reset,
       });
     }
-  }, [collateralType, isGenerated, methodId, methodType, property, reset]);
+  }, [
+    comparativeSurveys,
+    comparativeSurveys.length,
+    getValues,
+    methodId,
+    methodType,
+    property,
+    setValue,
+  ]);
 
   useEffect(() => {
+    console.log('Check infinite refresh on select market survey!');
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
       setDirectComparisonInitialValueOnSelectSurvey({
         comparativeSurveys: comparativeSurveys,
@@ -191,7 +200,15 @@ export function DirectComparisonPanel({
         getValues: getValues,
       });
     }
-  }, [comparativeSurveys.length]);
+  }, [
+    comparativeSurveys,
+    comparativeSurveys.length,
+    getValues,
+    methodId,
+    methodType,
+    property,
+    setValue,
+  ]);
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {

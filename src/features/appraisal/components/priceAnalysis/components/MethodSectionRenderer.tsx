@@ -1,7 +1,7 @@
-import { WQSMethodPanel } from './WQSMethodPanel';
-import { SaleAdjustmentGridPanel } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridPanel.tsx';
-import { DirectComparisonPanel } from '../features/directComparison/components/DirectComparisonPanel';
 import type { PriceAnalysisSelectorState } from '@features/appraisal/components/priceAnalysis/features/selection/domain/useReducer.tsx';
+import { SaleAdjustmentGridPanel } from '@features/appraisal/components/priceAnalysis/components/SaleAdjustmentGridPanel.tsx';
+import { DirectComparisonPanel } from '@features/appraisal/components/priceAnalysis/components/DirectComparisonPanel.tsx';
+import { WQSPanel } from '@features/appraisal/components/priceAnalysis/components/WQSPanel.tsx';
 
 interface MethodSectionRendererProps {
   state: PriceAnalysisSelectorState;
@@ -14,11 +14,10 @@ export function MethodSectionRenderer({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: MethodSectionRendererProps) {
-  console.log('surveys', state.marketSurveys);
   switch (state.activeMethod?.methodType) {
     case 'WQS_MARKET': {
       return (
-        <WQSMethodPanel
+        <WQSPanel
           state={state}
           onCalculationMethodDirty={onCalculationMethodDirty}
           onCancelCalculationMethod={onCancelCalculationMethod}

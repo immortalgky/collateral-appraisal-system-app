@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import { directComparisonPath } from '@/features/appraisal/components/priceAnalysis/features/directComparison/adapters/directComparisonFieldPath';
+import type { MarketComparableDetailType } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/adapters/directComparisonFieldPath.ts';
 
 interface DirectComparisonSecondRevisionProps {
   comparativeSurveys: MarketComparableDetailType[];

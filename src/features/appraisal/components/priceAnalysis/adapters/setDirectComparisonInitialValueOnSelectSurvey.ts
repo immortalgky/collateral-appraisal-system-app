@@ -1,35 +1,40 @@
 import type { UseFormGetValues, UseFormSetValue } from 'react-hook-form';
-import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
 import type {
-  SaleAdjustmentGridQualitativeFormType,
-  SaleAdjustmentGridType,
-} from '../../../schemas/saleAdjustmentGridForm';
-import type { FactorDataType, MarketComparableDetailType } from '../../../schemas/v1';
-import { readFactorValue } from '../../../domain/readFactorValue';
+  FactorDataType,
+  MarketComparableDetailType,
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import type {
+  DirectComparisonQualitativeFormType,
+  DirectComparisonType,
+} from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm.ts';
+import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/adapters/directComparisonFieldPath.ts';
+import type { SaleAdjustmentGridQualitativeFormType } from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
 
-interface SetSaleAdjustmentGridInitialValueOnSelectSurveyProps {
+interface SetDirectComparisonInitialValueOnSelectSurveyProps {
   comparativeSurveys: MarketComparableDetailType[];
-  setValue: UseFormSetValue<SaleAdjustmentGridType>;
-  getValues: UseFormGetValues<SaleAdjustmentGridType>;
+  setValue: UseFormSetValue<DirectComparisonType>;
+  getValues: UseFormGetValues<DirectComparisonType>;
 }
-export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
+export function setDirectComparisonInitialValueOnSelectSurvey({
   comparativeSurveys,
   setValue,
   getValues,
-}: SetSaleAdjustmentGridInitialValueOnSelectSurveyProps) {
+}: SetDirectComparisonInitialValueOnSelectSurveyProps) {
   const {
     qualitatives: qualitativesPath,
     comparativeSurveys: comparativeSurveysPath,
     calculations: calculationsPath,
     adjustmentFactors: adjustmentFactorsPath,
-  } = saleGridFieldPath;
+  } = directComparisonPath;
 
   const qualitativeFactors =
-    (getValues(qualitativesPath()) as SaleAdjustmentGridQualitativeFormType[]) ?? [];
+    (getValues(qualitativesPath()) as DirectComparisonQualitativeFormType[]) ?? [];
 
   setValue(
     comparativeSurveysPath(),
-    (comparativeSurveys ?? []).map((survey, index) => ({
+    comparativeSurveys.map((survey, index) => ({
+      linkId: '',
       marketId: survey.id,
       displaySeq: index + 1,
     })),
@@ -39,8 +44,9 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
   setValue(
     qualitativesPath(),
     [
-      ...qualitativeFactors.map((factor: SaleAdjustmentGridQualitativeFormType) => {
+      ...qualitativeFactors.map((factor: DirectComparisonQualitativeFormType) => {
         return {
+          factorId: factor.factorId,
           factorCode: factor.factorCode,
           qualitatives: comparativeSurveys.map((survey: MarketComparableDetailType) => ({
             marketId: survey.id,
@@ -55,7 +61,7 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
   setValue(
     calculationsPath(),
     [
-      ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => {
+      ...comparativeSurveys.map(survey => {
         const surveyMap = new Map(
           (survey.factorData ?? []).map((factor: FactorDataType) => [
             factor.factorCode,
@@ -89,6 +95,7 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
     adjustmentFactorsPath(),
     [
       ...(qualitativeFactors ?? []).map((factor: SaleAdjustmentGridQualitativeFormType) => ({
+        factorId: factor.factorId,
         factorCode: factor.factorCode,
         surveys: comparativeSurveys.map(survey => ({
           marketId: survey.id,

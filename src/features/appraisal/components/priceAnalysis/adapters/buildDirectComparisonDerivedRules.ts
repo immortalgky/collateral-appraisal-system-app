@@ -1,38 +1,26 @@
-import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
 import {
   calcAdjustedValue,
   calcAdjustedValueFromSellingPrice,
   calcAdjustValueFromSellingPrice,
   calcDiff,
+  calcFinalValue,
   calcFinalValueRoundedValue,
   calcIncreaseDecrease,
   calcSum,
   calcTotalAdjustValue,
   calcTotalSecondRevision,
-  calcWeightedAdjustValue,
-} from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/calculations.ts';
-import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/shouldAutoDefault.ts';
-import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
-import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
-import type { FactorDataType, MarketComparableDetailType } from '../../../schemas/v1';
-import type { SaleAdjustmentGridQualitativeFormType } from '../../../schemas/saleAdjustmentGridForm';
-import { readFactorValue } from '../../../domain/readFactorValue';
+} from '@features/appraisal/components/priceAnalysis/domain/calculateDirectComparison.ts';
+import { shouldAutoDefault } from '../domain/shouldAutoDefault';
+import type { MarketComparableDetailType } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/adapters/useDerivedFieldArray.tsx';
+import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/adapters/directComparisonFieldPath.ts';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
+import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
+import type { DirectComparisonQualitativeFormType } from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm.ts';
+import { qualitativeDefaultPercent } from '@features/appraisal/components/priceAnalysis/domain/qualitativeDefault.ts';
+import type { SaleAdjustmentGridQualitativeFormType } from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
 
-export function buildSaleGridQualitativeDerivedRules(args: {
-  surveys: MarketComparableDetailType[];
-  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
-}): DerivedFieldRule[] {
-  const { qualitativeRows, surveys } = args;
-
-  const { adjustmentFactorsFactorCode, qualitativeMarketId } = saleGridFieldPath;
-
-  const rules: DerivedFieldRule[] = [];
-
-  return rules;
-}
-
-export function buildSaleGridCalculationDerivedRules(args: {
+export function buildDirectComparisonCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
   property: Record<string, any>;
 }): DerivedFieldRule[] {
@@ -56,10 +44,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculationSumFactorPct: calculationSumFactorPctPath,
     calculationSumFactorAmt: calculationSumFactorAmtPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
-    calculationWeight: calculationWeightPath,
-    calculationWeightAdjustValue: calculationWeightAdjustValuePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
-  } = saleGridFieldPath;
+  } = directComparisonPath;
 
   const rules: DerivedFieldRule[] = surveys
     .map((survey: MarketComparableDetailType, columnIndex: number) => {
@@ -245,51 +231,22 @@ export function buildSaleGridCalculationDerivedRules(args: {
             return totalAdjustValue;
           },
         },
-        {
-          targetPath: calculationWeightPath({ column: columnIndex }),
-          deps: [],
-          when: ({ getValues, getFieldState, formState }) => {
-            const target = calculationWeightPath({ column: columnIndex });
-            const weight = getValues(calculationWeightPath({ column: columnIndex })) ?? 0;
-            const curr = getValues(target);
-            const { isDirty } = getFieldState(target, formState);
-            return shouldAutoDefault({ value: curr, isDirty }) || weight > 1 || weight < 0;
-          },
-          compute: () => {
-            const numberOfSurveys = surveys.length ?? 0;
-            return 1 / numberOfSurveys;
-          },
-        },
-        {
-          targetPath: calculationWeightAdjustValuePath({ column: columnIndex }),
-          deps: [
-            calculationTotalAdjustValuePath({ column: columnIndex }),
-            calculationWeightPath({ column: columnIndex }),
-          ],
-          compute: ({ getValues }) => {
-            const totalAdjustValue =
-              getValues(calculationTotalAdjustValuePath({ column: columnIndex })) ?? 0;
-            const weight = getValues(calculationWeightPath({ column: columnIndex })) ?? 0;
-            const weightedAdjustValue = calcWeightedAdjustValue(totalAdjustValue, weight);
-            return weightedAdjustValue;
-          },
-        },
       ];
     })
     .flat() as DerivedFieldRule[];
   return rules;
 }
 
-export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
+export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
   surveys: MarketComparableDetailType[];
-  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
+  qualitativeRows: DirectComparisonQualitativeFormType[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows } = args;
 
   const {
     qualitativeLevel: qualitativeLevelPath,
     adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
-  } = saleGridFieldPath;
+  } = directComparisonPath;
 
   return qualitativeRows
     .map((_, rowIndex: number) =>
@@ -300,8 +257,8 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
           compute: ({ getValues }) => {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
-            console.log(`adjustment factors ${rowIndex} ${columnIndex}:`, level);
-            return qualitativeDefaultPercent(level) ?? null;
+            console.log(level);
+            return qualitativeDefaultPercent(level) ?? 0;
           },
         };
       }),
@@ -309,7 +266,7 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
     .flat(2);
 }
 
-export function buildSaleGridAdjustmentFactorAmountRules(args: {
+export function buildDirectComparisonAdjustmentFactorAmountRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
@@ -319,7 +276,7 @@ export function buildSaleGridAdjustmentFactorAmountRules(args: {
     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
     adjustmentFactorAdjustPercent: adjustmentFactorAdjustPercentPath,
     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
-  } = saleGridFieldPath;
+  } = directComparisonPath;
 
   return qualitativeRows
     .map((_, rowIndex) =>
@@ -344,14 +301,14 @@ export function buildSaleGridAdjustmentFactorAmountRules(args: {
     .flat();
 }
 
-export function buildSaleGridFinalValueRules(arg: {
+export function buildDirectComparisonFinalValueRules(arg: {
   surveys: MarketComparableDetailType[];
 }): DerivedFieldRule[] {
   const {
     finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
-    calculationWeightAdjustValue: calculationWeightAdjustValuePath,
-  } = saleGridFieldPath;
+    calculationTotalAdjustValue: calculationTotalAdjustValuePath,
+  } = directComparisonPath;
   const { surveys = [] } = arg;
 
   const rules: DerivedFieldRule[] = [
@@ -359,21 +316,18 @@ export function buildSaleGridFinalValueRules(arg: {
       targetPath: finalValuePath(),
       deps: [
         ...surveys.map((_, columnIndex: number) =>
-          calculationWeightAdjustValuePath({ column: columnIndex }),
+          calculationTotalAdjustValuePath({ column: columnIndex }),
         ),
       ],
       compute: ({ getValues }) => {
-        const totalWeightedAdjustValue = surveys.reduce(
-          (acc: number, curr, columnIndex: number) => {
-            const weightedAdjustValue =
-              getValues(calculationWeightAdjustValuePath({ column: columnIndex })) ?? 0;
-            return acc + weightedAdjustValue;
-          },
-          0,
-        );
-        return Number.isFinite(totalWeightedAdjustValue)
-          ? parseFloat(totalWeightedAdjustValue.toFixed(2))
-          : 0;
+        const totalValues = surveys.map((_, columnIndex: number) => {
+          const totalAdjustValue =
+            getValues(calculationTotalAdjustValuePath({ column: columnIndex })) ?? 0;
+          return totalAdjustValue;
+        });
+
+        const finalValue = calcFinalValue(totalValues);
+        return finalValue;
       },
     },
     {

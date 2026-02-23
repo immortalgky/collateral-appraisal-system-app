@@ -2,15 +2,15 @@ import type { UseFormReset } from 'react-hook-form';
 import type {
   SaleAdjustmentGridCalculationFormType,
   SaleAdjustmentGridType,
-} from '../../../schemas/saleAdjustmentGridForm';
+} from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm';
 import type {
   FactorDataType,
   MarketComparableDetailType,
   TemplateCalculationFactorType,
   TemplateComparativeFactorType,
   TemplateDetailType,
-} from '../../../schemas/v1';
-import { readFactorValue } from '../../../domain/readFactorValue';
+} from '@features/appraisal/components/priceAnalysis/schemas/v1';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue';
 
 interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;
@@ -36,7 +36,7 @@ export function setSaleAdjustmentGridInitialValue({
   if (!template) {
     reset(
       {
-        methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+        methodId: methodId,
         collateralType: undefined,
         pricingTemplateCode: undefined,
         comparativeSurveys: [
@@ -98,7 +98,7 @@ export function setSaleAdjustmentGridInitialValue({
 
   reset(
     {
-      methodId: 'SALEADJXXX', // method Id which generate when enable in methods selection screen
+      methodId: methodId, // method Id which generate when enable in methods selection screen
       collateralType: collateralType,
       pricingTemplateCode: template.templateCode,
       comparativeSurveys: [
@@ -109,12 +109,14 @@ export function setSaleAdjustmentGridInitialValue({
       ],
       comparativeFactors: (template.comparativeFactors ?? []).map(
         (compFact: TemplateComparativeFactorType) => ({
+          factorId: compFact.id,
           factorCode: compFact.factorCode,
         }),
       ),
 
       saleAdjustmentGridQualitatives: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => ({
+          factorId: calcFact.id,
           factorCode: calcFact.factorCode,
           qualitatives: (comparativeSurveys ?? []).map(() => ({
             qualitativeLevel: 'E',
@@ -160,7 +162,6 @@ export function setSaleAdjustmentGridInitialValue({
       ] as SaleAdjustmentGridCalculationFormType[],
       saleAdjustmentGridAdjustmentFactors: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => {
-          console.log(calcFact.id);
           return {
             factorId: calcFact.id,
             factorCode: calcFact.factorCode,

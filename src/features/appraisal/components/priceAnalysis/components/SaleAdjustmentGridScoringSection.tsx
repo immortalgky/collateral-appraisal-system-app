@@ -1,36 +1,30 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useMemo } from 'react';
 import { Icon } from '@/shared/components';
-import {
-  type DerivedFieldRule,
-  useDerivedFields,
-} from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
-import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/qualitativeDefault.ts';
-import { saleGridFieldPath } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/saleAdjustmentGridfieldPath';
+import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
+import clsx from 'clsx';
+import { saleGridFieldPath } from '@features/appraisal/components/priceAnalysis/adapters/saleAdjustmentGridfieldPath.ts';
+import type { SaleAdjustmentGridQualitativeFormType } from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
+import type { ComparativeFactorsFormType } from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm.ts';
+import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import {
   buildSaleGridAdjustmentFactorAmountRules,
   buildSaleGridAdjustmentFactorDefaultPercentRules,
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
-  buildSaleGridQualitativeDerivedRules,
-} from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/adapters/buildSaleAdjustmentGridDerivedRules';
-import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
-import clsx from 'clsx';
-import { SaleAdjustmentGridSecondRevision } from '@/features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridSecondRevision';
-import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
-import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
+} from '@features/appraisal/components/priceAnalysis/adapters/buildSaleAdjustmentGridDerivedRules.ts';
 import type {
   FactorDataType,
   MarketComparableDetailType,
   TemplateCalculationFactorType,
   TemplateComparativeFactorType,
   TemplateDetailType,
-} from '../../../schemas/v1';
-import type {
-  ComparativeFactorsFormType,
-  SaleAdjustmentGridQualitativeFormType,
-} from '../../../schemas/saleAdjustmentGridForm';
-import { readFactorValue } from '../../../domain/readFactorValue';
+} from '../schemas/v1';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
+import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
+import { SaleAdjustmentGridSecondRevision } from '@features/appraisal/components/priceAnalysis/components/SaleAdjustmentGridSecondRevision.tsx';
+import { qualitativeDefault } from '@features/appraisal/components/priceAnalysis/domain/qualitativeDefault.ts';
+import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 
 interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];

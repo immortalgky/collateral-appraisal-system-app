@@ -1,12 +1,13 @@
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '../../../schemas/v1';
-import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
-import { ComparativeMarketSurveySection } from '@/features/appraisal/components/priceAnalysis/components/ComparativeMarketSurveySection';
-import { saleGridFieldPath } from '../adapters/saleAdjustmentGridfieldPath';
-import { SaleAdjustmentGridScoringSection } from './SaleAdjustmentGridScoringSection';
+import { directComparisonPath } from '../adapters/directComparisonFieldPath';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
+import { DirectComparisonScoringSection } from './DirectComparisonScoringSection';
+import {
+  ComparativeMarketSurveySection
+} from '@features/appraisal/components/priceAnalysis/components/ComparativeMarketSurveySection.tsx';
+import {
+  DirectComparisonAdjustAppraisalPriceSection
+} from '@features/appraisal/components/priceAnalysis/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
+
 /**
  * NOTE:
  *
@@ -20,7 +21,7 @@ import { SaleAdjustmentGridScoringSection } from './SaleAdjustmentGridScoringSec
  *
  */
 
-interface SaleAdjustmentGridProps {
+interface DirectComparisonProps {
   property: Record<string, unknown>;
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
@@ -29,15 +30,15 @@ interface SaleAdjustmentGridProps {
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 
-export const SaleAdjustmentGrid = ({
+export const DirectComparison = ({
   property,
   marketSurveys,
   comparativeMarketSurveys,
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
-}: SaleAdjustmentGridProps) => {
-  const fieldPath = saleGridFieldPath;
+}: DirectComparisonProps) => {
+  const fieldPath = directComparisonPath;
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
@@ -62,17 +63,17 @@ export const SaleAdjustmentGrid = ({
                   Calculation of Appraisal Value
                 </div>
                 <div className="px-4 mt-4">
-                  <SaleAdjustmentGridScoringSection
-                    comparativeSurveys={comparativeMarketSurveys}
+                  <DirectComparisonScoringSection
                     property={property}
                     template={template}
+                    comparativeSurveys={comparativeMarketSurveys}
                   />
                 </div>
               </div>
               <div>
                 <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
                 <div className="px-4 mt-4">
-                  <SaleAdjustmentGridAdjustAppraisalPriceSection property={property} />
+                  <DirectComparisonAdjustAppraisalPriceSection property={property} />
                 </div>
               </div>
             </>

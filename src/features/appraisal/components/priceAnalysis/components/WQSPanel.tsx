@@ -1,38 +1,82 @@
-import { COLLATERAL_TYPE } from '@features/appraisal/components/priceAnalysis/data/data.ts';
-import { FormProvider, type SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  SaleAdjustmentGridDto,
-  type SaleAdjustmentGridType,
-} from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
-import toast from 'react-hot-toast';
+import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
+import { PriceAnalysisTemplateSelector } from './PriceAnalysisTemplateSelector';
+import { MethodFooterActions } from './MethodFooterActions';
+import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
-import { PriceAnalysisTemplateSelector } from '@/features/appraisal/components/priceAnalysis/components/PriceAnalysisTemplateSelector';
-import { MethodFooterActions } from '@features/appraisal/components/priceAnalysis/components/MethodFooterActions.tsx';
-import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValue.ts';
-import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/features/saleAdjustmentGrid/domain/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
-import { flattenRHFErrors } from '../../../domain/flattenRHFErrors';
-import { SaleAdjustmentGrid } from './SaleAdjustmentGrid';
+import { COLLATERAL_TYPE } from '../data/data';
+import toast from 'react-hot-toast';
+import { flattenRHFErrors } from '../domain/flattenRHFErrors';
+import { WQS } from './WQS';
 import {
   SaveComparativeAnalysisRequest,
   type MarketComparableDetailType,
   type TemplateDetailType,
-} from '../../../schemas/v1';
-import { useSaveComparativeAnalysis } from '../../../api/api';
-import { mapSaleAdjustmentGridFormToSubmitSchama } from '../../../domain/mapSaleAdjustmentGridFormToSubmitSchema';
-import type { PriceAnalysisSelectorState } from '../../selection/domain/useReducer';
+} from '../schemas/v1';
+import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
+import { useSaveComparativeAnalysis } from '../api/api';
+import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { setWQSInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/adapters/setWQSInitialValueOnSelectSurvey.ts';
+import { setWQSInitialValue } from '@features/appraisal/components/priceAnalysis/adapters/setWQSInitialValue.ts';
 
-interface SaleAdjustmentGridPanelProps {
+/**
+ * => default collateral type, template => generate => query factors in template
+ * =>
+ * API stages:
+ * stage (1): after user click 'AP' button
+ * - use 'groupId' to query property in the group, market survey in application
+ *
+ * stage (2): after user trigger 'pencil' button to start method
+ * - load 'collateral type', 'template', 'all factors' parameter
+ *
+ * stage (3): after user trigger 'generate' button
+ * - initial template setting into methods
+ *
+ * WQS divided into 4 sections:
+ * (1) select comparative data
+ * (2) WQS score
+ * (3) WQS calculation
+ * (4) adjust value
+ *
+ * WQS flow:
+ * (1) user choose collateral type and template then system initial data
+ * (2) user choose market survey in application to calculate at section (1)
+ * (3) user adjust score in section (2)
+ * (4) user adjust pricing from market survey such as offering price or selling price (3)
+ * (5) after system calculate final value, user will adjust final value at section (4)
+ *
+ * Control logic:
+ * section (1)
+ * - in selection market survey screen, system will display in map ***
+ * - factor from template setting cannot change/ remove
+ * - user can add more factor from all parameter
+ * - in case that no template, user still select factor by themself
+ * section (2)
+ * - factor from template setting cannot change/ remove
+ * - user can add more factor from section (1), these factors can change or remove
+ * - if total intensity > 100, system will show red color
+ * - in case that no template, no factor initail from section (1). but user still choose factor from section (1) to key in score
+ * section (3)
+ * - market survey data will deliver either offering price or selling price
+ * - if offering price has value, user can adjust value by either percentage or amount. but default percentage 5%
+ * - if selling price has value, system will calculate total number of year of collateral from date. then, user can adjust period of time (%) and period of time also default 3%
+ * section (4)
+ * - if coefficient > 0.85, highlight red color
+ * others
+ * - warning when change template button data already key in ***
+ */
+
+interface WQSPanelProps {
   state: PriceAnalysisSelectorState;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
-export function SaleAdjustmentGridPanel({
+export function WQSPanel({
   state,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
-}: SaleAdjustmentGridPanelProps) {
+}: WQSPanelProps) {
   const {
     activeMethod: { pricingAnalysisId, methodId, methodType } = {},
     property,
@@ -41,9 +85,9 @@ export function SaleAdjustmentGridPanel({
     methodTemplates: templates,
   } = state;
 
-  const methods = useForm<SaleAdjustmentGridType>({
+  const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
-    resolver: zodResolver(SaleAdjustmentGridDto),
+    resolver: zodResolver(WQSDto),
   });
 
   const {
@@ -54,7 +98,8 @@ export function SaleAdjustmentGridPanel({
     formState: { errors, isDirty },
   } = methods;
 
-  /** Template selector handler */
+  /** Template selector states handler */
+  /** market comparable must be initialize from database */
   const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
     setComparativeSurveys([...surveys]);
@@ -62,7 +107,7 @@ export function SaleAdjustmentGridPanel({
 
   const [collateralType, setCollateralType] = useState<string>('');
   const [pricingTemplateType, setPricingTemplateType] = useState<string>('');
-  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
+  const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>(undefined);
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
   /** cancel calulation dialog state */
@@ -76,11 +121,9 @@ export function SaleAdjustmentGridPanel({
   } = useSaveComparativeAnalysis();
 
   /** Form handler */
-  const handleOnSubmit = (value: SaleAdjustmentGridType) => {
+  const handleOnSubmit = (value: WQSFormType) => {
     if (!!pricingAnalysisId && !!methodId) {
-      const submitSchema = mapSaleAdjustmentGridFormToSubmitSchama({
-        SaleAdjustmentGridForm: value,
-      });
+      const submitSchema = mapWQSFormToSubmitSchema({ WQSForm: value });
 
       const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
 
@@ -124,8 +167,6 @@ export function SaleAdjustmentGridPanel({
     setPricingTemplate(
       (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
     );
-    reset({});
-    console.log('check reset value!', getValues());
     // reset comparative surveys to empty list when generate
     setComparativeSurveys([]);
 
@@ -156,7 +197,7 @@ export function SaleAdjustmentGridPanel({
     setisShowCanceledDialog(false);
   };
 
-  const onInvalid: SubmitErrorHandler<SaleAdjustmentGridType> = errs => {
+  const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
     const messages = flattenRHFErrors(errs);
 
     toast.error(
@@ -168,14 +209,14 @@ export function SaleAdjustmentGridPanel({
           ))}
         </ul>
       </div>,
-      { id: 'sale-grid-form-errors' }, // prevents stacking duplicate toasts
+      { id: 'wqs-form-errors' }, // prevents stacking duplicate toasts
     );
   };
 
   useEffect(() => {
-    console.log('Check inifinite refresh on initial!');
+    console.log('Check infinite refresh on initial!');
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setSaleAdjustmentGridInitialValue({
+      setWQSInitialValue({
         collateralType: collateralType,
         methodId: methodId,
         methodType: methodType,
@@ -196,13 +237,18 @@ export function SaleAdjustmentGridPanel({
     reset,
   ]);
 
-  // useEffect must have active list in below, in order to update imedialy
+  // useEffect must have the active list in below, to update immediately
   useEffect(() => {
-    console.log('Check inifinite refresh on select market survey!');
+    console.log('Check infinite refresh on select market survey!');
     if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setSaleAdjustmentGridInitialValueOnSelectSurvey({
+      setWQSInitialValueOnSelectSurvey({
+        collateralType: collateralType,
+        methodId: methodId,
+        methodType: methodType,
         comparativeSurveys: comparativeSurveys,
-        setValue: setValue,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
         getValues: getValues,
       });
     }
@@ -215,6 +261,8 @@ export function SaleAdjustmentGridPanel({
     property,
     setValue,
   ]);
+
+  const isLoading = !isGenerated || !property || !marketSurveys || !allFactors;
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {
@@ -237,8 +285,8 @@ export function SaleAdjustmentGridPanel({
         className="flex flex-col h-full gap-4"
       >
         <PriceAnalysisTemplateSelector
-          icon="table"
-          methodName="Sale Adjustment Grid"
+          icon="scale-balanced"
+          methodName="Weighted Quality Scores (WQS)"
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
@@ -251,15 +299,17 @@ export function SaleAdjustmentGridPanel({
             options:
               (templates ?? [])
                 .filter(template => template?.collateralType === collateralType)
-                .map(template => ({
-                  value: template.templateCode,
-                  label: template.templateName,
-                })) ?? [],
+                .map(template => {
+                  return {
+                    value: template?.templateCode ?? '',
+                    label: template?.templateName ?? '',
+                  };
+                }) ?? [],
           }}
         />
-        {isGenerated && (
+        {!isLoading && (
           <div className="flex-1 min-h-0">
-            <SaleAdjustmentGrid
+            <WQS
               {...methods}
               property={property}
               marketSurveys={marketSurveys}

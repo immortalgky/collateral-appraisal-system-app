@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import { saleGridFieldPath } from '../adapters/saleAdjustmentGridfieldPath';
-import type { MarketComparableDetailType } from '../../../schemas/v1';
+import type { MarketComparableDetailType } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 
 interface SaleAdjustmentGridSecondRevisionProps {
   comparativeSurveys: MarketComparableDetailType[];

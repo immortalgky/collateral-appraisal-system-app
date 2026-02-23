@@ -4,30 +4,32 @@ import { Icon } from '@/shared/components';
 import {
   type DerivedFieldRule,
   useDerivedFields,
-} from '@features/appraisal/components/priceAnalysis/components/useDerivedFieldArray.tsx';
+} from '@features/appraisal/components/priceAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
 import clsx from 'clsx';
-import { directComparisonPath } from '@/features/appraisal/components/priceAnalysis/features/directComparison/adapters/directComparisonFieldPath';
+import { directComparisonPath } from '@features/appraisal/components/priceAnalysis/adapters/directComparisonFieldPath';
 import {
   buildDirectComparisonAdjustmentFactorAmountRules,
   buildDirectComparisonAdjustmentFactorDefaultPercentRules,
   buildDirectComparisonCalculationDerivedRules,
   buildDirectComparisonFinalValueRules,
-} from '@/features/appraisal/components/priceAnalysis/features/directComparison/adapters/buildDirectComparisonDerivedRules';
+} from '@features/appraisal/components/priceAnalysis/adapters/buildDirectComparisonDerivedRules';
 import { DirectComparisonSecondRevision } from './DirectComparisonSecondRevision';
 import { qualitativeDefault } from '../domain/qualitativeDefault';
-import { getFactorDesciption } from '../../../shared/domain/getFactorDescription';
-import { getPropertyValueByFactorCode } from '../../../domain/getPropertyValueByFactorCode';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '../../../schemas/v1';
+import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription';
 import type {
   ComparativeFactorsFormType,
   DirectComparisonQualitativeFormType,
-} from '../../../schemas/directComparisonForm';
-import { readFactorValue } from '../../../domain/readFactorValue';
+} from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm.ts';
+import type {
+  FactorDataType,
+  MarketComparableDetailType, TemplateCalculationFactorType,
+  TemplateComparativeFactorType, TemplateDetailType,
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
+import {
+  getPropertyValueByFactorCode
+} from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
 
 interface DirectComparisonScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];

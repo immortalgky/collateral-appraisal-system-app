@@ -1,15 +1,16 @@
 import type { UseFormReset } from 'react-hook-form';
 import type {
+  FactorDataType,
   MarketComparableDetailType,
+  TemplateCalculationFactorType,
   TemplateComparativeFactorType,
   TemplateDetailType,
-} from '../../../schemas/v1';
+} from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 import type {
   DirectComparisonCalculationFormType,
   DirectComparisonType,
-} from '../../../schemas/directComparisonForm';
-import { toFactorMap } from '../../../domain/toFactorMap';
-import { readFactorValue } from '../../../domain/readFactorValue';
+} from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm';
+import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
 
 interface SetDirectComparisonInitialValueProps {
   collateralType: string;
@@ -35,7 +36,7 @@ export function setDirectComparisonInitialValue({
   if (!template) {
     reset(
       {
-        methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
+        methodId: methodId,
         collateralType: undefined,
         pricingTemplateCode: undefined,
         comparativeSurveys: [
@@ -93,7 +94,7 @@ export function setDirectComparisonInitialValue({
 
   reset(
     {
-      methodId: 'DIRECTXXXX', // method Id which generate when enable in methods selection screen
+      methodId: methodId, // method Id which generate when enable in methods selection screen
       collateralType: collateralType,
       pricingTemplateCode: template.templateCode,
       comparativeSurveys: [
@@ -104,12 +105,14 @@ export function setDirectComparisonInitialValue({
       ],
       comparativeFactors: (template.comparativeFactors ?? []).map(
         (compFact: TemplateComparativeFactorType) => ({
+          factorId: compFact.id,
           factorCode: compFact.factorCode,
         }),
       ),
 
       directComparisonQualitatives: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => ({
+          factorId: calcFact.id,
           factorCode: calcFact.factorCode,
           qualitatives: (comparativeSurveys ?? []).map(() => ({
             qualitativeLevel: 'E',
@@ -137,7 +140,7 @@ export function setDirectComparisonInitialValue({
             offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
             sellingPrice: surveyMap.get('21') ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            // sellingDate: surveyMap.get('22') ?? '',
+            sellingDate: surveyMap.get('22') ?? '',
             sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
             numberOfYears: 10, // TODO: convert selling date to number of year
 
@@ -150,7 +153,15 @@ export function setDirectComparisonInitialValue({
           };
         }),
       ] as DirectComparisonCalculationFormType[],
-      directComparisonAdjustmentFactors: [],
+      directComparisonAdjustmentFactors: (template.calculationFactors ?? []).map(
+        (calcFact: TemplateCalculationFactorType) => {
+          return {
+            factorId: calcFact.id,
+            factorCode: calcFact.factorCode,
+            surveys: [],
+          };
+        },
+      ),
       directComparisonFinalValue: {
         finalValue: 0,
         finalValueRounded: 0,

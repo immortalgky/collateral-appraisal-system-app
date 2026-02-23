@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const ComparativeFactors = z
   .object({
+    factorId: z.string(),
     factorCode: z.string(),
   })
   .passthrough();
@@ -22,6 +23,7 @@ const DirectComparisonQualitativeSurvey = z
   .passthrough();
 
 const DirectComparisonQualitative = z.object({
+  factorId: z.string(),
   factorCode: z.string(),
   qualitatives: z.array(DirectComparisonQualitativeSurvey),
 });

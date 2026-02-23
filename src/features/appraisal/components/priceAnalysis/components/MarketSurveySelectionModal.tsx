@@ -2,9 +2,9 @@ import Button from '@/shared/components/Button';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useState } from 'react';
-import { getFactorDesciption } from '../shared/domain/getFactorDescription';
 import type { FactorDataType, MarketComparableDetailType } from '../schemas/v1';
 import { readFactorValue } from '../domain/readFactorValue';
+import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 
 interface MarketSurveySelectionModalProps {
   surveys: MarketComparableDetailType[];

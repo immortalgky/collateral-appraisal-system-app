@@ -1,20 +1,17 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { getFactorDesciption } from '../shared/domain/getFactorDescription';
-import { getPropertyValueByFactorCode } from '../shared/domain/getPropertyValueByFactorCode';
-import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import { RHFInputCell } from './table/RHFInputCell';
-import { useMemo } from 'react';
 import type {
   FactorDataType,
   MarketComparableDataType,
   MarketComparableDetailType,
+  TemplateComparativeFactorType,
   TemplateDetailType,
-  TemplateFactorDataType,
 } from '../schemas/v1';
-import type { ComparativeFactorFormType } from '../schemas/wqsForm';
 import { readFactorValue } from '../domain/readFactorValue';
+import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
+import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
 
 interface ComparativeSurveySectionProps {
   comparativeMarketSurveys: MarketComparableDataType[];
@@ -100,7 +97,7 @@ export function ComparativeSurveySection({
                       factorColumnStyle,
                     )}
                   >
-                    {template?.comparativeFactors?.find((t: TemplateFactorDataType) => {
+                    {template?.comparativeFactors?.find((t: TemplateComparativeFactorType) => {
                       return t.factorCode === compFact.factorCode;
                     }) ? (
                       <div

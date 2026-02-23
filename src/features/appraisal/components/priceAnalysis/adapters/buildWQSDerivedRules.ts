@@ -1,22 +1,21 @@
-import type { DerivedFieldRule } from '../components/useDerivedFieldArray';
 import { readFactorValue } from '../domain/readFactorValue';
 import type { MarketComparableDetailType } from '../schemas/v1';
-import { calcAdjustedValueFromSellingPrice } from '../features/saleAdjustmentGrid/domain/calculations';
-import { shouldAutoDefault } from '../features/saleAdjustmentGrid/domain/shouldAutoDefault';
 import {
   calcAdjustedValue,
-  calcAdjustValueFromSellingPrice,
+  calcAdjustedValueFromSellingPrice,
   calcSum,
   calcWeightedScore,
   floorToTenThousands,
   round2,
   toFiniteNumber,
   toNumberArray,
-} from '../domain/wqsCalculations';
+} from '@features/appraisal/components/priceAnalysis/domain/calculateWQS';
 import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
 import type { WQSScoreFormType } from '../schemas/wqsForm';
 import { wqsFieldPath } from './wqsFieldPath';
+import type { DerivedFieldRule } from '@features/appraisal/components/priceAnalysis/adapters/useDerivedFieldArray.tsx';
+import { shouldAutoDefault } from '@features/appraisal/components/priceAnalysis/domain/shouldAutoDefault.ts';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
   surveys: MarketComparableDetailType[];
@@ -161,7 +160,7 @@ export function buildWQSCalculationDerivedRules(args: {
               getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
             const adjustPercent =
               getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
-            const totalAdjustSellingPricePercent = calcAdjustValueFromSellingPrice(
+            const totalAdjustSellingPricePercent = calcAdjustedValueFromSellingPrice(
               calculationNumberOfYears,
               adjustPercent,
             );

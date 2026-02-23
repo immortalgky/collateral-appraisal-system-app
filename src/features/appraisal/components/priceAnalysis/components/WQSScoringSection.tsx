@@ -9,9 +9,7 @@ import {
   buildWQSScoringSurveyDerivedRules,
   buildWQSTotalScoreRules,
 } from '../adapters/buildWQSDerivedRules';
-import { useDerivedFields, type DerivedFieldRule } from './useDerivedFieldArray';
 import { useMemo } from 'react';
-import { getFactorDesciption } from '../shared/domain/getFactorDescription';
 import type {
   FactorDataType,
   MarketComparableDataType,
@@ -19,6 +17,11 @@ import type {
   TemplateDetailType,
 } from '../schemas/v1';
 import type { ComparativeFactorFormType, WQSScoreFormType } from '../schemas/wqsForm';
+import {
+  type DerivedFieldRule,
+  useDerivedFields,
+} from '@features/appraisal/components/priceAnalysis/adapters/useDerivedFieldArray.tsx';
+import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];

@@ -1,4 +1,4 @@
-import { ALL_FACTORS } from '../../data/allFactorsData';
+import { ALL_FACTORS } from '@features/appraisal/components/priceAnalysis/data/allFactorsData.ts';
 
 export const getFactorDesciption = (factorCode: string) => {
   const factors = new Map(ALL_FACTORS.map(factor => [factor.factorCode, factor.factorName]));
