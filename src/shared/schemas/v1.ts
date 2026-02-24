@@ -3117,6 +3117,60 @@ const LinkPhotoToPropertyRequest = z
   })
   .passthrough();
 const LinkPhotoToPropertyResponse = z.object({ mappingId: z.string().uuid() }).passthrough();
+const LinkAppraisalComparableRequest = z
+  .object({
+    marketComparableId: z.string().uuid(),
+    sequenceNumber: z.number().int(),
+    originalPricePerUnit: z.number(),
+    weight: z.number().nullish().default(null),
+    selectionReason: z.string().nullish().default(null),
+    notes: z.string().nullish().default(null),
+  })
+  .passthrough();
+const LinkAppraisalComparableResponse = z
+  .object({
+    id: z.string().uuid(),
+    sequenceNumber: z.number().int(),
+    originalPricePerUnit: z.number(),
+    weight: z.number(),
+  })
+  .passthrough();
+const ComparableAdjustmentDto = z
+  .object({
+    id: z.string().uuid(),
+    adjustmentCategory: z.string(),
+    adjustmentType: z.string(),
+    adjustmentPercent: z.number(),
+    adjustmentDirection: z.string(),
+    subjectValue: z.string().nullable(),
+    comparableValue: z.string().nullable(),
+    justification: z.string().nullable(),
+  })
+  .passthrough();
+const AppraisalComparableDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    marketComparableId: z.string().uuid(),
+    sequenceNumber: z.number().int(),
+    weight: z.number(),
+    originalPricePerUnit: z.number(),
+    adjustedPricePerUnit: z.number(),
+    totalAdjustmentPct: z.number(),
+    weightedValue: z.number(),
+    selectionReason: z.string().nullable(),
+    notes: z.string().nullable(),
+    comparableNumber: z.string().nullable(),
+    comparablePropertyType: z.string().nullable(),
+    comparableSurveyName: z.string().nullable(),
+    comparableInfoDateTime: z.string().datetime({ offset: true }).nullable(),
+    comparableSourceInfo: z.string().nullable(),
+    adjustments: z.array(ComparableAdjustmentDto),
+  })
+  .passthrough();
+const GetAppraisalComparablesResponse = z
+  .object({ comparables: z.array(AppraisalComparableDto) })
+  .passthrough();
 const PropertyGroupDto = z
   .object({
     id: z.string().uuid(),
@@ -3860,6 +3914,82 @@ const CancelAppointmentRequest = z
   .object({ changedBy: z.string(), reason: z.string().nullish().default(null) })
   .passthrough();
 const ApproveAppointmentRequest = z.object({ approvedBy: z.string() }).passthrough();
+const CreateUploadSessionRequest = z
+  .object({ clientReference: z.string(), externalCaseKey: z.string() })
+  .passthrough();
+const UploadLimitation = z
+  .object({
+    maxFiles: z.number().int(),
+    maxFileBytes: z.number().int(),
+    maxTotalBytes: z.number().int(),
+  })
+  .passthrough();
+const CreateUploadSessionResponse2 = z
+  .object({
+    uploadSessionId: z.string().uuid(),
+    status: z.string(),
+    expiresAt: z.string(),
+    limits: UploadLimitation,
+  })
+  .passthrough();
+const QuotationDto2 = z
+  .object({
+    id: z.string().uuid(),
+    companyId: z.string().uuid(),
+    companyName: z.string(),
+    totalAmount: z.number(),
+    status: z.string(),
+    submittedAt: z.string().datetime({ offset: true }),
+    isWinner: z.boolean(),
+  })
+  .passthrough();
+const GetQuotationsResponse2 = z.object({ quotations: z.array(QuotationDto2) }).passthrough();
+const ApproveQuotationRequest = z.object({ approvalReason: z.string().nullable() }).passthrough();
+const UploadDocumentResponse2 = z
+  .object({
+    documentId: z.string().uuid(),
+    fileName: z.string(),
+    contentType: z.string(),
+    sizeInBytes: z.number().int(),
+  })
+  .passthrough();
+const GetDocumentResponse = z
+  .object({
+    id: z.string().uuid(),
+    fileName: z.string(),
+    contentType: z.string(),
+    fileSizeBytes: z.number().int(),
+    documentType: z.string().nullable(),
+    category: z.string().nullable(),
+    downloadUrl: z.string(),
+    createdOn: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const ResubmitRequestResult = z
+  .object({
+    status: z.string(),
+    message: z.string(),
+    errorCode: z.string().nullish().default(null),
+  })
+  .passthrough();
+const CreateRequestRequest2 = z
+  .object({
+    uploadSessionId: z.string().nullable(),
+    purpose: z.string(),
+    channel: z.string(),
+    requestor: UserInfoDto,
+    creator: UserInfoDto,
+    priority: z.string(),
+    isPma: z.boolean(),
+    detail: RequestDetailDto2,
+    customers: z.array(RequestCustomerDto),
+    properties: z.array(RequestPropertyDto),
+    titles: z.array(RequestTitleDto),
+    documents: z.array(RequestDocumentDto),
+    comments: z.array(RequestCommentDto),
+  })
+  .passthrough();
+const CreateRequestResponse2 = z.object({ requestId: z.string().uuid() }).passthrough();
 const SimulateTaskCompletionRequest = z
   .object({
     correlationId: z.string().uuid().nullable().default(null),
@@ -4195,6 +4325,11 @@ export const schemas = {
   MarkPhotoForReportResult,
   LinkPhotoToPropertyRequest,
   LinkPhotoToPropertyResponse,
+  LinkAppraisalComparableRequest,
+  LinkAppraisalComparableResponse,
+  ComparableAdjustmentDto,
+  AppraisalComparableDto,
+  GetAppraisalComparablesResponse,
   PropertyGroupDto,
   GetPropertyGroupsResponse,
   CreatePropertyGroupRequest,
@@ -4245,6 +4380,17 @@ export const schemas = {
   CreateAppointmentResponse,
   CancelAppointmentRequest,
   ApproveAppointmentRequest,
+  CreateUploadSessionRequest,
+  UploadLimitation,
+  CreateUploadSessionResponse2,
+  QuotationDto2,
+  GetQuotationsResponse2,
+  ApproveQuotationRequest,
+  UploadDocumentResponse2,
+  GetDocumentResponse,
+  ResubmitRequestResult,
+  CreateRequestRequest2,
+  CreateRequestResponse2,
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
@@ -4334,6 +4480,13 @@ export type GetMarketComparableTemplateByIdResponseType = z.infer<
   typeof GetMarketComparableTemplateByIdResponse
 >;
 export type DeleteMarketComparableResponseType = z.infer<typeof DeleteMarketComparableResponse>;
+
+// Appraisal Comparable types
+export type LinkAppraisalComparableRequestType = z.infer<typeof LinkAppraisalComparableRequest>;
+export type LinkAppraisalComparableResponseType = z.infer<typeof LinkAppraisalComparableResponse>;
+export type ComparableAdjustmentDtoType = z.infer<typeof ComparableAdjustmentDto>;
+export type AppraisalComparableDtoType = z.infer<typeof AppraisalComparableDto>;
+export type GetAppraisalComparablesResponseType = z.infer<typeof GetAppraisalComparablesResponse>;
 
 // Appointment types
 export type AppointmentDto2Type = z.infer<typeof AppointmentDto2>;

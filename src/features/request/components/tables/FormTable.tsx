@@ -1,15 +1,9 @@
 import React, { useRef, useState } from 'react';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
-import { Dropdown, NumberInput, type ListBoxItem } from '@/shared/components/inputs';
+import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import {
-  type Control,
-  type FieldValues,
-  useController,
-  useFieldArray,
-  useFormContext,
-} from 'react-hook-form';
+import { type Control, type FieldValues, useController, useFieldArray, useFormContext, } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
 
 interface FormTableProps {
@@ -29,6 +23,7 @@ interface FormTableRegularHeader {
   align?: 'left' | 'center' | 'right';
   decimalPlaces?: number; // For number inputs (default: 2)
   options?: ListBoxItem[]; // For dropdown input type
+  group?: string; // Optional group for dropdown options
 }
 
 interface FormTableRowNumberHeader {
@@ -292,91 +287,95 @@ const FormTable = ({ name, headers, sumColumns = [], totalFieldName }: FormTable
         {hasSumRow && (
           <tfoot>
             <tr className="bg-gray-50 border-t-2 border-gray-200">
-              {(() => { let hasRenderedTotalLabel = false; return headers.map((header, index) => {
-                if ('name' in header && sumColumns.includes(header.name)) {
-                  const currentTotal = totalFieldName
-                    ? (watch(totalFieldName) ?? calculatedTotal)
-                    : calculatedTotal;
-                  const alignClass = 'align' in header && header.align === 'right' ? 'text-right' : '';
-                  return (
-                    <td key={index} className={`py-3 px-4 ${alignClass}`}>
-                      {isReadOnly ? (
-                        <span className="text-sm font-semibold text-gray-900 text-right block">
-                          {formatNumber(currentTotal)}
-                        </span>
-                      ) : totalFieldName ? (
-                        <div className="flex items-center gap-2">
-                          {isOverridden ? (
-                            <>
-                              <div className="relative flex-1">
+              {(() => {
+                let hasRenderedTotalLabel = false;
+                return headers.map((header, index) => {
+                  if ('name' in header && sumColumns.includes(header.name)) {
+                    const currentTotal = totalFieldName
+                      ? (watch(totalFieldName) ?? calculatedTotal)
+                      : calculatedTotal;
+                    const alignClass =
+                      'align' in header && header.align === 'right' ? 'text-right' : '';
+                    return (
+                      <td key={index} className={`py-3 px-4 ${alignClass}`}>
+                        {isReadOnly ? (
+                          <span className="text-sm font-semibold text-gray-900 text-right block">
+                            {formatNumber(currentTotal)}
+                          </span>
+                        ) : totalFieldName ? (
+                          <div className="flex items-center gap-2">
+                            {isOverridden ? (
+                              <>
+                                <div className="relative flex-1">
+                                  <NumberInput
+                                    value={currentTotal}
+                                    onChange={e => {
+                                      if (totalFieldName) setValue(totalFieldName, e.target.value);
+                                    }}
+                                    decimalPlaces={2}
+                                    className="!bg-amber-50 !border-amber-300 font-semibold"
+                                  />
+                                  <span className="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px]">
+                                    <Icon style="solid" name="pen" className="size-2" />
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleResetTotal}
+                                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                  title="Reset to calculated sum"
+                                >
+                                  <Icon style="solid" name="rotate-left" className="size-3.5" />
+                                </button>
+                              </>
+                            ) : (
+                              <>
                                 <NumberInput
                                   value={currentTotal}
-                                  onChange={e => {
-                                    if (totalFieldName) setValue(totalFieldName, e.target.value);
-                                  }}
+                                  disabled
                                   decimalPlaces={2}
-                                  className="!bg-amber-50 !border-amber-300 font-semibold"
+                                  className="font-semibold"
                                 />
-                                <span className="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px]">
-                                  <Icon style="solid" name="pen" className="size-2" />
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleResetTotal}
-                                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                title="Reset to calculated sum"
-                              >
-                                <Icon style="solid" name="rotate-left" className="size-3.5" />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <NumberInput
-                                value={currentTotal}
-                                disabled
-                                decimalPlaces={2}
-                                className="font-semibold"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleEnableOverride}
-                                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                title="Override total"
-                              >
-                                <Icon style="solid" name="pen" className="size-3.5" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm font-semibold text-gray-900 block">
-                          {formatNumber(calculatedTotal)}
-                        </span>
-                      )}
-                    </td>
-                  );
-                } else if ('rowNumberColumn' in header) {
-                  return <td key={index} className="py-3 px-4" />;
-                } else if (!hasRenderedTotalLabel) {
-                  hasRenderedTotalLabel = true;
-                  return (
-                    <td key={index} className="py-3 px-4 text-sm font-semibold text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Icon style="solid" name="sigma" className="size-4 text-primary" />
-                        Total
-                        {isOverridden && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
-                            Override
+                                <button
+                                  type="button"
+                                  onClick={handleEnableOverride}
+                                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                  title="Override total"
+                                >
+                                  <Icon style="solid" name="pen" className="size-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm font-semibold text-gray-900 block">
+                            {formatNumber(calculatedTotal)}
                           </span>
                         )}
-                      </div>
-                    </td>
-                  );
-                } else {
-                  return <td key={index} className="py-3 px-4" />;
-                }
-              }); })()}
+                      </td>
+                    );
+                  } else if ('rowNumberColumn' in header) {
+                    return <td key={index} className="py-3 px-4" />;
+                  } else if (!hasRenderedTotalLabel) {
+                    hasRenderedTotalLabel = true;
+                    return (
+                      <td key={index} className="py-3 px-4 text-sm font-semibold text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Icon style="solid" name="sigma" className="size-4 text-primary" />
+                          Total
+                          {isOverridden && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
+                              Override
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  } else {
+                    return <td key={index} className="py-3 px-4" />;
+                  }
+                });
+              })()}
               {!isReadOnly && <td className="py-3 px-4" />}
             </tr>
           </tfoot>
@@ -447,8 +446,15 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
     if (isNumber) {
       return <NumberInput {...field} decimalPlaces={decimalPlaces} />;
     }
-    if (header.inputType === 'dropdown' && header.options) {
-      return <Dropdown value={field.value} onChange={field.onChange} options={header.options} />;
+    if (header.inputType === 'dropdown' && (header.options || header.group)) {
+      return (
+        <Dropdown
+          value={field.value}
+          onChange={field.onChange}
+          group={header.group}
+          options={header.options}
+        />
+      );
     }
     return <Input type={header.inputType} {...field} />;
   };

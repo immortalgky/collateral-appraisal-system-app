@@ -104,16 +104,7 @@ const contactFields: FormField[] = [
     label: 'Dealer Code',
     name: 'dealerCode',
     wrapperClassName: 'col-span-6',
-    options: [
-      {
-        value: 'a',
-        label: 'A',
-      },
-      {
-        value: 'b',
-        label: 'B',
-      },
-    ],
+    group: 'Dealer', // TODO: Get actual parameter
   },
 ];
 
