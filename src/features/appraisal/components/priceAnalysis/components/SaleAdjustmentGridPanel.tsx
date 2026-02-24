@@ -1,12 +1,12 @@
 import { COLLATERAL_TYPE } from '@features/appraisal/components/priceAnalysis/data/data.ts';
-import { FormProvider, type SubmitErrorHandler, useForm } from 'react-hook-form';
+import { FormProvider, type SubmitErrorHandler, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   SaleAdjustmentGridDto,
   type SaleAdjustmentGridType,
 } from '@features/appraisal/components/priceAnalysis/schemas/saleAdjustmentGridForm.ts';
 import toast from 'react-hot-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PriceAnalysisTemplateSelector } from '@/features/appraisal/components/priceAnalysis/components/PriceAnalysisTemplateSelector';
 import { MethodFooterActions } from '@features/appraisal/components/priceAnalysis/components/MethodFooterActions.tsx';
 import { SaleAdjustmentGrid } from './SaleAdjustmentGrid';
@@ -22,6 +22,7 @@ import { flattenRHFErrors } from '@features/appraisal/components/priceAnalysis/d
 import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/components/priceAnalysis/adapters/setSaleAdjustmentGridInitialValue.ts';
 import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/adapters/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
 import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
+import { saleGridFieldPath } from '../adapters/saleAdjustmentGridfieldPath';
 
 interface SaleAdjustmentGridPanelProps {
   state: PriceAnalysisSelectorState;
@@ -52,11 +53,24 @@ export function SaleAdjustmentGridPanel({
     reset,
     setValue,
     formState: { errors, isDirty },
+    control,
   } = methods;
 
-  /** Template selector handler */
+  // comparative market survey selection
   const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
+    const removeSurvey = comparativeSurveys.filter(comparativeSurvey =>
+      surveys.includes(comparativeSurvey),
+    );
+
+    const addSurvey = comparativeSurveys.filter(
+      comparativeSurvey => !surveys.includes(comparativeSurvey),
+    );
+
+    console.log('remove: ', removeSurvey, 'add: ', addSurvey);
+
+    // TODO: fire api to update current api
+
     setComparativeSurveys([...surveys]);
   };
 
@@ -121,13 +135,21 @@ export function SaleAdjustmentGridPanel({
 
     setIsGenerated(false);
     // set template that belong to selected template
-    setPricingTemplate(
-      (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
-    );
-    reset({});
-    console.log('check reset value!', getValues());
-    // reset comparative surveys to empty list when generate
+
+    const template = (templates ?? []).find(t => t.templateCode === pricingTemplateType);
+    setPricingTemplate(template);
     setComparativeSurveys([]);
+
+    // single source of truth: init now
+    setSaleAdjustmentGridInitialValue({
+      collateralType,
+      methodId: methodId!,
+      methodType: methodType!,
+      comparativeSurveys: [],
+      property: property!,
+      template,
+      reset,
+    });
 
     // Mark as dirty because Generate creates a new unsaved configuration
     setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
@@ -175,48 +197,14 @@ export function SaleAdjustmentGridPanel({
   };
 
   useEffect(() => {
-    console.log('Check infinite refresh on initial!');
-    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setSaleAdjustmentGridInitialValue({
-        collateralType: collateralType,
-        methodId: methodId,
-        methodType: methodType,
-        comparativeSurveys: comparativeSurveys,
-        property: property,
-        template: pricingTemplate,
-        reset: reset,
-      });
-    }
-  }, [
-    collateralType,
-    comparativeSurveys,
-    isGenerated,
-    methodId,
-    methodType,
-    pricingTemplate,
-    property,
-    reset,
-  ]);
-
-  // useEffect must have the active list in below, to update immediately
-  useEffect(() => {
     console.log('Check infinite refresh on select market survey!');
-    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setSaleAdjustmentGridInitialValueOnSelectSurvey({
-        comparativeSurveys: comparativeSurveys,
-        setValue: setValue,
-        getValues: getValues,
-      });
-    }
-  }, [
-    comparativeSurveys,
-    comparativeSurveys.length,
-    getValues,
-    methodId,
-    methodType,
-    property,
-    setValue,
-  ]);
+    if (!methodId || !methodType || !property) return;
+    setSaleAdjustmentGridInitialValueOnSelectSurvey({
+      comparativeSurveys: comparativeSurveys,
+      reset: reset,
+      getValues: getValues,
+    });
+  }, [comparativeSurveys, getValues, methodId, methodType, property]);
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {

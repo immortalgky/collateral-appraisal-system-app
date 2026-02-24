@@ -30,8 +30,7 @@ export function setSaleAdjustmentGridInitialValue({
   comparativeSurveys,
   reset,
 }: SetSaleAdjustmentGridInitialValueProps) {
-  if (!collateralType || !methodId || !methodType || !property || !comparativeSurveys || !reset)
-    return;
+  if (!collateralType || !methodId || !methodType || !property || !reset) return;
 
   if (!template) {
     reset(
@@ -109,16 +108,15 @@ export function setSaleAdjustmentGridInitialValue({
       ],
       comparativeFactors: (template.comparativeFactors ?? []).map(
         (compFact: TemplateComparativeFactorType) => ({
-          factorId: compFact.id,
           factorCode: compFact.factorCode,
         }),
       ),
 
       saleAdjustmentGridQualitatives: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => ({
-          factorId: calcFact.id,
           factorCode: calcFact.factorCode,
-          qualitatives: (comparativeSurveys ?? []).map(() => ({
+          qualitatives: (comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => ({
+            marketId: survey.id,
             qualitativeLevel: 'E',
           })),
         }),
@@ -163,7 +161,6 @@ export function setSaleAdjustmentGridInitialValue({
       saleAdjustmentGridAdjustmentFactors: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => {
           return {
-            factorId: calcFact.id,
             factorCode: calcFact.factorCode,
             surveys: [],
           };

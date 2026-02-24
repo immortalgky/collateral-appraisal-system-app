@@ -315,7 +315,8 @@ export function useInitializePriceAnalysis({
     isLoadingAllFactor;
   const error = pricingConfigurationQuery.error;
 
-  // // Build a lookup map for property details
+  // Build a lookup map for property details
+  
   const propertyDetailMap = new Map<string, Record<string, unknown>>();
   for (let i = 0; i < allPropertyEntries.length; i++) {
     const detail = propertyDetailQueries[i]?.data;

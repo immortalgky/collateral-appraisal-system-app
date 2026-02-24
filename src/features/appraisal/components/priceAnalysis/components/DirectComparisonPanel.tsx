@@ -117,11 +117,20 @@ export function DirectComparisonPanel({
 
     setIsGenerated(false);
     // set template that belong to selected template
-    setPricingTemplate(
-      (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
-    );
-    // reset comparative surveys to empty list when generate
+    const template = (templates ?? []).find(t => t.templateCode === pricingTemplateType);
+    setPricingTemplate(template);
     setComparativeSurveys([]);
+
+    // single source of truth: init now
+    setDirectComparisonInitialValue({
+      collateralType,
+      methodId: methodId!,
+      methodType: methodType!,
+      comparativeSurveys: [],
+      property: property!,
+      template,
+      reset,
+    });
 
     // Mark as dirty because Generate creates a new unsaved configuration
     setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
@@ -170,36 +179,12 @@ export function DirectComparisonPanel({
 
   useEffect(() => {
     console.log('Check infinite refresh on select market survey!');
-    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setDirectComparisonInitialValue({
-        collateralType: collateralType,
-        methodId: methodId,
-        methodType: methodType,
-        comparativeSurveys: comparativeSurveys,
-        property: property,
-        template: pricingTemplate,
-        reset: reset,
-      });
-    }
-  }, [
-    comparativeSurveys,
-    comparativeSurveys.length,
-    getValues,
-    methodId,
-    methodType,
-    property,
-    setValue,
-  ]);
-
-  useEffect(() => {
-    console.log('Check infinite refresh on select market survey!');
-    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setDirectComparisonInitialValueOnSelectSurvey({
-        comparativeSurveys: comparativeSurveys,
-        setValue: setValue,
-        getValues: getValues,
-      });
-    }
+    if (!methodId || !methodType || !property) return;
+    setDirectComparisonInitialValueOnSelectSurvey({
+      comparativeSurveys: comparativeSurveys,
+      reset: reset,
+      getValues: getValues,
+    });
   }, [
     comparativeSurveys,
     comparativeSurveys.length,

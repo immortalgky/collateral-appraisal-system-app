@@ -70,14 +70,14 @@ export const RHFInputCell = ({
   }
 
   if (inputType === 'select') {
-    // return (
-    //   <TDropdown
-    //     {...field}
-    //     value={field.value ?? ''}
-    //     options={options ?? []}
-    //     error={error?.message}
-    //   />
-    // ); // TODO error message on validation
+    return (
+      <TDropdown
+        {...field}
+        value={field.value ?? ''}
+        options={options ?? []}
+        error={error?.message}
+      />
+    ); // TODO error message on validation
     return <Dropdown {...field} options={options ?? []} error={error?.message} />;
   }
 

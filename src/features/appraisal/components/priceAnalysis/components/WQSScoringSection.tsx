@@ -618,7 +618,7 @@ export function WQSScoringSection({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className={'flex flex-rows justify-between items-center'}>
+                <div className={'flex flex-rows justify-left gap-2 items-center'}>
                   <span>Adjusted Offering Price</span>
                   <span>(%)</span>
                 </div>
@@ -811,7 +811,7 @@ export function WQSScoringSection({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <div className={'flex flex-rows justify-between items-center'}>
+                <div className={'flex flex-rows justify-left items-center'}>
                   <span>Cumulative Adjusted Period</span>
                   <span>(%)</span>
                 </div>

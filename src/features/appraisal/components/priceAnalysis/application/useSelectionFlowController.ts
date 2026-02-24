@@ -19,7 +19,6 @@ import type { PriceAnalysisSelectorState } from '../features/selection/domain/us
 import { useInitializeCalculationMethod } from '../hooks/useInitailizeCalculationMethod';
 
 type MethodKey = { approachType: string; methodType: string };
-type StartCalculationArgs = { approachId: string; methodId: string; methodType: string }; // what ActiveMethodPanel needs
 
 function findMethodByType(state: PriceAnalysisSelectorState, k: MethodKey) {
   const appr = state.summarySelected.find(
@@ -37,8 +36,6 @@ export function useSelectionFlowController(opts: {
   closeSelectionPanel?: () => void;
   openSelectionPanel?: () => void;
 }) {
-  console.log('Check useSelectionFlowController refresh!');
-
   const state = useSelectionState();
   const dispatch = useSelectionDispatch();
 
@@ -67,7 +64,6 @@ export function useSelectionFlowController(opts: {
   }, [initialData]);
 
   useEffect(() => {
-    console.log('Check initial data useEffect() refresh');
     if (isInitialDataLoading) return;
 
     if (
@@ -104,7 +100,6 @@ export function useSelectionFlowController(opts: {
   /** Start calculation process */
   /** (1) When user clicks "Calculate" we set this, then the query below will run. */
   const calcKey = useMemo(() => {
-    console.log('Check state active method refresh');
     return {
       approachType: state.activeMethod?.approachType,
       methodType: state.activeMethod?.methodType,
@@ -113,7 +108,6 @@ export function useSelectionFlowController(opts: {
 
   /** (2) Derive IDs needed for the comparative factors call (from current state + calcKey) */
   const calcIds = useMemo(() => {
-    console.log('Check calcKey refresh');
     if (!state.activeMethod?.approachType || !state.activeMethod?.methodType) return;
 
     if (!calcKey) return null;
@@ -141,14 +135,11 @@ export function useSelectionFlowController(opts: {
    * (4.2) If not, start new calulcation.
    */
   useEffect(() => {
-    console.log('Check select calculation method useEffect() refresh');
     if (!state.activeMethod?.approachType || !state.activeMethod?.methodType) return;
 
     if (!calcIds) return; // safety
 
     if (isLoadingCalculationMethodData) return;
-
-    console.log('calculation refresh!');
 
     /** Guard template data in case that we not allow user to do calculation if not choose method. so, if don't have any method to query, user still cannot do calculation */
     // if (!templateQuery.data) return;
@@ -168,8 +159,6 @@ export function useSelectionFlowController(opts: {
       toast.error('Save selection first to generate method and approach IDs before calculation.');
       return;
     }
-
-    console.log('success');
 
     /** (4.1) if got comparative value, mapping, pass to calculation section. */
     if (calculationMethodData.comparativeFactors) {
@@ -273,7 +262,6 @@ export function useSelectionFlowController(opts: {
         return;
       }
 
-      console.log('Saving selection', selections);
       await saveEditingSelection({
         pricingAnalysisId: opts.pricingAnalysisId,
         selections,
@@ -321,8 +309,6 @@ export function useSelectionFlowController(opts: {
       return;
     }
 
-    console.log(appr, method);
-
     dispatch({
       type: 'CALCULATION_SELECTED',
       payload: {
@@ -368,12 +354,9 @@ export function useSelectionFlowController(opts: {
   };
 
   const cancelCalculationMethod = () => {
-    console.log('cancel!');
     dispatch({ type: 'CALCULATION_CANCEL' });
     opts.openSelectionPanel?.();
   };
-
-  console.log(initialData.pricingSelection);
 
   return {
     state,

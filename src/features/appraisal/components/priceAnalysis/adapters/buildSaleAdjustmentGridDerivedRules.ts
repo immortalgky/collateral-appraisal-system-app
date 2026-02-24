@@ -287,7 +287,6 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
           compute: ({ getValues }) => {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
-            console.log(`adjustment factors ${rowIndex} ${columnIndex}:`, level);
             return qualitativeDefaultPercent(level) ?? null;
           },
         };

@@ -226,16 +226,7 @@ export function WQSPanel({
         reset: reset,
       });
     }
-  }, [
-    collateralType,
-    comparativeSurveys,
-    isGenerated,
-    methodId,
-    methodType,
-    pricingTemplate,
-    property,
-    reset,
-  ]);
+  }, [collateralType, isGenerated, methodId, methodType, pricingTemplate, property]);
 
   // useEffect must have the active list in below, to update immediately
   useEffect(() => {

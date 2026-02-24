@@ -48,7 +48,7 @@ export function ComparativeSurveySection({
     'text-left font-medium  px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap  sticky right-[70px] z-25 after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
 
   return (
-    <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg b flex flex-col">
+    <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg b flex flex-col overflow-hidden">
       <div className="flex-1 min-h-0">
         <table className="table table-sm min-w-max">
           <thead className="bg-gray-50 sticky top-0">

@@ -91,7 +91,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
           <RHFInputCell
             fieldName={finalValuSlopePath()}
             inputType="display"
-            accessor={({ value }) => (value ? value.toLocaleString() : 0)}
+            accessor={({ value }) => (value ? value : 0)}
           />
         </div>
       </div>

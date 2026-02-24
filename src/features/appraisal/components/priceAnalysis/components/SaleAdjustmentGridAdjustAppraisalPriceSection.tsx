@@ -18,7 +18,6 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
       targetPath: appraisalPricePath(),
       deps: [finalValueRoundedPath()],
       compute: ({ getValues, ctx }) => {
-        console.log(ctx);
         const collateralType = ctx?.property?.collateralType ?? '';
         const finalValue = getValues(finalValueRoundedPath()) ?? 0;
 

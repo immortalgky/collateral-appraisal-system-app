@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 const ComparativeFactors = z
   .object({
-    factorId: z.string(),
     factorCode: z.string(),
   })
   .passthrough();
@@ -23,7 +22,6 @@ const SaleAdjustmentGridQualitativeSurvey = z
   .passthrough();
 
 const SaleAdjustmentGridQualitative = z.object({
-  factorId: z.string(),
   factorCode: z.string(),
   qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey),
 });
@@ -83,7 +81,6 @@ const SaleAdjustmentGridAdjustmentPct = z
 
 const SaleAdjustmentGridAdjustmentFactor = z
   .object({
-    factorId: z.string(),
     factorCode: z.string(),
     surveys: z.array(SaleAdjustmentGridAdjustmentPct),
     remark: z.string().nullable().optional(),
