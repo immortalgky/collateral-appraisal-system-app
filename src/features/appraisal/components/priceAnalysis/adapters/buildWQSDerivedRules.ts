@@ -419,6 +419,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const stdError = STEYX(surveyScores, surveyCalculate) ?? 0;
+        console.log('stdError', surveyScores, surveyCalculate, stdError);
         return toFiniteNumber(stdError.toFixed(6));
       },
     },
@@ -440,6 +441,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const intersectionPoint = INTERCEPT(surveyScores, surveyCalculate) ?? 0;
+        console.log('intersection point', surveyScores, surveyCalculate, intersectionPoint);
         return toFiniteNumber(intersectionPoint);
       },
     },
@@ -461,6 +463,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const slope = SLOPE(surveyScores, surveyCalculate) ?? 0;
+        console.log('slope', surveyScores, surveyCalculate, slope);
         return toFiniteNumber(slope);
       },
     },
@@ -486,9 +489,9 @@ export function buildWQSFinalValueDerivedRules(args: {
       targetPath: finalValueLandAreaPath(),
       deps: [],
       compute: ({ ctx }) => {
-        const collateralType = ctx.property?.collateralType;
+        const propertyType = ctx.property?.propertyType;
 
-        if (collateralType === 'L') {
+        if (propertyType === 'L') {
           return ctx.property?.landArea;
         }
         return null;
@@ -499,7 +502,7 @@ export function buildWQSFinalValueDerivedRules(args: {
       deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
       compute: ({ getValues, ctx }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
-        const collateralType = ctx.property?.collateralType;
+        const collateralType = ctx.property?.propertyType;
 
         if (collateralType === 'L') {
           const landArea = getValues(finalValueLandAreaPath()) ?? 0;

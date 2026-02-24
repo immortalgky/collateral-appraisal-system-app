@@ -18,6 +18,8 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
   } = wqsFieldPath;
 
+  console.log('property type', property.propertyType);
+
   return (
     <div className="flex flex-col gap-4 text-sm py-2">
       <div className="grid grid-cols-12">
@@ -119,7 +121,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
         <div className="col-span-3">Include area</div>
         <div className="col-span-9"></div>
       </div> */}
-      {property.collateralType === 'L' && (
+      {property.propertyType === 'L' && (
         <div className="grid grid-cols-12">
           <div className="col-span-3">Area</div>
           <div className="col-span-2 text-right">

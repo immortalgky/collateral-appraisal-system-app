@@ -20,6 +20,7 @@ import {
 import { PROPERTIES } from '@features/appraisal/components/priceAnalysis/data/propertiesData.ts';
 import type { PropertyItem, PropertyType } from '@features/appraisal/types';
 import { ALL_FACTORS } from '../data/allFactorsData';
+import { LAND_AND_BUILDING_PROPERTY, LAND_PROPERTY } from '../data/propertyData';
 
 // ==================== Type-to-Endpoint Mapping ====================
 
@@ -316,7 +317,7 @@ export function useInitializePriceAnalysis({
   const error = pricingConfigurationQuery.error;
 
   // Build a lookup map for property details
-  
+
   const propertyDetailMap = new Map<string, Record<string, unknown>>();
   for (let i = 0; i < allPropertyEntries.length; i++) {
     const detail = propertyDetailQueries[i]?.data;
@@ -335,7 +336,7 @@ export function useInitializePriceAnalysis({
   console.log('pricing analysis', pricingSelection);
 
   const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
-  const _property = PROPERTIES[1];
+  const _property = LAND_PROPERTY;
   const initialData = {
     groupDetail: _groupDetail, // groupDetail
     properties: _property, // properties

@@ -75,6 +75,7 @@ export function ComparativeSurveySection({
           <tbody>
             {/* use comparativeSurveyFactors directly because we need to update it immediatly */}
             {comparativeSurveyFactors.map((compFact: any, rowIndex: number) => {
+              console.log(compFact.factorCode);
               const selected = compFact.factorCode ?? '';
               const options = (allFactors ?? [])
                 .filter(
@@ -88,7 +89,7 @@ export function ComparativeSurveySection({
                 }));
               return (
                 <tr
-                  key={compFact.factorCode ?? rowIndex}
+                  key={compFact.factorCode}
                   className="hover:bg-gray-50 cursor-default transition-colors"
                 >
                   <td

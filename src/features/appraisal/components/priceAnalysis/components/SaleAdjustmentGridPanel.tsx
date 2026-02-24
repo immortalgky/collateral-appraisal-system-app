@@ -59,19 +59,15 @@ export function SaleAdjustmentGridPanel({
   // comparative market survey selection
   const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    const removeSurvey = comparativeSurveys.filter(comparativeSurvey =>
-      surveys.includes(comparativeSurvey),
-    );
+    const nextIds = new Set(surveys.map(s => s.id));
+    const prevIds = new Set(comparativeSurveys.map(s => s.id));
 
-    const addSurvey = comparativeSurveys.filter(
-      comparativeSurvey => !surveys.includes(comparativeSurvey),
-    );
+    const removed = comparativeSurveys.filter(s => !nextIds.has(s.id)); // prev - next
+    const added = surveys.filter(s => !prevIds.has(s.id)); // next - prev
 
-    console.log('remove: ', removeSurvey, 'add: ', addSurvey);
+    // TODO: fire api to update link
 
-    // TODO: fire api to update current api
-
-    setComparativeSurveys([...surveys]);
+    setComparativeSurveys(surveys);
   };
 
   const [collateralType, setCollateralType] = useState<string>('');

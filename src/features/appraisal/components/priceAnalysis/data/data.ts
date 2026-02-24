@@ -15,7 +15,7 @@ export const APPROACHES_QUERY_RESPONSE: GetPricingAnalysisResponseType = {
     {
       id: '7F9F433E-F36B-1410-8382-00F1875B7717',
       approachType: 'MARAPPR',
-      appraisalValue: 10000000,
+      appraisalValue: 0,
       isCandidated: false,
       methods: [
         {

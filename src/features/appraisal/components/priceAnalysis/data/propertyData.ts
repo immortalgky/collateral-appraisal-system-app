@@ -5,7 +5,7 @@ export const LAND_PROPERTY = {
   sequenceNumber: 1,
 
   // basic
-  propertyType: 'Land',
+  propertyType: 'L',
   description: 'Vacant industrial land with road frontage; suitable for warehouse/factory use.',
 
   // land detail
@@ -13,6 +13,7 @@ export const LAND_PROPERTY = {
   propertyName: 'Suksawat Industrial Plot',
   landOffice: 'Phra Pradaeng Land Office',
   landDescription: 'Chanote title deed; flat land; clear boundaries; rectangular-ish plot.',
+  landArea: 210.6,
 
   // owner
   ownerName: 'Somchai P.',
@@ -117,7 +118,7 @@ export const LAND_AND_BUILDING_PROPERTY = {
   propertyId: '019e2a6b-9c2d-7a44-b2d1-6d2b7f5c3a10',
   appraisalId: '019e2a6b-a7d3-7e1b-9b6a-2a0e6f1d8c22',
   sequenceNumber: 1,
-  propertyType: 'LandAndBuilding',
+  propertyType: 'LB',
   description: 'Land with a warehouse building; good logistics access.',
   detailId: '019e2a6b-b5c8-7b30-8a12-9b9c2d4a1f03',
 
@@ -290,7 +291,7 @@ export const CONDO_PROPERTY = {
   propertyId: '019e2a6b-9c2d-7a44-b2d1-6d2b7f5c3a10',
   appraisalId: '019e2a6b-a7d3-7e1b-9b6a-2a0e6f1d8c22',
   sequenceNumber: 1,
-  propertyType: 'Condo',
+  propertyType: 'C',
   description: 'High-rise condo near BTS; corner unit with city view.',
   detailId: '019e2a6b-faa0-7c12-8a4b-2a3e8c9d7f11',
 

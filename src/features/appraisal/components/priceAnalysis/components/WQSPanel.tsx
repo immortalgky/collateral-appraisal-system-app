@@ -102,7 +102,15 @@ export function WQSPanel({
   /** market comparable must be initialize from database */
   const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    setComparativeSurveys([...surveys]);
+    const nextIds = new Set(surveys.map(s => s.id));
+    const prevIds = new Set(comparativeSurveys.map(s => s.id));
+
+    const removed = comparativeSurveys.filter(s => !nextIds.has(s.id)); // prev - next
+    const added = surveys.filter(s => !prevIds.has(s.id)); // next - prev
+
+    // TODO: fire api to update link
+
+    setComparativeSurveys(surveys);
   };
 
   const [collateralType, setCollateralType] = useState<string>('');

@@ -1,7 +1,7 @@
 export const PROPERTIES = [
   {
     propertyId: '00000000-0000-0000-0000-000000000000',
-    collateralType: 'L',
+    propertyType: 'L',
 
     environment: 'ที่อยู่อาศัย และอุตสาหกรรม',
     plotLocation: 'แปลงกลาง',
@@ -14,7 +14,7 @@ export const PROPERTIES = [
   },
   {
     propertyId: '00000000-0000-0000-0000-000000000000',
-    collateralType: 'LB',
+    propertyType: 'LB',
 
     addressLocation: 'ถนนภายในโครงการ',
     plotLocation: 'แปลงกลาง',
@@ -26,7 +26,7 @@ export const PROPERTIES = [
   },
   {
     propertyId: '00000000-0000-0000-0000-000000000000',
-    collateralType: 'C',
+    propertyType: 'C',
 
     projectNameVillageName: 'พลัส 38 คอนโดมีเนียม',
     facility: 'สระว่ายน้ำ ห้องฟิตเนส',

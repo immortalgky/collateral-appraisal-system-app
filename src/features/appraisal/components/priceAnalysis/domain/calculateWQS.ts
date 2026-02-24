@@ -67,13 +67,15 @@ export function calcAdjustedValue(
 }
 
 export function calcAdjustedValueFromSellingPrice(
-  sellingPriceAdjustmentPct: unknown,
-  totalNumberOfYear: unknown,
+  sellingPrice: unknown,
+  numberOfYears: unknown,
+  sellingPriceAdjustmentYearPct: unknown,
 ): number {
-  const price = Number(sellingPriceAdjustmentPct);
+  const price = Number(sellingPrice);
   if (!Number.isFinite(price) || price === 0) return 0;
 
-  const totalYear = Number(totalNumberOfYear) || 0;
+  const years = Number(numberOfYears) || 0;
+  const pctPerYear = Number(sellingPriceAdjustmentYearPct) || 0;
 
-  return round2(price * totalYear);
+  return round2(price + (price * years * pctPerYear) / 100);
 }

@@ -250,13 +250,13 @@ export function WQSScoringSection({
               </tr>
             ) : (
               /** scoring section */
-              scoringFactors.map((factor, rowIndex: number) => {
+              scoringFactorFields.map((factor, rowIndex: number) => {
                 const selected = factor.factorCode ?? '';
                 const options = comparativeFactors
                   .filter(
                     compFact =>
                       compFact.factorCode === selected ||
-                      !scoringFactors.some(q => q.factorCode === compFact.factorCode),
+                      !scoringFactorFields.some(q => q.factorCode === compFact.factorCode),
                   )
                   .map(f => ({
                     label: getFactorDesciption(f.factorCode) ?? '',
