@@ -153,9 +153,7 @@ const CreateMarketComparablePage = () => {
       <div className="shrink-0 pb-4">
         <NavAnchors
           containerId="form-scroll-container"
-          anchors={[
-            { label: 'Comparable', id: 'comparable-section', icon: 'chart-line' },
-          ]}
+          anchors={[{ label: 'Comparable', id: 'comparable-section', icon: 'chart-line' }]}
         />
       </div>
 
@@ -178,9 +176,15 @@ const CreateMarketComparablePage = () => {
                   <Section id="comparable-section" anchor>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Icon name="magnifying-glass-location" style="solid" className="w-5 h-5 text-orange-600" />
+                        <Icon
+                          name="magnifying-glass-location"
+                          style="solid"
+                          className="w-5 h-5 text-orange-600"
+                        />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Comparable Information</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Comparable Information
+                      </h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                   </Section>
@@ -202,11 +206,7 @@ const CreateMarketComparablePage = () => {
                 <div className="h-6 w-px bg-gray-200" />
               </div>
               <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  isLoading={isPending}
-                  disabled={isPending}
-                >
+                <Button type="submit" isLoading={isPending} disabled={isPending}>
                   <Icon name="check" style="solid" className="size-4 mr-2" />
                   Save
                 </Button>
