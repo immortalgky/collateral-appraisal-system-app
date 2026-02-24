@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
+  AppraisalComparableDtoType,
   CreateMarketComparableRequestType,
   GetMarketComparableTemplateByIdResponseType,
-  GetMarketComparableTemplatesResponseType,
+  LinkAppraisalComparableRequestType,
   MarketComparableDtoType,
   MarketComparableFactorDtoType,
   MarketComparableTemplateDtoType,
@@ -47,16 +48,15 @@ export const useMarketComparableTemplateFactors = (templateId?: string) => {
 };
 
 /**
- * Get market comparables for an appraisal
+ * Get market comparables (general pool listing)
  * GET /market-comparables
  */
-export const useGetMarketComparables = (appraisalId?: string) => {
+export const useGetMarketComparables = () => {
   return useQuery({
-    queryKey: ['market-comparables', appraisalId],
-    enabled: !!appraisalId,
+    queryKey: ['market-comparables'],
     queryFn: async (): Promise<MarketComparableDtoType[]> => {
       const { data } = await axios.get('/market-comparables', {
-        params: { AppraisalId: appraisalId, PageNumber: 0, PageSize: 100 },
+        params: { PageNumber: 0, PageSize: 100 },
       });
       const result = data.result ?? data;
       return result.items ?? [];
@@ -112,30 +112,105 @@ export const useUpdateMarketComparable = () => {
 
   return useMutation({
     mutationFn: async (
-      request: UpdateMarketComparableRequestType,
+      request: UpdateMarketComparableRequestType & { id: string; factorData?: any[] },
     ): Promise<UpdateMarketComparableResponseType> => {
-      console.log(request);
-      const { data } = await axios.put(`/market-comparables/${request.id}`, request);
-      await axios.put(`/market-comparables/${request.id}/factor-data`, request);
+      const { id, factorData, ...body } = request;
+      const { data } = await axios.put(`/market-comparables/${id}`, body);
+      if (factorData) {
+        await axios.put(`/market-comparables/${id}/factor-data`, { factorData });
+      }
       return data;
     },
-    onSuccess: data => {
-      console.log(data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['market-comparables'] });
-    },
-    onError: (error: any) => {
-      console.log(error);
     },
   });
 };
 
-export const useGetMarketComparableTemplateByPropertyType = (propertyType?: string) => {
-  return useQuery({
-    queryKey: ['market-comparable-template', propertyType],
-    enabled: !!propertyType,
-    queryFn: async (): Promise<GetMarketComparableTemplatesResponseType> => {
-      const { data } = await axios.get(`/market-comparable-templates?propertyType=${propertyType}`);
+/**
+ * Delete a market comparable from the general pool
+ * DELETE /market-comparables/{id}
+ */
+export const useDeleteMarketComparable = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await axios.delete(`/market-comparables/${id}`);
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['market-comparables'] });
+    },
+  });
+};
+
+// ========================
+// Appraisal-linked comparables
+// ========================
+
+/**
+ * Get comparables linked to an appraisal
+ * GET /appraisals/{id}/comparables
+ */
+export const useGetAppraisalComparables = (appraisalId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'comparables'],
+    enabled: !!appraisalId,
+    queryFn: async (): Promise<AppraisalComparableDtoType[]> => {
+      const { data } = await axios.get(`/appraisals/${appraisalId}/comparables`);
+      return data.comparables ?? [];
+    },
+  });
+};
+
+/**
+ * Link a market comparable to an appraisal
+ * POST /appraisals/{id}/comparables
+ */
+export const useLinkAppraisalComparable = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      ...body
+    }: LinkAppraisalComparableRequestType & { appraisalId: string }) => {
+      const { data } = await axios.post(`/appraisals/${appraisalId}/comparables`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appraisals', variables.appraisalId, 'comparables'],
+      });
+    },
+  });
+};
+
+/**
+ * Unlink a comparable from an appraisal
+ * DELETE /appraisals/{id}/comparables/{comparableId}
+ */
+export const useUnlinkAppraisalComparable = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      comparableId,
+    }: {
+      appraisalId: string;
+      comparableId: string;
+    }) => {
+      const { data } = await axios.delete(
+        `/appraisals/${appraisalId}/comparables/${comparableId}`,
+      );
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appraisals', variables.appraisalId, 'comparables'],
+      });
     },
   });
 };

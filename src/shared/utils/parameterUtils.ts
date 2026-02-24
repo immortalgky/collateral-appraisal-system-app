@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { useParameterStore, useLocaleStore } from '../store';
 import type { Parameter } from '../types/api';
 import type { ListBoxItem } from '../components/inputs/Dropdown';
+import type { CheckboxOption } from '../components/inputs/CheckboxGroup';
+import type { RadioOption } from '../components/inputs/RadioGroup';
 
 // =============================================================================
 // Sync utilities (read from Zustand store directly, for use outside React)
@@ -70,6 +72,26 @@ export function useParameterOptions(group: string): ListBoxItem[] {
         label: p.description,
         id: p.code,
       })),
+    [params],
+  );
+}
+
+/** Returns CheckboxOption[] for CheckboxGroup */
+export function useParameterAsCheckboxOptions(group: string): CheckboxOption[] {
+  const params = useParametersByGroup(group);
+
+  return useMemo(
+    () => params.map(p => ({ value: p.code, label: p.description })),
+    [params],
+  );
+}
+
+/** Returns RadioOption[] for RadioGroup */
+export function useParameterAsRadioOptions(group: string): RadioOption[] {
+  const params = useParametersByGroup(group);
+
+  return useMemo(
+    () => params.map(p => ({ value: p.code, label: p.description })),
     [params],
   );
 }

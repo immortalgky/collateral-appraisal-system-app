@@ -87,7 +87,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
 
 export const useLocaleStore = create<LocaleStore>(set => ({
   country: 'TH',
-  language: 'TH',
+  language: 'EN',
   setLocale: (country: string, language: string) => set({ country, language }),
 }));
 

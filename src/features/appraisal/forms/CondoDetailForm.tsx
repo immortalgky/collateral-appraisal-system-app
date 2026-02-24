@@ -226,7 +226,7 @@ const condoFields: FormField[] = [
     label: 'Check Owner',
     name: 'isOwnerVerified',
     required: true,
-    options: ['Can', 'Can not'],
+    options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-3',
   },
   {
@@ -259,7 +259,7 @@ const condoFields: FormField[] = [
     name: 'hasObligation',
     wrapperClassName: 'col-span-12',
     required: false,
-    options: ['Mortgage as security', 'No obligations'],
+    options: ['No obligations', 'Mortgage as security'],
   },
   {
     type: 'text-input',
@@ -275,7 +275,7 @@ const condoFields: FormField[] = [
     name: 'isDocumentValidated',
     wrapperClassName: 'col-span-12',
     required: true,
-    options: ['Correctly Matched', 'Not Consistent'],
+    options: ['Not Consistent', 'Correctly Matched'],
   },
 ];
 

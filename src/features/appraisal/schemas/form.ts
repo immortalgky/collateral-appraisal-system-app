@@ -474,12 +474,14 @@ export const factorDataDto = z
 export const createMarketComparableForm = z
   .object({
     factorData: z.array(factorDataDto).nullable().optional(),
-    note: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
     infoDateTime: z.string().datetime({ local: true, offset: true }).nullable().optional(),
     sourceInfo: z.string().nullable().optional(),
     surveyName: z.string(),
     templateId: z.string().uuid().nullable().optional(),
     templateCode: z.string().nullable().optional(),
+    propertyType: z.string().nullable().optional(),
+    comparableNumber: z.string().nullable().optional(),
   })
   .passthrough();
 
@@ -878,7 +880,9 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   surveyName: '',
   templateId: '',
   templateCode: '',
-  note: '',
+  notes: '',
   infoDateTime: '',
   sourceInfo: '',
+  propertyType: '',
+  comparableNumber: '',
 };

@@ -6,60 +6,70 @@ import clsx from 'clsx';
 export const PROPERTY_TYPES = [
   {
     type: 'Building',
+    code: 'B',
     icon: 'building',
     route: 'building',
     description: 'Standalone building structure',
   },
   {
     type: 'Condominium',
+    code: 'U',
     icon: 'city',
     route: 'condo',
     description: 'Condominium unit',
   },
   {
     type: 'Land and building',
+    code: 'LB',
     icon: 'house-chimney',
     route: 'land-building',
     description: 'Land with building structure',
   },
   {
     type: 'Lands',
+    code: 'L',
     icon: 'map-location-dot',
     route: 'land',
     description: 'Land parcel only',
   },
   {
     type: 'Lease Agreement Building',
+    code: 'LSB',
     icon: 'file-contract',
     route: 'building',
     description: 'Leased building property',
   },
   {
     type: 'Lease Agreement Land and building',
+    code: 'LS',
     icon: 'file-signature',
     route: 'land-building',
     description: 'Leased land with building',
   },
   {
     type: 'Lease Agreement Lands',
+    code: 'LSL',
     icon: 'scroll',
     route: 'land',
     description: 'Leased land parcel',
   },
   {
     type: 'Machine',
+    code: 'M',
     icon: 'gears',
     route: null,
     description: 'Machinery and equipment',
   },
   {
     type: 'Vehicle',
+    code: 'VEH',
     icon: 'car',
     route: null,
     description: 'Vehicle asset',
   },
   {
     type: 'Vessel',
+    code: 'VES',
     icon: 'ship',
     route: null,
     description: 'Marine vessel',
@@ -68,8 +78,10 @@ export const PROPERTY_TYPES = [
 
 interface PropertyTypeDropdownProps {
   groupId: string;
-  onSelectType?: (type: string, groupId: string) => void;
+  onSelectType?: (type: string, groupId: string, code: string) => void;
   buttonClassName?: string;
+  buttonLabel?: string;
+  disableDefaultNavigation?: boolean;
   align?: 'left' | 'right';
 }
 
@@ -77,6 +89,8 @@ export const PropertyTypeDropdown = ({
   groupId,
   onSelectType,
   buttonClassName,
+  buttonLabel,
+  disableDefaultNavigation = false,
   align = 'left',
 }: PropertyTypeDropdownProps) => {
   const navigate = useNavigate();
@@ -84,10 +98,10 @@ export const PropertyTypeDropdown = ({
 
   const handleSelect = (propertyType: (typeof PROPERTY_TYPES)[number]) => {
     if (onSelectType) {
-      onSelectType(propertyType.type, groupId);
+      onSelectType(propertyType.type, groupId, propertyType.code);
     }
 
-    if (propertyType.route) {
+    if (!disableDefaultNavigation && propertyType.route) {
       // Navigate to the create page under appraisal context
       const basePath = appraisalId
         ? `/appraisal/${appraisalId}/property/${propertyType.route}/new`
@@ -106,7 +120,7 @@ export const PropertyTypeDropdown = ({
         )}
       >
         <Icon name="circle-plus" className="text-gray-500" />
-        <span>Add property to group</span>
+        <span>{buttonLabel ?? 'Add property to group'}</span>
         <Icon name="chevron-down" className="text-gray-400 ml-1" style="solid" />
       </MenuButton>
 

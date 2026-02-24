@@ -1,4 +1,10 @@
-import { type Control, type FieldValues, useController, useFormContext, useWatch } from 'react-hook-form';
+import {
+  type Control,
+  type FieldValues,
+  useController,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { useMemo } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
@@ -21,7 +27,7 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types'; // =============================================================================
+import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types';
 
 // =============================================================================
 // Condition Evaluation Utilities
@@ -195,17 +201,38 @@ interface UseFieldStateOptions {
  * preventing unnecessary re-renders when unrelated form fields change.
  */
 function useFieldState({ field, namePrefix, index }: UseFieldStateOptions) {
-  const hasConditions = !!(field.showWhen || field.hideWhen || field.disableWhen || field.enableWhen || field.requiredWhen);
+  const hasConditions = !!(
+    field.showWhen ||
+    field.hideWhen ||
+    field.disableWhen ||
+    field.enableWhen ||
+    field.requiredWhen
+  );
 
   // Collect only the field names this field's conditions depend on
   const watchFields = useMemo(() => {
     if (!hasConditions) return [] as string[];
     const fields: string[] = [];
-    for (const cond of [field.showWhen, field.hideWhen, field.disableWhen, field.enableWhen, field.requiredWhen]) {
+    for (const cond of [
+      field.showWhen,
+      field.hideWhen,
+      field.disableWhen,
+      field.enableWhen,
+      field.requiredWhen,
+    ]) {
       fields.push(...extractConditionFields(cond, namePrefix, index));
     }
     return [...new Set(fields)];
-  }, [field.showWhen, field.hideWhen, field.disableWhen, field.enableWhen, field.requiredWhen, namePrefix, index, hasConditions]);
+  }, [
+    field.showWhen,
+    field.hideWhen,
+    field.disableWhen,
+    field.enableWhen,
+    field.requiredWhen,
+    namePrefix,
+    index,
+    hasConditions,
+  ]);
 
   // Only subscribe to the specific fields that conditions reference
   const watchedValues = useWatch({ name: watchFields });
@@ -215,7 +242,11 @@ function useFieldState({ field, namePrefix, index }: UseFieldStateOptions) {
     if (!hasConditions || watchFields.length === 0) return {};
     const obj: Record<string, unknown> = {};
     watchFields.forEach((fieldName, i) => {
-      setNestedValue(obj, fieldName, Array.isArray(watchedValues) ? watchedValues[i] : watchedValues);
+      setNestedValue(
+        obj,
+        fieldName,
+        Array.isArray(watchedValues) ? watchedValues[i] : watchedValues,
+      );
     });
     return obj;
   }, [hasConditions, watchFields, watchedValues]);
@@ -448,29 +479,15 @@ function FieldRenderer({
         );
       }
 
-      case 'boolean-toggle':
-        return (
-          <FormBooleanToggle
-            label={passedField.label}
-            options={passedField.options}
-            size={passedField.size}
-            name={name}
-            className={passedField.className}
-            disabled={isDisabled}
-          />
-        );
+      case 'boolean-toggle': {
+        const { type: _bt, name: _bn, key: _bk, disabledValue: _bdv, ...boolToggleRest } = passedField;
+        return <FormBooleanToggle {...boolToggleRest} name={name} disabled={isDisabled} />;
+      }
 
-      case 'string-toggle':
-        return (
-          <FormStringToggle
-            label={passedField.label}
-            options={passedField.options}
-            size={passedField.size}
-            name={name}
-            className={passedField.className}
-            disabled={isDisabled}
-          />
-        );
+      case 'string-toggle': {
+        const { type: _st, name: _sn, key: _sk, disabledValue: _sdv, ...strToggleRest } = passedField;
+        return <FormStringToggle {...strToggleRest} name={name} disabled={isDisabled} />;
+      }
 
       case 'textarea': {
         const textareaProps = {
@@ -497,31 +514,35 @@ function FieldRenderer({
           />
         );
 
-      case 'checkbox-group':
+      case 'checkbox-group': {
+        const { type: _cgt, name: _cgn, key: _cgk, disabledValue: _cgdv, label: cgLabel, className: cgClass, wrap: cgWrap, size: cgSize, orientation: _cgOri, ...cgGroupOrOptions } = passedField;
         return (
           <FormCheckboxGroup
             name={name}
-            label={passedField.label}
-            options={passedField.options}
+            label={cgLabel}
             disabled={isDisabled}
-            className={passedField.className}
-            size={passedField.size}
-            orientation={passedField.orientation}
+            className={cgClass}
+            wrap={cgWrap}
+            size={cgSize}
+            {...cgGroupOrOptions}
           />
         );
+      }
 
-      case 'radio-group':
+      case 'radio-group': {
+        const { type: _rgt, name: _rgn, key: _rgk, disabledValue: _rgdv, label: rgLabel, className: rgClass, size: rgSize, orientation: rgOri, ...rgGroupOrOptions } = passedField;
         return (
           <FormRadioGroup
             name={name}
-            label={passedField.label}
-            options={passedField.options}
+            label={rgLabel}
             disabled={isDisabled}
-            className={passedField.className}
-            size={passedField.size}
-            orientation={passedField.orientation}
+            className={rgClass}
+            size={rgSize}
+            orientation={rgOri}
+            {...rgGroupOrOptions}
           />
         );
+      }
 
       case 'switch':
         return (
