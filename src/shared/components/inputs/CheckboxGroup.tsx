@@ -1,6 +1,8 @@
 import clsx from 'clsx';
 import { useController, useFormContext } from 'react-hook-form';
 import Icon from '../Icon';
+import { useParameterAsCheckboxOptions } from '../../utils/parameterUtils';
+import type { AtLeastOne } from '@/shared/types';
 
 export interface CheckboxOption {
   value: string;
@@ -8,10 +10,9 @@ export interface CheckboxOption {
   icon?: string;
 }
 
-interface CheckboxGroupProps {
+interface CheckboxGroupBaseProps {
   name: string;
   label?: string;
-  options: CheckboxOption[];
   required?: boolean;
   className?: string;
   wrap?: boolean;
@@ -26,9 +27,13 @@ interface CheckboxGroupProps {
   clearAllThreshold?: number;
 }
 
+type CheckboxGroupProps = CheckboxGroupBaseProps &
+  AtLeastOne<{ group: string; options: CheckboxOption[] }>;
+
 const CheckboxGroup = ({
   name,
   label,
+  group,
   options,
   required,
   className,
@@ -39,6 +44,8 @@ const CheckboxGroup = ({
   showClearAll = true,
   clearAllThreshold = 2,
 }: CheckboxGroupProps) => {
+  const parameterOptions = useParameterAsCheckboxOptions(group ?? '');
+  const resolvedOptions = options ?? parameterOptions;
   const { control } = useFormContext();
   const {
     field,
@@ -99,7 +106,7 @@ const CheckboxGroup = ({
       <div className={clsx('flex flex-col gap-2', className)}>
         <Header />
         <div className={clsx('flex gap-2', wrap && 'flex-wrap')}>
-          {options.map(option => {
+          {resolvedOptions.map(option => {
             const isSelected = selectedValues.includes(option.value);
             return (
               <button
@@ -134,7 +141,7 @@ const CheckboxGroup = ({
       <div className={clsx('flex flex-col gap-2', className)}>
         <Header />
         <div className={clsx('flex gap-2', wrap && 'flex-wrap')}>
-          {options.map(option => {
+          {resolvedOptions.map(option => {
             const isSelected = selectedValues.includes(option.value);
             return (
               <button
@@ -175,7 +182,7 @@ const CheckboxGroup = ({
     <div className={clsx('flex flex-col gap-2', className)}>
       <Header />
       <div className={clsx('flex gap-2', wrap && 'flex-wrap')}>
-        {options.map(option => {
+        {resolvedOptions.map(option => {
           const isSelected = selectedValues.includes(option.value);
           return (
             <button

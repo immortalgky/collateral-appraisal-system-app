@@ -180,7 +180,7 @@ const landInfoField: FormField[] = [
     label: 'Check Owner',
     name: 'isOwnerVerified',
     required: true,
-    options: ['Can', 'Can not'],
+    options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-3',
   },
   {
@@ -196,7 +196,7 @@ const landInfoField: FormField[] = [
     type: 'boolean-toggle',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['Mortgage as Security', 'No Obligation'],
+    options: ['No Obligation', 'Mortgage as Security'],
     wrapperClassName: 'col-span-6',
   },
   {
@@ -214,7 +214,7 @@ const landLocationField: FormField[] = [
     type: 'boolean-toggle',
     label: '',
     name: 'isLandLocationVerified',
-    options: ['Correct', 'In Correct'],
+    options: ['In Correct', 'Correct'],
     wrapperClassName: 'col-span-12',
   },
   {

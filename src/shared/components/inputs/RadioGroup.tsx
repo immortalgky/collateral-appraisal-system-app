@@ -8,6 +8,8 @@ import {
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import Icon from '../Icon';
+import { useParameterAsRadioOptions } from '../../utils/parameterUtils';
+import type { AtLeastOne } from '@/shared/types';
 
 export interface RadioOption {
   value: string;
@@ -17,11 +19,10 @@ export interface RadioOption {
   icon?: string;
 }
 
-export interface RadioGroupProps {
+interface RadioGroupBaseProps {
   value?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
-  options: RadioOption[];
   label?: string;
   error?: string;
   disabled?: boolean;
@@ -34,10 +35,14 @@ export interface RadioGroupProps {
   variant?: 'default' | 'card' | 'button';
 }
 
+export type RadioGroupProps = RadioGroupBaseProps &
+  AtLeastOne<{ group: string; options: RadioOption[] }>;
+
 const RadioGroup = ({
   value,
   defaultValue,
   onChange,
+  group,
   options,
   label,
   error,
@@ -48,6 +53,8 @@ const RadioGroup = ({
   name,
   variant = 'default',
 }: RadioGroupProps) => {
+  const parameterOptions = useParameterAsRadioOptions(group ?? '');
+  const resolvedOptions = options ?? parameterOptions;
   const sizeStyles = {
     sm: 'h-4 w-4',
     md: 'h-[18px] w-[18px]',
@@ -74,7 +81,7 @@ const RadioGroup = ({
           name={name}
           className="inline-flex rounded-lg bg-primary/10 p-1"
         >
-          {options.map(option => (
+          {resolvedOptions.map(option => (
             <HeadlessRadio
               key={option.value}
               value={option.value}
@@ -117,7 +124,7 @@ const RadioGroup = ({
             orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
           )}
         >
-          {options.map(option => (
+          {resolvedOptions.map(option => (
             <HeadlessRadio
               key={option.value}
               value={option.value}
@@ -191,7 +198,7 @@ const RadioGroup = ({
           orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
         )}
       >
-        {options.map(option => (
+        {resolvedOptions.map(option => (
           <HeadlessRadio
             key={option.value}
             value={option.value}

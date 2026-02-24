@@ -182,19 +182,22 @@ interface BaseDropdownField extends BaseFormField {
 // Toggle fields
 // =============================================================================
 
-export interface BooleanToggleField extends BaseFormField {
+export type BooleanToggleField = BaseBooleanToggleField &
+  AtLeastOne<{ group: string; options: [string, string] }>;
+
+interface BaseBooleanToggleField extends BaseFormField {
   type: 'boolean-toggle';
   label: string;
-  /** Labels for [false, true] states */
-  options: [string, string];
   /** Size variant */
   size?: 'sm' | 'md';
 }
 
-export interface StringToggleField extends BaseFormField {
+export type StringToggleField = BaseStringToggleField &
+  AtLeastOne<{ group: string; options: [FormStringToggleOption, FormStringToggleOption] }>;
+
+interface BaseStringToggleField extends BaseFormField {
   type: 'string-toggle';
   label: string;
-  options: [FormStringToggleOption, FormStringToggleOption];
   /** Size variant */
   size?: 'sm' | 'md';
 }
@@ -210,19 +213,23 @@ export interface CheckboxField extends BaseFormField {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export interface CheckboxGroupField extends BaseFormField {
+export type CheckboxGroupField = BaseCheckboxGroupField &
+  AtLeastOne<{ group: string; options: CheckboxOption[] }>;
+
+interface BaseCheckboxGroupField extends BaseFormField {
   type: 'checkbox-group';
   label?: string;
-  options: CheckboxOption[];
   wrap?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md';
   orientation?: 'horizontal' | 'vertical';
 }
 
-export interface RadioGroupField extends BaseFormField {
+export type RadioGroupField = BaseRadioGroupField &
+  AtLeastOne<{ group: string; options: RadioOption[] }>;
+
+interface BaseRadioGroupField extends BaseFormField {
   type: 'radio-group';
   label?: string;
-  options: RadioOption[];
   size?: 'sm' | 'md' | 'lg';
   orientation?: 'horizontal' | 'vertical';
 }

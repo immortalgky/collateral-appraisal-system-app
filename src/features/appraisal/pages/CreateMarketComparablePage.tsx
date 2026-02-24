@@ -3,6 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
@@ -13,10 +14,15 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 
+import type {
+  CreateMarketComparableRequestType,
+  UpdateMarketComparableRequestType,
+} from '@/shared/schemas/v1';
 import {
   useCreateMarketComparable,
   useGetMarketComparableById,
   useGetMarketComparableTemplateById,
+  useLinkAppraisalComparable,
   useUpdateMarketComparable,
 } from '../api/marketComparable';
 import MarketComparableForm from '../forms/MarketComparableForm';
@@ -28,6 +34,7 @@ import {
 
 const CreateMarketComparablePage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Support both appraisal-nested routes (URL params) and standalone routes (search params)
   const { appraisalId, marketComparableId } = useParams<{
@@ -49,6 +56,7 @@ const CreateMarketComparablePage = () => {
 
   const { mutate: createMarketComparable, isPending: isCreating } = useCreateMarketComparable();
   const { mutate: updateMarketComparable, isPending: isUpdating } = useUpdateMarketComparable();
+  const { mutateAsync: linkAppraisalComparable } = useLinkAppraisalComparable();
 
   const isPending = isCreating || isUpdating;
 
@@ -63,12 +71,13 @@ const CreateMarketComparablePage = () => {
   useEffect(() => {
     if (!isEditMode || !marketComparable || !template) return;
 
-    const factorDataValue = template.template.factors.map((factor: any) => {
-      const existing = marketComparable.marketComparable.factorData.find(
-        (ed: any) => ed.factorId === factor.factorId,
-      );
-      return existing;
-    });
+    const factorDataValue = template.template.factors
+      .map((factor: any) => {
+        return marketComparable.marketComparable.factorData.find(
+          (ed: any) => ed.factorId === factor.factorId,
+        );
+      })
+      .filter(Boolean);
 
     methods.reset({
       surveyName: marketComparable.marketComparable.surveyName,
@@ -84,54 +93,80 @@ const CreateMarketComparablePage = () => {
 
   const onSubmit: SubmitHandler<createMarketComparableFormType> = data => {
     // Convert factorData values to string
-    const payload = {
-      ...data,
-      factorData: (data.factorData ?? []).map(factor => ({
-        ...factor,
-        value: factor.value === null || factor.value === undefined ? '' : String(factor.value),
-      })),
-    };
+    const factorData = (data.factorData ?? []).map(factor => ({
+      ...factor,
+      value: factor.value === null || factor.value === undefined ? '' : String(factor.value),
+    }));
 
     if (isEditMode && marketId) {
-      updateMarketComparable(
+      const updatePayload: UpdateMarketComparableRequestType & { id: string; factorData?: any[] } =
         {
           id: marketId,
-          ...payload,
-        } as any,
-        {
-          onSuccess: () => {
-            toast.success('Market comparable updated successfully');
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to update market comparable. Please try again.',
-            );
-          },
+          propertyType: data.propertyType ?? '',
+          surveyName: data.surveyName,
+          infoDateTime: data.infoDateTime || null,
+          sourceInfo: data.sourceInfo || null,
+          notes: data.notes || null,
+          templateId: data.templateId || null,
+          factorData,
+        };
+
+      updateMarketComparable(updatePayload, {
+        onSuccess: () => {
+          if (appraisalId) {
+            queryClient.invalidateQueries({
+              queryKey: ['appraisals', appraisalId, 'comparables'],
+            });
+          }
+          toast.success('Market comparable updated successfully');
         },
-      );
+        onError: (error: any) => {
+          toast.error(
+            error.apiError?.detail || 'Failed to update market comparable. Please try again.',
+          );
+        },
+      });
     } else {
-      createMarketComparable(
-        {
-          ...payload,
-          comparableNumber: 'MC-2026-006',
-        } as any,
-        {
-          onSuccess: response => {
-            toast.success('Market comparable created successfully');
-            // Navigate to edit mode within the same context
-            if (appraisalId) {
-              navigate(`/appraisal/${appraisalId}/property/market-comparable/${response.id}`);
-            } else {
-              navigate(`/market-comparable/detail?id=${response.id}`);
+      const createPayload: CreateMarketComparableRequestType = {
+        comparableNumber: data.comparableNumber ?? '',
+        propertyType: data.propertyType ?? '',
+        surveyName: data.surveyName,
+        infoDateTime: data.infoDateTime || null,
+        sourceInfo: data.sourceInfo || null,
+        notes: data.notes || null,
+        templateId: data.templateId || null,
+      };
+
+      createMarketComparable(createPayload, {
+        onSuccess: async response => {
+          if (appraisalId) {
+            try {
+              await linkAppraisalComparable({
+                appraisalId,
+                marketComparableId: response.id,
+                sequenceNumber: 0,
+                originalPricePerUnit: 0,
+              });
+            } catch (error: any) {
+              toast.error(
+                error.apiError?.detail || 'Created comparable but failed to link to appraisal.',
+              );
+              return;
             }
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create market comparable. Please try again.',
-            );
-          },
+          }
+          toast.success('Market comparable created successfully');
+          if (appraisalId) {
+            navigate(`/appraisal/${appraisalId}/property/market-comparable/${response.id}`);
+          } else {
+            navigate(`/market-comparable/detail?id=${response.id}`);
+          }
         },
-      );
+        onError: (error: any) => {
+          toast.error(
+            error.apiError?.detail || 'Failed to create market comparable. Please try again.',
+          );
+        },
+      });
     }
   };
 
@@ -155,6 +190,7 @@ const CreateMarketComparablePage = () => {
           containerId="form-scroll-container"
           anchors={[
             { label: 'Comparable', id: 'comparable-section', icon: 'chart-line' },
+            { label: 'Survey Factors', id: 'factors-section', icon: 'sliders' },
           ]}
         />
       </div>

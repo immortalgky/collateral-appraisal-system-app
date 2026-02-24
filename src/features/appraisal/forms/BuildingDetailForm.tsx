@@ -159,7 +159,7 @@ const buildingInfoField: FormField[] = [
     label: 'Check Owner',
     name: 'isOwnerVerified',
     required: true,
-    options: ['Can', 'Can not'],
+    options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-3',
   },
   {
@@ -197,7 +197,7 @@ const buildingInfoField: FormField[] = [
     label: 'Under Construction',
     name: 'isUnderConstruction',
     wrapperClassName: 'col-span-3',
-    options: ['Yes', 'No'],
+    options: ['No', 'Yes'],
   },
   {
     type: 'number-input',
@@ -217,14 +217,14 @@ const buildingInfoField: FormField[] = [
     label: 'Is Appraise',
     name: 'isAppraisable',
     required: true,
-    options: ['Appraise', 'Not Appraise'],
+    options: ['Not Appraise', 'Appraise'],
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'boolean-toggle',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['Mortgage as Security', 'No Obligation'],
+    options: ['No Obligation', 'Mortgage as Security'],
     wrapperClassName: 'col-span-6',
   },
   {
@@ -306,7 +306,7 @@ const encroachmentField: FormField[] = [
     type: 'boolean-toggle',
     label: '',
     name: 'isEncroachingOthers',
-    options: ['Is Encroaching', 'Is not Encroaching'],
+    options: ['Is not Encroaching', 'Is Encroaching'],
     wrapperClassName: 'col-span-4 flex items-center',
   },
   {
@@ -360,7 +360,7 @@ const isResidentialField: FormField[] = [
     type: 'boolean-toggle',
     label: '',
     name: 'isResidential',
-    options: ['Can', 'Can not'],
+    options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-10 flex items-center',
   },
   {
