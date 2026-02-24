@@ -13,16 +13,7 @@ const machineFields: FormField[] = [
     type: 'dropdown',
     label: 'Installation Status',
     name: 'installationStatus',
-    options: [
-      {
-        value: 'a',
-        label: 'A',
-      },
-      {
-        value: 'b',
-        label: 'B',
-      },
-    ],
+    group: 'MachineStatus',
     wrapperClassName: 'col-span-3',
     required: true,
   },
@@ -30,16 +21,7 @@ const machineFields: FormField[] = [
     type: 'dropdown',
     label: 'Machine Type',
     name: 'machineType',
-    options: [
-      {
-        value: 'a',
-        label: 'A',
-      },
-      {
-        value: 'b',
-        label: 'B',
-      },
-    ],
+    group: 'MachineType',
     wrapperClassName: 'col-span-3',
     required: true,
   },
@@ -47,16 +29,7 @@ const machineFields: FormField[] = [
     type: 'dropdown',
     label: 'Registration Status',
     name: 'registrationStatus',
-    options: [
-      {
-        value: 'a',
-        label: 'A',
-      },
-      {
-        value: 'b',
-        label: 'B',
-      },
-    ],
+    group: 'RegistrationStatus',
     wrapperClassName: 'col-span-3',
     required: true,
   },

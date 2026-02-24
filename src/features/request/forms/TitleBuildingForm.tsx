@@ -15,16 +15,7 @@ const buildingFields: FormField[] = [
     type: 'dropdown',
     label: 'Building Type',
     name: 'buildingType',
-    options: [
-      {
-        value: 'a',
-        label: 'A',
-      },
-      {
-        value: 'b',
-        label: 'B',
-      },
-    ],
+    group: 'BuildingType',
     wrapperClassName: 'col-span-3',
     required: true,
   },
