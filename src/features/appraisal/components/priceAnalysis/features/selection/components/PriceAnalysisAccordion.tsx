@@ -41,6 +41,7 @@ interface PriceAnalysisAccordionProps {
   onCancelDeselectMethod: () => void;
   onSystemCalculationChange: (check: boolean) => void;
   systemCalculationMode: string;
+  onCancelPricingAccordian: () => void;
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
@@ -54,15 +55,19 @@ export const PriceAnalysisAccordion = ({
   isPriceAnalysisAccordionOpen,
   onSelectCalculationMethod,
   onCancelEditMode,
+
   onEnterEdit,
   onEditModeSave,
   onSummaryModeSave,
   onToggleMethod,
+
   isConfirmDeselectedMethodOpen,
   onConfirmDeselectMethod,
   onCancelDeselectMethod,
   onSystemCalculationChange,
   systemCalculationMode,
+  onCancelPricingAccordian,
+
   onSelectCandidateMethod,
   onSelectCandidateApproach,
 }: PriceAnalysisAccordionProps) => {
@@ -204,6 +209,7 @@ export const PriceAnalysisAccordion = ({
                   onSummaryModeSave={onSummaryModeSave}
                   onToggleMethod={onToggleMethod}
                   onSelectCalculationMethod={onSelectCalculationMethod}
+                  onCancelPricingAccordian={onCancelPricingAccordian}
                   onCancelEditMode={onCancelEditMode}
                   onSelectCandidateMethod={onSelectCandidateMethod}
                   onSelectCandidateApproach={onSelectCandidateApproach}

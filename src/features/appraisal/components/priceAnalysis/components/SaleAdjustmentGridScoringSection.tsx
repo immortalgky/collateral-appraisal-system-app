@@ -84,7 +84,7 @@ export const SaleAdjustmentGridScoringSection = ({
   });
 
   const {
-    fields: adjustmentFactors,
+    fields: adjustmentFactorsFields,
     append: appendAdjustmentFactor,
     remove: removeAdjustmentFactor,
   } = useFieldArray({
@@ -92,23 +92,35 @@ export const SaleAdjustmentGridScoringSection = ({
     name: adjustmentFactorsPath(),
   });
 
-  const qualitativeFactors = useMemo(() => {
-    console.log('qualitativeFactorFields change!');
-    return (getValues(qualitativesPath()) as SaleAdjustmentGridQualitativeFormType[]) ?? [];
-  }, [qualitativeFactorFields]);
+  const watchedQualitatives =
+    (useWatch({ control, name: qualitativesPath() }) as SaleAdjustmentGridQualitativeFormType[]) ??
+    [];
 
-  const comparativeFactors =
+  const usedFactorCodes = useMemo(
+    () => watchedQualitatives.map(r => r?.factorCode).filter(Boolean),
+    [watchedQualitatives],
+  );
+
+  const watchComparativeFactors =
     (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
+
+  const comparativeFactors = useMemo(() => {
+    return getValues(comparativeFactorsPath());
+  }, [watchComparativeFactors]);
 
   const handleAddRow = () => {
     appendQualitativeFactor({
       factorCode: '',
-      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: 'E' })), // TODO: default value
+      qualitatives: comparativeSurveys.map(survey => ({
+        marketId: survey.id,
+        qualitativeLevel: 'E',
+      })), // TODO: default value
     });
 
     appendAdjustmentFactor({
       factorCode: '',
-      surveys: comparativeSurveys.map(() => ({
+      surveys: comparativeSurveys.map(survey => ({
+        marketId: survey.id,
         adjustPercent: 0,
         adjustAmount: 0,
       })),
@@ -117,6 +129,7 @@ export const SaleAdjustmentGridScoringSection = ({
 
   const handleRemoveRow = (rowIndex: number) => {
     removeQualitativeFactor(rowIndex);
+
     removeAdjustmentFactor(rowIndex);
   };
 
@@ -128,29 +141,29 @@ export const SaleAdjustmentGridScoringSection = ({
     });
 
     return rules;
-  }, [comparativeSurveys.length, property]);
+  }, [comparativeSurveys, property]);
 
   const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorDefaultPercentRules({
       surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactorFields,
+      qualitativeRows: getValues(qualitativesPath()),
     });
-  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+  }, [comparativeSurveys, qualitativeFactorFields.length]);
 
   const adjustAmountRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorAmountRules({
       surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactorFields,
+      qualitativeRows: getValues(qualitativesPath()),
     });
-  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+  }, [comparativeSurveys, qualitativeFactorFields.length]);
 
   const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridFinalValueRules({
       surveys: comparativeSurveys,
     });
-  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+  }, [comparativeSurveys, qualitativeFactorFields]);
 
-  useDerivedFields({ rules: calculationRules });
+  useDerivedFields({ rules: calculationRules, ctx: { property: property } });
   useDerivedFields({ rules: adjustPercentDefaultRules });
   useDerivedFields({ rules: adjustAmountRules });
   useDerivedFields({ rules: finalValueRules });
@@ -219,25 +232,25 @@ export const SaleAdjustmentGridScoringSection = ({
 
           <tbody className="divide-y divide-gray-100">
             {/* qualitative section */}
-            {qualitativeFactorFields.map((factor, rowIndex: number) => {
-              const selected = factor.factorCode ?? '';
+            {qualitativeFactorFields.map((field, rowIndex: number) => {
+              const selected =
+                (getValues(qualitativeFactorCodePath({ row: rowIndex })) as string) ?? '';
               const options = comparativeFactors
                 .filter(
-                  compFact =>
-                    compFact.factorCode === selected ||
-                    !qualitativeFactorFields.some(q => q.factorCode === compFact.factorCode),
+                  cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                 )
-                .map(compFact => ({
-                  label: getFactorDesciption(compFact.factorCode) ?? '',
-                  value: compFact.factorCode,
+                .map(cf => ({
+                  label: getFactorDesciption(cf.factorCode) ?? '',
+                  value: cf.factorCode,
                 }));
+              const isTemplateFactor = (template?.calculationFactors ?? []).some(
+                t => t.factorCode === selected,
+              );
               return (
-                <tr key={factor.factorCode}>
+                <tr key={field.id}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     <div className="truncate">
-                      {(template?.calculationFactors ?? []).find(
-                        (t: TemplateComparativeFactorType) => t.factorCode === factor.factorCode,
-                      ) ? (
+                      {isTemplateFactor ? (
                         <RHFInputCell
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="display"
@@ -256,15 +269,6 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
 
                   {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                    console.log(
-                      'qualitative level: ',
-                      getValues(
-                        qualitativeLevelPath({
-                          row: rowIndex,
-                          column: columnIndex,
-                        }),
-                      ),
-                    );
                     return (
                       <td key={survey.id} className={clsx(surveyColumnBody)}>
                         <div className="flex flex-row justitfy-between items-center gap-2">
@@ -295,7 +299,11 @@ export const SaleAdjustmentGridScoringSection = ({
                                   fieldDecimal: factorData.fieldDecimal,
                                   value: factorData.value,
                                 });
-                                return factorValue ?? '';
+                                return (
+                                  <div title={factorValue?.toString() ?? ''} className="truncate">
+                                    {factorValue ?? ''}
+                                  </div>
+                                );
                               }
                               return '';
                             }}
@@ -310,18 +318,20 @@ export const SaleAdjustmentGridScoringSection = ({
                       fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value
-                          ? getPropertyValueByFactorCode(value.toString(), property)
-                          : '';
+                        return (
+                          <div
+                            title={getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                            className="truncate"
+                          >
+                            {getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                          </div>
+                        );
                       }}
                     />
                   </td>
                   <td className={clsx('bg-white', actionColumnBody)}>
                     {/* if rowIndex > template factors length, show delete button */}
-                    {!template?.calculationFactors?.find(
-                      (calFact: TemplateCalculationFactorType) =>
-                        calFact.factorCode === factor.factorCode,
-                    ) && (
+                    {!isTemplateFactor && (
                       <div className="flex flex-row justify-center items-center">
                         <button
                           type="button"
@@ -561,9 +571,9 @@ export const SaleAdjustmentGridScoringSection = ({
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-gray-200', actionColumnBody)}></td>
             </tr>
-            {qualitativeFactorFields.map((factor, rowIndex) => {
+            {adjustmentFactorsFields.map((field, rowIndex) => {
               return (
-                <tr key={factor.factorCode}>
+                <tr key={field.id}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     {
                       <RHFInputCell

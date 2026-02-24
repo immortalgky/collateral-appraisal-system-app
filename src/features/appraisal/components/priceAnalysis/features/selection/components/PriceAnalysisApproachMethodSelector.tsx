@@ -12,6 +12,7 @@ interface PriceAnalysisApproachMethodSelectorProps {
   onSummaryModeSave: () => void;
   onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
+  onCancelPricingAccordian: () => void;
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
@@ -27,6 +28,7 @@ export const PriceAnalysisApproachMethodSelector = ({
   onSummaryModeSave,
   onToggleMethod,
   onSelectCalculationMethod,
+  onCancelPricingAccordian,
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
@@ -109,7 +111,11 @@ export const PriceAnalysisApproachMethodSelector = ({
 
               {/* Footer Actions */}
               <div className="shrink-0 min-h-14 flex items-center justify-between py-2">
-                <button type="button" className="btn btn-ghost" onClick={() => null}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => onCancelPricingAccordian()}
+                >
                   Cancel
                 </button>
                 <div className="flex gap-4">

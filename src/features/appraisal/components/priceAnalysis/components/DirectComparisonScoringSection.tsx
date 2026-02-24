@@ -23,13 +23,13 @@ import type {
 } from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm.ts';
 import type {
   FactorDataType,
-  MarketComparableDetailType, TemplateCalculationFactorType,
-  TemplateComparativeFactorType, TemplateDetailType,
+  MarketComparableDetailType,
+  TemplateCalculationFactorType,
+  TemplateComparativeFactorType,
+  TemplateDetailType,
 } from '@features/appraisal/components/priceAnalysis/schemas/v1.ts';
 import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
-import {
-  getPropertyValueByFactorCode
-} from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
+import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
 
 interface DirectComparisonScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -87,7 +87,7 @@ export const DirectComparisonScoringSection = ({
   });
 
   const {
-    fields: adjustmentFactors,
+    fields: adjustmentFactorsFields,
     append: appendAdjustmentFactor,
     remove: removeAdjustmentFactor,
   } = useFieldArray({
@@ -95,23 +95,35 @@ export const DirectComparisonScoringSection = ({
     name: adjustmentFactorsPath(),
   });
 
-  const qualitativeFactors = useMemo(() => {
-    console.log('qualitativeFactorFields change!');
-    return (getValues(qualitativesPath()) as DirectComparisonQualitativeFormType[]) ?? [];
-  }, [qualitativeFactorFields]);
+  const watchedQualitatives =
+    (useWatch({ control, name: qualitativesPath() }) as DirectComparisonQualitativeFormType[]) ??
+    [];
 
-  const comparativeFactors =
+  const usedFactorCodes = useMemo(
+    () => watchedQualitatives.map(r => r?.factorCode).filter(Boolean),
+    [watchedQualitatives],
+  );
+
+  const watchComparativeFactors =
     (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
+
+  const comparativeFactors = useMemo(() => {
+    return getValues(comparativeFactorsPath());
+  }, [watchComparativeFactors]);
 
   const handleAddRow = () => {
     appendQualitativeFactor({
       factorCode: '',
-      qualitatives: comparativeSurveys.map(() => ({ qualitativeLevel: 'E' })), // TODO: default value
+      qualitatives: comparativeSurveys.map(survey => ({
+        marketId: survey.id,
+        qualitativeLevel: 'E',
+      })), // TODO: default value
     });
 
     appendAdjustmentFactor({
       factorCode: '',
-      surveys: comparativeSurveys.map(() => ({
+      surveys: comparativeSurveys.map(survey => ({
+        marketId: survey.id,
         adjustPercent: 0,
         adjustAmount: 0,
       })),
@@ -136,22 +148,22 @@ export const DirectComparisonScoringSection = ({
   const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildDirectComparisonAdjustmentFactorDefaultPercentRules({
       surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactorFields,
+      qualitativeRows: getValues(qualitativesPath()),
     });
-  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+  }, [comparativeSurveys, qualitativeFactorFields.length]);
 
   const adjustAmountRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildDirectComparisonAdjustmentFactorAmountRules({
       surveys: comparativeSurveys,
-      qualitativeRows: qualitativeFactorFields,
+      qualitativeRows: getValues(qualitativesPath()),
     });
-  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+  }, [comparativeSurveys, qualitativeFactorFields.length]);
 
   const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildDirectComparisonFinalValueRules({
       surveys: comparativeSurveys,
     });
-  }, [comparativeSurveys.length, qualitativeFactorFields.length]);
+  }, [comparativeSurveys, qualitativeFactorFields]);
 
   useDerivedFields({ rules: calculationRules });
   useDerivedFields({ rules: adjustPercentDefaultRules });
@@ -222,25 +234,25 @@ export const DirectComparisonScoringSection = ({
 
           <tbody className="divide-y divide-gray-100">
             {/* qualitative section */}
-            {qualitativeFactorFields.map((factor, rowIndex: number) => {
-              const selected = factor.factorCode ?? '';
+            {qualitativeFactorFields.map((fields, rowIndex: number) => {
+              const selected =
+                (getValues(qualitativeFactorCodePath({ row: rowIndex })) as string) ?? '';
               const options = comparativeFactors
                 .filter(
-                  compFact =>
-                    compFact.factorCode === selected ||
-                    !qualitativeFactorFields.some(q => q.factorCode === compFact.factorCode),
+                  cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                 )
-                .map(compFact => ({
-                  label: getFactorDesciption(compFact.factorCode) ?? '',
-                  value: compFact.factorCode,
+                .map(cf => ({
+                  label: getFactorDesciption(cf.factorCode) ?? '',
+                  value: cf.factorCode,
                 }));
+              const isTemplateFactor = (template?.calculationFactors ?? []).some(
+                t => t.factorCode === selected,
+              );
               return (
-                <tr key={factor.factorCode}>
+                <tr key={fields.id}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     <div className="truncate">
-                      {(template?.calculationFactors ?? []).find(
-                        (t: TemplateComparativeFactorType) => t.factorCode === factor.factorCode,
-                      ) ? (
+                      {isTemplateFactor ? (
                         <RHFInputCell
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="display"
@@ -259,15 +271,6 @@ export const DirectComparisonScoringSection = ({
                   </td>
 
                   {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                    console.log(
-                      'qualitative level: ',
-                      getValues(
-                        qualitativeLevelPath({
-                          row: rowIndex,
-                          column: columnIndex,
-                        }),
-                      ),
-                    );
                     return (
                       <td key={survey.id} className={clsx(surveyColumnBody)}>
                         <div className="flex flex-row justitfy-between items-center gap-2">
@@ -298,7 +301,11 @@ export const DirectComparisonScoringSection = ({
                                   fieldDecimal: factorData.fieldDecimal,
                                   value: factorData.value,
                                 });
-                                return factorValue ?? '';
+                                return (
+                                  <div title={factorValue?.toString() ?? ''} className="truncate">
+                                    {factorValue ?? ''}
+                                  </div>
+                                );
                               }
                               return '';
                             }}
@@ -313,18 +320,20 @@ export const DirectComparisonScoringSection = ({
                       fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value
-                          ? getPropertyValueByFactorCode(value.toString(), property)
-                          : '';
+                        return (
+                          <div
+                            title={getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                            className="truncate"
+                          >
+                            {getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                          </div>
+                        );
                       }}
                     />
                   </td>
                   <td className={clsx('bg-white', actionColumnBody)}>
                     {/* if rowIndex > template factors length, show delete button */}
-                    {!template?.calculationFactors?.find(
-                      (calFact: TemplateCalculationFactorType) =>
-                        calFact.factorCode === factor.factorCode,
-                    ) && (
+                    {!isTemplateFactor && (
                       <div className="flex flex-row justify-center items-center">
                         <button
                           type="button"
@@ -564,9 +573,9 @@ export const DirectComparisonScoringSection = ({
               <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
               <td className={clsx('bg-gray-200', actionColumnBody)}></td>
             </tr>
-            {qualitativeFactorFields.map((factor, rowIndex) => {
+            {adjustmentFactorsFields.map((fields, rowIndex) => {
               return (
-                <tr key={factor.factorCode}>
+                <tr key={fields.id}>
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                     {
                       <RHFInputCell

@@ -18,12 +18,17 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
       targetPath: appraisalPricePath(),
       deps: [finalValueRoundedPath()],
       compute: ({ getValues, ctx }) => {
-        const collateralType = ctx?.property?.collateralType ?? '';
+        const collateralType = ctx?.property?.propertyType ?? '';
         const finalValue = getValues(finalValueRoundedPath()) ?? 0;
 
         if (collateralType === 'L') {
-          const landArea = ctx?.property?.landArea ?? 0;
+          const landArea = ctx?.property?.area ?? 0;
           return finalValue * landArea;
+        }
+
+        if (collateralType === 'U') {
+          const usableArea = ctx?.property?.area ?? 0;
+          return finalValue * usableArea;
         }
 
         return finalValue;
@@ -49,10 +54,16 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
 
   return (
     <div className="flex flex-col gap-4 text-sm py-2">
-      {property.collateralType === 'L' && (
+      {property.propertyType === 'L' && (
         <div className="grid grid-cols-12">
-          <div className="col-span-3">Area</div>
-          <div className="col-span-1 text-right">{property.landArea ?? 0}</div>
+          <div className="col-span-3">Land Area</div>
+          <div className="col-span-1 text-right">{property.area ?? 0}</div>
+        </div>
+      )}
+      {property.propertyType === 'U' && (
+        <div className="grid grid-cols-12">
+          <div className="col-span-3">Usable Area</div>
+          <div className="col-span-1 text-right">{property.area ?? 0}</div>
         </div>
       )}
       <div className="grid grid-cols-12">

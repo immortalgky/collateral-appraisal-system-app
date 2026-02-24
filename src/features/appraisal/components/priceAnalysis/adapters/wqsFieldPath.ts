@@ -68,6 +68,7 @@ export const wqsFieldPath = {
   finalValueHasBuildingCost: () => `WQSFinalValue.hasBuildingCost`,
   finalValueIncludeLandArea: () => `WQSFinalValue.includeLandArea`,
   finalValueLandArea: () => `WQSFinalValue.landArea`,
+  finalValueUsableArea: () => `WQSFinalValue.usableArea`,
   finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice`,
   finalValueAppraisalPriceRounded: () => `WQSFinalValue.appraisalPriceRounded`,
 };

@@ -19,6 +19,7 @@ import type { PriceAnalysisSelectorState } from '../features/selection/domain/us
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { setWQSInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/adapters/setWQSInitialValueOnSelectSurvey.ts';
 import { setWQSInitialValue } from '@features/appraisal/components/priceAnalysis/adapters/setWQSInitialValue.ts';
+import { useSelectionDispatch } from '../features/selection/domain/selectionContext';
 
 /**
  * => default collateral type, template => generate => query factors in template
@@ -128,31 +129,47 @@ export function WQSPanel({
     error,
   } = useSaveComparativeAnalysis();
 
+  const dispatch = useSelectionDispatch(); // TODO: remove if api ready
+
   /** Form handler */
   const handleOnSubmit = (value: WQSFormType) => {
     if (!!pricingAnalysisId && !!methodId) {
-      const submitSchema = mapWQSFormToSubmitSchema({ WQSForm: value });
+      // const submitSchema = mapWQSFormToSubmitSchema({ WQSForm: value });
+      // const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
+      // if (!parse.success) {
+      //   toast.error(parse.error.message);
+      //   return;
+      // }
+      // submitComparativeAnalysisMutate({
+      //   id: pricingAnalysisId,
+      //   methodId: methodId,
+      //   request: submitSchema,
+      // });
+      // if (isSubmitComparativeAnalysisSuccess) {
+      //   toast.success('Saved!');
+      //   reset(value);
+      //   return;
+      // }
+      // toast.error(error);
+      // return;
+    }
 
-      const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
-
-      if (!parse.success) {
-        toast.error(parse.error.message);
-        return;
-      }
-
-      submitComparativeAnalysisMutate({
-        id: pricingAnalysisId,
-        methodId: methodId,
-        request: submitSchema,
+    const appraisalValue = value.WQSFinalValue.appraisalPriceRounded;
+    if (
+      !!appraisalValue &&
+      !!state.activeMethod?.approachType &&
+      !!state.activeMethod?.methodType
+    ) {
+      dispatch({
+        type: 'CALCULATION_SAVE',
+        payload: {
+          approachType: state.activeMethod?.approachType,
+          methodType: state.activeMethod?.methodType,
+          appraisalValue: appraisalValue,
+        },
       });
-
-      if (isSubmitComparativeAnalysisSuccess) {
-        toast.success('Saved!');
-        reset(value);
-        return;
-      }
-
-      toast.error(error);
+      toast.success('Saved!');
+      reset(value);
       return;
     }
 

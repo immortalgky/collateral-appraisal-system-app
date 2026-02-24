@@ -1,4 +1,4 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -12,6 +12,8 @@ import type {
 import { readFactorValue } from '../domain/readFactorValue';
 import { getFactorDesciption } from '@features/appraisal/components/priceAnalysis/domain/getFactorDescription.ts';
 import { getPropertyValueByFactorCode } from '@features/appraisal/components/priceAnalysis/domain/getPropertyValueByFactorCode.ts';
+import { useMemo } from 'react';
+import type { ComparativeFactorsFormType } from '../schemas/saleAdjustmentGridForm';
 
 interface ComparativeSurveySectionProps {
   comparativeMarketSurveys: MarketComparableDataType[];
@@ -41,6 +43,18 @@ export function ComparativeSurveySection({
     control,
     name: comparativeFactorsPath(),
   });
+
+  const watchComparativeFactors =
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
+
+  const usedFactorCodes = useMemo(
+    () => watchComparativeFactors.map(r => r?.factorCode).filter(Boolean),
+    [watchComparativeFactors],
+  );
+
+  const comparativeFactors = useMemo(() => {
+    return getValues(comparativeFactorsPath());
+  }, [comparativeSurveyFactors]);
 
   const factorColumnStyle =
     'z-20 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
@@ -75,23 +89,17 @@ export function ComparativeSurveySection({
           <tbody>
             {/* use comparativeSurveyFactors directly because we need to update it immediatly */}
             {comparativeSurveyFactors.map((compFact: any, rowIndex: number) => {
-              console.log(compFact.factorCode);
-              const selected = compFact.factorCode ?? '';
+              const selected = watchComparativeFactors[rowIndex]?.factorCode ?? '';
               const options = (allFactors ?? [])
                 .filter(
-                  (f: FactorDataType) =>
-                    f.factorCode === selected ||
-                    !comparativeSurveyFactors.some((q: any) => q.factorCode === f.factorCode),
+                  cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                 )
-                .map((f: FactorDataType) => ({
-                  label: f.factorName ?? '',
-                  value: f.factorCode,
+                .map(cf => ({
+                  label: getFactorDesciption(cf.factorCode) ?? '',
+                  value: cf.factorCode,
                 }));
               return (
-                <tr
-                  key={compFact.factorCode}
-                  className="hover:bg-gray-50 cursor-default transition-colors"
-                >
+                <tr key={compFact.id} className="hover:bg-gray-50 cursor-default transition-colors">
                   <td
                     className={clsx(
                       'bg-white font-medium  sticky left-0 h-[55px]',
@@ -101,16 +109,20 @@ export function ComparativeSurveySection({
                     {template?.comparativeFactors?.find((t: TemplateComparativeFactorType) => {
                       return t.factorCode === compFact.factorCode;
                     }) ? (
-                      <div
-                        className="truncate"
-                        title={getFactorDesciption(compFact.factorCode) ?? ''}
-                      >
-                        <RHFInputCell
-                          fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
-                          inputType="display"
-                          accessor={({ value }) => getFactorDesciption(value.toString())}
-                        />
-                      </div>
+                      <RHFInputCell
+                        fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
+                        inputType="display"
+                        accessor={({ value }) => {
+                          return (
+                            <div
+                              title={getFactorDesciption(value.toString()) ?? ''}
+                              className="truncate"
+                            >
+                              {getFactorDesciption(value.toString()) ?? ''}
+                            </div>
+                          );
+                        }}
+                      />
                     ) : (
                       <div>
                         <RHFInputCell
@@ -138,7 +150,11 @@ export function ComparativeSurveySection({
                                   fieldDecimal: factorData.fieldDecimal,
                                   value: factorData.value,
                                 });
-                                return factorValue ?? '';
+                                return (
+                                  <div title={factorValue?.toString() ?? ''} className="truncate">
+                                    {factorValue ?? ''}
+                                  </div>
+                                );
                               }
                               return '';
                             }}
@@ -151,9 +167,16 @@ export function ComparativeSurveySection({
                     <RHFInputCell
                       fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                       inputType="display"
-                      accessor={({ value }) =>
-                        getPropertyValueByFactorCode(value.toString(), property) ?? ''
-                      }
+                      accessor={({ value }) => {
+                        return (
+                          <div
+                            title={getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                            className="truncate"
+                          >
+                            {getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                          </div>
+                        );
+                      }}
                     />
                   </td>
                   <td className="bg-white px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0">

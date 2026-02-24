@@ -23,6 +23,7 @@ import { setSaleAdjustmentGridInitialValue } from '@features/appraisal/component
 import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/appraisal/components/priceAnalysis/adapters/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
 import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
 import { saleGridFieldPath } from '../adapters/saleAdjustmentGridfieldPath';
+import { useSelectionDispatch } from '../features/selection/domain/selectionContext';
 
 interface SaleAdjustmentGridPanelProps {
   state: PriceAnalysisSelectorState;
@@ -85,37 +86,59 @@ export function SaleAdjustmentGridPanel({
     error,
   } = useSaveComparativeAnalysis();
 
+  const dispatch = useSelectionDispatch(); // TODO: remove if api ready
+
   /** Form handler */
   const handleOnSubmit = (value: SaleAdjustmentGridType) => {
-    if (!!pricingAnalysisId && !!methodId) {
-      const submitSchema = mapSaleAdjustmentGridFormToSubmitSchama({
-        SaleAdjustmentGridForm: value,
+    // if (!!pricingAnalysisId && !!methodId) {
+    //   const submitSchema = mapSaleAdjustmentGridFormToSubmitSchama({
+    //     SaleAdjustmentGridForm: value,
+    //   });
+
+    //   const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
+
+    //   if (!parse.success) {
+    //     toast.error(parse.error.message);
+    //     return;
+    //   }
+
+    //   submitComparativeAnalysisMutate({
+    //     id: pricingAnalysisId,
+    //     methodId: methodId,
+    //     request: submitSchema,
+    //   });
+
+    //   if (isSubmitComparativeAnalysisSuccess) {
+    //     toast.success('Saved!');
+    //     reset(value);
+    //     return;
+    //   }
+
+    //   toast.error(error);
+    //   return;
+    // }
+
+    // toast.error('Pricing analysis ID or method Id not found!');
+
+    // TODO: remove if api ready!
+    const appraisalValue = value.saleAdjustmentGridAppraisalPrice.appraisalPriceRounded;
+    if (
+      !!appraisalValue &&
+      !!state.activeMethod?.approachType &&
+      !!state.activeMethod?.methodType
+    ) {
+      dispatch({
+        type: 'CALCULATION_SAVE',
+        payload: {
+          approachType: state.activeMethod?.approachType,
+          methodType: state.activeMethod?.methodType,
+          appraisalValue: appraisalValue,
+        },
       });
-
-      const parse = SaveComparativeAnalysisRequest.safeParse(submitSchema);
-
-      if (!parse.success) {
-        toast.error(parse.error.message);
-        return;
-      }
-
-      submitComparativeAnalysisMutate({
-        id: pricingAnalysisId,
-        methodId: methodId,
-        request: submitSchema,
-      });
-
-      if (isSubmitComparativeAnalysisSuccess) {
-        toast.success('Saved!');
-        reset(value);
-        return;
-      }
-
-      toast.error(error);
+      toast.success('Saved!');
+      reset(value);
       return;
     }
-
-    toast.error('Pricing analysis ID or method Id not found!');
   };
 
   const handleOnSaveDraft = () => {

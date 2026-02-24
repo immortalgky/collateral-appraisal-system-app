@@ -95,7 +95,11 @@ export type PriceAnalysisSelectorAction =
     }
   | {
       type: 'CALCULATION_CANCEL';
-    };
+    }
+  | {
+      type: 'CALCULATION_SAVE';
+      payload: { approachType: string; methodType: string; appraisalValue: number };
+    }; // TODO: remove this state if api ready
 
 /** filter out approaches and methods that are not selected in editing mode
  * @param approaches - approaches which want to filter out
@@ -400,6 +404,36 @@ export function approachMethodReducer(
           methodType: undefined,
         },
       };
+    }
+
+    case 'CALCULATION_SAVE': {
+      if (
+        !action.payload.approachType ||
+        !action.payload.methodType ||
+        !action.payload.appraisalValue
+      )
+        return state;
+
+      const nextState: PriceAnalysisSelectorState = {
+        ...state,
+        summarySelected: state.summarySelected.map(appr => {
+          return {
+            ...appr,
+            methods: appr.methods.map(method => {
+              if (
+                method.methodType === action.payload.methodType &&
+                appr.approachType === action.payload.approachType
+              )
+                return {
+                  ...method,
+                  appraisalValue: action.payload.appraisalValue,
+                };
+              return method;
+            }),
+          };
+        }),
+      };
+      return nextState;
     }
 
     default:

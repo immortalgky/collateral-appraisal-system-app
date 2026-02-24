@@ -56,6 +56,7 @@ export function PriceAnalysisTab({
     selectCandidateApproach,
     startCalculation,
     saveSummary,
+    cancelPricingAccordian,
 
     // calculation
     cancelCalculationMethod,
@@ -127,6 +128,7 @@ export function PriceAnalysisTab({
             isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
             onSystemCalculationChange={changeSystemCalculation}
             systemCalculationMode={priceAnalysisState.systemCalculationMode}
+            onCancelPricingAccordian={cancelPricingAccordian}
             isConfirmDeselectedMethodOpen={confirm.isOpen}
             onConfirmDeselectMethod={confirm.confirmDeselect}
             onCancelDeselectMethod={confirm.cancelDeselect}

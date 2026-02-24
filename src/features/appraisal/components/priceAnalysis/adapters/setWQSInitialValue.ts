@@ -34,7 +34,8 @@ export function setWQSInitialValue({
       WQSTotalScores: undefined,
       WQSCalculations: [],
       WQSFinalValue: {
-        landArea: property?.landArea ?? undefined,
+        landArea: property?.area ?? undefined,
+        usableArea: property?.area ?? undefined,
         finalValue: 0,
         finalValueRounded: 0,
         coefficientOfDecision: 0,
@@ -69,7 +70,8 @@ export function setWQSInitialValue({
     })),
     WQSCalculations: [],
     WQSFinalValue: {
-      landArea: property?.landArea ?? undefined,
+      landArea: property?.area ?? undefined,
+      usableArea: property?.area ?? undefined,
       finalValue: 0,
       finalValueRounded: 0,
       coefficientOfDecision: 0,

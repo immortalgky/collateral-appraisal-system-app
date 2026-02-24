@@ -323,6 +323,7 @@ export function buildWQSFinalValueDerivedRules(args: {
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
     finalValueLandArea: finalValueLandAreaPath,
+    finalValueUsableArea: finalValueUsableAreaPath,
     finalValueAppraisalPrice: finalValueAppraisalPricePath,
     finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
   } = wqsFieldPath;
@@ -418,8 +419,7 @@ export function buildWQSFinalValueDerivedRules(args: {
             return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
           }),
         );
-        const stdError = STEYX(surveyScores, surveyCalculate) ?? 0;
-        console.log('stdError', surveyScores, surveyCalculate, stdError);
+        const stdError = STEYX(surveyCalculate, surveyScores) ?? 0;
         return toFiniteNumber(stdError.toFixed(6));
       },
     },
@@ -440,8 +440,7 @@ export function buildWQSFinalValueDerivedRules(args: {
             return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
           }),
         );
-        const intersectionPoint = INTERCEPT(surveyScores, surveyCalculate) ?? 0;
-        console.log('intersection point', surveyScores, surveyCalculate, intersectionPoint);
+        const intersectionPoint = INTERCEPT(surveyCalculate, surveyScores) ?? 0;
         return toFiniteNumber(intersectionPoint);
       },
     },
@@ -462,8 +461,7 @@ export function buildWQSFinalValueDerivedRules(args: {
             return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
           }),
         );
-        const slope = SLOPE(surveyScores, surveyCalculate) ?? 0;
-        console.log('slope', surveyScores, surveyCalculate, slope);
+        const slope = SLOPE(surveyCalculate, surveyScores) ?? 0;
         return toFiniteNumber(slope);
       },
     },
@@ -485,18 +483,18 @@ export function buildWQSFinalValueDerivedRules(args: {
         return round2(finalValueRounded + stdError);
       },
     },
-    {
-      targetPath: finalValueLandAreaPath(),
-      deps: [],
-      compute: ({ ctx }) => {
-        const propertyType = ctx.property?.propertyType;
+    // {
+    //   targetPath: finalValueLandAreaPath(),
+    //   deps: [],
+    //   compute: ({ ctx }) => {
+    //     const propertyType = ctx.property?.propertyType;
 
-        if (propertyType === 'L') {
-          return ctx.property?.landArea;
-        }
-        return null;
-      },
-    },
+    //     if (propertyType === 'L') {
+    //       return ctx.property?.area;
+    //     }
+    //     return null;
+    //   },
+    // },
     {
       targetPath: finalValueAppraisalPricePath(),
       deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
@@ -507,6 +505,11 @@ export function buildWQSFinalValueDerivedRules(args: {
         if (collateralType === 'L') {
           const landArea = getValues(finalValueLandAreaPath()) ?? 0;
           return round2(finalValueRounded * landArea);
+        }
+
+        if (collateralType === 'U') {
+          const usableArea = getValues(finalValueUsableAreaPath()) ?? 0;
+          return round2(finalValueRounded * usableArea);
         }
 
         return round2(finalValueRounded);

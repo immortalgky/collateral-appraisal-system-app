@@ -113,11 +113,11 @@ export function useInitializePriceAnalysis({
   const groupDetailQuery = useQuery({
     queryKey: propertyGroupKeys.detail(appraisalId!, groupId),
     queryFn: async (): Promise<GetPropertyGroupByIdResponse> => {
-      // const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
-      // return data;
+      const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
+      return data;
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return GET_PROPERTY_GROUP_BY_ID_RESPONSE;
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+      // return GET_PROPERTY_GROUP_BY_ID_RESPONSE;
     },
     enabled: !!appraisalId && !!groupId,
     staleTime: Infinity,
@@ -197,7 +197,6 @@ export function useInitializePriceAnalysis({
 
   // Step 3.1: For each market survey, fetch its detail
   const mapping_mock_survey_data = new Map(MAPPED_MARKET_COMPARABLE_DATA.map(s => [s.id, s]));
-  console.log('all entries', allMarketSurveyEntries);
   const marketSurveyDetailQueries = useQueries({
     queries: allMarketSurveyEntries.map(entry => {
       return {
@@ -211,7 +210,6 @@ export function useInitializePriceAnalysis({
           if (!parse.success) {
             throw parse.error;
           }
-          console.log(parse.data);
           return parse.data;
         },
         enabled: !!appraisalId && !!entry.id,
@@ -333,13 +331,11 @@ export function useInitializePriceAnalysis({
   const pricingSelection = pricingSelectionQuery.data;
   const allFactors = allFactorQuery.data;
 
-  console.log('pricing analysis', pricingSelection);
-
-  const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
-  const _property = LAND_PROPERTY;
+  // const _groupDetail = GET_PROPERTY_GROUP_BY_ID_RESPONSE;
+  // const _property = LAND_PROPERTY;
   const initialData = {
-    groupDetail: _groupDetail, // groupDetail
-    properties: _property, // properties
+    groupDetail: groupDetail,
+    properties: (properties ?? [])[0],
     marketSurveyDetails,
     pricingConfiguration,
     pricingSelection,

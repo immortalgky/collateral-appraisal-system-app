@@ -14,6 +14,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
     finalValueLandArea: finalValueLandAreaPath,
+    finalValueUsableArea: finalValueUsableAreaPath,
     finalValueAppraisalPrice: finalValueAppraisalPricePath,
     finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
   } = wqsFieldPath;
@@ -127,6 +128,18 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
           <div className="col-span-2 text-right">
             <RHFInputCell
               fieldName={finalValueLandAreaPath()}
+              inputType="display"
+              accessor={({ value }) => (value ? value.toLocaleString() : 0)}
+            />
+          </div>
+        </div>
+      )}
+      {property.propertyType === 'U' && (
+        <div className="grid grid-cols-12">
+          <div className="col-span-3">Area</div>
+          <div className="col-span-2 text-right">
+            <RHFInputCell
+              fieldName={finalValueUsableAreaPath()}
               inputType="display"
               accessor={({ value }) => (value ? value.toLocaleString() : 0)}
             />

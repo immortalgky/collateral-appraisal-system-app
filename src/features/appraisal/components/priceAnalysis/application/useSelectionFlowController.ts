@@ -17,6 +17,7 @@ import { ALL_FACTORS } from '../data/allFactorsData';
 import { useSaveEditingSelection } from '@features/appraisal/components/priceAnalysis/features/selection/domain/saveEditingSelection.ts';
 import type { PriceAnalysisSelectorState } from '../features/selection/domain/useReducer';
 import { useInitializeCalculationMethod } from '../hooks/useInitailizeCalculationMethod';
+import { useNavigate, useParams } from 'react-router-dom';
 
 type MethodKey = { approachType: string; methodType: string };
 
@@ -36,6 +37,9 @@ export function useSelectionFlowController(opts: {
   closeSelectionPanel?: () => void;
   openSelectionPanel?: () => void;
 }) {
+  const navigate = useNavigate();
+  const { appraisalId } = useParams<{ appraisalId: string }>();
+
   const state = useSelectionState();
   const dispatch = useSelectionDispatch();
 
@@ -51,6 +55,8 @@ export function useSelectionFlowController(opts: {
     groupId: opts.groupId,
     pricingAnalysisId: opts.pricingAnalysisId,
   });
+
+  console.log('initial data: ', initialData);
 
   const {
     groupDetail,
@@ -358,6 +364,11 @@ export function useSelectionFlowController(opts: {
     opts.openSelectionPanel?.();
   };
 
+  const cancelPricingAccordian = () => {
+    console.log('cancel accordian');
+    navigate(`/appraisal/${appraisalId}/property`);
+  };
+
   return {
     state,
     vm,
@@ -378,6 +389,7 @@ export function useSelectionFlowController(opts: {
     selectCandidateApproach,
     startCalculation,
     saveSummary,
+    cancelPricingAccordian,
 
     // calculation
     cancelCalculationMethod,

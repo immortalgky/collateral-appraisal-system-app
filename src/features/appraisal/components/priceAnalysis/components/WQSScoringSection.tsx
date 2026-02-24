@@ -82,9 +82,16 @@ export function WQSScoringSection({
     name: scoringFactorsPath(),
   });
 
-  const scoringFactors = useMemo(() => {
-    return (getValues(scoringFactorsPath()) as WQSScoreFormType[]) ?? [];
-  }, [scoringFactorFields]);
+  const watchedScoringFactors =
+    (useWatch({
+      control,
+      name: scoringFactorsPath(),
+    }) as WQSScoreFormType[]) ?? [];
+
+  const usedFactorCodes = useMemo(
+    () => watchedScoringFactors.map(r => r?.factorCode).filter(Boolean),
+    [watchedScoringFactors],
+  );
 
   const comparativeFactors =
     (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorFormType[]) ?? [];
@@ -115,24 +122,24 @@ export function WQSScoringSection({
   const scoringSurveyRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSScoringSurveyDerivedRules({
       surveys: comparativeSurveys,
-      scoringRows: scoringFactors,
+      scoringRows: getValues(scoringFactorsPath()),
     });
-  }, [comparativeSurveys, scoringFactors, property]);
+  }, [comparativeSurveys, scoringFactorFields.length]);
 
   const totalScoreRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSTotalScoreRules({
       surveys: comparativeSurveys,
-      scoringRows: scoringFactors,
+      scoringRows: getValues(scoringFactorsPath()),
     });
-  }, [comparativeSurveys, scoringFactors, property]);
+  }, [comparativeSurveys, scoringFactorFields.length]);
 
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSCalculationDerivedRules({ surveys: comparativeSurveys });
-  }, [comparativeSurveys, property]);
+  }, [comparativeSurveys, scoringFactorFields.length]);
 
   const finalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSFinalValueDerivedRules({ surveys: comparativeSurveys });
-  }, [comparativeSurveys, property]);
+  }, [comparativeSurveys, scoringFactorFields]);
 
   useDerivedFields({ rules: scoringSurveyRules });
   useDerivedFields({ rules: totalScoreRules });
@@ -244,31 +251,27 @@ export function WQSScoringSection({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr>
-                <td colSpan={comparativeSurveys.length + 3}>Loading</td>
-              </tr>
-            ) : (
+            {
               /** scoring section */
               scoringFactorFields.map((factor, rowIndex: number) => {
-                const selected = factor.factorCode ?? '';
+                const selected =
+                  (getValues(scoringFactorCodePath({ row: rowIndex })) as string) ?? '';
                 const options = comparativeFactors
                   .filter(
-                    compFact =>
-                      compFact.factorCode === selected ||
-                      !scoringFactorFields.some(q => q.factorCode === compFact.factorCode),
+                    cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                   )
-                  .map(f => ({
-                    label: getFactorDesciption(f.factorCode) ?? '',
-                    value: f.factorCode,
+                  .map(cf => ({
+                    label: getFactorDesciption(cf.factorCode) ?? '',
+                    value: cf.factorCode,
                   }));
+                const isTemplateFactor = (template?.calculationFactors ?? []).some(
+                  t => t.factorCode === selected,
+                );
                 return (
-                  <tr key={factor.factorCode}>
+                  <tr key={factor.id}>
                     <td className={clsx('bg-white border-r', leftColumnBody)}>
                       <div className="truncate">
-                        {template?.calculationFactors?.find(
-                          t => t.factorCode === factor.factorCode,
-                        ) ? (
+                        {isTemplateFactor ? (
                           <RHFInputCell
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
@@ -390,9 +393,7 @@ export function WQSScoringSection({
                     </td>
                     <td className={clsx('bg-white', bgGradientLeft, rightColumnBody)}>
                       {/* if rowIndex > template factors length, show delete button */}
-                      {!template?.calculationFactors?.find(
-                        t => t.factorCode === factor.factorCode,
-                      ) && (
+                      {!isTemplateFactor && (
                         <div className="flex flex-row justify-center items-center">
                           <button
                             type="button"
@@ -410,7 +411,7 @@ export function WQSScoringSection({
                   </tr>
                 );
               })
-            )}
+            }
 
             {/* add new row */}
             <tr>

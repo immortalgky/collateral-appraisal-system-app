@@ -62,6 +62,7 @@ const WQSFinalValue = z
     hasBuildingCost: z.boolean().optional(),
     includeLandArea: z.boolean().optional(),
     landArea: z.number().optional(),
+    usableArea: z.number().optional(),
     appraisalPrice: z.number(),
     appraisalPriceRounded: z.number(),
   })
