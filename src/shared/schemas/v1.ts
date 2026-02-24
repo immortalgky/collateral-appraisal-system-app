@@ -4552,3 +4552,12 @@ export type MovePropertyToGroupResponseType = z.infer<typeof MovePropertyToGroup
 export type RemovePropertyFromGroupResponseType = z.infer<typeof RemovePropertyFromGroupResponse>;
 export type SetPropertyThumbnailResultType = z.infer<typeof SetPropertyThumbnailResult>;
 export type UnsetPropertyThumbnailResultType = z.infer<typeof UnsetPropertyThumbnailResult>;
+
+// Law and Regulation types
+export type LawAndRegulationImageDtoType = z.infer<typeof LawAndRegulationImageDto>;
+export type LawAndRegulationDtoType = z.infer<typeof LawAndRegulationDto>;
+export type GetLawAndRegulationsResultType = z.infer<typeof GetLawAndRegulationsResult>;
+export type LawAndRegulationImageInputType = z.infer<typeof LawAndRegulationImageInput>;
+export type LawAndRegulationItemInputType = z.infer<typeof LawAndRegulationItemInput>;
+export type SaveLawAndRegulationsRequestType = z.infer<typeof SaveLawAndRegulationsRequest>;
+export type SaveLawAndRegulationsResponseType = z.infer<typeof SaveLawAndRegulationsResponse>;

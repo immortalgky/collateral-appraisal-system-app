@@ -54,7 +54,7 @@ const ConfirmDialog = ({
   };
 
   return (
-    <dialog className="modal modal-open">
+    <dialog className="modal modal-open z-[60]">
       <div className="modal-box bg-white rounded-2xl shadow-xl max-w-sm">
         <div className="flex flex-col items-center text-center">
           <div className={`w-14 h-14 rounded-full ${styles.iconBg} flex items-center justify-center mb-4`}>

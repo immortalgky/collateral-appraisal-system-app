@@ -1,4 +1,5 @@
 import Icon from '@/shared/components/Icon';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { useState, useCallback } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import SurfaceInputModal, { type SurfaceData } from './SurfaceInputModal';
@@ -21,35 +22,6 @@ interface SurfaceTableRowNumberHeader {
   rowNumberColumn: true;
   label: string;
 }
-
-// Option mappings for display
-const floorTypeLabels: Record<string, string> = {
-  CB: 'Cement Block',
-  WOOD: 'Wood',
-  IRON: 'Iron',
-  TILE: 'Tile',
-  MARBLE: 'Marble',
-  PARQUET: 'Parquet',
-};
-
-const floorStructureLabels: Record<string, string> = {
-  CB: 'Cement Block',
-  WOOD: 'Wood',
-  IRON: 'Iron',
-  RFC: 'Reinforced Concrete',
-  STEEL: 'Steel',
-};
-
-const floorSurfaceLabels: Record<string, string> = {
-  CB: 'Cement Block',
-  WOOD: 'Wood',
-  IRON: 'Iron',
-  TILE: 'Tile',
-  MARBLE: 'Marble',
-  PARQUET: 'Parquet',
-  VINYL: 'Vinyl',
-  LAMINATE: 'Laminate',
-};
 
 const SurfaceTable = ({ name }: SurfaceTableProps) => {
   const { control } = useFormContext();
@@ -181,13 +153,13 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                     {formatFloorRange(row.fromFloorNumber, row.toFloorNumber)}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    {floorTypeLabels[row.floorType] || row.floorType || '-'}
+                    <ParameterDisplay group="FloorType" code={row.floorType} />
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    {floorStructureLabels[row.floorStructureType] || row.floorStructureType || '-'}
+                    <ParameterDisplay group="FloorStructureType" code={row.floorStructureType} />
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    {floorSurfaceLabels[row.floorSurfaceType] || row.floorSurfaceType || '-'}
+                    <ParameterDisplay group="FloorSurfaceType" code={row.floorSurfaceType} />
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-1 justify-end">

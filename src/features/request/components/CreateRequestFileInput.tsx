@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
-import FileInput from '@/shared/components/inputs/FileInput';
-import clsx from 'clsx';
+import UploadArea from '@/shared/components/inputs/UploadArea';
 import { type UploadDocumentResponse, useUploadDocument } from '../api';
 import FileAssignmentModal from './FileAssignmentModal';
 import { getDocumentCategory, getDocumentTypeInfo, type UploadedDocument } from '../types/document';
@@ -67,7 +67,6 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
   );
   const [, setSelectedFiles] = useState<FileList | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const isUploading = uploadProgress.length > 0;
 
@@ -305,82 +304,13 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      // Create a synthetic change event
-      const event = {
-        target: { files },
-      } as React.ChangeEvent<HTMLInputElement>;
-      handleChange(event);
-    }
-  };
-
   return (
     <>
-      <FileInput onChange={handleChange}>
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={clsx(
-            'w-full border-2 border-dashed rounded-2xl p-8 transition-all duration-200 cursor-pointer',
-            isDragging
-              ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg shadow-primary/10'
-              : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300',
-            isPending && 'opacity-50 cursor-not-allowed',
-          )}
-        >
-          <div className="flex flex-col items-center justify-center">
-            {isPending ? (
-              <LoadingSpinner size="lg" variant="document" text="Uploading files..." />
-            ) : (
-              <>
-                <div
-                  className={clsx(
-                    'w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-200',
-                    isDragging
-                      ? 'bg-primary/10 text-primary animate-bounce'
-                      : 'bg-gray-100 text-gray-400',
-                  )}
-                >
-                  <Icon style="solid" name="cloud-arrow-up" className="text-2xl" />
-                </div>
-                <p
-                  className={clsx(
-                    'text-sm font-medium mb-1 transition-colors',
-                    isDragging ? 'text-primary' : 'text-gray-600',
-                  )}
-                >
-                  {isDragging ? 'Drop files here' : 'Click to upload'}
-                </p>
-                <p className="text-xs text-gray-400">or drag and drop files</p>
-                {!isDragging && (
-                  <p className="text-xs text-gray-400 mt-2">
-                    Supported: PDF, PNG, JPG (Max 10MB each)
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </FileInput>
+      <UploadArea
+        onChange={handleChange}
+        supportedText="PDF, PNG, JPG (Max 10MB each)"
+        isLoading={isPending}
+      />
 
       {/* Validation errors */}
       {validationErrors.length > 0 && (
