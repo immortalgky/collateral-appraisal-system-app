@@ -5,7 +5,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -367,6 +367,7 @@ function FieldRenderer({
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
   const { isVisible, isDisabled, isRequired } = useFieldState({ field, namePrefix, index });
+  const { setValue, getValues } = useFormContext();
 
   // Build a full field name with prefix and index
   let name = field.name;
@@ -376,6 +377,20 @@ function FieldRenderer({
   if (namePrefix !== undefined && namePrefix.trim() !== '') {
     name = `${namePrefix}.${name}`;
   }
+
+  useEffect(() => {
+    if (!isDisabled) return;
+    if (field.disabledValue === undefined) return;
+
+    const currentValue = getValues(name);
+
+    if (currentValue !== field.disabledValue) {
+      setValue(name, field.disabledValue, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [isDisabled, name, field.disabledValue, getValues, setValue]);
 
   const {
     field: fieldProps,
@@ -404,6 +419,7 @@ function FieldRenderer({
     requiredWhen: _rw,
     disabled: _d,
     required: _r,
+    disabledValue: _dv,
     ...passedField
   } = field;
 
@@ -480,12 +496,24 @@ function FieldRenderer({
       }
 
       case 'boolean-toggle': {
-        const { type: _bt, name: _bn, key: _bk, disabledValue: _bdv, ...boolToggleRest } = passedField;
+        const {
+          type: _bt,
+          name: _bn,
+          key: _bk,
+          disabledValue: _bdv,
+          ...boolToggleRest
+        } = passedField;
         return <FormBooleanToggle {...boolToggleRest} name={name} disabled={isDisabled} />;
       }
 
       case 'string-toggle': {
-        const { type: _st, name: _sn, key: _sk, disabledValue: _sdv, ...strToggleRest } = passedField;
+        const {
+          type: _st,
+          name: _sn,
+          key: _sk,
+          disabledValue: _sdv,
+          ...strToggleRest
+        } = passedField;
         return <FormStringToggle {...strToggleRest} name={name} disabled={isDisabled} />;
       }
 
@@ -515,7 +543,18 @@ function FieldRenderer({
         );
 
       case 'checkbox-group': {
-        const { type: _cgt, name: _cgn, key: _cgk, disabledValue: _cgdv, label: cgLabel, className: cgClass, wrap: cgWrap, size: cgSize, orientation: _cgOri, ...cgGroupOrOptions } = passedField;
+        const {
+          type: _cgt,
+          name: _cgn,
+          key: _cgk,
+          disabledValue: _cgdv,
+          label: cgLabel,
+          className: cgClass,
+          wrap: cgWrap,
+          size: cgSize,
+          orientation: _cgOri,
+          ...cgGroupOrOptions
+        } = passedField;
         return (
           <FormCheckboxGroup
             name={name}
@@ -530,7 +569,17 @@ function FieldRenderer({
       }
 
       case 'radio-group': {
-        const { type: _rgt, name: _rgn, key: _rgk, disabledValue: _rgdv, label: rgLabel, className: rgClass, size: rgSize, orientation: rgOri, ...rgGroupOrOptions } = passedField;
+        const {
+          type: _rgt,
+          name: _rgn,
+          key: _rgk,
+          disabledValue: _rgdv,
+          label: rgLabel,
+          className: rgClass,
+          size: rgSize,
+          orientation: rgOri,
+          ...rgGroupOrOptions
+        } = passedField;
         return (
           <FormRadioGroup
             name={name}
