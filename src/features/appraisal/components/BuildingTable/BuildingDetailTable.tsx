@@ -719,7 +719,7 @@ const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterPro
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-gray-50', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-medium">
             {footer ? footer({ rows }) : ''}
@@ -730,7 +730,7 @@ const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterPro
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-white', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-normal text-gray-400">
             {footer
@@ -743,7 +743,7 @@ const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterPro
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-white', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-normal text-gray-400">
             {footer ? footer(rows) : ''}
@@ -754,7 +754,7 @@ const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterPro
       return (
         <td
           key={inner_index}
-          className={clsx('py-1.5 px-2 sticky bottom-0 bg-white', alignClass(header.align))}
+          className={clsx('py-1.5 px-2 sticky bottom-0 ', alignClass(header.align))}
         >
           <span className="inline-flex items-center justify-center text-xs font-normal text-gray-400">
             {footer ? footer(rows.map((v: Record<string, string>) => v[header.name])) : ''}
@@ -764,9 +764,7 @@ const TableFooter = ({ type, header, rows, inner_index, footer }: TableFooterPro
     case 'group':
       return null;
     default:
-      return (
-        <td key={inner_index} className={clsx('py-1.5 px-2 sticky bottom-0 right-0 bg-white')}></td>
-      );
+      return <td key={inner_index} className={clsx('py-1.5 px-2 sticky bottom-0 right-0 ')}></td>;
   }
 };
 export default BuildingDetailTable;

@@ -5,7 +5,7 @@ import type { PropertyGroup, PropertyItem } from '../types';
 import { PropertyCard } from './PropertyCard';
 import { PropertyTable } from './PropertyTable';
 import Icon from '@shared/components/Icon';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import PropertyTypeDropdown from '@features/appraisal/components/PropertyTypeDropdown.tsx';
 
 type ViewMode = 'grid' | 'list';
@@ -21,6 +21,7 @@ interface GroupContainerProps {
   onCopy: (property: PropertyItem) => void;
   onPaste: (groupId: string) => void;
   onDelete: (property: PropertyItem, groupId: string) => void;
+  onGoToPriceAnalysis: (groupId: string) => void;
   hasClipboard: boolean;
   isDeletingGroup?: boolean;
 }
@@ -47,6 +48,7 @@ export const GroupContainer = React.memo(
     });
 
     const navigate = useNavigate();
+    const { appraisalId } = useParams<{ appraisalId: string }>();
 
     // Memoize item IDs so SortableContext doesn't get a new array reference every render
     // (especially important for empty groups where [] !== [])
@@ -94,6 +96,13 @@ export const GroupContainer = React.memo(
       [commitRename, group.name],
     );
 
+    const handleOnClickPricingButton = useCallback(() => {
+      if (!appraisalId) return; // or show toast
+      navigate(
+        `/dev/appraisal/${appraisalId}/group/${group.id}/price-analysis/019c90b2-4887-76c0-8bc7-257a8c336348`,
+      );
+    }, [appraisalId, group.id, navigate]);
+
     return (
       <div className="border border-gray-200 rounded-lg bg-white p-4">
         {/* Group Header */}
@@ -134,9 +143,13 @@ export const GroupContainer = React.memo(
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-medium">
+            <button
+              className="px-2 py-0.5 bg-orange-100 text-orange-700 hover:text-red-500 hover:bg-red-50 cursor-pointer rounded text-[10px] font-medium"
+              onClick={() => handleOnClickPricingButton()}
+              title="Appraise Collateral"
+            >
               AP
-            </span>
+            </button>
           </div>
         </div>
 

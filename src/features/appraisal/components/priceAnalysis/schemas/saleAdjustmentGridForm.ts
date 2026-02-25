@@ -1,0 +1,125 @@
+import { z } from 'zod';
+
+const ComparativeFactors = z
+  .object({
+    factorCode: z.string(),
+  })
+  .passthrough();
+
+const ComparativeSurveys = z
+  .object({
+    linkId: z.string().optional().nullable(),
+    marketId: z.string(),
+    displaySeq: z.number(),
+  })
+  .passthrough();
+
+const SaleAdjustmentGridQualitativeSurvey = z
+  .object({
+    marketId: z.string(),
+    qualitativeLevel: z.string(),
+  })
+  .passthrough();
+
+const SaleAdjustmentGridQualitative = z.object({
+  factorCode: z.string(),
+  qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey),
+});
+
+const SaleAdjustmentGridCalculation = z
+  .object({
+    marketId: z.string(),
+    offeringPrice: z.number().nullable().optional(),
+    offeringPriceMeasurementUnit: z.string().nullable().optional(),
+    offeringPriceAdjustmentPct: z.number().nullable().optional(),
+    offeringPriceAdjustmentAmt: z.number().nullable().optional(),
+    sellingPrice: z.number().nullable().optional(),
+    sellingPriceMeasurementUnit: z.string().nullable().optional(),
+    // sellingDate: z.date(), TODO
+    sellingPriceAdjustmentYear: z.number().nullable().optional(),
+    numberOfYears: z.number().nullable().optional(),
+    adjustedValue: z.number(),
+
+    // 2nd revision
+    landAreaOfDeficient: z.number().nullable().optional(),
+    landAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
+    landPrice: z.number().nullable().optional(),
+    landPriceMeasureUnit: z.number().nullable().optional(),
+    landValueIncreaseDecrease: z.number().nullable().optional(),
+    usableAreaOfDeficient: z.number().nullable().optional(),
+    usableAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
+    usableAreaPrice: z.number().nullable().optional(),
+    usableAreaPriceMeasureUnit: z.number().nullable().optional(),
+    buildingValueIncreaseDecrease: z.number().nullable().optional(),
+    totalSecondRevision: z.number().nullable().optional(),
+
+    // adjusted value
+    factorDiffPct: z.number(),
+    factorDiffAmt: z.number(),
+    totalAdjustValue: z.number(),
+
+    // adjust weight
+    weight: z.number(),
+    weightedAdjustValue: z.number(),
+  })
+  .passthrough();
+
+const SaleAdjustmentGridFinalValue = z
+  .object({
+    finalValue: z.number(),
+    finalValueRounded: z.number(),
+  })
+  .passthrough();
+
+const SaleAdjustmentGridAdjustmentPct = z
+  .object({
+    marketId: z.string(),
+    adjustPercent: z.number(),
+    adjustAmount: z.number(),
+  })
+  .passthrough();
+
+const SaleAdjustmentGridAdjustmentFactor = z
+  .object({
+    factorCode: z.string(),
+    surveys: z.array(SaleAdjustmentGridAdjustmentPct),
+    remark: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+const SaleAdjustmentGridAppraisalPrice = z
+  .object({
+    landArea: z.number().nullable().optional(),
+    usableArea: z.number().nullable().optional(),
+    appraisalPrice: z.number(),
+    appraisalPriceRounded: z.number(),
+  })
+  .passthrough();
+
+export const SaleAdjustmentGridDto = z
+  .object({
+    methodId: z.string(),
+    collateralType: z.string().nullable().optional(), // remove nullable and optional if this field is required.
+    pricingTemplateCode: z.string().nullable().optional(), // remove nullable and optional if this field is required.
+    comparativeSurveys: z.array(ComparativeSurveys),
+    comparativeFactors: z.array(ComparativeFactors),
+    /** Qualitative section */
+    saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative),
+    /** Calculation section */
+    saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation),
+    /** Adjustment Factors (adjust percentage) section */
+    saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor),
+    /** Final value section */
+    saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue,
+    /** Apprisal price section */
+    saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice,
+  })
+  .passthrough();
+
+export type SaleAdjustmentGridCalculationFormType = z.infer<typeof SaleAdjustmentGridCalculation>;
+export type SaleAdjustmentGridQualitativeSurveyFormType = z.infer<
+  typeof SaleAdjustmentGridQualitativeSurvey
+>;
+export type ComparativeFactorsFormType = z.infer<typeof ComparativeFactors>;
+export type SaleAdjustmentGridQualitativeFormType = z.infer<typeof SaleAdjustmentGridQualitative>;
+export type SaleAdjustmentGridType = z.infer<typeof SaleAdjustmentGridDto>;

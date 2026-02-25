@@ -418,6 +418,12 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     }
   };
 
+  const handleGoToPriceAnalysis = (groupId: string) => {
+    // check condition before navigate
+
+    navigate('/dev/price-analysis', { state: { groupId } });
+  };
+
   const contextMenuItems = [
     {
       label: 'Edit',
@@ -568,6 +574,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onCopy={handleCopyProperty}
                 onPaste={handlePasteProperty}
                 onDelete={handleDeleteProperty}
+                onGoToPriceAnalysis={handleGoToPriceAnalysis}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
               />
