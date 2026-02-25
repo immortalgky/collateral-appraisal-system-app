@@ -5,10 +5,7 @@ import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../../context/AppraisalContext';
-import {
-  useGetAppraisalComparables,
-  useUnlinkAppraisalComparable,
-} from '../../api/marketComparable';
+import { useGetAppraisalComparables, useUnlinkAppraisalComparable, } from '@features/appraisal/api';
 import FormCard from '@shared/components/sections/FormCard';
 import { PROPERTY_TYPES, PropertyTypeDropdown } from '../PropertyTypeDropdown';
 
@@ -179,10 +176,13 @@ export const MarketsTab = () => {
                     </span>
                   </div>
                   <div className="col-span-2 flex items-center">
-                    <Badge type="property" value={comparable.comparablePropertyType} size="xs" dot={false}>
-                      {propIcon && (
-                        <Icon name={propIcon} style="solid" className="text-[10px]" />
-                      )}
+                    <Badge
+                      type="property"
+                      value={comparable.comparablePropertyType}
+                      size="xs"
+                      dot={false}
+                    >
+                      {propIcon && <Icon name={propIcon} style="solid" className="text-[10px]" />}
                       {comparable.comparablePropertyType || '-'}
                     </Badge>
                   </div>

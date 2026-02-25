@@ -14,6 +14,7 @@ import {
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
+import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { usePropertyClipboardStore } from '../../store';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import {
@@ -47,17 +48,6 @@ const getRouteSegment = (type: string): string => {
     U: 'condo',
   };
   return typeMap[type] || 'land';
-};
-
-// Map property type to description
-const getPropertyDescription = (type: string) => {
-  const typeMap: Record<string, string> = {
-    L: 'Land',
-    B: 'Building',
-    LB: 'Land & Building',
-    U: 'Condo',
-  };
-  return typeMap[type] || 'Unknown type';
 };
 
 // Only measure droppables before a drag starts — prevents ResizeObserver
@@ -634,9 +624,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
-                    {getPropertyDescription(activeProperty.type)}
-                  </span>
+                  <ParameterDisplay group="PropertyType" code={activeProperty.type}
+                    fallback="Unknown type"
+                    className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium" />
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { Icon } from '@/shared/components';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { useState } from 'react';
 
 interface MarketComparableItem {
@@ -28,7 +29,12 @@ interface MarketComparableTableRegularHeader {
   label: string;
 }
 
-const MarketComparableTable = ({ headers, data, onSelect, onDelete }: MarketComparableTableProps) => {
+const MarketComparableTable = ({
+  headers,
+  data,
+  onSelect,
+  onDelete,
+}: MarketComparableTableProps) => {
   const isEmpty = !data || data.length === 0;
 
   // Delete confirmation state
@@ -76,7 +82,9 @@ const MarketComparableTable = ({ headers, data, onSelect, onDelete }: MarketComp
                 >
                   <td className="px-4 py-3">{item.comparableNumber}</td>
                   <td className="px-4 py-3">{item.surveyName}</td>
-                  <td className="px-4 py-3">{item.propertyType}</td>
+                  <td className="px-4 py-3">
+                    <ParameterDisplay group="PropertyType" code={item.propertyType} />
+                  </td>
                   <td className="px-4 py-3"> {new Date(item.createdOn).toLocaleString('th-TH')}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1 justify-end">

@@ -8,3 +8,4 @@ export * from './fee';
 export * from './documentChecklist';
 export * from './photo';
 export * from './gallery';
+export * from './lawAndRegulation';
