@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
+import ParameterDisplay from '@shared/components/ParameterDisplay';
 
 // Map property type to route a segment
 const getRouteSegment = (type: string): string => {
@@ -21,17 +22,6 @@ const getRouteSegment = (type: string): string => {
     U: 'condo',
   };
   return typeMap[type] || 'land';
-};
-
-// Map property type to description
-const getPropertyDescription = (type: string) => {
-  const typeMap: Record<string, string> = {
-    L: 'Land',
-    B: 'Building',
-    LB: 'Land & Building',
-    U: 'Condo',
-  };
-  return typeMap[type] || 'Unknown type';
 };
 
 interface PropertyCardProps {
@@ -152,9 +142,9 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
 
           {/* Property Type Badge - Bottom Right */}
           <div className="flex justify-end">
-            <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
-              {getPropertyDescription(property.type)}
-            </span>
+            <ParameterDisplay group="PropertyType" code={property.type}
+              fallback="Unknown type"
+              className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium" />
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
+import ParameterDisplay from '@shared/components/ParameterDisplay';
 
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
@@ -85,9 +86,8 @@ export const PropertyTableRow = ({
 
       {/* Type Badge */}
       <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
-        <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium whitespace-nowrap">
-          {property.type}
-        </span>
+        <ParameterDisplay group="PropertyType" code={property.type}
+          className="inline-block px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium whitespace-nowrap" />
       </td>
 
       {/* Area */}

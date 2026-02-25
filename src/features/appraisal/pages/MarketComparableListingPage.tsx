@@ -2,19 +2,36 @@ import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MarketComparableTable from '../components/tables/MarketComparableTable';
-import { useParametersByGroup } from '@/shared/utils/parameterUtils';
-import { useGetMarketComparables } from '../api/marketComparable';
-import { useState } from 'react';
+import { useDeleteMarketComparable, useGetMarketComparables } from '../api/marketComparable';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
+import toast from 'react-hot-toast';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 
 const MarketComparableListingPage = () => {
   const { isOpen, onToggle } = useDisclosure();
-  // Fetch market comparable data
-  const { data: marketComparables, isLoading } = useGetMarketComparables('appraisalId');
-  const collateralTypes = useParametersByGroup('collateralType');
-  const items = marketComparables?.result?.items;
+  // Fetch market comparable data (general pool, no appraisalId needed)
+  const { data: marketComparables, isLoading } = useGetMarketComparables();
+
+  const parameterValues = useParametersByGroup('PropertyType');
+  const collateralItems = useMemo(
+    () => parameterValues.map(p => ({ code: p.code, description: p.description })),
+    [parameterValues],
+  );
+  const { mutate: deleteComparable } = useDeleteMarketComparable();
+
+  const items = (marketComparables ?? []).map(item => ({
+    id: item.id ?? '',
+    comparableNumber: item.comparableNumber ?? '',
+    surveyName: item.surveyName ?? '',
+    propertyType: item.propertyType ?? '',
+    infoDateTime: item.infoDateTime ?? '',
+    sourceInfo: item.sourceInfo ?? '',
+    notes: item.notes ?? '',
+    createdOn: item.createdOn ?? '',
+  }));
 
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -29,10 +46,6 @@ const MarketComparableListingPage = () => {
     setIsOpenModal(true);
   };
 
-  const getParameterValues = (parameters: any[] | undefined, group: string) => {
-    return parameters?.find(p => p.parameterGroup === group)?.values ?? [];
-  };
-
   // Handle selection of market comparable for editing
   const handleEditSelect = (item: any) => {
     navigate(`/market-comparable/detail?id=${item.id}`, {
@@ -41,6 +54,19 @@ const MarketComparableListingPage = () => {
       },
     });
   };
+
+  // Handle deletion of market comparable
+  const handleDelete = (id: string) => {
+    deleteComparable(id, {
+      onSuccess: () => {
+        toast.success('Market comparable deleted successfully');
+      },
+      onError: () => {
+        toast.error('Failed to delete market comparable');
+      },
+    });
+  };
+
   // Handle selection of collateral type for creating new market comparable
   const handleCreateSelect = (item: any) => {
     navigate(`/market-comparable/detail?propertyType=${item.code}`);
@@ -60,7 +86,7 @@ const MarketComparableListingPage = () => {
       <div>
         <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
         <p className="text-xs text-gray-500 mt-0.5">
-          {items?.length} comparable{items?.length !== 1 ? 's' : ''} linked to this appraisal
+          {items.length} comparable{items.length !== 1 ? 's' : ''} linked to this appraisal
         </p>
       </div>
 
@@ -74,7 +100,12 @@ const MarketComparableListingPage = () => {
           <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden pt-3">
             <div className="flex-auto flex flex-col gap-6">
               <Section anchor className="flex flex-col gap-6">
-                <MarketComparableTable headers={headers} data={items} onSelect={handleEditSelect} />
+                <MarketComparableTable
+                  headers={headers}
+                  data={items}
+                  onSelect={handleEditSelect}
+                  onDelete={handleDelete}
+                />
               </Section>
             </div>
             <div className="border-t border-gray-100 sticky bottom-0 pt-3">
@@ -93,7 +124,7 @@ const MarketComparableListingPage = () => {
             </div>
             {isOpenModal && (
               <CollateralSelectModal
-                items={parameters.values}
+                items={collateralItems}
                 position={modalPosition || { x: 0, y: 0 }}
                 onSelect={handleCreateSelect}
                 onCancel={() => setIsOpenModal(false)}
@@ -104,20 +135,6 @@ const MarketComparableListingPage = () => {
       </div>
     </div>
   );
-};
-
-const parameters = {
-  parameterGroup: 'propertyType',
-  values: [
-    { code: 'Land', description: 'Land' },
-    { code: 'Building', description: 'Building' },
-    { code: 'LandAndBuilding', description: 'Land and Building' },
-    { code: 'Condo', description: 'Condominium' },
-    { code: 'Machine', description: 'Machinery' },
-    { code: 'LS', description: 'Lease Agreement Lands' },
-    { code: 'BS', description: 'Lease Agreement Building' },
-    { code: 'LBS', description: 'Lease Agreement Land and Building' },
-  ],
 };
 
 const headers = [

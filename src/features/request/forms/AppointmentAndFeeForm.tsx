@@ -19,40 +19,7 @@ const appointmentAndFeeFields: FormField[] = [
     type: 'dropdown',
     label: 'Fee Payment Type',
     name: 'detail.fee.feePaymentType',
-    options: [
-      {
-        value: '01',
-        label: 'Paid at the bank (before the appraisal date)',
-      },
-      {
-        value: '02',
-        label: 'Paid on the appraisal date',
-      },
-      {
-        value: '03',
-        label: 'Customer partially paid; remaining paid on the appraisal date',
-      },
-      {
-        value: '04',
-        label: 'Customer partially paid / bank absorbed part of the fee',
-      },
-      {
-        value: '05',
-        label: 'Exempted due to M/F',
-      },
-      {
-        value: '06',
-        label: 'Exempted due to retail customer under M/F',
-      },
-      {
-        value: '07',
-        label: 'Exempted due to other reasons',
-      },
-      {
-        value: '99',
-        label: 'Others',
-      },
-    ],
+    group: 'FeePaymentMethod',
     wrapperClassName: 'col-span-1',
     required: true,
   },

@@ -1,5 +1,6 @@
 import { Icon } from '@/shared/components';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { useState } from 'react';
 
 interface MarketComparableItem {
@@ -18,6 +19,7 @@ interface MarketComparableTableProps {
   data: MarketComparableItem[];
   parameters?: [];
   onSelect: (item: any) => void;
+  onDelete?: (id: string) => void;
 }
 
 type MarketComparableTableHeader = MarketComparableTableRegularHeader;
@@ -27,7 +29,12 @@ interface MarketComparableTableRegularHeader {
   label: string;
 }
 
-const MarketComparableTable = ({ headers, data, onSelect }: MarketComparableTableProps) => {
+const MarketComparableTable = ({
+  headers,
+  data,
+  onSelect,
+  onDelete,
+}: MarketComparableTableProps) => {
   const isEmpty = !data || data.length === 0;
 
   // Delete confirmation state
@@ -75,7 +82,9 @@ const MarketComparableTable = ({ headers, data, onSelect }: MarketComparableTabl
                 >
                   <td className="px-4 py-3">{item.comparableNumber}</td>
                   <td className="px-4 py-3">{item.surveyName}</td>
-                  <td className="px-4 py-3">{item.propertyType}</td>
+                  <td className="px-4 py-3">
+                    <ParameterDisplay group="PropertyType" code={item.propertyType} />
+                  </td>
                   <td className="px-4 py-3"> {new Date(item.createdOn).toLocaleString('th-TH')}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1 justify-end">
@@ -107,7 +116,12 @@ const MarketComparableTable = ({ headers, data, onSelect }: MarketComparableTabl
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
-        onConfirm={() => {}}
+        onConfirm={() => {
+          if (deleteConfirm.id && onDelete) {
+            onDelete(deleteConfirm.id);
+          }
+          setDeleteConfirm({ isOpen: false, id: null });
+        }}
         title="Delete Market Comparable"
         message="Are you sure you want to delete this market comparable? This action cannot be undone."
         confirmText="Delete"

@@ -1,9 +1,13 @@
 import { useController, useFormContext } from 'react-hook-form';
 import RadioGroup, { type RadioOption } from './RadioGroup';
+import type { AtLeastOne } from '@/shared/types';
 
-interface FormRadioGroupProps {
+type GroupOrOptions = AtLeastOne<{ group: string; options: RadioOption[] }>;
+
+type FormRadioGroupProps = FormRadioGroupBaseProps & GroupOrOptions;
+
+interface FormRadioGroupBaseProps {
   name: string;
-  options: RadioOption[];
   label?: string;
   disabled?: boolean;
   className?: string;
@@ -13,12 +17,12 @@ interface FormRadioGroupProps {
 
 const FormRadioGroup = ({
   name,
-  options,
   label,
   disabled,
   className,
   size,
   orientation,
+  ...groupOrOptions
 }: FormRadioGroupProps) => {
   const { control } = useFormContext();
   const {
@@ -30,7 +34,6 @@ const FormRadioGroup = ({
     <RadioGroup
       value={field.value}
       onChange={field.onChange}
-      options={options}
       label={label}
       error={error?.message}
       disabled={disabled}
@@ -38,6 +41,7 @@ const FormRadioGroup = ({
       size={size}
       orientation={orientation}
       name={name}
+      {...groupOrOptions}
     />
   );
 };

@@ -1,59 +1,69 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from '@shared/components/Button';
+import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
+import Badge from '@shared/components/Badge';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../../context/AppraisalContext';
-import { useGetMarketComparables } from '../../api/marketComparable';
+import { useGetAppraisalComparables, useUnlinkAppraisalComparable, } from '@features/appraisal/api';
 import FormCard from '@shared/components/sections/FormCard';
-import CollateralSelectModal from '../CollateralSelectModal';
+import { PROPERTY_TYPES, PropertyTypeDropdown } from '../PropertyTypeDropdown';
 
-import type { MarketComparableDtoType } from '@/shared/schemas/v1';
+import type { AppraisalComparableDtoType } from '@/shared/schemas/v1';
 
-interface MarketComparableItem {
-  id: string;
-  comparableNumber: string;
-  propertyType: string;
-  dataSource?: string;
-  transactionType?: string | null;
-  transactionDate?: string | null;
-  transactionPrice?: number | null;
-  status?: string | null;
-}
-
-const propertyTypeOptions = [
-  { code: 'Land', description: 'Land' },
-  { code: 'Building', description: 'Building' },
-  { code: 'LandAndBuilding', description: 'Land and Building' },
-  { code: 'Condo', description: 'Condominium' },
-  { code: 'Machine', description: 'Machinery' },
-  { code: 'LS', description: 'Lease Agreement Lands' },
-  { code: 'BS', description: 'Lease Agreement Building' },
-  { code: 'LBS', description: 'Lease Agreement Land and Building' },
-];
+/** Look up icon name for a property type code */
+const getPropertyIcon = (code: string | null | undefined): string | null => {
+  if (!code) return null;
+  const match = PROPERTY_TYPES.find(pt => pt.code === code);
+  return match?.icon ?? null;
+};
 
 export const MarketsTab = () => {
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
 
-  const { data: marketComparables, isLoading, isError } = useGetMarketComparables(appraisalId);
+  const {
+    data: appraisalComparables,
+    isLoading,
+    isError,
+  } = useGetAppraisalComparables(appraisalId);
+  const { mutate: unlinkComparable } = useUnlinkAppraisalComparable();
 
-  // Collateral type select modal state
-  const [modalPosition, setModalPosition] = useState<{ x: number; y: number } | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Unlink confirmation state
+  const [unlinkConfirm, setUnlinkConfirm] = useState<{ isOpen: boolean; id: string | null }>({
+    isOpen: false,
+    id: null,
+  });
 
-  const handleOpenCreateModal = (e: React.MouseEvent) => {
-    setModalPosition({ x: e.clientX, y: e.clientY });
-    setIsModalOpen(true);
+  const handleCreateSelect = (_type: string, _groupId: string, code: string) => {
+    navigate(
+      `/appraisal/${appraisalId}/property/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
+    );
   };
 
-  const handleCreateSelect = (item: any) => {
-    setIsModalOpen(false);
-    navigate(`/appraisal/${appraisalId}/property/market-comparable/new?propertyType=${item.code}`);
+  const handleViewComparable = (marketComparableId: string) => {
+    navigate(`/appraisal/${appraisalId}/property/market-comparable/${marketComparableId}`);
   };
 
-  const handleViewComparable = (comparableId: string) => {
-    navigate(`/appraisal/${appraisalId}/property/market-comparable/${comparableId}`);
+  const handleUnlink = (comparableId: string) => {
+    setUnlinkConfirm({ isOpen: true, id: comparableId });
+  };
+
+  const confirmUnlink = () => {
+    if (!appraisalId || !unlinkConfirm.id) return;
+    unlinkComparable(
+      { appraisalId, comparableId: unlinkConfirm.id },
+      {
+        onSuccess: () => {
+          toast.success('Comparable unlinked successfully');
+          setUnlinkConfirm({ isOpen: false, id: null });
+        },
+        onError: () => {
+          toast.error('Failed to unlink comparable');
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -89,18 +99,7 @@ export const MarketsTab = () => {
     );
   }
 
-  // Transform API response to match component interface
-  const comparables: MarketComparableItem[] =
-    (marketComparables as MarketComparableDtoType[] | undefined)?.map(item => ({
-      id: item.id ?? '',
-      comparableNumber: item.comparableNumber ?? '',
-      propertyType: item.propertyType ?? '',
-      dataSource: item.dataSource,
-      transactionType: item.transactionType,
-      transactionDate: item.transactionDate,
-      transactionPrice: item.transactionPrice,
-      status: item.status,
-    })) || [];
+  const comparables: AppraisalComparableDtoType[] = appraisalComparables ?? [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -109,13 +108,17 @@ export const MarketsTab = () => {
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            {comparables.length} comparable{comparables.length !== 1 ? 's' : ''} linked to this appraisal
+            {comparables.length} comparable{comparables.length !== 1 ? 's' : ''} linked to this
+            appraisal
           </p>
         </div>
-        <Button variant="primary" onClick={handleOpenCreateModal} className="flex items-center gap-2">
-          <Icon name="plus" />
-          Create Comparable
-        </Button>
+        <PropertyTypeDropdown
+          groupId=""
+          onSelectType={handleCreateSelect}
+          buttonLabel="Create Comparable"
+          disableDefaultNavigation
+          align="right"
+        />
       </div>
 
       {/* Comparable List */}
@@ -129,104 +132,109 @@ export const MarketsTab = () => {
             <p className="text-xs text-gray-400 mt-1 mb-4">
               Create a market comparable to analyze comparable properties
             </p>
-            <Button
-              variant="outline"
-              onClick={handleOpenCreateModal}
-              className="flex items-center gap-2"
-            >
-              <Icon name="plus" />
-              Create First Comparable
-            </Button>
+            <PropertyTypeDropdown
+              groupId=""
+              onSelectType={handleCreateSelect}
+              buttonLabel="Create First Comparable"
+              disableDefaultNavigation
+            />
           </div>
         </FormCard>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-primary/5 border-b border-gray-100 text-xs font-medium text-primary uppercase tracking-wider">
+            <div className="col-span-1">#</div>
             <div className="col-span-2">Comparable No.</div>
+            <div className="col-span-3">Survey Name</div>
             <div className="col-span-2">Property Type</div>
-            <div className="col-span-2">Data Source</div>
-            <div className="col-span-2">Transaction Type</div>
-            <div className="col-span-2">Price</div>
+            <div className="col-span-2">Info Date</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
 
           {/* Table Body */}
           <div className="divide-y divide-gray-100">
-            {comparables.map(comparable => (
-              <div
-                key={comparable.id}
-                className="grid grid-cols-12 gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer group"
-                onClick={() => handleViewComparable(comparable.id)}
-              >
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm font-medium text-gray-900">
-                    {comparable.comparableNumber}
-                  </span>
+            {comparables.map((comparable, index) => {
+              const propIcon = getPropertyIcon(comparable.comparablePropertyType);
+              return (
+                <div
+                  key={comparable.id}
+                  className="grid grid-cols-12 gap-4 px-4 py-3 border-l-2 border-l-transparent hover:border-l-primary hover:bg-gray-50 transition-all cursor-pointer group"
+                  onClick={() => handleViewComparable(comparable.marketComparableId)}
+                >
+                  <div className="col-span-1 flex items-center">
+                    <span className="text-xs text-gray-400 font-medium">{index + 1}</span>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <span className="text-sm font-semibold text-primary">
+                      {comparable.comparableNumber || '-'}
+                    </span>
+                  </div>
+                  <div className="col-span-3 flex items-center">
+                    <span className="text-sm text-gray-600 truncate">
+                      {comparable.comparableSurveyName || '-'}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <Badge
+                      type="property"
+                      value={comparable.comparablePropertyType}
+                      size="xs"
+                      dot={false}
+                    >
+                      {propIcon && <Icon name={propIcon} style="solid" className="text-[10px]" />}
+                      {comparable.comparablePropertyType || '-'}
+                    </Badge>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <span className="text-sm text-gray-600">
+                      {comparable.comparableInfoDateTime
+                        ? new Date(comparable.comparableInfoDateTime).toLocaleDateString('th-TH')
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex items-center justify-end gap-1.5">
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleViewComparable(comparable.marketComparableId);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                      title="Edit comparable"
+                    >
+                      <Icon name="pencil" style="solid" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleUnlink(comparable.id);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
+                      title="Unlink comparable"
+                    >
+                      <Icon name="trash-can" style="solid" />
+                    </button>
+                  </div>
                 </div>
-                <div className="col-span-2 flex items-center">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                    {comparable.propertyType}
-                  </span>
-                </div>
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-600 truncate">{comparable.dataSource || '-'}</span>
-                </div>
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-600 truncate">
-                    {comparable.transactionType || '-'}
-                  </span>
-                </div>
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm text-gray-700">
-                    {comparable.transactionPrice
-                      ? new Intl.NumberFormat('th-TH', {
-                          style: 'currency',
-                          currency: 'THB',
-                          maximumFractionDigits: 0,
-                        }).format(comparable.transactionPrice)
-                      : '-'}
-                  </span>
-                </div>
-                <div className="col-span-2 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleViewComparable(comparable.id);
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
-                    title="View comparable"
-                  >
-                    <Icon name="eye" style="solid" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleViewComparable(comparable.id);
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Edit comparable"
-                  >
-                    <Icon name="pen-to-square" style="solid" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Property Type Select Modal */}
-      {isModalOpen && (
-        <CollateralSelectModal
-          items={propertyTypeOptions}
-          position={modalPosition || { x: 0, y: 0 }}
-          onSelect={handleCreateSelect}
-          onCancel={() => setIsModalOpen(false)}
-        />
-      )}
+      {/* Unlink Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={unlinkConfirm.isOpen}
+        onClose={() => setUnlinkConfirm({ isOpen: false, id: null })}
+        onConfirm={confirmUnlink}
+        title="Unlink Comparable"
+        message="Are you sure you want to unlink this comparable from the appraisal?"
+        confirmText="Unlink"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

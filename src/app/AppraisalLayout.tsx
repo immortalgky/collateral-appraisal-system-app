@@ -38,6 +38,7 @@ const propertySubRouteLabels: Record<string, { label: string; icon: string }> = 
   condo: { label: 'Condominium', icon: 'city' },
   'land-building': { label: 'Land & Building', icon: 'house-chimney' },
   'market-comparable': { label: 'Market Comparable', icon: 'magnifying-glass-location' },
+  'law-and-regulation': { label: 'Law & Regulation', icon: 'gavel' },
 };
 
 /**
@@ -86,6 +87,8 @@ function AppraisalLayout() {
           const propertyType = pathSegments[3];
           if (propertyType === 'market-comparable') {
             propertyHrefSuffix = '?tab=markets';
+          } else if (propertyType === 'law-and-regulation') {
+            propertyHrefSuffix = '?tab=laws';
           }
         }
 

@@ -28,8 +28,8 @@ const Toggle = ({
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
 
-  // Treat undefined/null as false (second option active)
-  const isFirstActive = checked === true;
+  // Treat undefined/null as false (first option active)
+  const isFirstActive = !checked;
   const activeIndex = isFirstActive ? 0 : 1;
 
   const sizeStyles = {
@@ -45,7 +45,7 @@ const Toggle = ({
 
   const handleClick = (index: number) => {
     if (isDisabled) return;
-    onChange?.(index === 0);
+    onChange?.(index !== 0);
   };
 
   return (

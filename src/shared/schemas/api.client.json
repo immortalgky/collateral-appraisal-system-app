@@ -7623,6 +7623,49 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/comparables/{comparableId}": {
+      "delete": {
+        "tags": ["AppraisalComparables"],
+        "summary": "Unlink a market comparable from an appraisal",
+        "description": "Removes the link between a market comparable and an appraisal.",
+        "operationId": "UnlinkAppraisalComparable",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "comparableId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals/{appraisalId}/properties/{propertyId}/photos/{photoId}/set-thumbnail": {
       "put": {
         "tags": ["AppraisalGallery"],
@@ -8173,6 +8216,96 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appraisals/{appraisalId}/comparables": {
+      "post": {
+        "tags": ["AppraisalComparables"],
+        "summary": "Link a market comparable to an appraisal",
+        "description": "Links a market comparable to an appraisal for valuation comparison.",
+        "operationId": "LinkAppraisalComparable",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkAppraisalComparableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkAppraisalComparableResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["AppraisalComparables"],
+        "summary": "Get all comparables linked to an appraisal",
+        "description": "Returns all market comparables linked to the specified appraisal, including their adjustments.",
+        "operationId": "GetAppraisalComparables",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAppraisalComparablesResponse"
                 }
               }
             }
@@ -9607,6 +9740,310 @@
         }
       }
     },
+    "/api/v1/upload-sessions": {
+      "post": {
+        "tags": ["Integration - Upload Sessions"],
+        "operationId": "API - CreateUploadSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUploadSessionResponse2"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appraisal-requests/{id}/quotations": {
+      "get": {
+        "tags": ["Integration - Quotations"],
+        "operationId": "GetQuotationsForRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetQuotationsResponse2"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/quotations/{id}/approve": {
+      "post": {
+        "tags": ["Integration - Quotations"],
+        "operationId": "ApproveQuotation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveQuotationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents": {
+      "post": {
+        "tags": ["Integration - Documents"],
+        "operationId": "API - UploadDocument",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDocumentResponse2"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}": {
+      "get": {
+        "tags": ["Integration - Documents"],
+        "operationId": "GetDocumentForIntegration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDocumentResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Integration - Documents"],
+        "operationId": "DeleteDocumentForIntegration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{requestId}/resubmit": {
+      "put": {
+        "tags": ["Requests"],
+        "summary": "Resubmit an existing request",
+        "description": "Resubmits an existing request in the system.",
+        "operationId": "ResubmitRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResubmitRequestResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests": {
+      "post": {
+        "tags": ["Integration - Appraisal Requests"],
+        "operationId": "API - CreateRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequestRequest2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRequestResponse2"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/test/notifications/task-completed": {
       "post": {
         "tags": ["Test Notifications"],
@@ -10475,6 +10912,75 @@
           }
         }
       },
+      "AppraisalComparableDto": {
+        "required": [
+          "id",
+          "appraisalId",
+          "marketComparableId",
+          "sequenceNumber",
+          "weight",
+          "originalPricePerUnit",
+          "adjustedPricePerUnit",
+          "totalAdjustmentPct",
+          "weightedValue",
+          "selectionReason",
+          "notes",
+          "adjustments"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "marketComparableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          },
+          "originalPricePerUnit": {
+            "type": "number",
+            "format": "double"
+          },
+          "adjustedPricePerUnit": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAdjustmentPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "weightedValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "selectionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "adjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComparableAdjustmentDto"
+            }
+          }
+        }
+      },
       "AppraisalDto": {
         "type": "object",
         "properties": {
@@ -10702,6 +11208,17 @@
             "format": "uuid"
           }
         }
+      },
+      "ApproveQuotationRequest": {
+        "required": ["approvalReason"],
+        "type": "object",
+        "properties": {
+          "approvalReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "nullable": true
       },
       "AssignAppraisalRequest": {
         "required": ["assignmentType"],
@@ -11636,6 +12153,50 @@
           "createdOn": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "ComparableAdjustmentDto": {
+        "required": [
+          "id",
+          "adjustmentCategory",
+          "adjustmentType",
+          "adjustmentPercent",
+          "adjustmentDirection",
+          "subjectValue",
+          "comparableValue",
+          "justification"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adjustmentCategory": {
+            "type": "string"
+          },
+          "adjustmentType": {
+            "type": "string"
+          },
+          "adjustmentPercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "adjustmentDirection": {
+            "type": "string"
+          },
+          "subjectValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "comparableValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "justification": {
+            "type": "string",
             "nullable": true
           }
         }
@@ -14610,11 +15171,96 @@
           }
         }
       },
+      "CreateRequestRequest2": {
+        "required": [
+          "uploadSessionId",
+          "purpose",
+          "channel",
+          "requestor",
+          "creator",
+          "priority",
+          "isPma",
+          "detail",
+          "customers",
+          "properties",
+          "titles",
+          "documents",
+          "comments"
+        ],
+        "type": "object",
+        "properties": {
+          "uploadSessionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "requestor": {
+            "$ref": "#/components/schemas/UserInfoDto"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/UserInfoDto"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "isPma": {
+            "type": "boolean"
+          },
+          "detail": {
+            "$ref": "#/components/schemas/RequestDetailDto2"
+          },
+          "customers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestCustomerDto"
+            }
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestPropertyDto"
+            }
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestTitleDto"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestDocumentDto"
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestCommentDto"
+            }
+          }
+        }
+      },
       "CreateRequestResponse": {
         "required": ["id"],
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateRequestResponse2": {
+        "required": ["requestId"],
+        "type": "object",
+        "properties": {
+          "requestId": {
             "type": "string",
             "format": "uuid"
           }
@@ -14702,6 +15348,18 @@
           }
         }
       },
+      "CreateUploadSessionRequest": {
+        "required": ["clientReference", "externalCaseKey"],
+        "type": "object",
+        "properties": {
+          "clientReference": {
+            "type": "string"
+          },
+          "externalCaseKey": {
+            "type": "string"
+          }
+        }
+      },
       "CreateUploadSessionResponse": {
         "required": ["sessionId", "expiresAt"],
         "type": "object",
@@ -14713,6 +15371,25 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "CreateUploadSessionResponse2": {
+        "required": ["uploadSessionId", "status", "expiresAt", "limits"],
+        "type": "object",
+        "properties": {
+          "uploadSessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/UploadLimitation"
           }
         }
       },
@@ -15939,6 +16616,18 @@
           }
         }
       },
+      "GetAppraisalComparablesResponse": {
+        "required": ["comparables"],
+        "type": "object",
+        "properties": {
+          "comparables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppraisalComparableDto"
+            }
+          }
+        }
+      },
       "GetAppraisalFeesResponse": {
         "required": ["fees"],
         "type": "object",
@@ -16853,6 +17542,50 @@
             "items": {
               "$ref": "#/components/schemas/DocumentRequirementDto"
             }
+          }
+        }
+      },
+      "GetDocumentResponse": {
+        "required": [
+          "id",
+          "fileName",
+          "contentType",
+          "fileSizeBytes",
+          "documentType",
+          "category",
+          "downloadUrl",
+          "createdOn"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "documentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "downloadUrl": {
+            "type": "string"
+          },
+          "createdOn": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -18561,6 +19294,18 @@
           }
         }
       },
+      "GetQuotationsResponse2": {
+        "required": ["quotations"],
+        "type": "object",
+        "properties": {
+          "quotations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuotationDto2"
+            }
+          }
+        }
+      },
       "GetRequestByIdResponse": {
         "type": "object",
         "properties": {
@@ -19983,6 +20728,62 @@
           }
         }
       },
+      "LinkAppraisalComparableRequest": {
+        "required": ["marketComparableId", "sequenceNumber", "originalPricePerUnit"],
+        "type": "object",
+        "properties": {
+          "marketComparableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "originalPricePerUnit": {
+            "type": "number",
+            "format": "double"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "selectionReason": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "LinkAppraisalComparableResponse": {
+        "required": ["id", "sequenceNumber", "originalPricePerUnit", "weight"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "originalPricePerUnit": {
+            "type": "number",
+            "format": "double"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "LinkComparableRequest": {
         "required": ["marketComparableId", "displaySequence"],
         "type": "object",
@@ -21028,6 +21829,45 @@
           }
         }
       },
+      "QuotationDto2": {
+        "required": [
+          "id",
+          "companyId",
+          "companyName",
+          "totalAmount",
+          "status",
+          "submittedAt",
+          "isWinner"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isWinner": {
+            "type": "boolean"
+          }
+        }
+      },
       "RecalculateFactorsResponse": {
         "required": ["pricingCalculationId", "totalFactorDiffPct"],
         "type": "object",
@@ -21765,6 +22605,23 @@
             "format": "date-time"
           },
           "reason": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "ResubmitRequestResult": {
+        "required": ["status", "message"],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "errorCode": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -26231,6 +27088,44 @@
           }
         }
       },
+      "UploadDocumentResponse2": {
+        "required": ["documentId", "fileName", "contentType", "sizeInBytes"],
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "sizeInBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "UploadLimitation": {
+        "required": ["maxFiles", "maxFileBytes", "maxTotalBytes"],
+        "type": "object",
+        "properties": {
+          "maxFiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxFileBytes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxTotalBytes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "UserInfoDto": {
         "required": ["userId", "username"],
         "type": "object",
@@ -26432,10 +27327,25 @@
       "name": "Appendix"
     },
     {
+      "name": "AppraisalComparables"
+    },
+    {
       "name": "LawAndRegulation"
     },
     {
       "name": "Appointment"
+    },
+    {
+      "name": "Integration - Upload Sessions"
+    },
+    {
+      "name": "Integration - Quotations"
+    },
+    {
+      "name": "Integration - Documents"
+    },
+    {
+      "name": "Integration - Appraisal Requests"
     },
     {
       "name": "Test Notifications"

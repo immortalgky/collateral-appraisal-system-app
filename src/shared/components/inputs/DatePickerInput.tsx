@@ -1,4 +1,4 @@
-import { forwardRef, useId, useRef, useState, useEffect } from 'react';
+import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { format, formatISO, isValid, parse } from 'date-fns';
 import clsx from 'clsx';
@@ -213,7 +213,9 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
               className,
             )}
             aria-invalid={error ? 'true' : 'false'}
-            aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+            aria-describedby={
+              error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
+            }
             disabled={isDisabled}
             placeholder={placeholder}
             value={inputValue}
@@ -253,13 +255,16 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
           >
             <DayPicker
               className="react-day-picker p-3"
+              captionLayout="dropdown"
               mode="single"
+              navLayout="around"
               selected={selectedDate}
               onSelect={handleDaySelect}
               month={month}
               onMonthChange={setMonth}
               showOutsideDays
-              fixedWeeks
+              reverseYears
+              endMonth={new Date(new Date().getFullYear() + 100, 12, 0)}
             />
           </div>
         )}

@@ -4,7 +4,7 @@ import {
   ListboxOption as HeadlessListboxOption,
   ListboxOptions as HeadlessListboxOptions,
 } from '@headlessui/react';
-import { forwardRef, useMemo, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { forwardRef, type ReactNode, type SelectHTMLAttributes, useMemo } from 'react';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useParameterOptions } from '../../utils/parameterUtils';
@@ -24,7 +24,8 @@ interface ListBoxProps {
   value: string | null | unknown;
   onChange?: (value: any) => void;
   placeholder: string;
-  selectedLabel?: string;
+  //selectedLabel?: string;
+  selected?: ListBoxItem | null;
   children: ReactNode;
   disabled?: boolean;
   error?: string;
@@ -66,15 +67,12 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       return [{ value: undefined, label: placeholder, id: '' }, ...base];
     }, [options, parameterOptions, placeholder]);
 
-    const isControlled = onChange !== undefined && value !== undefined;
     const selectedOption = useMemo(
       () => dropdownOptions.find(opt => opt.value === value) ?? null,
       [dropdownOptions, value],
     );
     const selectedOnChange = (opt: ListBoxItem) => {
-      if (isControlled) {
-        onChange(opt.value);
-      }
+      onChange?.(opt.value);
     };
 
     return (
@@ -87,16 +85,17 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
         )}
         <ListBox
           ref={ref}
-          value={value === undefined ? undefined : selectedOption}
-          onChange={onChange === undefined ? undefined : selectedOnChange}
+          value={selectedOption}
+          onChange={selectedOnChange}
           placeholder={placeholder}
-          selectedLabel={selectedOption?.label}
+          //selectedLabel={selectedOption?.label}
+          selected={selectedOption}
           disabled={isDisabled}
           error={error}
         >
           {dropdownOptions.map(option => (
             <ListBoxOption key={option.id ?? option.value} value={option}>
-              {option.label}
+              {`${option.value ? `${option.value} -` : ''} ${option.label}`}
             </ListBoxOption>
           ))}
         </ListBox>
@@ -107,7 +106,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 );
 
 const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
-  ({ placeholder, selectedLabel, children, disabled, error, ...props }, ref) => {
+  ({ placeholder, selected, children, disabled, error, ...props }, ref) => {
     return (
       <HeadlessListBox disabled={disabled} by="value" {...props}>
         <div className="relative">
@@ -128,7 +127,11 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
               <Icon style="regular" name="chevron-down" className="size-3.5" />
             </div>
             <div className="px-3 py-2">
-              {selectedLabel || <span className="text-gray-400">{placeholder}</span>}
+              {selected?.value ? (
+                `${selected.value} - ${selected.label}`
+              ) : (
+                <span className="text-gray-400">{placeholder}</span>
+              )}
             </div>
           </HeadlessListboxButton>
           <HeadlessListboxOptions className="absolute left-0 mt-1 w-full bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50">
