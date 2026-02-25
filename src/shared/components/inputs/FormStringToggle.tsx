@@ -43,11 +43,11 @@ const FormStringToggle = ({ name, label, group, options, size, disabled, classNa
       options={[resolvedOptions[0].label, resolvedOptions[1].label]}
       size={size}
       error={error?.message?.toString()}
-      checked={field.value === resolvedOptions[0].name}
+      checked={field.value === resolvedOptions[1].name}
       disabled={disabled}
       className={className}
       required={required}
-      onChange={checked => field.onChange(checked ? resolvedOptions[0].name : resolvedOptions[1].name)}
+      onChange={checked => field.onChange(checked ? resolvedOptions[1].name : resolvedOptions[0].name)}
     />
   );
 };
