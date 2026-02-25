@@ -147,10 +147,11 @@ export function useInitializePriceAnalysis({
     }
   }
 
-  // // Step 2: For each property, fetch its detail (non-fatal — failures are gracefully handled)
+  // Step 2: For each property, fetch its detail (non-fatal — failures are gracefully handled)
   const propertyDetailQueries = useQueries({
     queries: allPropertyEntries.map(entry => {
       const endpoint = typeToDetailEndpoint[entry.propertyType];
+      console.log(entry.propertyId);
       return {
         queryKey: propertyGroupKeys.propertyDetail(appraisalId!, entry.propertyId),
         queryFn: async () => {
@@ -315,7 +316,6 @@ export function useInitializePriceAnalysis({
   const error = pricingConfigurationQuery.error;
 
   // Build a lookup map for property details
-
   const propertyDetailMap = new Map<string, Record<string, unknown>>();
   for (let i = 0; i < allPropertyEntries.length; i++) {
     const detail = propertyDetailQueries[i]?.data;
@@ -325,7 +325,7 @@ export function useInitializePriceAnalysis({
   }
 
   const groupDetail = groupDetailQuery.data;
-  const properties = groupDetail?.properties;
+  const properties = propertyDetailQueries[0]?.data; // if need all properties data, use `propertyDetailMap` instead for more efficiency.
   const marketSurveyDetails = marketSurveyDetailQueries.map(q => q.data);
   const pricingConfiguration = pricingConfigurationQuery.data?.approaches;
   const pricingSelection = pricingSelectionQuery.data;
@@ -335,7 +335,7 @@ export function useInitializePriceAnalysis({
   // const _property = LAND_PROPERTY;
   const initialData = {
     groupDetail: groupDetail,
-    properties: (properties ?? [])[0],
+    properties: properties,
     marketSurveyDetails,
     pricingConfiguration,
     pricingSelection,

@@ -1,12 +1,8 @@
 import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas/v1';
 import { DirectComparisonScoringSection } from './DirectComparisonScoringSection';
-import {
-  ComparativeMarketSurveySection
-} from '@features/appraisal/components/priceAnalysis/components/ComparativeMarketSurveySection.tsx';
-import {
-  DirectComparisonAdjustAppraisalPriceSection
-} from '@features/appraisal/components/priceAnalysis/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
+import { ComparativeMarketSurveySection } from '@features/appraisal/components/priceAnalysis/components/ComparativeMarketSurveySection.tsx';
+import { DirectComparisonAdjustAppraisalPriceSection } from '@features/appraisal/components/priceAnalysis/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
 
 /**
  * NOTE:

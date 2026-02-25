@@ -47,7 +47,7 @@ export interface GroupDetails {
   groupName: string;
   description: string;
   useSystemCalc: boolean;
-  groupProperties: PropertyGroupItemDto[];
+  properties: PropertyGroupItemDto[];
 }
 
 // export type MarketSurvey;

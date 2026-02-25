@@ -144,7 +144,7 @@ export function WQSScoringSection({
   useDerivedFields({ rules: scoringSurveyRules });
   useDerivedFields({ rules: totalScoreRules });
   useDerivedFields({ rules: calculationRules });
-  useDerivedFields({ rules: finalValueRules, ctx: { property: property } });
+  useDerivedFields({ rules: finalValueRules });
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';

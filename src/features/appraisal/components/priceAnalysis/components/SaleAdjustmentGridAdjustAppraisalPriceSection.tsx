@@ -5,10 +5,20 @@ import {
   useDerivedFields,
 } from '@features/appraisal/components/priceAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/appraisal/components/priceAnalysis/components/table/RHFInputCell.tsx';
+import { useFormContext } from 'react-hook-form';
 
-export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
+interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
+  property: Record<string, unknown>;
+}
+export function SaleAdjustmentGridAdjustAppraisalPriceSection({
+  property,
+}: SaleAdjustmentGridAdjustAppraisalPriceSectionProps) {
+  const { getValues } = useFormContext();
+
   const {
     finalValueRounded: finalValueRoundedPath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
     appraisalPrice: appraisalPricePath,
     appraisalPriceRounded: appraisalPriceRoundedPath,
   } = saleGridFieldPath;
@@ -17,17 +27,17 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
     {
       targetPath: appraisalPricePath(),
       deps: [finalValueRoundedPath()],
-      compute: ({ getValues, ctx }) => {
-        const collateralType = ctx?.property?.propertyType ?? '';
+      compute: ({ getValues }) => {
         const finalValue = getValues(finalValueRoundedPath()) ?? 0;
 
-        if (collateralType === 'L') {
-          const landArea = ctx?.property?.area ?? 0;
+        const landArea = getValues(landAreaPath());
+        console.log(getValues(usableAreaPath()));
+        if (landArea) {
           return finalValue * landArea;
         }
 
-        if (collateralType === 'U') {
-          const usableArea = ctx?.property?.area ?? 0;
+        const usableArea = getValues(usableAreaPath());
+        if (usableArea) {
           return finalValue * usableArea;
         }
 
@@ -50,20 +60,20 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({ property }) {
     },
   ];
 
-  useDerivedFields({ rules: rules, ctx: { property: property } });
+  useDerivedFields({ rules: rules });
 
   return (
     <div className="flex flex-col gap-4 text-sm py-2">
       {property.propertyType === 'L' && (
         <div className="grid grid-cols-12">
           <div className="col-span-3">Land Area</div>
-          <div className="col-span-1 text-right">{property.area ?? 0}</div>
+          <div className="col-span-1 text-right">{getValues(landAreaPath()) ?? 0}</div>
         </div>
       )}
       {property.propertyType === 'U' && (
         <div className="grid grid-cols-12">
           <div className="col-span-3">Usable Area</div>
-          <div className="col-span-1 text-right">{property.area ?? 0}</div>
+          <div className="col-span-1 text-right">{getValues(usableAreaPath()) ?? 0}</div>
         </div>
       )}
       <div className="grid grid-cols-12">

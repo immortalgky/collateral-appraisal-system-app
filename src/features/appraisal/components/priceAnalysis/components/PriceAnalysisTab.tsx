@@ -118,7 +118,7 @@ export function PriceAnalysisTab({
               name: priceAnalysisState.groupDetails?.groupName ?? '',
               description: priceAnalysisState.groupDetails?.description ?? '',
               useSystemCalc: priceAnalysisState.groupDetails?.useSystemCalc ?? true,
-              properties: priceAnalysisState.property ?? [],
+              properties: priceAnalysisState.groupDetails?.properties ?? [],
             }}
             onSelectCalculationMethod={startCalculation}
             onSummaryModeSave={saveSummary}

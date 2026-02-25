@@ -483,32 +483,19 @@ export function buildWQSFinalValueDerivedRules(args: {
         return round2(finalValueRounded + stdError);
       },
     },
-    // {
-    //   targetPath: finalValueLandAreaPath(),
-    //   deps: [],
-    //   compute: ({ ctx }) => {
-    //     const propertyType = ctx.property?.propertyType;
-
-    //     if (propertyType === 'L') {
-    //       return ctx.property?.area;
-    //     }
-    //     return null;
-    //   },
-    // },
     {
       targetPath: finalValueAppraisalPricePath(),
       deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
-      compute: ({ getValues, ctx }) => {
+      compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
-        const collateralType = ctx.property?.propertyType;
 
-        if (collateralType === 'L') {
-          const landArea = getValues(finalValueLandAreaPath()) ?? 0;
+        const landArea = getValues(finalValueLandAreaPath());
+        if (landArea) {
           return round2(finalValueRounded * landArea);
         }
 
-        if (collateralType === 'U') {
-          const usableArea = getValues(finalValueUsableAreaPath()) ?? 0;
+        const usableArea = getValues(finalValueUsableAreaPath());
+        if (usableArea) {
           return round2(finalValueRounded * usableArea);
         }
 

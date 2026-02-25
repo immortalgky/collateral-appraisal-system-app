@@ -11,6 +11,7 @@ import type {
   TemplateDetailType,
 } from '@features/appraisal/components/priceAnalysis/schemas/v1';
 import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue';
+import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;
@@ -88,6 +89,14 @@ export function setSaleAdjustmentGridInitialValue({
         saleAdjustmentGridFinalValue: {
           finalValue: 0,
           finalValueRounded: 0,
+        },
+        saleAdjustmentGridAppraisalPrice: {
+          landArea: property.titles
+            ? convertLandTitlesToLandArea({ titles: property.titles })
+            : undefined,
+          usableArea: property.usableArea ?? undefined,
+          appraisalPrice: 0,
+          appraisalPriceRounded: 0,
         },
       },
       { keepDirty: false, keepDirtyValues: false, keepTouched: false },
@@ -169,6 +178,14 @@ export function setSaleAdjustmentGridInitialValue({
       saleAdjustmentGridFinalValue: {
         finalValue: 0,
         finalValueRounded: 0,
+      },
+      saleAdjustmentGridAppraisalPrice: {
+        landArea: property.titles
+          ? convertLandTitlesToLandArea({ titles: property.titles })
+          : undefined,
+        usableArea: property.usableArea ?? undefined,
+        appraisalPrice: 0,
+        appraisalPriceRounded: 0,
       },
     },
     { keepDirty: false, keepDirtyValues: false, keepTouched: false },

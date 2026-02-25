@@ -87,6 +87,15 @@ const SaleAdjustmentGridAdjustmentFactor = z
   })
   .passthrough();
 
+const SaleAdjustmentGridAppraisalPrice = z
+  .object({
+    landArea: z.number().nullable().optional(),
+    usableArea: z.number().nullable().optional(),
+    appraisalPrice: z.number(),
+    appraisalPriceRounded: z.number(),
+  })
+  .passthrough();
+
 export const SaleAdjustmentGridDto = z
   .object({
     methodId: z.string(),
@@ -103,10 +112,7 @@ export const SaleAdjustmentGridDto = z
     /** Final value section */
     saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue,
     /** Apprisal price section */
-    saleAdjustmentGridAppraisalPrice: z.object({
-      appraisalPrice: z.number(),
-      appraisalPriceRounded: z.number(),
-    }),
+    saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice,
   })
   .passthrough();
 

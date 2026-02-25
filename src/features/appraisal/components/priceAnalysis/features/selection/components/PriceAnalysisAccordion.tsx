@@ -24,7 +24,7 @@ interface PriceAnalysisAccordionProps {
     name: string;
     description: string;
     useSystemCalc: boolean;
-    properties: Record<string, unknown>;
+    properties: Record<string, unknown>[];
   };
   isPriceAnalysisAccordionOpen: boolean;
   onPriceAnalysisAccordionChange: any;

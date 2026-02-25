@@ -19,8 +19,6 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
   } = wqsFieldPath;
 
-  console.log('property type', property.propertyType);
-
   return (
     <div className="flex flex-col gap-4 text-sm py-2">
       <div className="grid grid-cols-12">

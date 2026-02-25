@@ -83,6 +83,15 @@ const DirectComparisonAdjustmentFactor = z
   })
   .passthrough();
 
+const DirectComparisonAppraisalPrice = z
+  .object({
+    landArea: z.number().nullable().optional(),
+    usableArea: z.number().nullable().optional(),
+    appraisalPrice: z.number(),
+    appraisalPriceRounded: z.number(),
+  })
+  .passthrough();
+
 export const DirectComparisonDto = z
   .object({
     methodId: z.string(),
@@ -99,10 +108,7 @@ export const DirectComparisonDto = z
     /** Final value section */
     directComparisonFinalValue: DirectComparisonFinalValue,
     /** Apprisal price section */
-    directComparisonAppraisalPrice: z.object({
-      appraisalPrice: z.number(),
-      appraisalPriceRounded: z.number(),
-    }),
+    directComparisonAppraisalPrice: DirectComparisonAppraisalPrice,
   })
   .passthrough();
 

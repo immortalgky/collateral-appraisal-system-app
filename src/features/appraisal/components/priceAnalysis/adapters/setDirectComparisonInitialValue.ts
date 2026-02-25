@@ -11,6 +11,7 @@ import type {
   DirectComparisonType,
 } from '@features/appraisal/components/priceAnalysis/schemas/directComparisonForm';
 import { readFactorValue } from '@features/appraisal/components/priceAnalysis/domain/readFactorValue.ts';
+import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetDirectComparisonInitialValueProps {
   collateralType: string;
@@ -85,6 +86,14 @@ export function setDirectComparisonInitialValue({
         directComparisonFinalValue: {
           finalValue: 0,
           finalValueRounded: 0,
+        },
+        directComparisonAppraisalPrice: {
+          landArea: property.titles
+            ? convertLandTitlesToLandArea({ titles: property.titles })
+            : undefined,
+          usableArea: property.usableArea ?? undefined,
+          appraisalPrice: 0,
+          appraisalPriceRounded: 0,
         },
       },
       { keepDirty: false, keepDirtyValues: false, keepTouched: false },
@@ -165,6 +174,14 @@ export function setDirectComparisonInitialValue({
       directComparisonFinalValue: {
         finalValue: 0,
         finalValueRounded: 0,
+      },
+      directComparisonAppraisalPrice: {
+        landArea: property.titles
+          ? convertLandTitlesToLandArea({ titles: property.titles })
+          : undefined,
+        usableArea: property.usableArea ?? undefined,
+        appraisalPrice: 0,
+        appraisalPriceRounded: 0,
       },
     },
     { keepDirty: false, keepDirtyValues: false, keepTouched: false },

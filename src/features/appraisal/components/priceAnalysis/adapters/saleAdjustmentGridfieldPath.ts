@@ -84,6 +84,8 @@ export const saleGridFieldPath = {
   finalValueRounded: () => 'saleAdjustmentGridFinalValue.finalValueRounded',
 
   /** Appraisal price */
+  landArea: () => 'saleAdjustmentGridAppraisalPrice.landArea',
+  usableArea: () => 'saleAdjustmentGridAppraisalPrice.usableArea',
   appraisalPrice: () => 'saleAdjustmentGridAppraisalPrice.appraisalPrice',
   appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded',
 };

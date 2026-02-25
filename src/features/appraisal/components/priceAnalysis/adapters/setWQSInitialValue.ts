@@ -1,6 +1,7 @@
 import type { UseFormReset } from 'react-hook-form';
 import type { WQSFormType } from '../schemas/wqsForm';
 import type { MarketComparableDataType, TemplateDetailType } from '../schemas/v1';
+import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface setWQSInitialValueProps {
   collateralType: string;
@@ -34,8 +35,10 @@ export function setWQSInitialValue({
       WQSTotalScores: undefined,
       WQSCalculations: [],
       WQSFinalValue: {
-        landArea: property?.area ?? undefined,
-        usableArea: property?.area ?? undefined,
+        landArea: property.titles
+          ? convertLandTitlesToLandArea({ titles: property.titles })
+          : undefined,
+        usableArea: property?.usableArea ?? undefined,
         finalValue: 0,
         finalValueRounded: 0,
         coefficientOfDecision: 0,
@@ -70,8 +73,10 @@ export function setWQSInitialValue({
     })),
     WQSCalculations: [],
     WQSFinalValue: {
-      landArea: property?.area ?? undefined,
-      usableArea: property?.area ?? undefined,
+      landArea: property.titles
+        ? convertLandTitlesToLandArea({ titles: property.titles })
+        : undefined,
+      usableArea: property?.usableArea ?? undefined,
       finalValue: 0,
       finalValueRounded: 0,
       coefficientOfDecision: 0,
