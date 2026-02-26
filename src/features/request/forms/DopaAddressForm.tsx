@@ -106,6 +106,7 @@ export const dopaAddressFieldsTop: FormField[] = [
     label: 'House No',
     name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
@@ -142,6 +143,7 @@ export const dopaAddressFieldsTop: FormField[] = [
     postcodeField: 'dopaAddress.postcode',
     subDistrictNameField: 'dopaAddress.subDistrictName',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',

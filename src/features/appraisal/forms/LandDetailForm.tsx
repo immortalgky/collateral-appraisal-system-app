@@ -115,18 +115,20 @@ const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Latitude',
     name: 'latitude',
     wrapperClassName: 'col-span-6',
     required: true,
+    decimalPlaces: 6,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Longitude',
     name: 'longitude',
     wrapperClassName: 'col-span-6',
     required: true,
+    decimalPlaces: 6,
   },
   // Location selector (sub-district autocomplete that populates district, province, postcode)
   {
@@ -362,7 +364,7 @@ const landFillField: FormField[] = [
     label: 'Other',
     name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'in' },
+    showWhen: { field: 'landFillType', is: '99' },
   },
   {
     type: 'number-input',

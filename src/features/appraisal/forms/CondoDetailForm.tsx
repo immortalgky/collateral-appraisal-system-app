@@ -202,6 +202,7 @@ const condoFields: FormField[] = [
     name: 'latitude',
     wrapperClassName: 'col-span-4',
     required: true,
+    decimalPlaces: 6,
   },
   {
     type: 'number-input',
@@ -209,6 +210,7 @@ const condoFields: FormField[] = [
     name: 'longitude',
     wrapperClassName: 'col-span-4',
     required: true,
+    decimalPlaces: 6,
   },
   {
     type: 'dropdown',

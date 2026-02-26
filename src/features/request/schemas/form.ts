@@ -9,7 +9,7 @@ const RequestDetailDto = z.object({
   hasAppraisalBook: z.boolean(),
   loanDetail: z.object({
     bankingSegment: z.string().min(1, 'Banking segment is required.'),
-    loanApplicationNumber: z.string().nullable(),
+    loanApplicationNumber: z.string().max(10).nullable(),
     facilityLimit: z.coerce.number().min(1, 'Facility limit must be greater than 0.'),
     additionalFacilityLimit: z.number().nullable(),
     previousFacilityLimit: z.number().nullable(),
@@ -19,11 +19,11 @@ const RequestDetailDto = z.object({
   prevAppraisalValue: z.number().nullable(),
   prevAppraisalDate: z.string().nullable(),
   address: z.object({
-    houseNumber: z.string().nullable(),
-    projectName: z.string().nullable(),
-    moo: z.string().nullable(),
-    soi: z.string().nullable(),
-    road: z.string().nullable(),
+    houseNumber: z.string().max(10).min(1, 'House number is required.'),
+    projectName: z.string().max(100).nullable(),
+    moo: z.string().max(10).nullable(),
+    soi: z.string().max(100).nullable(),
+    road: z.string().max(100).nullable(),
     subDistrict: z.string().min(1, 'Sub district is required.'),
     subDistrictName: z.string().nullable(),
     district: z.string().min(1, 'District is required.'),
@@ -33,8 +33,8 @@ const RequestDetailDto = z.object({
     postcode: z.string().nullable(),
   }),
   contact: z.object({
-    contactPersonName: z.string().min(1, 'Contact person name is required.'),
-    contactPersonPhone: z.string().min(1, 'Contact person phone number is required.'),
+    contactPersonName: z.string().max(100).min(1, 'Contact person name is required.'),
+    contactPersonPhone: z.string().max(40).min(1, 'Contact person phone number is required.'),
     dealerCode: z.string().nullable(),
   }),
   appointment: z.object({
@@ -48,8 +48,8 @@ const RequestDetailDto = z.object({
   }),
 });
 const RequestCustomerDto = z.object({
-  name: z.string().min(1, 'Customer name is required.'),
-  contactNumber: z.string().min(1, 'Contact number is required.'),
+  name: z.string().max(200).min(1, 'Customer name is required.'),
+  contactNumber: z.string().max(20).min(1, 'Contact number is required.'),
 });
 const RequestPropertyDto = z.object({
   propertyType: z.string().min(1, 'Property type is required.'),
@@ -58,11 +58,11 @@ const RequestPropertyDto = z.object({
 });
 const AddressDto = z
   .object({
-    houseNumber: z.string().nullable(),
-    projectName: z.string().nullable(),
-    moo: z.string().nullable(),
-    soi: z.string().nullable(),
-    road: z.string().nullable(),
+    houseNumber: z.string().max(10).min(1, 'House number is required.'),
+    projectName: z.string().max(100).nullable(),
+    moo: z.string().max(10).nullable(),
+    soi: z.string().max(100).nullable(),
+    road: z.string().max(100).nullable(),
     subDistrict: z.string().min(1, 'Sub district is required.'),
     subDistrictName: z.string().nullable(),
     district: z.string().min(1, 'District is required.'),
@@ -95,7 +95,7 @@ const BaseTitleFields = {
   id: z.string().uuid().optional(),
   requestId: z.string().uuid().optional(),
   collateralStatus: z.boolean().optional(),
-  ownerName: z.string().nullable().optional(),
+  ownerName: z.string().max(200).nullable().optional(),
   titleAddress: AddressDto.optional(),
   dopaAddress: AddressDto.optional(),
   notes: z.string().nullable().optional(),
@@ -188,6 +188,8 @@ const LandTitleDto = z.object({
   ...VesselFields,
   collateralType: z.literal('L'),
   titleNumber: z.string().min(1, 'Title number is required'),
+  bookNumber: z.string().max(10).min(1, 'Book number is required'),
+  pageNumber: z.string().max(10).min(1, 'Page number is required'),
 });
 
 // Building title schema
@@ -360,18 +362,34 @@ export const createRequestForm = z
     comments: z.array(RequestCommentDto),
   })
   .superRefine((data, ctx) => {
-    // Loan Application Number is required when the purpose is '01' (New Loan)
+    // Loan Application Number is required when the purpose is '02' (Top Up)
     console.log('[superRefine] Running validation, purpose:', data.purpose);
-    if (data.purpose === '01') {
-      const loanAppNumber = data.detail?.loanDetail?.loanApplicationNumber;
-      const isEmpty = loanAppNumber == null || loanAppNumber.trim() === '';
-      console.log('[superRefine] loanAppNumber:', loanAppNumber, 'isEmpty:', isEmpty);
-      if (isEmpty) {
-        console.log('[superRefine] Adding error for loanApplicationNumber');
+    if (data.purpose === '02') {
+      const additionalFacilityLimit = data.detail.loanDetail.additionalFacilityLimit;
+      const previousFacilityLimit = data.detail.loanDetail.previousFacilityLimit;
+
+      if (
+        additionalFacilityLimit === null ||
+        additionalFacilityLimit === undefined ||
+        additionalFacilityLimit === 0
+      ) {
+        console.log('[superRefine] Adding error for additionalFacilityLimit');
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Loan Application No is required',
-          path: ['detail', 'loanDetail', 'loanApplicationNumber'],
+          message: 'Additional Facility Limit is required',
+          path: ['detail', 'loanDetail', 'additionalFacilityLimit'],
+        });
+      }
+      if (
+        previousFacilityLimit === null ||
+        previousFacilityLimit === undefined ||
+        previousFacilityLimit === 0
+      ) {
+        console.log('[superRefine] Adding error for previousFacilityLimit');
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Previous Facility Limit is required',
+          path: ['detail', 'loanDetail', 'previousFacilityLimit'],
         });
       }
     }

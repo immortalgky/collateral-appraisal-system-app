@@ -110,6 +110,7 @@ export const titleAddressFieldsTop: FormField[] = [
     label: 'House Number',
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
@@ -146,6 +147,7 @@ export const titleAddressFieldsTop: FormField[] = [
     postcodeField: 'titleAddress.postcode',
     subDistrictNameField: 'titleAddress.subDistrictName',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',

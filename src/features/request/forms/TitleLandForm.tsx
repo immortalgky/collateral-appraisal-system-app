@@ -29,6 +29,7 @@ const landFields: FormField[] = [
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',

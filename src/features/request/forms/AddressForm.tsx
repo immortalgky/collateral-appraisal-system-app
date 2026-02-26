@@ -20,6 +20,7 @@ const addressFields: FormField[] = [
     label: 'House No',
     name: 'houseNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
@@ -58,6 +59,7 @@ const addressFields: FormField[] = [
     postcodeField: 'detail.address.postcode',
     subDistrictNameField: 'detail.address.subDistrictName',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
 
   // Display fields (autopopulated by location-selector)

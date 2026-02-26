@@ -87,7 +87,6 @@ const requestFields: FormField[] = [
     label: 'Loan Application No',
     name: 'detail.loanDetail.loanApplicationNumber',
     wrapperClassName: 'col-span-1',
-    required: true,
   },
   {
     type: 'number-input',
@@ -101,12 +100,14 @@ const requestFields: FormField[] = [
     label: 'Increase Limit Amount',
     name: 'detail.loanDetail.additionalFacilityLimit',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: '02' },
   },
   {
     type: 'number-input',
     label: 'Old Limit Amount',
     name: 'detail.loanDetail.previousFacilityLimit',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: '02' },
   },
 ];
 
