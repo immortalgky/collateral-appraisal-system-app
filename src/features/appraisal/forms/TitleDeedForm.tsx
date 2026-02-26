@@ -12,7 +12,7 @@ const TitleDeedForm = () => {
 const titleDeedTableHeaders = [
   { rowNumberColumn: true as const, label: '#' },
   { name: 'titleNumber', label: 'Title Number', disabled: true, type: 'text-input' as const },
-  { name: 'titleType', label: 'Title Type', type: 'text-input' as const },
+  { name: 'titleType', label: 'Title Type', type: 'dropdown' as const, group: 'DeedType' },
   { name: 'bookNumber', label: 'Book Number', disabled: true, colSpan: 4 },
   { name: 'pageNumber', label: 'Page Number', disabled: true },
   { name: 'landParcelNumber', label: 'Land Number', disabled: true },
@@ -48,10 +48,7 @@ const titleDeedTableHeaders = [
     name: 'hasBoundaryMarker',
     label: 'Boundary Marker',
     type: 'dropdown' as const,
-    options: [
-      { value: '01', label: 'Found' },
-      { value: '02', label: 'Not Found' },
-    ],
+    group: 'BoundaryMarker',
   },
   {
     name: 'boundaryMarkerRemark',
@@ -62,10 +59,7 @@ const titleDeedTableHeaders = [
     name: 'isDocumentValidated',
     label: 'Document Validate',
     type: 'dropdown' as const,
-    options: [
-      { value: true, label: 'Correctly Matched' },
-      { value: false, label: 'Not Matched' },
-    ],
+    group: 'DocumentValidation',
     colSpan: 4,
     required: true,
   },
@@ -73,10 +67,7 @@ const titleDeedTableHeaders = [
     name: 'isMissingFromSurvey',
     label: 'Missed out on the survey',
     type: 'radio-group' as const,
-    options: [
-      { value: true, label: 'Yes' },
-      { value: false, label: 'No' },
-    ],
+    group: 'MissedOutOnTheSurvey',
     colSpan: 2,
     orientation: 'horizontal' as const,
   },

@@ -218,10 +218,7 @@ const condoFields: FormField[] = [
     name: 'landOffice',
     wrapperClassName: 'col-span-4',
     required: true,
-    options: [
-      { value: '0', label: 'Office 01' },
-      { value: '1', label: 'Office 02' },
-    ],
+    group: 'LandOffice',
   },
   {
     type: 'boolean-toggle',
@@ -246,13 +243,7 @@ const condoFields: FormField[] = [
     name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
     required: false,
-    options: [
-      { value: '0', label: 'New' },
-      { value: '1', label: 'Moderate' },
-      { value: '2', label: 'Old' },
-      { value: '3', label: 'Construction' },
-      { value: '4', label: 'Dilapidated' },
-    ],
+    group: 'CondoCondition',
     orientation: 'horizontal',
   },
   {
@@ -289,10 +280,7 @@ const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: [
-      { value: '1', label: 'Correct' },
-      { value: '0', label: 'Incorrect' },
-    ],
+    group: 'CondoLocation',
   },
   {
     type: 'text-input',
@@ -337,10 +325,7 @@ const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: [
-      { value: '1', label: 'Concrete' },
-      { value: '0', label: 'Soil' },
-    ],
+    group: 'Condo_RoadSurface',
   },
   {
     type: 'checkbox-group',
@@ -349,13 +334,7 @@ const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: [
-      { value: '0', label: 'Permanent Electricity' },
-      { value: '1', label: 'Tap water / ground water' },
-      { value: '2', label: 'Street Electricity' },
-      { value: '3', label: 'Manhole / Drainage pipe' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Condo_PublicUtility',
   },
   {
     type: 'text-input',
@@ -375,12 +354,7 @@ const condoDecorationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
     orientation: 'horizontal',
-    options: [
-      { value: '0', label: 'Ready to move in' },
-      { value: '1', label: 'Partially' },
-      { value: '2', label: 'None' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Decoration',
   },
   {
     type: 'text-input',
@@ -416,11 +390,7 @@ const buildingFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: [
-      { value: '0', label: 'Normal' },
-      { value: '1', label: 'Good' },
-      { value: '2', label: 'VeryGood' },
-    ],
+    group: 'BuildingForm',
   },
 ];
 
@@ -432,21 +402,8 @@ const constructionMaterialsFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: [
-      { value: '0', label: 'Normal' },
-      { value: '1', label: 'Good' },
-      { value: '2', label: 'VeryGood' },
-    ],
+    group: 'ConstructionMaterials',
   },
-];
-
-const condoRoomOptions = [
-  { value: '0', label: 'Studio' },
-  { value: '1', label: '1 Bedroom' },
-  { value: '2', label: '2 Bedroom' },
-  { value: '3', label: 'Duplex' },
-  { value: '4', label: 'Penhouse' },
-  { value: '99', label: 'Other' },
 ];
 
 const condoRoomLayoutFormFields: FormField[] = [
@@ -457,7 +414,7 @@ const condoRoomLayoutFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: condoRoomOptions,
+    group: 'RoomLayout',
   },
   {
     type: 'text-input',
@@ -469,20 +426,6 @@ const condoRoomLayoutFormFields: FormField[] = [
   },
 ];
 
-const locationViewOptions = [
-  { value: '0', label: 'Pool View' },
-  { value: '1', label: 'River View' },
-  { value: '2', label: 'Clubhouse View' },
-  { value: '3', label: 'Near/Adjacent to Elevator' },
-  { value: '4', label: 'Near/Adjacent to Trash Room' },
-  { value: '5', label: 'Corner Room' },
-  { value: '6', label: 'Garden View' },
-  { value: '7', label: 'City View' },
-  { value: '8', label: 'Sea View' },
-  { value: '9', label: 'Mountain View' },
-  { value: '10', label: 'Central Floor (or Central Area)' },
-];
-
 const locationViewFormFields: FormField[] = [
   {
     type: 'checkbox-group',
@@ -491,37 +434,8 @@ const locationViewFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: locationViewOptions,
+    group: 'LocationView',
   },
-];
-
-const groundFlooringMaterialsOptions = [
-  { value: '0', label: 'Polished concrete' },
-  { value: '1', label: 'Glazed tiles' },
-  { value: '2', label: 'Parquet' },
-  { value: '3', label: 'Marble' },
-  { value: '4', label: 'Granite' },
-  { value: '5', label: 'Laminate' },
-  { value: '6', label: 'Rubber tiles' },
-  { value: '99', label: 'Other' },
-];
-
-const upperFlooringMaterialsOptions = [
-  { value: '0', label: 'Polished concrete' },
-  { value: '1', label: 'Glazed tiles' },
-  { value: '2', label: 'Parquet' },
-  { value: '3', label: 'Marble' },
-  { value: '4', label: 'Granite' },
-  { value: '5', label: 'Laminate' },
-  { value: '6', label: 'Rubber tiles' },
-  { value: '99', label: 'Other' },
-];
-
-const bathroomFlooringMaterialsOptions = [
-  { value: '0', label: 'Polished concrete' },
-  { value: '1', label: 'Glazed tiles' },
-  { value: '2', label: 'Marble' },
-  { value: '99', label: 'Other' },
 ];
 
 const floorFormFields: FormField[] = [
@@ -532,7 +446,7 @@ const floorFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: groundFlooringMaterialsOptions,
+    group: 'GroundFlooringMaterials',
   },
   {
     type: 'text-input',
@@ -548,7 +462,7 @@ const floorFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: upperFlooringMaterialsOptions,
+    group: 'UpperFlooringMaterials',
   },
   {
     type: 'text-input',
@@ -564,7 +478,7 @@ const floorFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: bathroomFlooringMaterialsOptions,
+    group: 'BathroomFlooringMaterials',
   },
   {
     type: 'text-input',
@@ -575,19 +489,6 @@ const floorFormFields: FormField[] = [
   },
 ];
 
-const roofOptions = [
-  { value: '0', label: 'Reinforced Concrete' },
-  { value: '1', label: 'Tiles' },
-  { value: '2', label: 'Corrugated Tiles' },
-  { value: '3', label: 'Duplex' },
-  { value: '4', label: 'Metal sheet' },
-  { value: '5', label: 'Vinyl' },
-  { value: '6', label: 'Terracotta Tiles' },
-  { value: '7', label: 'Zinc' },
-  { value: '8', label: 'Unable to verify' },
-  { value: '99', label: 'Other' },
-];
-
 const roofFormFields: FormField[] = [
   {
     type: 'radio-group',
@@ -596,7 +497,7 @@ const roofFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: roofOptions,
+    group: 'Condo_Roof',
   },
   {
     type: 'text-input',
@@ -645,27 +546,6 @@ const expropriationFields: FormField[] = [
   },
 ];
 
-const condoFacilityOptions = [
-  { value: '0', label: 'Passenger Elevator' },
-  { value: '1', label: 'Hallway' },
-  { value: '2', label: 'Parking' },
-  { value: '3', label: 'Fire Escape' },
-  { value: '4', label: 'Fire Extinguishing System' },
-  { value: '5', label: 'Swimming Pool' },
-  { value: '6', label: 'Fitness Room' },
-  { value: '7', label: 'Garden' },
-  { value: '8', label: 'Outdoor' },
-  { value: '9', label: 'Club' },
-  { value: '10', label: 'Steam Room' },
-  { value: '11', label: 'Security System' },
-  { value: '12', label: 'Key card System' },
-  { value: '13', label: 'Legal Entity' },
-  { value: '14', label: 'Garbage Disposal Point' },
-  { value: '15', label: 'Waste Disposal and System' },
-  { value: '16', label: 'Kindergarten' },
-  { value: '99', label: 'Other' },
-];
-
 const condoFacilityFields: FormField[] = [
   {
     type: 'checkbox-group',
@@ -674,7 +554,7 @@ const condoFacilityFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: condoFacilityOptions,
+    group: 'Facilities',
   },
   {
     type: 'text-input',
@@ -685,17 +565,6 @@ const condoFacilityFields: FormField[] = [
   },
 ];
 
-const environmentOptions = [
-  { value: '0', label: 'Highly Densely Populated Residential Area' },
-  { value: '1', label: 'Moderately Densely Populated Residential Area' },
-  { value: '2', label: 'Low-Density Residential Area' },
-  { value: '3', label: 'Sparsely Populated Residential Area, Rural' },
-  { value: '4', label: 'Vacant Land, Far from Community' },
-  { value: '5', label: 'Commercial Area' },
-  { value: '6', label: 'Industrial Area' },
-  { value: '7', label: 'Agricultural Area' },
-];
-
 const environmentFields: FormField[] = [
   {
     type: 'checkbox-group',
@@ -704,7 +573,7 @@ const environmentFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     orientation: 'horizontal',
-    options: environmentOptions,
+    group: 'Environment',
   },
 ];
 

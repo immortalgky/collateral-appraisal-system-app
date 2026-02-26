@@ -142,6 +142,7 @@ const landInfoField: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
 
   // Display fields (autopopulated by location-selector)
@@ -163,10 +164,7 @@ const landInfoField: FormField[] = [
     type: 'dropdown',
     label: 'Land Office',
     name: 'landOffice',
-    options: [
-      { label: 'Bangkok Land Office', value: 'Bangkok Land Office' },
-      { label: 'Land Office', value: 'Land Office' },
-    ],
+    group: 'LandOffice',
     wrapperClassName: 'col-span-3',
     required: true,
   },
@@ -224,11 +222,7 @@ const landLocationField: FormField[] = [
     label: 'Check By',
     name: 'landCheckMethodType',
     orientation: 'horizontal',
-    options: [
-      { value: 'plot', label: 'Plot' },
-      { value: 'rawang', label: 'Rawang' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'CheckBy',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -275,51 +269,21 @@ const landLocationField: FormField[] = [
     label: 'Land Shape',
     name: 'landShapeType',
     wrapperClassName: 'col-span-6',
-    options: [
-      {
-        value: 'A shape with soil, space is appropriate for development made a very beneficial',
-        label: 'A shape with soil, space is appropriate for development made a very beneficial',
-      },
-      {
-        value: 'A shape with soil, space is appropriate for development benefit and medium',
-        label: 'A shape with soil, space is appropriate for development benefit and medium',
-      },
-      {
-        value: 'A shape with soil, space, there are no appropriate development benefits',
-        label: 'A shape with soil, space, there are no appropriate development benefits',
-      },
-    ],
+    group: 'LandShape',
   },
   {
     type: 'dropdown',
     label: 'Type of urban plan',
     name: 'urbanPlanningType',
     wrapperClassName: 'col-span-6',
-    options: [
-      {
-        value: 'Commerce or commercial district',
-        label: 'Commerce or commercial district',
-      },
-      {
-        value: 'A very dense residential area',
-        label: 'A very dense residential area',
-      },
-    ],
+    group: 'TypeOfUrbanPlanning',
   },
   {
     type: 'checkbox-group',
     label: 'Location',
     name: 'landZoneType',
     orientation: 'horizontal',
-    options: [
-      { value: 'SanitaryZone', label: 'Sanitary Zone' },
-      { value: 'Municipality', label: 'Municipality' },
-      {
-        value: 'Subdistrict Administrative Organization Area',
-        label: 'Subdistrict Administrative Organization Area',
-      },
-      { value: 'Bangkok Metropolitan Area', label: 'Bangkok Metropolitan Area' },
-    ],
+    group: 'Location',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -329,11 +293,7 @@ const plotLocationField: FormField[] = [
     type: 'checkbox-group',
     name: 'plotLocationType',
     orientation: 'horizontal',
-    options: [
-      { value: 'ShowHouse', label: 'Show House' },
-      { value: 'CornerPlot', label: 'Corner Plot' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'PlotLocation',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -350,13 +310,7 @@ const landFillField: FormField[] = [
     type: 'radio-group',
     name: 'landFillType',
     orientation: 'horizontal',
-    options: [
-      { value: 'Empty Land', label: 'Empty Land' },
-      { value: 'Filled', label: 'Filled' },
-      { value: 'Not Filled yet', label: 'Not Filled yet' },
-      { value: 'Partially Filled', label: 'Partially Filled' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Landfill',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -420,11 +374,7 @@ const roadField: FormField[] = [
     label: 'Land Accessibility',
     name: 'landAccessibilityType',
     orientation: 'horizontal',
-    options: [
-      { value: 'Able', label: 'Able' },
-      { value: 'Unable', label: 'Unable' },
-      { value: 'IsAlteration', label: 'Is Alteration' },
-    ],
+    group: 'LandAccessibility',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -440,13 +390,7 @@ const roadSurfaceField: FormField[] = [
     type: 'radio-group',
     name: 'roadSurfaceType',
     orientation: 'horizontal',
-    options: [
-      { value: 'ReinforcedConcrete', label: 'Reinforced Concrete' },
-      { value: 'Gravel/CrushedStone', label: 'Gravel/Crushed Stone' },
-      { value: 'Soil', label: 'Soil' },
-      { value: 'Paved', label: 'Paved' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'RoadSurface',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -463,13 +407,7 @@ const publicUtilityField: FormField[] = [
     type: 'checkbox-group',
     name: 'publicUtilityType',
     orientation: 'horizontal',
-    options: [
-      { value: 'PermanentElectricity', label: 'Permanent Electricity' },
-      { value: 'TapWater/Groundwater', label: 'Tap Water/Groundwater' },
-      { value: 'DrainagePipe/Sump', label: 'Drainage Pipe/Sump' },
-      { value: 'Streetlight', label: 'Streetlight' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'PublicUtility',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -486,13 +424,7 @@ const landUseField: FormField[] = [
     type: 'checkbox-group',
     name: 'landUseType',
     orientation: 'horizontal',
-    options: [
-      { value: 'Residential', label: 'Residential' },
-      { value: 'Commercial', label: 'Commercial' },
-      { value: 'Industrial', label: 'Industrial' },
-      { value: 'Agricultural', label: 'Agricultural' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'LandUse',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -509,13 +441,7 @@ const landEntranceField: FormField[] = [
     type: 'checkbox-group',
     name: 'landEntranceExitType',
     orientation: 'horizontal',
-    options: [
-      { value: 'PublicInterest', label: 'Public Interest' },
-      { value: 'InsideAllocationProject', label: 'Inside the  Allocation Project' },
-      { value: 'Personal', label: 'Personal' },
-      { value: 'Servitude', label: 'Servitude' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'LandEntranceExit',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -532,13 +458,7 @@ const transpotationField: FormField[] = [
     type: 'checkbox-group',
     name: 'transportationAccessType',
     orientation: 'horizontal',
-    options: [
-      { value: 'Car', label: 'Car' },
-      { value: 'Bus', label: 'Bus' },
-      { value: 'Ship', label: 'Ship' },
-      { value: 'Footpath', label: 'Footpath' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Transportation',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -555,12 +475,7 @@ const anticipationProsperityField: FormField[] = [
     type: 'radio-group',
     name: 'propertyAnticipationType',
     orientation: 'horizontal',
-    options: [
-      { value: 'VeryProsperous', label: 'Very Prosperous' },
-      { value: 'Moderate', label: 'Moderate' },
-      { value: 'LikelyProsperFuture', label: 'Likely to Prosper in the Future' },
-      { value: 'LittleChanceProsperity', label: 'Little Chance of Prosperity' },
-    ],
+    group: 'AnticipationOfProsperity',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -677,11 +592,7 @@ const evictionField: FormField[] = [
     type: 'checkbox-group',
     name: 'evictionType',
     orientation: 'horizontal',
-    options: [
-      { value: 'PermanentElectricity', label: 'Permanent Electricity' },
-      { value: 'SubwayLine', label: 'Subway Line' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Eviction',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -698,10 +609,7 @@ const allocationField: FormField[] = [
     type: 'radio-group',
     name: 'allocationType',
     orientation: 'horizontal',
-    options: [
-      { value: 'AllocateNewProjects', label: 'Allocate Projects' },
-      { value: 'NotAllocate', label: 'Not Allocate' },
-    ],
+    group: 'Allocation',
     wrapperClassName: 'col-span-12',
   },
 ];
