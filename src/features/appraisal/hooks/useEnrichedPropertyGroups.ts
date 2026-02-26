@@ -35,7 +35,7 @@ function formatArea(area: number | null | undefined, propertyType: string | unde
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyItem {
+export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyItem {
   const photos: PropertyPhoto[] = (item.photos ?? []).map(p => ({
     documentId: p.documentId,
     isThumbnail: p.isThumbnail,
@@ -128,6 +128,7 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
           description: apiGroup.description,
           groupNumber: apiGroup.groupNumber,
           useSystemCalc: apiGroup.useSystemCalc,
+          pricingAnalysisId: groupDetail?.pricingAnalysisId ?? null,
         };
       }),
     [groupsData, groupDetailData],

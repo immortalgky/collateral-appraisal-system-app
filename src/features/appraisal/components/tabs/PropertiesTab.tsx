@@ -419,9 +419,13 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   };
 
   const handleGoToPriceAnalysis = (groupId: string) => {
-    // check condition before navigate
-
-    navigate('/dev/price-analysis', { state: { groupId } });
+    const group = groups.find(g => g.id === groupId);
+    const paId = group?.pricingAnalysisId;
+    if (paId) {
+      navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${paId}`);
+    } else {
+      navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis`);
+    }
   };
 
   const contextMenuItems = [

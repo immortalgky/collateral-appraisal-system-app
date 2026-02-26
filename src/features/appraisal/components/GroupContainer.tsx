@@ -5,7 +5,6 @@ import type { PropertyGroup, PropertyItem } from '../types';
 import { PropertyCard } from './PropertyCard';
 import { PropertyTable } from './PropertyTable';
 import Icon from '@shared/components/Icon';
-import { useNavigate, useParams } from 'react-router-dom';
 import PropertyTypeDropdown from '@features/appraisal/components/PropertyTypeDropdown.tsx';
 
 type ViewMode = 'grid' | 'list';
@@ -38,6 +37,7 @@ export const GroupContainer = React.memo(
     onCopy,
     onPaste,
     onDelete,
+    onGoToPriceAnalysis,
     hasClipboard,
     isDeletingGroup = false,
   }: GroupContainerProps) => {
@@ -47,8 +47,6 @@ export const GroupContainer = React.memo(
       data: droppableData,
     });
 
-    const navigate = useNavigate();
-    const { appraisalId } = useParams<{ appraisalId: string }>();
 
     // Memoize item IDs so SortableContext doesn't get a new array reference every render
     // (especially important for empty groups where [] !== [])
@@ -97,11 +95,8 @@ export const GroupContainer = React.memo(
     );
 
     const handleOnClickPricingButton = useCallback(() => {
-      if (!appraisalId) return; // or show toast
-      navigate(
-        `/dev/appraisal/${appraisalId}/group/${group.id}/price-analysis/019c90b2-4887-76c0-8bc7-257a8c336348`,
-      );
-    }, [appraisalId, group.id, navigate]);
+      onGoToPriceAnalysis(group.id);
+    }, [onGoToPriceAnalysis, group.id]);
 
     return (
       <div className="border border-gray-200 rounded-lg bg-white p-4">
