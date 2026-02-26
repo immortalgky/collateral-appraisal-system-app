@@ -94,8 +94,10 @@ export function buildWQSCalculationDerivedRules(args: {
   const { surveys = [] } = args;
   const {
     calculationAdjustedValue: calculationAdjustedValuePath,
+    calculationOfferingPrice: calculationOfferingPricePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
+    calculationSellingPrice: calculationSellingPricePath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
@@ -112,40 +114,26 @@ export function buildWQSCalculationDerivedRules(args: {
             calculationAdjustmentYearPath({ column: columnIndex }),
           ],
           compute: ({ getValues }) => {
-            const offeringPrice = survey.factorData?.find(f => f.factorCode === '17');
-            const offeringPriceValue = offeringPrice
-              ? readFactorValue({
-                  dataType: offeringPrice.dataType,
-                  fieldDecimal: offeringPrice.fieldDecimal,
-                  value: offeringPrice.value,
-                })
-              : undefined;
-            if (offeringPriceValue) {
+            const offeringPrice = getValues(calculationOfferingPricePath({ column: columnIndex }));
+            if (offeringPrice) {
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValue(
-                offeringPriceValue,
+                offeringPrice,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
               );
             }
-            const sellingPrice = survey.factorData?.find(f => f.factorCode === '21');
-            const sellingPriceValue = sellingPrice
-              ? readFactorValue({
-                  dataType: sellingPrice.dataType,
-                  fieldDecimal: sellingPrice.fieldDecimal,
-                  value: sellingPrice.value,
-                })
-              : undefined;
-            if (sellingPriceValue) {
+            const sellingPrice = getValues(calculationSellingPricePath({ column: columnIndex }));
+            if (sellingPrice) {
               const numberOfYears =
                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
-                sellingPriceValue,
+                sellingPrice,
                 numberOfYears,
                 sellingPriceAdjustmentYearPct,
               );
@@ -160,10 +148,7 @@ export function buildWQSCalculationDerivedRules(args: {
               getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
             const adjustPercent =
               getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
-            const totalAdjustSellingPricePercent = calcAdjustedValueFromSellingPrice(
-              calculationNumberOfYears,
-              adjustPercent,
-            );
+            const totalAdjustSellingPricePercent = calculationNumberOfYears * adjustPercent;
             return totalAdjustSellingPricePercent;
           },
         },

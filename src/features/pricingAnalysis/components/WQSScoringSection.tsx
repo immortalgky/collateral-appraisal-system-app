@@ -279,7 +279,9 @@ export function WQSScoringSection({
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) =>
-                              value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                              value
+                                ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                                : ''
                             }
                           />
                         ) : (
@@ -720,7 +722,7 @@ export function WQSScoringSection({
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '21',
+                  (f: FactorDataType) => f.factorCode === '47',
                 );
                 if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
