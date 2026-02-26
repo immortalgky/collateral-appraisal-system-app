@@ -418,6 +418,16 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     }
   };
 
+  const handleGoToPriceAnalysis = (groupId: string) => {
+    const group = groups.find(g => g.id === groupId);
+    const paId = group?.pricingAnalysisId;
+    if (paId) {
+      navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${paId}`);
+    } else {
+      navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis`);
+    }
+  };
+
   const contextMenuItems = [
     {
       label: 'Edit',
@@ -568,6 +578,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onCopy={handleCopyProperty}
                 onPaste={handlePasteProperty}
                 onDelete={handleDeleteProperty}
+                onGoToPriceAnalysis={handleGoToPriceAnalysis}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
               />

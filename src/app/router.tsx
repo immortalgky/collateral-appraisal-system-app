@@ -24,6 +24,7 @@ import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalCon
 import { ProtectedRoute } from '@features/auth/components';
 import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
 import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
+import PriceAnalysisPage from '@features/pricingAnalysis/pages/PriceAnalysisPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -235,6 +236,14 @@ export const router = createBrowserRouter([
       {
         path: 'summary',
         element: <PlaceholderPage title="Summary & Decision" />,
+      },
+      {
+        path: 'groups/:groupId/pricing-analysis',
+        element: <PriceAnalysisPage />,
+      },
+      {
+        path: 'groups/:groupId/pricing-analysis/:pricingAnalysisId',
+        element: <PriceAnalysisPage />,
       },
     ],
   },

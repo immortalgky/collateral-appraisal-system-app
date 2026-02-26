@@ -38,6 +38,7 @@ export interface PropertyGroup {
   description?: string | null;
   groupNumber?: number;
   useSystemCalc?: boolean;
+  pricingAnalysisId?: string | null;
 }
 
 export interface PropertyClipboardStore {
