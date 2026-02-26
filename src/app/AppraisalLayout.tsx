@@ -29,6 +29,7 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   summary: { label: 'Summary & Decision', icon: 'clipboard-check' },
   property: { label: 'Property Information', icon: 'buildings' },
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
+  groups: { label: 'Groups', icon: 'layer-group' },
 };
 
 // Labels for property sub-routes
@@ -90,6 +91,21 @@ function AppraisalLayout() {
           } else if (propertyType === 'law-and-regulation') {
             propertyHrefSuffix = '?tab=laws';
           }
+        }
+
+        // Pricing analysis: /appraisal/:id/groups/:groupId/pricing-analysis[/:pricingAnalysisId]
+        if (pageSegment === 'groups' && pathSegments.includes('pricing-analysis')) {
+          items.push({
+            label: 'Property Information',
+            href: `/appraisal/${appraisalId}/property`,
+            icon: 'buildings',
+          });
+          items.push({
+            label: 'Pricing Analysis',
+            href: location.pathname,
+            icon: 'chart-mixed',
+          });
+          return items;
         }
 
         // Add page breadcrumb

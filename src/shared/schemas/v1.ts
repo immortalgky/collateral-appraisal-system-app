@@ -2117,6 +2117,7 @@ const GetPropertyGroupByIdResponse = z
     description: z.string().nullable(),
     useSystemCalc: z.boolean(),
     properties: z.array(PropertyGroupItemDto),
+    pricingAnalysisId: z.string().uuid().nullable(),
   })
   .passthrough();
 const DeletePropertyGroupResponse = z.object({ success: z.boolean() }).passthrough();
