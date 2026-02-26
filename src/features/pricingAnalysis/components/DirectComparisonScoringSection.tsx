@@ -167,7 +167,7 @@ export const DirectComparisonScoringSection = ({
     });
   }, [comparativeSurveys, qualitativeFactorFields]);
 
-  useDerivedFields({ rules: calculationRules });
+  useDerivedFields({ rules: calculationRules, ctx: { property: property } });
   useDerivedFields({ rules: adjustPercentDefaultRules });
   useDerivedFields({ rules: adjustAmountRules });
   useDerivedFields({ rules: finalValueRules });
@@ -259,7 +259,9 @@ export const DirectComparisonScoringSection = ({
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="display"
                           accessor={({ value }) =>
-                            value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                            value
+                              ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                              : ''
                           }
                         />
                       ) : (
@@ -407,9 +409,14 @@ export const DirectComparisonScoringSection = ({
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                const offeringPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '17',
+                const findOfferingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '25',
                 );
+                const offeringPrice = readFactorValue({
+                  dataType: findOfferingPrice?.dataType,
+                  fieldDecimal: findOfferingPrice?.fieldDecimal,
+                  value: findOfferingPrice?.value,
+                });
                 if (!offeringPrice)
                   return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -432,9 +439,14 @@ export const DirectComparisonScoringSection = ({
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                const offeringPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '17',
+                const findOfferingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '25',
                 );
+                const offeringPrice = readFactorValue({
+                  dataType: findOfferingPrice?.dataType,
+                  fieldDecimal: findOfferingPrice?.fieldDecimal,
+                  value: findOfferingPrice?.value,
+                });
                 if (!offeringPrice)
                   return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -455,7 +467,7 @@ export const DirectComparisonScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '21',
+                  (f: FactorDataType) => f.factorCode === '47',
                 );
                 if (!sellingPrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
@@ -477,6 +489,16 @@ export const DirectComparisonScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
+                const findSellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '47',
+                );
+                const sellingPrice = readFactorValue({
+                  dataType: findSellingPrice?.dataType,
+                  fieldDecimal: findSellingPrice?.fieldDecimal,
+                  value: findSellingPrice?.value,
+                });
+                if (!sellingPrice)
+                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
                   <td key={survey.id} className={clsx('text-right', surveyColumnBody)}>
                     <RHFInputCell
@@ -494,9 +516,14 @@ export const DirectComparisonScoringSection = ({
                 Adjusted Selling Price
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '21',
+                const findSellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '47',
                 );
+                const sellingPrice = readFactorValue({
+                  dataType: findSellingPrice?.dataType,
+                  fieldDecimal: findSellingPrice?.fieldDecimal,
+                  value: findSellingPrice?.value,
+                });
                 if (!sellingPrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
@@ -519,9 +546,14 @@ export const DirectComparisonScoringSection = ({
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '21',
+                const findSellingPrice = survey.factorData?.find(
+                  (f: FactorDataType) => f.factorCode === '47',
                 );
+                const sellingPrice = readFactorValue({
+                  dataType: findSellingPrice?.dataType,
+                  fieldDecimal: findSellingPrice?.fieldDecimal,
+                  value: findSellingPrice?.value,
+                });
                 if (!sellingPrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
@@ -584,7 +616,9 @@ export const DirectComparisonScoringSection = ({
                         fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
                         accessor={({ value }) =>
-                          value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                          value
+                            ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                            : ''
                         }
                       />
                     }
