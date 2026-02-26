@@ -110,11 +110,7 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
         <FormFields fields={buildingArea} />
         <div className="col-span-12">
           <BuildingDetail
-            name={
-              prefix != null
-                ? `${prefix}.depreciationDetails`
-                : 'depreciationDetails'
-            }
+            name={prefix != null ? `${prefix}.depreciationDetails` : 'depreciationDetails'}
           />
         </div>
       </SectionRow>
@@ -181,13 +177,7 @@ const buildingInfoField: FormField[] = [
   {
     type: 'radio-group',
     label: 'Building Condition',
-    options: [
-      { value: 'NEW', label: 'New' },
-      { value: 'MODERATE', label: 'Moderate' },
-      { value: 'OLD', label: 'Old' },
-      { value: 'CONSTRUCTION', label: 'Construction' },
-      { value: 'DILAPIDATED', label: 'Dilapidated' },
-    ],
+    group: 'BuildingCondition',
     orientation: 'horizontal',
     name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
@@ -242,23 +232,7 @@ const buildingTypeField: FormField[] = [
     type: 'radio-group',
     name: 'buildingType',
     orientation: 'horizontal',
-    options: [
-      { value: 'SGH', label: 'Single House' },
-      { value: 'TWH', label: 'Twin House' },
-      { value: 'TNH', label: 'Townhouse' },
-      { value: 'CMB', label: 'Commercial Building' },
-      { value: 'UNT', label: 'Condominium' },
-      { value: 'PROJ', label: 'Project' },
-      { value: 'OFC', label: 'Office' },
-      { value: 'HTL', label: 'Hotel' },
-      { value: 'DPS', label: 'Department Store' },
-      { value: 'FAC', label: 'Factory' },
-      { value: 'WH', label: 'Warehouse' },
-      { value: 'APT', label: 'Apartment' },
-      { value: 'RSB', label: 'Residential Building' },
-      { value: 'L', label: 'Land' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'BuildingType',
     wrapperClassName: 'col-span-12',
     required: true,
   },
@@ -283,12 +257,7 @@ const decorationField: FormField[] = [
     type: 'radio-group',
     name: 'decorationType',
     orientation: 'horizontal',
-    options: [
-      { value: 'RDTM', label: 'Ready to move in' },
-      { value: 'PRT', label: 'Partially' },
-      { value: 'NONE', label: 'None' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Decoration',
     wrapperClassName: 'col-span-12',
     required: true,
   },
@@ -330,12 +299,7 @@ const buildingMaterialField: FormField[] = [
     type: 'radio-group',
     name: 'buildingMaterialType',
     orientation: 'horizontal',
-    options: [
-      { value: 'VERYGOOD', label: 'Very Good' },
-      { value: 'GOOD', label: 'Good' },
-      { value: 'MODERATE', label: 'Moderate' },
-      { value: 'FE', label: 'Fair Enough' },
-    ],
+    group: 'BuildingMaterial',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -345,12 +309,7 @@ const buildingStyleField: FormField[] = [
     type: 'radio-group',
     name: 'buildingStyleType',
     orientation: 'horizontal',
-    options: [
-      { value: 'VERYGOOD', label: 'Very Good' },
-      { value: 'GOOD', label: 'Good' },
-      { value: 'MODERATE', label: 'Moderate' },
-      { value: 'FE', label: 'Fair Enough' },
-    ],
+    group: 'BuildingStyle',
     wrapperClassName: 'col-span-12',
   },
 ];
@@ -382,11 +341,7 @@ const constructionStyleField: FormField[] = [
     type: 'radio-group',
     name: 'constructionStyleType',
     orientation: 'horizontal',
-    options: [
-      { value: 'BUILDING', label: 'Building' },
-      { value: 'HTB', label: 'Half-Timbered Building' },
-      { value: 'WOOD', label: 'Wood' },
-    ],
+    group: 'ConstructionStyle',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -403,13 +358,7 @@ const generalStructureField: FormField[] = [
     type: 'checkbox-group',
     name: 'structureType',
     orientation: 'horizontal',
-    options: [
-      { value: 'RFC', label: 'Reinforced Concrete' },
-      { value: 'STEEL', label: 'Steel' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'CANTCHECK', label: "Can't Check" },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'GeneralStructure',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -426,13 +375,7 @@ const roofFrameField: FormField[] = [
     type: 'checkbox-group',
     name: 'roofFrameType',
     orientation: 'horizontal',
-    options: [
-      { value: 'RFC', label: 'Reinforced Concrete' },
-      { value: 'STEEL', label: 'Steel' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'CANTCHECK', label: "Can't Check" },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'RoofFrame',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -449,13 +392,7 @@ const roofField: FormField[] = [
     type: 'checkbox-group',
     name: 'roofType',
     orientation: 'horizontal',
-    options: [
-      { value: 'RFC', label: 'Reinforced Concrete' },
-      { value: 'STEEL', label: 'Steel' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'CANTCHECK', label: "Can't Check" },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Roof',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -472,14 +409,7 @@ const ceilingField: FormField[] = [
     type: 'checkbox-group',
     name: 'ceilingType',
     orientation: 'horizontal',
-    options: [
-      { value: 'SG', label: 'Smooth Gypsum' },
-      { value: 'TBAR', label: 'T-Bar' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'RFC', label: 'Reinforced Concrete' },
-      { value: 'SB', label: 'Smartboard' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Ceiling',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -497,12 +427,7 @@ const wallField: FormField[] = [
     label: 'Interior',
     name: 'interiorWallType',
     orientation: 'horizontal',
-    options: [
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'SPBPAINT', label: 'Smooth plastered brickwork and painted' },
-      { value: 'WALLPAPER', label: 'Wallpaper' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Interior',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -517,11 +442,7 @@ const wallField: FormField[] = [
     label: 'Exterior',
     name: 'exteriorWallType',
     orientation: 'horizontal',
-    options: [
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'SPBPAINT', label: 'Smooth plastered brickwork and painted' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Exterior',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -544,31 +465,19 @@ const surfaceTableHeader = [
     name: 'floorType',
     label: 'Floor Type',
     inputType: 'dropdown' as const,
-    options: [
-      { value: 'CB', label: 'Cement Block' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'IRON', label: 'Iron' },
-    ],
+    group: 'FloorType',
   },
   {
     name: 'floorStructureType',
     label: 'Floor Structure',
     inputType: 'dropdown' as const,
-    options: [
-      { value: 'CB', label: 'Cement Block' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'IRON', label: 'Iron' },
-    ],
+    group: 'FloorStructure',
   },
   {
     name: 'floorSurfaceType',
     label: 'Floor Surface',
     inputType: 'dropdown' as const,
-    options: [
-      { value: 'CB', label: 'Cement Block' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'IRON', label: 'Iron' },
-    ],
+    group: 'FloorSurface',
   },
 ];
 
@@ -577,17 +486,7 @@ const fenceField: FormField[] = [
     type: 'checkbox-group',
     name: 'fenceType',
     orientation: 'horizontal',
-    options: [
-      { value: 'CB', label: 'Cement Block' },
-      { value: 'WOOD', label: 'Wood' },
-      { value: 'IRON', label: 'Iron' },
-      { value: 'BRICK', label: 'Brick' },
-      { value: 'SS', label: 'Stainless Steel' },
-      { value: 'NF', label: 'No Fence' },
-      { value: 'WM', label: 'Wire Mesh' },
-      { value: 'BW', label: 'Barbed Wire' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Fence',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -604,11 +503,7 @@ const constTypeFeild: FormField[] = [
     type: 'radio-group',
     name: 'constructionType',
     orientation: 'horizontal',
-    options: [
-      { value: 'HES', label: 'House Estate' },
-      { value: 'BIY', label: 'Build it yourself' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'ConstructionType',
     wrapperClassName: 'col-span-12',
   },
   {
@@ -628,13 +523,6 @@ const buildingArea: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
   },
-  {
-    type: 'textarea',
-    label: 'Other',
-    name: 'constructionTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'constructionType', is: '99', operator: 'equals' },
-  },
 ];
 
 const utilizationFeild: FormField[] = [
@@ -642,11 +530,7 @@ const utilizationFeild: FormField[] = [
     type: 'radio-group',
     name: 'utilizationType',
     orientation: 'horizontal',
-    options: [
-      { value: 'HES', label: 'House Estate' },
-      { value: 'BIY', label: 'Build it yourself' },
-      { value: '99', label: 'Other' },
-    ],
+    group: 'Utilization',
     wrapperClassName: 'col-span-12',
   },
   {

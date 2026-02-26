@@ -13,16 +13,7 @@ const vehicleFields: FormField[] = [
     type: 'dropdown',
     label: 'Vehicle Type',
     name: 'vehicleType',
-    options: [
-      {
-        value: 'a',
-        label: 'A',
-      },
-      {
-        value: 'b',
-        label: 'B',
-      },
-    ],
+    group: 'VehicleType',
     wrapperClassName: 'col-span-3',
   },
   {
