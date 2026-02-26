@@ -70,6 +70,7 @@ const condoFields: FormField[] = [
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    required: true,
   },
 ];
 

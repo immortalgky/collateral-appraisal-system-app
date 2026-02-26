@@ -187,9 +187,14 @@ const LandTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('L'),
-  titleNumber: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().max(40).min(1, 'Title number is required'),
+  titleType: z.string().min(1, 'Title type is required'),
+  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
   bookNumber: z.string().max(10).min(1, 'Book number is required'),
   pageNumber: z.string().max(10).min(1, 'Page number is required'),
+  landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
+  surveyNumber: z.string().max(10).min(1, 'Survey number is required'),
+  ownerName: z.string().max(200).min(1, 'Owner name is required'),
 });
 
 // Building title schema
@@ -202,8 +207,9 @@ const BuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('B'),
-  titleNumber: z.string().min(1, 'Title number is required'),
   buildingType: z.string().min(1, 'Building type is required'),
+  usableArea: z.number().min(1, 'Usable area is required'),
+  numberOfBuilding: z.number().int().min(1, 'Number of building is required'),
 });
 
 // Land and Building title schema
@@ -216,8 +222,17 @@ const LandAndBuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LB'),
-  titleNumber: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().max(40).min(1, 'Title number is required'),
+  titleType: z.string().min(1, 'Title type is required'),
+  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  bookNumber: z.string().max(10).min(1, 'Book number is required'),
+  pageNumber: z.string().max(10).min(1, 'Page number is required'),
+  landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
+  surveyNumber: z.string().max(10).min(1, 'Survey number is required'),
+  ownerName: z.string().max(200).min(1, 'Owner name is required'),
   buildingType: z.string().min(1, 'Building type is required'),
+  usableArea: z.number().min(1, 'Usable area is required'),
+  numberOfBuilding: z.number().int().min(1, 'Number of building is required'),
 });
 
 // Condominium title schema
@@ -230,8 +245,13 @@ const CondominiumTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('U'),
-  condoName: z.string().min(1, 'Condo name is required'),
-  roomNumber: z.string().min(1, 'Room number is required'),
+  condoName: z.string().max(100).min(1, 'Condo name is required'),
+  buildingNumber: z.string().max(10).min(1, 'Building number is required'),
+  roomNumber: z.string().max(10).min(1, 'Room number is required'),
+  floorNumber: z.string().max(10).min(1, 'Floor number is required'),
+  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  usableArea: z.number().min(1, 'Usable area is required'),
+  ownerName: z.string().max(200).min(1, 'Owner name is required'),
 });
 
 // Vehicle title schema
@@ -272,7 +292,13 @@ const LeaseAgreementLandTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LSL'),
-  titleNumber: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().max(40).min(1, 'Title number is required'),
+  bookNumber: z.string().max(10).min(1, 'Book number is required'),
+  pageNumber: z.string().max(10).min(1, 'Page number is required'),
+  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
+  surveyNumber: z.string().max(10).min(1, 'Survey number is required'),
+  ownerName: z.string().max(200).min(1, 'Owner name is required'),
 });
 
 // Lease Agreement Building title schema
@@ -285,8 +311,9 @@ const LeaseAgreementBuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LSB'),
-  titleNumber: z.string().min(1, 'Title number is required'),
   buildingType: z.string().min(1, 'Building type is required'),
+  usableArea: z.number().min(1, 'Usable area is required'),
+  numberOfBuilding: z.number().int().min(1, 'Number of building is required'),
 });
 
 // Lease Agreement Land and Building title schema
@@ -299,8 +326,16 @@ const LeaseAgreementLandAndBuildingTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('LS'),
-  titleNumber: z.string().min(1, 'Title number is required'),
+  titleNumber: z.string().max(40).min(1, 'Title number is required'),
+  bookNumber: z.string().max(10).min(1, 'Book number is required'),
+  pageNumber: z.string().max(10).min(1, 'Page number is required'),
+  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
+  surveyNumber: z.string().max(10).min(1, 'Survey number is required'),
+  ownerName: z.string().max(200).min(1, 'Owner name is required'),
   buildingType: z.string().min(1, 'Building type is required'),
+  usableArea: z.number().min(1, 'Usable area is required'),
+  numberOfBuilding: z.number().int().min(1, 'Number of building is required'),
 });
 
 // Combined discriminated union

@@ -29,12 +29,14 @@ const landFields: FormField[] = [
     label: 'Book Number',
     name: 'bookNumber',
     wrapperClassName: 'col-span-1',
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Page Number',
     name: 'pageNumber',
     wrapperClassName: 'col-span-1',
+    required: true,
   },
   {
     type: 'text-input',
@@ -47,12 +49,14 @@ const landFields: FormField[] = [
     label: 'Land Parcel Number',
     name: 'landParcelNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Survey Number',
     name: 'surveyNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'number-input',
@@ -80,12 +84,14 @@ const landFields: FormField[] = [
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
+    required: true,
   },
   {
     type: 'textarea',
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    required: true,
   },
 ];
 
