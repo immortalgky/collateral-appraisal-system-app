@@ -20,8 +20,15 @@ export const useCreateMarketComparable = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreateMarketComparableRequestType): Promise<{ id: string }> => {
+    mutationFn: async (
+      request: CreateMarketComparableRequestType & { factorData?: any[] },
+    ): Promise<{ id: string }> => {
       const { data } = await axios.post('/market-comparables', request);
+      if (request.factorData) {
+        await axios.put(`/market-comparables/${data.id}/factor-data`, {
+          factorData: request.factorData,
+        });
+      }
       return data;
     },
     onSuccess: () => {
@@ -202,9 +209,7 @@ export const useUnlinkAppraisalComparable = () => {
       appraisalId: string;
       comparableId: string;
     }) => {
-      const { data } = await axios.delete(
-        `/appraisals/${appraisalId}/comparables/${comparableId}`,
-      );
+      const { data } = await axios.delete(`/appraisals/${appraisalId}/comparables/${comparableId}`);
       return data;
     },
     onSuccess: (_data, variables) => {

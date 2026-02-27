@@ -118,6 +118,7 @@ const CreateMarketComparablePage = () => {
               queryKey: ['appraisals', appraisalId, 'comparables'],
             });
           }
+          navigate(`/appraisal/${appraisalId}/property?tab=markets`);
           toast.success('Market comparable updated successfully');
         },
         onError: (error: any) => {
@@ -127,7 +128,7 @@ const CreateMarketComparablePage = () => {
         },
       });
     } else {
-      const createPayload: CreateMarketComparableRequestType = {
+      const createPayload: CreateMarketComparableRequestType & { factorData?: any[] } = {
         comparableNumber: data.comparableNumber ?? '',
         propertyType: data.propertyType ?? '',
         surveyName: data.surveyName,
@@ -135,6 +136,7 @@ const CreateMarketComparablePage = () => {
         sourceInfo: data.sourceInfo || null,
         notes: data.notes || null,
         templateId: data.templateId || null,
+        factorData,
       };
 
       createMarketComparable(createPayload, {
