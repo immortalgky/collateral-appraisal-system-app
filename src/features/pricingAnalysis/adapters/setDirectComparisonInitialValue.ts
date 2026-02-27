@@ -64,11 +64,11 @@ export function setDirectComparisonInitialValue({
             );
             return {
               marketId: survey.id,
-              offeringPrice: surveyMap.get('17') ?? 0,
+              offeringPrice: surveyMap.get('25') ?? 0,
               offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
               offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
               offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-              sellingPrice: surveyMap.get('21') ?? 0,
+              sellingPrice: surveyMap.get('47') ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
               // sellingDate: surveyMap.get('22') ?? '',
               sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
@@ -143,11 +143,11 @@ export function setDirectComparisonInitialValue({
           );
           return {
             marketId: survey.id,
-            offeringPrice: surveyMap.get('17') ?? 0,
+            offeringPrice: surveyMap.get('25') ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
             offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
             offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-            sellingPrice: surveyMap.get('21') ?? 0,
+            sellingPrice: surveyMap.get('47') ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: surveyMap.get('22') ?? '',
             sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
