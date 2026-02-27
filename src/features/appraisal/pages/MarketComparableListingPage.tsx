@@ -3,16 +3,23 @@ import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MarketComparableTable from '../components/tables/MarketComparableTable';
 import { useDeleteMarketComparable, useGetMarketComparables } from '../api/marketComparable';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
 import toast from 'react-hot-toast';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 
 const MarketComparableListingPage = () => {
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market comparable data (general pool, no appraisalId needed)
   const { data: marketComparables, isLoading } = useGetMarketComparables();
+
+  const parameterValues = useParametersByGroup('PropertyType');
+  const collateralItems = useMemo(
+    () => parameterValues.map(p => ({ code: p.code, description: p.description })),
+    [parameterValues],
+  );
   const { mutate: deleteComparable } = useDeleteMarketComparable();
 
   const items = (marketComparables ?? []).map(item => ({
@@ -117,7 +124,7 @@ const MarketComparableListingPage = () => {
             </div>
             {isOpenModal && (
               <CollateralSelectModal
-                items={parameters.values}
+                items={collateralItems}
                 position={modalPosition || { x: 0, y: 0 }}
                 onSelect={handleCreateSelect}
                 onCancel={() => setIsOpenModal(false)}
@@ -128,20 +135,6 @@ const MarketComparableListingPage = () => {
       </div>
     </div>
   );
-};
-
-const parameters = {
-  parameterGroup: 'propertyType',
-  values: [
-    { code: 'Land', description: 'Land' },
-    { code: 'Building', description: 'Building' },
-    { code: 'LandAndBuilding', description: 'Land and Building' },
-    { code: 'Condo', description: 'Condominium' },
-    { code: 'Machine', description: 'Machinery' },
-    { code: 'LSL', description: 'Lease Agreement Lands' },
-    { code: 'LSB', description: 'Lease Agreement Building' },
-    { code: 'LS', description: 'Lease Agreement Land and Building' },
-  ],
 };
 
 const headers = [

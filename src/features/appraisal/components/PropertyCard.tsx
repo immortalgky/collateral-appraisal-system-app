@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
+import { PropertyCardContent } from './PropertyCardContent';
 
 // Map property type to route a segment
 const getRouteSegment = (type: string): string => {
@@ -21,17 +22,6 @@ const getRouteSegment = (type: string): string => {
     U: 'condo',
   };
   return typeMap[type] || 'land';
-};
-
-// Map property type to description
-const getPropertyDescription = (type: string) => {
-  const typeMap: Record<string, string> = {
-    L: 'Land',
-    B: 'Building',
-    LB: 'Land & Building',
-    U: 'Condo',
-  };
-  return typeMap[type] || 'Unknown type';
 };
 
 interface PropertyCardProps {
@@ -96,73 +86,11 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
         <Icon name="grip-vertical" className="text-gray-400" />
       </div>
 
-      {/* Clickable Card Content */}
-      <div
+      <PropertyCardContent
+        property={property}
         onClick={handleCardClick}
-        className="flex flex-1 cursor-pointer hover:bg-gray-50/50 transition-colors"
-      >
-        {/* Property Image - Left Side */}
-        <div className="relative w-44 h-28 bg-gray-100 flex-shrink-0">
-          {property.image ? (
-            <img
-              src={property.image}
-              alt={property.address}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Icon name="image" className="text-gray-400 text-2xl" />
-            </div>
-          )}
-          {/* Location Pin Overlay */}
-          <div className="absolute top-2 left-2 bg-white rounded-full p-1 shadow-sm">
-            <Icon name="location-dot" className="text-green-500 text-[10px]" style="solid" />
-          </div>
-        </div>
-
-        {/* Property Details - Right Side */}
-        <div className="flex-1 p-2.5 flex flex-col justify-between min-w-0">
-          <div>
-            {/* Address/Title */}
-            <h3
-              className="font-medium text-gray-900 text-sm mb-1.5 line-clamp-1"
-              title={property.address}
-            >
-              {property.address}
-            </h3>
-
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              {/* Area with icon */}
-              <div className="flex items-center gap-1">
-                <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
-                <span>{property.area}</span>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-              <Icon name="location-dot" className="text-[10px]" style="solid" />
-              <span className="truncate" title={property.location}>
-                {property.location}
-              </span>
-            </div>
-          </div>
-
-          {/* Property Type Badge - Bottom Right */}
-          <div className="flex justify-end">
-            <span className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
-              {getPropertyDescription(property.type)}
-            </span>
-          </div>
-        </div>
-
-        {/* Arrow indicator */}
-        <div className="flex items-center pr-3">
-          <Icon name="chevron-right" className="text-gray-300 text-sm" style="solid" />
-        </div>
-      </div>
+        size="md"
+      />
     </div>
   );
 });

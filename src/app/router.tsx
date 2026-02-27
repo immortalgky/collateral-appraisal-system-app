@@ -19,10 +19,12 @@ import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
 import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
 import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
 import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
+import CreateLawAndRegulationPage from '@/features/appraisal/pages/CreateLawAndRegulationPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 import { ProtectedRoute } from '@features/auth/components';
 import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
 import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
+import PriceAnalysisPage from '@features/pricingAnalysis/pages/PriceAnalysisPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -210,6 +212,14 @@ export const router = createBrowserRouter([
             element: <LandBuildingPMAPage />,
           },
           {
+            path: 'law-and-regulation/new',
+            element: <CreateLawAndRegulationPage />,
+          },
+          {
+            path: 'law-and-regulation/:itemId',
+            element: <CreateLawAndRegulationPage />,
+          },
+          {
             path: 'market-comparable/new',
             element: <CreateMarketComparablePage />,
           },
@@ -226,6 +236,14 @@ export const router = createBrowserRouter([
       {
         path: 'summary',
         element: <PlaceholderPage title="Summary & Decision" />,
+      },
+      {
+        path: 'groups/:groupId/pricing-analysis',
+        element: <PriceAnalysisPage />,
+      },
+      {
+        path: 'groups/:groupId/pricing-analysis/:pricingAnalysisId',
+        element: <PriceAnalysisPage />,
       },
     ],
   },

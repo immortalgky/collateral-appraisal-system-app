@@ -5,7 +5,6 @@ import type { PropertyGroup, PropertyItem } from '../types';
 import { PropertyCard } from './PropertyCard';
 import { PropertyTable } from './PropertyTable';
 import Icon from '@shared/components/Icon';
-import { useNavigate } from 'react-router-dom';
 import PropertyTypeDropdown from '@features/appraisal/components/PropertyTypeDropdown.tsx';
 
 type ViewMode = 'grid' | 'list';
@@ -21,6 +20,7 @@ interface GroupContainerProps {
   onCopy: (property: PropertyItem) => void;
   onPaste: (groupId: string) => void;
   onDelete: (property: PropertyItem, groupId: string) => void;
+  onGoToPriceAnalysis: (groupId: string) => void;
   hasClipboard: boolean;
   isDeletingGroup?: boolean;
 }
@@ -37,6 +37,7 @@ export const GroupContainer = React.memo(
     onCopy,
     onPaste,
     onDelete,
+    onGoToPriceAnalysis,
     hasClipboard,
     isDeletingGroup = false,
   }: GroupContainerProps) => {
@@ -46,7 +47,6 @@ export const GroupContainer = React.memo(
       data: droppableData,
     });
 
-    const navigate = useNavigate();
 
     // Memoize item IDs so SortableContext doesn't get a new array reference every render
     // (especially important for empty groups where [] !== [])
@@ -94,6 +94,10 @@ export const GroupContainer = React.memo(
       [commitRename, group.name],
     );
 
+    const handleOnClickPricingButton = useCallback(() => {
+      onGoToPriceAnalysis(group.id);
+    }, [onGoToPriceAnalysis, group.id]);
+
     return (
       <div className="border border-gray-200 rounded-lg bg-white p-4">
         {/* Group Header */}
@@ -134,9 +138,13 @@ export const GroupContainer = React.memo(
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-medium">
+            <button
+              className="px-2 py-0.5 bg-orange-100 text-orange-700 hover:text-red-500 hover:bg-red-50 cursor-pointer rounded text-[10px] font-medium"
+              onClick={() => handleOnClickPricingButton()}
+              title="Appraise Collateral"
+            >
               AP
-            </span>
+            </button>
           </div>
         </div>
 

@@ -14,14 +14,7 @@ const landFields: FormField[] = [
     type: 'dropdown',
     label: 'Title Type',
     name: 'titleType',
-    options: [
-      { value: 'DEED', label: 'Title Deed' },
-      { value: 'NS3', label: 'Nor Sor 3' },
-      { value: 'NS3K', label: 'Nor Sor 3 K' },
-      { value: 'NS3KO', label: 'Nor Sor 3 Ko' },
-      { value: 'RIGHT', label: 'Document of possessory rights to land' },
-      { value: 'OTH', label: 'Other' },
-    ],
+    group: 'DeedType',
     wrapperClassName: 'col-span-2',
   },
   {

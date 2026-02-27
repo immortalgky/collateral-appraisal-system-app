@@ -30,34 +30,6 @@ const defaultSurfaceData: SurfaceData = {
   floorSurfaceType: '',
 };
 
-const floorTypeOptions = [
-  { value: 'CB', label: 'Cement Block' },
-  { value: 'WOOD', label: 'Wood' },
-  { value: 'IRON', label: 'Iron' },
-  { value: 'TILE', label: 'Tile' },
-  { value: 'MARBLE', label: 'Marble' },
-  { value: 'PARQUET', label: 'Parquet' },
-];
-
-const floorStructureTypeOptions = [
-  { value: 'CB', label: 'Cement Block' },
-  { value: 'WOOD', label: 'Wood' },
-  { value: 'IRON', label: 'Iron' },
-  { value: 'RFC', label: 'Reinforced Concrete' },
-  { value: 'STEEL', label: 'Steel' },
-];
-
-const floorSurfaceTypeOptions = [
-  { value: 'CB', label: 'Cement Block' },
-  { value: 'WOOD', label: 'Wood' },
-  { value: 'IRON', label: 'Iron' },
-  { value: 'TILE', label: 'Tile' },
-  { value: 'MARBLE', label: 'Marble' },
-  { value: 'PARQUET', label: 'Parquet' },
-  { value: 'VINYL', label: 'Vinyl' },
-  { value: 'LAMINATE', label: 'Laminate' },
-];
-
 const SurfaceInputModal = ({
   isOpen,
   onClose,
@@ -147,7 +119,7 @@ const SurfaceInputModal = ({
                   Floor Type
                 </label>
                 <Dropdown
-                  options={floorTypeOptions}
+                  group="FloorType"
                   value={floorType}
                   onChange={value => setValue('floorType', value)}
                   placeholder="Select floor type"
@@ -160,7 +132,7 @@ const SurfaceInputModal = ({
                   Floor Structure
                 </label>
                 <Dropdown
-                  options={floorStructureTypeOptions}
+                  group="FloorStructureType"
                   value={floorStructureType}
                   onChange={value => setValue('floorStructureType', value)}
                   placeholder="Select floor structure"
@@ -173,7 +145,7 @@ const SurfaceInputModal = ({
                   Floor Surface
                 </label>
                 <Dropdown
-                  options={floorSurfaceTypeOptions}
+                  group="FloorSurfaceType"
                   value={floorSurfaceType}
                   onChange={value => setValue('floorSurfaceType', value)}
                   placeholder="Select floor surface"

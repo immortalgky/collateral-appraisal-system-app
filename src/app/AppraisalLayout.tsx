@@ -29,6 +29,7 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   summary: { label: 'Summary & Decision', icon: 'clipboard-check' },
   property: { label: 'Property Information', icon: 'buildings' },
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
+  groups: { label: 'Groups', icon: 'layer-group' },
 };
 
 // Labels for property sub-routes
@@ -38,6 +39,7 @@ const propertySubRouteLabels: Record<string, { label: string; icon: string }> = 
   condo: { label: 'Condominium', icon: 'city' },
   'land-building': { label: 'Land & Building', icon: 'house-chimney' },
   'market-comparable': { label: 'Market Comparable', icon: 'magnifying-glass-location' },
+  'law-and-regulation': { label: 'Law & Regulation', icon: 'gavel' },
 };
 
 /**
@@ -86,7 +88,24 @@ function AppraisalLayout() {
           const propertyType = pathSegments[3];
           if (propertyType === 'market-comparable') {
             propertyHrefSuffix = '?tab=markets';
+          } else if (propertyType === 'law-and-regulation') {
+            propertyHrefSuffix = '?tab=laws';
           }
+        }
+
+        // Pricing analysis: /appraisal/:id/groups/:groupId/pricing-analysis[/:pricingAnalysisId]
+        if (pageSegment === 'groups' && pathSegments.includes('pricing-analysis')) {
+          items.push({
+            label: 'Property Information',
+            href: `/appraisal/${appraisalId}/property`,
+            icon: 'buildings',
+          });
+          items.push({
+            label: 'Pricing Analysis',
+            href: location.pathname,
+            icon: 'chart-mixed',
+          });
+          return items;
         }
 
         // Add page breadcrumb
