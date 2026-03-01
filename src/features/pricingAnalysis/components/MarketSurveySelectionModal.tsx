@@ -2,7 +2,7 @@ import Button from '@/shared/components/Button';
 import { Icon } from '@/shared/components';
 import Modal from '@shared/components/Modal';
 import clsx from 'clsx';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import type { FactorDataType, MarketComparableDetailType } from '../schemas';
 import { readFactorValue } from '../domain/readFactorValue';
@@ -37,6 +37,10 @@ export const MarketSurveySelectionModal = ({
     setSelectedSurveys([]);
     onCancel();
   };
+
+  useEffect(() => {
+    setSelectedSurveys(comparativeSurveys);
+  }, [comparativeSurveys]);
 
   return (
     <Modal isOpen={isOpen} onClose={handleOnCancel} title="Select Comparative Data" size="2xl">

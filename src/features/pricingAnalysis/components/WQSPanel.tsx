@@ -8,14 +8,11 @@ import { COLLATERAL_TYPE } from '../data/constants';
 import toast from 'react-hot-toast';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { WQS } from './WQS';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '../schemas';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { setWQSInitialValueOnSelectSurvey } from '@features/pricingAnalysis/adapters/setWQSInitialValueOnSelectSurvey.ts';
 import { setWQSInitialValue } from '@features/pricingAnalysis/adapters/setWQSInitialValue.ts';
+import { resetWQSValue } from '../adapters/resetWQSValue';
 
 interface WQSPanelProps {
   activeMethod?: {
@@ -29,7 +26,11 @@ interface WQSPanelProps {
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   methodTemplates: TemplateDetailType[] | null | undefined;
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -76,11 +77,7 @@ export function WQSPanel({
   /** Form handler */
   const handleOnSubmit = (value: WQSFormType) => {
     const appraisalValue = value.WQSFinalValue.appraisalPriceRounded;
-    if (
-      !!appraisalValue &&
-      !!activeMethod?.approachType &&
-      !!activeMethod?.methodType
-    ) {
+    if (!!appraisalValue && !!activeMethod?.approachType && !!activeMethod?.methodType) {
       onCalculationSave({
         approachType: activeMethod.approachType,
         methodType: activeMethod.methodType,
@@ -130,6 +127,21 @@ export function WQSPanel({
 
   const handleOnDenyCancelCalculationMethod = () => {
     setisShowCanceledDialog(false);
+  };
+
+  const handleOnResetCalculationMethod = () => {
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      resetWQSValue({
+        collateralType: collateralType,
+        methodId: methodId,
+        methodType: methodType,
+        comparativeSurveys: comparativeSurveys,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
+        getValues: getValues,
+      });
+    }
   };
 
   const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
@@ -244,6 +256,7 @@ export function WQSPanel({
             <MethodFooterActions
               onSaveDraft={handleOnSaveDraft}
               onCancel={handleOnCancelCalculationMethod}
+              onReset={handleOnResetCalculationMethod}
             />
           </div>
         )}

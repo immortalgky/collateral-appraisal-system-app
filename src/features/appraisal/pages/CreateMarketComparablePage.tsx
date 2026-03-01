@@ -99,6 +99,7 @@ const CreateMarketComparablePage = () => {
     }));
 
     if (isEditMode && marketId) {
+      console.log('update with payload + factor Data', factorData);
       const updatePayload: UpdateMarketComparableRequestType & { id: string; factorData?: any[] } =
         {
           id: marketId,
@@ -138,6 +139,8 @@ const CreateMarketComparablePage = () => {
         templateId: data.templateId || null,
         factorData,
       };
+
+      console.log('create comparable');
 
       createMarketComparable(createPayload, {
         onSuccess: async response => {
