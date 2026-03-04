@@ -1,7 +1,6 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
 import type { MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import type { WQSCalculationType, WQSFormType } from '../schemas/wqsForm';
-import { calculateDuration } from '../domain/utils/dateUtils';
 import { readFactorValue } from '../domain/readFactorValue';
 
 interface resetWQSValueArgs {
@@ -60,11 +59,6 @@ export function resetWQSValue({
           readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
         ]),
       );
-      const { years, months } = calculateDuration(
-        surveyMap.get('84')?.toString() ?? '',
-        new Date(),
-      );
-      const numberOfYears = years + Math.round(months);
       return {
         marketId: survey.id.toString(),
         offeringPrice: surveyMap.get('25') ?? 0,
@@ -74,7 +68,7 @@ export function resetWQSValue({
         sellingPrice: surveyMap.get('47') ?? 0,
         sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
         sellingDate: surveyMap.get('84') ?? '',
-        numberOfYears: numberOfYears,
+        numberOfYears: 10,
         sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
       };
     }) as WQSCalculationType[],

@@ -6,7 +6,6 @@ import type {
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
-import { calculateDuration } from '../domain/utils/dateUtils';
 
 interface WQSInitialValueOnSelectSurveyProps {
   collateralType: string;
@@ -62,12 +61,6 @@ export function setWQSInitialValueOnSelectSurvey({
             readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
           ]),
         );
-        const { years, months } = calculateDuration(
-          surveyMap.get('84')?.toString() ?? '',
-          new Date(),
-        );
-        const numberOfYears = years + Math.round(months);
-        console.log(numberOfYears);
         return {
           marketId: survey.id.toString(),
           offeringPrice: surveyMap.get('25') ?? null,
@@ -77,7 +70,7 @@ export function setWQSInitialValueOnSelectSurvey({
           sellingPrice: surveyMap.get('47') ?? null,
           sellingPriceMeasurementUnit: surveyMap.get('20') ?? null,
           sellingDate: surveyMap.get('84') ?? null,
-          numberOfYears: numberOfYears,
+          numberOfYears: 10,
           sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
         };
       }) as WQSCalculationType[],
