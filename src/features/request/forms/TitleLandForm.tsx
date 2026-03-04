@@ -16,6 +16,7 @@ const landFields: FormField[] = [
     name: 'titleType',
     group: 'DeedType',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',

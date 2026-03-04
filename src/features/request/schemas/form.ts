@@ -95,7 +95,7 @@ const BaseTitleFields = {
   id: z.string().uuid().optional(),
   requestId: z.string().uuid().optional(),
   collateralStatus: z.boolean().optional(),
-  ownerName: z.string().max(200).nullable().optional(),
+  ownerName: z.string().nullable().optional(),
   titleAddress: AddressDto.optional(),
   dopaAddress: AddressDto.optional(),
   notes: z.string().nullable().optional(),
@@ -106,7 +106,7 @@ const BaseTitleFields = {
 const LandFields = {
   titleNumber: z.string().nullable().optional(),
   titleType: z.string().nullable().optional(),
-  titleDetail: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
   bookNumber: z.string().nullable().optional(),
   pageNumber: z.string().nullable().optional(),
   rawang: z.string().nullable().optional(),
@@ -189,7 +189,7 @@ const LandTitleDto = z.object({
   collateralType: z.literal('L'),
   titleNumber: z.string().max(40).min(1, 'Title number is required'),
   titleType: z.string().min(1, 'Title type is required'),
-  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  notes: z.string().max(200).min(1, 'Title detail is required'),
   bookNumber: z.string().max(10).min(1, 'Book number is required'),
   pageNumber: z.string().max(10).min(1, 'Page number is required'),
   landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
@@ -224,7 +224,7 @@ const LandAndBuildingTitleDto = z.object({
   collateralType: z.literal('LB'),
   titleNumber: z.string().max(40).min(1, 'Title number is required'),
   titleType: z.string().min(1, 'Title type is required'),
-  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  notes: z.string().max(200).min(1, 'Title detail is required'),
   bookNumber: z.string().max(10).min(1, 'Book number is required'),
   pageNumber: z.string().max(10).min(1, 'Page number is required'),
   landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
@@ -245,11 +245,13 @@ const CondominiumTitleDto = z.object({
   ...MachineFields,
   ...VesselFields,
   collateralType: z.literal('U'),
+  titleNumber: z.string().max(40).min(1, 'Title number is required'),
+  titleType: z.string().min(1, 'Title type is required'),
+  notes: z.string().max(200).min(1, 'Title detail is required'),
   condoName: z.string().max(100).min(1, 'Condo name is required'),
   buildingNumber: z.string().max(10).min(1, 'Building number is required'),
   roomNumber: z.string().max(10).min(1, 'Room number is required'),
   floorNumber: z.string().max(10).min(1, 'Floor number is required'),
-  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
   usableArea: z.number().min(1, 'Usable area is required'),
   ownerName: z.string().max(200).min(1, 'Owner name is required'),
 });
@@ -295,7 +297,7 @@ const LeaseAgreementLandTitleDto = z.object({
   titleNumber: z.string().max(40).min(1, 'Title number is required'),
   bookNumber: z.string().max(10).min(1, 'Book number is required'),
   pageNumber: z.string().max(10).min(1, 'Page number is required'),
-  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  notes: z.string().max(200).min(1, 'Title detail is required'),
   landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
   surveyNumber: z.string().max(10).min(1, 'Survey number is required'),
   ownerName: z.string().max(200).min(1, 'Owner name is required'),
@@ -329,7 +331,7 @@ const LeaseAgreementLandAndBuildingTitleDto = z.object({
   titleNumber: z.string().max(40).min(1, 'Title number is required'),
   bookNumber: z.string().max(10).min(1, 'Book number is required'),
   pageNumber: z.string().max(10).min(1, 'Page number is required'),
-  titleDetail: z.string().max(200).min(1, 'Title detail is required'),
+  notes: z.string().max(200).min(1, 'Title detail is required'),
   landParcelNumber: z.string().max(10).min(1, 'Land parcel number is required'),
   surveyNumber: z.string().max(10).min(1, 'Survey number is required'),
   ownerName: z.string().max(200).min(1, 'Owner name is required'),
@@ -397,7 +399,7 @@ export const createRequestForm = z
     comments: z.array(RequestCommentDto),
   })
   .superRefine((data, ctx) => {
-    // Loan Application Number is required when the purpose is '02' (Top Up)
+    // Additional Facility Limit / Previous Facility Limit is required when the purpose is '02' (Top Up)
     console.log('[superRefine] Running validation, purpose:', data.purpose);
     if (data.purpose === '02') {
       const additionalFacilityLimit = data.detail.loanDetail.additionalFacilityLimit;
@@ -510,7 +512,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   collateralStatus: false,
   titleNumber: '',
   titleType: '',
-  titleDetail: '',
+  notes: '',
   bookNumber: '',
   pageNumber: '',
   rawang: '',
@@ -571,6 +573,5 @@ export const requestTitleDefault: RequestTitleDtoType = {
     provinceName: '',
     postcode: '',
   },
-  notes: '',
   documents: [],
 };

@@ -174,12 +174,13 @@ const landInfoField: FormField[] = [
     name: 'landDescription',
     wrapperClassName: 'col-span-12',
     required: true,
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
     name: 'isOwnerVerified',
-    required: true,
     options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-3',
   },
@@ -190,6 +191,7 @@ const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-4',
     required: true,
     disableWhen: { field: 'isOwnerVerified', is: false },
+    requiredWhen: { field: 'isOwnerVerified', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
   },
   {
@@ -206,6 +208,7 @@ const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
     showWhen: { field: 'hasObligation', is: true },
+    requiredWhen: { field: 'hasObligation', is: true },
   },
 ];
 
@@ -226,12 +229,14 @@ const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'landCheckMethodTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landCheckMethodType', is: '99', operator: 'equals' },
-    required: true,
+    showWhen: { field: 'landCheckMethodType', is: '99' },
+    requiredWhen: { field: 'landCheckMethodType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'text-input',
@@ -297,11 +302,14 @@ const plotLocationField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -314,11 +322,14 @@ const landFillField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'landFillType', is: '99' },
+    requiredWhen: { field: 'landFillType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'number-input',
@@ -382,6 +393,8 @@ const roadField: FormField[] = [
     label: 'Land Accessibility Description',
     name: 'landAccessibilityRemark',
     wrapperClassName: 'col-span-12',
+    maxLength: 200,
+    showCharCount: true,
   },
 ];
 
@@ -394,11 +407,14 @@ const roadSurfaceField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'roadSurfaceTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roadSurfaceType', is: '99', operator: 'equals' },
+    showWhen: { field: 'roadSurfaceType', is: '99' },
+    requiredWhen: { field: 'roadSurfaceType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -411,11 +427,14 @@ const publicUtilityField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -428,11 +447,14 @@ const landUseField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'landUseTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'landUseType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'landUseType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -445,11 +467,14 @@ const landEntranceField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'landEntranceExitTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -462,11 +487,14 @@ const transpotationField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'transportationAccessTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -506,6 +534,9 @@ const expropriateField: FormField[] = [
     name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isExpropriated', is: true },
+    requiredWhen: { field: 'isExpropriated', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
   {
     type: 'textarea',
@@ -513,6 +544,9 @@ const expropriateField: FormField[] = [
     name: 'expropriationLineRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isInExpropriationLine', is: true },
+    requiredWhen: { field: 'isInExpropriationLine', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
@@ -536,6 +570,9 @@ const encroachedField: FormField[] = [
     name: 'encroachmentRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isEncroached', is: true },
+    requiredWhen: { field: 'isEncroached', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 const LimitationOther: FormField[] = [
@@ -570,6 +607,9 @@ const LimitationOther: FormField[] = [
     name: 'landlockedRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isLandlocked', is: true },
+    requiredWhen: { field: 'isLandlocked', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
 
   {
@@ -578,6 +618,9 @@ const LimitationOther: FormField[] = [
     name: 'forestBoundaryRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isForestBoundary', is: true },
+    requiredWhen: { field: 'isForestBoundary', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
   {
     type: 'textarea',
@@ -596,11 +639,14 @@ const evictionField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'evictionTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'evictionStatusType', is: '99', operator: 'in' },
+    showWhen: { field: 'evictionType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'evictionType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -685,11 +731,14 @@ const otherInformationField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'hasBuildingOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'hasBuilding', is: true },
+    requiredWhen: { field: 'hasBuilding', is: true },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -699,6 +748,8 @@ const remarkLandField: FormField[] = [
     label: '',
     name: 'remark',
     wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 

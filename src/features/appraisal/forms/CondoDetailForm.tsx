@@ -261,6 +261,7 @@ const condoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: false,
     showWhen: { field: 'hasObligation', is: true },
+    requiredWhen: { field: 'hasObligation', is: true },
   },
   {
     type: 'boolean-toggle',
@@ -315,7 +316,6 @@ const condoLocationFields: FormField[] = [
     label: 'Right of Way',
     name: 'rightOfWay',
     wrapperClassName: 'col-span-3',
-    required: false,
     decimalPlaces: 0,
   },
   {
@@ -323,7 +323,6 @@ const condoLocationFields: FormField[] = [
     label: 'Road Surface',
     name: 'roadSurfaceType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'Condo_RoadSurface',
   },
@@ -332,17 +331,16 @@ const condoLocationFields: FormField[] = [
     label: 'Public Utility',
     name: 'publicUtilityType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'Condo_PublicUtility',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
-    required: false,
-    showWhen: { field: 'publicUtility', is: '99', operator: 'in' },
+    showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
   },
 ];
 
@@ -357,12 +355,13 @@ const condoDecorationFields: FormField[] = [
     group: 'Decoration',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'decorationTypeOther',
     wrapperClassName: 'col-span-12',
     required: false,
-    showWhen: { field: 'decoration', is: '99' },
+    showWhen: { field: 'decorationType', is: '99' },
+    requiredWhen: { field: 'decorationType', is: '99' },
   },
 ];
 
@@ -417,12 +416,13 @@ const condoRoomLayoutFormFields: FormField[] = [
     group: 'RoomLayout',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'roomLayoutTypeOther',
     wrapperClassName: 'col-span-12',
     required: false,
     showWhen: { field: 'roomLayoutType', is: '99' },
+    requiredWhen: { field: 'roomLayoutType', is: '99' },
   },
 ];
 
@@ -449,11 +449,12 @@ const floorFormFields: FormField[] = [
     group: 'GroundFlooringMaterials',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'groundFloorMaterialTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'groundFloorMaterial', is: '99' },
+    showWhen: { field: 'groundFloorMaterialType', is: '99' },
+    requiredWhen: { field: 'groundFloorMaterialType', is: '99' },
   },
   {
     type: 'radio-group',
@@ -465,11 +466,12 @@ const floorFormFields: FormField[] = [
     group: 'UpperFlooringMaterials',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'upperFloorMaterialTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'upperFloorMaterial', is: '99' },
+    showWhen: { field: 'upperFloorMaterialType', is: '99' },
+    requiredWhen: { field: 'upperFloorMaterialType', is: '99' },
   },
   {
     type: 'radio-group',
@@ -481,11 +483,12 @@ const floorFormFields: FormField[] = [
     group: 'BathroomFlooringMaterials',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'bathroomFloorMaterialTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'bathroomFloorMaterial', is: '99' },
+    showWhen: { field: 'bathroomFloorMaterialType', is: '99' },
+    requiredWhen: { field: 'bathroomFloorMaterialType', is: '99' },
   },
 ];
 
@@ -500,11 +503,12 @@ const roofFormFields: FormField[] = [
     group: 'Condo_Roof',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'roofTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roomType', is: '99' },
+    showWhen: { field: 'roofType', is: '99' },
+    requiredWhen: { field: 'roofType', is: '99' },
   },
 ];
 
@@ -536,6 +540,7 @@ const expropriationFields: FormField[] = [
     name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isExpropriated', is: true },
+    requiredWhen: { field: 'isExpropriated', is: true },
   },
   {
     type: 'textarea',
@@ -543,6 +548,7 @@ const expropriationFields: FormField[] = [
     name: 'expropriationLineRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isInExpropriationLine', is: true },
+    requiredWhen: { field: 'isInExpropriationLine', is: true },
   },
 ];
 
@@ -557,11 +563,12 @@ const condoFacilityFields: FormField[] = [
     group: 'Facilities',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'facilityTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilityType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'facilityType', is: '99', operator: 'in' },
   },
 ];
 
@@ -591,6 +598,7 @@ const inForestBoundaryFormFields: FormField[] = [
     name: 'forestBoundaryRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isForestBoundary', is: true },
+    requiredWhen: { field: 'isForestBoundary', is: true },
   },
 ];
 

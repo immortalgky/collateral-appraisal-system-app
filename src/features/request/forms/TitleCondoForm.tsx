@@ -15,12 +15,14 @@ const condoFields: FormField[] = [
     name: 'titleType',
     group: 'DeedType',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
+    required: true,
   },
   {
     type: 'text-input',

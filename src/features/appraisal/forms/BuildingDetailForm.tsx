@@ -237,11 +237,12 @@ const buildingTypeField: FormField[] = [
     required: true,
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Building Type Other',
     name: 'buildingTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'buildingType', is: '99', operator: 'equals' },
+    requiredWhen: { field: 'buildingType', is: '99', operator: 'equals' },
   },
   {
     type: 'number-input',
@@ -262,11 +263,12 @@ const decorationField: FormField[] = [
     required: true,
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Decoration Other',
     name: 'decorationTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'decorationType', is: '99', operator: 'equals' },
+    showWhen: { field: 'decorationType', is: '99' },
+    requiredWhen: { field: 'decorationType', is: '99' },
   },
 ];
 
@@ -286,11 +288,12 @@ const encroachmentField: FormField[] = [
     disableWhen: { field: 'isEncroachingOthers', is: false },
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Encroachment Remark',
     name: 'encroachingOthersRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isEncroachingOthers', is: true },
+    requiredWhen: { field: 'isEncroachingOthers', is: true },
   },
 ];
 
@@ -327,6 +330,7 @@ const isResidentialField: FormField[] = [
     label: 'Building Age',
     name: 'buildingAge',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'textarea',
@@ -334,6 +338,7 @@ const isResidentialField: FormField[] = [
     name: 'residentialRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isResidential', is: false },
+    requiredWhen: { field: 'isResidential', is: false },
   },
 ];
 const constructionStyleField: FormField[] = [
@@ -362,11 +367,12 @@ const generalStructureField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'structureTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'structureType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'structureType', is: '99', operator: 'in' },
   },
 ];
 
@@ -379,11 +385,12 @@ const roofFrameField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'roofFrameTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
   },
 ];
 
@@ -396,11 +403,12 @@ const roofField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'roofTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'roofType', is: '99', operator: 'in' },
   },
 ];
 
@@ -413,11 +421,12 @@ const ceilingField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'ceilingTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'ceilingType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'ceilingType', is: '99', operator: 'in' },
   },
 ];
 
@@ -431,11 +440,12 @@ const wallField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'interiorWallTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
   },
   {
     type: 'checkbox-group',
@@ -446,11 +456,12 @@ const wallField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'exteriorWallTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
   },
 ];
 
@@ -490,11 +501,12 @@ const fenceField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'fenceTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'fenchType', is: '99', operator: 'in' },
+    showWhen: { field: 'fenceType', is: '99', operator: 'in' },
+    requiredWhen: { field: 'fenceType', is: '99', operator: 'in' },
   },
 ];
 
@@ -511,7 +523,10 @@ const constTypeFeild: FormField[] = [
     label: 'Other',
     name: 'constructionTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'constructionType', is: '99', operator: 'equals' },
+    showWhen: { field: 'constructionType', is: '99' },
+    requiredWhen: { field: 'constructionType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -538,7 +553,8 @@ const utilizationFeild: FormField[] = [
     label: 'Other',
     name: 'utilizationTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'utilizationType', is: '99', operator: 'equals' },
+    showWhen: { field: 'utilizationType', is: '99' },
+    requiredWhen: { field: 'utilizationType', is: '99' },
   },
 ];
 
