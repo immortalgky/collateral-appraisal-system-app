@@ -242,7 +242,6 @@ const condoFields: FormField[] = [
     label: 'Condominium Conditions',
     name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
-    required: false,
     group: 'CondoCondition',
     orientation: 'horizontal',
   },
@@ -251,7 +250,6 @@ const condoFields: FormField[] = [
     label: 'Is Obligation',
     name: 'hasObligation',
     wrapperClassName: 'col-span-12',
-    required: false,
     options: ['No obligations', 'Mortgage as security'],
   },
   {
@@ -259,7 +257,6 @@ const condoFields: FormField[] = [
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    required: false,
     showWhen: { field: 'hasObligation', is: true },
     requiredWhen: { field: 'hasObligation', is: true },
   },
@@ -279,7 +276,6 @@ const condoLocationFields: FormField[] = [
     label: '',
     name: 'locationType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'CondoLocation',
   },
@@ -288,28 +284,24 @@ const condoLocationFields: FormField[] = [
     label: 'Street',
     name: 'street',
     wrapperClassName: 'col-span-6',
-    required: false,
   },
   {
     type: 'text-input',
     label: 'Soi',
     name: 'soi',
     wrapperClassName: 'col-span-6',
-    required: false,
   },
   {
     type: 'number-input',
     label: 'Distance',
     name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-3',
-    required: false,
   },
   {
     type: 'number-input',
     label: 'Road Width',
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-3',
-    required: false,
   },
   {
     type: 'number-input',
@@ -341,6 +333,8 @@ const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
     requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -359,9 +353,10 @@ const condoDecorationFields: FormField[] = [
     label: 'Other',
     name: 'decorationTypeOther',
     wrapperClassName: 'col-span-12',
-    required: false,
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -387,7 +382,6 @@ const buildingFormFields: FormField[] = [
     label: '',
     name: 'buildingFormType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'BuildingForm',
   },
@@ -399,7 +393,6 @@ const constructionMaterialsFormFields: FormField[] = [
     label: '',
     name: 'constructionMaterialType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'ConstructionMaterials',
   },
@@ -411,7 +404,6 @@ const condoRoomLayoutFormFields: FormField[] = [
     label: '',
     name: 'roomLayoutType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'RoomLayout',
   },
@@ -420,9 +412,10 @@ const condoRoomLayoutFormFields: FormField[] = [
     label: 'Other',
     name: 'roomLayoutTypeOther',
     wrapperClassName: 'col-span-12',
-    required: false,
     showWhen: { field: 'roomLayoutType', is: '99' },
     requiredWhen: { field: 'roomLayoutType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -432,7 +425,6 @@ const locationViewFormFields: FormField[] = [
     label: '',
     name: 'locationViewType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'LocationView',
   },
@@ -444,7 +436,6 @@ const floorFormFields: FormField[] = [
     label: 'Ground Flooring Materials',
     name: 'groundFloorMaterialType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'GroundFlooringMaterials',
   },
@@ -455,13 +446,14 @@ const floorFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'groundFloorMaterialType', is: '99' },
     requiredWhen: { field: 'groundFloorMaterialType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'radio-group',
     label: 'Upper Flooring Materials',
     name: 'upperFloorMaterialType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'UpperFlooringMaterials',
   },
@@ -472,13 +464,14 @@ const floorFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'upperFloorMaterialType', is: '99' },
     requiredWhen: { field: 'upperFloorMaterialType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'radio-group',
     label: 'Bathroom Flooring Materials',
     name: 'bathroomFloorMaterialType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'BathroomFlooringMaterials',
   },
@@ -489,6 +482,8 @@ const floorFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'bathroomFloorMaterialType', is: '99' },
     requiredWhen: { field: 'bathroomFloorMaterialType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -498,7 +493,6 @@ const roofFormFields: FormField[] = [
     label: '',
     name: 'roofType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'Condo_Roof',
   },
@@ -509,6 +503,8 @@ const roofFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99' },
     requiredWhen: { field: 'roofType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -518,21 +514,18 @@ const expropriationFields: FormField[] = [
     label: 'Is Expropriated',
     name: 'isExpropriated',
     wrapperClassName: 'col-span-2',
-    required: false,
   },
   {
     type: 'checkbox',
     label: 'In Line Expropriated',
     name: 'isInExpropriationLine',
     wrapperClassName: 'col-span-7',
-    required: false,
   },
   {
     type: 'text-input',
     label: 'Royal Decree',
     name: 'royalDecree',
     wrapperClassName: 'col-span-3',
-    required: false,
   },
   {
     type: 'textarea',
@@ -541,6 +534,8 @@ const expropriationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isExpropriated', is: true },
     requiredWhen: { field: 'isExpropriated', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
   {
     type: 'textarea',
@@ -549,6 +544,8 @@ const expropriationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isInExpropriationLine', is: true },
     requiredWhen: { field: 'isInExpropriationLine', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
@@ -558,7 +555,6 @@ const condoFacilityFields: FormField[] = [
     label: '',
     name: 'facilityType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'Facilities',
   },
@@ -569,6 +565,8 @@ const condoFacilityFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilityType', is: '99', operator: 'in' },
     requiredWhen: { field: 'facilityType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -578,7 +576,6 @@ const environmentFields: FormField[] = [
     label: '',
     name: 'environmentType',
     wrapperClassName: 'col-span-12',
-    required: false,
     orientation: 'horizontal',
     group: 'Environment',
   },
@@ -589,7 +586,6 @@ const inForestBoundaryFormFields: FormField[] = [
     type: 'checkbox',
     label: 'Is In Forest Boundary',
     name: 'isForestBoundary',
-    required: false,
     wrapperClassName: 'col-span-12',
   },
   {
@@ -599,6 +595,8 @@ const inForestBoundaryFormFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isForestBoundary', is: true },
     requiredWhen: { field: 'isForestBoundary', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
@@ -608,7 +606,8 @@ const remarkFormFields: FormField[] = [
     label: '',
     name: 'remark',
     wrapperClassName: 'col-span-12',
-    required: false,
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 

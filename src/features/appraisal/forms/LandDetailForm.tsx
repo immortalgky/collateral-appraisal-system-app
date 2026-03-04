@@ -627,6 +627,8 @@ const LimitationOther: FormField[] = [
     label: 'Other',
     name: 'otherLegalLimitations',
     wrapperClassName: 'col-span-12',
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 

@@ -269,6 +269,8 @@ const decorationField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -294,6 +296,8 @@ const encroachmentField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isEncroachingOthers', is: true },
     requiredWhen: { field: 'isEncroachingOthers', is: true },
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
@@ -339,6 +343,8 @@ const isResidentialField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isResidential', is: false },
     requiredWhen: { field: 'isResidential', is: false },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 const constructionStyleField: FormField[] = [
@@ -373,6 +379,8 @@ const generalStructureField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'structureType', is: '99', operator: 'in' },
     requiredWhen: { field: 'structureType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -391,6 +399,8 @@ const roofFrameField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
     requiredWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -409,6 +419,8 @@ const roofField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99', operator: 'in' },
     requiredWhen: { field: 'roofType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -427,6 +439,8 @@ const ceilingField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'ceilingType', is: '99', operator: 'in' },
     requiredWhen: { field: 'ceilingType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -446,6 +460,8 @@ const wallField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
     requiredWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'checkbox-group',
@@ -462,6 +478,8 @@ const wallField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
     requiredWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -507,6 +525,8 @@ const fenceField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'fenceType', is: '99', operator: 'in' },
     requiredWhen: { field: 'fenceType', is: '99', operator: 'in' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -555,6 +575,8 @@ const utilizationFeild: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'utilizationType', is: '99' },
     requiredWhen: { field: 'utilizationType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -565,6 +587,8 @@ const remarkField: FormField[] = [
     name: 'remark',
     wrapperClassName: 'col-span-12',
     required: false,
+    maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
