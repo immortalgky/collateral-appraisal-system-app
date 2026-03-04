@@ -70,13 +70,13 @@ export function setWQSInitialValueOnSelectSurvey({
         console.log(numberOfYears);
         return {
           marketId: survey.id.toString(),
-          offeringPrice: surveyMap.get('25') ?? 0,
-          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+          offeringPrice: surveyMap.get('25') ?? null,
+          offeringPriceMeasurementUnit: surveyMap.get('20') ?? null,
           offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
           offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-          sellingPrice: surveyMap.get('47') ?? 0,
-          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          sellingDate: surveyMap.get('84') ?? '',
+          sellingPrice: surveyMap.get('47') ?? null,
+          sellingPriceMeasurementUnit: surveyMap.get('20') ?? null,
+          sellingDate: surveyMap.get('84') ?? null,
           numberOfYears: numberOfYears,
           sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
         };
