@@ -143,6 +143,7 @@ export const MarketSurveySelectionModal = ({
                       >
                         {survey.propertyType}
                       </td>
+                      {/* missing static field */}
                       {(serverData?.allFactors ?? []).map(factor => {
                         const factorDetail = survey?.factorData?.find(
                           f => f.factorCode === factor.factorCode,

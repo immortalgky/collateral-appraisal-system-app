@@ -15,7 +15,7 @@ export interface DateDuration {
 export function calculateDuration(dateString: string, now: Date = new Date()): DateDuration {
   // 🔴 Always validate input — DB strings can be null/malformed
   if (!dateString) {
-    throw new Error('dateString is required');
+    return { years: 0, months: 0 };
   }
 
   const startDate = new Date(dateString);
