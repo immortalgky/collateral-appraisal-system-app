@@ -63,15 +63,15 @@ export function setWQSInitialValueOnSelectSurvey({
         );
         return {
           marketId: survey.id.toString(),
-          offeringPrice: surveyMap.get('25') ?? 0,
-          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+          offeringPrice: surveyMap.get('25') ?? null,
+          offeringPriceMeasurementUnit: surveyMap.get('20') ?? null,
           offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
           offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-          sellingPrice: surveyMap.get('47') ?? 0,
-          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          // sellingDate: surveyMap.get('22') ?? '',
+          sellingPrice: surveyMap.get('47') ?? null,
+          sellingPriceMeasurementUnit: surveyMap.get('20') ?? null,
+          sellingDate: surveyMap.get('84') ?? null,
+          numberOfYears: 10,
           sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-          numberOfYears: 10, // TODO: convert selling date to number of year
         };
       }) as WQSCalculationType[],
     },

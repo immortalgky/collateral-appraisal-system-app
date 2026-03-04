@@ -18,6 +18,7 @@ import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/g
 import type { MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue';
+import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 export function buildSaleGridCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
@@ -48,6 +49,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculationWeight: calculationWeightPath,
     calculationWeightAdjustValue: calculationWeightAdjustValuePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
   } = saleGridFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
@@ -105,8 +108,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
         {
           targetPath: calculationLandAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: ({ ctx }) => {
-            const propertyLandArea = ctx.property?.landArea ?? 0;
+          compute: ({ getValues }) => {
+            const propertyLandArea = getValues(landAreaPath()) ?? 0;
             const findSurveyRai = (survey.factorData ?? []).find(f => f.factorCode === '43');
             const rai = findSurveyRai
               ? readFactorValue({
@@ -149,8 +152,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
         {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: ({ ctx }) => {
-            const propertyUsableArea = ctx.property?.usableArea ?? 0;
+          compute: ({ getValues }) => {
+            const propertyUsableArea = getValues(usableAreaPath()) ?? 0;
             const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '14');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({

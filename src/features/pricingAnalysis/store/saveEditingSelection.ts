@@ -42,7 +42,8 @@ export function useSaveEditingSelection() {
     groupId: string;
     selections: Array<{ approachType: string; methodTypes: string[] }>;
   }) => {
-    if (input.selections.length === 0) return { pricingAnalysisId: input.pricingAnalysisId, entries: [] };
+    if (input.selections.length === 0)
+      return { pricingAnalysisId: input.pricingAnalysisId, entries: [] };
 
     // If "new", create the pricing analysis first to get a real ID
     let pricingAnalysisId = input.pricingAnalysisId;

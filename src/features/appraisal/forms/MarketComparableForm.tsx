@@ -2,7 +2,10 @@ import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useGetMarketComparableTemplate, useGetMarketComparableTemplateById, } from '../api/marketComparable';
+import {
+  useGetMarketComparableTemplate,
+  useGetMarketComparableTemplateById,
+} from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 
@@ -277,6 +280,14 @@ const buildFormField = (fac: any, index: number): FormField => {
     case 'Numeric':
       return {
         type: 'number-input',
+        name: `factorData.[${index}].value`,
+        label: '',
+        wrapperClassName: 'col-span-12',
+      };
+
+    case 'Date':
+      return {
+        type: 'date-input',
         name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-12',

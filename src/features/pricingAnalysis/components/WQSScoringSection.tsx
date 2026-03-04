@@ -24,6 +24,8 @@ import {
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
+import { readFactorValue } from '../domain/readFactorValue';
+import { formatInformationDate } from '../domain/utils/dateUtils';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -760,12 +762,23 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const findBuySellDate = survey.factorData?.find(f => f.factorCode === '84');
+                const buySellDateValue =
+                  readFactorValue({
+                    dataType: findBuySellDate?.dataType,
+                    value: findBuySellDate?.value,
+                    fieldDecimal: findBuySellDate?.fieldDecimal,
+                  }) ?? '';
+                const buySellDate = formatInformationDate(buySellDateValue, 'MMM yyyy');
                 return (
                   <td key={survey.id} className={clsx('text-right', surveyStyle)}>
-                    <RHFInputCell
-                      fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
-                      inputType="display"
-                    />
+                    <div className="flex flex-row justify-between gap-2">
+                      <span>{buySellDate ?? ''}</span>
+                      <RHFInputCell
+                        fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
+                        inputType="display"
+                      />
+                    </div>
                   </td>
                 );
               })}
@@ -875,7 +888,7 @@ export function WQSScoringSection({
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
-                  <td key={survey.id} className={'border-b border-r border-gray-300'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300 text-right'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"

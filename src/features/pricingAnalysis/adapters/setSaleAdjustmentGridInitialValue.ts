@@ -94,7 +94,7 @@ export function setSaleAdjustmentGridInitialValue({
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
-          usableArea: property.usableArea ?? undefined,
+          usableArea: property.totalBuildingArea ?? undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
         },
@@ -183,7 +183,7 @@ export function setSaleAdjustmentGridInitialValue({
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,
-        usableArea: property.usableArea ?? undefined,
+        usableArea: property.totalBuildingArea ?? undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
       },
