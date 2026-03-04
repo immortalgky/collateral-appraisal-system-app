@@ -1,10 +1,4 @@
-import {
-  type Control,
-  type FieldValues,
-  useController,
-  useFormContext,
-  useWatch,
-} from 'react-hook-form';
+import { type Control, type FieldValues, useController, useFormContext, useWatch, } from 'react-hook-form';
 import { useEffect, useMemo } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
@@ -138,9 +132,9 @@ function evaluateCondition(
     case 'notEquals':
       return value !== target;
     case 'in':
-      return Array.isArray(target) && target.includes(value);
+      return Array.isArray(value) && value.includes(target);
     case 'notIn':
-      return Array.isArray(target) && !target.includes(value);
+      return Array.isArray(value) && !value.includes(target);
     case 'isEmpty':
       return value == null || value === '';
     case 'isNotEmpty':

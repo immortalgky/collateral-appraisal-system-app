@@ -12,8 +12,8 @@ import type { AtLeastOne } from '@/shared/types';
 export type ConditionOperator =
   | 'equals' // value === target (default)
   | 'notEquals' // value !== target
-  | 'in' // target array includes value
-  | 'notIn' // target array doesn't include value
+  | 'in' // value array includes target
+  | 'notIn' // value array doesn't include target
   | 'isEmpty' // value is null/undefined/''
   | 'isNotEmpty' // value is truthy
   | 'gt' // value > target (number)
