@@ -110,7 +110,7 @@ export function initializeSaleAdjustmentGridForm({
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
-          usableArea: property.totalBuildingArea ?? undefined,
+          usableArea: property?.usableArea ?? undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
         },
@@ -175,7 +175,7 @@ export function initializeSaleAdjustmentGridForm({
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: survey.saleDate ?? '',
             sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
-            numberOfYears: 10, // TODO: convert selling date to number of year
+            numberOfYears: yearDiffFromToday(survey.saleDate),
             adjustedValue: 0,
 
             // adjusted value
@@ -206,7 +206,7 @@ export function initializeSaleAdjustmentGridForm({
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,
-        usableArea: property.totalBuildingArea ?? undefined,
+        usableArea: property?.usableArea ?? undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
       },
