@@ -10,7 +10,11 @@ import type {
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue';
 import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetSaleAdjustmentGridInitialValueProps {
@@ -73,8 +77,12 @@ export function initializeSaleAdjustmentGridForm({
               marketId: survey.id,
               offeringPrice: survey.offerPrice ?? 0,
               offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
-              offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+              offeringPriceAdjustmentPct: survey.offerPrice
+                ? (survey.offerPriceAdjustmentPercent ?? 5)
+                : null,
+              offeringPriceAdjustmentAmt: survey.offerPrice
+                ? (survey.offerPriceAdjustmentAmount ?? null)
+                : null,
               sellingPrice: survey.salePrice ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
               sellingDate: survey.saleDate ?? '',
@@ -157,8 +165,12 @@ export function initializeSaleAdjustmentGridForm({
             marketId: survey.id,
             offeringPrice: survey.offerPrice ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
-            offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+            offeringPriceAdjustmentPct: survey.offerPrice
+              ? (survey.offerPriceAdjustmentPercent ?? 5)
+              : null,
+            offeringPriceAdjustmentAmt: survey.offerPrice
+              ? (survey.offerPriceAdjustmentAmount ?? null)
+              : null,
             sellingPrice: survey.salePrice ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: survey.saleDate ?? '',

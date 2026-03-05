@@ -14,13 +14,7 @@ import {
   buildSaleGridCalculationDerivedRules,
   buildSaleGridFinalValueRules,
 } from '@features/pricingAnalysis/adapters/buildSaleAdjustmentGridDerivedRules.ts';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateCalculationFactorType,
-  TemplateComparativeFactorType,
-  TemplateDetailType,
-} from '../schemas';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode.ts';
 import { SaleAdjustmentGridSecondRevision } from '@features/pricingAnalysis/components/SaleAdjustmentGridSecondRevision.tsx';
@@ -259,7 +253,9 @@ export const SaleAdjustmentGridScoringSection = ({
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="display"
                           accessor={({ value }) =>
-                            value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                            value
+                              ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                              : ''
                           }
                         />
                       ) : (
@@ -267,11 +263,16 @@ export const SaleAdjustmentGridScoringSection = ({
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={options}
-                          onSelectChange={(value) => {
-                            const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
+                          onSelectChange={value => {
+                            const factor = serverData.allFactors?.find(
+                              (f: FactorDataType) => f.factorCode === value,
+                            );
                             const fid = factor?.factorId ?? factor?.id ?? '';
                             setValue(`saleAdjustmentGridQualitatives.${rowIndex}.factorId`, fid);
-                            setValue(`saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorId`, fid);
+                            setValue(
+                              `saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorId`,
+                              fid,
+                            );
                           }}
                         />
                       )}
@@ -414,14 +415,20 @@ export const SaleAdjustmentGridScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
-                if (!hasOfferPrice)
-                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
+                const hasAdjustAmount = !!getValues(
+                  calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex }),
+                );
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
-                    <RHFInputCell
-                      fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
-                      inputType="number"
-                    />
+                    {hasOfferPrice && (
+                      <RHFInputCell
+                        fieldName={calculationOfferingPriceAdjustmentPctPath({
+                          column: columnIndex,
+                        })}
+                        inputType="number"
+                        disabled={hasAdjustAmount}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -437,14 +444,21 @@ export const SaleAdjustmentGridScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
-                if (!hasOfferPrice)
-                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
+                const hasAdjustPercent = !!getValues(
+                  calculationOfferingPriceAdjustmentPctPath({ column: columnIndex }),
+                );
+
                 return (
-                  <td key={survey.id} className={clsx(surveyColumnBody)}>
-                    <RHFInputCell
-                      fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
-                      inputType="number"
-                    />
+                  <td key={survey.id} className={clsx('border-b border-r border-gray-300')}>
+                    {hasOfferPrice && (
+                      <RHFInputCell
+                        fieldName={calculationOfferingPriceAdjustmentAmtPath({
+                          column: columnIndex,
+                        })}
+                        inputType="number"
+                        disabled={hasAdjustPercent}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -461,7 +475,10 @@ export const SaleAdjustmentGridScoringSection = ({
                 if (!hasSalePrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -481,7 +498,14 @@ export const SaleAdjustmentGridScoringSection = ({
                 const hasOfferPrice = !!survey.offerPrice;
                 const hasSalePrice = !!survey.salePrice;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyColumnBody, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(
+                      'text-right',
+                      surveyColumnBody,
+                      (hasOfferPrice || !hasSalePrice) && 'opacity-50',
+                    )}
+                  >
                     <RHFInputCell
                       fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
                       inputType="display"
@@ -530,7 +554,10 @@ export const SaleAdjustmentGridScoringSection = ({
                 if (!hasSalePrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyColumnBody, hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx('text-right', surveyColumnBody, hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -589,7 +616,9 @@ export const SaleAdjustmentGridScoringSection = ({
                         fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
                         accessor={({ value }) =>
-                          value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                          value
+                            ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                            : ''
                         }
                       />
                     }
