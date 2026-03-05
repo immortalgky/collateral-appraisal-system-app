@@ -1,11 +1,11 @@
 import clsx from 'clsx';
-import { PriceAnalysisApproachCard } from './PriceAnalysisApproachCard';
-import { PriceAnalysisMethodCard } from './PriceAnalysisMethodCard';
+import { PricingAnalysisApproachCard } from './PricingAnalysisApproachCard';
+import { PricingAnalysisMethodCard } from './PricingAnalysisMethodCard';
 import type { Approach } from '../../types/selection';
 import type { ViewMode } from '@features/pricingAnalysis/store/selectionReducer';
 import { useState } from 'react';
 
-interface PriceAnalysisApproachAccordionProps {
+interface PricingAnalysisApproachAccordionProps {
   viewMode: ViewMode;
   approach: Approach;
   onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
@@ -15,7 +15,7 @@ interface PriceAnalysisApproachAccordionProps {
   onSelectCandidateApproach: (approachType: string) => void;
 }
 
-export const PriceAnalysisApproachAccordion = ({
+export const PricingAnalysisApproachAccordion = ({
   viewMode,
   approach,
   onToggleMethod,
@@ -23,12 +23,12 @@ export const PriceAnalysisApproachAccordion = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
-}: PriceAnalysisApproachAccordionProps) => {
+}: PricingAnalysisApproachAccordionProps) => {
   const [isOpen, setIsOpen] = useState(false);
   if (viewMode === 'editing') {
     return (
       <div>
-        <PriceAnalysisApproachCard
+        <PricingAnalysisApproachCard
           viewMode={viewMode}
           approach={approach}
           isOpen={isOpen}
@@ -44,7 +44,7 @@ export const PriceAnalysisApproachAccordion = ({
         >
           {/* method */}
           {approach.methods.map(method => (
-            <PriceAnalysisMethodCard
+            <PricingAnalysisMethodCard
               key={method.methodType}
               viewMode={viewMode}
               approachId={approach.id}
@@ -62,7 +62,7 @@ export const PriceAnalysisApproachAccordion = ({
 
   return (
     <div>
-      <PriceAnalysisApproachCard
+      <PricingAnalysisApproachCard
         viewMode={viewMode}
         approach={approach}
         isOpen={isOpen}
@@ -78,7 +78,7 @@ export const PriceAnalysisApproachAccordion = ({
       >
         {/* method */}
         {approach.methods.map(method => (
-          <PriceAnalysisMethodCard
+          <PricingAnalysisMethodCard
             key={method.methodType}
             viewMode={viewMode}
             approachId={approach.id}

@@ -1,15 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import {
-  type AddPriceAnalysisApproachRequestType,
-  type AddPriceAnalysisApproachResponseType,
-  type AddPriceAnalysisMethodRequestType,
-  type AddPriceAnalysisMethodResponseType,
+  type AddPricingAnalysisApproachRequestType,
+  type AddPricingAnalysisApproachResponseType,
+  type AddPricingAnalysisMethodRequestType,
+  type AddPricingAnalysisMethodResponseType,
   type FactorDataType,
   type GetComparativeFactorsResponseType,
   type GetPricingAnalysisResponseType,
   GetPricingTemplateByMethodResponse,
   type GetPricingTemplatesByMethodResponseType,
+  type LinkComparableRequestType,
+  type LinkComparableResponseType,
   type SaveComparativeAnalysisRequestType,
   type SaveComparativeAnalysisResponseType,
 } from '../schemas';
@@ -84,7 +86,7 @@ export function useCreatePricingAnalysis() {
  * Add approach to price analysis
  * POST /pricing-analysis/{id}/approaches
  */
-export function useAddPriceAnalysisApproach() {
+export function useAddPricingAnalysisApproach() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -93,8 +95,8 @@ export function useAddPriceAnalysisApproach() {
       request,
     }: {
       pricingAnalysisId: string;
-      request: AddPriceAnalysisApproachRequestType;
-    }): Promise<AddPriceAnalysisApproachResponseType> => {
+      request: AddPricingAnalysisApproachRequestType;
+    }): Promise<AddPricingAnalysisApproachResponseType> => {
       const { data: response } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/approaches`,
         request,
@@ -113,7 +115,7 @@ export function useAddPriceAnalysisApproach() {
  * Add method to price analysis approach
  * POST /pricing-analysis/{id}/approaches/{approachId}/methods
  */
-export function useAddPriceAnalysisMethod() {
+export function useAddPricingAnalysisMethod() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -124,8 +126,8 @@ export function useAddPriceAnalysisMethod() {
     }: {
       pricingAnalysisId: string;
       approachId: string;
-      request: AddPriceAnalysisMethodRequestType;
-    }): Promise<AddPriceAnalysisMethodResponseType> => {
+      request: AddPricingAnalysisMethodRequestType;
+    }): Promise<AddPricingAnalysisMethodResponseType> => {
       const { data: response } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/approaches/${approachId}/methods`,
         request,
@@ -165,6 +167,72 @@ export function useSaveComparativeAnalysis() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(variables.id) });
+    },
+  });
+}
+
+/**
+ * Link a market comparable to a pricing method
+ * POST /pricing-analysis/{id}/methods/{methodId}/comparables
+ */
+export function useLinkComparable() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: LinkComparableRequestType;
+    }): Promise<LinkComparableResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/comparables`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.comparativeFactors(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+    },
+  });
+}
+
+/**
+ * Unlink a market comparable from a pricing method
+ * DELETE /pricing-analysis/{id}/methods/{methodId}/comparables/{linkId}
+ */
+export function useUnlinkComparable() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      linkId,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      linkId: string;
+    }): Promise<void> => {
+      await axios.delete(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/comparables/${linkId}`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.comparativeFactors(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
     },
   });
 }

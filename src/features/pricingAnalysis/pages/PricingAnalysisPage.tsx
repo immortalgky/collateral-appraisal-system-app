@@ -20,7 +20,7 @@ import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectio
 import { useCalculationFlow } from '@features/pricingAnalysis/hooks/useCalculationFlow';
 import { createInitialState } from '@features/pricingAnalysis/store/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { PriceAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PriceAnalysisAccordion';
+import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
 import { MethodSectionRenderer } from '@features/pricingAnalysis/components/MethodSectionRenderer';
 import type { PricingServerData } from '@features/pricingAnalysis/types/selection';
 import { useCreatePricingAnalysis } from '@features/pricingAnalysis/api';
@@ -54,7 +54,7 @@ const initialState: SelectionState = {
  * Wrapper: when pricingAnalysisId is missing (new route), auto-create one
  * and redirect. Once we have an ID, render the full content component.
  */
-function PriceAnalysisPage() {
+function PricingAnalysisPage() {
   const { appraisalId, groupId, pricingAnalysisId } = useParams<{
     appraisalId: string;
     groupId: string;
@@ -125,7 +125,7 @@ function PriceAnalysisPage() {
   }
 
   return (
-    <PriceAnalysisContent
+    <PricingAnalysisContent
       appraisalId={appraisalId ?? ''}
       groupId={groupId ?? ''}
       pricingAnalysisId={pricingAnalysisId}
@@ -137,7 +137,7 @@ function PriceAnalysisPage() {
  * Content: always receives a valid pricingAnalysisId.
  * All hooks run unconditionally.
  */
-function PriceAnalysisContent({
+function PricingAnalysisContent({
   appraisalId,
   groupId,
   pricingAnalysisId,
@@ -206,8 +206,8 @@ function PriceAnalysisContent({
 
   // (7) CALCULATION_ENTER effect — when calc data loads, dispatch and close panel
   const {
-    isOpen: isPriceAnalysisAccordionOpen,
-    onToggle: onPriceAnalysisAccordionChange,
+    isOpen: isPricingAnalysisAccordionOpen,
+    onToggle: onPricingAnalysisAccordionChange,
     onClose: closeSelectionPanel,
     onOpen: openSelectionPanel,
   } = useDisclosure({ defaultIsOpen: true });
@@ -252,7 +252,7 @@ function PriceAnalysisContent({
                 {!isLoading && (
                   <div className="flex-1 min-w-0 min-h-0 flex-col">
                     <div>
-                      <PriceAnalysisAccordion
+                      <PricingAnalysisAccordion
                         state={state}
                         appraisalId={appraisalId}
                         group={{
@@ -267,8 +267,8 @@ function PriceAnalysisContent({
                         onSummaryModeSave={selectionActions.saveSummary}
                         onEditModeSave={selectionActions.saveEdit}
                         onToggleMethod={selectionActions.toggleMethod}
-                        onPriceAnalysisAccordionChange={onPriceAnalysisAccordionChange}
-                        isPriceAnalysisAccordionOpen={isPriceAnalysisAccordionOpen}
+                        onPricingAnalysisAccordionChange={onPricingAnalysisAccordionChange}
+                        isPricingAnalysisAccordionOpen={isPricingAnalysisAccordionOpen}
                         onSystemCalculationChange={selectionActions.changeSystemCalculation}
                         systemCalculationMode={state.systemCalculationMode}
                         onCancelPricingAccordion={selectionActions.cancelPricingAccordion}
@@ -346,4 +346,4 @@ function PriceAnalysisContent({
   );
 }
 
-export default PriceAnalysisPage;
+export default PricingAnalysisPage;

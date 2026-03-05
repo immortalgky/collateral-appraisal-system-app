@@ -1,9 +1,9 @@
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { useState } from 'react';
-import { ComparativeSurveySection } from './ComparativeSurveySection';
+import { ComparativeFactorTable } from './ComparativeFactorTable';
 import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
 
-interface ComparativeMarketSurveySectionProps {
+interface SurveySelectionSectionProps {
   property: Record<string, unknown>;
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
@@ -12,7 +12,7 @@ interface ComparativeMarketSurveySectionProps {
   fieldPath: Record<string, any>;
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
-export function ComparativeMarketSurveySection({
+export function SurveySelectionSection({
   template,
   allFactors,
   property,
@@ -20,7 +20,7 @@ export function ComparativeMarketSurveySection({
   comparativeMarketSurveys,
   fieldPath,
   onSelectComparativeMarketSurvey,
-}: ComparativeMarketSurveySectionProps) {
+}: SurveySelectionSectionProps) {
   const [isShowMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
   const handleOnClickAddComparativeSurvey = (check: boolean) => {
     setShowMarketSurveySelection(check);
@@ -38,7 +38,7 @@ export function ComparativeMarketSurveySection({
           >
             Add Comparative Data
           </button>
-          <ComparativeSurveySection
+          <ComparativeFactorTable
             comparativeMarketSurveys={comparativeMarketSurveys}
             property={property}
             allFactors={allFactors}

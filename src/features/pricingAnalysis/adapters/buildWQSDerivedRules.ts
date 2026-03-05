@@ -1,4 +1,3 @@
-import { readFactorValue } from '../domain/readFactorValue';
 import type { MarketComparableDetailType } from '../schemas';
 import {
   calcAdjustedValue,
@@ -94,10 +93,8 @@ export function buildWQSCalculationDerivedRules(args: {
   const { surveys = [] } = args;
   const {
     calculationAdjustedValue: calculationAdjustedValuePath,
-    calculationOfferingPrice: calculationOfferingPricePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
-    calculationSellingPrice: calculationSellingPricePath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
@@ -114,26 +111,26 @@ export function buildWQSCalculationDerivedRules(args: {
             calculationAdjustmentYearPath({ column: columnIndex }),
           ],
           compute: ({ getValues }) => {
-            const offeringPrice = getValues(calculationOfferingPricePath({ column: columnIndex }));
-            if (offeringPrice) {
+            const offeringPriceValue = survey.offerPrice;
+            if (offeringPriceValue) {
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValue(
-                offeringPrice,
+                offeringPriceValue,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
               );
             }
-            const sellingPrice = getValues(calculationSellingPricePath({ column: columnIndex }));
-            if (sellingPrice) {
+            const sellingPriceValue = survey.salePrice;
+            if (sellingPriceValue) {
               const numberOfYears =
                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
-                sellingPrice,
+                sellingPriceValue,
                 numberOfYears,
                 sellingPriceAdjustmentYearPct,
               );
@@ -143,13 +140,16 @@ export function buildWQSCalculationDerivedRules(args: {
         },
         {
           targetPath: calculationTotalAdjustedSellingPricePath({ column: columnIndex }),
+          deps: [
+            calculationNumberOfYearsPath({ column: columnIndex }),
+            calculationAdjustmentYearPath({ column: columnIndex }),
+          ],
           compute: ({ getValues }) => {
-            const calculationNumberOfYears =
+            const numberOfYears =
               getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
             const adjustPercent =
               getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
-            const totalAdjustSellingPricePercent = calculationNumberOfYears * adjustPercent;
-            return totalAdjustSellingPricePercent;
+            return round2(numberOfYears * adjustPercent);
           },
         },
       ];

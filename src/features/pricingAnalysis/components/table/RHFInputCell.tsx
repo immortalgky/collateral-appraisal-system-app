@@ -19,6 +19,7 @@ export function toNumber(v: any): number | null {
 interface RHFInputCellProps {
   fieldName: string;
   inputType?: 'number' | 'select' | 'text' | 'display' | 'toggle';
+  disabled?: boolean;
   toggle?: {
     checked: unknown;
     options: [string, string];
@@ -28,6 +29,7 @@ interface RHFInputCellProps {
   };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
+  onSelectChange?: (value: string) => void;
   accessor?: (args: {
     value: number | string;
     getValues: any;
@@ -38,10 +40,12 @@ interface RHFInputCellProps {
 export const RHFInputCell = ({
   fieldName,
   inputType,
+  disabled,
   toggle,
   text,
   options,
   onUserChange,
+  onSelectChange,
   accessor,
 }: RHFInputCellProps) => {
   const { control, getValues, getFieldState } = useFormContext();
@@ -62,9 +66,13 @@ export const RHFInputCell = ({
           field.onChange(next);
         }}
         allowNegative={true}
+        disabled={disabled}
         error={error?.message}
         inputMode="numeric"
-        className={clsx('w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth')}
+        className={clsx(
+          'w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth',
+          disabled && 'opacity-50 cursor-not-allowed bg-gray-100',
+        )}
       />
     );
   }
@@ -74,6 +82,10 @@ export const RHFInputCell = ({
       <TDropdown
         {...field}
         value={field.value ?? ''}
+        onChange={(value: any) => {
+          field.onChange(value);
+          onSelectChange?.(value);
+        }}
         options={options ?? []}
         error={error?.message}
       />

@@ -1,6 +1,6 @@
 import {
-  useAddPriceAnalysisApproach,
-  useAddPriceAnalysisMethod,
+  useAddPricingAnalysisApproach,
+  useAddPricingAnalysisMethod,
   useCreatePricingAnalysis,
 } from '@features/pricingAnalysis/api';
 
@@ -34,8 +34,8 @@ function mapToServerMethodType(methodType: string): string {
 }
 export function useSaveEditingSelection() {
   const createPricingAnalysis = useCreatePricingAnalysis();
-  const addApproach = useAddPriceAnalysisApproach();
-  const addMethod = useAddPriceAnalysisMethod();
+  const addApproach = useAddPricingAnalysisApproach();
+  const addMethod = useAddPricingAnalysisMethod();
 
   const save = async (input: {
     pricingAnalysisId: string;

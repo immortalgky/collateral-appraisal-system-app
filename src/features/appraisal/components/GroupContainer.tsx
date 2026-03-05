@@ -20,7 +20,7 @@ interface GroupContainerProps {
   onCopy: (property: PropertyItem) => void;
   onPaste: (groupId: string) => void;
   onDelete: (property: PropertyItem, groupId: string) => void;
-  onGoToPriceAnalysis: (groupId: string) => void;
+  onGoToPricingAnalysis: (groupId: string) => void;
   hasClipboard: boolean;
   isDeletingGroup?: boolean;
 }
@@ -37,7 +37,7 @@ export const GroupContainer = React.memo(
     onCopy,
     onPaste,
     onDelete,
-    onGoToPriceAnalysis,
+    onGoToPricingAnalysis,
     hasClipboard,
     isDeletingGroup = false,
   }: GroupContainerProps) => {
@@ -95,8 +95,8 @@ export const GroupContainer = React.memo(
     );
 
     const handleOnClickPricingButton = useCallback(() => {
-      onGoToPriceAnalysis(group.id);
-    }, [onGoToPriceAnalysis, group.id]);
+      onGoToPricingAnalysis(group.id);
+    }, [onGoToPricingAnalysis, group.id]);
 
     return (
       <div className="border border-gray-200 rounded-lg bg-white p-4">
