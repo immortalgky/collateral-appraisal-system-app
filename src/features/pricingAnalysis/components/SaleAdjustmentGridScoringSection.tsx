@@ -20,6 +20,7 @@ import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/g
 import { SaleAdjustmentGridSecondRevision } from '@features/pricingAnalysis/components/SaleAdjustmentGridSecondRevision.tsx';
 import { qualitativeDefault } from '@features/pricingAnalysis/domain/qualitativeDefault.ts';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
+import { format } from 'date-fns';
 
 interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -497,6 +498,13 @@ export const SaleAdjustmentGridScoringSection = ({
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
                 const hasSalePrice = !!survey.salePrice;
+                const saleDateLabel = (() => {
+                  if (!survey.saleDate) return '';
+                  const d = new Date(survey.saleDate);
+                  if (isNaN(d.getTime())) return '';
+                  const buddhistYear = d.getFullYear() + 543;
+                  return `${format(d, 'MMM')} ${buddhistYear}`;
+                })();
                 return (
                   <td
                     key={survey.id}
@@ -506,10 +514,15 @@ export const SaleAdjustmentGridScoringSection = ({
                       (hasOfferPrice || !hasSalePrice) && 'opacity-50',
                     )}
                   >
-                    <RHFInputCell
-                      fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
-                      inputType="display"
-                    />
+                    <div className="flex flex-col items-end gap-0.5">
+                      <RHFInputCell
+                        fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
+                        inputType="display"
+                      />
+                      {saleDateLabel && (
+                        <span className="text-xs text-gray-400">{saleDateLabel}</span>
+                      )}
+                    </div>
                   </td>
                 );
               })}
