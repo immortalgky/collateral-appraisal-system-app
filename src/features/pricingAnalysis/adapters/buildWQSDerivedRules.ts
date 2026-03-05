@@ -11,7 +11,7 @@ import {
 } from '@features/pricingAnalysis/domain/calculateWQS';
 import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
-import type { WQSScoreFormType } from '../schemas/wqsForm';
+import type { ComparativeFactorFormType, WQSScoreFormType } from '../schemas/wqsForm';
 import { wqsFieldPath } from './wqsFieldPath';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
@@ -307,6 +307,7 @@ export function buildWQSFinalValueDerivedRules(args: {
     finalValuSlope: finalValuSlopePath,
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
+    finalValueIncludeLandArea: finalValueIncludeLandAreaPath,
     finalValueLandArea: finalValueLandAreaPath,
     finalValueUsableArea: finalValueUsableAreaPath,
     finalValueAppraisalPrice: finalValueAppraisalPricePath,
@@ -460,17 +461,22 @@ export function buildWQSFinalValueDerivedRules(args: {
     },
     {
       targetPath: finalValueAppraisalPricePath(),
-      deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
+      deps: [
+        finalValueFinalValueRoundedPath(),
+        finalValueLandAreaPath(),
+        finalValueIncludeLandAreaPath(),
+      ],
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
 
-        const landArea = getValues(finalValueLandAreaPath());
-        if (landArea) {
+        const isIncludeLandArea = getValues(finalValueIncludeLandAreaPath());
+        if (isIncludeLandArea) {
+          const landArea = getValues(finalValueLandAreaPath()) ?? 0;
           return round2(finalValueRounded * landArea);
         }
 
-        const usableArea = getValues(finalValueUsableAreaPath());
-        if (usableArea) {
+        if (isIncludeLandArea) {
+          const usableArea = getValues(finalValueUsableAreaPath());
           return round2(finalValueRounded * usableArea);
         }
 

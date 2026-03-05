@@ -41,12 +41,16 @@ export const wqsFieldPath = {
   calculation: (arg: { column: number }) => `WQSCalculations.${arg.column}`,
   calculationOfferingPrice: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.offeringPrice`,
+  calculationOfferingPriceMeasurementUnit: (arg: { column: number }) =>
+    `WQSCalculations.${arg.column}.offeringPriceMeasurementUnit`,
   calculationOfferingPriceAdjustmentPct: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.offeringPriceAdjustmentPct`,
   calculationOfferingPriceAdjustmentAmt: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.offeringPriceAdjustmentAmt`,
   calculationSellingPrice: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.sellingPrice`,
+  calculationSellingPriceMeasurementUnit: (arg: { column: number }) =>
+    `WQSCalculations.${arg.column}.sellingPriceMeasurementUnit`,
   calculationNumberOfYears: (arg: { column: number }) =>
     `WQSCalculations.${arg.column}.numberOfYears`,
   calculationAdjustmentYear: (arg: { column: number }) =>

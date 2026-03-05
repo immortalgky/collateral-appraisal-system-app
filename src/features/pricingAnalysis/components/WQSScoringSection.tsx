@@ -65,9 +65,11 @@ export function WQSScoringSection({
 
     /** calculation section path */
     calculationOfferingPrice: calculationOfferingPricePath,
+    calculationOfferingPriceMeasurementUnit: calculationOfferingPriceMeasurementUnitPath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationSellingPrice: calculationSellingPricePath,
+    calculationSellingPriceMeasurementUnit: calculationSellingPriceMeasurementUnitPath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
@@ -632,6 +634,13 @@ export function WQSScoringSection({
                       inputType="display"
                       accessor={({ value }) => (value ? Number(value).toLocaleString() : '')}
                     />
+                    <RHFInputCell
+                      fieldName={calculationOfferingPriceMeasurementUnitPath({
+                        column: columnIndex,
+                      })}
+                      inputType="display"
+                      accessor={({ value }) => (value ? value : '')}
+                    />
                   </td>
                 );
               })}
@@ -753,6 +762,13 @@ export function WQSScoringSection({
                 const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
                 if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
+                console.log(
+                  getValues(
+                    calculationSellingPriceMeasurementUnitPath({
+                      column: columnIndex,
+                    }),
+                  ),
+                );
                 return (
                   <td
                     key={survey.id}
@@ -764,6 +780,13 @@ export function WQSScoringSection({
                       accessor={({ value }) => {
                         return value ? value.toLocaleString() : '';
                       }}
+                    />
+                    <RHFInputCell
+                      fieldName={calculationSellingPriceMeasurementUnitPath({
+                        column: columnIndex,
+                      })}
+                      inputType="display"
+                      accessor={({ value }) => (value ? value : '')}
                     />
                   </td>
                 );
