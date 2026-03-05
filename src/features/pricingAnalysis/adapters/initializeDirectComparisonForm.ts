@@ -1,37 +1,46 @@
 import type { UseFormReset } from 'react-hook-form';
 import type {
-  SaleAdjustmentGridCalculationFormType,
-  SaleAdjustmentGridType,
-} from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
-import type {
   FactorDataType,
   MarketComparableDetailType,
   TemplateCalculationFactorType,
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue';
+import type {
+  DirectComparisonCalculationFormType,
+  DirectComparisonType,
+} from '@features/pricingAnalysis/schemas/directComparisonForm';
+import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
-interface SetSaleAdjustmentGridInitialValueProps {
+interface SetDirectComparisonInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
   property: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDetailType[];
-  reset: UseFormReset<SaleAdjustmentGridType>;
+  allFactors?: FactorDataType[];
+  reset: UseFormReset<DirectComparisonType>;
 }
-export function setSaleAdjustmentGridInitialValue({
+export function initializeDirectComparisonForm({
   collateralType,
   methodId,
   methodType,
   property,
   template,
   comparativeSurveys,
+  allFactors,
   reset,
-}: SetSaleAdjustmentGridInitialValueProps) {
-  if (!collateralType || !methodId || !methodType || !property || !reset) return;
+}: SetDirectComparisonInitialValueProps) {
+  if (!collateralType || !methodId || !methodType || !property || !comparativeSurveys || !reset)
+    return;
+
+  const factorIdMap = new Map<string, string>();
+  for (const f of allFactors ?? []) {
+    const fid = f.factorId ?? f.id;
+    if (f.factorCode && fid) factorIdMap.set(f.factorCode, fid);
+  }
 
   if (!template) {
     reset(
@@ -40,20 +49,20 @@ export function setSaleAdjustmentGridInitialValue({
         collateralType: undefined,
         pricingTemplateCode: undefined,
         comparativeSurveys: [
-          ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType, columnIndex) => ({
+          ...comparativeSurveys.map((survey, columnIndex) => ({
             marketId: survey.id,
             displaySeq: columnIndex + 1,
           })),
         ],
         comparativeFactors: [],
 
-        saleAdjustmentGridQualitatives: [],
+        directComparisonQualitatives: [],
 
-        saleAdjustmentGridCalculations: [
+        directComparisonCalculations: [
           ...((comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => {
             const surveyMap = new Map(
               (survey?.factorData ?? []).map((factor: FactorDataType) => [
-                survey.id,
+                factor.factorCode,
                 readFactorValue({
                   dataType: factor.dataType,
                   fieldDecimal: factor.fieldDecimal,
@@ -63,34 +72,30 @@ export function setSaleAdjustmentGridInitialValue({
             );
             return {
               marketId: survey.id,
-              offeringPrice: surveyMap.get('25') ?? 0,
+              offeringPrice: survey.offerPrice ?? 0,
               offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-              offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-              sellingPrice: surveyMap.get('47') ?? 0,
+              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+              offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+              sellingPrice: survey.salePrice ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              // sellingDate: surveyMap.get('22') ?? '',
-              sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-              numberOfYears: 10, // TODO: convert selling date to number of year
+              sellingDate: survey.saleDate ?? '',
+              sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
+              numberOfYears: yearDiffFromToday(survey.saleDate),
               adjustedValue: 0,
 
               // adjusted value
               factorDiffPct: 0,
               factorDiffAmt: 0,
               totalAdjustValue: 0,
-
-              // adjust weight
-              weight: 0,
-              weightedAdjustValue: 0,
             };
-          }) as SaleAdjustmentGridCalculationFormType[]),
+          }) as DirectComparisonCalculationFormType[]),
         ],
-        saleAdjustmentGridAdjustmentFactors: [],
-        saleAdjustmentGridFinalValue: {
+        directComparisonAdjustmentFactors: [],
+        directComparisonFinalValue: {
           finalValue: 0,
           finalValueRounded: 0,
         },
-        saleAdjustmentGridAppraisalPrice: {
+        directComparisonAppraisalPrice: {
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
@@ -117,25 +122,26 @@ export function setSaleAdjustmentGridInitialValue({
       ],
       comparativeFactors: (template.comparativeFactors ?? []).map(
         (compFact: TemplateComparativeFactorType) => ({
+          factorId: factorIdMap.get(compFact.factorCode) ?? '',
           factorCode: compFact.factorCode,
         }),
       ),
 
-      saleAdjustmentGridQualitatives: (template.calculationFactors ?? []).map(
+      directComparisonQualitatives: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => ({
+          factorId: factorIdMap.get(calcFact.factorCode) ?? '',
           factorCode: calcFact.factorCode,
-          qualitatives: (comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => ({
-            marketId: survey.id,
+          qualitatives: (comparativeSurveys ?? []).map(() => ({
             qualitativeLevel: 'E',
           })),
         }),
       ),
 
-      saleAdjustmentGridCalculations: [
-        ...(comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => {
+      directComparisonCalculations: [
+        ...(comparativeSurveys ?? []).map(survey => {
           const surveyMap = new Map(
             (survey.factorData ?? []).map(s => [
-              s.id,
+              s.factorCode,
               readFactorValue({
                 dataType: s.dataType,
                 fieldDecimal: s.fieldDecimal,
@@ -145,41 +151,39 @@ export function setSaleAdjustmentGridInitialValue({
           );
           return {
             marketId: survey.id,
-            offeringPrice: surveyMap.get('25') ?? 0,
+            offeringPrice: survey.offerPrice ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-            offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-            sellingPrice: surveyMap.get('47') ?? 0,
+            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+            offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+            sellingPrice: survey.salePrice ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            sellingDate: surveyMap.get('22') ?? '',
-            sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
+            sellingDate: survey.saleDate ?? '',
+            sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
             numberOfYears: 10, // TODO: convert selling date to number of year
+
             adjustedValue: 0,
 
             // adjusted value
             factorDiffPct: 0,
             factorDiffAmt: 0,
             totalAdjustValue: 0,
-
-            // adjust weight
-            weight: 0,
-            weightedAdjustValue: 0,
           };
         }),
-      ] as SaleAdjustmentGridCalculationFormType[],
-      saleAdjustmentGridAdjustmentFactors: (template.calculationFactors ?? []).map(
+      ] as DirectComparisonCalculationFormType[],
+      directComparisonAdjustmentFactors: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => {
           return {
+            factorId: factorIdMap.get(calcFact.factorCode) ?? '',
             factorCode: calcFact.factorCode,
             surveys: [],
           };
         },
       ),
-      saleAdjustmentGridFinalValue: {
+      directComparisonFinalValue: {
         finalValue: 0,
         finalValueRounded: 0,
       },
-      saleAdjustmentGridAppraisalPrice: {
+      directComparisonAppraisalPrice: {
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,

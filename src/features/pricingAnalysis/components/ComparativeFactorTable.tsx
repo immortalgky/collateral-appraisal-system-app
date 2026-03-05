@@ -16,26 +16,26 @@ import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/g
 import { useMemo, useState } from 'react';
 import type { ComparativeFactorsFormType } from '../schemas/saleAdjustmentGridForm';
 
-interface ComparativeSurveySectionProps {
+interface ComparativeFactorTableProps {
   comparativeMarketSurveys: MarketComparableDataType[];
   property: Record<string, unknown>;
   allFactors: FactorDataType[];
   template?: TemplateDetailType;
   fieldPath: Record<string, any>;
 }
-export function ComparativeSurveySection({
+export function ComparativeFactorTable({
   comparativeMarketSurveys,
   property,
   allFactors,
   template,
   fieldPath,
-}: ComparativeSurveySectionProps) {
+}: ComparativeFactorTableProps) {
   const {
     comparativeFactors: comparativeFactorsPath,
     comparativeFactorsFactorCode: comparativeFactorsFactorCodePath,
   } = fieldPath;
 
-  const { control, getValues } = useFormContext();
+  const { control, getValues, setValue } = useFormContext();
   const {
     fields: comparativeSurveyFactors,
     append: appendComparativeSurveyFactors,
@@ -147,6 +147,10 @@ export function ComparativeSurveySection({
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={options}
+                          onSelectChange={(value) => {
+                            const factor = allFactors?.find(f => f.factorCode === value);
+                            setValue(`comparativeFactors.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                          }}
                         />
                       </div>
                     )}
@@ -235,6 +239,7 @@ export function ComparativeSurveySection({
                   type="button"
                   onClick={() =>
                     appendComparativeSurveyFactors({
+                      factorId: '',
                       factorCode: '',
                     })
                   }

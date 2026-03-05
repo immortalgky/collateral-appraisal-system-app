@@ -3,15 +3,24 @@ import { z } from 'zod';
 /** select surveys section */
 const ComparativeFactor = z
   .object({
+    id: z.string().nullable().optional(),
+    factorId: z.string(),
     factorCode: z.string(),
   })
   .passthrough();
 
-const ComparativeSurveys = z.object({ marketId: z.string(), displaySeq: z.number() }).passthrough();
+const ComparativeSurveys = z
+  .object({
+    linkId: z.string().nullable().optional(),
+    marketId: z.string(),
+    displaySeq: z.number(),
+  })
+  .passthrough();
 
 /** WQS scoring section */
 const WQSSurveyScore = z
   .object({
+    id: z.string().nullable().optional(),
     marketId: z.string(),
     surveyScore: z.number(),
     weightedSurveyScore: z.number(),
@@ -20,6 +29,7 @@ const WQSSurveyScore = z
 
 const WQSScore = z
   .object({
+    factorId: z.string(),
     factorCode: z.string(),
     weight: z.number(),
     intensity: z.number(),
@@ -27,6 +37,7 @@ const WQSScore = z
     surveys: z.array(WQSSurveyScore),
     collateral: z.number(),
     collateralWeightedScore: z.number(),
+    collateralScoreId: z.string().nullable(),
   })
   .partial();
 

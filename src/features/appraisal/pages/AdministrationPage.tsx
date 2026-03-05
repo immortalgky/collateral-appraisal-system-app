@@ -10,6 +10,8 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 
 import { useCreateAssignment, useGetAssignment, useGetCompanyById, useGetUserById, } from '../api/administration';
 import { assignmentFormDefaults, assignmentFormSchema, type AssignmentFormType, } from '../schemas/administration';
@@ -53,6 +55,8 @@ const AdministrationPage = () => {
     defaultValues: assignmentFormDefaults,
     resolver: zodResolver(assignmentFormSchema),
   });
+
+  const { blocker } = useUnsavedChangesWarning(isDirty);
 
   console.log(errors);
 
@@ -658,6 +662,13 @@ const AdministrationPage = () => {
                 <Button variant="ghost" type="button" onClick={handleCancel}>
                   Cancel
                 </Button>
+                <div className="h-6 w-px bg-gray-200" />
+                {isDirty && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Unsaved changes
+                  </span>
+                )}
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" type="button" disabled={!isDirty}>
@@ -682,6 +693,8 @@ const AdministrationPage = () => {
           </div>
         )}
       </form>
+
+      <UnsavedChangesDialog blocker={blocker} />
 
       {/* Modals */}
       {!isReadOnly && (

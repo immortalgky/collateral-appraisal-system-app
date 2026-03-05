@@ -2,7 +2,7 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import type { Method } from '../../types/selection';
 
-interface PriceAnalysisMethodCardProps {
+interface PricingAnalysisMethodCardProps {
   viewMode: 'editing' | 'summary';
   approachId?: string;
   approachType: string;
@@ -12,7 +12,7 @@ interface PriceAnalysisMethodCardProps {
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
 }
 
-export const PriceAnalysisMethodCard = ({
+export const PricingAnalysisMethodCard = ({
   viewMode,
   approachId,
   approachType,
@@ -21,7 +21,7 @@ export const PriceAnalysisMethodCard = ({
   onSelectCalculationMethod,
 
   onSelectCandidateMethod,
-}: PriceAnalysisMethodCardProps) => {
+}: PricingAnalysisMethodCardProps) => {
   if (viewMode === 'editing') {
     return (
       <div

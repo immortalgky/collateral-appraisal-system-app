@@ -8,6 +8,8 @@ import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import TitleDeedForm from '../forms/TitleDeedForm';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
@@ -40,7 +42,9 @@ const CreateLandPage = () => {
     defaultValues: createLandFormDefault,
     resolver: zodResolver(createLandForm),
   });
-  const { handleSubmit, getValues, reset } = methods;
+  const { handleSubmit, getValues, reset, formState: { isDirty } } = methods;
+
+  const { blocker } = useUnsavedChangesWarning(isDirty);
 
   const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
 
@@ -70,6 +74,7 @@ const CreateLandPage = () => {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Property land updated successfully');
             setSaveAction(null);
           },
@@ -117,6 +122,7 @@ const CreateLandPage = () => {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
           },
@@ -246,6 +252,12 @@ const CreateLandPage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
+                {isDirty && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Unsaved changes
+                  </span>
+                )}
               </div>
               <div className="flex gap-3">
                 <Button
@@ -269,6 +281,8 @@ const CreateLandPage = () => {
               </div>
             </div>
           </div>
+
+          <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>
     </div>

@@ -76,7 +76,7 @@ const ListRow = memo(({
     </td>
     {showUsedBadge && (
       <td className="py-3 px-4">
-        {image.isUsedInReport ? (
+        {image.isInUse ? (
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
           >
@@ -91,8 +91,17 @@ const ListRow = memo(({
       </td>
     )}
     <td className="py-3 px-4">
-      <span className="text-sm text-gray-600 capitalize">
-        {image.category || image.photoType || '-'}
+      <span className="text-sm text-gray-600 uppercase">
+        {image.fileExtension || image.mimeType?.split('/')[1] || '-'}
+      </span>
+    </td>
+    <td className="py-3 px-4">
+      <span className="text-sm text-gray-600">
+        {image.fileSizeBytes != null
+          ? image.fileSizeBytes < 1024 * 1024
+            ? `${(image.fileSizeBytes / 1024).toFixed(1)} KB`
+            : `${(image.fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`
+          : '-'}
       </span>
     </td>
     <td className="py-3 px-4">
@@ -232,8 +241,11 @@ export const PhotoListView = ({
                 Status
               </th>
             )}
-            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
               Type
+            </th>
+            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+              Size
             </th>
             <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Description
