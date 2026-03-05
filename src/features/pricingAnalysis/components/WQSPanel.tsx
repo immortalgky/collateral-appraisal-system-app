@@ -1,21 +1,29 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
-import { PriceAnalysisTemplateSelector } from './PriceAnalysisTemplateSelector';
+import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelector';
 import { MethodFooterActions } from './MethodFooterActions';
 import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import { COLLATERAL_TYPE } from '../data/constants';
 import toast from 'react-hot-toast';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
-import { WQS } from './WQS';
+import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
+import { useSaveComparativeAnalysis } from '../api';
+import { WQSForm } from './WQSForm';
 import type {
+  CalculationType,
+  ComparativeFactorType,
   FactorDataType,
+  FactorScoreType,
+  LinkedComparableType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { setWQSInitialValueOnSelectSurvey } from '@features/pricingAnalysis/adapters/setWQSInitialValueOnSelectSurvey.ts';
-import { setWQSInitialValue } from '@features/pricingAnalysis/adapters/setWQSInitialValue.ts';
+import { syncWQSFormSurveys } from '@features/pricingAnalysis/adapters/syncWQSFormSurveys.ts';
+import { initializeWQSForm } from '@features/pricingAnalysis/adapters/initializeWQSForm.ts';
+import { restoreWQSFromSavedData } from '@features/pricingAnalysis/adapters/restoreWQSFromSavedData.ts';
+import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 
 interface WQSPanelProps {
   activeMethod?: {
@@ -29,6 +37,10 @@ interface WQSPanelProps {
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   methodTemplates: TemplateDetailType[] | null | undefined;
+  linkedComparables: LinkedComparableType[] | undefined;
+  savedComparativeFactors?: ComparativeFactorType[];
+  savedFactorScores?: FactorScoreType[];
+  savedCalculations?: CalculationType[];
   onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
@@ -40,6 +52,10 @@ export function WQSPanel({
   marketSurveys,
   allFactors,
   methodTemplates: templates,
+  linkedComparables,
+  savedComparativeFactors,
+  savedFactorScores,
+  savedCalculations,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -59,10 +75,15 @@ export function WQSPanel({
     formState: { isDirty },
   } = methods;
 
-  /** Template selector states handler */
-  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  /** Linked comparables — syncs with server on select/deselect */
+  const { comparativeSurveys, syncSelection } = useLinkedComparables({
+    pricingAnalysisId: activeMethod?.pricingAnalysisId,
+    methodId: methodId,
+    marketSurveys,
+    linkedComparables,
+  });
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    setComparativeSurveys(surveys);
+    syncSelection(surveys);
   };
 
   const [collateralType, setCollateralType] = useState<string>('');
@@ -73,25 +94,41 @@ export function WQSPanel({
   /** cancel calculation dialog state */
   const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
 
-  /** Form handler */
-  const handleOnSubmit = (value: WQSFormType) => {
-    const appraisalValue = value.WQSFinalValue.appraisalPriceRounded;
-    if (
-      !!appraisalValue &&
-      !!activeMethod?.approachType &&
-      !!activeMethod?.methodType
-    ) {
-      onCalculationSave({
-        approachType: activeMethod.approachType,
-        methodType: activeMethod.methodType,
-        appraisalValue: appraisalValue,
-      });
-      toast.success('Saved!');
-      reset(value);
+  const saveMutation = useSaveComparativeAnalysis();
+
+  /** Form handler — skips full Zod validation so we can save factors/scores independently */
+  const handleOnSubmit = async () => {
+    if (!activeMethod?.pricingAnalysisId || !methodId) {
+      toast.error('Pricing analysis ID or method ID not found!');
       return;
     }
 
-    toast.error('Pricing analysis ID or method Id not found!');
+    const value = getValues();
+
+    try {
+      const request = mapWQSFormToSubmitSchema({
+        WQSForm: value,
+      });
+
+      await saveMutation.mutateAsync({
+        id: activeMethod.pricingAnalysisId,
+        methodId,
+        request,
+      });
+
+      const appraisalValue = value.WQSFinalValue?.appraisalPriceRounded;
+      if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
+        onCalculationSave({
+          approachType: activeMethod.approachType,
+          methodType: activeMethod.methodType,
+          appraisalValue,
+        });
+      }
+      toast.success('Saved!');
+      reset(value);
+    } catch {
+      toast.error('Failed to save comparative analysis');
+    }
   };
 
   const handleOnSaveDraft = () => {
@@ -102,10 +139,22 @@ export function WQSPanel({
   /** template selection handler */
   const handleOnGenerate = () => {
     setIsGenerated(false);
-    setPricingTemplate(
-      (templates ?? []).find(template => template?.templateCode === pricingTemplateType),
-    );
-    setComparativeSurveys([]);
+
+    const template = (templates ?? []).find(t => t?.templateCode === pricingTemplateType);
+    setPricingTemplate(template);
+
+    // single source of truth: init now (use existing linked comparables)
+    initializeWQSForm({
+      collateralType,
+      methodId: methodId!,
+      methodType: methodType!,
+      comparativeSurveys,
+      property: property!,
+      template,
+      allFactors,
+      reset,
+    });
+
     setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
     setIsGenerated(true);
   };
@@ -148,33 +197,61 @@ export function WQSPanel({
     );
   };
 
+  // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
-    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setWQSInitialValue({
-        collateralType: collateralType,
-        methodId: methodId,
-        methodType: methodType,
-        comparativeSurveys: comparativeSurveys,
-        property: property,
-        template: pricingTemplate,
-        reset: reset,
-      });
-    }
-  }, [collateralType, isGenerated, methodId, methodType, pricingTemplate, property]);
+    if (isGenerated || comparativeSurveys.length === 0) return;
+    if (!methodId || !methodType || !property) return;
 
-  useEffect(() => {
-    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
-      setWQSInitialValueOnSelectSurvey({
-        collateralType: collateralType,
-        methodId: methodId,
-        methodType: methodType,
-        comparativeSurveys: comparativeSurveys,
-        property: property,
-        template: pricingTemplate,
-        reset: reset,
-        getValues: getValues,
+    // Restore from saved data if available
+    if (savedComparativeFactors && savedComparativeFactors.length > 0) {
+      restoreWQSFromSavedData({
+        methodId,
+        property,
+        comparativeSurveys,
+        allFactors,
+        linkedComparables,
+        savedComparativeFactors,
+        savedFactorScores: savedFactorScores ?? [],
+        savedCalculations,
+        reset,
       });
+      setIsGenerated(true);
+      return;
     }
+
+    initializeWQSForm({
+      collateralType: '',
+      methodId,
+      methodType,
+      comparativeSurveys,
+      property,
+      template: undefined,
+      allFactors,
+      reset,
+    });
+    setIsGenerated(true);
+  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors, savedFactorScores]);
+
+  // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
+  useEffect(() => {
+    if (!isGenerated) return;
+    if (!methodId || !methodType || !property) return;
+
+    // Only re-init when the set of surveys actually changed
+    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
+    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    if (formSurveyIds === currentSurveyIds) return;
+
+    initializeWQSFormOnSelectSurvey({
+      collateralType: collateralType,
+      methodId: methodId,
+      methodType: methodType,
+      comparativeSurveys: comparativeSurveys,
+      property: property,
+      template: pricingTemplate,
+      reset: reset,
+      getValues: getValues,
+    });
   }, [
     comparativeSurveys,
     comparativeSurveys.length,
@@ -204,10 +281,10 @@ export function WQSPanel({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(handleOnSubmit, onInvalid)}
+        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
         className="flex flex-col h-full gap-4"
       >
-        <PriceAnalysisTemplateSelector
+        <PricingAnalysisTemplateSelector
           icon="scale-balanced"
           methodName="Weighted Quality Scores (WQS)"
           onGenerate={handleOnGenerate}
@@ -232,7 +309,7 @@ export function WQSPanel({
         />
         {!isLoading && (
           <div className="flex-1 min-h-0">
-            <WQS
+            <WQSForm
               {...methods}
               property={property}
               marketSurveys={marketSurveys}
@@ -244,6 +321,7 @@ export function WQSPanel({
             <MethodFooterActions
               onSaveDraft={handleOnSaveDraft}
               onCancel={handleOnCancelCalculationMethod}
+              isSubmitting={saveMutation.isPending}
             />
           </div>
         )}

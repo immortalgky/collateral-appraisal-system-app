@@ -1,8 +1,8 @@
 import { Toggle } from '@/shared/components';
-import { PriceAnalysisApproachAccordion } from './PriceAnalysisApproachAccordion';
+import { PricingAnalysisApproachAccordion } from './PricingAnalysisApproachAccordion';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 
-interface PriceAnalysisApproachMethodSelectorProps {
+interface PricingAnalysisApproachMethodSelectorProps {
   state: SelectionState;
   isSystemCalculation: string;
   onSystemCalculationChange: (check: boolean) => void;
@@ -18,7 +18,7 @@ interface PriceAnalysisApproachMethodSelectorProps {
   onSelectCandidateApproach: (approachType: string) => void;
 }
 
-export const PriceAnalysisApproachMethodSelector = ({
+export const PricingAnalysisApproachMethodSelector = ({
   state,
   isSystemCalculation,
   onSystemCalculationChange,
@@ -32,7 +32,7 @@ export const PriceAnalysisApproachMethodSelector = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
-}: PriceAnalysisApproachMethodSelectorProps) => {
+}: PricingAnalysisApproachMethodSelectorProps) => {
   return (
     <div className="flex flex-col overflow-hidden gap-4 h-full">
       {/* System Calculation */}
@@ -51,7 +51,7 @@ export const PriceAnalysisApproachMethodSelector = ({
               {/* Approach and methods */}
               <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
                 {state.editDraft?.map(appr => (
-                  <PriceAnalysisApproachAccordion
+                  <PricingAnalysisApproachAccordion
                     key={appr.id}
                     viewMode={state.viewMode}
                     approach={appr}
@@ -94,7 +94,7 @@ export const PriceAnalysisApproachMethodSelector = ({
                   Determine Approach and Method
                 </button>
                 {state.summarySelected?.map(appr => (
-                  <PriceAnalysisApproachAccordion
+                  <PricingAnalysisApproachAccordion
                     key={appr.id}
                     viewMode={state.viewMode}
                     approach={{

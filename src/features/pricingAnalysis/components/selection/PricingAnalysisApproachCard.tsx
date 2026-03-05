@@ -3,20 +3,20 @@ import clsx from 'clsx';
 import type { Approach } from '../../types/selection';
 import type { ViewMode } from '@features/pricingAnalysis/store/selectionReducer';
 
-interface PriceAnalysisApproachCard {
+interface PricingAnalysisApproachCard {
   viewMode: ViewMode;
   approach: Approach;
   isOpen: boolean;
   onToggle: () => void;
   onSelectCandidateApproach: (approachType: string) => void;
 }
-export const PriceAnalysisApproachCard = ({
+export const PricingAnalysisApproachCard = ({
   viewMode,
   approach,
   isOpen,
   onToggle,
   onSelectCandidateApproach,
-}: PriceAnalysisApproachCard) => {
+}: PricingAnalysisApproachCard) => {
   if (viewMode === 'editing') {
     return (
       <div className="flex flex-col">

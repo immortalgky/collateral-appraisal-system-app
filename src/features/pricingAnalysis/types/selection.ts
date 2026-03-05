@@ -2,10 +2,10 @@ import type { GetPropertyGroupByIdResponse, PropertyGroupItemDto } from '@featur
 import type {
   FactorDataType,
   MarketComparableDetailType,
-  PriceAnalysisConfigType,
+  PricingAnalysisConfigType,
 } from '../schemas';
 
-export interface PriceAnalysisMethodRequest {
+export interface PricingAnalysisMethodRequest {
   id: string;
   methodType: string;
   isCandidated: boolean;
@@ -13,12 +13,12 @@ export interface PriceAnalysisMethodRequest {
   appraisalValue: number;
 }
 
-export interface PriceAnalysisApproachRequest {
+export interface PricingAnalysisApproachRequest {
   id: string;
   approachType: string;
   appraisalValue: number;
   isCandidated: boolean;
-  methods: PriceAnalysisMethodRequest[];
+  methods: PricingAnalysisMethodRequest[];
 }
 
 export type ApproachMethodLink = {
@@ -57,14 +57,14 @@ export interface GroupDetails {
 
 // export type MarketSurvey;
 
-export type PriceAnalysisSelectorMode = 'editing' | 'summary';
+export type PricingAnalysisSelectorMode = 'editing' | 'summary';
 
 export interface PricingServerData {
   groupDetail: GetPropertyGroupByIdResponse | undefined;
   properties: Record<string, unknown> | undefined;
   marketSurveyDetails: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
-  pricingConfiguration: PriceAnalysisConfigType[] | undefined;
+  pricingConfiguration: PricingAnalysisConfigType[] | undefined;
 }
 
 export interface MethodConfiguration {
