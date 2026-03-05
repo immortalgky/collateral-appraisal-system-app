@@ -37,7 +37,7 @@ interface ListBoxOptionProps {
 }
 
 export type ListBoxItem = {
-  value: string | undefined;
+  value: string | null | undefined;
   label: string;
   id?: string | number;
 };
@@ -58,13 +58,12 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     },
     ref,
   ) => {
-    console.log('drop down options: ', options);
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');
     const dropdownOptions = useMemo(() => {
       const base = options !== undefined ? options : parameterOptions;
-      return [{ value: undefined, label: placeholder, id: '' }, ...base];
+      return [{ value: null, label: placeholder, id: '' }, ...base];
     }, [options, parameterOptions, placeholder]);
 
     const selectedOption = useMemo(

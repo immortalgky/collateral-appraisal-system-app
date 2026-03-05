@@ -25,6 +25,11 @@ import { ProtectedRoute } from '@features/auth/components';
 import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
 import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
 import PricingAnalysisPage from '@features/pricingAnalysis/pages/PricingAnalysisPage';
+import MarketComparableFactorListPage from '@features/templateManagement/pages/MarketComparableFactorListPage';
+import MarketComparableTemplateListPage from '@features/templateManagement/pages/MarketComparableTemplateListPage';
+import MarketComparableTemplateDetailPage from '@features/templateManagement/pages/MarketComparableTemplateDetailPage';
+import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
+import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -126,6 +131,27 @@ export const router = createBrowserRouter([
       {
         path: 'condo-pma',
         element: <CondoPMAPage />,
+      },
+      // Template Management Routes
+      {
+        path: 'market-comparable-factors',
+        element: <MarketComparableFactorListPage />,
+      },
+      {
+        path: 'market-comparable-templates',
+        children: [
+          { index: true, element: <MarketComparableTemplateListPage /> },
+          { path: 'new', element: <MarketComparableTemplateDetailPage /> },
+          { path: ':templateId', element: <MarketComparableTemplateDetailPage /> },
+        ],
+      },
+      {
+        path: 'comparative-templates',
+        children: [
+          { index: true, element: <ComparativeTemplateListPage /> },
+          { path: 'new', element: <ComparativeTemplateDetailPage /> },
+          { path: ':templateId', element: <ComparativeTemplateDetailPage /> },
+        ],
       },
       {
         path: 'dev/property-information',

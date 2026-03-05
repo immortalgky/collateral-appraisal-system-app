@@ -1,8 +1,14 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useBlocker } from 'react-router-dom';
 
 export function useUnsavedChangesWarning(isDirty: boolean) {
-  const blocker = useBlocker(isDirty);
+  const skipRef = useRef(false);
+
+  const blocker = useBlocker(() => isDirty && !skipRef.current);
+
+  const skipWarning = useCallback(() => {
+    skipRef.current = true;
+  }, []);
 
   // Browser tab close / refresh
   useEffect(() => {
@@ -16,5 +22,5 @@ export function useUnsavedChangesWarning(isDirty: boolean) {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  return { blocker };
+  return { blocker, skipWarning };
 }

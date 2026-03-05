@@ -242,7 +242,7 @@ export function WQSPanel({
     const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
-    initializeWQSFormOnSelectSurvey({
+    syncWQSFormSurveys({
       collateralType: collateralType,
       methodId: methodId,
       methodType: methodType,

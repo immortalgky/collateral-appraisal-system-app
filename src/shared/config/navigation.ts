@@ -209,6 +209,37 @@ export const navigationConfig: NavItem[] = [
     ],
   },
   {
+    name: 'Template Management',
+    href: '/market-comparable-factors',
+    icon: 'layer-group',
+    iconColor: 'text-teal-500',
+    iconStyle: 'solid',
+    allowedRoles: ['admin'],
+    children: [
+      {
+        name: 'MC Factors',
+        href: '/market-comparable-factors',
+        icon: 'database',
+        iconColor: 'text-teal-500',
+        iconStyle: 'solid',
+      },
+      {
+        name: 'MC Templates',
+        href: '/market-comparable-templates',
+        icon: 'rectangle-list',
+        iconColor: 'text-teal-500',
+        iconStyle: 'solid',
+      },
+      {
+        name: 'Comparative Templates',
+        href: '/comparative-templates',
+        icon: 'chart-mixed',
+        iconColor: 'text-teal-500',
+        iconStyle: 'solid',
+      },
+    ],
+  },
+  {
     name: 'Development',
     href: '/dev',
     icon: 'code',

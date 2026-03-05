@@ -42,9 +42,10 @@ const CreateLandPage = () => {
     defaultValues: createLandFormDefault,
     resolver: zodResolver(createLandForm),
   });
-  const { handleSubmit, getValues, reset, formState: { isDirty } } = methods;
+  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
 
@@ -96,7 +97,8 @@ const CreateLandPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Property land created successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property/land/${response.id}`);
+            skipWarning();
+            navigate(`/appraisal/${appraisalId}/property/land/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -144,8 +146,9 @@ const CreateLandPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Draft saved successfully');
             setSaveAction(null);
-            if (response.id) {
-              navigate(`/appraisal/${appraisalId}/property/land/${response.id}`);
+            if (response.propertyId) {
+              skipWarning();
+              navigate(`/appraisal/${appraisalId}/property/land/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -252,7 +255,7 @@ const CreateLandPage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
-                {isDirty && (
+                {hasDirtyFields && (
                   <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     Unsaved changes

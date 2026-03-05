@@ -719,7 +719,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   provinceName: '',
   landOffice: '',
   landDescription: '',
-  isOwnerVerified: false,
+  isOwnerVerified: true,
   ownerName: '',
   hasObligation: false,
   obligationDetails: '',

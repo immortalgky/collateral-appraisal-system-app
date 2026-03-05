@@ -19,6 +19,8 @@ import type { WorkflowActivity } from './config/navigation';
 export const useUIStore = create<UIStore>(set => ({
   sidebarOpen: false,
   setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
+  sidebarCollapsed: false,
+  toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   searchQuery: '',
   setSearchQuery: (query: string) => set({ searchQuery: query }),
 }));

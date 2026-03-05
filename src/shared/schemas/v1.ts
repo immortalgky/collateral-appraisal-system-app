@@ -1595,6 +1595,7 @@ const UpdateMarketComparableFactorRequest = z
   .object({
     factorName: z.string(),
     fieldName: z.string(),
+    dataType: z.string().nullable(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
@@ -4602,3 +4603,33 @@ export type LawAndRegulationImageInputType = z.infer<typeof LawAndRegulationImag
 export type LawAndRegulationItemInputType = z.infer<typeof LawAndRegulationItemInput>;
 export type SaveLawAndRegulationsRequestType = z.infer<typeof SaveLawAndRegulationsRequest>;
 export type SaveLawAndRegulationsResponseType = z.infer<typeof SaveLawAndRegulationsResponse>;
+
+// Market Comparable Factor types (for template management)
+export type CreateMarketComparableFactorRequestType = z.infer<
+  typeof CreateMarketComparableFactorRequest
+>;
+export type UpdateMarketComparableFactorRequestType = z.infer<
+  typeof UpdateMarketComparableFactorRequest
+>;
+
+// Market Comparable Template detail types
+export type MarketComparableTemplateDetailDtoType = z.infer<
+  typeof MarketComparableTemplateDetailDto
+>;
+export type CreateMarketComparableTemplateRequestType = z.infer<
+  typeof CreateMarketComparableTemplateRequest
+>;
+export type UpdateMarketComparableTemplateRequestType = z.infer<
+  typeof UpdateMarketComparableTemplateRequest
+>;
+export type TemplateFactorDtoType = z.infer<typeof TemplateFactorDto>;
+export type AddFactorToTemplateRequestType = z.infer<typeof AddFactorToTemplateRequest>;
+
+// Comparative Analysis Template types
+export type TemplateDtoType = z.infer<typeof TemplateDto>;
+export type GetTemplateByIdResponseType = z.infer<typeof GetTemplateByIdResponse>;
+export type GetTemplatesResponseType = z.infer<typeof GetTemplatesResponse>;
+export type CreateTemplateRequestType = z.infer<typeof CreateTemplateRequest>;
+export type UpdateTemplateRequestType = z.infer<typeof UpdateTemplateRequest>;
+export type TemplateFactorDto2Type = z.infer<typeof TemplateFactorDto2>;
+export type AddFactorToTemplateRequest2Type = z.infer<typeof AddFactorToTemplateRequest2>;

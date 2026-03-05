@@ -241,7 +241,7 @@ export function DirectComparisonPanel({
     const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
-    initializeDirectComparisonFormOnSelectSurvey({
+    syncDirectComparisonFormSurveys({
       comparativeSurveys: comparativeSurveys,
       reset: reset,
       getValues: getValues,

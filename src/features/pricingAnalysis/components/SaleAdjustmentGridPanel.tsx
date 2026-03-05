@@ -245,7 +245,7 @@ export function SaleAdjustmentGridPanel({
     const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
-    initializeSaleAdjustmentGridFormOnSelectSurvey({
+    syncSaleAdjustmentGridFormSurveys({
       comparativeSurveys: comparativeSurveys,
       reset: reset,
       getValues: getValues,
