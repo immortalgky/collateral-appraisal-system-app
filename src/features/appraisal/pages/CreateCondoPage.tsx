@@ -11,7 +11,11 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CondoDetailForm from '../forms/CondoDetailForm';
-import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty, } from '../api/property';
+import {
+  useCreateCondoProperty,
+  useGetCondoPropertyById,
+  useUpdateCondoProperty,
+} from '../api/property';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
@@ -21,12 +25,12 @@ import PropertyPhotoSection, {
 
 const CreateCondoPage = () => {
   const navigate = useNavigate();
-
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const isEditMode = Boolean(propertyId);
 
@@ -42,6 +46,9 @@ const CreateCondoPage = () => {
     if (isEditMode && propertyData) {
       const formValues = mapCondoPropertyResponseToForm(propertyData);
       reset(formValues);
+      setIsLoaded(true);
+    } else if (!isEditMode) {
+      setIsLoaded(true);
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -215,7 +222,7 @@ const CreateCondoPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <CondoDetailForm />
+                    <CondoDetailForm isLoaded={isLoaded} />
                   </Section>
                 </div>
               </ResizableSidebar.Main>

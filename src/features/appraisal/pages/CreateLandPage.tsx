@@ -33,6 +33,7 @@ const CreateLandPage = () => {
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const isEditMode = Boolean(propertyId);
 
@@ -48,6 +49,9 @@ const CreateLandPage = () => {
     if (isEditMode && propertyData) {
       const formValues = mapLandPropertyResponseToForm(propertyData);
       reset(formValues);
+      setIsLoaded(true);
+    } else if (!isEditMode) {
+      setIsLoaded(true);
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -233,7 +237,7 @@ const CreateLandPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <LandDetailForm />
+                    <LandDetailForm isLoaded={isLoaded} />
                   </Section>
                 </div>
               </ResizableSidebar.Main>

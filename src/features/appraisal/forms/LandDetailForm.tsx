@@ -1,5 +1,13 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
+import {
+  usePropertyNameSoftDefault,
+  type UsePropertyNameSoftDefaultOptions,
+} from '../hooks/usePropertyNameSoftDefault';
+interface LandDetailFormProps {
+  isLoaded: boolean;
+  softDefault?: UsePropertyNameSoftDefaultOptions | false;
+}
 
 /** Section row component for form layout */
 interface SectionRowProps {
@@ -28,7 +36,20 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
-const LandDetailForm = () => {
+const LandDetailForm = ({ isLoaded, softDefault }: LandDetailFormProps) => {
+  const defaultConfig: UsePropertyNameSoftDefaultOptions = {
+    fields: ['titles'],
+    arrayField: values =>
+      values[0]
+        ?.map((t: any) => t?.titleNumber)
+        .filter(Boolean)
+        .join(', '),
+  };
+
+  usePropertyNameSoftDefault(
+    softDefault === false ? { ...defaultConfig, enabled: false } : (softDefault ?? defaultConfig),
+    isLoaded,
+  );
   return (
     <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Land Detail</h2>

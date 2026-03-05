@@ -25,7 +25,10 @@ import {
   type createLandAndBuildingFormType,
 } from '../schemas/form';
 import toast from 'react-hot-toast';
-import { mapLandAndBuildingPropertyResponseToForm, mapLandAndBuildingFormDataToApiPayload } from '../utils/mappers';
+import {
+  mapLandAndBuildingPropertyResponseToForm,
+  mapLandAndBuildingFormDataToApiPayload,
+} from '../utils/mappers';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
@@ -42,6 +45,7 @@ const CreateLandBuildingPage = () => {
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const methods = useForm<createLandAndBuildingFormType>({
     defaultValues: createLandAndBuildingFormDefault,
@@ -58,6 +62,9 @@ const CreateLandBuildingPage = () => {
     if (isEditMode && propertyData) {
       const formValues = mapLandAndBuildingPropertyResponseToForm(propertyData);
       reset(formValues);
+      setIsLoaded(true);
+    } else if (!isEditMode) {
+      setIsLoaded(true);
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -264,7 +271,23 @@ const CreateLandBuildingPage = () => {
                       anchor
                       className="flex flex-col gap-6 min-w-0 overflow-hidden"
                     >
-                      <LandDetailForm />
+                      <LandDetailForm
+                        isLoaded={isLoaded}
+                        softDefault={{
+                          fields: ['titles', 'buildingNumber', 'modelName'],
+                          arrayField: values => {
+                            const [titles, buildingNumber, modelName] = values;
+                            const titlePart = (titles as any[])
+                              ?.map((t: any) => t?.titleNumber)
+                              .filter(Boolean)
+                              .join(', ');
+                            const buildingPart = [buildingNumber, modelName]
+                              .filter(Boolean)
+                              .join(' ');
+                            return [titlePart, buildingPart].filter(Boolean).join(' ');
+                          },
+                        }}
+                      />
                     </Section>
                   </div>
 
@@ -282,7 +305,7 @@ const CreateLandBuildingPage = () => {
                     </div>
                     <div className="h-px bg-gray-200" />
                     <Section id="building-info" anchor className="flex flex-col gap-6">
-                      <BuildingDetailForm />
+                      <BuildingDetailForm isLoaded={isLoaded} softDefault={false} />
                     </Section>
                   </div>
                 </div>

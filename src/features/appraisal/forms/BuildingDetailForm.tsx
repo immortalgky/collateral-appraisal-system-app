@@ -3,9 +3,14 @@ import SurfaceTable from '../components/tables/SurfaceTable';
 import { BuildingDetail } from '../components/tables/BuildingDetail';
 import Icon from '@/shared/components/Icon';
 import type { ReactNode } from 'react';
-
+import {
+  usePropertyNameSoftDefault,
+  type UsePropertyNameSoftDefaultOptions,
+} from '../hooks/usePropertyNameSoftDefault';
 interface BuildingDetailFormProps {
   prefix?: string;
+  isLoaded: boolean;
+  softDefault?: UsePropertyNameSoftDefaultOptions | false;
 }
 
 // SectionRow component for consistent section styling with icons
@@ -35,7 +40,15 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
-const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
+const BuildingDetailForm = ({ prefix, isLoaded, softDefault }: BuildingDetailFormProps) => {
+  const defaultConfig: UsePropertyNameSoftDefaultOptions = {
+    fields: ['buildingNumber', 'modelName'],
+  };
+
+  usePropertyNameSoftDefault(
+    softDefault === false ? { ...defaultConfig, enabled: false } : (softDefault ?? defaultConfig),
+    isLoaded,
+  );
   return (
     <div className="grid grid-cols-5 gap-6">
       <SectionRow title="Building Information" icon="building">

@@ -1,7 +1,11 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
-import type { ReactNode } from 'react';
 import CondoAreaDetailForm from './CondoAreaDetailForm';
+import { type ReactNode } from 'react';
+import { usePropertyNameSoftDefault } from '../hooks/usePropertyNameSoftDefault';
+interface CondoDetailFormProps {
+  isLoaded: boolean;
+}
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -30,7 +34,8 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
-function CondoDetailForm() {
+function CondoDetailForm({ isLoaded }: CondoDetailFormProps) {
+  usePropertyNameSoftDefault({ fields: ['condoName', 'modelName'] }, isLoaded);
   return (
     <div className="grid grid-cols-5 gap-6">
       <SectionRow title="Condominium Information" icon="building">

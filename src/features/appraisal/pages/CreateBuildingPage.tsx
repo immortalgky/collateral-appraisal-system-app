@@ -22,7 +22,10 @@ import {
   createBuildingFormDefault,
   type createBuildingFormType,
 } from '../schemas/form';
-import { mapBuildingPropertyResponseToForm, mapBuildingFormDataToApiPayload } from '../utils/mappers';
+import {
+  mapBuildingPropertyResponseToForm,
+  mapBuildingFormDataToApiPayload,
+} from '../utils/mappers';
 import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
@@ -36,6 +39,7 @@ const CreateBuildingPage = () => {
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const isEditMode = Boolean(propertyId);
 
@@ -51,6 +55,9 @@ const CreateBuildingPage = () => {
     if (isEditMode && propertyData) {
       const formValues = mapBuildingPropertyResponseToForm(propertyData);
       reset(formValues);
+      setIsLoaded(true);
+    } else if (!isEditMode) {
+      setIsLoaded(true);
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -227,7 +234,7 @@ const CreateBuildingPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <BuildingDetailForm />
+                    <BuildingDetailForm isLoaded={isLoaded} />
                   </Section>
                 </div>
               </ResizableSidebar.Main>
