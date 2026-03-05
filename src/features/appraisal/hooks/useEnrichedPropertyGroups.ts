@@ -39,6 +39,7 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
   const photos: PropertyPhoto[] = (item.photos ?? []).map(p => ({
     documentId: p.documentId,
     isThumbnail: p.isThumbnail,
+    mappingId: p.mappingId ?? undefined,
   }));
   const thumbnailId =
     photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;

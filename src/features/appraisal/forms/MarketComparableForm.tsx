@@ -1,10 +1,13 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useGetMarketComparableTemplate, useGetMarketComparableTemplateById, } from '../api/marketComparable';
+import { useEffect, useState } from 'react';
+import {
+  useGetMarketComparableTemplate,
+  useGetMarketComparableTemplateById,
+} from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
-import Icon from '@/shared/components/Icon';
+import Icon from '@/shared/components/Icon'; // SectionRow component for consistent section styling with icons
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -161,6 +164,24 @@ const MarketComparableForm = () => {
       label: '',
       wrapperClassName: 'col-span-12',
     },
+    {
+      type: 'number-input',
+      name: 'offerPrice',
+      label: '',
+      wrapperClassName: 'col-span-12',
+    },
+    {
+      type: 'number-input',
+      name: 'salePrice',
+      label: '',
+      wrapperClassName: 'col-span-12',
+    },
+    {
+      type: 'date-input',
+      name: 'saleDate',
+      label: '',
+      wrapperClassName: 'col-span-12',
+    },
   ];
 
   const formStaticSections = [
@@ -188,6 +209,21 @@ const MarketComparableForm = () => {
       label: 'Source of Information',
       icon: 'circle-info',
       fields: staticFields.filter(f => f.name === 'sourceInfo'),
+    },
+    {
+      label: 'Offer Price',
+      icon: 'money-bill',
+      fields: staticFields.filter(f => f.name === 'offerPrice'),
+    },
+    {
+      label: 'Sale Price',
+      icon: 'money-bill',
+      fields: staticFields.filter(f => f.name === 'salePrice'),
+    },
+    {
+      label: 'Sale Date',
+      icon: 'calendar',
+      fields: staticFields.filter(f => f.name === 'saleDate'),
     },
   ];
 
