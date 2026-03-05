@@ -17,9 +17,7 @@ import { useCreateCondoProperty, useGetCondoPropertyById, useUpdateCondoProperty
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
-import PropertyPhotoSection, {
-  type PropertyPhotoSectionRef,
-} from '../components/PropertyPhotoSection';
+import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
 
 const CreateCondoPage = () => {
   const navigate = useNavigate();
@@ -36,9 +34,15 @@ const CreateCondoPage = () => {
     defaultValues: createCondoFormDefault,
     resolver: zodResolver(createCondoForm),
   });
-  const { handleSubmit, getValues, reset, formState: { isDirty } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId, propertyId);
 
@@ -89,7 +93,8 @@ const CreateCondoPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Property condominium created successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property/condo/${response.id}`);
+            skipWarning();
+            navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -137,8 +142,9 @@ const CreateCondoPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Draft saved successfully');
             setSaveAction(null);
-            if (response.id) {
-              navigate(`/appraisal/${appraisalId}/property/condo/${response.id}`);
+            if (response.propertyId) {
+              skipWarning();
+              navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -234,7 +240,7 @@ const CreateCondoPage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
-                {isDirty && (
+                {hasDirtyFields && (
                   <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     Unsaved changes

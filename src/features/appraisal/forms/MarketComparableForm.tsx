@@ -1,7 +1,7 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   useGetMarketComparableTemplate,
   useGetMarketComparableTemplateById,
@@ -57,8 +57,9 @@ const FactorsSkeleton = () => (
 );
 
 const MarketComparableForm = () => {
-  const { getValues, setValue } = useFormContext();
+  const { getValues, setValue, reset } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
+  const isInitialSetup = useRef(true);
   const [searchParams] = useSearchParams();
 
   // Watch property type to fetch templates
@@ -118,8 +119,16 @@ const MarketComparableForm = () => {
 
     const defaultData = defaultMarketComparableData(factors, oldData);
 
-    setValue('factorData', defaultData, { shouldDirty: true });
-  }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue]);
+    if (isInitialSetup.current) {
+      // Auto-initialization: use reset to update defaultValues baseline
+      // so isDirty correctly tracks user changes (including reverts)
+      isInitialSetup.current = false;
+      reset({ ...getValues(), factorData: defaultData });
+    } else {
+      // User changed template: just update value, keep dirty state
+      setValue('factorData', defaultData);
+    }
+  }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue, reset]);
 
   useEffect(() => {
     if (!templateCode) return;
@@ -324,6 +333,7 @@ const buildFormField = (fac: any, index: number): FormField => {
         name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-12',
+        ...(fac.fieldLength ? { maxLength: fac.fieldLength } : {}),
       };
   }
 };
@@ -343,11 +353,13 @@ const defaultMarketComparableData = (newFactors: any[], oldData: any[] = []) => 
       fieldDecimal: fac.fieldDecimal ?? 2,
       value:
         old?.value ??
-        (fac.dataType === 'checkbox-group'
+        (fac.dataType === 'CheckboxGroup'
           ? fac.value || []
-          : fac.dataType === 'number-input'
-            ? fac.value || ''
-            : ''),
+          : fac.dataType === 'Checkbox'
+            ? false
+            : fac.dataType === 'Numeric'
+              ? fac.value || ''
+              : ''),
     };
   });
 };

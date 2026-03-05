@@ -36,7 +36,7 @@ const getIconBgClass = (iconColor: string | undefined) => {
   return colorMap[iconColor] || 'bg-gray-100';
 };
 
-function CompactMenuItem({ item }: { item: NavItem }) {
+function CompactMenuItem({ item, collapsed = false }: { item: NavItem; collapsed?: boolean }) {
   const location = useLocation();
   const isActive = location.pathname === item.href;
   const iconStyle = (item.iconStyle || 'solid') as
@@ -46,6 +46,33 @@ function CompactMenuItem({ item }: { item: NavItem }) {
     | 'thin'
     | 'duotone'
     | 'brands';
+
+  if (collapsed) {
+    return (
+      <Link
+        to={item.href}
+        title={item.name}
+        className={clsx(
+          'group flex items-center justify-center py-2 px-2.5 rounded-lg transition-all duration-200',
+          isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+        )}
+      >
+        <div
+          className={clsx(
+            'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+            isActive ? 'bg-primary/10' : getIconBgClass(item.iconColor),
+            'group-hover:scale-105',
+          )}
+        >
+          <Icon
+            name={item.icon}
+            style={iconStyle}
+            className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
+          />
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link
@@ -79,10 +106,12 @@ function ExpandableSection({
   title,
   items,
   initialVisibleCount = 3,
+  collapsed = false,
 }: {
   title: string;
   items: NavItem[];
   initialVisibleCount?: number;
+  collapsed?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const location = useLocation();
@@ -90,6 +119,20 @@ function ExpandableSection({
   const hasMoreItems = items.length > initialVisibleCount;
   const hiddenActiveItem =
     !isExpanded && items.slice(initialVisibleCount).some(item => location.pathname === item.href);
+
+  if (collapsed) {
+    return (
+      <div className="mb-3">
+        <ul className="flex flex-col gap-0.5">
+          {items.map(item => (
+            <li key={item.href}>
+              <CompactMenuItem item={item} collapsed />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-3">
@@ -243,6 +286,8 @@ export default function AppraisalSidebar({
   const requestId = useAppraisalRequestId();
   const user = useUserStore(state => state.user);
   const role = user?.role ?? 'viewer';
+  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
+  const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
   // Get role-filtered navigation
   const applicationNav = useMemo(
@@ -256,62 +301,85 @@ export default function AppraisalSidebar({
   const footerItems = useMemo(() => getFooterNavigationByRole(role), [role]);
 
   return (
-    <aside className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[256px] lg:flex-col">
+    <aside
+      className={clsx(
+        'hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300',
+        sidebarCollapsed ? 'lg:w-16' : 'lg:w-[256px]',
+      )}
+    >
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
-        <div className="px-5 py-5">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm">
+        <div className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}>
+          <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-7 w-auto" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
-                CAS
-              </span>
-              <div
-                className="w-12 h-1 rounded-full my-0.5"
-                style={{
-                  background:
-                    'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
-                }}
-              />
-              <span className="text-[10px] font-medium text-gray-400">
-                Collateral Appraisal System
-              </span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex flex-col">
+                <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
+                  CAS
+                </span>
+                <div
+                  className="w-12 h-1 rounded-full my-0.5"
+                  style={{
+                    background:
+                      'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
+                  }}
+                />
+                <span className="text-[10px] font-medium text-gray-400">
+                  Collateral Appraisal System
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-1 flex-col px-3 py-2">
-          {/* GENERAL Section - Show first 3, expand for more */}
-          <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} />
+        <nav className={clsx('flex flex-1 flex-col py-2 transition-all duration-300', sidebarCollapsed ? 'px-1' : 'px-3')}>
+          {/* GENERAL Section */}
+          <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} collapsed={sidebarCollapsed} />
 
           {/* APPLICATION Section */}
-          <div className="pt-3 border-t border-gray-100">
-            <div className="px-2.5 mb-1">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                Application
-              </span>
-            </div>
+          <div className={clsx('pt-3', !sidebarCollapsed && 'border-t border-gray-100')}>
+            {!sidebarCollapsed && (
+              <div className="px-2.5 mb-1">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                  Application
+                </span>
+              </div>
+            )}
             <ul className="flex flex-col gap-0.5">
               {applicationNav.map(item => (
                 <li key={item.href}>
-                  <CompactMenuItem item={item} />
+                  <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Footer */}
-          <div className="mt-auto pt-3 border-t border-gray-100">
+          <div className={clsx('mt-auto pt-3', !sidebarCollapsed && 'border-t border-gray-100')}>
             <ul className="flex flex-col gap-0.5">
               {footerItems.map(item => (
                 <li key={item.href}>
-                  <CompactMenuItem item={item} />
+                  <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
                 </li>
               ))}
             </ul>
+
+            {/* Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <Icon
+                style="solid"
+                name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
+                className="size-4"
+              />
+            </button>
           </div>
         </nav>
       </div>

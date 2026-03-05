@@ -379,23 +379,12 @@ function FieldRenderer({
     const currentValue = getValues(name);
 
     if (currentValue !== field.disabledValue) {
-      // Sync internal default BEFORE setValue so isDirty stays false
-      const defaults = (control as any)._defaultValues;
-      if (defaults) {
-        const keys = name.split('.');
-        let obj = defaults;
-        for (let i = 0; i < keys.length - 1; i++) {
-          obj = obj[keys[i]];
-          if (!obj) break;
-        }
-        if (obj) obj[keys[keys.length - 1]] = field.disabledValue;
-      }
       setValue(name, field.disabledValue, {
         shouldDirty: false,
         shouldValidate: true,
       });
     }
-  }, [isDisabled, name, field.disabledValue, getValues, setValue, control]);
+  }, [isDisabled, name, field.disabledValue, getValues, setValue]);
 
   const {
     field: fieldProps,

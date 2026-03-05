@@ -16,6 +16,7 @@ import {
   useRightMenuPortal,
 } from '@shared/contexts/RightMenuPortalContext';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
+import { useUIStore } from '@shared/store';
 
 const userNavigation = [
   { name: 'Your profile', href: '#' },
@@ -83,6 +84,7 @@ function Layout() {
     defaultIsOpen: true,
   });
   const rightMenuPortalRef = useRef<HTMLDivElement>(null);
+  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
 
   // Get role-based navigation
   const navigation = useNavigation();
@@ -98,7 +100,7 @@ function Layout() {
         <MobileSidebar navigation={navigation} logo={Logo} />
         <Sidebar navigation={navigation} logo={Logo} />
 
-        <div className="lg:pl-72 flex-1 flex flex-col min-h-0 min-w-0">
+        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-72'} flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-300`}>
           <Navbar userNavigation={userNavigation} />
 
           <div className="flex-1 flex min-h-0 min-w-0">

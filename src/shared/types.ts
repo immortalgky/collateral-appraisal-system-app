@@ -5,6 +5,8 @@ import type { WorkflowActivity } from './config/navigation';
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 };
