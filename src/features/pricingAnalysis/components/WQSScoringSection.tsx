@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
@@ -24,6 +24,7 @@ import {
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { format } from 'date-fns';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -124,9 +125,7 @@ export function WQSScoringSection({
     });
   };
 
-  const handleRemoveRow = (rowIndex: number) => {
-    removeScoringFactor(rowIndex);
-  };
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   /** Rules */
   const scoringSurveyRules: DerivedFieldRule<any>[] = useMemo(() => {
@@ -426,7 +425,7 @@ export function WQSScoringSection({
                           <button
                             type="button"
                             onClick={() => {
-                              handleRemoveRow(rowIndex);
+                              setDeleteIndex(rowIndex);
                             }}
                             className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
                             title="Delete"
@@ -1042,6 +1041,19 @@ export function WQSScoringSection({
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        isOpen={deleteIndex !== null}
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          if (deleteIndex !== null) {
+            removeScoringFactor(deleteIndex);
+            setDeleteIndex(null);
+          }
+        }}
+        variant="danger"
+        title="Remove Factor"
+        message="Are you sure you want to remove this factor?"
+      />
     </div>
   );
 }
