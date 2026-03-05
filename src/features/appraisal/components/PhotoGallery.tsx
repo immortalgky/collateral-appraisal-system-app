@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
-import FileInput from '@/shared/components/inputs/FileInput';
 
 export interface Photo {
   id: string;
@@ -12,11 +11,12 @@ export interface Photo {
   url?: string;
   fullSrc?: string;
   isUploading?: boolean;
+  mappingId?: string;
 }
 
 interface PhotoGalleryProps {
   photos: Photo[];
-  onUpload: (file: File) => void;
+  onAddClick: () => void;
   onDelete: (photoId: string) => void;
   onSetThumbnail: (photoId: string) => void;
   onPreview: (photo: Photo) => void;
@@ -39,7 +39,7 @@ const GAP = 8; // gap-2
 
 const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   photos,
-  onUpload,
+  onAddClick,
   onDelete,
   onSetThumbnail,
   onPreview,
@@ -82,19 +82,6 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const hasOverflow = photos.length > maxVisible;
   const visiblePhotos = hasOverflow ? photos.slice(0, maxVisible) : photos;
   const remainingCount = photos.length - maxVisible + 1;
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-          onUpload(file);
-        }
-      });
-    }
-    // Reset input
-    e.target.value = '';
-  };
 
   const handleContextMenu = useCallback((e: React.MouseEvent, photoId: string) => {
     e.preventDefault();
@@ -161,27 +148,23 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   return (
     <div className="relative min-w-0" onClick={handleContainerClick}>
       <div ref={containerRef} className="flex items-center gap-2 overflow-hidden pb-2">
-      {/* Upload Button */}
-      <FileInput
-        onChange={handleFileChange}
-        accept="image/*"
-        multiple
-        disabled={disabled}
-        fullWidth={false}
+      {/* Add Button */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={disabled ? undefined : onAddClick}
+        onKeyDown={e => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) onAddClick(); }}
+        className={clsx(
+          'flex flex-col items-center justify-center',
+          'w-[148px] h-28 shrink-0',
+          'bg-gray-50 border border-dashed border-gray-300 rounded-lg',
+          'cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors',
+          disabled && 'opacity-50 cursor-not-allowed',
+        )}
       >
-        <div
-          className={clsx(
-            'flex flex-col items-center justify-center',
-            'w-[148px] h-28 shrink-0',
-            'bg-gray-50 border border-dashed border-gray-300 rounded-lg',
-            'cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors',
-            disabled && 'opacity-50 cursor-not-allowed',
-          )}
-        >
-          <Icon name="plus" style="solid" className="w-5 h-5 text-gray-400 mb-1" />
-          <span className="text-xs text-gray-500 text-center px-2">Click to add picture</span>
-        </div>
-      </FileInput>
+        <Icon name="plus" style="solid" className="w-5 h-5 text-gray-400 mb-1" />
+        <span className="text-xs text-gray-500 text-center px-2">Click to add picture</span>
+      </div>
 
       {/* Photo Thumbnails */}
       {visiblePhotos.map((photo, index) => {

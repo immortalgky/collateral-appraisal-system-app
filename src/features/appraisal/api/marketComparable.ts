@@ -12,6 +12,10 @@ import type {
   UpdateMarketComparableResponseType,
 } from '@/shared/schemas/v1';
 
+export const marketComparableKeys = {
+  detail: (id?: string) => ['market-comparables', 'detail', id] as const,
+};
+
 /**
  * Create a new market comparable
  * POST /market-comparables
@@ -216,6 +220,82 @@ export const useUnlinkAppraisalComparable = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisals', variables.appraisalId, 'comparables'],
       });
+    },
+  });
+};
+
+// ========================
+// Market comparable images
+// ========================
+
+/**
+ * Add an image to a market comparable (link a gallery photo)
+ * POST /market-comparables/{marketComparableId}/images
+ */
+export const useAddMarketComparableImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      marketComparableId,
+      appraisalId: _appraisalId,
+      ...body
+    }: {
+      marketComparableId: string;
+      appraisalId?: string;
+      galleryPhotoId: string;
+      title?: string | null;
+      description?: string | null;
+    }): Promise<{ imageId: string }> => {
+      const { data } = await axios.post(`/market-comparables/${marketComparableId}/images`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: marketComparableKeys.detail(variables.marketComparableId),
+      });
+      if (variables.appraisalId) {
+        queryClient.invalidateQueries({
+          queryKey: ['appraisal', variables.appraisalId, 'gallery'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['appraisal', variables.appraisalId, 'photo-topics'],
+        });
+      }
+    },
+  });
+};
+
+/**
+ * Remove an image from a market comparable
+ * DELETE /market-comparables/{marketComparableId}/images/{imageId}
+ */
+export const useRemoveMarketComparableImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      marketComparableId,
+      imageId,
+    }: {
+      marketComparableId: string;
+      imageId: string;
+      appraisalId?: string;
+    }): Promise<void> => {
+      await axios.delete(`/market-comparables/${marketComparableId}/images/${imageId}`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: marketComparableKeys.detail(variables.marketComparableId),
+      });
+      if (variables.appraisalId) {
+        queryClient.invalidateQueries({
+          queryKey: ['appraisal', variables.appraisalId, 'gallery'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['appraisal', variables.appraisalId, 'photo-topics'],
+        });
+      }
     },
   });
 };

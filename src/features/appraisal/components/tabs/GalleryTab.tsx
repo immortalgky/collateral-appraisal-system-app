@@ -13,9 +13,8 @@ import {
   useGetGalleryPhotos,
   useAddGalleryPhoto,
   useRemoveGalleryPhoto,
-  useMarkPhotoForReport,
-  useUnmarkPhotoFromReport,
   useLinkPhotoToProperty,
+  useUpdateGalleryPhoto,
 } from '../../api/gallery';
 import {
   createUploadSession,
@@ -23,6 +22,7 @@ import {
 } from '@features/request/api/documents';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
+import PhotoEditModal from '../gallery/PhotoEditModal';
 
 type SortOption = 'newest' | 'oldest' | 'name';
 type FilterStatus = 'all' | 'used' | 'unused';
@@ -99,15 +99,11 @@ const FilterChip = ({
 const BulkActionToolbar = ({
   selectedCount,
   onDelete,
-  onMarkForReport,
-  onUnmarkFromReport,
   onLinkToProperty,
   onDeselect,
 }: {
   selectedCount: number;
   onDelete: () => void;
-  onMarkForReport: () => void;
-  onUnmarkFromReport: () => void;
   onLinkToProperty: () => void;
   onDeselect: () => void;
 }) => (
@@ -124,22 +120,6 @@ const BulkActionToolbar = ({
       >
         <Icon name="link" className="text-xs" />
         Link to Property
-      </button>
-      <button
-        type="button"
-        onClick={onMarkForReport}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 transition-colors text-sm font-medium"
-      >
-        <Icon name="file-lines" className="text-xs" />
-        Mark for Report
-      </button>
-      <button
-        type="button"
-        onClick={onUnmarkFromReport}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 transition-colors text-sm font-medium"
-      >
-        <Icon name="file-circle-xmark" className="text-xs" />
-        Unmark
       </button>
       <button
         type="button"
@@ -176,58 +156,6 @@ const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => (
     </Button>
   </div>
 );
-
-// Mark for Report Modal
-const MarkForReportModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  isLoading,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (section: string) => void;
-  isLoading: boolean;
-}) => {
-  const [section, setSection] = useState('');
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Mark for Report</h3>
-          <p className="text-sm text-gray-500 mt-1">Enter the report section name</p>
-        </div>
-        <div className="p-6">
-          <input
-            type="text"
-            value={section}
-            onChange={e => setSection(e.target.value)}
-            placeholder="e.g. Area in front of the project"
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            autoFocus
-          />
-        </div>
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => onConfirm(section)}
-            disabled={!section.trim() || isLoading}
-            isLoading={isLoading}
-          >
-            Confirm
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Link to Property Modal
 const LinkToPropertyModal = ({
@@ -348,8 +276,8 @@ export const GalleryTab = () => {
   const [uploadingPhotos, setUploadingPhotos] = useState<Map<string, { file: File; progress: number }>>(new Map());
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; photoId: string | null }>({ isOpen: false, photoId: null });
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
-  const [markForReportOpen, setMarkForReportOpen] = useState(false);
   const [linkToPropertyOpen, setLinkToPropertyOpen] = useState(false);
+  const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSessionIdRef = useRef<string | null>(null);
   const sessionPromiseRef = useRef<Promise<string> | null>(null);
@@ -358,9 +286,8 @@ export const GalleryTab = () => {
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
   const { mutate: removeGalleryPhoto, isPending: isDeleting } = useRemoveGalleryPhoto();
-  const { mutate: markForReport, isPending: isMarking } = useMarkPhotoForReport();
-  const { mutate: unmarkFromReport } = useUnmarkPhotoFromReport();
   const { mutate: linkPhotoToProperty, isPending: isLinking } = useLinkPhotoToProperty();
+  const { mutateAsync: updateGalleryPhoto, isPending: isUpdating } = useUpdateGalleryPhoto();
   const { groups } = useEnrichedPropertyGroups(appraisalId);
 
   /**
@@ -406,16 +333,15 @@ export const GalleryTab = () => {
         img =>
           img.fileName?.toLowerCase().includes(query) ||
           img.description?.toLowerCase().includes(query) ||
-          img.caption?.toLowerCase().includes(query) ||
-          img.reportSection?.toLowerCase().includes(query)
+          img.caption?.toLowerCase().includes(query)
       );
     }
 
     // Filter by status
     if (filterStatus === 'used') {
-      result = result.filter(img => img.isUsedInReport);
+      result = result.filter(img => img.isInUse);
     } else if (filterStatus === 'unused') {
-      result = result.filter(img => !img.isUsedInReport);
+      result = result.filter(img => !img.isInUse);
     }
 
     // Sort
@@ -438,8 +364,8 @@ export const GalleryTab = () => {
   const stats = useMemo(
     () => ({
       total: allImages.length,
-      used: allImages.filter(img => img.isUsedInReport).length,
-      unused: allImages.filter(img => !img.isUsedInReport).length,
+      used: allImages.filter(img => img.isInUse).length,
+      unused: allImages.filter(img => !img.isInUse).length,
     }),
     [allImages]
   );
@@ -478,9 +404,26 @@ export const GalleryTab = () => {
   };
 
   const handleImageEdit = (image: GalleryImage) => {
-    // TODO: Open edit modal
-    console.log('Edit image:', image.id);
-    toast.success('Edit feature coming soon');
+    setEditingImage(image);
+  };
+
+  const handleEditSave = async (data: { caption: string }) => {
+    if (!editingImage || !appraisalId) return;
+    try {
+      await updateGalleryPhoto({
+        appraisalId,
+        photoId: editingImage.id,
+        caption: data.caption || null,
+        photoCategory: editingImage.photoCategory,
+        latitude: editingImage.latitude,
+        longitude: editingImage.longitude,
+        capturedAt: editingImage.capturedAt,
+      });
+      toast.success('Photo updated successfully');
+      setEditingImage(null);
+    } catch {
+      toast.error('Failed to update photo');
+    }
   };
 
   const handleBulkDelete = () => {
@@ -516,74 +459,6 @@ export const GalleryTab = () => {
               toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
               setSelectedImageIds(new Set());
               setBulkDeleteConfirm(false);
-            }
-          },
-        }
-      );
-    });
-  };
-
-  const handleBulkMarkForReport = () => {
-    if (selectedImageIds.size === 0) {
-      toast.error('Please select at least one photo');
-      return;
-    }
-    setMarkForReportOpen(true);
-  };
-
-  const confirmMarkForReport = (section: string) => {
-    if (!appraisalId) return;
-    const ids = Array.from(selectedImageIds);
-    let successCount = 0;
-    let failCount = 0;
-
-    ids.forEach(photoId => {
-      markForReport(
-        { appraisalId, photoId, reportSection: section },
-        {
-          onSuccess: () => {
-            successCount++;
-            if (successCount + failCount === ids.length) {
-              toast.success(`Marked ${successCount} photo(s) for report`);
-              setSelectedImageIds(new Set());
-              setMarkForReportOpen(false);
-            }
-          },
-          onError: () => {
-            failCount++;
-            if (successCount + failCount === ids.length) {
-              toast.error(`Marked ${successCount}, failed ${failCount}`);
-              setSelectedImageIds(new Set());
-              setMarkForReportOpen(false);
-            }
-          },
-        }
-      );
-    });
-  };
-
-  const handleBulkUnmarkFromReport = () => {
-    if (!appraisalId || selectedImageIds.size === 0) return;
-    const ids = Array.from(selectedImageIds);
-    let successCount = 0;
-    let failCount = 0;
-
-    ids.forEach(photoId => {
-      unmarkFromReport(
-        { appraisalId, photoId },
-        {
-          onSuccess: () => {
-            successCount++;
-            if (successCount + failCount === ids.length) {
-              toast.success(`Unmarked ${successCount} photo(s) from report`);
-              setSelectedImageIds(new Set());
-            }
-          },
-          onError: () => {
-            failCount++;
-            if (successCount + failCount === ids.length) {
-              toast.error(`Unmarked ${successCount}, failed ${failCount}`);
-              setSelectedImageIds(new Set());
             }
           },
         }
@@ -747,6 +622,12 @@ export const GalleryTab = () => {
         longitude: null,
         capturedAt: null,
         photoTopicIds: null,
+        fileName: uploadResult.fileName,
+        filePath: uploadResult.storageUrl,
+        fileExtension: file.name.includes('.') ? file.name.split('.').pop() ?? null : null,
+        mimeType: file.type || null,
+        fileSizeBytes: uploadResult.fileSize,
+        uploadedByName: null,
       });
 
       setUploadingPhotos(prev => {
@@ -1001,6 +882,7 @@ export const GalleryTab = () => {
                 images={filteredImages}
                 onImageClick={handleImageClick}
                 onImageDelete={handleImageDelete}
+                onImageEdit={handleImageEdit}
                 selectedImageIds={selectedImageIds}
                 onSelectionChange={setSelectedImageIds}
                 showUsedBadge
@@ -1041,8 +923,6 @@ export const GalleryTab = () => {
         <BulkActionToolbar
           selectedCount={selectedImageIds.size}
           onDelete={handleBulkDelete}
-          onMarkForReport={handleBulkMarkForReport}
-          onUnmarkFromReport={handleBulkUnmarkFromReport}
           onLinkToProperty={handleBulkLinkToProperty}
           onDeselect={() => setSelectedImageIds(new Set())}
         />
@@ -1055,6 +935,27 @@ export const GalleryTab = () => {
           photos={filteredImages}
           onClose={handleCloseModal}
           onNavigate={handleNavigate}
+          onSaveDescription={async (caption: string) => {
+            if (!appraisalId) return;
+            try {
+              await updateGalleryPhoto({
+                appraisalId,
+                photoId: selectedImage.id,
+                caption: caption || null,
+                photoCategory: selectedImage.photoCategory,
+                latitude: selectedImage.latitude,
+                longitude: selectedImage.longitude,
+                capturedAt: selectedImage.capturedAt,
+              });
+              setSelectedImage(prev =>
+                prev ? { ...prev, caption: caption || null, description: caption || undefined } : null
+              );
+              toast.success('Description updated');
+            } catch {
+              toast.error('Failed to update description');
+            }
+          }}
+          isSavingDescription={isUpdating}
           onDelete={() => {
             handleImageDelete(selectedImage);
             setSelectedImage(null);
@@ -1088,14 +989,6 @@ export const GalleryTab = () => {
         isLoading={isDeleting}
       />
 
-      {/* Mark for Report Modal */}
-      <MarkForReportModal
-        isOpen={markForReportOpen}
-        onClose={() => setMarkForReportOpen(false)}
-        onConfirm={confirmMarkForReport}
-        isLoading={isMarking}
-      />
-
       {/* Link to Property Modal */}
       <LinkToPropertyModal
         isOpen={linkToPropertyOpen}
@@ -1103,6 +996,15 @@ export const GalleryTab = () => {
         onConfirm={confirmLinkToProperty}
         isLoading={isLinking}
         properties={allProperties}
+      />
+
+      {/* Photo Edit Modal */}
+      <PhotoEditModal
+        isOpen={editingImage !== null}
+        image={editingImage}
+        onClose={() => setEditingImage(null)}
+        onSave={handleEditSave}
+        isLoading={isUpdating}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import type { GalleryViewProps, GalleryImage } from '../../types/gallery';
 
 interface PhotoGridViewProps extends GalleryViewProps {
   showUsedBadge?: boolean;
+  prepend?: React.ReactNode;
 }
 
 interface GridItemProps {
@@ -12,9 +13,11 @@ interface GridItemProps {
   isSelected: boolean;
   showUsedBadge: boolean;
   hasSelection: boolean;
+  hasEdit: boolean;
   hasDelete: boolean;
   onSelect: (imageId: string, e: React.MouseEvent) => void;
   onClick: (image: GalleryImage) => void;
+  onEdit: (image: GalleryImage) => void;
   onDelete: (image: GalleryImage) => void;
 }
 
@@ -23,9 +26,11 @@ const GridItem = memo(({
   isSelected,
   showUsedBadge,
   hasSelection,
+  hasEdit,
   hasDelete,
   onSelect,
   onClick,
+  onEdit,
   onDelete,
 }: GridItemProps) => (
   <div
@@ -46,7 +51,7 @@ const GridItem = memo(({
       />
 
       {/* Used Badge */}
-      {showUsedBadge && image.isUsedInReport && (
+      {showUsedBadge && image.isInUse && (
         <div className="absolute top-2 left-2">
           <span
             className="px-2 py-0.5 bg-green-600 rounded text-white text-xs font-bold flex items-center gap-1"
@@ -82,36 +87,62 @@ const GridItem = memo(({
         </div>
       </div>
 
-      {/* Delete button */}
-      {hasDelete && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            onDelete(image);
-          }}
-          className="absolute bottom-2 right-2 w-8 h-8 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center text-red-500 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-          title="Delete"
-        >
-          <Icon name="trash" style="solid" />
-        </button>
-      )}
+      {/* Action buttons */}
+      <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        {hasEdit && (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onEdit(image);
+            }}
+            className="w-8 h-8 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center text-gray-600 shadow-sm"
+            title="Edit"
+          >
+            <Icon name="pen-to-square" style="solid" />
+          </button>
+        )}
+        {hasDelete && (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onDelete(image);
+            }}
+            className="w-8 h-8 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm"
+            title="Delete"
+          >
+            <Icon name="trash" style="solid" />
+          </button>
+        )}
+      </div>
     </div>
 
     {/* Image Info */}
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0.5">
       {image.fileName && (
         <p className="text-[10px] text-black font-normal truncate">
           {image.fileName}
         </p>
       )}
+      <div className="flex items-center gap-2 text-[10px] text-gray-400">
+        {image.fileExtension && (
+          <span className="uppercase">{image.fileExtension}</span>
+        )}
+        {image.fileSizeBytes != null && (
+          <>
+            {image.fileExtension && <span>&middot;</span>}
+            <span>{image.fileSizeBytes < 1024 * 1024 ? `${(image.fileSizeBytes / 1024).toFixed(1)} KB` : `${(image.fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`}</span>
+          </>
+        )}
+      </div>
       <p
         className={clsx(
-          'text-sm font-normal truncate',
-          image.description ? 'text-gray-700' : 'text-gray-300'
+          'text-xs font-normal truncate',
+          image.description ? 'text-gray-500' : 'text-gray-300'
         )}
       >
-        {image.description || 'Description'}
+        {image.description || 'No description'}
       </p>
     </div>
   </div>
@@ -122,9 +153,11 @@ export const PhotoGridView = ({
   images,
   onImageClick,
   onImageDelete,
+  onImageEdit,
   selectedImageIds,
   onSelectionChange,
   showUsedBadge = true,
+  prepend,
 }: PhotoGridViewProps) => {
   const handleSelect = useCallback((imageId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -143,11 +176,15 @@ export const PhotoGridView = ({
     onImageClick?.(image);
   }, [onImageClick]);
 
+  const handleEdit = useCallback((image: GalleryImage) => {
+    onImageEdit?.(image);
+  }, [onImageEdit]);
+
   const handleDelete = useCallback((image: GalleryImage) => {
     onImageDelete?.(image);
   }, [onImageDelete]);
 
-  if (images.length === 0) {
+  if (images.length === 0 && !prepend) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
@@ -161,6 +198,7 @@ export const PhotoGridView = ({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {prepend}
       {images.map(image => (
         <GridItem
           key={image.id}
@@ -168,9 +206,11 @@ export const PhotoGridView = ({
           isSelected={!!selectedImageIds?.has(image.id)}
           showUsedBadge={showUsedBadge}
           hasSelection={!!onSelectionChange}
+          hasEdit={!!onImageEdit}
           hasDelete={!!onImageDelete}
           onSelect={handleSelect}
           onClick={handleClick}
+          onEdit={handleEdit}
           onDelete={handleDelete}
         />
       ))}
