@@ -396,7 +396,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const stdError = STEYX(surveyCalculate, surveyScores) ?? 0;
-        return toFiniteNumber(stdError.toFixed(6));
+        return round2(stdError);
       },
     },
     {
@@ -417,7 +417,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const intersectionPoint = INTERCEPT(surveyCalculate, surveyScores) ?? 0;
-        return toFiniteNumber(intersectionPoint);
+        return round2(intersectionPoint);
       },
     },
     {
@@ -438,7 +438,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const slope = SLOPE(surveyCalculate, surveyScores) ?? 0;
-        return toFiniteNumber(slope);
+        return round2(slope);
       },
     },
     {
@@ -447,7 +447,7 @@ export function buildWQSFinalValueDerivedRules(args: {
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
         const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
-        return round2(finalValueRounded - stdError);
+        return Math.round(finalValueRounded - stdError);
       },
     },
     {
@@ -456,7 +456,7 @@ export function buildWQSFinalValueDerivedRules(args: {
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
         const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
-        return round2(finalValueRounded + stdError);
+        return Math.round(finalValueRounded + stdError);
       },
     },
     {
