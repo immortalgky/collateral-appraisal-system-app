@@ -34,11 +34,15 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
     return {
       marketId: survey.id ?? '',
       offeringPrice: survey.offerPrice ?? 0,
-      offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-      offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? null,
-      offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? null,
+      offeringPriceMeasurementUnit: surveyMap.get('20') ?? null,
+      offeringPriceAdjustmentPct: survey.offerPrice
+        ? (survey.offerPriceAdjustmentPercent ?? 3)
+        : null,
+      offeringPriceAdjustmentAmt: survey.offerPrice
+        ? (survey.offerPriceAdjustmentAmount ?? null)
+        : null,
       sellingPrice: survey.salePrice ?? 0,
-      sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+      sellingPriceMeasurementUnit: surveyMap.get('20') ?? null,
       sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
       numberOfYears: yearDiffFromToday(survey.saleDate),
       adjustedValue: 0,
@@ -47,6 +51,7 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
 }
 
 function buildFinalValue(property: Record<string, unknown>) {
+  console.log('usable area', property?.usableArea);
   return {
     landArea: property.titles
       ? convertLandTitlesToLandArea({ titles: property.titles })
