@@ -4570,7 +4570,7 @@
       "post": {
         "tags": ["MarketComparables"],
         "summary": "Add image to market comparable",
-        "description": "Links a document (uploaded via Document API) as an image to a market comparable record.",
+        "description": "Links a gallery photo as an image to a market comparable record.",
         "operationId": "AddMarketComparableImage",
         "parameters": [
           {
@@ -5496,11 +5496,18 @@
       "get": {
         "tags": ["Document Requirements"],
         "summary": "Get all document requirements",
-        "description": "Returns all document requirements. Use collateralTypeCode=APP for application-level, or L/B/U/VEH/etc. for collateral-specific",
+        "description": "Returns all document requirements. Use propertyTypeCode=APP for application-level, or L/B/U/VEH/etc. for property-type-specific. Use purposeCode to filter by purpose.",
         "operationId": "GetDocumentRequirements",
         "parameters": [
           {
-            "name": "collateralTypeCode",
+            "name": "propertyTypeCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purposeCode",
             "in": "query",
             "schema": {
               "type": "string"
@@ -5523,7 +5530,7 @@
       "post": {
         "tags": ["Document Requirements"],
         "summary": "Create a document requirement",
-        "description": "Creates a new document requirement linking a document type to a collateral type. Use null for CollateralTypeCode for application-level requirements.",
+        "description": "Creates a new document requirement. Use null PropertyTypeCode for application-level, null PurposeCode for purpose-agnostic requirements.",
         "operationId": "CreateDocumentRequirement",
         "requestBody": {
           "content": {
@@ -5562,14 +5569,21 @@
     "/document-checklist": {
       "get": {
         "tags": ["Document Requirements"],
-        "summary": "Get document checklist for specified collateral types",
-        "description": "Returns application-level documents and collateral-specific documents grouped by type",
+        "summary": "Get document checklist for specified property types",
+        "description": "Returns application-level documents and property-type-specific documents grouped by type. Use purposeCode to include purpose-specific requirements.",
         "operationId": "GetDocumentChecklist",
         "parameters": [
           {
-            "name": "collateralTypeCodes",
+            "name": "propertyTypeCodes",
             "in": "query",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purposeCode",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -7510,66 +7524,6 @@
         }
       }
     },
-    "/appraisals/{appraisalId}/gallery/{photoId}/unmark-from-report": {
-      "post": {
-        "tags": ["AppraisalGallery"],
-        "summary": "Unmark photo from report",
-        "description": "Removes a gallery photo from the appraisal report.",
-        "operationId": "UnmarkPhotoFromReport",
-        "parameters": [
-          {
-            "name": "appraisalId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnmarkPhotoFromReportResult"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/appraisals/{appraisalId}/gallery/property-links/{mappingId}": {
       "delete": {
         "tags": ["AppraisalGallery"],
@@ -8056,76 +8010,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MovePropertyToGroupResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/appraisals/{appraisalId}/gallery/{photoId}/mark-for-report": {
-      "post": {
-        "tags": ["AppraisalGallery"],
-        "summary": "Mark photo for report",
-        "description": "Marks a gallery photo to be included in the appraisal report under the specified section.",
-        "operationId": "MarkPhotoForReport",
-        "parameters": [
-          {
-            "name": "appraisalId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MarkPhotoForReportRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarkPhotoForReportResult"
                 }
               }
             }
@@ -10531,6 +10415,37 @@
             },
             "default": null,
             "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "filePath": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "fileExtension": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "default": null,
+            "nullable": true
+          },
+          "uploadedByName": {
+            "type": "string",
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -10549,10 +10464,10 @@
         }
       },
       "AddMarketComparableImageRequest": {
-        "required": ["documentId"],
+        "required": ["galleryPhotoId"],
         "type": "object",
         "properties": {
-          "documentId": {
+          "galleryPhotoId": {
             "type": "string",
             "format": "uuid"
           },
@@ -10913,20 +10828,6 @@
         }
       },
       "AppraisalComparableDto": {
-        "required": [
-          "id",
-          "appraisalId",
-          "marketComparableId",
-          "sequenceNumber",
-          "weight",
-          "originalPricePerUnit",
-          "adjustedPricePerUnit",
-          "totalAdjustmentPct",
-          "weightedValue",
-          "selectionReason",
-          "notes",
-          "adjustments"
-        ],
         "type": "object",
         "properties": {
           "id": {
@@ -10971,6 +10872,49 @@
           },
           "notes": {
             "type": "string",
+            "nullable": true
+          },
+          "comparableNumber": {
+            "type": "string"
+          },
+          "comparablePropertyType": {
+            "type": "string"
+          },
+          "comparableSurveyName": {
+            "type": "string"
+          },
+          "comparableInfoDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "comparableSourceInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "comparableOfferPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "comparableOfferPriceAdjustmentPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "comparableOfferPriceAdjustmentAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "comparableSalePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "comparableSaleDate": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "adjustments": {
@@ -11178,7 +11122,7 @@
         }
       },
       "ApproachDto": {
-        "required": ["id", "approachType"],
+        "required": ["id", "approachType", "methods"],
         "type": "object",
         "properties": {
           "id": {
@@ -11187,6 +11131,12 @@
           },
           "approachType": {
             "type": "string"
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MethodDto"
+            }
           }
         }
       },
@@ -11863,22 +11813,6 @@
           }
         }
       },
-      "CollateralDocumentGroupDto": {
-        "required": ["collateralTypeCode", "collateralTypeName", "documents"],
-        "type": "object",
-        "properties": {
-          "collateralTypeCode": {
-            "type": "string"
-          },
-          "collateralTypeName": {
-            "type": "string"
-          },
-          "documents": {
-            "type": "array",
-            "items": {}
-          }
-        }
-      },
       "CollateralEngagementDto": {
         "required": ["collatId", "reqId", "linkedAt", "unlinkedAt", "isActive"],
         "type": "object",
@@ -12158,19 +12092,13 @@
         }
       },
       "ComparableAdjustmentDto": {
-        "required": [
-          "id",
-          "adjustmentCategory",
-          "adjustmentType",
-          "adjustmentPercent",
-          "adjustmentDirection",
-          "subjectValue",
-          "comparableValue",
-          "justification"
-        ],
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalComparableId": {
             "type": "string",
             "format": "uuid"
           },
@@ -13267,14 +13195,18 @@
         }
       },
       "CreateDocumentRequirementRequest": {
-        "required": ["documentTypeId", "collateralTypeCode", "isRequired", "notes"],
+        "required": ["documentTypeId", "propertyTypeCode", "purposeCode", "isRequired", "notes"],
         "type": "object",
         "properties": {
           "documentTypeId": {
             "type": "string",
             "format": "uuid"
           },
-          "collateralTypeCode": {
+          "propertyTypeCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "purposeCode": {
             "type": "string",
             "nullable": true
           },
@@ -14890,12 +14822,9 @@
         }
       },
       "CreateMarketComparableRequest": {
-        "required": ["comparableNumber", "propertyType", "surveyName"],
+        "required": ["propertyType", "surveyName"],
         "type": "object",
         "properties": {
-          "comparableNumber": {
-            "type": "string"
-          },
           "propertyType": {
             "type": "string"
           },
@@ -14921,6 +14850,36 @@
           "templateId": {
             "type": "string",
             "format": "uuid",
+            "default": null,
+            "nullable": true
+          },
+          "offerPrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "offerPriceAdjustmentPercent": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "offerPriceAdjustmentAmount": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "salePrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "saleDate": {
+            "type": "string",
+            "format": "date-time",
             "default": null,
             "nullable": true
           }
@@ -15057,12 +15016,9 @@
         }
       },
       "CreateQuotationRequest": {
-        "required": ["quotationNumber", "dueDate", "requestedBy", "requestedByName"],
+        "required": ["dueDate", "requestedBy", "requestedByName"],
         "type": "object",
         "properties": {
-          "quotationNumber": {
-            "type": "string"
-          },
           "dueDate": {
             "type": "string",
             "format": "date-time"
@@ -16111,11 +16067,15 @@
             "type": "string",
             "nullable": true
           },
-          "collateralTypeCode": {
+          "propertyTypeCode": {
             "type": "string",
             "nullable": true
           },
-          "collateralTypeName": {
+          "propertyTypeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "purposeCode": {
             "type": "string",
             "nullable": true
           },
@@ -16449,9 +16409,14 @@
           "longitude",
           "capturedAt",
           "uploadedAt",
-          "isUsedInReport",
-          "reportSection",
-          "photoTopicIds"
+          "isInUse",
+          "photoTopicIds",
+          "fileName",
+          "filePath",
+          "fileExtension",
+          "mimeType",
+          "fileSizeBytes",
+          "uploadedByName"
         ],
         "type": "object",
         "properties": {
@@ -16497,12 +16462,8 @@
             "type": "string",
             "format": "date-time"
           },
-          "isUsedInReport": {
+          "isInUse": {
             "type": "boolean"
-          },
-          "reportSection": {
-            "type": "string",
-            "nullable": true
           },
           "photoTopicIds": {
             "type": "array",
@@ -16510,6 +16471,31 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "filePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "uploadedByName": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -17516,7 +17502,7 @@
         }
       },
       "GetDocumentChecklistResponse": {
-        "required": ["applicationDocuments", "collateralGroups"],
+        "required": ["applicationDocuments", "propertyTypeGroups"],
         "type": "object",
         "properties": {
           "applicationDocuments": {
@@ -17525,10 +17511,10 @@
               "$ref": "#/components/schemas/DocumentChecklistItemDto"
             }
           },
-          "collateralGroups": {
+          "propertyTypeGroups": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CollateralDocumentGroupDto"
+              "$ref": "#/components/schemas/PropertyTypeDocumentGroupDto"
             }
           }
         }
@@ -19156,6 +19142,7 @@
           "groupName",
           "description",
           "useSystemCalc",
+          "pricingAnalysisId",
           "properties"
         ],
         "type": "object",
@@ -19177,6 +19164,11 @@
           },
           "useSystemCalc": {
             "type": "boolean"
+          },
+          "pricingAnalysisId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           },
           "properties": {
             "type": "array",
@@ -20213,7 +20205,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "documentId": {
+          "galleryPhotoId": {
             "type": "string",
             "format": "uuid"
           },
@@ -20624,34 +20616,20 @@
         }
       },
       "LawAndRegulationImageDto": {
-        "required": [
-          "id",
-          "documentId",
-          "displaySequence",
-          "fileName",
-          "filePath",
-          "title",
-          "description"
-        ],
+        "required": ["id", "galleryPhotoId", "displaySequence", "title", "description"],
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "documentId": {
+          "galleryPhotoId": {
             "type": "string",
             "format": "uuid"
           },
           "displaySequence": {
             "type": "integer",
             "format": "int32"
-          },
-          "fileName": {
-            "type": "string"
-          },
-          "filePath": {
-            "type": "string"
           },
           "title": {
             "type": "string",
@@ -20664,15 +20642,7 @@
         }
       },
       "LawAndRegulationImageInput": {
-        "required": [
-          "id",
-          "documentId",
-          "displaySequence",
-          "fileName",
-          "filePath",
-          "title",
-          "description"
-        ],
+        "required": ["id", "galleryPhotoId", "displaySequence", "title", "description"],
         "type": "object",
         "properties": {
           "id": {
@@ -20680,19 +20650,13 @@
             "format": "uuid",
             "nullable": true
           },
-          "documentId": {
+          "galleryPhotoId": {
             "type": "string",
             "format": "uuid"
           },
           "displaySequence": {
             "type": "integer",
             "format": "int32"
-          },
-          "fileName": {
-            "type": "string"
-          },
-          "filePath": {
-            "type": "string"
           },
           "title": {
             "type": "string",
@@ -20947,6 +20911,31 @@
             "type": "string",
             "nullable": true
           },
+          "offerPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "offerPriceAdjustmentPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "offerPriceAdjustmentAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "salePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "saleDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "nullable": true
@@ -21011,6 +21000,31 @@
           },
           "sourceInfo": {
             "type": "string",
+            "nullable": true
+          },
+          "offerPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "offerPriceAdjustmentPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "offerPriceAdjustmentAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "salePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "saleDate": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "notes": {
@@ -21182,25 +21196,6 @@
           }
         }
       },
-      "MarkPhotoForReportRequest": {
-        "required": ["reportSection"],
-        "type": "object",
-        "properties": {
-          "reportSection": {
-            "type": "string"
-          }
-        }
-      },
-      "MarkPhotoForReportResult": {
-        "required": ["id"],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
       "MeResponse": {
         "required": [
           "id",
@@ -21256,6 +21251,27 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "MethodDto": {
+        "required": ["id", "methodType", "methodValue", "isSelected"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "methodType": {
+            "type": "string"
+          },
+          "methodValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "isSelected": {
+            "type": "boolean"
           }
         }
       },
@@ -21768,15 +21784,35 @@
         }
       },
       "PropertyPhotoDto": {
-        "required": ["documentId", "isThumbnail"],
+        "required": ["mappingId", "documentId", "isThumbnail"],
         "type": "object",
         "properties": {
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "documentId": {
             "type": "string",
             "format": "uuid"
           },
           "isThumbnail": {
             "type": "boolean"
+          }
+        }
+      },
+      "PropertyTypeDocumentGroupDto": {
+        "required": ["propertyTypeCode", "propertyTypeName", "documents"],
+        "type": "object",
+        "properties": {
+          "propertyTypeCode": {
+            "type": "string"
+          },
+          "propertyTypeName": {
+            "type": "string"
+          },
+          "documents": {
+            "type": "array",
+            "items": {}
           }
         }
       },
@@ -23421,16 +23457,6 @@
       },
       "TransitionType": {
         "enum": ["Normal", "Conditional", "Exception", "Timeout"]
-      },
-      "UnmarkPhotoFromReportResult": {
-        "required": ["id"],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
       },
       "UnsetPropertyThumbnailResult": {
         "required": ["mappingId"],
@@ -26259,6 +26285,36 @@
           "templateId": {
             "type": "string",
             "format": "uuid",
+            "default": null,
+            "nullable": true
+          },
+          "offerPrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "offerPriceAdjustmentPercent": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "offerPriceAdjustmentAmount": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "salePrice": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "saleDate": {
+            "type": "string",
+            "format": "date-time",
             "default": null,
             "nullable": true
           }
