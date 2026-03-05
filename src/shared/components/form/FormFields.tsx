@@ -21,7 +21,7 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types';
+import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types'; // =============================================================================
 
 // =============================================================================
 // Condition Evaluation Utilities
@@ -379,12 +379,23 @@ function FieldRenderer({
     const currentValue = getValues(name);
 
     if (currentValue !== field.disabledValue) {
+      // Sync internal default BEFORE setValue so isDirty stays false
+      const defaults = (control as any)._defaultValues;
+      if (defaults) {
+        const keys = name.split('.');
+        let obj = defaults;
+        for (let i = 0; i < keys.length - 1; i++) {
+          obj = obj[keys[i]];
+          if (!obj) break;
+        }
+        if (obj) obj[keys[keys.length - 1]] = field.disabledValue;
+      }
       setValue(name, field.disabledValue, {
-        shouldDirty: true,
+        shouldDirty: false,
         shouldValidate: true,
       });
     }
-  }, [isDisabled, name, field.disabledValue, getValues, setValue]);
+  }, [isDisabled, name, field.disabledValue, getValues, setValue, control]);
 
   const {
     field: fieldProps,
@@ -430,6 +441,7 @@ function FieldRenderer({
           showCharCount: passedField.showCharCount ?? globalShowCharCount,
           disabled: isDisabled,
         };
+
         return <TextInput {...fieldProps} {...passedField} {...textProps} error={error?.message} />;
       }
 
