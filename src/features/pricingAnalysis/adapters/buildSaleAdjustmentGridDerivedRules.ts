@@ -10,6 +10,7 @@ import {
   calcTotalAdjustValue,
   calcTotalSecondRevision,
   calcWeightedAdjustValue,
+  round2,
 } from '@features/pricingAnalysis/domain/calculateSaleAdjustmentGrid.ts';
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
@@ -378,6 +379,56 @@ export function buildSaleGridFinalValueRules(arg: {
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValuePath()) ?? 0;
         const finalValueRounded = calcFinalValueRoundedValue(finalValue);
+        return finalValueRounded;
+      },
+    },
+  ].flat();
+
+  return rules;
+}
+
+export function buildSaleGridAdjustAppraisalValueRules(): DerivedFieldRule[] {
+  const {
+    finalValueRounded: finalValueRoundedPath,
+    includeLandArea: includeLandAreaPath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
+    appraisalPrice: appraisalPricePath,
+    appraisalPriceRounded: appraisalPriceRoundedPath,
+  } = saleGridFieldPath;
+
+  const rules: DerivedFieldRule[] = [
+    {
+      targetPath: appraisalPricePath(),
+      deps: [finalValueRoundedPath(), landAreaPath(), usableAreaPath(), includeLandAreaPath()],
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
+
+        const isIncludeLandArea = getValues(includeLandAreaPath());
+        const landArea = getValues(landAreaPath());
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
+        }
+
+        const usableArea = getValues(usableAreaPath());
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
+        }
+
+        return finalValueRounded;
+      },
+    },
+    {
+      targetPath: appraisalPriceRoundedPath(),
+      deps: [appraisalPricePath()],
+      when: ({ getValues, getFieldState, formState }) => {
+        const target = appraisalPriceRoundedPath();
+        const curr = getValues(target);
+        const { isDirty } = getFieldState(target, formState);
+        return shouldAutoDefault({ value: curr, isDirty });
+      },
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(appraisalPricePath()) ?? 0;
         return finalValueRounded;
       },
     },

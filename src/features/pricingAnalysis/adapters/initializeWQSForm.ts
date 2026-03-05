@@ -51,7 +51,6 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
 }
 
 function buildFinalValue(property: Record<string, unknown>) {
-  console.log('usable area', property?.usableArea);
   return {
     landArea: property.titles
       ? convertLandTitlesToLandArea({ titles: property.titles })

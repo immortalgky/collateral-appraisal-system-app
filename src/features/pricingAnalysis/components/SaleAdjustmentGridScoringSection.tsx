@@ -9,6 +9,7 @@ import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAna
 import type { ComparativeFactorsFormType } from '@features/pricingAnalysis/schemas/directComparisonForm.ts';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import {
+  buildSaleGridAdjustAppraisalValueRules,
   buildSaleGridAdjustmentFactorAmountRules,
   buildSaleGridAdjustmentFactorDefaultPercentRules,
   buildSaleGridCalculationDerivedRules,
@@ -162,10 +163,15 @@ export const SaleAdjustmentGridScoringSection = ({
     });
   }, [comparativeSurveys, qualitativeFactorFields]);
 
+  const adjustAppraisalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildSaleGridAdjustAppraisalValueRules();
+  }, []);
+
   useDerivedFields({ rules: calculationRules, ctx: { property: property } });
   useDerivedFields({ rules: adjustPercentDefaultRules });
   useDerivedFields({ rules: adjustAmountRules });
   useDerivedFields({ rules: finalValueRules });
+  useDerivedFields({ rules: adjustAppraisalValueRules });
 
   /** styles */
   const bgGradient =
