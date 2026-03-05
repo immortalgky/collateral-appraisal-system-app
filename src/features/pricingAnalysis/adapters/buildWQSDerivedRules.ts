@@ -464,20 +464,21 @@ export function buildWQSFinalValueDerivedRules(args: {
       deps: [
         finalValueFinalValueRoundedPath(),
         finalValueLandAreaPath(),
+        finalValueUsableAreaPath(),
         finalValueIncludeLandAreaPath(),
       ],
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
 
         const isIncludeLandArea = getValues(finalValueIncludeLandAreaPath());
-        if (isIncludeLandArea) {
-          const landArea = getValues(finalValueLandAreaPath()) ?? 0;
-          return round2(finalValueRounded * landArea);
+        const landArea = getValues(finalValueLandAreaPath());
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
         }
 
-        if (isIncludeLandArea) {
-          const usableArea = getValues(finalValueUsableAreaPath());
-          return round2(finalValueRounded * usableArea);
+        const usableArea = getValues(finalValueUsableAreaPath());
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
         }
 
         return round2(finalValueRounded);
