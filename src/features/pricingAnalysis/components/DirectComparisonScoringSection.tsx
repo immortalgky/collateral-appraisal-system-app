@@ -10,6 +10,7 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import clsx from 'clsx';
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath';
 import {
+  buildDirectComparisonAdjustAppraisalValueRules,
   buildDirectComparisonAdjustmentFactorAmountRules,
   buildDirectComparisonAdjustmentFactorDefaultPercentRules,
   buildDirectComparisonCalculationDerivedRules,
@@ -171,10 +172,15 @@ export const DirectComparisonScoringSection = ({
     });
   }, [comparativeSurveys, qualitativeFactorFields]);
 
+  const adjustAppraisalValueRules: DerivedFieldRule<any>[] = useMemo(() => {
+    return buildDirectComparisonAdjustAppraisalValueRules();
+  }, []);
+
   useDerivedFields({ rules: calculationRules });
   useDerivedFields({ rules: adjustPercentDefaultRules });
   useDerivedFields({ rules: adjustAmountRules });
   useDerivedFields({ rules: finalValueRules });
+  useDerivedFields({ rules: adjustAppraisalValueRules });
 
   /** styles */
   const bgGradient =

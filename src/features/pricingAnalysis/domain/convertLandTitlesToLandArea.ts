@@ -8,6 +8,5 @@ export function convertLandTitlesToLandArea({ titles }: convertLandTitlesToLandA
     const areaWa = curr.squareWa ?? 0;
     return prev + areaRai * 400 + areaNgan * 100 + areaWa;
   }, 0);
-  console.log('titles', titles, 'totalSqWa', totalSquareWa);
   return totalSquareWa;
 }
