@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  GetComparativeFactorsResponse,
   GetPricingTemplateByMethodResponse,
   type GetComparativeFactorsResponseType,
   type GetPricingTemplatesByMethodResponseType,
@@ -60,10 +59,7 @@ export function useEnrichedCalculationMethod({
       const { data } = await axios.get(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/comparative-factors`,
       );
-      const parse = GetComparativeFactorsResponse.safeParse(data);
-
-      if (!parse.success) throw parse.error;
-      return parse.data;
+      return data as GetComparativeFactorsResponseType;
     },
     enabled: !!pricingAnalysisId && !!methodId,
     refetchOnWindowFocus: false,

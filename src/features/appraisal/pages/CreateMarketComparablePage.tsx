@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,8 @@ import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -18,6 +20,9 @@ import type {
   CreateMarketComparableRequestType,
   UpdateMarketComparableRequestType,
 } from '@/shared/schemas/v1';
+import MarketComparablePhotoSection, {
+  type MarketComparablePhotoSectionRef,
+} from '../components/MarketComparablePhotoSection';
 import {
   useCreateMarketComparable,
   useGetMarketComparableById,
@@ -58,6 +63,8 @@ const CreateMarketComparablePage = () => {
   const { mutate: updateMarketComparable, isPending: isUpdating } = useUpdateMarketComparable();
   const { mutateAsync: linkAppraisalComparable } = useLinkAppraisalComparable();
 
+  const photoSectionRef = useRef<MarketComparablePhotoSectionRef>(null);
+
   const isPending = isCreating || isUpdating;
 
   const methods = useForm<createMarketComparableFormType>({
@@ -65,7 +72,9 @@ const CreateMarketComparablePage = () => {
     resolver: zodResolver(createMarketComparableForm),
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, formState: { isDirty } } = methods;
+
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // Populate form for edit
   useEffect(() => {
@@ -73,9 +82,14 @@ const CreateMarketComparablePage = () => {
 
     const factorDataValue = template.template.factors
       .map((factor: any) => {
-        return marketComparable.marketComparable.factorData.find(
+        const found = marketComparable.marketComparable.factorData.find(
           (ed: any) => ed.factorId === factor.factorId,
         );
+        if (!found) return undefined;
+        if (factor.dataType === 'Checkbox') {
+          return { ...found, value: found.value === true || found.value === 'true' };
+        }
+        return found;
       })
       .filter(Boolean);
 
@@ -87,6 +101,9 @@ const CreateMarketComparablePage = () => {
       notes: marketComparable.marketComparable.notes,
       sourceInfo: marketComparable.marketComparable.sourceInfo,
       templateId: marketComparable.marketComparable.templateId,
+      offerPrice: marketComparable.marketComparable.offerPrice ?? null,
+      salePrice: marketComparable.marketComparable.salePrice ?? null,
+      saleDate: marketComparable.marketComparable.saleDate ?? null,
       factorData: factorDataValue,
     });
   }, [isEditMode, marketComparable, template]);
@@ -108,17 +125,22 @@ const CreateMarketComparablePage = () => {
           sourceInfo: data.sourceInfo || null,
           notes: data.notes || null,
           templateId: data.templateId || null,
+          offerPrice: data.offerPrice ?? null,
+          offerPriceAdjustmentPercent: null,
+          offerPriceAdjustmentAmount: null,
+          salePrice: data.salePrice ?? null,
+          saleDate: data.saleDate || null,
           factorData,
         };
 
       updateMarketComparable(updatePayload, {
         onSuccess: () => {
+          methods.reset(methods.getValues());
           if (appraisalId) {
             queryClient.invalidateQueries({
               queryKey: ['appraisals', appraisalId, 'comparables'],
             });
           }
-          navigate(`/appraisal/${appraisalId}/property?tab=markets`);
           toast.success('Market comparable updated successfully');
         },
         onError: (error: any) => {
@@ -136,6 +158,11 @@ const CreateMarketComparablePage = () => {
         sourceInfo: data.sourceInfo || null,
         notes: data.notes || null,
         templateId: data.templateId || null,
+        offerPrice: data.offerPrice ?? null,
+        offerPriceAdjustmentPercent: null,
+        offerPriceAdjustmentAmount: null,
+        salePrice: data.salePrice ?? null,
+        saleDate: data.saleDate || null,
         factorData,
       };
 
@@ -156,6 +183,10 @@ const CreateMarketComparablePage = () => {
               return;
             }
           }
+          // Link any pending photos to the newly created comparable
+          await photoSectionRef.current?.linkImagesToComparable(response.id);
+
+          skipWarning();
           toast.success('Market comparable created successfully');
           if (appraisalId) {
             navigate(`/appraisal/${appraisalId}/property/market-comparable/${response.id}`);
@@ -191,6 +222,9 @@ const CreateMarketComparablePage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
+            ...(appraisalId
+              ? [{ label: 'Photos', id: 'photos-section', icon: 'images' }]
+              : []),
             { label: 'Comparable', id: 'comparable-section', icon: 'chart-line' },
             { label: 'Survey Factors', id: 'factors-section', icon: 'sliders' },
           ]}
@@ -212,19 +246,32 @@ const CreateMarketComparablePage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Photo Section (appraisal context only) */}
+                  {appraisalId && (
+                    <Section id="photos-section" anchor>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Icon name="images" style="solid" className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      </div>
+                      <div className="h-px bg-gray-200 mb-4" />
+                      <MarketComparablePhotoSection
+                        ref={photoSectionRef}
+                        appraisalId={appraisalId}
+                        marketComparableId={marketId ?? undefined}
+                        images={marketComparable?.marketComparable?.images}
+                      />
+                    </Section>
+                  )}
+
                   {/* Comparable Information Header */}
                   <Section id="comparable-section" anchor>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Icon
-                          name="magnifying-glass-location"
-                          style="solid"
-                          className="w-5 h-5 text-orange-600"
-                        />
+                        <Icon name="magnifying-glass-location" style="solid" className="w-5 h-5 text-orange-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Comparable Information
-                      </h2>
+                      <h2 className="text-lg font-semibold text-gray-900">Comparable Information</h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                   </Section>
@@ -244,15 +291,27 @@ const CreateMarketComparablePage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
+                {isDirty && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Unsaved changes
+                  </span>
+                )}
               </div>
               <div className="flex gap-3">
-                <Button type="submit" isLoading={isPending} disabled={isPending}>
+                <Button
+                  type="submit"
+                  isLoading={isPending}
+                  disabled={isPending}
+                >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
                   Save
                 </Button>
               </div>
             </div>
           </div>
+
+          <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>
     </div>

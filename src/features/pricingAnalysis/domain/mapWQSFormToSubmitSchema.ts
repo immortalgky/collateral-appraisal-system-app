@@ -1,60 +1,63 @@
 import type { WQSFormType } from '../schemas/wqsForm';
-import type { FactorScoreType, SaveComparativeAnalysisRequestType } from '../schemas';
+import type { SaveComparativeAnalysisRequestType } from '../schemas';
 
-interface mapWQSFormToSubmitSchemaProps {
+interface MapWQSFormToSubmitSchemaProps {
   WQSForm: WQSFormType;
 }
+
 export function mapWQSFormToSubmitSchema({
   WQSForm,
-}: mapWQSFormToSubmitSchemaProps): SaveComparativeAnalysisRequestType {
+}: MapWQSFormToSubmitSchemaProps): SaveComparativeAnalysisRequestType {
   return {
-    comparativeFactors: [
-      ...WQSForm.comparativeFactors.map((compFact, index: number) => ({
-        factorId: `7B9F433E-F36B-1410-8382-00F1875B700${index}`, // compFact.factorCode
+    comparativeFactors: (WQSForm.comparativeFactors ?? []).map((cf, index) => ({
+      id: cf.id || null,
+      factorId: cf.factorId || null,
+      displaySequence: index,
+      isSelectedForScoring: true,
+      remarks: null,
+    })),
+
+    factorScores: WQSForm.WQSScores.flatMap((score, index) => {
+      const entries: SaveComparativeAnalysisRequestType['factorScores'] = [];
+      const fid = score.factorId || null;
+
+      // One entry per survey for this factor
+      for (const survey of score.surveys ?? []) {
+        entries.push({
+          id: survey.id || null,
+          factorId: fid,
+          marketComparableId: survey.marketId || null,
+          factorWeight: score.weight ?? 0,
+          displaySequence: index,
+          score: survey.surveyScore,
+        });
+      }
+
+      // Collateral (subject property) score entry — no marketComparableId
+      entries.push({
+        id: score.collateralScoreId || null,
+        factorId: fid,
+        marketComparableId: null,
+        factorWeight: score.weight ?? 0,
         displaySequence: index,
-        isSelectedForScoring: !!WQSForm.WQSScores.find(
-          record => record.factorCode === compFact.factorCode,
-        ),
-      })),
-    ],
-    factorScores: [
-      ...(WQSForm.WQSScores.map((score, index) => {
-        return [
-          ...(score.surveys ?? []).map(survey => {
-            return {
-              factorId: `7B9F433E-F36B-1410-8382-00F1875B700${index}`, // score.factorCode
-              factorName: 'xxxxx',
-              marketComparableId: survey.marketId,
-              factorWeight: score.weight,
-              displaySequence: index,
-              score: survey.surveyScore,
-            };
-          }),
-          {
-            factorId: `7B9F433E-F36B-1410-8382-00F1875B700${index}`,
-            factorName: 'xxxxx',
-            factorWeight: score.weight,
-            displaySequence: index,
-            score: score.collateral,
-          },
-        ];
-      }).flat(1) as FactorScoreType[]),
-    ],
-    calculations: [
-      ...WQSForm.WQSCalculations.map((calc, index) => {
-        return {
-          marketComparableId: calc.marketId,
-          offeringPrice: calc.offeringPrice,
-          offeringPriceUnit: calc.offeringPriceMeasurementUnit,
-          adjustOfferPricePct: calc.offeringPriceAdjustmentPct,
-          sellingPrice: calc.sellingPrice,
-          buySellYear: 5,
-          buySellMonth: 5,
-          adjustedPeriodPct: calc.sellingPriceAdjustmentYear,
-          cumulativeAdjPeriod: calc.totalAdjustedSellingPrice,
-          totalAdjustedValue: calc.adjustedValue,
-        };
-      }),
-    ],
+        score: score.collateral ?? 0,
+      });
+
+      return entries;
+    }),
+
+    calculations: (WQSForm.WQSCalculations ?? []).map(calc => ({
+      marketComparableId: calc.marketId,
+      offeringPrice: calc.offeringPrice ?? null,
+      offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
+      adjustOfferPricePct: calc.offeringPriceAdjustmentPct ?? null,
+      sellingPrice: calc.sellingPrice ?? null,
+      buySellYear: calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
+      buySellMonth: null,
+      adjustedPeriodPct: calc.sellingPriceAdjustmentYear ?? null,
+      cumulativeAdjPeriod: calc.totalAdjustedSellingPrice ?? null,
+      totalAdjustedValue: calc.adjustedValue ?? null,
+      weight: null,
+    })),
   };
 }

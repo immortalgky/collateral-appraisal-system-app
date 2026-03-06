@@ -11,7 +11,7 @@ type SidebarProps = {
   logo: string;
 };
 
-function MenuItem({ item, isChild = false }: { item: NavItem; isChild?: boolean }) {
+function MenuItem({ item, isChild = false, collapsed = false }: { item: NavItem; isChild?: boolean; collapsed?: boolean }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const isActive = location.pathname === item.href;
@@ -35,6 +35,28 @@ function MenuItem({ item, isChild = false }: { item: NavItem; isChild?: boolean 
   };
 
   if (hasChildren) {
+    if (collapsed) {
+      // When collapsed, show only the parent icon (no expandable children)
+      return (
+        <li>
+          <div
+            className="group flex items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50"
+            title={item.name}
+          >
+            <div
+              className={clsx(
+                'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
+                getIconBgClass(item.iconColor),
+                'group-hover:scale-105',
+              )}
+            >
+              <Icon name={item.icon} style={iconStyle} className={clsx('size-4', item.iconColor || 'text-gray-500')} />
+            </div>
+          </div>
+        </li>
+      );
+    }
+
     const isChildActive = item.children?.some(child => location.pathname === child.href);
 
     return (
@@ -80,6 +102,35 @@ function MenuItem({ item, isChild = false }: { item: NavItem; isChild?: boolean 
             <MenuItem key={child.href} item={child} isChild />
           ))}
         </ul>
+      </li>
+    );
+  }
+
+  if (collapsed && !isChild) {
+    return (
+      <li>
+        <Link
+          to={item.href}
+          title={item.name}
+          className={clsx(
+            'group flex items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-200',
+            isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+          )}
+        >
+          <div
+            className={clsx(
+              'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
+              getIconBgClass(item.iconColor),
+              'group-hover:scale-105',
+            )}
+          >
+            <Icon
+              name={item.icon}
+              style={iconStyle}
+              className={clsx('size-4', item.iconColor || 'text-gray-500')}
+            />
+          </div>
+        </Link>
       </li>
     );
   }
@@ -208,65 +259,95 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 export default function Sidebar({ navigation, logo }: SidebarProps): React.ReactNode {
   const location = useLocation();
   const isSettingsActive = location.pathname === '/settings';
+  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
+  const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
   return (
-    <aside className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+    <aside
+      className={clsx(
+        'hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300',
+        sidebarCollapsed ? 'lg:w-16' : 'lg:w-72',
+      )}
+    >
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
-        <div className="px-5 py-5">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm">
+        <div className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}>
+          <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-7 w-auto" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
-                CAS
-              </span>
-              <div
-                className="w-12 h-1 rounded-full my-0.5"
-                style={{ background: 'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)' }}
-              />
-              <span className="text-[10px] font-medium text-gray-400">
-                Collateral Appraisal System
-              </span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex flex-col">
+                <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
+                  CAS
+                </span>
+                <div
+                  className="w-12 h-1 rounded-full my-0.5"
+                  style={{ background: 'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)' }}
+                />
+                <span className="text-[10px] font-medium text-gray-400">
+                  Collateral Appraisal System
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-1 flex-col px-4 py-4">
-          {/* Main Menu Label */}
-          <div className="px-3 mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</span>
-          </div>
+        <nav className={clsx('flex flex-1 flex-col py-4 transition-all duration-300', sidebarCollapsed ? 'px-1' : 'px-4')}>
+          {!sidebarCollapsed && (
+            <div className="px-3 mb-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</span>
+            </div>
+          )}
 
           <ul className="flex flex-col gap-1">
             {navigation.map(item => (
-              <MenuItem key={item.href} item={item} />
+              <MenuItem key={item.href} item={item} collapsed={sidebarCollapsed} />
             ))}
           </ul>
 
           {/* Bottom Section */}
-          <div className="mt-auto pt-4 border-t border-gray-100">
-            <div className="px-3 mb-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">System</span>
-            </div>
+          <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100')}>
+            {!sidebarCollapsed && (
+              <div className="px-3 mb-2">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">System</span>
+              </div>
+            )}
             <ul className="flex flex-col gap-1">
               <li>
                 <Link
                   to="/settings"
+                  title={sidebarCollapsed ? 'Settings' : undefined}
                   className={clsx(
-                    'group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200',
+                    'group flex items-center py-2.5 px-3 rounded-xl transition-all duration-200',
                     isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+                    sidebarCollapsed ? 'justify-center' : 'gap-3',
                   )}
                 >
                   <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
                     <Icon name="gear" style="solid" className="size-4 text-gray-500" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Settings</span>
+                  {!sidebarCollapsed && (
+                    <span className="text-sm font-medium text-gray-700">Settings</span>
+                  )}
                 </Link>
               </li>
             </ul>
+
+            {/* Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <Icon
+                style="solid"
+                name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
+                className="size-4"
+              />
+            </button>
           </div>
         </nav>
       </div>

@@ -1,10 +1,26 @@
-import { AdjustFinalValueSection } from './WQSAdjustFinalValueSection';
-import { ComparativeMarketSurveySection } from './ComparativeMarketSurveySection';
-import { WQSScoringSection } from '@/features/pricingAnalysis/components/WQSScoringSection';
-import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
-import { wqsFieldPath } from '../adapters/wqsFieldPath';
+import { SurveySelectionSection } from '@/features/pricingAnalysis/components/SurveySelectionSection';
+import { saleGridFieldPath } from '../adapters/saleAdjustmentGridFieldPath';
+import { SaleAdjustmentGridScoringSection } from './SaleAdjustmentGridScoringSection';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+  TemplateDetailType,
+} from '@features/pricingAnalysis/schemas';
+import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/pricingAnalysis/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
+/**
+ * NOTE:
+ *
+ * Workflow:
+ * (1) System retrive method value from database to check whether has value or not
+ * (1.1) In case that has value
+ * - System can show retrieved value.
+ * (1.2) In case that has no value
+ * - System can initial value to prepared stages before user take action.
+ *
+ *
+ */
 
-interface WQSProps {
+interface SaleAdjustmentGridProps {
   property: Record<string, unknown>;
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
@@ -12,15 +28,16 @@ interface WQSProps {
   allFactors: FactorDataType[];
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
-export const WQS = ({
+
+export const SaleAdjustmentGridForm = ({
   property,
   marketSurveys,
   comparativeMarketSurveys,
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
-}: WQSProps) => {
-  const fieldPath = wqsFieldPath;
+}: SaleAdjustmentGridProps) => {
+  const fieldPath = saleGridFieldPath;
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
@@ -29,7 +46,7 @@ export const WQS = ({
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4 py-4"
       >
         <div className="flex flex-col gap-4">
-          <ComparativeMarketSurveySection
+          <SurveySelectionSection
             template={template}
             allFactors={allFactors}
             property={property}
@@ -45,18 +62,17 @@ export const WQS = ({
                   Calculation of Appraisal Value
                 </div>
                 <div className="px-4 mt-4">
-                  <WQSScoringSection
+                  <SaleAdjustmentGridScoringSection
                     comparativeSurveys={comparativeMarketSurveys}
                     property={property}
                     template={template}
-                    isLoading={false}
                   />
                 </div>
               </div>
               <div>
                 <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
                 <div className="px-4 mt-4">
-                  <AdjustFinalValueSection property={property} />
+                  <SaleAdjustmentGridAdjustAppraisalPriceSection property={property} />
                 </div>
               </div>
             </>

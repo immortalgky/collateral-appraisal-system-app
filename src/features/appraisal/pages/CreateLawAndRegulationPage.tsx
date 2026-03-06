@@ -5,18 +5,25 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
+import UnsavedChangesDialog from '@shared/components/UnsavedChangesDialog';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import Section from '@shared/components/sections/Section';
-import UploadArea from '@shared/components/inputs/UploadArea';
+import clsx from 'clsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { FormFields, type FormField } from '@/shared/components/form';
 import { PhotoGridView } from '../components/gallery';
 import PhotoPreviewModal, { type PreviewablePhoto } from '../components/PhotoPreviewModal';
+import PhotoSourceModal from '../components/PhotoSourceModal';
+import GallerySelectionModal from '../components/GallerySelectionModal';
 import type { GalleryImage } from '../types/gallery';
+import { toGalleryImage } from '../types/gallery';
 import { useGetLawAndRegulations, useSaveLawAndRegulations } from '../api/lawAndRegulation';
+import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type {
   LawAndRegulationImageInputType,
   LawAndRegulationItemInputType,
+  GalleryPhotoDtoType,
 } from '@shared/schemas/v1';
 import {
   createLawAndRegulationForm,
@@ -25,20 +32,11 @@ import {
 } from '../schemas/lawAndRegulation';
 
 const LAW_HEADER_GROUP = 'Header';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-const getImageSrc = (documentId: string) =>
-  `${API_BASE_URL}/documents/${documentId}/download?download=false`;
-
-const getThumbnailSrc = (documentId: string) =>
-  `${API_BASE_URL}/documents/${documentId}/download?download=false&size=large`;
 
 interface LocalImage {
   id: string | null;
-  documentId: string;
+  galleryPhotoId: string;
   displaySequence: number;
-  fileName: string;
-  filePath: string;
   title: string | null;
   description: string | null;
 }
@@ -72,6 +70,9 @@ const CreateLawAndRegulationPage = () => {
     resolver: zodResolver(createLawAndRegulationForm),
   });
 
+  const { formState: { isDirty } } = methods;
+  const { blocker } = useUnsavedChangesWarning(isDirty);
+
   // Image & UI state
   const [images, setImages] = useState<LocalImage[]>([]);
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
@@ -79,13 +80,36 @@ const CreateLawAndRegulationPage = () => {
   // Preview state
   const [previewPhoto, setPreviewPhoto] = useState<PreviewablePhoto | null>(null);
 
+  // Modal state
+  const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
+
   // Delete confirmation state
-  const [deleteTarget, setDeleteTarget] = useState<{ documentId: string; fileName: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ galleryPhotoId: string; fileName: string } | null>(null);
+
+  // Drag-and-drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const dragCounterRef = useRef(0);
 
   // API
   const { data, isLoading } = useGetLawAndRegulations(appraisalId);
+  const { data: galleryData } = useGetGalleryPhotos(appraisalId);
   const saveMutation = useSaveLawAndRegulations();
   const uploadMutation = useUploadDocument();
+  const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
+  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } = useUpdateGalleryPhoto();
+
+  // DTO map for gallery update calls
+  const galleryPhotoDtoMap = useMemo(() => {
+    const map = new Map<string, GalleryPhotoDtoType>();
+    if (galleryData?.photos) {
+      for (const dto of galleryData.photos as GalleryPhotoDtoType[]) {
+        map.set(dto.id, dto);
+      }
+    }
+    return map;
+  }, [galleryData]);
 
   // Upload session
   const uploadSessionIdRef = useRef<string | null>(null);
@@ -110,6 +134,17 @@ const CreateLawAndRegulationPage = () => {
 
   const allItems = useMemo(() => data?.items ?? [], [data]);
 
+  // Build a map from galleryPhotoId → GalleryImage for URL resolution
+  const galleryPhotoMap = useMemo(() => {
+    const map = new Map<string, GalleryImage>();
+    if (galleryData?.photos) {
+      for (const dto of galleryData.photos as GalleryPhotoDtoType[]) {
+        map.set(dto.id, toGalleryImage(dto));
+      }
+    }
+    return map;
+  }, [galleryData]);
+
   // Populate form in edit mode
   useEffect(() => {
     if (isEditMode && itemId && allItems.length > 0) {
@@ -122,10 +157,8 @@ const CreateLawAndRegulationPage = () => {
         setImages(
           target.images.map(img => ({
             id: img.id,
-            documentId: img.documentId,
+            galleryPhotoId: img.galleryPhotoId,
             displaySequence: img.displaySequence,
-            fileName: img.fileName,
-            filePath: img.filePath,
             title: img.title,
             description: img.description,
           })),
@@ -137,58 +170,89 @@ const CreateLawAndRegulationPage = () => {
   // Map LocalImage[] → GalleryImage[] for PhotoGridView
   const gridImages: GalleryImage[] = useMemo(
     () =>
-      images.map((img, idx) => ({
-        id: img.documentId,
-        documentId: img.documentId,
-        photoNumber: idx + 1,
-        src: getImageSrc(img.documentId),
-        thumbnailSrc: getThumbnailSrc(img.documentId),
-        alt: img.fileName,
-        fileName: img.fileName,
-        caption: img.title,
-        description: img.description ?? undefined,
-        photoType: 'LAW_REG',
-        photoCategory: null,
-        isUsedInReport: false,
-        reportSection: null,
-        latitude: null,
-        longitude: null,
-        capturedAt: null,
-      })),
-    [images],
+      images.map((img, idx) => {
+        const galleryImg = galleryPhotoMap.get(img.galleryPhotoId);
+        return {
+          id: img.galleryPhotoId,
+          documentId: galleryImg?.documentId ?? '',
+          photoNumber: idx + 1,
+          src: galleryImg?.src ?? '',
+          thumbnailSrc: galleryImg?.thumbnailSrc ?? '',
+          alt: galleryImg?.fileName ?? `Photo ${idx + 1}`,
+          fileName: galleryImg?.fileName,
+          caption: galleryImg?.caption ?? null,
+          description: galleryImg?.caption ?? undefined,
+          photoType: 'LAW_REG',
+          photoCategory: null,
+          isInUse: galleryImg?.isInUse ?? false,
+          latitude: null,
+          longitude: null,
+          capturedAt: null,
+          fileExtension: galleryImg?.fileExtension,
+          mimeType: galleryImg?.mimeType,
+          fileSizeBytes: galleryImg?.fileSizeBytes,
+        };
+      }),
+    [images, galleryPhotoMap],
   );
 
   // Map for preview modal
   const previewablePhotos: PreviewablePhoto[] = useMemo(
     () =>
-      images.map(img => ({
-        id: img.documentId,
-        src: getImageSrc(img.documentId),
-        fileName: img.fileName,
-      })),
-    [images],
+      images.map(img => {
+        const galleryImg = galleryPhotoMap.get(img.galleryPhotoId);
+        return {
+          id: img.galleryPhotoId,
+          src: galleryImg?.src ?? '',
+          fileName: galleryImg?.fileName,
+          caption: galleryImg?.caption ?? null,
+          fileExtension: galleryImg?.fileExtension,
+          mimeType: galleryImg?.mimeType,
+          fileSizeBytes: galleryImg?.fileSizeBytes,
+        };
+      }),
+    [images, galleryPhotoMap],
   );
 
-  // Upload handler
+  // Upload handler — upload to gallery, then add to local images
   const handleUpload = useCallback(
     async (file: File) => {
+      if (!appraisalId) return;
       try {
         const sessionId = await getOrCreateSession();
-        const result = await uploadMutation.mutateAsync({
+        const uploadResult = await uploadMutation.mutateAsync({
           uploadSessionId: sessionId,
           file,
           documentType: 'LAW_REG',
           documentCategory: 'support',
         });
 
+        // Register in gallery
+        const galleryResult = await addGalleryPhoto({
+          appraisalId,
+          documentId: uploadResult.documentId,
+          photoType: 'law_regulation',
+          uploadedBy: 'current-user',
+          photoCategory: null,
+          caption: null,
+          latitude: null,
+          longitude: null,
+          capturedAt: null,
+          photoTopicIds: null,
+          fileName: uploadResult.fileName,
+          filePath: uploadResult.storageUrl,
+          fileExtension: file.name.includes('.') ? file.name.split('.').pop() ?? null : null,
+          mimeType: file.type || null,
+          fileSizeBytes: uploadResult.fileSize,
+          uploadedByName: null,
+        });
+
         setImages(prev => [
           ...prev,
           {
             id: null,
-            documentId: result.documentId,
+            galleryPhotoId: galleryResult.id,
             displaySequence: prev.length + 1,
-            fileName: result.fileName,
-            filePath: result.storageUrl,
             title: null,
             description: null,
           },
@@ -198,42 +262,121 @@ const CreateLawAndRegulationPage = () => {
         toast.error('Failed to upload image');
       }
     },
-    [getOrCreateSession, uploadMutation],
+    [appraisalId, getOrCreateSession, uploadMutation, addGalleryPhoto],
   );
 
-  // File input change handler
-  const handleFileInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-      if (imageFiles.length === 0) {
-        toast.error('Only image files are supported');
-        return;
-      }
-      imageFiles.forEach(file => handleUpload(file));
-      e.target.value = '';
+  // "Upload from Device" handler (via PhotoSourceModal)
+  const handleUploadFromDevice = useCallback(
+    (files: FileList) => {
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          handleUpload(file);
+        }
+      });
     },
     [handleUpload],
   );
 
+  // Keep a ref so the native drop handler always calls the latest handleUpload
+  const handleUploadRef = useRef(handleUpload);
+  handleUploadRef.current = handleUpload;
+
+  // Native drag-and-drop with drag counter (no flicker on nested elements)
+  useEffect(() => {
+    const el = dropZoneRef.current;
+    if (!el) return;
+
+    const onDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current++;
+      if (dragCounterRef.current === 1) setIsDragging(true);
+    };
+    const onDragOver = (e: DragEvent) => e.preventDefault();
+    const onDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current--;
+      if (dragCounterRef.current <= 0) {
+        dragCounterRef.current = 0;
+        setIsDragging(false);
+      }
+    };
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+      const files = Array.from(e.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+      if (files.length > 0) {
+        toast.success(`Uploading ${files.length} file(s)...`);
+        files.forEach(f => handleUploadRef.current(f));
+      }
+    };
+
+    el.addEventListener('dragenter', onDragEnter);
+    el.addEventListener('dragover', onDragOver);
+    el.addEventListener('dragleave', onDragLeave);
+    el.addEventListener('drop', onDrop);
+    return () => {
+      el.removeEventListener('dragenter', onDragEnter);
+      el.removeEventListener('dragover', onDragOver);
+      el.removeEventListener('dragleave', onDragLeave);
+      el.removeEventListener('drop', onDrop);
+    };
+  }, []);
+
+  // Gallery images available for selection (exclude already-added ones)
+  const currentGalleryPhotoIds = useMemo(
+    () => new Set(images.map(img => img.galleryPhotoId)),
+    [images],
+  );
+
+  const availableGalleryImages: GalleryImage[] = useMemo(() => {
+    if (!galleryData?.photos) return [];
+    return (galleryData.photos as GalleryPhotoDtoType[])
+      .filter(p => !currentGalleryPhotoIds.has(p.id))
+      .map(toGalleryImage);
+  }, [galleryData, currentGalleryPhotoIds]);
+
+  // "Choose from Gallery" handler
+  const handleGallerySelect = useCallback(
+    (selectedImages: GalleryImage[]) => {
+      setImages(prev => [
+        ...prev,
+        ...selectedImages.map((img, idx) => ({
+          id: null,
+          galleryPhotoId: img.id,
+          displaySequence: prev.length + idx + 1,
+          title: null,
+          description: null,
+        })),
+      ]);
+      if (selectedImages.length > 0) {
+        toast.success(
+          selectedImages.length === 1
+            ? 'Photo added'
+            : `${selectedImages.length} photos added`,
+        );
+      }
+    },
+    [],
+  );
+
   // Delete handler for PhotoGridView
   const handleImageDelete = useCallback((image: GalleryImage) => {
-    setDeleteTarget({ documentId: image.documentId, fileName: image.fileName ?? image.alt });
+    setDeleteTarget({ galleryPhotoId: image.id, fileName: image.fileName ?? image.alt });
   }, []);
 
   const confirmDelete = useCallback(() => {
     if (!deleteTarget) return;
-    setImages(prev => prev.filter(img => img.documentId !== deleteTarget.documentId));
-    // Also close preview if the deleted image is being previewed
-    setPreviewPhoto(prev => (prev?.id === deleteTarget.documentId ? null : prev));
+    setImages(prev => prev.filter(img => img.galleryPhotoId !== deleteTarget.galleryPhotoId));
+    setPreviewPhoto(prev => (prev?.id === deleteTarget.galleryPhotoId ? null : prev));
     setDeleteTarget(null);
   }, [deleteTarget]);
 
   // Click handler for PhotoGridView (opens preview)
   const handleImageClick = useCallback((image: GalleryImage) => {
-    setPreviewPhoto({ id: image.id, src: image.src, fileName: image.fileName });
-  }, []);
+    const match = previewablePhotos.find(p => p.id === image.id);
+    setPreviewPhoto(match ?? { id: image.id, src: image.src, fileName: image.fileName });
+  }, [previewablePhotos]);
 
   // Build items array for batch save
   const buildItemsPayload = (formData: CreateLawAndRegulationFormType): LawAndRegulationItemInputType[] => {
@@ -244,10 +387,8 @@ const CreateLawAndRegulationPage = () => {
       images: images.map(
         (img, idx): LawAndRegulationImageInputType => ({
           id: img.id,
-          documentId: img.documentId,
+          galleryPhotoId: img.galleryPhotoId,
           displaySequence: idx + 1,
-          fileName: img.fileName,
-          filePath: img.filePath,
           title: img.title,
           description: img.description,
         }),
@@ -264,10 +405,8 @@ const CreateLawAndRegulationPage = () => {
               remark: i.remark,
               images: i.images.map(img => ({
                 id: img.id,
-                documentId: img.documentId,
+                galleryPhotoId: img.galleryPhotoId,
                 displaySequence: img.displaySequence,
-                fileName: img.fileName,
-                filePath: img.filePath,
                 title: img.title,
                 description: img.description,
               })),
@@ -282,10 +421,8 @@ const CreateLawAndRegulationPage = () => {
         remark: i.remark,
         images: i.images.map(img => ({
           id: img.id,
-          documentId: img.documentId,
+          galleryPhotoId: img.galleryPhotoId,
           displaySequence: img.displaySequence,
-          fileName: img.fileName,
-          filePath: img.filePath,
           title: img.title,
           description: img.description,
         })),
@@ -357,26 +494,46 @@ const CreateLawAndRegulationPage = () => {
 
             {/* Images */}
             <Section id="images-section">
-              <div className="flex flex-col gap-4">
+              <div ref={dropZoneRef} className="relative flex flex-col gap-4">
                 <span className="block text-xs font-medium text-gray-700">Images</span>
 
-                {/* Upload area */}
-                <UploadArea
-                  onChange={handleFileInputChange}
-                  accept="image/*"
-                  multiple
-                  supportedText="PNG, JPG (Max 10MB each)"
-                />
+                {/* Drag overlay */}
+                <div
+                  className={clsx(
+                    'absolute inset-0 z-40 flex items-center justify-center border-2 border-dashed rounded-2xl transition-opacity pointer-events-none',
+                    isDragging
+                      ? 'opacity-100 border-primary bg-primary/5'
+                      : 'opacity-0 border-transparent',
+                  )}
+                >
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3 animate-bounce">
+                      <Icon name="cloud-arrow-down" className="text-2xl text-primary" />
+                    </div>
+                    <p className="text-lg font-semibold text-primary">Drop photos here</p>
+                    <p className="text-sm text-primary/60 mt-1">Release to upload</p>
+                  </div>
+                </div>
 
                 {/* Photo grid */}
-                {gridImages.length > 0 && (
-                  <PhotoGridView
-                    images={gridImages}
-                    onImageClick={handleImageClick}
-                    onImageDelete={handleImageDelete}
-                    showUsedBadge={false}
-                  />
-                )}
+                <PhotoGridView
+                  images={gridImages}
+                  onImageClick={handleImageClick}
+                  onImageDelete={handleImageDelete}
+                  showUsedBadge={false}
+                  prepend={
+                    <div
+                      onClick={() => setShowPhotoSourceModal(true)}
+                      className="aspect-[4/3] rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-3">
+                        <Icon name="plus" className="text-2xl" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-600">Add photos</p>
+                      <p className="text-xs text-gray-400 mt-1">Click or drag & drop</p>
+                    </div>
+                  }
+                />
               </div>
             </Section>
           </div>
@@ -390,6 +547,12 @@ const CreateLawAndRegulationPage = () => {
                 Cancel
               </Button>
               <div className="h-6 w-px bg-gray-200" />
+              {isDirty && (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Unsaved changes
+                </span>
+              )}
             </div>
             <div className="flex gap-3">
               <Button
@@ -426,6 +589,25 @@ const CreateLawAndRegulationPage = () => {
           variant="danger"
         />
 
+        {/* Photo Source Modal (Upload or Gallery) */}
+        <PhotoSourceModal
+          isOpen={showPhotoSourceModal}
+          onClose={() => setShowPhotoSourceModal(false)}
+          onUploadFromDevice={handleUploadFromDevice}
+          onChooseFromGallery={() => setShowGalleryModal(true)}
+        />
+
+        {/* Gallery Selection Modal */}
+        <GallerySelectionModal
+          isOpen={showGalleryModal}
+          onClose={() => setShowGalleryModal(false)}
+          onSelect={handleGallerySelect}
+          images={availableGalleryImages}
+          multiSelect
+        />
+
+        <UnsavedChangesDialog blocker={blocker} />
+
         {/* Photo Preview Modal */}
         {previewPhoto && (
           <PhotoPreviewModal
@@ -433,12 +615,35 @@ const CreateLawAndRegulationPage = () => {
             photos={previewablePhotos}
             onClose={() => setPreviewPhoto(null)}
             onNavigate={setPreviewPhoto}
+            showInUseStatus={false}
             onDelete={() => {
               setDeleteTarget({
-                documentId: previewPhoto.id,
+                galleryPhotoId: previewPhoto.id,
                 fileName: previewPhoto.fileName ?? 'this image',
               });
             }}
+            onSaveDescription={async (caption: string) => {
+              if (!appraisalId) return;
+              try {
+                const dto = galleryPhotoDtoMap.get(previewPhoto.id);
+                await updateGalleryPhotoApi({
+                  appraisalId,
+                  photoId: previewPhoto.id,
+                  caption: caption || null,
+                  photoCategory: dto?.photoCategory ?? null,
+                  latitude: dto?.latitude ?? null,
+                  longitude: dto?.longitude ?? null,
+                  capturedAt: dto?.capturedAt ?? null,
+                });
+                setPreviewPhoto(prev =>
+                  prev ? { ...prev, caption: caption || null } : null,
+                );
+                toast.success('Description updated');
+              } catch {
+                toast.error('Failed to update description');
+              }
+            }}
+            isSavingDescription={isUpdatingDescription}
           />
         )}
       </div>

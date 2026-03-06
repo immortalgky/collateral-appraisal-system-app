@@ -482,6 +482,9 @@ export const createMarketComparableForm = z
     templateCode: z.string().nullable().optional(),
     propertyType: z.string().nullable().optional(),
     comparableNumber: z.string().nullable().optional(),
+    offerPrice: z.coerce.number().nullable().optional(),
+    salePrice: z.coerce.number().nullable().optional(),
+    saleDate: z.string().datetime({ local: true, offset: true }).nullable().optional(),
   })
   .passthrough();
 
@@ -716,7 +719,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   provinceName: '',
   landOffice: '',
   landDescription: '',
-  isOwnerVerified: false,
+  isOwnerVerified: true,
   ownerName: '',
   hasObligation: false,
   obligationDetails: '',
@@ -885,4 +888,7 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   sourceInfo: '',
   propertyType: '',
   comparableNumber: '',
+  offerPrice: null,
+  salePrice: null,
+  saleDate: null,
 };

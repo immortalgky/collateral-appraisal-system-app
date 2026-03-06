@@ -29,6 +29,8 @@ import AttachDocumentForm from '../forms/AttachDocumentForm';
 import { createUploadSession, useCreateRequest, useGetRequestById, useSubmitRequest, useUpdateRequest, } from '../api';
 import { mapRequestResponseToForm } from '../utils/mappers';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import DeleteButton from '@/shared/components/buttons/DeleteButton';
 import DuplicateButton from '@/shared/components/buttons/DuplicateButton';
@@ -106,8 +108,10 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     getValues,
     setValue,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = methods;
+
+  const { blocker } = useUnsavedChangesWarning(isDirty && !readOnly);
 
   // Reset form when switching between create/edit mode or when requestId changes
   useEffect(() => {
@@ -209,6 +213,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Request updated successfully');
             setSaveAction(null);
           },
@@ -269,6 +274,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
           },
@@ -503,6 +509,12 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
                       <DeleteButton />
                       <DuplicateButton />
                     </div>
+                    {isDirty && (
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Unsaved changes
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-3">
                     <Button
@@ -538,6 +550,8 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
               </div>
             )}
           </div>
+
+          <UnsavedChangesDialog blocker={blocker} />
 
           {/* Right Menu - rendered via portal to layout (only when not in readOnly mode) */}
           {!readOnly && (

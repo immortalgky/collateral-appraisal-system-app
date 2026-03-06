@@ -60,7 +60,7 @@ const RequestPropertyDto = z.object({
 });
 const AddressDto = z
   .object({
-    houseNumber: z.string().nullable(),
+    houseNumber: z.string().max(10),
     projectName: z.string().nullable(),
     moo: z.string().nullable(),
     soi: z.string().nullable(),
@@ -178,12 +178,12 @@ export const createRequestFormDefault: createRequestFormType = {
   isPma: false,
   // TODO: Replace with actual logged-in user when login is implemented
   creator: {
-    userId: 'P000000001',
-    username: 'System User',
+    userId: '',
+    username: '',
   },
   requestor: {
-    userId: 'P000000001',
-    username: 'System User',
+    userId: '',
+    username: '',
   },
   detail: {
     hasAppraisalBook: false,

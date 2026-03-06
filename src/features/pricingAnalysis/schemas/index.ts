@@ -14,10 +14,10 @@ export const GetPricingAnalysisResponse = schemas.GetPricingAnalysisResponse;
 export type GetPricingAnalysisResponseType = z.infer<typeof schemas.GetPricingAnalysisResponse>;
 
 // -- Approaches & Methods --
-export type AddPriceAnalysisApproachRequestType = z.infer<typeof schemas.AddApproachRequest>;
-export type AddPriceAnalysisApproachResponseType = z.infer<typeof schemas.AddApproachResponse>;
-export type AddPriceAnalysisMethodRequestType = z.infer<typeof schemas.AddMethodRequest>;
-export type AddPriceAnalysisMethodResponseType = z.infer<typeof schemas.AddMethodResponse>;
+export type AddPricingAnalysisApproachRequestType = z.infer<typeof schemas.AddApproachRequest>;
+export type AddPricingAnalysisApproachResponseType = z.infer<typeof schemas.AddApproachResponse>;
+export type AddPricingAnalysisMethodRequestType = z.infer<typeof schemas.AddMethodRequest>;
+export type AddPricingAnalysisMethodResponseType = z.infer<typeof schemas.AddMethodResponse>;
 
 // -- Comparative Analysis --
 export const SaveComparativeAnalysisRequest = schemas.SaveComparativeAnalysisRequest;
@@ -28,8 +28,15 @@ export type SaveComparativeAnalysisResponseType = z.infer<typeof schemas.SaveCom
 
 // -- Comparative Factors --
 export const GetComparativeFactorsResponse = schemas.GetComparativeFactorsResponse;
+export type ComparativeFactorType = z.infer<typeof schemas.ComparativeFactorDto>;
 export type FactorScoreType = z.infer<typeof schemas.FactorScoreDto>;
+export type CalculationType = z.infer<typeof schemas.CalculationDto>;
 export type GetComparativeFactorsResponseType = z.infer<typeof schemas.GetComparativeFactorsResponse>;
+
+// -- Link/Unlink Comparables --
+export type LinkedComparableType = z.infer<typeof schemas.LinkedComparableDto>;
+export type LinkComparableRequestType = z.infer<typeof schemas.LinkComparableRequest>;
+export type LinkComparableResponseType = z.infer<typeof schemas.LinkComparableResponse>;
 
 // -- Market Comparable --
 export const GetMarketComparableByIdResponse = schemas.GetMarketComparableByIdResponse;
@@ -43,7 +50,7 @@ export type FactorDataType = z.infer<typeof schemas.FactorDataDto>;
 // ==================== Local-only types (not from server) ====================
 
 // -- Pricing Analysis Configuration (parsed from local JSON config) --
-const PriceAnalysisConfigDto = z
+const PricingAnalysisConfigDto = z
   .object({
     id: z.string(),
     approachType: z.string(),
@@ -76,11 +83,11 @@ const PriceAnalysisConfigDto = z
     ),
   })
   .passthrough();
-export const PriceAnalysisConfigResponse = z.object({
-  approaches: z.array(PriceAnalysisConfigDto),
+export const PricingAnalysisConfigResponse = z.object({
+  approaches: z.array(PricingAnalysisConfigDto),
 });
-export type PriceAnalysisConfigType = z.infer<typeof PriceAnalysisConfigDto>;
-export type PriceAnalysisConfigResponseType = z.infer<typeof PriceAnalysisConfigResponse>;
+export type PricingAnalysisConfigType = z.infer<typeof PricingAnalysisConfigDto>;
+export type PricingAnalysisConfigResponseType = z.infer<typeof PricingAnalysisConfigResponse>;
 
 // -- Pricing Templates (mocked — no backend endpoint yet) --
 const TemplateComparativeFactorDto = z.object({

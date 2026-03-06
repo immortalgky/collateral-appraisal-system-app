@@ -229,7 +229,7 @@ function FieldRenderer({
 
     if (currentValue !== field.disabledValue) {
       setValue(name, field.disabledValue, {
-        shouldDirty: true,
+        shouldDirty: false,
         shouldValidate: true,
       });
     }
