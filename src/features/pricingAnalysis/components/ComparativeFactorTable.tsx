@@ -147,9 +147,12 @@ export function ComparativeFactorTable({
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={options}
-                          onSelectChange={(value) => {
+                          onSelectChange={value => {
                             const factor = allFactors?.find(f => f.factorCode === value);
-                            setValue(`comparativeFactors.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                            setValue(
+                              `comparativeFactors.${rowIndex}.factorId`,
+                              factor?.factorId ?? factor?.id ?? '',
+                            );
                           }}
                         />
                       </div>
@@ -227,6 +230,56 @@ export function ComparativeFactorTable({
                 </tr>
               );
             })}
+            <tr className="hover:bg-gray-70 cursor-default transition-colors">
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 font-medium h-[55px] w-[350px] min-w-[350px] max-w-[350px] z-25 sticky left-0',
+                )}
+              >
+                Offering Price
+              </td>
+              <td className="bg-white border-r border-b border-gray-300 px-3 py-2.5 w-[65px] min-w-[65px] max-w-[65px] sticky left-[350px] z-25"></td>
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 text-right font-medium px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] z-25 sticky left-[415px] top-0 whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              ></td>
+              {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
+                return (
+                  <td
+                    key={survey.id}
+                    className="border-r border-b border-gray-300 px-3 py-2.5 font-medium min-w-[250px]"
+                  >
+                    {survey.offerPrice ? Number(survey.offerPrice).toLocaleString() : '-'}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr className="hover:bg-gray-70 cursor-default transition-colors">
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 font-medium h-[55px] w-[350px] min-w-[350px] max-w-[350px] z-25 sticky left-0',
+                )}
+              >
+                Selling Price
+              </td>
+              <td className="bg-white border-r border-b border-gray-300 px-3 py-2.5 w-[65px] min-w-[65px] max-w-[65px] sticky left-[350px] z-25"></td>
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 text-right font-medium px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] z-25 sticky left-[415px] top-0 whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              ></td>
+              {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
+                return (
+                  <td
+                    key={survey.id}
+                    className="border-r border-b border-gray-300 px-3 py-2.5 font-medium min-w-[250px]"
+                  >
+                    {survey.salePrice ? Number(survey.salePrice).toLocaleString() : '-'}
+                  </td>
+                );
+              })}
+            </tr>
             <tr>
               <td
                 colSpan={2}

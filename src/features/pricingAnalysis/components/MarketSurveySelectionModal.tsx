@@ -49,7 +49,7 @@ export const MarketSurveySelectionModal = ({
           <div className="flex-1 min-h-0 overflow-auto">
             <table className="table table-sm min-w-max">
               <thead className="sticky top-0 z-20 bg-gray-50">
-                <tr>
+                <tr className="bg-gray-100">
                   <th className="font-medium text-right text-gray-600 py-2.5 whitespace-nowrap">
                     <button
                       onClick={() =>
@@ -78,6 +78,12 @@ export const MarketSurveySelectionModal = ({
                   <th className="font-medium text-right text-gray-600 py-2.5 whitespace-nowrap">
                     Type
                   </th>
+                  <th className="font-medium text-right text-gray-600 py-2.5 whitespace-nowrap">
+                    Offering Price
+                  </th>
+                  <th className="font-medium text-right text-gray-600 py-2.5 whitespace-nowrap">
+                    Selling Price
+                  </th>
                   {serverData?.allFactors?.map((factor: FactorDataType) => {
                     return (
                       <th
@@ -94,10 +100,7 @@ export const MarketSurveySelectionModal = ({
                 {(serverData?.marketSurveyDetails ?? []).map((survey, idx) => {
                   const isSelected = selectedSurveys.some(s => s.id === survey.id);
                   return (
-                    <tr
-                      key={survey.id}
-                      className={clsx('hover:bg-gray-50', isSelected && 'bg-gray-50')}
-                    >
+                    <tr key={survey.id} className={clsx(isSelected && 'bg-gray-50')}>
                       <td className="text-sm text-right flex items-center justify-center">
                         <button
                           key={idx}
@@ -112,7 +115,7 @@ export const MarketSurveySelectionModal = ({
                             'flex flex-row text-left items-center justify-center w-6 h-6 rounded-md transition-colors cursor-pointer',
                             isSelected
                               ? 'border border-primary text-primary transition-all duration-300 ease-in-out'
-                              : 'border border-gray-300 text-neutral-400 hover:text-neutral-800',
+                              : 'border border-gray-300 text-neutral-400 ',
                           )}
                         >
                           {isSelected && (
@@ -142,6 +145,26 @@ export const MarketSurveySelectionModal = ({
                         )}
                       >
                         {survey.propertyType}
+                      </td>
+                      <td
+                        className={clsx(
+                          'text-sm text-right',
+                          isSelected
+                            ? 'text-primary transition-all duration-300 ease-in-out'
+                            : 'text-neutral-400 ',
+                        )}
+                      >
+                        {survey.offerPrice ? Number(survey.offerPrice).toLocaleString() : '-'}
+                      </td>
+                      <td
+                        className={clsx(
+                          'text-sm text-right',
+                          isSelected
+                            ? 'text-primary transition-all duration-300 ease-in-out'
+                            : 'text-neutral-400 ',
+                        )}
+                      >
+                        {survey.salePrice ? Number(survey.salePrice).toLocaleString() : '-'}
                       </td>
                       {/* missing static field */}
                       {(serverData?.allFactors ?? []).map(factor => {
