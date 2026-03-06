@@ -9,6 +9,7 @@ import {
   calcSum,
   calcTotalAdjustValue,
   calcTotalSecondRevision,
+  round2,
 } from '@features/pricingAnalysis/domain/calculateDirectComparison.ts';
 import { shouldAutoDefault } from '../domain/shouldAutoDefault';
 import type { MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
@@ -132,19 +133,17 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
                   value: findSurveyWah.value,
                 })
               : 0;
-            const surveyLandArea = rai * 400 + ngan * 100 + wah;
-            const landDiff = calcDiff(propertyLandArea, surveyLandArea);
-            return landDiff;
+            const surveyLandArea = Number(rai) * 400 + Number(ngan) * 100 + Number(wah);
+            return calcDiff(propertyLandArea, surveyLandArea);
           },
         },
         {
           targetPath: calculationLandValueIncreaseDecreasePath({ column: columnIndex }),
           deps: [calculationLandPricePath()],
           compute: ({ getValues }) => {
-            const landPrice = getValues('landPrice') ?? 0;
+            const landPrice = getValues(calculationLandPricePath()) ?? 0;
             const landDiff = getValues(calculationLandAreaDiffPath({ column: columnIndex })) ?? 0;
-            const landValueIncreaseDecrease = calcIncreaseDecrease(landPrice, landDiff);
-            return landValueIncreaseDecrease;
+            return calcIncreaseDecrease(landPrice, landDiff);
           },
         },
         {
@@ -349,6 +348,56 @@ export function buildDirectComparisonFinalValueRules(arg: {
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValuePath()) ?? 0;
         const finalValueRounded = calcFinalValueRoundedValue(finalValue);
+        return finalValueRounded;
+      },
+    },
+  ].flat();
+
+  return rules;
+}
+
+export function buildDirectComparisonAdjustAppraisalValueRules(): DerivedFieldRule[] {
+  const {
+    finalValueRounded: finalValueRoundedPath,
+    includeLandArea: includeLandAreaPath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
+    appraisalPrice: appraisalPricePath,
+    appraisalPriceRounded: appraisalPriceRoundedPath,
+  } = directComparisonPath;
+
+  const rules: DerivedFieldRule[] = [
+    {
+      targetPath: appraisalPricePath(),
+      deps: [finalValueRoundedPath(), landAreaPath(), usableAreaPath(), includeLandAreaPath()],
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
+
+        const isIncludeLandArea = getValues(includeLandAreaPath());
+        const landArea = getValues(landAreaPath());
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
+        }
+
+        const usableArea = getValues(usableAreaPath());
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
+        }
+
+        return finalValueRounded;
+      },
+    },
+    {
+      targetPath: appraisalPriceRoundedPath(),
+      deps: [appraisalPricePath()],
+      when: ({ getValues, getFieldState, formState }) => {
+        const target = appraisalPriceRoundedPath();
+        const curr = getValues(target);
+        const { isDirty } = getFieldState(target, formState);
+        return shouldAutoDefault({ value: curr, isDirty });
+      },
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(appraisalPricePath()) ?? 0;
         return finalValueRounded;
       },
     },
