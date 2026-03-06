@@ -77,13 +77,16 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
       }
       if (field.maxIntegerDigits != null) {
         const maxInt = field.maxIntegerDigits;
-        schema = n.refine(
-          val => Math.trunc(Math.abs(val)).toString().length <= maxInt,
-          { message: `Must not exceed ${maxInt} digits before decimal point` },
-        );
-      } else {
-        schema = n;
+        n = n.refine(val => Math.trunc(Math.abs(val)).toString().length <= maxInt, {
+          message: `Must not exceed ${maxInt} digits before decimal point`,
+        });
       }
+      // Enforce "required" for number-inputs that don't define their own min:
+      // treat 0 as an empty value while preserving existing min/max semantics.
+      if (staticRequired && field.min == null) {
+        n = n.refine(val => val !== 0, { message: requiredMsg });
+      }
+      schema = n;
       break;
     }
 
@@ -227,7 +230,7 @@ function deepMergeShapes(
       const overrideInner = (overrideValue as z.ZodObject<any>)._def.shape();
       result[key] = z.object(deepMergeShapes(baseInner, overrideInner, priority));
     } else if (baseValue && priority === 'base-wins') {
-      continue; // keep base
+      // keep base
     } else {
       result[key] = overrideValue; // field wins or new key
     }

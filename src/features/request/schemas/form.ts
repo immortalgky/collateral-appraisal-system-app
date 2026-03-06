@@ -153,14 +153,11 @@ const createRequestFormBase = z.object({
 // Conditional refinement from field configs replaces hand-written superRefine.
 // Field configs are the source of truth for validation (field-wins by default).
 // Base schema provides fields not expressible as FormField (titles, documents, etc.).
-export const createRequestForm = buildFormSchema(
-  allRequestFields,
-  createRequestFormBase,
-) as z.ZodEffects<typeof createRequestFormBase>;
+export const createRequestForm = buildFormSchema(allRequestFields, createRequestFormBase);
 
 export type UserDtoType = z.infer<typeof UserDto>;
 export type RequestCommentDtoType = z.infer<typeof RequestCommentDto>;
-export type createRequestFormType = z.infer<typeof createRequestFormBase>;
+export type createRequestFormType = z.infer<typeof createRequestForm>;
 export type RequestTitleDtoType = z.infer<typeof RequestTitleDto>;
 export type RequestDocumentDtoType = z.infer<typeof RequestDocumentDto>;
 export type CollateralType = string;
