@@ -89,7 +89,14 @@ export function restoreDirectComparisonFromSavedData({
     const surveyMap = new Map<string, unknown>();
     for (const s of survey.factorData ?? []) {
       if (s.factorCode) {
-        surveyMap.set(s.factorCode, readFactorValue({ dataType: s.dataType as string, value: s.value as string, fieldDecimal: s.fieldDecimal as number }));
+        surveyMap.set(
+          s.factorCode,
+          readFactorValue({
+            dataType: s.dataType as string,
+            value: s.value as string,
+            fieldDecimal: s.fieldDecimal as number,
+          }),
+        );
       }
     }
 
@@ -98,8 +105,10 @@ export function restoreDirectComparisonFromSavedData({
     return {
       marketId: survey.id,
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
-      offeringPriceMeasurementUnit: saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
-      offeringPriceAdjustmentPct: saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
+      offeringPriceMeasurementUnit:
+        saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
+      offeringPriceAdjustmentPct:
+        saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
       offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
       sellingPriceMeasurementUnit: (surveyMap.get('20') as string) ?? '',
