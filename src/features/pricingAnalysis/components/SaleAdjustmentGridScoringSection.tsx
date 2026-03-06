@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
@@ -22,6 +22,7 @@ import { SaleAdjustmentGridSecondRevision } from '@features/pricingAnalysis/comp
 import { qualitativeDefault } from '@features/pricingAnalysis/domain/qualitativeDefault.ts';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { format } from 'date-fns';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -129,11 +130,12 @@ export const SaleAdjustmentGridScoringSection = ({
 
   const handleRemoveRow = (rowIndex: number) => {
     removeQualitativeFactor(rowIndex);
-
     removeAdjustmentFactor(rowIndex);
   };
 
-  /** define rules */
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+
+  /** Rules */
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
     const rules = buildSaleGridCalculationDerivedRules({
       surveys: comparativeSurveys,
@@ -354,7 +356,7 @@ export const SaleAdjustmentGridScoringSection = ({
                         <button
                           type="button"
                           onClick={() => {
-                            handleRemoveRow(rowIndex);
+                            setDeleteIndex(rowIndex);
                           }}
                           className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
                           title="Delete"
@@ -416,8 +418,7 @@ export const SaleAdjustmentGridScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-between items-center'}>
-                  <span>Adjusted Offering Price</span>
-                  <span>(%)</span>
+                  <span>Adjusted Offering Price (%)</span>
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
@@ -479,20 +480,20 @@ export const SaleAdjustmentGridScoringSection = ({
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
-                if (!hasSalePrice)
-                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
                   <td
                     key={survey.id}
                     className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}
                   >
-                    <RHFInputCell
-                      fieldName={calculationSellingPricePath({ column: columnIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
-                      }}
-                    />
+                    {hasSalePrice && (
+                      <RHFInputCell
+                        fieldName={calculationSellingPricePath({ column: columnIndex })}
+                        inputType="display"
+                        accessor={({ value }) => {
+                          return value ? value.toLocaleString() : '';
+                        }}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -538,8 +539,7 @@ export const SaleAdjustmentGridScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-between items-center'}>
-                  <span>Adjusted Selling Price</span>
-                  <span>(%)</span>
+                  <span>Adjusted Period (%)</span>
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
@@ -563,8 +563,7 @@ export const SaleAdjustmentGridScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className="flex flex-rows justify-between items-center">
-                  <span>Cumulative Adjusted Period</span>
-                  <span>(%)</span>
+                  <span>Cumulative Adjusted Period (%)</span>
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
@@ -857,6 +856,19 @@ export const SaleAdjustmentGridScoringSection = ({
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        isOpen={deleteIndex !== null}
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          if (deleteIndex !== null) {
+            handleRemoveRow(deleteIndex);
+            setDeleteIndex(null);
+          }
+        }}
+        variant="danger"
+        title="Remove Factor"
+        message="Are you sure you want to remove this factor?"
+      />
     </div>
   );
 };
