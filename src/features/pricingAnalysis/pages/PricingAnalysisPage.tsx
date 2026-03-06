@@ -74,7 +74,7 @@ function PricingAnalysisPage() {
     createPricingAnalysis.mutate(
       { groupId },
       {
-        onSuccess: (result) => {
+        onSuccess: result => {
           // Invalidate group detail so pricingAnalysisId is updated in cache
           if (appraisalId) {
             queryClient.invalidateQueries({
@@ -82,10 +82,9 @@ function PricingAnalysisPage() {
             });
           }
           // Redirect to the existing pricing analysis route
-          navigate(
-            `/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${result.id}`,
-            { replace: true },
-          );
+          navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${result.id}`, {
+            replace: true,
+          });
         },
       },
     );
@@ -281,14 +280,16 @@ function PricingAnalysisContent({
                         onSelectCandidateApproach={selectionActions.selectCandidateApproach}
                       />
                       {!isCalcLoading && (
-                        <MethodSectionRenderer
-                          state={state}
-                          serverData={serverData}
-                          calculationMethodData={calculationMethodData}
-                          onCalculationSave={calcFlow.onCalculationSave}
-                          onCalculationMethodDirty={handleOnCalculationMethodDirty}
-                          onCancelCalculationMethod={handleCancelCalculationMethod}
-                        />
+                        <div className="mt-4">
+                          <MethodSectionRenderer
+                            state={state}
+                            serverData={serverData}
+                            calculationMethodData={calculationMethodData}
+                            onCalculationSave={calcFlow.onCalculationSave}
+                            onCalculationMethodDirty={handleOnCalculationMethodDirty}
+                            onCancelCalculationMethod={handleCancelCalculationMethod}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>

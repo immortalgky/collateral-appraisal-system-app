@@ -1,9 +1,4 @@
-import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import { saleGridFieldPath } from '@features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
-import {
-  type DerivedFieldRule,
-  useDerivedFields,
-} from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { toFiniteNumber } from '../domain/calculateSaleAdjustmentGrid';
@@ -17,7 +12,6 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
   const { getValues } = useFormContext();
 
   const {
-    finalValueRounded: finalValueRoundedPath,
     includeLandArea: includeLandAreaPath,
     landArea: landAreaPath,
     usableArea: usableAreaPath,
