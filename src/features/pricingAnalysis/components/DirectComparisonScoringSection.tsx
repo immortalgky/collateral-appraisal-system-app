@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { Icon } from '@/shared/components';
 import {
@@ -30,6 +30,7 @@ import type {
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode.ts';
 import { format } from 'date-fns';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface DirectComparisonScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -137,6 +138,8 @@ export const DirectComparisonScoringSection = ({
     removeQualitativeFactor(rowIndex);
     removeAdjustmentFactor(rowIndex);
   };
+
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   /** define rules */
   const calculationRules: DerivedFieldRule<any>[] = useMemo(() => {
@@ -351,7 +354,7 @@ export const DirectComparisonScoringSection = ({
                         <button
                           type="button"
                           onClick={() => {
-                            handleRemoveRow(rowIndex);
+                            setDeleteIndex(rowIndex);
                           }}
                           className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
                           title="Delete"
@@ -801,6 +804,19 @@ export const DirectComparisonScoringSection = ({
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        isOpen={deleteIndex !== null}
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          if (deleteIndex !== null) {
+            handleRemoveRow(deleteIndex);
+            setDeleteIndex(null);
+          }
+        }}
+        variant="danger"
+        title="Remove Factor"
+        message="Are you sure you want to remove this factor?"
+      />
     </div>
   );
 };
