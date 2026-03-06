@@ -13,7 +13,10 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
       id: cf.id || null,
       factorId: cf.factorId || null,
       displaySequence: index,
-      isSelectedForScoring: true,
+      isSelectedForScoring:
+        SaleAdjustmentGridForm.saleAdjustmentGridQualitatives?.some(
+          q => q.factorId === cf.factorId,
+        ) ?? false,
       remarks: null,
     })),
 

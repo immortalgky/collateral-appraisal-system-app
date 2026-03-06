@@ -13,7 +13,9 @@ export function mapDirectComparisonFormToSubmitSchema({
       id: cf.id || null,
       factorId: cf.factorId || null,
       displaySequence: index,
-      isSelectedForScoring: true,
+      isSelectedForScoring:
+        DirectComparisonForm.directComparisonQualitatives?.some(q => q.factorId === cf.factorId) ??
+        false,
       remarks: null,
     })),
 
