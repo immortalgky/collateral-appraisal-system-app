@@ -450,8 +450,7 @@ export const DirectComparisonScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-between items-center'}>
-                  <span>Adjusted Offering Price</span>
-                  <span>(Amount)</span>
+                  <span>Adjusted Offering Price (Amount)</span>
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
@@ -541,9 +540,7 @@ export const DirectComparisonScoringSection = ({
               <td className={clsx('bg-white', actionColumnBody)}></td>
             </tr>
             <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                Adjusted Selling Price (%)
-              </td>
+              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Adjusted Period (%)</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
