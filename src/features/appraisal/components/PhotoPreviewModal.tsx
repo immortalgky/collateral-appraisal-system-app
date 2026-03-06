@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useEffect } from 'react';
+import { useState, useCallback, useLayoutEffect, useEffect, useRef } from 'react';
 import Icon from '@/shared/components/Icon';
 
 export interface PreviewablePhoto {
@@ -6,6 +6,10 @@ export interface PreviewablePhoto {
   src: string;
   fileName?: string;
   caption?: string | null;
+  isInUse?: boolean;
+  fileExtension?: string | null;
+  mimeType?: string | null;
+  fileSizeBytes?: number | null;
 }
 
 interface PhotoPreviewModalProps<T extends PreviewablePhoto> {
@@ -15,7 +19,10 @@ interface PhotoPreviewModalProps<T extends PreviewablePhoto> {
   onClose: () => void;
   onNavigate: (photo: T) => void;
   onSetThumbnail?: () => void;
+  onSaveDescription?: (caption: string) => void;
+  isSavingDescription?: boolean;
   onDelete?: () => void;
+  showInUseStatus?: boolean;
 }
 
 function PhotoPreviewModal<T extends PreviewablePhoto>({
@@ -25,11 +32,47 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
   onClose,
   onNavigate,
   onSetThumbnail,
+  onSaveDescription,
+  isSavingDescription = false,
   onDelete,
+  showInUseStatus = true,
 }: PhotoPreviewModalProps<T>) {
   const currentIndex = photos.findIndex(p => p.id === photo.id);
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < photos.length - 1;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset editing state when photo changes
+  useEffect(() => {
+    setIsEditing(false);
+    setDraft(photo.caption ?? '');
+  }, [photo.id]);
+
+  // Auto-focus input when entering edit mode
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+    }
+  }, [isEditing]);
+
+  const startEditing = useCallback(() => {
+    setDraft(photo.caption ?? '');
+    setIsEditing(true);
+  }, [photo.caption]);
+
+  const cancelEditing = useCallback(() => {
+    setIsEditing(false);
+    setDraft(photo.caption ?? '');
+  }, [photo.caption]);
+
+  const saveDescription = useCallback(() => {
+    if (!onSaveDescription) return;
+    onSaveDescription(draft);
+    setIsEditing(false);
+  }, [onSaveDescription, draft]);
 
   const goToPrev = useCallback(() => {
     if (hasPrev) {
@@ -46,6 +89,16 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
   // Keyboard navigation
   useLayoutEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle nav keys while editing
+      if (isEditing) {
+        if (e.key === 'Escape') {
+          cancelEditing();
+        } else if (e.key === 'Enter') {
+          saveDescription();
+        }
+        return;
+      }
+
       switch (e.key) {
         case 'Escape':
           onClose();
@@ -61,7 +114,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, goToPrev, goToNext]);
+  }, [onClose, goToPrev, goToNext, isEditing, cancelEditing, saveDescription]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -171,14 +224,96 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
       />
 
       {/* Bottom Info Bar */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+      <div
+        className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-center">
-          <div className="bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-xl flex items-center gap-4 max-w-2xl">
-            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-              <Icon name="image" className="text-white/70" />
+          <div className="bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-xl max-w-2xl w-full">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                <Icon name="image" className="text-white/70" />
+              </div>
+              <div className="min-w-0 flex-1">
+                {isEditing ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={draft}
+                      onChange={e => setDraft(e.target.value)}
+                      placeholder="Enter description..."
+                      className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-white/40"
+                      disabled={isSavingDescription}
+                    />
+                    <button
+                      type="button"
+                      onClick={saveDescription}
+                      disabled={isSavingDescription}
+                      className="p-1.5 bg-green-500/80 hover:bg-green-500 rounded-lg text-white transition-colors disabled:opacity-50"
+                      title="Save"
+                    >
+                      {isSavingDescription ? (
+                        <Icon name="spinner" style="solid" className="text-sm animate-spin" />
+                      ) : (
+                        <Icon name="check" style="solid" className="text-sm" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      disabled={isSavingDescription}
+                      className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors disabled:opacity-50"
+                      title="Cancel"
+                    >
+                      <Icon name="xmark" className="text-sm" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium truncate flex-1">
+                      {photo.caption || photo.fileName || 'Photo'}
+                    </p>
+                    {onSaveDescription && (
+                      <button
+                        type="button"
+                        onClick={startEditing}
+                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white/60 hover:text-white transition-colors flex-shrink-0"
+                        title="Edit description"
+                      >
+                        <Icon name="pen-to-square" className="text-sm" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="font-medium truncate">{photo.caption || photo.fileName || 'Photo'}</p>
+
+            {/* Metadata pills */}
+            <div className="flex items-center gap-2 mt-2.5 ml-14">
+              {showInUseStatus && photo.isInUse != null && (
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${photo.isInUse ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'}`}>
+                  <Icon name={photo.isInUse ? 'check-circle' : 'clock'} className="text-[10px]" />
+                  {photo.isInUse ? 'In Use' : 'Not Used'}
+                </span>
+              )}
+              {(photo.fileExtension || photo.mimeType) && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/10 text-white/60 uppercase">
+                  {photo.fileExtension || photo.mimeType?.split('/')[1] || ''}
+                </span>
+              )}
+              {photo.fileSizeBytes != null && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/10 text-white/60">
+                  {photo.fileSizeBytes < 1024 * 1024
+                    ? `${(photo.fileSizeBytes / 1024).toFixed(1)} KB`
+                    : `${(photo.fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`}
+                </span>
+              )}
+              {photo.fileName && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-white/10 text-white/40 truncate max-w-[200px]">
+                  {photo.fileName}
+                </span>
+              )}
             </div>
           </div>
         </div>

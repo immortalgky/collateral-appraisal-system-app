@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
@@ -11,7 +11,6 @@ import {
   buildWQSScoringSurveyDerivedRules,
   buildWQSTotalScoreRules,
 } from '../adapters/buildWQSDerivedRules';
-import { useMemo } from 'react';
 import type {
   FactorDataType,
   MarketComparableDataType,
@@ -24,6 +23,7 @@ import {
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
+import { format } from 'date-fns';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -72,10 +72,14 @@ export function WQSScoringSection({
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
     calculationAdjustedValue: calculationAdjustedValuePath,
+
+    /** final value (shown at bottom of scoring table) */
+    finalValueFinalValue: finalValueFinalValuePath,
+    finalValueFinalValueRounded: finalValueFinalValueRoundedPath,
   } = wqsFieldPath;
 
   const serverData = useContext(ServerDataCtx);
-  const { control, getValues } = useFormContext();
+  const { control, getValues, setValue } = useFormContext();
   const {
     fields: scoringFactorFields,
     append: appendScoringFactor,
@@ -101,6 +105,7 @@ export function WQSScoringSection({
 
   const handleAddRow = () => {
     appendScoringFactor({
+      factorId: '',
       factorCode: '',
       weight: 0,
       intensity: 0,
@@ -125,14 +130,14 @@ export function WQSScoringSection({
   const scoringSurveyRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSScoringSurveyDerivedRules({
       surveys: comparativeSurveys,
-      scoringRows: getValues(scoringFactorsPath()),
+      scoringRows: getValues(scoringFactorsPath()) ?? [],
     });
   }, [comparativeSurveys, scoringFactorFields.length]);
 
   const totalScoreRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildWQSTotalScoreRules({
       surveys: comparativeSurveys,
-      scoringRows: getValues(scoringFactorsPath()),
+      scoringRows: getValues(scoringFactorsPath()) ?? [],
     });
   }, [comparativeSurveys, scoringFactorFields.length]);
 
@@ -279,9 +284,7 @@ export function WQSScoringSection({
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) =>
-                              value
-                                ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
-                                : ''
+                              value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
                             }
                           />
                         ) : (
@@ -289,6 +292,10 @@ export function WQSScoringSection({
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="select"
                             options={options}
+                            onSelectChange={(value) => {
+                              const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
+                              setValue(`WQSScores.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                            }}
                           />
                         )}
                       </div>
@@ -642,17 +649,15 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
-                const offeringPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '17',
-                );
-                if (!offeringPrice)
-                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
+                const hasOfferPrice = !!survey.offerPrice;
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
-                    <RHFInputCell
-                      fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
-                      inputType="number"
-                    />
+                    {hasOfferPrice && (
+                      <RHFInputCell
+                        fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
+                        inputType="number"
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -682,17 +687,15 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
-                const offeringPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '17',
-                );
-                if (!offeringPrice)
-                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
+                const hasOfferPrice = !!survey.offerPrice;
                 return (
                   <td key={survey.id} className={clsx(surveyStyle)}>
-                    <RHFInputCell
-                      fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
-                      inputType="number"
-                    />
+                    {hasOfferPrice && (
+                      <RHFInputCell
+                        fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
+                        inputType="number"
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -721,12 +724,11 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
-                const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '47',
-                );
-                if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
+                const hasSalePrice = !!survey.salePrice;
+                const hasOfferPrice = !!survey.offerPrice;
+                if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={survey.id} className={clsx(surveyStyle, 'text-right')}>
+                  <td key={survey.id} className={clsx(surveyStyle, 'text-right', hasOfferPrice && 'opacity-50')}>
                     <RHFInputCell
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -760,12 +762,26 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
+                const hasSalePrice = !!survey.salePrice;
+                const hasOfferPrice = !!survey.offerPrice;
+                const saleDateLabel = (() => {
+                  if (!survey.saleDate) return '';
+                  const d = new Date(survey.saleDate);
+                  if (isNaN(d.getTime())) return '';
+                  const buddhistYear = d.getFullYear() + 543;
+                  return `${format(d, 'MMM')} ${buddhistYear}`;
+                })();
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyStyle)}>
-                    <RHFInputCell
-                      fieldName={calculationNumberOfYearsPath({ column: columnIndex })} // TODO: convert date
-                      inputType="display"
-                    />
+                  <td key={survey.id} className={clsx('text-right', surveyStyle, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <RHFInputCell
+                        fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
+                        inputType="display"
+                      />
+                      {saleDateLabel && (
+                        <span className="text-xs text-gray-400">{saleDateLabel}</span>
+                      )}
+                    </div>
                   </td>
                 );
               })}
@@ -779,7 +795,7 @@ export function WQSScoringSection({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                Adjusted Selling Price
+                Adjusted Selling Price (%)
               </td>
               <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
@@ -794,16 +810,17 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
-                const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '21',
-                );
-                if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
+                const hasSalePrice = !!survey.salePrice;
+                const hasOfferPrice = !!survey.offerPrice;
                 return (
                   <td key={survey.id} className={clsx(surveyStyle)}>
-                    <RHFInputCell
-                      fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
-                      inputType="number"
-                    />
+                    {hasSalePrice && (
+                      <RHFInputCell
+                        fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
+                        inputType="number"
+                        disabled={hasOfferPrice}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -835,12 +852,11 @@ export function WQSScoringSection({
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
-                const sellingPrice = survey.factorData?.find(
-                  (f: FactorDataType) => f.factorCode === '21',
-                );
-                if (!sellingPrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
+                const hasSalePrice = !!survey.salePrice;
+                const hasOfferPrice = !!survey.offerPrice;
+                if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyStyle)}>
+                  <td key={survey.id} className={clsx('text-right', surveyStyle, hasOfferPrice && 'opacity-50')}>
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -890,6 +906,57 @@ export function WQSScoringSection({
               <td
                 className={clsx(
                   'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
+                  bgGradientLeft,
+                )}
+              ></td>
+            </tr>
+
+            {/* Final Value row */}
+            <tr>
+              <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
+                Final Value
+              </td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}></td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30', bgGradient)}></td>
+              {comparativeSurveys.map(survey => (
+                <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
+              ))}
+              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-2.5 text-right font-semibold')}>
+                <RHFInputCell
+                  fieldName={finalValueFinalValuePath()}
+                  inputType="display"
+                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+                />
+              </td>
+              <td
+                className={clsx(
+                  'border-b border-gray-300 bg-gray-100 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
+                  bgGradientLeft,
+                )}
+              ></td>
+            </tr>
+
+            {/* Final Value (Rounded) row */}
+            <tr>
+              <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
+                {'Final Value (Rounded)'}
+              </td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}></td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30', bgGradient)}></td>
+              {comparativeSurveys.map(survey => (
+                <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
+              ))}
+              <td className={clsx('bg-gray-100 border-b border-gray-300 px-1 py-1')}>
+                <RHFInputCell
+                  fieldName={finalValueFinalValueRoundedPath()}
+                  inputType="number"
+                />
+              </td>
+              <td
+                className={clsx(
+                  'border-b border-gray-300 bg-gray-100 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
                   bgGradientLeft,
                 )}
               ></td>

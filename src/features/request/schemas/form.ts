@@ -58,7 +58,7 @@ const RequestPropertyDto = z.object({
 });
 const AddressDto = z
   .object({
-    houseNumber: z.string().nullable(),
+    houseNumber: z.string().max(10),
     projectName: z.string().nullable(),
     moo: z.string().nullable(),
     soi: z.string().nullable(),
@@ -344,38 +344,20 @@ const RequestCommentDto = z.object({
   isLocal: z.boolean().optional(), // true = not yet saved to API
 });
 
-export const createRequestForm = z
-  .object({
-    purpose: z.string().min(1, 'Appraisal purpose is required.'),
-    channel: z.string().min(1, 'Channel is required.'),
-    priority: z.string(),
-    isPma: z.boolean(),
-    creator: UserDto,
-    requestor: UserDto,
-    detail: RequestDetailDto,
-    customers: z.array(RequestCustomerDto).min(1, 'At least one customer is required.'),
-    properties: z.array(RequestPropertyDto).min(1, 'At least one property is required.'),
-    titles: z.array(RequestTitleDto),
-    documents: z.array(RequestDocumentDto),
-    comments: z.array(RequestCommentDto),
-  })
-  .superRefine((data, ctx) => {
-    // Loan Application Number is required when the purpose is '01' (New Loan)
-    console.log('[superRefine] Running validation, purpose:', data.purpose);
-    if (data.purpose === '01') {
-      const loanAppNumber = data.detail?.loanDetail?.loanApplicationNumber;
-      const isEmpty = loanAppNumber == null || loanAppNumber.trim() === '';
-      console.log('[superRefine] loanAppNumber:', loanAppNumber, 'isEmpty:', isEmpty);
-      if (isEmpty) {
-        console.log('[superRefine] Adding error for loanApplicationNumber');
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Loan Application No is required',
-          path: ['detail', 'loanDetail', 'loanApplicationNumber'],
-        });
-      }
-    }
-  });
+export const createRequestForm = z.object({
+  purpose: z.string().nonempty('Appraisal purpose is required.'),
+  channel: z.string(),
+  priority: z.string(),
+  isPma: z.boolean(),
+  creator: UserDto,
+  requestor: UserDto,
+  detail: RequestDetailDto,
+  customers: z.array(RequestCustomerDto).min(1, 'At least one customer is required.'),
+  properties: z.array(RequestPropertyDto).min(1, 'At least one property is required.'),
+  titles: z.array(RequestTitleDto),
+  documents: z.array(RequestDocumentDto),
+  comments: z.array(RequestCommentDto),
+});
 
 export type UserDtoType = z.infer<typeof UserDto>;
 export type RequestCommentDtoType = z.infer<typeof RequestCommentDto>;
@@ -397,12 +379,12 @@ export const createRequestFormDefault: createRequestFormType = {
   isPma: false,
   // TODO: Replace with actual logged-in user when login is implemented
   creator: {
-    userId: 'P000000001',
-    username: 'System User',
+    userId: '',
+    username: '',
   },
   requestor: {
-    userId: 'P000000001',
-    username: 'System User',
+    userId: '',
+    username: '',
   },
   detail: {
     hasAppraisalBook: false,

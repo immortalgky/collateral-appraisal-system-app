@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -14,6 +15,7 @@ import LandBoundaryForm from '../forms/LandBoundaryForm';
 import Dropdown from '@shared/components/inputs/Dropdown';
 
 export default function LandDetailPage() {
+  const navigate = useNavigate();
   const methods = useForm<LandDetailFormType>({
     defaultValues: landDetailFormDefaults,
     resolver: zodResolver(LandDetailFormSchema),
@@ -137,7 +139,7 @@ export default function LandDetailPage() {
           {/* Footer Actions */}
           <div className="divider"></div>
           <div className="flex justify-between">
-            <button type="button" className="btn btn-ghost">
+            <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>
               Cancel
             </button>
             <div className="flex gap-4">

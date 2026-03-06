@@ -1,14 +1,17 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
-import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
+import type {
+  FactorDataType,
+  MarketComparableDetailType,
+} from '@features/pricingAnalysis/schemas';
 import type { SaleAdjustmentGridType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
-import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 
 interface SetSaleAdjustmentGridInitialValueOnSelectSurveyProps {
   comparativeSurveys: MarketComparableDetailType[];
   reset: UseFormReset<SaleAdjustmentGridType>;
   getValues: UseFormGetValues<SaleAdjustmentGridType>;
 }
-export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
+export function syncSaleAdjustmentGridFormSurveys({
   comparativeSurveys = [],
   reset,
   getValues,
@@ -55,20 +58,21 @@ export function setSaleAdjustmentGridInitialValueOnSelectSurvey({
       );
       return {
         marketId: survey.id,
-        offeringPrice: surveyMap.get('25') ?? 0,
+        offeringPrice: survey.offerPrice ?? 0,
         offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-        offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-        offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-        sellingPrice: surveyMap.get('47') ?? 0,
+        offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+        offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+        sellingPrice: survey.salePrice ?? 0,
         sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-        sellingDate: surveyMap.get('22') ?? '',
-        sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-        numberOfYears: 10, // TODO: convert selling date to number of year
+        sellingDate: survey.saleDate ?? '',
+        sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
+        numberOfYears: yearDiffFromToday(survey.saleDate),
         adjustedValue: 0,
         weight: 0,
       };
     }),
     saleAdjustmentGridAdjustmentFactors: (current.saleAdjustmentGridQualitatives ?? []).map(q => ({
+      factorId: q.factorId,
       factorCode: q.factorCode,
       surveys: comparativeSurveys.map(survey => ({
         marketId: survey.id,

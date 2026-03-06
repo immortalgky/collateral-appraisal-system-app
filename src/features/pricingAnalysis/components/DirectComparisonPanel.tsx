@@ -3,19 +3,27 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
 import { useEffect, useState } from 'react';
 import type {
+  CalculationType,
+  ComparativeFactorType,
   FactorDataType,
+  FactorScoreType,
+  LinkedComparableType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas';
 import toast from 'react-hot-toast';
 import { flattenRHFErrors } from '@features/pricingAnalysis/domain/flattenRHFErrors.ts';
-import { setDirectComparisonInitialValue } from '@features/pricingAnalysis/adapters/setDirectComparisonInitialValue.ts';
-import { setDirectComparisonInitialValueOnSelectSurvey } from '@features/pricingAnalysis/adapters/setDirectComparisonInitialValueOnSelectSurvey.ts';
-import { PriceAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PriceAnalysisTemplateSelector.tsx';
+import { mapDirectComparisonFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapDirectComparisonFormToSubmitSchema.ts';
+import { useSaveComparativeAnalysis } from '@features/pricingAnalysis/api';
+import { initializeDirectComparisonForm } from '@features/pricingAnalysis/adapters/initializeDirectComparisonForm.ts';
+import { syncDirectComparisonFormSurveys } from '@features/pricingAnalysis/adapters/syncDirectComparisonFormSurveys.ts';
+import { restoreDirectComparisonFromSavedData } from '@features/pricingAnalysis/adapters/restoreDirectComparisonFromSavedData.ts';
+import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants';
-import { DirectComparison } from '@features/pricingAnalysis/components/DirectComparison.tsx';
+import { DirectComparisonForm } from '@features/pricingAnalysis/components/DirectComparisonForm.tsx';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
+import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 
 interface DirectComparisonPanelProps {
   activeMethod?: {
@@ -29,6 +37,10 @@ interface DirectComparisonPanelProps {
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   methodTemplates: TemplateDetailType[] | null | undefined;
+  linkedComparables: LinkedComparableType[] | undefined;
+  savedComparativeFactors?: ComparativeFactorType[];
+  savedFactorScores?: FactorScoreType[];
+  savedCalculations?: CalculationType[];
   onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
@@ -40,6 +52,9 @@ export function DirectComparisonPanel({
   marketSurveys,
   allFactors,
   methodTemplates: templates,
+  linkedComparables,
+  savedComparativeFactors,
+  savedCalculations,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -59,10 +74,15 @@ export function DirectComparisonPanel({
     formState: { isDirty },
   } = methods;
 
-  /** Template selector handler */
-  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  /** Linked comparables — syncs with server on select/deselect */
+  const { comparativeSurveys, syncSelection } = useLinkedComparables({
+    pricingAnalysisId: activeMethod?.pricingAnalysisId,
+    methodId: methodId,
+    marketSurveys,
+    linkedComparables,
+  });
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    setComparativeSurveys(surveys);
+    syncSelection(surveys);
   };
 
   const [collateralType, setCollateralType] = useState<string>('');
@@ -73,23 +93,40 @@ export function DirectComparisonPanel({
   /** cancel calculation dialog state */
   const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
 
-  /** Form handler */
-  const handleOnSubmit = (value: DirectComparisonType) => {
-    // TODO: remove if api ready!
-    const appraisalValue = value.directComparisonAppraisalPrice.appraisalPriceRounded;
-    if (
-      !!appraisalValue &&
-      !!activeMethod?.approachType &&
-      !!activeMethod?.methodType
-    ) {
-      onCalculationSave({
-        approachType: activeMethod.approachType,
-        methodType: activeMethod.methodType,
-        appraisalValue: appraisalValue,
+  const saveMutation = useSaveComparativeAnalysis();
+
+  /** Form handler — skips full Zod validation so we can save factors/scores independently */
+  const handleOnSubmit = async () => {
+    if (!activeMethod?.pricingAnalysisId || !methodId) {
+      toast.error('Pricing analysis ID or method ID not found!');
+      return;
+    }
+
+    const value = getValues();
+
+    try {
+      const request = mapDirectComparisonFormToSubmitSchema({
+        DirectComparisonForm: value,
       });
+
+      await saveMutation.mutateAsync({
+        id: activeMethod.pricingAnalysisId,
+        methodId,
+        request,
+      });
+
+      const appraisalValue = value.directComparisonAppraisalPrice?.appraisalPriceRounded;
+      if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
+        onCalculationSave({
+          approachType: activeMethod.approachType,
+          methodType: activeMethod.methodType,
+          appraisalValue,
+        });
+      }
       toast.success('Saved!');
       reset(value);
-      return;
+    } catch {
+      toast.error('Failed to save comparative analysis');
     }
   };
 
@@ -103,16 +140,16 @@ export function DirectComparisonPanel({
 
     const template = (templates ?? []).find(t => t?.templateCode === pricingTemplateType);
     setPricingTemplate(template);
-    setComparativeSurveys([]);
 
-    // single source of truth: init now
-    setDirectComparisonInitialValue({
+    // single source of truth: init now (use existing linked comparables)
+    initializeDirectComparisonForm({
       collateralType,
       methodId: methodId!,
       methodType: methodType!,
-      comparativeSurveys: [],
+      comparativeSurveys,
       property: property!,
       template,
+      allFactors,
       reset,
     });
 
@@ -160,9 +197,51 @@ export function DirectComparisonPanel({
     );
   };
 
+  // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
+    if (isGenerated || comparativeSurveys.length === 0) return;
     if (!methodId || !methodType || !property) return;
-    setDirectComparisonInitialValueOnSelectSurvey({
+
+    // Restore from saved data if available
+    if (savedComparativeFactors && savedComparativeFactors.length > 0) {
+      restoreDirectComparisonFromSavedData({
+        methodId,
+        property,
+        comparativeSurveys,
+        allFactors,
+        linkedComparables,
+        savedComparativeFactors,
+        savedCalculations,
+        reset,
+      });
+      setIsGenerated(true);
+      return;
+    }
+
+    initializeDirectComparisonForm({
+      collateralType: '',
+      methodId,
+      methodType,
+      comparativeSurveys,
+      property,
+      template: undefined,
+      allFactors,
+      reset,
+    });
+    setIsGenerated(true);
+  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors]);
+
+  // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
+  useEffect(() => {
+    if (!isGenerated) return;
+    if (!methodId || !methodType || !property) return;
+
+    // Only re-init when the set of surveys actually changed
+    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
+    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    if (formSurveyIds === currentSurveyIds) return;
+
+    syncDirectComparisonFormSurveys({
       comparativeSurveys: comparativeSurveys,
       reset: reset,
       getValues: getValues,
@@ -194,10 +273,10 @@ export function DirectComparisonPanel({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(handleOnSubmit, onInvalid)}
+        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
         className="flex flex-col h-full gap-4"
       >
-        <PriceAnalysisTemplateSelector
+        <PricingAnalysisTemplateSelector
           icon="house-building"
           methodName="Direct Comparison"
           onGenerate={handleOnGenerate}
@@ -220,7 +299,7 @@ export function DirectComparisonPanel({
         />
         {isGenerated && (
           <div className="flex-1 min-h-0">
-            <DirectComparison
+            <DirectComparisonForm
               {...methods}
               property={property}
               marketSurveys={marketSurveys}
@@ -232,6 +311,7 @@ export function DirectComparisonPanel({
             <MethodFooterActions
               onSaveDraft={handleOnSaveDraft}
               onCancel={handleOnCancelCalculationMethod}
+              isSubmitting={saveMutation.isPending}
             />
           </div>
         )}

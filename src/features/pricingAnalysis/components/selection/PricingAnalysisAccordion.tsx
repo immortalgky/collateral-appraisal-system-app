@@ -1,14 +1,14 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { PriceAnalysisApproachMethodSelector } from './PriceAnalysisApproachMethodSelector';
+import { PricingAnalysisApproachMethodSelector } from './PricingAnalysisApproachMethodSelector';
 import { PropertyCardContent } from '@features/appraisal/components/PropertyCardContent';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PropertyGroupItemDto } from '@features/appraisal/api';
 import { mapGroupItemToPropertyItem } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
 
-interface PriceAnalysisAccordionProps {
+interface PricingAnalysisAccordionProps {
   state: SelectionState;
   appraisalId: string;
   group: {
@@ -19,8 +19,8 @@ interface PriceAnalysisAccordionProps {
     useSystemCalc: boolean;
     properties: PropertyGroupItemDto[];
   };
-  isPriceAnalysisAccordionOpen: boolean;
-  onPriceAnalysisAccordionChange: () => void;
+  isPricingAnalysisAccordionOpen: boolean;
+  onPricingAnalysisAccordionChange: () => void;
 
   onEnterEdit: () => void;
   onEditModeSave: () => void;
@@ -40,11 +40,11 @@ interface PriceAnalysisAccordionProps {
   onSelectCandidateApproach: (approachType: string) => void;
 }
 
-export const PriceAnalysisAccordion = ({
+export const PricingAnalysisAccordion = ({
   state,
   group,
-  onPriceAnalysisAccordionChange,
-  isPriceAnalysisAccordionOpen,
+  onPricingAnalysisAccordionChange,
+  isPricingAnalysisAccordionOpen,
   onSelectCalculationMethod,
   onCancelEditMode,
 
@@ -62,7 +62,7 @@ export const PriceAnalysisAccordion = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
-}: PriceAnalysisAccordionProps) => {
+}: PricingAnalysisAccordionProps) => {
   /** Map group properties to PropertyItem for rendering */
   const propertyItems = useMemo(
     () =>
@@ -113,16 +113,16 @@ export const PriceAnalysisAccordion = ({
           </div>
           <button
             type="button"
-            onClick={onPriceAnalysisAccordionChange}
+            onClick={onPricingAnalysisAccordionChange}
             className="btn btn-ghost btn-sm"
-            aria-expanded={isPriceAnalysisAccordionOpen}
+            aria-expanded={isPricingAnalysisAccordionOpen}
           >
             <Icon
               name="chevron-down"
               style="solid"
               className={clsx(
                 'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
-                isPriceAnalysisAccordionOpen ? 'rotate-180' : 'rotate-0',
+                isPricingAnalysisAccordionOpen ? 'rotate-180' : 'rotate-0',
               )}
             />
           </button>
@@ -132,13 +132,13 @@ export const PriceAnalysisAccordion = ({
       {/* detail */}
       <div
         className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-        style={{ maxHeight: isPriceAnalysisAccordionOpen ? detailMaxHeight : 0 }}
+        style={{ maxHeight: isPricingAnalysisAccordionOpen ? detailMaxHeight : 0 }}
       >
         <div
           ref={detailInnerRef}
           className={clsx(
             'pb-4 text-gray-700 transition-opacity duration-200',
-            isPriceAnalysisAccordionOpen
+            isPricingAnalysisAccordionOpen
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none',
           )}
@@ -165,7 +165,7 @@ export const PriceAnalysisAccordion = ({
 
             {/* Right: Approach & Method Selector (50%) */}
             <div className="w-1/2 min-w-0 pl-3">
-              <PriceAnalysisApproachMethodSelector
+              <PricingAnalysisApproachMethodSelector
                 state={state}
                 isSystemCalculation={systemCalculationMode}
                 onSystemCalculationChange={onSystemCalculationChange}

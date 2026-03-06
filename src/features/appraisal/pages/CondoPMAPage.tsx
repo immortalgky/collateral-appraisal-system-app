@@ -8,6 +8,8 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
 import { FormProvider } from '@/shared/components/form';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import RightMenuPortal from '@/shared/components/RightMenuPortal';
 import CondoPMAForm from '../forms/CondoPMAForm';
 
@@ -20,7 +22,9 @@ const CondoPMAPage = () => {
     defaultValues: condoPMAFormDefault,
     resolver: zodResolver(condoPMAForm),
   });
-  const { handleSubmit, getValues, reset } = methods;
+  const { handleSubmit, getValues, reset, formState: { isDirty } } = methods;
+
+  const { blocker } = useUnsavedChangesWarning(isDirty);
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
@@ -91,6 +95,12 @@ const CondoPMAPage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
+                {isDirty && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Unsaved changes
+                  </span>
+                )}
               </div>
               <div className="flex gap-3">
                 <Button
@@ -114,6 +124,9 @@ const CondoPMAPage = () => {
               </div>
             </div>
           </div>
+
+          <UnsavedChangesDialog blocker={blocker} />
+
           <RightMenuPortal>
             <div></div>
           </RightMenuPortal>

@@ -16,12 +16,13 @@ export interface GalleryImage {
   photoCategory: string | null;
   category?: string;
   uploadedAt?: Date;
-  isUsedInReport: boolean;
-  isUsed?: boolean;
-  reportSection: string | null;
+  isInUse: boolean;
   latitude: number | null;
   longitude: number | null;
   capturedAt: string | null;
+  fileExtension?: string | null;
+  mimeType?: string | null;
+  fileSizeBytes?: number | null;
 }
 
 export interface GalleryViewProps {
@@ -46,19 +47,20 @@ export const toGalleryImage = (dto: GalleryPhotoDtoType): GalleryImage => ({
   src: `${API_BASE_URL}/documents/${dto.documentId}/download?download=false`,
   thumbnailSrc: `${API_BASE_URL}/documents/${dto.documentId}/download?download=false&size=large`,
   alt: dto.caption || `Photo #${dto.photoNumber}`,
-  fileName: `Photo_${dto.photoNumber}`,
+  fileName: dto.fileName ?? `Photo_${dto.photoNumber}`,
   caption: dto.caption,
   description: dto.caption ?? undefined,
   photoType: dto.photoType,
   photoCategory: dto.photoCategory,
   category: dto.photoCategory ?? undefined,
   uploadedAt: new Date(dto.uploadedAt),
-  isUsedInReport: dto.isUsedInReport,
-  isUsed: dto.isUsedInReport,
-  reportSection: dto.reportSection,
+  isInUse: dto.isInUse,
   latitude: dto.latitude,
   longitude: dto.longitude,
   capturedAt: dto.capturedAt,
+  fileExtension: dto.fileExtension,
+  mimeType: dto.mimeType,
+  fileSizeBytes: dto.fileSizeBytes,
 });
 
 export interface TopicPhotoDisplay {

@@ -316,7 +316,7 @@ const plotLocationField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
@@ -333,11 +333,13 @@ const landFillField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'in' },
+    showWhen: { field: 'landFillType', is: '99' },
+    maxLength: 4000,
+    showCharCount: true,
   },
   {
     type: 'number-input',

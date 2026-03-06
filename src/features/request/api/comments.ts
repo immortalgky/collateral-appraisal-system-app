@@ -64,7 +64,9 @@ export const useUpdateComment = () => {
       commentId: string;
       comment: string;
     }): Promise<UpdateRequestCommentResponseType> => {
-      const { data } = await axios.put(`/requests/${requestId}/comments/${commentId}`, { comment });
+      const { data } = await axios.patch(`/requests/${requestId}/comments/${commentId}`, {
+        comment,
+      });
       return data;
     },
     onSuccess: (_, variables) => {

@@ -14,6 +14,13 @@ interface GallerySelectionModalProps {
   title?: string;
 }
 
+function formatFileSize(bytes: number | null | undefined): string | null {
+  if (bytes == null) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 // Stable empty array to avoid re-renders
 const EMPTY_ARRAY: string[] = [];
 
@@ -275,10 +282,19 @@ export const GallerySelectionModal = ({
                       <p className="text-white text-sm font-medium truncate">
                         {image.fileName || image.alt}
                       </p>
-                      {image.photoCategory && (
-                        <p className="text-white/70 text-xs truncate mt-0.5">
-                          {image.photoCategory}
-                        </p>
+                      {(image.caption || image.fileSizeBytes != null) && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {image.caption && (
+                            <p className="text-white/70 text-xs truncate min-w-0 flex-1">
+                              {image.caption}
+                            </p>
+                          )}
+                          {image.fileSizeBytes != null && (
+                            <span className="text-white/60 text-[10px] font-medium bg-white/10 rounded px-1.5 py-0.5 shrink-0">
+                              {formatFileSize(image.fileSizeBytes)}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

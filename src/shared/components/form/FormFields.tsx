@@ -21,7 +21,7 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types';
+import type { ConditionInput, FieldCondition, FieldConditions, FormField } from './types'; // =============================================================================
 
 // =============================================================================
 // Condition Evaluation Utilities
@@ -380,7 +380,7 @@ function FieldRenderer({
 
     if (currentValue !== field.disabledValue) {
       setValue(name, field.disabledValue, {
-        shouldDirty: true,
+        shouldDirty: false,
         shouldValidate: true,
       });
     }
@@ -430,6 +430,7 @@ function FieldRenderer({
           showCharCount: passedField.showCharCount ?? globalShowCharCount,
           disabled: isDisabled,
         };
+
         return <TextInput {...fieldProps} {...passedField} {...textProps} error={error?.message} />;
       }
 

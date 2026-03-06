@@ -9,11 +9,10 @@ export function floorToTenThousands(num) {
 }
 
 /**
- * NOTE:
+ * Adjusted value from offering price:
  * - pct > 0 => offeringPrice - offeringPrice * pct/100
- * - else if amt > 0 => returns amt (NOT offeringPrice +/- amt)
+ * - else if amt > 0 => offeringPrice - amt
  * - else => offeringPrice
- *
  */
 export function calcAdjustedValue(
   offeringPrice: unknown,
@@ -27,7 +26,7 @@ export function calcAdjustedValue(
   const amt = Number(offeringPriceAdjustmentAmt) || 0;
 
   if (pct > 0) return round2(price - (price * pct) / 100);
-  if (amt > 0) return round2(amt); // keeping your current logic
+  if (amt > 0) return round2(price - amt);
   return round2(price);
 }
 

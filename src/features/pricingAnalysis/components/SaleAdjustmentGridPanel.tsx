@@ -7,18 +7,26 @@ import {
 } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
 import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
-import { PriceAnalysisTemplateSelector } from '@/features/pricingAnalysis/components/PriceAnalysisTemplateSelector';
+import { PricingAnalysisTemplateSelector } from '@/features/pricingAnalysis/components/PricingAnalysisTemplateSelector';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
-import { SaleAdjustmentGrid } from './SaleAdjustmentGrid';
+import { SaleAdjustmentGridForm } from './SaleAdjustmentGridForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type {
+  CalculationType,
+  ComparativeFactorType,
   FactorDataType,
+  FactorScoreType,
+  LinkedComparableType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas';
 import { flattenRHFErrors } from '@features/pricingAnalysis/domain/flattenRHFErrors.ts';
-import { setSaleAdjustmentGridInitialValue } from '@features/pricingAnalysis/adapters/setSaleAdjustmentGridInitialValue.ts';
-import { setSaleAdjustmentGridInitialValueOnSelectSurvey } from '@features/pricingAnalysis/adapters/setSaleAdjustmentGridInitialValueOnSelectSurvey.ts';
+import { mapSaleAdjustmentGridFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapSaleAdjustmentGridFormToSubmitSchema.ts';
+import { useSaveComparativeAnalysis } from '@features/pricingAnalysis/api';
+import { initializeSaleAdjustmentGridForm } from '@features/pricingAnalysis/adapters/initializeSaleAdjustmentGridForm.ts';
+import { syncSaleAdjustmentGridFormSurveys } from '@features/pricingAnalysis/adapters/syncSaleAdjustmentGridFormSurveys.ts';
+import { restoreSaleAdjustmentGridFromSavedData } from '@features/pricingAnalysis/adapters/restoreSaleAdjustmentGridFromSavedData.ts';
+import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 
 interface SaleAdjustmentGridPanelProps {
   activeMethod?: {
@@ -32,6 +40,10 @@ interface SaleAdjustmentGridPanelProps {
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   methodTemplates: TemplateDetailType[] | null | undefined;
+  linkedComparables: LinkedComparableType[] | undefined;
+  savedComparativeFactors?: ComparativeFactorType[];
+  savedFactorScores?: FactorScoreType[];
+  savedCalculations?: CalculationType[];
   onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
@@ -43,6 +55,9 @@ export function SaleAdjustmentGridPanel({
   marketSurveys,
   allFactors,
   methodTemplates: templates,
+  linkedComparables,
+  savedComparativeFactors,
+  savedCalculations,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -62,10 +77,15 @@ export function SaleAdjustmentGridPanel({
     formState: { isDirty },
   } = methods;
 
-  // comparative market survey selection
-  const [comparativeSurveys, setComparativeSurveys] = useState<MarketComparableDetailType[]>([]);
+  // Linked comparables — syncs with server on select/deselect
+  const { comparativeSurveys, syncSelection } = useLinkedComparables({
+    pricingAnalysisId: activeMethod?.pricingAnalysisId,
+    methodId: methodId,
+    marketSurveys,
+    linkedComparables,
+  });
   const handleOnSelectComparativeMarketSurvey = (surveys: MarketComparableDetailType[]) => {
-    setComparativeSurveys(surveys);
+    syncSelection(surveys);
   };
 
   const [collateralType, setCollateralType] = useState<string>('');
@@ -76,23 +96,40 @@ export function SaleAdjustmentGridPanel({
   /** cancel calculation dialog state */
   const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
 
-  /** Form handler */
-  const handleOnSubmit = (value: SaleAdjustmentGridType) => {
-    // TODO: remove if api ready!
-    const appraisalValue = value.saleAdjustmentGridAppraisalPrice.appraisalPriceRounded;
-    if (
-      !!appraisalValue &&
-      !!activeMethod?.approachType &&
-      !!activeMethod?.methodType
-    ) {
-      onCalculationSave({
-        approachType: activeMethod.approachType,
-        methodType: activeMethod.methodType,
-        appraisalValue: appraisalValue,
+  const saveMutation = useSaveComparativeAnalysis();
+
+  /** Form handler — skips full Zod validation so we can save factors/scores independently */
+  const handleOnSubmit = async () => {
+    if (!activeMethod?.pricingAnalysisId || !methodId) {
+      toast.error('Pricing analysis ID or method ID not found!');
+      return;
+    }
+
+    const value = getValues();
+
+    try {
+      const request = mapSaleAdjustmentGridFormToSubmitSchema({
+        SaleAdjustmentGridForm: value,
       });
+
+      await saveMutation.mutateAsync({
+        id: activeMethod.pricingAnalysisId,
+        methodId,
+        request,
+      });
+
+      const appraisalValue = value.saleAdjustmentGridAppraisalPrice?.appraisalPriceRounded;
+      if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
+        onCalculationSave({
+          approachType: activeMethod.approachType,
+          methodType: activeMethod.methodType,
+          appraisalValue,
+        });
+      }
       toast.success('Saved!');
       reset(value);
-      return;
+    } catch {
+      toast.error('Failed to save comparative analysis');
     }
   };
 
@@ -107,16 +144,16 @@ export function SaleAdjustmentGridPanel({
 
     const template = (templates ?? []).find(t => t?.templateCode === pricingTemplateType);
     setPricingTemplate(template);
-    setComparativeSurveys([]);
 
-    // single source of truth: init now
-    setSaleAdjustmentGridInitialValue({
+    // single source of truth: init now (use existing linked comparables)
+    initializeSaleAdjustmentGridForm({
       collateralType,
       methodId: methodId!,
       methodType: methodType!,
-      comparativeSurveys: [],
+      comparativeSurveys,
       property: property!,
       template,
+      allFactors,
       reset,
     });
 
@@ -164,9 +201,51 @@ export function SaleAdjustmentGridPanel({
     );
   };
 
+  // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
+    if (isGenerated || comparativeSurveys.length === 0) return;
     if (!methodId || !methodType || !property) return;
-    setSaleAdjustmentGridInitialValueOnSelectSurvey({
+
+    // Restore from saved data if available
+    if (savedComparativeFactors && savedComparativeFactors.length > 0) {
+      restoreSaleAdjustmentGridFromSavedData({
+        methodId,
+        property,
+        comparativeSurveys,
+        allFactors,
+        linkedComparables,
+        savedComparativeFactors,
+        savedCalculations,
+        reset,
+      });
+      setIsGenerated(true);
+      return;
+    }
+
+    initializeSaleAdjustmentGridForm({
+      collateralType: '',
+      methodId,
+      methodType,
+      comparativeSurveys,
+      property,
+      template: undefined,
+      allFactors,
+      reset,
+    });
+    setIsGenerated(true);
+  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors]);
+
+  // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
+  useEffect(() => {
+    if (!isGenerated) return;
+    if (!methodId || !methodType || !property) return;
+
+    // Only re-init when the set of surveys actually changed
+    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
+    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    if (formSurveyIds === currentSurveyIds) return;
+
+    syncSaleAdjustmentGridFormSurveys({
       comparativeSurveys: comparativeSurveys,
       reset: reset,
       getValues: getValues,
@@ -190,10 +269,10 @@ export function SaleAdjustmentGridPanel({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(handleOnSubmit, onInvalid)}
+        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
         className="flex flex-col h-full gap-4"
       >
-        <PriceAnalysisTemplateSelector
+        <PricingAnalysisTemplateSelector
           icon="table"
           methodName="Sale Adjustment Grid"
           onGenerate={handleOnGenerate}
@@ -216,7 +295,7 @@ export function SaleAdjustmentGridPanel({
         />
         {isGenerated && (
           <div className="flex-1 min-h-0">
-            <SaleAdjustmentGrid
+            <SaleAdjustmentGridForm
               {...methods}
               property={property}
               marketSurveys={marketSurveys}
@@ -228,6 +307,7 @@ export function SaleAdjustmentGridPanel({
             <MethodFooterActions
               onSaveDraft={handleOnSaveDraft}
               onCancel={handleOnCancelCalculationMethod}
+              isSubmitting={saveMutation.isPending}
             />
           </div>
         )}

@@ -1,7 +1,7 @@
 import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { DirectComparisonScoringSection } from './DirectComparisonScoringSection';
-import { ComparativeMarketSurveySection } from '@features/pricingAnalysis/components/ComparativeMarketSurveySection.tsx';
+import { SurveySelectionSection } from '@features/pricingAnalysis/components/SurveySelectionSection.tsx';
 import { DirectComparisonAdjustAppraisalPriceSection } from '@features/pricingAnalysis/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
 
 /**
@@ -26,7 +26,7 @@ interface DirectComparisonProps {
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 
-export const DirectComparison = ({
+export const DirectComparisonForm = ({
   property,
   marketSurveys,
   comparativeMarketSurveys,
@@ -43,7 +43,7 @@ export const DirectComparison = ({
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4 py-4"
       >
         <div className="flex flex-col gap-4">
-          <ComparativeMarketSurveySection
+          <SurveySelectionSection
             template={template}
             allFactors={allFactors}
             property={property}
