@@ -10,6 +10,7 @@ import {
   calcTotalAdjustValue,
   calcTotalSecondRevision,
   calcWeightedAdjustValue,
+  round2,
 } from '@features/pricingAnalysis/domain/calculateSaleAdjustmentGrid.ts';
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
@@ -18,6 +19,7 @@ import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/g
 import type { MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue';
+import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 export function buildSaleGridCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
@@ -30,9 +32,11 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculation: calculationPath,
     calculationAdjustedValue: calculationAdjustedValuePath,
     calculationTotalAdjustValue: calculationTotalAdjustValuePath,
+    calculationOfferingPrice: calculationOfferingPricePath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+    calculationSellingPrice: calculationSellingPricePath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationLandAreaDiff: calculationLandAreaDiffPath,
@@ -46,6 +50,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculationWeight: calculationWeightPath,
     calculationWeightAdjustValue: calculationWeightAdjustValuePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
   } = saleGridFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
@@ -59,26 +65,26 @@ export function buildSaleGridCalculationDerivedRules(args: {
             calculationAdjustmentYearPath({ column: columnIndex }),
           ],
           compute: ({ getValues }) => {
-            const offeringPriceValue = survey.offerPrice;
-            if (offeringPriceValue) {
+            const offeringPrice = getValues(calculationOfferingPricePath({ column: columnIndex }));
+            if (offeringPrice) {
               const offeringPriceAdjustmentPct =
                 getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) ?? 0;
               const offeringPriceAdjustmentAmt =
                 getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValue(
-                offeringPriceValue,
+                offeringPrice,
                 offeringPriceAdjustmentPct,
                 offeringPriceAdjustmentAmt,
               );
             }
-            const sellingPriceValue = survey.salePrice;
-            if (sellingPriceValue) {
+            const sellingPrice = getValues(calculationSellingPricePath({ column: columnIndex }));
+            if (sellingPrice) {
               const numberOfYears =
                 getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
               const sellingPriceAdjustmentYearPct =
                 getValues(calculationAdjustmentYearPath({ column: columnIndex })) ?? 0;
               return calcAdjustedValueFromSellingPrice(
-                sellingPriceValue,
+                sellingPrice,
                 numberOfYears,
                 sellingPriceAdjustmentYearPct,
               );
@@ -88,10 +94,6 @@ export function buildSaleGridCalculationDerivedRules(args: {
         },
         {
           targetPath: calculationTotalAdjustedSellingPricePath({ column: columnIndex }),
-          deps: [
-            calculationNumberOfYearsPath({ column: columnIndex }),
-            calculationAdjustmentYearPath({ column: columnIndex }),
-          ],
           compute: ({ getValues }) => {
             const numberOfYears =
               getValues(calculationNumberOfYearsPath({ column: columnIndex })) ?? 0;
@@ -103,36 +105,51 @@ export function buildSaleGridCalculationDerivedRules(args: {
         {
           targetPath: calculationLandAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: ({ ctx }) => {
-            const propertyLandArea = ctx.property?.area ?? 0;
-            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '05');
-            const surveyLandArea = findSurveyLandArea
+          compute: ({ getValues }) => {
+            const propertyLandArea = getValues(landAreaPath()) ?? 0;
+            const findSurveyRai = (survey.factorData ?? []).find(f => f.factorCode === '43');
+            const rai = findSurveyRai
               ? readFactorValue({
-                  dataType: findSurveyLandArea.dataType,
-                  fieldDecimal: findSurveyLandArea.fieldDecimal,
-                  value: findSurveyLandArea.value,
+                  dataType: findSurveyRai.dataType,
+                  fieldDecimal: findSurveyRai.fieldDecimal,
+                  value: findSurveyRai.value,
                 })
               : 0;
-            const landDiff = calcDiff(propertyLandArea, surveyLandArea);
-            return landDiff;
+            const findSurveyNgan = (survey.factorData ?? []).find(f => f.factorCode === '44');
+            const ngan = findSurveyNgan
+              ? readFactorValue({
+                  dataType: findSurveyNgan.dataType,
+                  fieldDecimal: findSurveyNgan.fieldDecimal,
+                  value: findSurveyNgan.value,
+                })
+              : 0;
+            const findSurveyWah = (survey.factorData ?? []).find(f => f.factorCode === '45');
+            const wah = findSurveyWah
+              ? readFactorValue({
+                  dataType: findSurveyWah.dataType,
+                  fieldDecimal: findSurveyWah.fieldDecimal,
+                  value: findSurveyWah.value,
+                })
+              : 0;
+            const surveyLandArea = Number(rai) * 400 + Number(ngan) * 100 + Number(wah);
+            return calcDiff(propertyLandArea, surveyLandArea);
           },
         },
         {
           targetPath: calculationLandValueIncreaseDecreasePath({ column: columnIndex }),
           deps: [calculationLandPricePath()],
           compute: ({ getValues }) => {
-            const landPrice = getValues('landPrice') ?? 0;
+            const landPrice = getValues(calculationLandPricePath()) ?? 0;
             const landDiff = getValues(calculationLandAreaDiffPath({ column: columnIndex })) ?? 0;
-            const landValueIncreaseDecrease = calcIncreaseDecrease(landPrice, landDiff);
-            return landValueIncreaseDecrease;
+            return calcIncreaseDecrease(landPrice, landDiff);
           },
         },
         {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: () => {
-            const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
-            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
+          compute: ({ getValues }) => {
+            const propertyUsableArea = getValues(usableAreaPath()) ?? 0;
+            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '14');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({
                   dataType: findSurveyUsableArea.dataType,
@@ -257,7 +274,7 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
+  const { surveys = [], qualitativeRows = [] } = args;
 
   const {
     qualitativeLevel: qualitativeLevelPath,
@@ -285,7 +302,7 @@ export function buildSaleGridAdjustmentFactorAmountRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
+  const { surveys = [], qualitativeRows = [] } = args;
 
   const {
     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,
@@ -360,6 +377,56 @@ export function buildSaleGridFinalValueRules(arg: {
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValuePath()) ?? 0;
         const finalValueRounded = calcFinalValueRoundedValue(finalValue);
+        return finalValueRounded;
+      },
+    },
+  ].flat();
+
+  return rules;
+}
+
+export function buildSaleGridAdjustAppraisalValueRules(): DerivedFieldRule[] {
+  const {
+    finalValueRounded: finalValueRoundedPath,
+    includeLandArea: includeLandAreaPath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
+    appraisalPrice: appraisalPricePath,
+    appraisalPriceRounded: appraisalPriceRoundedPath,
+  } = saleGridFieldPath;
+
+  const rules: DerivedFieldRule[] = [
+    {
+      targetPath: appraisalPricePath(),
+      deps: [finalValueRoundedPath(), landAreaPath(), usableAreaPath(), includeLandAreaPath()],
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
+
+        const isIncludeLandArea = getValues(includeLandAreaPath());
+        const landArea = getValues(landAreaPath());
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
+        }
+
+        const usableArea = getValues(usableAreaPath());
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
+        }
+
+        return finalValueRounded;
+      },
+    },
+    {
+      targetPath: appraisalPriceRoundedPath(),
+      deps: [appraisalPricePath()],
+      when: ({ getValues, getFieldState, formState }) => {
+        const target = appraisalPriceRoundedPath();
+        const curr = getValues(target);
+        const { isDirty } = getFieldState(target, formState);
+        return shouldAutoDefault({ value: curr, isDirty });
+      },
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(appraisalPricePath()) ?? 0;
         return finalValueRounded;
       },
     },

@@ -3,10 +3,12 @@ import { Button, Icon } from '@/shared/components';
 export function MethodFooterActions({
   onSaveDraft,
   onCancel,
+  onReset,
   isSubmitting = false,
 }: {
   onSaveDraft: () => void;
   onCancel: () => void;
+  onReset: () => void;
   isSubmitting?: boolean;
 }) {
   return (
@@ -15,6 +17,9 @@ export function MethodFooterActions({
         <div className="flex items-center gap-4">
           <Button variant="ghost" type="button" onClick={onCancel}>
             Cancel
+          </Button>
+          <Button variant="danger" type="button" onClick={onReset}>
+            Reset
           </Button>
           <div className="h-6 w-px bg-gray-200" />
         </div>

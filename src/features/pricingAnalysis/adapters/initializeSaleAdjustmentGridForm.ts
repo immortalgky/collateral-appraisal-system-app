@@ -10,7 +10,11 @@ import type {
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue';
 import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetSaleAdjustmentGridInitialValueProps {
@@ -73,8 +77,12 @@ export function initializeSaleAdjustmentGridForm({
               marketId: survey.id,
               offeringPrice: survey.offerPrice ?? 0,
               offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
-              offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+              offeringPriceAdjustmentPct: survey.offerPrice
+                ? (survey.offerPriceAdjustmentPercent ?? 5)
+                : null,
+              offeringPriceAdjustmentAmt: survey.offerPrice
+                ? (survey.offerPriceAdjustmentAmount ?? null)
+                : null,
               sellingPrice: survey.salePrice ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
               sellingDate: survey.saleDate ?? '',
@@ -102,7 +110,12 @@ export function initializeSaleAdjustmentGridForm({
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
-          usableArea: property.usableArea ?? undefined,
+          usableArea:
+            property.propertyType === 'LB' || property.propertyType === 'B'
+              ? (property.totalBuildingArea ?? undefined)
+              : property.propertyType === 'U'
+                ? (property.usableArea ?? undefined)
+                : undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
         },
@@ -157,13 +170,17 @@ export function initializeSaleAdjustmentGridForm({
             marketId: survey.id,
             offeringPrice: survey.offerPrice ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
-            offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+            offeringPriceAdjustmentPct: survey.offerPrice
+              ? (survey.offerPriceAdjustmentPercent ?? 5)
+              : null,
+            offeringPriceAdjustmentAmt: survey.offerPrice
+              ? (survey.offerPriceAdjustmentAmount ?? null)
+              : null,
             sellingPrice: survey.salePrice ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: survey.saleDate ?? '',
             sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
-            numberOfYears: 10, // TODO: convert selling date to number of year
+            numberOfYears: yearDiffFromToday(survey.saleDate),
             adjustedValue: 0,
 
             // adjusted value
@@ -194,7 +211,12 @@ export function initializeSaleAdjustmentGridForm({
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,
-        usableArea: property.usableArea ?? undefined,
+        usableArea:
+          property.propertyType === 'LB' || property.propertyType === 'B'
+            ? (property.totalBuildingArea ?? undefined)
+            : property.propertyType === 'U'
+              ? (property.usableArea ?? undefined)
+              : undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
       },

@@ -13,7 +13,8 @@ export function mapWQSFormToSubmitSchema({
       id: cf.id || null,
       factorId: cf.factorId || null,
       displaySequence: index,
-      isSelectedForScoring: true,
+      isSelectedForScoring:
+        WQSForm.WQSScores?.some(score => score.factorId === cf.factorId) ?? false,
       remarks: null,
     })),
 

@@ -10,6 +10,8 @@ export function readFactorValue(s: {
     case 'Dropdown':
     case 'Data':
       return s.value; // confirm enum name
+    case 'Date':
+      return s.value;
     default:
       return '';
   }

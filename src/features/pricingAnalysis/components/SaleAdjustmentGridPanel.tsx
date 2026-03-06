@@ -44,7 +44,11 @@ interface SaleAdjustmentGridPanelProps {
   savedComparativeFactors?: ComparativeFactorType[];
   savedFactorScores?: FactorScoreType[];
   savedCalculations?: CalculationType[];
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -233,7 +237,15 @@ export function SaleAdjustmentGridPanel({
       reset,
     });
     setIsGenerated(true);
-  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors]);
+  }, [
+    comparativeSurveys,
+    isGenerated,
+    methodId,
+    methodType,
+    property,
+    reset,
+    savedComparativeFactors,
+  ]);
 
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
@@ -241,8 +253,14 @@ export function SaleAdjustmentGridPanel({
     if (!methodId || !methodType || !property) return;
 
     // Only re-init when the set of surveys actually changed
-    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
-    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    const formSurveyIds = (getValues('comparativeSurveys') ?? [])
+      .map(s => s.marketId)
+      .sort()
+      .join(',');
+    const currentSurveyIds = comparativeSurveys
+      .map(s => s.id)
+      .sort()
+      .join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
     syncSaleAdjustmentGridFormSurveys({
@@ -269,7 +287,10 @@ export function SaleAdjustmentGridPanel({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
+        onSubmit={e => {
+          e.preventDefault();
+          handleOnSubmit();
+        }}
         className="flex flex-col h-full gap-4"
       >
         <PricingAnalysisTemplateSelector

@@ -327,6 +327,14 @@ const buildFormField = (fac: any, index: number): FormField => {
         wrapperClassName: 'col-span-12',
       };
 
+    case 'Date':
+      return {
+        type: 'date-input',
+        name: `factorData.[${index}].value`,
+        label: '',
+        wrapperClassName: 'col-span-12',
+      };
+
     default:
       return {
         type: 'text-input',

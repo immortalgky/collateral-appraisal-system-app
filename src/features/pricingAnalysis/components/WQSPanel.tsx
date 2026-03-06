@@ -41,7 +41,11 @@ interface WQSPanelProps {
   savedComparativeFactors?: ComparativeFactorType[];
   savedFactorScores?: FactorScoreType[];
   savedCalculations?: CalculationType[];
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -181,6 +185,21 @@ export function WQSPanel({
     setisShowCanceledDialog(false);
   };
 
+  const handleOnResetCalculationMethod = () => {
+    if (!!methodId && !!methodType && !!comparativeSurveys && !!property) {
+      resetWQSValue({
+        collateralType: collateralType,
+        methodId: methodId,
+        methodType: methodType,
+        comparativeSurveys: comparativeSurveys,
+        property: property,
+        template: pricingTemplate,
+        reset: reset,
+        getValues: getValues,
+      });
+    }
+  };
+
   const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
     const messages = flattenRHFErrors(errs);
 
@@ -230,7 +249,16 @@ export function WQSPanel({
       reset,
     });
     setIsGenerated(true);
-  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors, savedFactorScores]);
+  }, [
+    comparativeSurveys,
+    isGenerated,
+    methodId,
+    methodType,
+    property,
+    reset,
+    savedComparativeFactors,
+    savedFactorScores,
+  ]);
 
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
@@ -238,8 +266,14 @@ export function WQSPanel({
     if (!methodId || !methodType || !property) return;
 
     // Only re-init when the set of surveys actually changed
-    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
-    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    const formSurveyIds = (getValues('comparativeSurveys') ?? [])
+      .map(s => s.marketId)
+      .sort()
+      .join(',');
+    const currentSurveyIds = comparativeSurveys
+      .map(s => s.id)
+      .sort()
+      .join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
     syncWQSFormSurveys({
@@ -281,7 +315,10 @@ export function WQSPanel({
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
+        onSubmit={e => {
+          e.preventDefault();
+          handleOnSubmit();
+        }}
         className="flex flex-col h-full gap-4"
       >
         <PricingAnalysisTemplateSelector

@@ -11,7 +11,7 @@ import {
 } from '@features/pricingAnalysis/domain/calculateWQS';
 import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
-import type { WQSScoreFormType } from '../schemas/wqsForm';
+import type { ComparativeFactorFormType, WQSScoreFormType } from '../schemas/wqsForm';
 import { wqsFieldPath } from './wqsFieldPath';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
@@ -307,6 +307,7 @@ export function buildWQSFinalValueDerivedRules(args: {
     finalValuSlope: finalValuSlopePath,
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
+    finalValueIncludeLandArea: finalValueIncludeLandAreaPath,
     finalValueLandArea: finalValueLandAreaPath,
     finalValueUsableArea: finalValueUsableAreaPath,
     finalValueAppraisalPrice: finalValueAppraisalPricePath,
@@ -395,7 +396,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const stdError = STEYX(surveyCalculate, surveyScores) ?? 0;
-        return toFiniteNumber(stdError.toFixed(6));
+        return round2(stdError);
       },
     },
     {
@@ -416,7 +417,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const intersectionPoint = INTERCEPT(surveyCalculate, surveyScores) ?? 0;
-        return toFiniteNumber(intersectionPoint);
+        return round2(intersectionPoint);
       },
     },
     {
@@ -437,7 +438,7 @@ export function buildWQSFinalValueDerivedRules(args: {
           }),
         );
         const slope = SLOPE(surveyCalculate, surveyScores) ?? 0;
-        return toFiniteNumber(slope);
+        return round2(slope);
       },
     },
     {
@@ -446,7 +447,7 @@ export function buildWQSFinalValueDerivedRules(args: {
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
         const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
-        return round2(finalValueRounded - stdError);
+        return Math.round(finalValueRounded - stdError);
       },
     },
     {
@@ -455,23 +456,29 @@ export function buildWQSFinalValueDerivedRules(args: {
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
         const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
-        return round2(finalValueRounded + stdError);
+        return Math.round(finalValueRounded + stdError);
       },
     },
     {
       targetPath: finalValueAppraisalPricePath(),
-      deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
+      deps: [
+        finalValueFinalValueRoundedPath(),
+        finalValueLandAreaPath(),
+        finalValueUsableAreaPath(),
+        finalValueIncludeLandAreaPath(),
+      ],
       compute: ({ getValues }) => {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
 
+        const isIncludeLandArea = getValues(finalValueIncludeLandAreaPath());
         const landArea = getValues(finalValueLandAreaPath());
-        if (landArea) {
-          return round2(finalValueRounded * landArea);
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
         }
 
         const usableArea = getValues(finalValueUsableAreaPath());
-        if (usableArea) {
-          return round2(finalValueRounded * usableArea);
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
         }
 
         return round2(finalValueRounded);

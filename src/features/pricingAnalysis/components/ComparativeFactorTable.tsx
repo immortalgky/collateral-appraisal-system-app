@@ -59,11 +59,6 @@ export function ComparativeFactorTable({
     return getValues(comparativeFactorsPath());
   }, [comparativeSurveyFactors]);
 
-  const factorColumnStyle =
-    'z-20 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
-  const collateralColumnStyle =
-    'text-left font-medium  px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap  sticky right-[70px] z-25 after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
-
   if (comparativeMarketSurveys.length === 0) {
     return (
       <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg flex flex-col items-center justify-center py-12 text-gray-400">
@@ -75,28 +70,39 @@ export function ComparativeFactorTable({
   }
 
   return (
-    <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-lg b flex flex-col overflow-hidden">
-      <div className="flex-1 min-h-0">
-        <table className="table table-sm min-w-max">
-          <thead className="bg-gray-50 sticky top-0">
+    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl  max-h-[400px]">
+      <div className="flex-1 min-h-0 overflow-auto">
+        <table className="table table-sm min-w-max border-separate border-spacing-0">
+          <thead className="bg-neutral-50">
             <tr className="">
               <th
-                className={clsx('bg-gray-50 sticky left-0 h-[55px] w-[350px]', factorColumnStyle)}
+                className={clsx(
+                  'bg-gray-50 border-b border-gray-300 h-[55px] w-[350px] min-w-[350px] max-w-[350px] z-30 sticky left-0 top-0',
+                )}
               >
                 Factors
+              </th>
+              <th className="bg-gray-50 border-r border-b border-gray-300 w-[65px] max-w-[65px] min-w-[65px] z-30 sticky left-[350px] top-0"></th>
+              <th
+                className={clsx(
+                  'bg-gray-50 border-b border-gray-300 w-[250px] min-w-[250px] max-w-[250px] z-30 sticky left-[415px] top-0 text-center font-medium px-3 py-2.5  whitespace-nowrap',
+                  'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              >
+                Collateral
               </th>
               {comparativeMarketSurveys.map((survey: MarketComparableDataType) => {
                 return (
                   <th
                     key={survey.id}
-                    className={'text-left font-medium  px-3 py-2.5 select-none whitespace-nowrap'}
+                    className={
+                      'bg-gray-50 border-r border-b border-gray-300 text-left font-medium z-28 sticky top-0 px-3 py-2.5 select-none whitespace-nowrap'
+                    }
                   >
                     {survey.surveyName}
                   </th>
                 );
               })}
-              <th className={clsx('bg-gray-50', collateralColumnStyle)}>Collateral</th>
-              <th className="w-[70px] max-w-[70px] min-w-[70px]"></th>
             </tr>
           </thead>
           <tbody>
@@ -112,11 +118,10 @@ export function ComparativeFactorTable({
                   value: cf.factorCode,
                 }));
               return (
-                <tr key={compFact.id} className="hover:bg-gray-50 cursor-default transition-colors">
+                <tr key={compFact.id} className="hover:bg-gray-70 cursor-default transition-colors">
                   <td
                     className={clsx(
-                      'bg-white font-medium  sticky left-0 h-[55px]',
-                      factorColumnStyle,
+                      'bg-white border-b border-gray-300 font-medium h-[55px] w-[350px] min-w-[350px] max-w-[350px] z-25 sticky left-0',
                     )}
                   >
                     {template?.comparativeFactors?.find((t: TemplateComparativeFactorType) => {
@@ -142,17 +147,59 @@ export function ComparativeFactorTable({
                           fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={options}
-                          onSelectChange={(value) => {
+                          onSelectChange={value => {
                             const factor = allFactors?.find(f => f.factorCode === value);
-                            setValue(`comparativeFactors.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                            setValue(
+                              `comparativeFactors.${rowIndex}.factorId`,
+                              factor?.factorId ?? factor?.id ?? '',
+                            );
                           }}
                         />
                       </div>
                     )}
                   </td>
+                  <td className="bg-white border-r border-b border-gray-300 px-3 py-2.5 w-[65px] min-w-[65px] max-w-[65px] sticky left-[350px] z-25">
+                    {!template?.comparativeFactors?.find(
+                      t => t.factorCode === compFact.factorCode,
+                    ) && (
+                      <div className="flex flex-row justify-center items-center">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteIndex(rowIndex)}
+                          className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
+                          title="Delete"
+                        >
+                          <Icon style="solid" name="trash" className="size-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                  <td
+                    className={clsx(
+                      'bg-white border-b border-gray-300 text-right font-medium px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] z-25 sticky left-[415px] top-0 whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                    )}
+                  >
+                    <RHFInputCell
+                      fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
+                      inputType="display"
+                      accessor={({ value }) => {
+                        return (
+                          <div
+                            title={getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                            className="truncate"
+                          >
+                            {getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                          </div>
+                        );
+                      }}
+                    />
+                  </td>
                   {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
                     return (
-                      <td key={survey.id} className="px-3 py-2.5 font-medium ">
+                      <td
+                        key={survey.id}
+                        className="border-r border-b border-gray-300 px-3 py-2.5 font-medium min-w-[250px]"
+                      >
                         {
                           <RHFInputCell
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
@@ -180,46 +227,65 @@ export function ComparativeFactorTable({
                       </td>
                     );
                   })}
-                  <td className={clsx('bg-white ', collateralColumnStyle)}>
-                    <RHFInputCell
-                      fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return (
-                          <div
-                            title={getPropertyValueByFactorCode(value.toString(), property) ?? ''}
-                            className="truncate"
-                          >
-                            {getPropertyValueByFactorCode(value.toString(), property) ?? ''}
-                          </div>
-                        );
-                      }}
-                    />
-                  </td>
-                  <td className="bg-white px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0">
-                    {!template?.comparativeFactors?.find(
-                      t => t.factorCode === compFact.factorCode,
-                    ) && (
-                      <div className="flex flex-row justify-center items-center">
-                        <button
-                          type="button"
-                          onClick={() => setDeleteIndex(rowIndex)}
-                          className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
                 </tr>
               );
             })}
-            <tr>
+            <tr className="hover:bg-gray-70 cursor-default transition-colors">
               <td
                 className={clsx(
-                  'bg-white sticky left-0',
-                  'z-15 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                  'bg-white border-b border-gray-300 font-medium h-[55px] w-[350px] min-w-[350px] max-w-[350px] z-25 sticky left-0',
+                )}
+              >
+                Offering Price
+              </td>
+              <td className="bg-white border-r border-b border-gray-300 px-3 py-2.5 w-[65px] min-w-[65px] max-w-[65px] sticky left-[350px] z-25"></td>
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 text-right font-medium px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] z-25 sticky left-[415px] top-0 whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              ></td>
+              {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
+                return (
+                  <td
+                    key={survey.id}
+                    className="border-r border-b border-gray-300 px-3 py-2.5 font-medium min-w-[250px]"
+                  >
+                    {survey.offerPrice ? Number(survey.offerPrice).toLocaleString() : '-'}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr className="hover:bg-gray-70 cursor-default transition-colors">
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 font-medium h-[55px] w-[350px] min-w-[350px] max-w-[350px] z-25 sticky left-0',
+                )}
+              >
+                Selling Price
+              </td>
+              <td className="bg-white border-r border-b border-gray-300 px-3 py-2.5 w-[65px] min-w-[65px] max-w-[65px] sticky left-[350px] z-25"></td>
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 text-right font-medium px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] z-25 sticky left-[415px] top-0 whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              ></td>
+              {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
+                return (
+                  <td
+                    key={survey.id}
+                    className="border-r border-b border-gray-300 px-3 py-2.5 font-medium min-w-[250px]"
+                  >
+                    {survey.salePrice ? Number(survey.salePrice).toLocaleString() : '-'}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr>
+              <td
+                colSpan={2}
+                className={clsx(
+                  'bg-white border-b border-r border-gray-300 sticky left-0',
+                  'z-25 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
                 )}
               >
                 <button
@@ -235,11 +301,19 @@ export function ComparativeFactorTable({
                   + Add More Factors
                 </button>
               </td>
+              <td
+                className={clsx(
+                  'bg-white border-b border-gray-300 text-left font-medium px-3 py-2.5 w-[250px] min-w-[250px] max-w-[250px] z-25 sticky left-[415px] top-0 whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full',
+                )}
+              ></td>
               {comparativeMarketSurveys.map((survey: any) => {
-                return <td key={survey.id} className="px-3 py-2.5 "></td>;
+                return (
+                  <td
+                    key={survey.id}
+                    className="border-r border-b border-gray-300 px-3 py-2.5 "
+                  ></td>
+                );
               })}
-              <td className={clsx('bg-white', collateralColumnStyle)}></td>
-              <td className="text-center font-medium  px-3 py-2.5 w-[70px] min-w-[70px] max-w-[70px] sticky right-0 z-20"></td>
             </tr>
           </tbody>
         </table>

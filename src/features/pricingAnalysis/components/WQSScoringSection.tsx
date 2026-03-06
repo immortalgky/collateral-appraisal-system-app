@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
@@ -24,6 +24,7 @@ import {
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { format } from 'date-fns';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -65,9 +66,11 @@ export function WQSScoringSection({
 
     /** calculation section path */
     calculationOfferingPrice: calculationOfferingPricePath,
+    calculationOfferingPriceMeasurementUnit: calculationOfferingPriceMeasurementUnitPath,
     calculationOfferingPriceAdjustmentPct: calculationOfferingPriceAdjustmentPctPath,
     calculationOfferingPriceAdjustmentAmt: calculationOfferingPriceAdjustmentAmtPath,
     calculationSellingPrice: calculationSellingPricePath,
+    calculationSellingPriceMeasurementUnit: calculationSellingPriceMeasurementUnitPath,
     calculationNumberOfYears: calculationNumberOfYearsPath,
     calculationAdjustmentYear: calculationAdjustmentYearPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
@@ -122,9 +125,7 @@ export function WQSScoringSection({
     });
   };
 
-  const handleRemoveRow = (rowIndex: number) => {
-    removeScoringFactor(rowIndex);
-  };
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   /** Rules */
   const scoringSurveyRules: DerivedFieldRule<any>[] = useMemo(() => {
@@ -161,11 +162,11 @@ export function WQSScoringSection({
   const bgGradientLeft =
     'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
   const rightColumnBody =
-    'border-b border-gray-300 text-left font-medium sticky right-[0px] z-30 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap';
-  const surveyStyle = 'px-3 py-2.5 border-b border-r border-gray-300';
+    'border-b border-gray-300 text-left font-medium sticky right-[0px] z-20 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap';
+  const surveyStyle = 'px-3 py-2.5 z-20 border-b border-r border-gray-300';
 
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl">
+    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl  max-h-[400px]">
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="table table-sm min-w-max border-separate border-spacing-0">
           <thead className="bg-neutral-50">
@@ -215,7 +216,7 @@ export function WQSScoringSection({
               <th
                 rowSpan={2}
                 className={clsx(
-                  'bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-25 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap',
+                  'bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-30 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap',
                   bgGradientLeft,
                 )}
               >
@@ -225,14 +226,14 @@ export function WQSScoringSection({
             <tr className="border-b border-gray-300">
               <td
                 className={clsx(
-                  'bg-gray-50 border-b border-r border-gray-300 text-left font-medium px-3 py-2.5 sticky left-[450px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-14 whitespace-nowrap',
+                  'bg-gray-50 border-b border-r border-gray-300 text-left font-medium px-3 py-2.5 sticky left-[450px] top-[40px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-14 whitespace-nowrap',
                 )}
               >
                 Intensity
               </td>
               <td
                 className={clsx(
-                  'bg-gray-50 border-b border-gray-300 text-left font-medium px-3 py-2.5 sticky left-[550px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-14 whitespace-nowrap',
+                  'bg-gray-50 border-b border-gray-300 text-left font-medium px-3 py-2.5 sticky left-[550px] top-[40px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-14 whitespace-nowrap',
                   bgGradient,
                 )}
               >
@@ -284,7 +285,9 @@ export function WQSScoringSection({
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="display"
                             accessor={({ value }) =>
-                              value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                              value
+                                ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                                : ''
                             }
                           />
                         ) : (
@@ -292,9 +295,14 @@ export function WQSScoringSection({
                             fieldName={scoringFactorCodePath({ row: rowIndex })}
                             inputType="select"
                             options={options}
-                            onSelectChange={(value) => {
-                              const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
-                              setValue(`WQSScores.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                            onSelectChange={value => {
+                              const factor = serverData.allFactors?.find(
+                                (f: FactorDataType) => f.factorCode === value,
+                              );
+                              setValue(
+                                `WQSScores.${rowIndex}.factorId`,
+                                factor?.factorId ?? factor?.id ?? '',
+                              );
                             }}
                           />
                         )}
@@ -302,7 +310,7 @@ export function WQSScoringSection({
                     </td>
                     <td
                       className={clsx(
-                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
+                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[350px]',
                       )}
                     >
                       <RHFInputCell
@@ -312,7 +320,7 @@ export function WQSScoringSection({
                     </td>
                     <td
                       className={clsx(
-                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
+                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[450px]',
                       )}
                     >
                       <RHFInputCell
@@ -323,7 +331,7 @@ export function WQSScoringSection({
                     {/* weight * intensity */}
                     <td
                       className={clsx(
-                        'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[550px]',
+                        'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[550px]',
                         bgGradient,
                       )}
                     >
@@ -351,7 +359,14 @@ export function WQSScoringSection({
                                     const intensity = getValues(
                                       scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
                                     );
-                                    if (v > intensity) return intensity;
+                                    if (v > intensity) {
+                                      console.log(
+                                        'is value > intensity: ',
+                                        v > intensity,
+                                        intensity,
+                                      );
+                                      return intensity;
+                                    }
                                     if (v < 0) return 0;
                                     return v;
                                   }}
@@ -410,7 +425,7 @@ export function WQSScoringSection({
                           <button
                             type="button"
                             onClick={() => {
-                              handleRemoveRow(rowIndex);
+                              setDeleteIndex(rowIndex);
                             }}
                             className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
                             title="Delete"
@@ -438,17 +453,17 @@ export function WQSScoringSection({
               </td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[350px]',
                 )}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[450px]',
                 )}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[550px]',
+                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[550px]',
                   bgGradient,
                 )}
               ></td>
@@ -466,24 +481,24 @@ export function WQSScoringSection({
 
             {/* total score row */}
             <tr>
-              <td className={clsx('bg-white border-r', leftColumnBody)}></td>
+              <td className={clsx('bg-white border-r', leftColumnBody)}>Summation</td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[350px]',
                 )}
               >
                 <RHFInputCell fieldName={totalWeightPath()} inputType="display" />
               </td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[450px]',
                 )}
               >
                 <RHFInputCell fieldName={totalIntensityPath()} inputType="display" />
               </td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[550px]',
+                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-20 sticky left-[550px]',
                   bgGradient,
                 )}
               >
@@ -572,14 +587,14 @@ export function WQSScoringSection({
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody)}>Initial Price</td>
               <td
-                className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-gray-200 border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-gray-200 border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
@@ -599,14 +614,14 @@ export function WQSScoringSection({
                 <span>Offering Price</span>
               </td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
@@ -616,7 +631,14 @@ export function WQSScoringSection({
                     <RHFInputCell
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => (value ? value.toLocaleString() : '')}
+                      accessor={({ value }) => (value ? Number(value).toLocaleString() : '')}
+                    />
+                    <RHFInputCell
+                      fieldName={calculationOfferingPriceMeasurementUnitPath({
+                        column: columnIndex,
+                      })}
+                      inputType="display"
+                      accessor={({ value }) => (value ? value : '')}
                     />
                   </td>
                 );
@@ -637,25 +659,31 @@ export function WQSScoringSection({
                 </div>
               </td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustAmount = !!getValues(
+                  calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex }),
+                );
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     {hasOfferPrice && (
                       <RHFInputCell
-                        fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
+                        fieldName={calculationOfferingPriceAdjustmentPctPath({
+                          column: columnIndex,
+                        })}
                         inputType="number"
+                        disabled={hasAdjustAmount}
                       />
                     )}
                   </td>
@@ -675,25 +703,31 @@ export function WQSScoringSection({
                 <span>(Amount)</span>
               </td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustPercent = !!getValues(
+                  calculationOfferingPriceAdjustmentPctPath({ column: columnIndex }),
+                );
                 return (
                   <td key={survey.id} className={clsx(surveyStyle)}>
                     {hasOfferPrice && (
                       <RHFInputCell
-                        fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
+                        fieldName={calculationOfferingPriceAdjustmentAmtPath({
+                          column: columnIndex,
+                        })}
                         inputType="number"
+                        disabled={hasAdjustPercent}
                       />
                     )}
                   </td>
@@ -712,14 +746,14 @@ export function WQSScoringSection({
                 <span>Selling Price</span>
               </td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
@@ -727,14 +761,31 @@ export function WQSScoringSection({
                 const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
                 if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
+                console.log(
+                  getValues(
+                    calculationSellingPriceMeasurementUnitPath({
+                      column: columnIndex,
+                    }),
+                  ),
+                );
                 return (
-                  <td key={survey.id} className={clsx(surveyStyle, 'text-right', hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(surveyStyle, 'text-right', hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
                         return value ? value.toLocaleString() : '';
                       }}
+                    />
+                    <RHFInputCell
+                      fieldName={calculationSellingPriceMeasurementUnitPath({
+                        column: columnIndex,
+                      })}
+                      inputType="display"
+                      accessor={({ value }) => (value ? value : '')}
                     />
                   </td>
                 );
@@ -750,14 +801,14 @@ export function WQSScoringSection({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
@@ -772,7 +823,14 @@ export function WQSScoringSection({
                   return `${format(d, 'MMM')} ${buddhistYear}`;
                 })();
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyStyle, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(
+                      'text-right',
+                      surveyStyle,
+                      (hasOfferPrice || !hasSalePrice) && 'opacity-50',
+                    )}
+                  >
                     <div className="flex flex-col items-end gap-0.5">
                       <RHFInputCell
                         fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
@@ -794,18 +852,16 @@ export function WQSScoringSection({
               ></td>
             </tr>
             <tr>
-              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                Adjusted Selling Price (%)
-              </td>
+              <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Adjusted Period (%)</td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
@@ -835,19 +891,18 @@ export function WQSScoringSection({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-left items-center'}>
-                  <span>Cumulative Adjusted Period</span>
-                  <span>(%)</span>
+                  <span>Cumulative Adjusted Period (%)</span>
                 </div>
               </td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
@@ -856,7 +911,10 @@ export function WQSScoringSection({
                 const hasOfferPrice = !!survey.offerPrice;
                 if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyStyle, hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx('text-right', surveyStyle, hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -878,20 +936,20 @@ export function WQSScoringSection({
                 <span>Adjusted Value</span>
               </td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-20')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
+                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-20')}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[550px] z-20',
                   bgGradient,
                 )}
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
-                  <td key={survey.id} className={'border-b border-r border-gray-300'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300 text-right'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
@@ -916,13 +974,26 @@ export function WQSScoringSection({
               <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
                 Final Value
               </td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30', bgGradient)}></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}
+              ></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}
+              ></td>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30',
+                  bgGradient,
+                )}
+              ></td>
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
-              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-2.5 text-right font-semibold')}>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 px-3 py-2.5 text-right font-semibold',
+                )}
+              >
                 <RHFInputCell
                   fieldName={finalValueFinalValuePath()}
                   inputType="display"
@@ -942,17 +1013,23 @@ export function WQSScoringSection({
               <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
                 {'Final Value (Rounded)'}
               </td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30', bgGradient)}></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}
+              ></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}
+              ></td>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30',
+                  bgGradient,
+                )}
+              ></td>
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
               <td className={clsx('bg-gray-100 border-b border-gray-300 px-1 py-1')}>
-                <RHFInputCell
-                  fieldName={finalValueFinalValueRoundedPath()}
-                  inputType="number"
-                />
+                <RHFInputCell fieldName={finalValueFinalValueRoundedPath()} inputType="number" />
               </td>
               <td
                 className={clsx(
@@ -964,6 +1041,19 @@ export function WQSScoringSection({
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        isOpen={deleteIndex !== null}
+        onClose={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          if (deleteIndex !== null) {
+            removeScoringFactor(deleteIndex);
+            setDeleteIndex(null);
+          }
+        }}
+        variant="danger"
+        title="Remove Factor"
+        message="Are you sure you want to remove this factor?"
+      />
     </div>
   );
 }

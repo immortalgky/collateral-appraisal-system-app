@@ -51,7 +51,7 @@ const WQSCalculation = z
     offeringPriceAdjustmentAmt: z.number().nullable(),
     sellingPrice: z.number().nullable(),
     sellingPriceMeasurementUnit: z.string().nullable(),
-    // sellingDate: z.date(), TODO
+    sellingDate: z.string().datetime().nullable(),
     sellingPriceAdjustmentYear: z.number().nullable(),
     totalAdjustedSellingPrice: z.number().nullable(),
     numberOfYears: z.number().nullable(),

@@ -5,7 +5,11 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue.ts';
 
 interface WQSInitialValueOnSelectSurveyProps {
   collateralType: string;

@@ -1,11 +1,7 @@
-import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import { saleGridFieldPath } from '@features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
-import {
-  type DerivedFieldRule,
-  useDerivedFields,
-} from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { toFiniteNumber } from '../domain/calculateSaleAdjustmentGrid';
 
 interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
   property: Record<string, unknown>;
@@ -16,84 +12,86 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
   const { getValues } = useFormContext();
 
   const {
-    finalValueRounded: finalValueRoundedPath,
+    includeLandArea: includeLandAreaPath,
     landArea: landAreaPath,
     usableArea: usableAreaPath,
     appraisalPrice: appraisalPricePath,
     appraisalPriceRounded: appraisalPriceRoundedPath,
   } = saleGridFieldPath;
 
-  const rules: DerivedFieldRule[] = [
-    {
-      targetPath: appraisalPricePath(),
-      deps: [finalValueRoundedPath()],
-      compute: ({ getValues }) => {
-        const finalValue = getValues(finalValueRoundedPath()) ?? 0;
+  const { control } = useFormContext();
+  const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
+  const appraisalPrice = useWatch({ control, name: appraisalPricePath() }) ?? 0;
 
-        const landArea = getValues(landAreaPath());
-        if (landArea) {
-          return finalValue * landArea;
-        }
+  const appraisalPriceRounded = useWatch({ control, name: appraisalPriceRoundedPath() }) ?? 0;
 
-        const usableArea = getValues(usableAreaPath());
-        if (usableArea) {
-          return finalValue * usableArea;
-        }
+  const isLand = property.propertyType === 'L';
+  const isUsable = property.propertyType === 'U';
+  const areaUnit = isLand ? 'Sq. Wa' : 'Sq. m.';
+  const areaFieldPath = isLand ? landAreaPath() : usableAreaPath();
 
-        return finalValue;
-      },
-    },
-    {
-      targetPath: appraisalPriceRoundedPath(),
-      deps: [appraisalPricePath()],
-      when: ({ getValues, getFieldState, formState }) => {
-        const target = appraisalPriceRoundedPath();
-        const curr = getValues(target);
-        const { isDirty } = getFieldState(target, formState);
-        return shouldAutoDefault({ value: curr, isDirty });
-      },
-      compute: ({ getValues }) => {
-        const finalValueRounded = getValues(appraisalPricePath()) ?? 0;
-        return finalValueRounded;
-      },
-    },
-  ];
-
-  useDerivedFields({ rules: rules });
+  const differentiate = toFiniteNumber(appraisalPrice) - toFiniteNumber(appraisalPriceRounded);
 
   return (
-    <div className="flex flex-col gap-4 text-sm py-2">
-      {property.propertyType === 'L' && (
-        <div className="grid grid-cols-12">
-          <div className="col-span-3">Land Area</div>
-          <div className="col-span-1 text-right">{getValues(landAreaPath()) ?? 0}</div>
-        </div>
-      )}
-      {property.propertyType === 'U' && (
-        <div className="grid grid-cols-12">
-          <div className="col-span-3">Usable Area</div>
-          <div className="col-span-1 text-right">{getValues(usableAreaPath()) ?? 0}</div>
-        </div>
-      )}
-      <div className="grid grid-cols-12">
-        <div className="col-span-3">Appraisal Price</div>
-        <div className="col-span-1">
-          <div className={'text-right'}>
+    <div className="flex flex-col gap-3 text-sm py-2">
+      {/* Include Area toggle */}
+      {(isLand || isUsable) && (
+        <div className="grid grid-cols-12 items-center">
+          <div className="col-span-3 text-gray-600">Include Area</div>
+          <div className="col-span-2">
             <RHFInputCell
-              fieldName={appraisalPricePath()}
-              inputType={'display'}
-              accessor={({ value }) => {
-                return value.toLocaleString() ?? '';
-              }}
+              fieldName={includeLandAreaPath()}
+              inputType="toggle"
+              toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
             />
           </div>
         </div>
-      </div>
-      <div className="grid grid-cols-12">
-        <div className="col-span-3 flex items-center">{'Appraisal Price (rounded)'}</div>
-        <div className="col-span-1">
-          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType={'number'} />
+      )}
+
+      {/* Area (shown when include area is on) */}
+      {includeLandArea && (isLand || isUsable) && (
+        <div className="grid grid-cols-12 items-center">
+          <div className="col-span-3 text-gray-600">Area</div>
+          <div className="col-span-2 text-right">
+            <RHFInputCell
+              fieldName={areaFieldPath}
+              inputType="display"
+              accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+            />
+          </div>
+          <div className="col-span-1 pl-2 text-gray-500">{areaUnit}</div>
         </div>
+      )}
+
+      {/* Appraisal Price */}
+      <div className="grid grid-cols-12 items-center">
+        <div className="col-span-3 text-gray-600">Appraisal Price</div>
+        <div className="col-span-2 text-right">
+          <RHFInputCell
+            fieldName={appraisalPricePath()}
+            inputType="display"
+            accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+          />
+        </div>
+        <div className="col-span-1 pl-2 text-gray-500">Baht</div>
+      </div>
+
+      {/* Appraisal Price (Rounded) + differentiate */}
+      <div className="grid grid-cols-12 items-center">
+        <div className="col-span-3 text-gray-600">{'Appraisal Price (Rounded)'}</div>
+        <div className="col-span-2">
+          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType="number" />
+        </div>
+        <div className="col-span-1 pl-2 text-gray-500">Baht</div>
+        {differentiate !== 0 && (
+          <>
+            <div className="col-span-2 text-right text-gray-500">
+              {differentiate > 0 ? '+' : ''}
+              {differentiate.toLocaleString()}
+            </div>
+            <div className="col-span-1 pl-2 text-xs text-gray-400">differentiate</div>
+          </>
+        )}
       </div>
     </div>
   );

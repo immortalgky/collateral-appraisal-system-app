@@ -51,16 +51,18 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       </div>
 
       {/* Include Area toggle */}
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-3 text-gray-600">Include Area</div>
-        <div className="col-span-2">
-          <RHFInputCell
-            fieldName={includeLandAreaPath()}
-            inputType="toggle"
-            toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
-          />
+      {(isLand || isUsable) && (
+        <div className="grid grid-cols-12 items-center">
+          <div className="col-span-3 text-gray-600">Include Area</div>
+          <div className="col-span-2">
+            <RHFInputCell
+              fieldName={includeLandAreaPath()}
+              inputType="toggle"
+              toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Area (shown when include area is on) */}
       {includeLandArea && (isLand || isUsable) && (
@@ -100,7 +102,8 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
         {differentiate !== 0 && (
           <>
             <div className="col-span-2 text-right text-gray-500">
-              {differentiate > 0 ? '+' : ''}{differentiate.toLocaleString()}
+              {differentiate > 0 ? '+' : ''}
+              {differentiate.toLocaleString()}
             </div>
             <div className="col-span-1 pl-2 text-xs text-gray-400">differentiate</div>
           </>
