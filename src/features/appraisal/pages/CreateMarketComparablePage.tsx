@@ -74,7 +74,7 @@ const CreateMarketComparablePage = () => {
 
   const { handleSubmit, formState: { isDirty } } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // Populate form for edit
   useEffect(() => {
@@ -82,9 +82,14 @@ const CreateMarketComparablePage = () => {
 
     const factorDataValue = template.template.factors
       .map((factor: any) => {
-        return marketComparable.marketComparable.factorData.find(
+        const found = marketComparable.marketComparable.factorData.find(
           (ed: any) => ed.factorId === factor.factorId,
         );
+        if (!found) return undefined;
+        if (factor.dataType === 'Checkbox') {
+          return { ...found, value: found.value === true || found.value === 'true' };
+        }
+        return found;
       })
       .filter(Boolean);
 
@@ -184,6 +189,7 @@ const CreateMarketComparablePage = () => {
           // Link any pending photos to the newly created comparable
           await photoSectionRef.current?.linkImagesToComparable(response.id);
 
+          skipWarning();
           toast.success('Market comparable created successfully');
           if (appraisalId) {
             navigate(`/appraisal/${appraisalId}/property/market-comparable/${response.id}`);

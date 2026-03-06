@@ -15,6 +15,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
+import { useUIStore } from '@shared/store';
 
 const userNavigation = [
   { name: 'Your profile', href: '#' },
@@ -57,6 +58,7 @@ function AppraisalLayout() {
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
   });
+  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
 
   // Fetch appraisal data to get requestId and other info
   const {
@@ -165,7 +167,7 @@ function AppraisalLayout() {
       <div className="h-screen flex flex-col">
         <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <div className="lg:pl-[256px] flex-1 flex flex-col min-h-0">
+        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
           <Navbar userNavigation={userNavigation} />
           <main className="py-4 flex-1 flex flex-col min-h-0">
             <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
@@ -183,7 +185,7 @@ function AppraisalLayout() {
       <div className="h-screen flex flex-col">
         <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <div className="lg:pl-[256px] flex-1 flex flex-col min-h-0">
+        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
           <Navbar userNavigation={userNavigation} />
           <main className="py-4 flex-1 flex flex-col min-h-0">
             <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col items-center justify-center min-h-0">
@@ -210,7 +212,7 @@ function AppraisalLayout() {
         <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
 
-        <div className="lg:pl-[256px] flex-1 flex flex-col min-h-0">
+        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
           <Navbar userNavigation={userNavigation} />
 
           <div className="flex-1 flex min-h-0">
