@@ -1,4 +1,5 @@
-import { type FormField, FormFields, useFormReadOnly } from '@/shared/components/form';
+import { FormFields, useFormReadOnly } from '@/shared/components/form';
+import { titleInfoFields } from '../configs/fields';
 import { useEffect, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import TitleLandForm from './TitleLandForm';
@@ -11,11 +12,7 @@ import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import TitleDocumentAddressForm from './TitleDocumentAddressForm';
 import DopaAddressForm from './DopaAddressForm';
-import {
-  requestTitleDefault,
-  RequestTitleDto,
-  type RequestTitleDtoType,
-} from '@/features/request/schemas/form';
+import { requestTitleDefault, RequestTitleDto, type RequestTitleDtoType, } from '@/features/request/schemas/form';
 import clsx from 'clsx';
 import { useTitleLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 
@@ -39,8 +36,6 @@ const TitleInformationForm = () => {
   const isTitleComplete = (index: number): boolean => {
     const title = titles[index];
 
-    console.log(title, 'testing');
-    console.log(RequestTitleDto.safeParse(title), 'parsed');
     if (!title) return false;
     const result = RequestTitleDto.safeParse(title);
     return result.success;
@@ -328,7 +323,7 @@ const TitleInformationForm = () => {
             {/* Right Panel - Detail Form */}
             <div className="flex-1 min-w-0">
               <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
-                <FormFields fields={titleFields} namePrefix="titles" index={editIndex} />
+                <FormFields fields={titleInfoFields} namePrefix="titles" index={editIndex} />
                 <TitleForm index={editIndex} currentFormType={currentFormType} />
                 <TitleDocumentAddressForm index={editIndex} />
                 <DopaAddressForm index={editIndex} />
@@ -667,23 +662,6 @@ const collateralTypeOptions = [
   { value: 'LSL', label: 'Lease Agreement Land' },
   { value: 'LS', label: 'Lease Agreement Land and Building' },
   { value: 'LSB', label: 'Lease Agreement Building' },
-];
-
-const titleFields: FormField[] = [
-  {
-    type: 'dropdown',
-    label: 'Collateral Type',
-    name: 'collateralType',
-    group: 'PropertyType',
-    wrapperClassName: 'col-span-3',
-  },
-  {
-    type: 'text-input',
-    label: 'Previous Appraisal Report No / CAS Status',
-    name: 'collateralStatus',
-    wrapperClassName: 'col-span-3',
-    disabled: true,
-  },
 ];
 
 export default TitleInformationForm;

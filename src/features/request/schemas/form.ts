@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { buildFormSchema } from '@/shared/components/form';
+import { allRequestFields, titlesFieldConfig } from '../configs/fields';
 
 const UserDto = z.object({
   userId: z.string(),
@@ -90,230 +92,18 @@ const RequestTitleDocumentDto = z
     uploadedAt: z.string(),
   })
   .partial();
-// Base fields shared by all title types (all optional for backend compatibility)
-const BaseTitleFields = {
+
+// Base for fields not expressible as FormField (UUIDs, documents, address sub-schemas)
+const TitleElementBase = z.object({
   id: z.string().uuid().optional(),
   requestId: z.string().uuid().optional(),
-  collateralStatus: z.boolean().optional(),
-  ownerName: z.string().nullable().optional(),
+  documents: z.array(RequestTitleDocumentDto).optional(),
   titleAddress: AddressDto.optional(),
   dopaAddress: AddressDto.optional(),
-  notes: z.string().nullable().optional(),
-  documents: z.array(RequestTitleDocumentDto).optional(),
-};
-
-// Optional fields for land-based types
-const LandFields = {
-  titleNumber: z.string().nullable().optional(),
-  titleType: z.string().nullable().optional(),
-  titleDetail: z.string().nullable().optional(),
-  bookNumber: z.string().nullable().optional(),
-  pageNumber: z.string().nullable().optional(),
-  rawang: z.string().nullable().optional(),
-  landParcelNumber: z.string().nullable().optional(),
-  surveyNumber: z.string().nullable().optional(),
-  aerialMapName: z.string().nullable().optional(),
-  aerialMapNumber: z.string().nullable().optional(),
-  areaRai: z.number().int().nullable().optional(),
-  areaNgan: z.number().int().nullable().optional(),
-  areaSquareWa: z.number().nullable().optional(),
-};
-
-// Optional fields for building-based types
-const BuildingFields = {
-  buildingType: z.string().nullable().optional(),
-  usableArea: z.number().nullable().optional(),
-  numberOfBuilding: z.number().int().nullable().optional(),
-};
-
-// Optional fields for a condominium type
-const CondoFields = {
-  condoName: z.string().nullable().optional(),
-  buildingNumber: z.string().nullable().optional(),
-  roomNumber: z.string().nullable().optional(),
-  floorNumber: z.string().nullable().optional(),
-};
-
-// Optional fields for a vehicle type
-const VehicleFields = {
-  vehicleType: z.string().nullable().optional(),
-  vehicleAppointmentLocation: z.string().nullable().optional(),
-  vin: z.string().nullable().optional(),
-  licensePlateNumber: z.string().nullable().optional(),
-};
-
-// Optional fields for a machine type
-const MachineFields = {
-  machineType: z.string().nullable().optional(),
-  registrationStatus: z.boolean().optional(),
-  registrationNo: z.string().nullable().optional(),
-  installationStatus: z.string().nullable().optional(),
-  invoiceNumber: z.string().nullable().optional(),
-  numberOfMachine: z.number().int().nullable().optional(),
-};
-
-// Vessel fields (for future use)
-const VesselFields = {
-  vesselType: z.string().nullable().optional(),
-  vesselAppointmentLocation: z.string().nullable().optional(),
-  hullIdentificationNumber: z.string().nullable().optional(),
-  vesselRegistrationNumber: z.string().nullable().optional(),
-};
-
-// All optional fields (for unselected state)
-const AllOptionalFields = {
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-};
-
-// Unselected state (when the collateral type is not yet chosen)
-const UnselectedTitleDto = z.object({
-  ...BaseTitleFields,
-  ...AllOptionalFields,
-  collateralType: z.literal(''),
 });
 
-// Land title schema
-const LandTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('L'),
-  titleNumber: z.string().min(1, 'Title number is required'),
-});
-
-// Building title schema
-const BuildingTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('B'),
-  titleNumber: z.string().min(1, 'Title number is required'),
-  buildingType: z.string().min(1, 'Building type is required'),
-});
-
-// Land and Building title schema
-const LandAndBuildingTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('LB'),
-  titleNumber: z.string().min(1, 'Title number is required'),
-  buildingType: z.string().min(1, 'Building type is required'),
-});
-
-// Condominium title schema
-const CondominiumTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('U'),
-  condoName: z.string().min(1, 'Condo name is required'),
-  roomNumber: z.string().min(1, 'Room number is required'),
-});
-
-// Vehicle title schema
-const VehicleTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('VEH'),
-  vehicleType: z.string().min(1, 'Vehicle type is required'),
-  licensePlateNumber: z.string().min(1, 'License plate number is required'),
-});
-
-// Machine title schema
-const MachineTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('MAC'),
-  machineType: z.string().min(1, 'Machine type is required'),
-  registrationNumber: z.string().min(1, 'Registration number is required'),
-});
-
-// Lease Agreement Land title schema
-const LeaseAgreementLandTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('LSL'),
-  titleNumber: z.string().min(1, 'Title number is required'),
-});
-
-// Lease Agreement Building title schema
-const LeaseAgreementBuildingTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('LSB'),
-  titleNumber: z.string().min(1, 'Title number is required'),
-  buildingType: z.string().min(1, 'Building type is required'),
-});
-
-// Lease Agreement Land and Building title schema
-const LeaseAgreementLandAndBuildingTitleDto = z.object({
-  ...BaseTitleFields,
-  ...LandFields,
-  ...BuildingFields,
-  ...CondoFields,
-  ...VehicleFields,
-  ...MachineFields,
-  ...VesselFields,
-  collateralType: z.literal('LS'),
-  titleNumber: z.string().min(1, 'Title number is required'),
-  buildingType: z.string().min(1, 'Building type is required'),
-});
-
-// Combined discriminated union
-const RequestTitleDto = z.discriminatedUnion('collateralType', [
-  UnselectedTitleDto,
-  LandTitleDto,
-  BuildingTitleDto,
-  LandAndBuildingTitleDto,
-  CondominiumTitleDto,
-  VehicleTitleDto,
-  MachineTitleDto,
-  LeaseAgreementLandTitleDto,
-  LeaseAgreementBuildingTitleDto,
-  LeaseAgreementLandAndBuildingTitleDto,
-]);
+// Element schema from field configs + base (deep merge preserves AddressDto sub-fields)
+const RequestTitleDto = buildFormSchema(titlesFieldConfig.fields, TitleElementBase);
 const RequestDocumentDto = z
   .object({
     id: z.string().uuid().nullable().optional(),
@@ -344,27 +134,33 @@ const RequestCommentDto = z.object({
   isLocal: z.boolean().optional(), // true = not yet saved to API
 });
 
-export const createRequestForm = z.object({
-  purpose: z.string().nonempty('Appraisal purpose is required.'),
+// Base schema without manual superRefine — conditional validation handled by field configs.
+const createRequestFormBase = z.object({
+  purpose: z.string(),
   channel: z.string(),
   priority: z.string(),
   isPma: z.boolean(),
   creator: UserDto,
   requestor: UserDto,
   detail: RequestDetailDto,
-  customers: z.array(RequestCustomerDto).min(1, 'At least one customer is required.'),
-  properties: z.array(RequestPropertyDto).min(1, 'At least one property is required.'),
+  customers: z.array(RequestCustomerDto),
+  properties: z.array(RequestPropertyDto),
   titles: z.array(RequestTitleDto),
   documents: z.array(RequestDocumentDto),
   comments: z.array(RequestCommentDto),
 });
+
+// Conditional refinement from field configs replaces hand-written superRefine.
+// Field configs are the source of truth for validation (field-wins by default).
+// Base schema provides fields not expressible as FormField (titles, documents, etc.).
+export const createRequestForm = buildFormSchema(allRequestFields, createRequestFormBase);
 
 export type UserDtoType = z.infer<typeof UserDto>;
 export type RequestCommentDtoType = z.infer<typeof RequestCommentDto>;
 export type createRequestFormType = z.infer<typeof createRequestForm>;
 export type RequestTitleDtoType = z.infer<typeof RequestTitleDto>;
 export type RequestDocumentDtoType = z.infer<typeof RequestDocumentDto>;
-export type CollateralType = RequestTitleDtoType['collateralType'];
+export type CollateralType = string;
 
 // Export schema for validation
 export { RequestTitleDto };
@@ -436,7 +232,7 @@ export const createRequestFormDefault: createRequestFormType = {
 };
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
-  collateralStatus: false,
+  collateralStatus: '',
   titleNumber: '',
   titleType: '',
   titleDetail: '',
@@ -455,11 +251,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vehicleAppointmentLocation: '',
   vin: '',
   licensePlateNumber: '',
-  vesselType: '',
-  vesselAppointmentLocation: '',
-  hullIdentificationNumber: '',
-  vesselRegistrationNumber: '',
-  registrationStatus: false,
+  registrationStatus: '',
   registrationNo: '',
   machineType: '',
   installationStatus: '',

@@ -366,7 +366,7 @@ const generalStructureField: FormField[] = [
     label: 'Other',
     name: 'structureTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'structureType', is: '99', operator: 'in' },
+    showWhen: { field: 'structureType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -383,7 +383,7 @@ const roofFrameField: FormField[] = [
     label: 'Other',
     name: 'roofFrameTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
+    showWhen: { field: 'roofFrameType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -400,7 +400,7 @@ const roofField: FormField[] = [
     label: 'Other',
     name: 'roofTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofType', is: '99', operator: 'in' },
+    showWhen: { field: 'roofType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -417,7 +417,7 @@ const ceilingField: FormField[] = [
     label: 'Other',
     name: 'ceilingTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'ceilingType', is: '99', operator: 'in' },
+    showWhen: { field: 'ceilingType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -435,7 +435,7 @@ const wallField: FormField[] = [
     label: 'Other',
     name: 'interiorWallTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
+    showWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
   },
   {
     type: 'checkbox-group',
@@ -450,7 +450,7 @@ const wallField: FormField[] = [
     label: 'Other',
     name: 'exteriorWallTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
+    showWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -494,7 +494,7 @@ const fenceField: FormField[] = [
     label: 'Other',
     name: 'fenceTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'fenchType', is: '99', operator: 'in' },
+    showWhen: { field: 'fenchType', is: '99', operator: 'contains' },
   },
 ];
 
