@@ -14,6 +14,8 @@ interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
   decimalPlaces?: number;
   /** Allow negative numbers (default: false) */
   allowNegative?: boolean;
+  /** Max digits before the decimal point, excluding commas (e.g., 15 for DECIMAL(17,2)) */
+  maxIntegerDigits?: number;
   /** Value from react-hook-form or controlled component */
   value?: number | string | null;
   /** onChange handler - receives number value */
@@ -39,6 +41,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       name,
       decimalPlaces = 2,
       allowNegative = false,
+      maxIntegerDigits,
       value,
       onChange,
       onBlur,
@@ -176,6 +179,14 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         : /^[\d,]*\.?\d*$/;
 
       if (inputValue === '' || regex.test(inputValue)) {
+        // Enforce digit limits (exclude commas)
+        const cleaned = inputValue.replace(/,/g, '');
+        const numStr = cleaned.startsWith('-') ? cleaned.slice(1) : cleaned;
+        const parts = numStr.split('.');
+        const intPart = parts[0].replace(/^0+(?=\d)/, ''); // strip leading zeros
+        if (maxIntegerDigits != null && intPart.length > maxIntegerDigits) return;
+        if (decimalPlaces != null && parts[1] != null && parts[1].length > decimalPlaces) return;
+
         // Count commas before cursor in old value
         const oldCommasBefore = (displayValue.slice(0, cursorPos).match(/,/g) || []).length;
 
@@ -246,7 +257,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={placeholder || '0.00'}
+            placeholder={placeholder || (0).toFixed(decimalPlaces)}
             {...props}
           />
 

@@ -58,7 +58,6 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     },
     ref,
   ) => {
-    console.log('drop down options: ', options);
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');

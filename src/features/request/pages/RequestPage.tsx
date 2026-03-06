@@ -452,7 +452,6 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
         <RequiredDocumentsInitializer />
         <form
           onSubmit={e => {
-            console.log('[form] Form submit event triggered');
             handleSubmit(onSubmit, errors =>
               console.log('[handleSubmit] Validation failed:', errors),
             )(e);

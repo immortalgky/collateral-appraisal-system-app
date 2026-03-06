@@ -12,8 +12,10 @@ import type { AtLeastOne } from '@/shared/types';
 export type ConditionOperator =
   | 'equals' // value === target (default)
   | 'notEquals' // value !== target
-  | 'in' // value array includes target
-  | 'notIn' // value array doesn't include target
+  | 'contains' // value (array) includes target (scalar)
+  | 'notContains' // value (array) doesn't include target (scalar)
+  | 'in' // value (scalar) is one of target (array)
+  | 'notIn' // value (scalar) is not in target (array)
   | 'isEmpty' // value is null/undefined/''
   | 'isNotEmpty' // value is truthy
   | 'gt' // value > target (number)
@@ -67,7 +69,8 @@ export type FormField =
   | RadioGroupField
   | SwitchField
   | AppraisalSelectorField
-  | LocationSelectorField;
+  | LocationSelectorField
+  | FieldArrayField;
 
 /**
  * Base properties shared by all form fields
@@ -103,6 +106,20 @@ interface BaseFormField {
   // Conditional required state
   /** Make field required when condition is met (shows asterisk and validates) */
   requiredWhen?: ConditionInput;
+
+  // Format & input helpers
+  /** Placeholder text (e.g., "DD/MM/YYYY") */
+  placeholder?: string;
+
+  /** Regex string for format validation. Used by schema builder for z.string().regex() */
+  formatPattern?: string;
+
+  /** Error message when formatPattern fails */
+  formatPatternMessage?: string;
+
+  /** Input mask pattern (e.g., "99/99/9999" where 9=digit, a=letter, *=any).
+   *  Requires react-imask integration in input components. */
+  inputMask?: string;
 }
 
 // =============================================================================
@@ -144,6 +161,8 @@ export interface NumberInputField extends BaseFormField {
   min?: number;
   /** Override max value from schema */
   max?: number;
+  /** Max digits before the decimal point, excluding commas (e.g., 15 for DECIMAL(17,2)) */
+  maxIntegerDigits?: number;
 }
 
 // =============================================================================
@@ -274,4 +293,18 @@ export interface LocationSelectorField extends BaseFormField {
   postcodeField: string;
   /** Form path for sub-district name (optional) */
   subDistrictNameField?: string;
+}
+
+// =============================================================================
+// Array fields (schema-only — rendering handled by useFieldArray + namePrefix)
+// =============================================================================
+
+export interface FieldArrayField extends BaseFormField {
+  type: 'field-array';
+  /** Child fields defining the shape of each array element */
+  fields: FormField[];
+  /** Minimum number of items (maps to z.array().min()) */
+  minItems?: number;
+  /** Maximum number of items (maps to z.array().max()) */
+  maxItems?: number;
 }

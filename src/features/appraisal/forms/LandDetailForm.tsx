@@ -299,7 +299,7 @@ const plotLocationField: FormField[] = [
     label: 'Other',
     name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
+    showWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -316,7 +316,7 @@ const landFillField: FormField[] = [
     label: 'Other',
     name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'in' },
+    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'contains' },
   },
   {
     type: 'number-input',
@@ -413,7 +413,7 @@ const publicUtilityField: FormField[] = [
     label: 'Other',
     name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
+    showWhen: { field: 'publicUtilityType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -430,7 +430,7 @@ const landUseField: FormField[] = [
     label: 'Other',
     name: 'landUseTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landUseType', is: '99', operator: 'in' },
+    showWhen: { field: 'landUseType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -447,7 +447,7 @@ const landEntranceField: FormField[] = [
     label: 'Other',
     name: 'landEntranceExitTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
+    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -464,7 +464,7 @@ const transpotationField: FormField[] = [
     label: 'Other',
     name: 'transportationAccessTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
+    showWhen: { field: 'transportationAccessType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -598,7 +598,7 @@ const evictionField: FormField[] = [
     label: 'Other',
     name: 'evictionTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'evictionStatusType', is: '99', operator: 'in' },
+    showWhen: { field: 'evictionStatusType', is: '99', operator: 'contains' },
   },
 ];
 
