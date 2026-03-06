@@ -25,12 +25,11 @@ import type {
 import type {
   FactorDataType,
   MarketComparableDetailType,
-  TemplateCalculationFactorType,
-  TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode.ts';
+import { format } from 'date-fns';
 
 interface DirectComparisonScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -261,7 +260,9 @@ export const DirectComparisonScoringSection = ({
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="display"
                           accessor={({ value }) =>
-                            value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                            value
+                              ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                              : ''
                           }
                         />
                       ) : (
@@ -269,8 +270,10 @@ export const DirectComparisonScoringSection = ({
                           fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                           inputType="select"
                           options={options}
-                          onSelectChange={(value) => {
-                            const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
+                          onSelectChange={value => {
+                            const factor = serverData.allFactors?.find(
+                              (f: FactorDataType) => f.factorCode === value,
+                            );
                             const fid = factor?.factorId ?? factor?.id ?? '';
                             setValue(`directComparisonQualitatives.${rowIndex}.factorId`, fid);
                             setValue(`directComparisonAdjustmentFactors.${rowIndex}.factorId`, fid);
@@ -410,8 +413,7 @@ export const DirectComparisonScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-between items-center'}>
-                  <span>Adjusted Offering Price</span>
-                  <span>(%)</span>
+                  <span>Adjusted Offering Price (%)</span>
                 </div>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
@@ -420,7 +422,9 @@ export const DirectComparisonScoringSection = ({
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     {hasOfferPrice && (
                       <RHFInputCell
-                        fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
+                        fieldName={calculationOfferingPriceAdjustmentPctPath({
+                          column: columnIndex,
+                        })}
                         inputType="number"
                       />
                     )}
@@ -443,7 +447,9 @@ export const DirectComparisonScoringSection = ({
                   <td key={survey.id} className={clsx(surveyColumnBody)}>
                     {hasOfferPrice && (
                       <RHFInputCell
-                        fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
+                        fieldName={calculationOfferingPriceAdjustmentAmtPath({
+                          column: columnIndex,
+                        })}
                         inputType="number"
                       />
                     )}
@@ -460,17 +466,20 @@ export const DirectComparisonScoringSection = ({
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
-                if (!hasSalePrice)
-                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}>
-                    <RHFInputCell
-                      fieldName={calculationSellingPricePath({ column: columnIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
-                      }}
-                    />
+                  <td
+                    key={survey.id}
+                    className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}
+                  >
+                    {hasSalePrice && (
+                      <RHFInputCell
+                        fieldName={calculationSellingPricePath({ column: columnIndex })}
+                        inputType="display"
+                        accessor={({ value }) => {
+                          return value ? value.toLocaleString() : '';
+                        }}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -480,14 +489,33 @@ export const DirectComparisonScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
-                const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasSalePrice = !!survey.salePrice;
+                const saleDateLabel = (() => {
+                  if (!survey.saleDate) return '';
+                  const d = new Date(survey.saleDate);
+                  if (isNaN(d.getTime())) return '';
+                  const buddhistYear = d.getFullYear() + 543;
+                  return `${format(d, 'MMM')} ${buddhistYear}`;
+                })();
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyColumnBody, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
-                    <RHFInputCell
-                      fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
-                      inputType="display"
-                    />
+                  <td
+                    key={survey.id}
+                    className={clsx(
+                      'text-right',
+                      surveyColumnBody,
+                      (hasOfferPrice || !hasSalePrice) && 'opacity-50',
+                    )}
+                  >
+                    <div className="flex flex-col items-end gap-0.5">
+                      <RHFInputCell
+                        fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
+                        inputType="display"
+                      />
+                      {saleDateLabel && (
+                        <span className="text-xs text-gray-400">{saleDateLabel}</span>
+                      )}
+                    </div>
                   </td>
                 );
               })}
@@ -529,7 +557,10 @@ export const DirectComparisonScoringSection = ({
                 if (!hasSalePrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyColumnBody, hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx('text-right', surveyColumnBody, hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -588,7 +619,9 @@ export const DirectComparisonScoringSection = ({
                         fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
                         accessor={({ value }) =>
-                          value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                          value
+                            ? getFactorDesciption(value.toString(), serverData.allFactors ?? [])
+                            : ''
                         }
                       />
                     }
