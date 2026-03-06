@@ -418,6 +418,9 @@ export const DirectComparisonScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustAmount = !!getValues(
+                  calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex }),
+                );
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     {hasOfferPrice && (
@@ -426,6 +429,7 @@ export const DirectComparisonScoringSection = ({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        disabled={hasAdjustAmount}
                       />
                     )}
                   </td>
@@ -443,6 +447,10 @@ export const DirectComparisonScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustPercent = !!getValues(
+                  calculationOfferingPriceAdjustmentPctPath({ column: columnIndex }),
+                );
+
                 return (
                   <td key={survey.id} className={clsx(surveyColumnBody)}>
                     {hasOfferPrice && (
@@ -451,6 +459,7 @@ export const DirectComparisonScoringSection = ({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        disabled={hasAdjustPercent}
                       />
                     )}
                   </td>
