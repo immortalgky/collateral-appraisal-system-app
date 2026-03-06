@@ -131,9 +131,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
                   value: findSurveyWah.value,
                 })
               : 0;
-            const surveyLandArea = rai * 400 + ngan * 100 + wah;
-            const landDiff = calcDiff(propertyLandArea, surveyLandArea);
-            return landDiff;
+            const surveyLandArea = Number(rai) * 400 + Number(ngan) * 100 + Number(wah);
+            return calcDiff(propertyLandArea, surveyLandArea);
           },
         },
         {
@@ -142,8 +141,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
           compute: ({ getValues }) => {
             const landPrice = getValues(calculationLandPricePath()) ?? 0;
             const landDiff = getValues(calculationLandAreaDiffPath({ column: columnIndex })) ?? 0;
-            const landValueIncreaseDecrease = calcIncreaseDecrease(landPrice, landDiff);
-            return landValueIncreaseDecrease;
+            return calcIncreaseDecrease(landPrice, landDiff);
           },
         },
         {
