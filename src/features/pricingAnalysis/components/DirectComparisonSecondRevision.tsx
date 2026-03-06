@@ -22,6 +22,10 @@ export function DirectComparisonSecondRevision({
     calculationUsableAreaDiff: calculationUsableAreaDiffPath,
     calculationBuildingValueIncreaseDecrease: calculationBuildingValueIncreaseDecreasePath,
     calculationTotalSecondRevision: calculationTotalSecondRevisionPath,
+
+    /** appraisal price */
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
   } = directComparisonPath;
 
   /** styles */
@@ -116,7 +120,7 @@ export function DirectComparisonSecondRevision({
                     fieldName={calculationLandValueIncreaseDecreasePath({ column: columnIndex })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : '';
+                      return value ? Number(value).toLocaleString() : '';
                     }}
                   />
                 </td>
@@ -143,7 +147,7 @@ export function DirectComparisonSecondRevision({
                     fieldName={calculationUsableAreaDiffPath({ column: columnIndex })}
                     inputType="display"
                     accessor={({ value }) => {
-                      return value ? value.toLocaleString() : value;
+                      return value ? Number(value).toLocaleString() : value;
                     }}
                   />
                 </td>

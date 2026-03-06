@@ -110,7 +110,12 @@ export function initializeSaleAdjustmentGridForm({
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
-          usableArea: property?.usableArea ?? undefined,
+          usableArea:
+            property.propertyType === 'LB' || property.propertyType === 'B'
+              ? (property.totalBuildingArea ?? undefined)
+              : property.propertyType === 'U'
+                ? (property.usableArea ?? undefined)
+                : undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
         },
@@ -206,7 +211,12 @@ export function initializeSaleAdjustmentGridForm({
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,
-        usableArea: property?.usableArea ?? undefined,
+        usableArea:
+          property.propertyType === 'LB' || property.propertyType === 'B'
+            ? (property.totalBuildingArea ?? undefined)
+            : property.propertyType === 'U'
+              ? (property.usableArea ?? undefined)
+              : undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
       },
