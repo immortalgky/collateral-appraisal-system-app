@@ -1,4 +1,6 @@
+import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
+import { allAppraisalFields } from '../configs/fields';
 
 const landTitleItem = z.object({
   titleNumber: z.string(),
@@ -23,105 +25,11 @@ const landTitleItem = z.object({
   remark: z.string().nullable().optional(),
 });
 
-export const createLandForm = z
-  .object({
-    titles: z.array(landTitleItem).nullable().optional(),
-    propertyName: z.string().max(150).nullable().optional(),
-    latitude: z.coerce.number(),
-    longitude: z.coerce.number(),
-    subDistrict: z.string().min(1, 'Sub district is required.'),
-    subDistrictName: z.string().nullable(),
-    district: z.string().min(1, 'District is required.'),
-    districtName: z.string().nullable(),
-    province: z.string().min(1, 'Province is required.'),
-    provinceName: z.string().nullable(),
-    landOffice: z.string().min(1, 'Land office is required.'),
-    landDescription: z.string().max(100).min(1, 'Land description is required.'),
-    isOwnerVerified: z.boolean(),
-    ownerName: z.string().max(100).min(1, 'Owner name is required.'),
-    hasObligation: z.boolean(),
-    obligationDetails: z.string().max(100),
-    isLandLocationVerified: z.boolean(),
-    landCheckMethodType: z.string().nullable().optional(),
-    landCheckMethodTypeOther: z.string().max(100).nullable().optional(),
-    street: z.string().max(100).min(1, 'Street is required.'),
-    soi: z.string().max(100).nullable().optional(),
-    distanceFromMainRoad: z.coerce.number().nullable().optional(),
-    village: z.string().max(100).nullable().optional(),
-    addressLocation: z.string().max(200).nullable().optional(),
-    landShapeType: z.string().nullable().optional(),
-    urbanPlanningType: z.string().nullable().optional(),
-    landZoneType: z.array(z.string()).nullable().optional(),
-    plotLocationType: z.array(z.string()).nullable().optional(),
-    plotLocationTypeOther: z.string().max(100).nullable().optional(),
-    landFillType: z.string().nullable().optional(),
-    landFillTypeOther: z.string().max(100).nullable().optional(),
-    landFillPercent: z.coerce.number().nullable().optional(),
-    soilLevel: z.coerce.number().nullable().optional(),
-    accessRoadWidth: z.coerce.number().nullable().optional(),
-    rightOfWay: z.coerce.number().nullable().optional(),
-    roadFrontage: z.coerce.number().nullable().optional(),
-    numberOfSidesFacingRoad: z.coerce.number().nullable().optional(),
-    roadPassInFrontOfLand: z.string().max(100).nullable().optional(),
-    landAccessibilityType: z.string().nullable().optional(),
-    landAccessibilityRemark: z.string().max(200).nullable().optional(),
-    roadSurfaceType: z.string().nullable().optional(),
-    roadSurfaceTypeOther: z.string().max(100).nullable().optional(),
-    publicUtilityType: z.array(z.string()).nullable().optional(),
-    publicUtilityTypeOther: z.string().max(100).nullable().optional(),
-    landUseType: z.array(z.string()).nullable().optional(),
-    landUseTypeOther: z.string().max(100).nullable().optional(),
-    landEntranceExitType: z.array(z.string()).nullable().optional(),
-    landEntranceExitTypeOther: z.string().max(100).nullable().optional(),
-    transportationAccessType: z.array(z.string()).nullable().optional(),
-    transportationAccessTypeOther: z.string().max(100).nullable().optional(),
-    propertyAnticipationType: z.string().nullable().optional(),
-    isExpropriated: z.boolean(),
-    expropriationRemark: z.string().max(4000).nullable().optional(),
-    isInExpropriationLine: z.boolean().nullable().optional(),
-    expropriationLineRemark: z.string().max(4000).nullable().optional(),
-    royalDecree: z.string().nullable().optional(),
-    isEncroached: z.boolean(),
-    encroachmentRemark: z.string().max(4000).nullable().optional(),
-    encroachmentArea: z.coerce.number().nullable().optional(),
-    hasElectricity: z.boolean(),
-    electricityDistance: z.coerce.number().nullable().optional(),
-    isLandlocked: z.boolean(),
-    landlockedRemark: z.string().max(4000).nullable().optional(),
-    isForestBoundary: z.boolean(),
-    forestBoundaryRemark: z.string().max(4000).nullable().optional(),
-    otherLegalLimitations: z.string().max(4000).nullable().optional(),
-    evictionType: z.array(z.string()).nullable().optional(),
-    evictionTypeOther: z.string().max(100).nullable().optional(),
-    allocationType: z.string().nullable().optional(),
-    northAdjacentArea: z.string().max(200).nullable().optional(),
-    northBoundaryLength: z.coerce.number().nullable().optional(),
-    southAdjacentArea: z.string().max(200).nullable().optional(),
-    southBoundaryLength: z.coerce.number().nullable().optional(),
-    eastAdjacentArea: z.string().max(200).nullable().optional(),
-    eastBoundaryLength: z.coerce.number().nullable().optional(),
-    westAdjacentArea: z.string().max(200).nullable().optional(),
-    westBoundaryLength: z.coerce.number().nullable().optional(),
-    pondArea: z.coerce.number().nullable().optional(),
-    pondDepth: z.coerce.number().nullable().optional(),
-    hasBuilding: z.boolean(),
-    hasBuildingOther: z.string().max(100).nullable().optional(),
-    remark: z.string().nullable().optional(),
-  })
-  .superRefine((data, ctx) => {
-    // Obligations required when hasObligation is 'true' (Martgage as security)
-    if (data.hasObligation) {
-      const obligation = data.obligationDetails;
-      if (obligation === null || obligation.trim() === '') {
-        console.log('[superRefine] Adding error for obligationDetails');
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Obligation is required',
-          path: ['obligationDetails'],
-        });
-      }
-    }
-  });
+export const createLandFormBase = z.object({
+  titles: z.array(landTitleItem).nullable().optional(),
+});
+
+export const createLandForm = buildFormSchema(allAppraisalFields, createLandFormBase);
 
 const surfaceFormItem = z.object({
   fromFloorNumber: z.coerce.number().nullable().optional(),
@@ -155,77 +63,12 @@ const depreciationFormItem = z.object({
   depreciationPeriods: z.array(depreciationPeriodFormItem).nullable().optional(),
 });
 
-export const createBuildingForm = z
-  .object({
-    ownerName: z.string().max(100).min(1, 'Owner name is required.'),
-    propertyName: z.string().max(150).nullable(),
-    buildingNumber: z.string().max(30).min(1, 'Building number is required.'),
-    modelName: z.string().max(50).min(1, 'Model name is required.'),
-    builtOnTitleNumber: z.string().max(200).min(1, 'Built on title number is required.'),
-    isOwnerVerified: z.boolean(),
-    houseNumber: z.string().max(10).min(1, 'House number is required.'),
-    buildingConditionType: z.string(),
-    isUnderConstruction: z.boolean(),
-    constructionCompletionPercent: z.coerce.number().min(0).max(100),
-    constructionLicenseExpirationDate: z.string().datetime({ local: true, offset: true }),
-    isAppraisable: z.boolean(),
-    hasObligation: z.boolean(),
-    obligationDetails: z.string().max(100),
-    buildingType: z.string().nullable(),
-    buildingTypeOther: z.string().max(100).nullable(),
-    numberOfFloors: z.coerce.number().min(1, 'Number of floors is required.'),
-    decorationType: z.string(),
-    decorationTypeOther: z.string().max(100).nullable(),
-    isEncroachingOthers: z.boolean(),
-    encroachingOthersRemark: z.string().max(4000).nullable(),
-    encroachingOthersArea: z.coerce.number().nullable(),
-    buildingMaterialType: z.string().nullable(),
-    buildingStyleType: z.string().nullable(),
-    isResidential: z.boolean(),
-    buildingAge: z.coerce.number().min(0, 'Building age cannot be negative.'),
-    residentialRemark: z.string().max(4000).nullable(),
-    constructionStyleRemark: z.string().max(4000).nullable(),
-    constructionStyleType: z.string().nullable(),
-    structureType: z.array(z.string()).nullable(),
-    structureTypeOther: z.string().max(100).nullable(),
-    roofFrameType: z.array(z.string()).nullable(),
-    roofFrameTypeOther: z.string().max(100).nullable(),
-    roofType: z.array(z.string()).nullable(),
-    roofTypeOther: z.string().max(100).nullable(),
-    ceilingType: z.array(z.string()).nullable(),
-    ceilingTypeOther: z.string().max(100).nullable(),
-    interiorWallType: z.array(z.string()).nullable(),
-    interiorWallTypeOther: z.string().max(100).nullable(),
-    exteriorWallType: z.array(z.string()).nullable(),
-    exteriorWallTypeOther: z.string().max(100).nullable(),
-    fenceType: z.array(z.string()).nullable(),
-    fenceTypeOther: z.string().max(100).nullable(),
-    constructionType: z.string().nullable(),
-    constructionTypeOther: z.string().max(100).nullable(),
-    utilizationType: z.string().nullable(),
-    utilizationTypeOther: z.string().max(100).nullable(),
-    totalBuildingArea: z.coerce.number().min(1, 'Total building area is required.'),
-    buildingInsurancePrice: z.coerce.number().nullable(),
-    sellingPrice: z.coerce.number().nullable(),
-    forcedSalePrice: z.coerce.number().nullable(),
-    remark: z.string().max(4000).nullable(),
-    surfaces: z.array(surfaceFormItem).nullable().optional(),
-    depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
-  })
-  .superRefine((data, ctx) => {
-    // Obligations required when hasObligation is 'true' (Martgage as security)
-    if (data.hasObligation) {
-      const obligation = data.obligationDetails;
-      if (obligation === null || obligation.trim() === '') {
-        console.log('[superRefine] Adding error for obligationDetails');
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Obligation is required',
-          path: ['obligationDetails'],
-        });
-      }
-    }
-  });
+export const createBuildingFormBase = z.object({
+  surfaces: z.array(surfaceFormItem).nullable().optional(),
+  depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
+});
+
+export const createBuildingForm = buildFormSchema(allAppraisalFields, createBuildingFormBase);
 
 const AreaDetailDto = z
   .object({
@@ -235,245 +78,22 @@ const AreaDetailDto = z
   })
   .passthrough();
 
-export const createCondoForm = z
-  .object({
-    ownerName: z.string().min(1, 'Owner name is required.'),
+export const createCondoFormBase = z.object({
+  areaDetails: z.array(AreaDetailDto).nullable(),
+});
 
-    propertyName: z.string().max(150).nullable(),
-    condoName: z.string().min(1, 'Condo name is required.'),
-    buildingNumber: z.string().max(30).min(1, 'Building number is required.'),
-    modelName: z.string().max(100).min(1, 'Model name is required.'),
-    builtOnTitleNumber: z.string().max(200).min(1, 'Construction on Title Deed No is required.'),
-    condoRegistrationNumber: z.string().max(10).min(1, 'Condominium Registration No is required.'),
-    roomNumber: z.string().max(10).min(1, 'Room No is required.'),
-    floorNumber: z.coerce.number().min(1, 'Floor No is required.'),
-    usableArea: z.coerce.number().min(1, 'Usable Area (Sqm) is required.'),
+export const createCondoForm = buildFormSchema(allAppraisalFields, createCondoFormBase);
 
-    latitude: z.coerce.number(),
-    longitude: z.coerce.number(),
+export const createLandAndBuildingFormBase = z.object({
+  titles: z.array(landTitleItem).nullable().optional(),
+  surfaces: z.array(surfaceFormItem).nullable().optional(),
+  depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
+});
 
-    subDistrict: z.string().min(1, 'Sub district is required.'),
-    district: z.string().min(1, 'District is required.'),
-    province: z.string().min(1, 'Province is required.'),
-    landOffice: z.string().min(1, 'Land office is required.'),
-
-    isOwnerVerified: z.boolean(),
-    buildingConditionType: z.string(),
-    hasObligation: z.boolean(),
-    obligationDetails: z.string().max(100),
-    isDocumentValidated: z.boolean(),
-
-    locationType: z.string().nullable(),
-    street: z.string().max(100).nullable(),
-    soi: z.string().max(100).nullable(),
-    distanceFromMainRoad: z.coerce.number().nullable(),
-    accessRoadWidth: z.coerce.number().nullable(),
-    rightOfWay: z.coerce.number().nullable(),
-    roadSurfaceType: z.string().nullable(),
-    publicUtilityType: z.array(z.string()).nullable(),
-    publicUtilityTypeOther: z.string().max(100).nullable(),
-
-    decorationType: z.string(),
-    decorationTypeOther: z.string().max(100).nullable(),
-    buildingAge: z.coerce.number(),
-    numberOfFloors: z.coerce.number().min(1, 'Number of floors is required.'),
-    buildingFormType: z.string().nullable(),
-    constructionMaterialType: z.string().nullable(),
-
-    roomLayoutType: z.string().nullable(),
-    roomLayoutTypeOther: z.string().max(100).nullable(),
-    locationViewType: z.array(z.string()).nullable(),
-    groundFloorMaterialType: z.string().nullable(),
-    groundFloorMaterialTypeOther: z.string().max(100).nullable(),
-    upperFloorMaterialType: z.string().nullable(),
-    upperFloorMaterialTypeOther: z.string().max(100).nullable(),
-    bathroomFloorMaterialType: z.string().nullable(),
-    bathroomFloorMaterialTypeOther: z.string().max(100).nullable(),
-    roofType: z.string().nullable(),
-    roofTypeOther: z.string().max(100).nullable(),
-
-    areaDetails: z.array(AreaDetailDto).nullable(),
-    totalBuildingArea: z.coerce.number(),
-
-    isExpropriated: z.boolean(),
-    expropriationRemark: z.string().max(4000).nullable(),
-    isInExpropriationLine: z.boolean(),
-    expropriationLineRemark: z.string().max(4000).nullable(),
-    royalDecree: z.string().nullable(),
-    isForestBoundary: z.boolean(),
-    forestBoundaryRemark: z.string().max(4000).nullable(),
-
-    facilityType: z.array(z.string()).nullable(),
-    facilityTypeOther: z.string().max(100).nullable(),
-    environmentType: z.array(z.string()).nullable(),
-
-    buildingInsurancePrice: z.coerce.number().nullable(),
-    sellingPrice: z.coerce.number().nullable(),
-    forcedSalePrice: z.coerce.number().nullable(),
-
-    remark: z.string().nullable(),
-  })
-  .superRefine((data, ctx) => {
-    // Obligations required when hasObligation is 'true' (Martgage as security)
-    if (data.hasObligation) {
-      const obligation = data.obligationDetails;
-      if (obligation === null || obligation.trim() === '') {
-        console.log('[superRefine] Adding error for obligationDetails');
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Obligation is required',
-          path: ['obligationDetails'],
-        });
-      }
-    }
-  });
-
-export const createLandAndBuildingForm = z
-  .object({
-    titles: z.array(landTitleItem).nullable().optional(),
-    propertyName: z.string().max(150).nullable().optional(),
-    latitude: z.coerce.number(),
-    longitude: z.coerce.number(),
-    subDistrict: z.string().min(1, 'Sub district is required.'),
-    subDistrictName: z.string().nullable(),
-    district: z.string().min(1, 'District is required.'),
-    districtName: z.string().nullable(),
-    province: z.string().min(1, 'Province is required.'),
-    provinceName: z.string().nullable(),
-    landOffice: z.string().min(1, 'Land office is required.'),
-    landDescription: z.string().min(1, 'Land description is required.'),
-    isOwnerVerified: z.boolean(),
-    ownerName: z.string().max(100).min(1, 'Owner name is required.'),
-    hasObligation: z.boolean(),
-    obligationDetails: z.string().max(200),
-    isLandLocationVerified: z.boolean(),
-    landCheckMethodType: z.string().nullable().optional(),
-    landCheckMethodTypeOther: z.string().max(100).nullable().optional(),
-    street: z.string().max(100).min(1, 'Street is required.'),
-    soi: z.string().max(100).nullable().optional(),
-    distanceFromMainRoad: z.coerce.number().nullable().optional(),
-    village: z.string().max(100).nullable().optional(),
-    addressLocation: z.string().max(200).nullable().optional(),
-    landShapeType: z.string().nullable().optional(),
-    urbanPlanningType: z.string().nullable().optional(),
-    landZoneType: z.array(z.string()).nullable().optional(),
-    plotLocationType: z.array(z.string()).nullable().optional(),
-    plotLocationTypeOther: z.string().max(100).nullable().optional(),
-    landFillType: z.string().nullable().optional(),
-    landFillTypeOther: z.string().max(100).nullable().optional(),
-    landFillPercent: z.coerce.number().nullable().optional(),
-    soilLevel: z.coerce.number().nullable().optional(),
-    accessRoadWidth: z.coerce.number().nullable().optional(),
-    rightOfWay: z.coerce.number().nullable().optional(),
-    roadFrontage: z.coerce.number().nullable().optional(),
-    numberOfSidesFacingRoad: z.coerce.number().nullable().optional(),
-    roadPassInFrontOfLand: z.string().nullable().optional(),
-    landAccessibilityType: z.string().nullable().optional(),
-    landAccessibilityRemark: z.string().max(200).nullable().optional(),
-    roadSurfaceType: z.string().nullable().optional(),
-    roadSurfaceTypeOther: z.string().max(100).nullable().optional(),
-    publicUtilityType: z.array(z.string()).nullable().optional(),
-    publicUtilityTypeOther: z.string().max(100).nullable().optional(),
-    landUseType: z.array(z.string()).nullable().optional(),
-    landUseTypeOther: z.string().max(100).nullable().optional(),
-    landEntranceExitType: z.array(z.string()).nullable().optional(),
-    landEntranceExitTypeOther: z.string().max(100).nullable().optional(),
-    transportationAccessType: z.array(z.string()).nullable().optional(),
-    transportationAccessTypeOther: z.string().max(100).nullable().optional(),
-    propertyAnticipationType: z.string().nullable().optional(),
-    isExpropriated: z.boolean(),
-    expropriationRemark: z.string().max(4000).nullable().optional(),
-    isInExpropriationLine: z.boolean().nullable().optional(),
-    expropriationLineRemark: z.string().max(4000).nullable().optional(),
-    royalDecree: z.string().nullable().optional(),
-    isEncroached: z.boolean(),
-    encroachmentRemark: z.string().max(4000).nullable().optional(),
-    encroachmentArea: z.coerce.number().nullable().optional(),
-    hasElectricity: z.boolean(),
-    electricityDistance: z.coerce.number().nullable().optional(),
-    isLandlocked: z.boolean(),
-    landlockedRemark: z.string().max(4000).nullable().optional(),
-    isForestBoundary: z.boolean(),
-    forestBoundaryRemark: z.string().max(4000).nullable().optional(),
-    otherLegalLimitations: z.string().max(200).nullable().optional(),
-    evictionType: z.array(z.string()).nullable().optional(),
-    evictionTypeOther: z.string().max(100).nullable().optional(),
-    allocationType: z.string().nullable().optional(),
-    northAdjacentArea: z.string().max(200).nullable().optional(),
-    northBoundaryLength: z.coerce.number().nullable().optional(),
-    southAdjacentArea: z.string().max(200).nullable().optional(),
-    southBoundaryLength: z.coerce.number().nullable().optional(),
-    eastAdjacentArea: z.string().max(200).nullable().optional(),
-    eastBoundaryLength: z.coerce.number().nullable().optional(),
-    westAdjacentArea: z.string().max(200).nullable().optional(),
-    westBoundaryLength: z.coerce.number().nullable().optional(),
-    pondArea: z.coerce.number().nullable().optional(),
-    pondDepth: z.coerce.number().nullable().optional(),
-    //Building
-    buildingNumber: z.string().max(30).min(1, 'Building number is required.'),
-    modelName: z.string().max(50).min(1, 'Model name is required.'),
-    builtOnTitleNumber: z.string().max(200).min(1, 'Built on title number is required.'),
-    houseNumber: z.string().max(10).min(1, 'House number is required.'),
-    buildingConditionType: z.string(),
-    isUnderConstruction: z.boolean(),
-    constructionCompletionPercent: z.coerce.number().min(0).max(100),
-    constructionLicenseExpirationDate: z.string().datetime({ local: true, offset: true }),
-    isAppraisable: z.boolean(),
-    buildingType: z.string().nullable(),
-    buildingTypeOther: z.string().max(100).nullable(),
-    numberOfFloors: z.coerce.number().min(1, 'Number of floors is required.'),
-    decorationType: z.string(),
-    decorationTypeOther: z.string().max(100).nullable(),
-    isEncroachingOthers: z.boolean(),
-    encroachingOthersRemark: z.string().max(4000).nullable(),
-    encroachingOthersArea: z.coerce.number().nullable(),
-    buildingMaterialType: z.string().nullable(),
-    buildingStyleType: z.string().nullable(),
-    isResidential: z.boolean(),
-    buildingAge: z.coerce.number().min(0, 'Building age cannot be negative.'),
-    residentialRemark: z.string().max(4000).nullable(),
-    constructionStyleRemark: z.string().max(4000).nullable(),
-    constructionStyleType: z.string().nullable(),
-    structureType: z.array(z.string()).nullable(),
-    structureTypeOther: z.string().max(100).nullable(),
-    roofFrameType: z.array(z.string()).nullable(),
-    roofFrameTypeOther: z.string().max(100).nullable(),
-    roofType: z.array(z.string()).nullable(),
-    roofTypeOther: z.string().max(100).nullable(),
-    ceilingType: z.array(z.string()).nullable(),
-    ceilingTypeOther: z.string().max(100).nullable(),
-    interiorWallType: z.array(z.string()).nullable(),
-    interiorWallTypeOther: z.string().max(100).nullable(),
-    exteriorWallType: z.array(z.string()).nullable(),
-    exteriorWallTypeOther: z.string().max(100).nullable(),
-    fenceType: z.array(z.string()).nullable(),
-    fenceTypeOther: z.string().max(100).nullable(),
-    constructionType: z.string().nullable(),
-    constructionTypeOther: z.string().max(100).nullable(),
-    utilizationType: z.string().nullable(),
-    utilizationTypeOther: z.string().max(100).nullable(),
-    totalBuildingArea: z.coerce.number().min(1, 'Total building area is required.'),
-    buildingInsurancePrice: z.coerce.number().nullable(),
-    sellingPrice: z.coerce.number().nullable(),
-    forcedSalePrice: z.coerce.number().nullable(),
-    remark: z.string().max(4000).nullable(),
-    surfaces: z.array(surfaceFormItem).nullable().optional(),
-    depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
-  })
-  .superRefine((data, ctx) => {
-    // Obligations required when hasObligation is 'true' (Martgage as security)
-    if (data.hasObligation) {
-      const obligation = data.obligationDetails;
-      if (obligation === null || obligation.trim() === '') {
-        console.log('[superRefine] Adding error for obligationDetails');
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Obligation is required',
-          path: ['obligationDetails'],
-        });
-      }
-    }
-  });
+export const createLandAndBuildingForm = buildFormSchema(
+  allAppraisalFields,
+  createLandAndBuildingFormBase,
+);
 
 export const landAndBuildingPMAForm = z.object({
   buildingInsurancePrice: z.coerce.number().nullable(),

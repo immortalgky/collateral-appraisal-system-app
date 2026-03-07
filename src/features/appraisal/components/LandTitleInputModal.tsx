@@ -14,6 +14,7 @@ interface HeaderField {
   options?: ListBoxItem[] | RadioOption[];
   required?: boolean;
   orientation?: 'horizontal' | 'vertical';
+  group?: string;
 }
 
 interface LandTitleModalProps {
