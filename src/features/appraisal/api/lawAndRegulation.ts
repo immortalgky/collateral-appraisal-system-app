@@ -47,6 +47,9 @@ export const useSaveLawAndRegulations = () => {
       queryClient.invalidateQueries({
         queryKey: lawAndRegulationKeys.all(variables.appraisalId),
       });
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'gallery'],
+      });
     },
   });
 };

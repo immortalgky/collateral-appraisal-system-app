@@ -16,6 +16,7 @@ export type PropertyType = typeof PropertyType[keyof typeof PropertyType];
 export interface PropertyPhoto {
   documentId: string;
   isThumbnail: boolean;
+  mappingId?: string;
 }
 
 export interface PropertyItem {

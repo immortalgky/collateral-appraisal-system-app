@@ -6,15 +6,13 @@ import type {
   GetGalleryPhotosResultType,
   LinkPhotoToPropertyRequestType,
   LinkPhotoToPropertyResponseType,
-  MarkPhotoForReportRequestType,
-  MarkPhotoForReportResultType,
   SetPropertyThumbnailResultType,
-  UnmarkPhotoFromReportResultType,
   UnsetPropertyThumbnailResultType,
   UpdateGalleryPhotoRequestType,
   UpdateGalleryPhotoResponseType,
 } from '@shared/schemas/v1';
 import { propertyGroupKeys } from './propertyGroup';
+import { photoTopicKeys } from './photo';
 
 /**
  * Get all gallery photos for an appraisal
@@ -79,6 +77,12 @@ export const useUpdateGalleryPhoto = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'gallery'],
       });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: photoTopicKeys.all(variables.appraisalId),
+      });
     },
   });
 };
@@ -104,63 +108,8 @@ export const useRemoveGalleryPhoto = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'gallery'],
       });
-    },
-  });
-};
-
-/**
- * Mark a photo for report inclusion
- * POST /appraisals/{appraisalId}/gallery/{photoId}/mark-for-report
- */
-export const useMarkPhotoForReport = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      appraisalId,
-      photoId,
-      ...body
-    }: MarkPhotoForReportRequestType & {
-      appraisalId: string;
-      photoId: string;
-    }): Promise<MarkPhotoForReportResultType> => {
-      const { data } = await axios.post(
-        `/appraisals/${appraisalId}/gallery/${photoId}/mark-for-report`,
-        body,
-      );
-      return data;
-    },
-    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['appraisal', variables.appraisalId, 'gallery'],
-      });
-    },
-  });
-};
-
-/**
- * Unmark a photo from report
- * POST /appraisals/{appraisalId}/gallery/{photoId}/unmark-from-report
- */
-export const useUnmarkPhotoFromReport = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      appraisalId,
-      photoId,
-    }: {
-      appraisalId: string;
-      photoId: string;
-    }): Promise<UnmarkPhotoFromReportResultType> => {
-      const { data } = await axios.post(
-        `/appraisals/${appraisalId}/gallery/${photoId}/unmark-from-report`,
-      );
-      return data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ['appraisal', variables.appraisalId, 'gallery'],
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
       });
     },
   });

@@ -306,10 +306,7 @@ const plotLocationField: FormField[] = [
     label: 'Other',
     name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'plotLocationType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -326,10 +323,7 @@ const landFillField: FormField[] = [
     label: 'Other',
     name: 'landFillTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landFillType', is: '99' },
-    requiredWhen: { field: 'landFillType', is: '99' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'landFillStatusType', is: ['99'], operator: 'contains' },
   },
   {
     type: 'number-input',
@@ -431,10 +425,7 @@ const publicUtilityField: FormField[] = [
     label: 'Other',
     name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'publicUtilityType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -451,10 +442,7 @@ const landUseField: FormField[] = [
     label: 'Other',
     name: 'landUseTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landUseType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'landUseType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'landUseType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -471,10 +459,7 @@ const landEntranceField: FormField[] = [
     label: 'Other',
     name: 'landEntranceExitTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'landEntranceExitType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -491,10 +476,7 @@ const transpotationField: FormField[] = [
     label: 'Other',
     name: 'transportationAccessTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'transportationAccessType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'transportationAccessType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -645,10 +627,7 @@ const evictionField: FormField[] = [
     label: 'Other',
     name: 'evictionTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'evictionType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'evictionType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'evictionStatusType', is: '99', operator: 'contains' },
   },
 ];
 

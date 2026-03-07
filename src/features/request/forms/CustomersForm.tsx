@@ -5,9 +5,7 @@ const CustomersForm = () => {
   return (
     <div>
       <SectionHeader title="Customers" />
-      {/*<FormCard title="Customers" noPadding>*/}
       <FormTable headers={customersTableHeader} name={'customers'} />
-      {/*</FormCard>*/}
     </div>
   );
 };

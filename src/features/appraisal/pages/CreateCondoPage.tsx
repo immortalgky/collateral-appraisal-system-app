@@ -7,6 +7,8 @@ import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -38,7 +40,15 @@ const CreateCondoPage = () => {
     defaultValues: createCondoFormDefault,
     resolver: zodResolver(createCondoForm),
   });
-  const { handleSubmit, getValues, reset } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
+
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId, propertyId);
 
@@ -67,6 +77,7 @@ const CreateCondoPage = () => {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Property condominium updated successfully');
             setSaveAction(null);
           },
@@ -88,7 +99,8 @@ const CreateCondoPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Property condominium created successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property/condo/${response.id}`);
+            skipWarning();
+            navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -114,7 +126,7 @@ const CreateCondoPage = () => {
         },
         {
           onSuccess: () => {
-            console.log(data);
+            reset(getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
           },
@@ -136,8 +148,9 @@ const CreateCondoPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Draft saved successfully');
             setSaveAction(null);
-            if (response.id) {
-              navigate(`/appraisal/${appraisalId}/property/condo/${response.id}`);
+            if (response.propertyId) {
+              skipWarning();
+              navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -233,6 +246,12 @@ const CreateCondoPage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
+                {hasDirtyFields && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Unsaved changes
+                  </span>
+                )}
               </div>
               <div className="flex gap-3">
                 <Button
@@ -256,6 +275,8 @@ const CreateCondoPage = () => {
               </div>
             </div>
           </div>
+
+          <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>
     </div>

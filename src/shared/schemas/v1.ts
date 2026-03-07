@@ -951,7 +951,6 @@ const PaginatedResultOfQuotationDto = z
 const GetQuotationsResponse = z.object({ quotations: PaginatedResultOfQuotationDto }).passthrough();
 const CreateQuotationRequest = z
   .object({
-    quotationNumber: z.string(),
     dueDate: z.string().datetime({ offset: true }),
     requestedBy: z.string().uuid(),
     requestedByName: z.string(),
@@ -988,7 +987,17 @@ const UpdatePricingAnalysisRequest = z
   })
   .passthrough();
 const UpdatePricingAnalysisResponse = z.object({ id: z.string().uuid() }).passthrough();
-const ApproachDto = z.object({ id: z.string().uuid(), approachType: z.string() }).passthrough();
+const MethodDto = z
+  .object({
+    id: z.string().uuid(),
+    methodType: z.string(),
+    methodValue: z.number().nullable(),
+    isSelected: z.boolean(),
+  })
+  .passthrough();
+const ApproachDto = z
+  .object({ id: z.string().uuid(), approachType: z.string(), methods: z.array(MethodDto) })
+  .passthrough();
 const GetPricingAnalysisResponse = z
   .object({
     id: z.string().uuid(),
@@ -1455,6 +1464,11 @@ const UpdateMarketComparableRequest = z
     sourceInfo: z.string().nullish().default(null),
     notes: z.string().nullish().default(null),
     templateId: z.string().uuid().nullish().default(null),
+    offerPrice: z.number().nullish().default(null),
+    offerPriceAdjustmentPercent: z.number().nullish().default(null),
+    offerPriceAdjustmentAmount: z.number().nullish().default(null),
+    salePrice: z.number().nullish().default(null),
+    saleDate: z.string().datetime({ offset: true }).nullish().default(null),
   })
   .passthrough();
 const UpdateMarketComparableResponse = z.object({ success: z.boolean() }).passthrough();
@@ -1478,7 +1492,7 @@ const FactorDataDto = z
 const ImageDto = z
   .object({
     id: z.string().uuid(),
-    documentId: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
     displaySequence: z.number().int(),
     title: z.string().nullable(),
     description: z.string().nullable(),
@@ -1493,6 +1507,11 @@ const MarketComparableDetailDto = z
     surveyName: z.string(),
     infoDateTime: z.string().datetime({ offset: true }).nullable(),
     sourceInfo: z.string().nullable(),
+    offerPrice: z.number().nullable(),
+    offerPriceAdjustmentPercent: z.number().nullable(),
+    offerPriceAdjustmentAmount: z.number().nullable(),
+    salePrice: z.number().nullable(),
+    saleDate: z.string().datetime({ offset: true }).nullable(),
     notes: z.string().nullable(),
     templateId: z.string().uuid().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
@@ -1526,6 +1545,11 @@ const MarketComparableDto = z
     surveyName: z.string(),
     infoDateTime: z.string().datetime({ offset: true }).nullable(),
     sourceInfo: z.string().nullable(),
+    offerPrice: z.number().nullable(),
+    offerPriceAdjustmentPercent: z.number().nullable(),
+    offerPriceAdjustmentAmount: z.number().nullable(),
+    salePrice: z.number().nullable(),
+    saleDate: z.string().datetime({ offset: true }).nullable(),
     notes: z.string().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
   })
@@ -1544,20 +1568,24 @@ const GetMarketComparablesResponse = z
   .passthrough();
 const CreateMarketComparableRequest = z
   .object({
-    comparableNumber: z.string(),
     propertyType: z.string(),
     surveyName: z.string(),
     infoDateTime: z.string().datetime({ offset: true }).nullish().default(null),
     sourceInfo: z.string().nullish().default(null),
     notes: z.string().nullish().default(null),
     templateId: z.string().uuid().nullish().default(null),
+    offerPrice: z.number().nullish().default(null),
+    offerPriceAdjustmentPercent: z.number().nullish().default(null),
+    offerPriceAdjustmentAmount: z.number().nullish().default(null),
+    salePrice: z.number().nullish().default(null),
+    saleDate: z.string().datetime({ offset: true }).nullish().default(null),
   })
   .passthrough();
 const CreateMarketComparableResponse = z.object({ id: z.string().uuid() }).passthrough();
 const DeleteMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 const AddMarketComparableImageRequest = z
   .object({
-    documentId: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
     title: z.string().nullish().default(null),
     description: z.string().nullish().default(null),
   })
@@ -1567,6 +1595,7 @@ const UpdateMarketComparableFactorRequest = z
   .object({
     factorName: z.string(),
     fieldName: z.string(),
+    dataType: z.string().nullable(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
@@ -1721,8 +1750,9 @@ const DocumentRequirementDto = z
     documentTypeCode: z.string(),
     documentTypeName: z.string(),
     documentTypeCategory: z.string().nullable(),
-    collateralTypeCode: z.string().nullable(),
-    collateralTypeName: z.string().nullable(),
+    propertyTypeCode: z.string().nullable(),
+    propertyTypeName: z.string().nullable(),
+    purposeCode: z.string().nullable(),
     isRequired: z.boolean(),
     isActive: z.boolean(),
     notes: z.string().nullable(),
@@ -1737,7 +1767,8 @@ const GetDocumentRequirementsResponse = z
 const CreateDocumentRequirementRequest = z
   .object({
     documentTypeId: z.string().uuid(),
-    collateralTypeCode: z.string().nullable(),
+    propertyTypeCode: z.string().nullable(),
+    purposeCode: z.string().nullable(),
     isRequired: z.boolean(),
     notes: z.string().nullable(),
   })
@@ -1754,17 +1785,17 @@ const DocumentChecklistItemDto = z
   })
   .partial()
   .passthrough();
-const CollateralDocumentGroupDto = z
+const PropertyTypeDocumentGroupDto = z
   .object({
-    collateralTypeCode: z.string(),
-    collateralTypeName: z.string(),
+    propertyTypeCode: z.string(),
+    propertyTypeName: z.string(),
     documents: z.array(z.unknown()),
   })
   .passthrough();
 const GetDocumentChecklistResponse = z
   .object({
     applicationDocuments: z.array(DocumentChecklistItemDto),
-    collateralGroups: z.array(CollateralDocumentGroupDto),
+    propertyTypeGroups: z.array(PropertyTypeDocumentGroupDto),
   })
   .passthrough();
 const UpdateTemplateRequest = z
@@ -2094,7 +2125,7 @@ const UpdatePropertyGroupRequest = z
   .passthrough();
 const UpdatePropertyGroupResponse = z.object({ id: z.string().uuid() }).passthrough();
 const PropertyPhotoDto = z
-  .object({ documentId: z.string().uuid(), isThumbnail: z.boolean() })
+  .object({ mappingId: z.string().uuid(), documentId: z.string().uuid(), isThumbnail: z.boolean() })
   .passthrough();
 const PropertyGroupItemDto = z
   .object({
@@ -2116,8 +2147,8 @@ const GetPropertyGroupByIdResponse = z
     groupName: z.string(),
     description: z.string().nullable(),
     useSystemCalc: z.boolean(),
-    properties: z.array(PropertyGroupItemDto),
     pricingAnalysisId: z.string().uuid().nullable(),
+    properties: z.array(PropertyGroupItemDto),
   })
   .passthrough();
 const DeletePropertyGroupResponse = z.object({ success: z.boolean() }).passthrough();
@@ -3050,15 +3081,12 @@ const UpdateAppendixLayoutResponse = z
   .object({ appendixId: z.string().uuid(), layoutColumns: z.number().int() })
   .passthrough();
 const UnsetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
-const UnmarkPhotoFromReportResult = z.object({ id: z.string().uuid() }).passthrough();
 const SetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
 const LawAndRegulationImageInput = z
   .object({
     id: z.string().uuid().nullable(),
-    documentId: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
     displaySequence: z.number().int(),
-    fileName: z.string(),
-    filePath: z.string(),
     title: z.string().nullable(),
     description: z.string().nullable(),
   })
@@ -3080,10 +3108,8 @@ const SaveLawAndRegulationsResponse = z
 const LawAndRegulationImageDto = z
   .object({
     id: z.string().uuid(),
-    documentId: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
     displaySequence: z.number().int(),
-    fileName: z.string(),
-    filePath: z.string(),
     title: z.string().nullable(),
     description: z.string().nullable(),
   })
@@ -3107,8 +3133,6 @@ const MovePropertyToGroupRequest = z
   .object({ targetGroupId: z.string().uuid(), targetPosition: z.number().int().nullable() })
   .passthrough();
 const MovePropertyToGroupResponse = z.object({ success: z.boolean() }).passthrough();
-const MarkPhotoForReportRequest = z.object({ reportSection: z.string() }).passthrough();
-const MarkPhotoForReportResult = z.object({ id: z.string().uuid() }).passthrough();
 const LinkPhotoToPropertyRequest = z
   .object({
     appraisalPropertyId: z.string().uuid(),
@@ -3139,6 +3163,7 @@ const LinkAppraisalComparableResponse = z
 const ComparableAdjustmentDto = z
   .object({
     id: z.string().uuid(),
+    appraisalComparableId: z.string().uuid(),
     adjustmentCategory: z.string(),
     adjustmentType: z.string(),
     adjustmentPercent: z.number(),
@@ -3147,6 +3172,7 @@ const ComparableAdjustmentDto = z
     comparableValue: z.string().nullable(),
     justification: z.string().nullable(),
   })
+  .partial()
   .passthrough();
 const AppraisalComparableDto = z
   .object({
@@ -3161,13 +3187,19 @@ const AppraisalComparableDto = z
     weightedValue: z.number(),
     selectionReason: z.string().nullable(),
     notes: z.string().nullable(),
-    comparableNumber: z.string().nullable(),
-    comparablePropertyType: z.string().nullable(),
-    comparableSurveyName: z.string().nullable(),
+    comparableNumber: z.string(),
+    comparablePropertyType: z.string(),
+    comparableSurveyName: z.string(),
     comparableInfoDateTime: z.string().datetime({ offset: true }).nullable(),
     comparableSourceInfo: z.string().nullable(),
+    comparableOfferPrice: z.number().nullable(),
+    comparableOfferPriceAdjustmentPercent: z.number().nullable(),
+    comparableOfferPriceAdjustmentAmount: z.number().nullable(),
+    comparableSalePrice: z.number().nullable(),
+    comparableSaleDate: z.string().datetime({ offset: true }).nullable(),
     adjustments: z.array(ComparableAdjustmentDto),
   })
+  .partial()
   .passthrough();
 const GetAppraisalComparablesResponse = z
   .object({ comparables: z.array(AppraisalComparableDto) })
@@ -3228,9 +3260,14 @@ const GalleryPhotoDto = z
     longitude: z.number().nullable(),
     capturedAt: z.string().datetime({ offset: true }).nullable(),
     uploadedAt: z.string().datetime({ offset: true }),
-    isUsedInReport: z.boolean(),
-    reportSection: z.string().nullable(),
+    isInUse: z.boolean(),
     photoTopicIds: z.array(z.string().uuid()),
+    fileName: z.string().nullable(),
+    filePath: z.string().nullable(),
+    fileExtension: z.string().nullable(),
+    mimeType: z.string().nullable(),
+    fileSizeBytes: z.number().int().nullable(),
+    uploadedByName: z.string().nullable(),
   })
   .passthrough();
 const GetGalleryPhotosResult = z.object({ photos: z.array(GalleryPhotoDto) }).passthrough();
@@ -3245,6 +3282,12 @@ const AddGalleryPhotoRequest = z
     longitude: z.number().nullish().default(null),
     capturedAt: z.string().datetime({ offset: true }).nullish().default(null),
     photoTopicIds: z.array(z.string().uuid()).nullish().default(null),
+    fileName: z.string().nullish().default(null),
+    filePath: z.string().nullish().default(null),
+    fileExtension: z.string().nullish().default(null),
+    mimeType: z.string().nullish().default(null),
+    fileSizeBytes: z.number().int().nullish().default(null),
+    uploadedByName: z.string().nullish().default(null),
   })
   .passthrough();
 const AddGalleryPhotoResponse = z
@@ -4147,6 +4190,7 @@ export const schemas = {
   GetQuotationByIdResponse,
   UpdatePricingAnalysisRequest,
   UpdatePricingAnalysisResponse,
+  MethodDto,
   ApproachDto,
   GetPricingAnalysisResponse,
   UpdateMethodRequest,
@@ -4249,7 +4293,7 @@ export const schemas = {
   CreateDocumentRequirementRequest,
   CreateDocumentRequirementResponse,
   DocumentChecklistItemDto,
-  CollateralDocumentGroupDto,
+  PropertyTypeDocumentGroupDto,
   GetDocumentChecklistResponse,
   UpdateTemplateRequest,
   UpdateTemplateResponse,
@@ -4307,7 +4351,6 @@ export const schemas = {
   UpdateAppendixLayoutRequest,
   UpdateAppendixLayoutResponse,
   UnsetPropertyThumbnailResult,
-  UnmarkPhotoFromReportResult,
   SetPropertyThumbnailResult,
   LawAndRegulationImageInput,
   LawAndRegulationItemInput,
@@ -4322,8 +4365,6 @@ export const schemas = {
   RemoveAppendixDocumentResponse,
   MovePropertyToGroupRequest,
   MovePropertyToGroupResponse,
-  MarkPhotoForReportRequest,
-  MarkPhotoForReportResult,
   LinkPhotoToPropertyRequest,
   LinkPhotoToPropertyResponse,
   LinkAppraisalComparableRequest,
@@ -4513,7 +4554,7 @@ export type UpdateFeeItemRequestType = z.infer<typeof UpdateFeeItemRequest>;
 
 // Document Checklist types
 export type DocumentChecklistItemDtoType = z.infer<typeof DocumentChecklistItemDto>;
-export type CollateralDocumentGroupDtoType = z.infer<typeof CollateralDocumentGroupDto>;
+export type PropertyTypeDocumentGroupDtoType = z.infer<typeof PropertyTypeDocumentGroupDto>;
 export type GetDocumentChecklistResponseType = z.infer<typeof GetDocumentChecklistResponse>;
 export type DocumentTypeDtoType = z.infer<typeof DocumentTypeDto>;
 export type GetDocumentTypesResponseType = z.infer<typeof GetDocumentTypesResponse>;
@@ -4527,9 +4568,9 @@ export type AddGalleryPhotoRequestType = z.infer<typeof AddGalleryPhotoRequest>;
 export type AddGalleryPhotoResponseType = z.infer<typeof AddGalleryPhotoResponse>;
 export type UpdateGalleryPhotoRequestType = z.infer<typeof UpdateGalleryPhotoRequest>;
 export type UpdateGalleryPhotoResponseType = z.infer<typeof UpdateGalleryPhotoResponse>;
-export type MarkPhotoForReportRequestType = z.infer<typeof MarkPhotoForReportRequest>;
-export type MarkPhotoForReportResultType = z.infer<typeof MarkPhotoForReportResult>;
-export type UnmarkPhotoFromReportResultType = z.infer<typeof UnmarkPhotoFromReportResult>;
+// export type MarkPhotoForReportRequestType = z.infer<typeof MarkPhotoForReportRequest>;
+// export type MarkPhotoForReportResultType = z.infer<typeof MarkPhotoForReportResult>;
+// export type UnmarkPhotoFromReportResultType = z.infer<typeof UnmarkPhotoFromReportResult>;
 export type LinkPhotoToPropertyRequestType = z.infer<typeof LinkPhotoToPropertyRequest>;
 export type LinkPhotoToPropertyResponseType = z.infer<typeof LinkPhotoToPropertyResponse>;
 
@@ -4562,3 +4603,33 @@ export type LawAndRegulationImageInputType = z.infer<typeof LawAndRegulationImag
 export type LawAndRegulationItemInputType = z.infer<typeof LawAndRegulationItemInput>;
 export type SaveLawAndRegulationsRequestType = z.infer<typeof SaveLawAndRegulationsRequest>;
 export type SaveLawAndRegulationsResponseType = z.infer<typeof SaveLawAndRegulationsResponse>;
+
+// Market Comparable Factor types (for template management)
+export type CreateMarketComparableFactorRequestType = z.infer<
+  typeof CreateMarketComparableFactorRequest
+>;
+export type UpdateMarketComparableFactorRequestType = z.infer<
+  typeof UpdateMarketComparableFactorRequest
+>;
+
+// Market Comparable Template detail types
+export type MarketComparableTemplateDetailDtoType = z.infer<
+  typeof MarketComparableTemplateDetailDto
+>;
+export type CreateMarketComparableTemplateRequestType = z.infer<
+  typeof CreateMarketComparableTemplateRequest
+>;
+export type UpdateMarketComparableTemplateRequestType = z.infer<
+  typeof UpdateMarketComparableTemplateRequest
+>;
+export type TemplateFactorDtoType = z.infer<typeof TemplateFactorDto>;
+export type AddFactorToTemplateRequestType = z.infer<typeof AddFactorToTemplateRequest>;
+
+// Comparative Analysis Template types
+export type TemplateDtoType = z.infer<typeof TemplateDto>;
+export type GetTemplateByIdResponseType = z.infer<typeof GetTemplateByIdResponse>;
+export type GetTemplatesResponseType = z.infer<typeof GetTemplatesResponse>;
+export type CreateTemplateRequestType = z.infer<typeof CreateTemplateRequest>;
+export type UpdateTemplateRequestType = z.infer<typeof UpdateTemplateRequest>;
+export type TemplateFactorDto2Type = z.infer<typeof TemplateFactorDto2>;
+export type AddFactorToTemplateRequest2Type = z.infer<typeof AddFactorToTemplateRequest2>;

@@ -5,7 +5,7 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 
 interface WQSInitialValueOnSelectSurveyProps {
   collateralType: string;
@@ -17,7 +17,7 @@ interface WQSInitialValueOnSelectSurveyProps {
   reset: UseFormReset<WQSFormType>;
   getValues: UseFormGetValues<WQSFormType>;
 }
-export function setWQSInitialValueOnSelectSurvey({
+export function syncWQSFormSurveys({
   collateralType,
   methodId,
   methodType,
@@ -63,15 +63,14 @@ export function setWQSInitialValueOnSelectSurvey({
         );
         return {
           marketId: survey.id.toString(),
-          offeringPrice: surveyMap.get('25') ?? 0,
+          offeringPrice: survey.offerPrice ?? 0,
           offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          offeringPriceAdjustmentPct: surveyMap.get('18') ?? 5,
-          offeringPriceAdjustmentAmt: surveyMap.get('19') ?? null,
-          sellingPrice: surveyMap.get('47') ?? 0,
+          offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+          offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+          sellingPrice: survey.salePrice ?? 0,
           sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          // sellingDate: surveyMap.get('22') ?? '',
-          sellingPriceAdjustmentYear: surveyMap.get('23') ?? 3,
-          numberOfYears: 10, // TODO: convert selling date to number of year
+          sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
+          numberOfYears: yearDiffFromToday(survey.saleDate),
         };
       }) as WQSCalculationType[],
     },

@@ -1,26 +1,11 @@
-import { ComparativeMarketSurveySection } from '@/features/pricingAnalysis/components/ComparativeMarketSurveySection';
-import { saleGridFieldPath } from '../adapters/saleAdjustmentGridFieldPath';
-import { SaleAdjustmentGridScoringSection } from './SaleAdjustmentGridScoringSection';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-  TemplateDetailType,
-} from '@features/pricingAnalysis/schemas';
-import { SaleAdjustmentGridAdjustAppraisalPriceSection } from '@features/pricingAnalysis/components/SaleAdjustmentGridAdjustAppraisalPriceSection.tsx';
-/**
- * NOTE:
- *
- * Workflow:
- * (1) System retrive method value from database to check whether has value or not
- * (1.1) In case that has value
- * - System can show retrieved value.
- * (1.2) In case that has no value
- * - System can initial value to prepared stages before user take action.
- *
- *
- */
+import { AdjustFinalValueSection } from './WQSAdjustFinalValueSection';
+import { SurveySelectionSection } from './SurveySelectionSection';
+import { WQSScoringSection } from '@/features/pricingAnalysis/components/WQSScoringSection';
+import { WQSRSQSection } from './WQSRSQSection';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
+import { wqsFieldPath } from '../adapters/wqsFieldPath';
 
-interface SaleAdjustmentGridProps {
+interface WQSProps {
   property: Record<string, unknown>;
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
@@ -28,16 +13,15 @@ interface SaleAdjustmentGridProps {
   allFactors: FactorDataType[];
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
-
-export const SaleAdjustmentGrid = ({
+export const WQSForm = ({
   property,
   marketSurveys,
   comparativeMarketSurveys,
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
-}: SaleAdjustmentGridProps) => {
-  const fieldPath = saleGridFieldPath;
+}: WQSProps) => {
+  const fieldPath = wqsFieldPath;
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
@@ -46,7 +30,7 @@ export const SaleAdjustmentGrid = ({
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden gap-4 py-4"
       >
         <div className="flex flex-col gap-4">
-          <ComparativeMarketSurveySection
+          <SurveySelectionSection
             template={template}
             allFactors={allFactors}
             property={property}
@@ -62,17 +46,21 @@ export const SaleAdjustmentGrid = ({
                   Calculation of Appraisal Value
                 </div>
                 <div className="px-4 mt-4">
-                  <SaleAdjustmentGridScoringSection
+                  <WQSScoringSection
                     comparativeSurveys={comparativeMarketSurveys}
                     property={property}
                     template={template}
+                    isLoading={false}
                   />
                 </div>
+              </div>
+              <div className="px-4">
+                <WQSRSQSection comparativeSurveys={comparativeMarketSurveys} />
               </div>
               <div>
                 <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
                 <div className="px-4 mt-4">
-                  <SaleAdjustmentGridAdjustAppraisalPriceSection property={property} />
+                  <AdjustFinalValueSection property={property} />
                 </div>
               </div>
             </>

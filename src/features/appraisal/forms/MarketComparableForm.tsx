@@ -1,10 +1,13 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useGetMarketComparableTemplate, useGetMarketComparableTemplateById, } from '../api/marketComparable';
+import { useEffect, useRef, useState } from 'react';
+import {
+  useGetMarketComparableTemplate,
+  useGetMarketComparableTemplateById,
+} from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
-import Icon from '@/shared/components/Icon';
+import Icon from '@/shared/components/Icon'; // SectionRow component for consistent section styling with icons
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -54,8 +57,9 @@ const FactorsSkeleton = () => (
 );
 
 const MarketComparableForm = () => {
-  const { getValues, setValue } = useFormContext();
+  const { getValues, setValue, reset } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
+  const isInitialSetup = useRef(true);
   const [searchParams] = useSearchParams();
 
   // Watch property type to fetch templates
@@ -115,8 +119,16 @@ const MarketComparableForm = () => {
 
     const defaultData = defaultMarketComparableData(factors, oldData);
 
-    setValue('factorData', defaultData, { shouldDirty: true });
-  }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue]);
+    if (isInitialSetup.current) {
+      // Auto-initialization: use reset to update defaultValues baseline
+      // so isDirty correctly tracks user changes (including reverts)
+      isInitialSetup.current = false;
+      reset({ ...getValues(), factorData: defaultData });
+    } else {
+      // User changed template: just update value, keep dirty state
+      setValue('factorData', defaultData);
+    }
+  }, [templateCode, factors, isEditMode, isTemplateChanged, getValues, setValue, reset]);
 
   useEffect(() => {
     if (!templateCode) return;
@@ -161,6 +173,24 @@ const MarketComparableForm = () => {
       label: '',
       wrapperClassName: 'col-span-12',
     },
+    {
+      type: 'number-input',
+      name: 'offerPrice',
+      label: '',
+      wrapperClassName: 'col-span-12',
+    },
+    {
+      type: 'number-input',
+      name: 'salePrice',
+      label: '',
+      wrapperClassName: 'col-span-12',
+    },
+    {
+      type: 'date-input',
+      name: 'saleDate',
+      label: '',
+      wrapperClassName: 'col-span-12',
+    },
   ];
 
   const formStaticSections = [
@@ -188,6 +218,21 @@ const MarketComparableForm = () => {
       label: 'Source of Information',
       icon: 'circle-info',
       fields: staticFields.filter(f => f.name === 'sourceInfo'),
+    },
+    {
+      label: 'Offer Price',
+      icon: 'money-bill',
+      fields: staticFields.filter(f => f.name === 'offerPrice'),
+    },
+    {
+      label: 'Sale Price',
+      icon: 'money-bill',
+      fields: staticFields.filter(f => f.name === 'salePrice'),
+    },
+    {
+      label: 'Sale Date',
+      icon: 'calendar',
+      fields: staticFields.filter(f => f.name === 'saleDate'),
     },
   ];
 
@@ -288,6 +333,7 @@ const buildFormField = (fac: any, index: number): FormField => {
         name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-12',
+        ...(fac.fieldLength ? { maxLength: fac.fieldLength } : {}),
       };
   }
 };
@@ -307,11 +353,13 @@ const defaultMarketComparableData = (newFactors: any[], oldData: any[] = []) => 
       fieldDecimal: fac.fieldDecimal ?? 2,
       value:
         old?.value ??
-        (fac.dataType === 'checkbox-group'
+        (fac.dataType === 'CheckboxGroup'
           ? fac.value || []
-          : fac.dataType === 'number-input'
-            ? fac.value || ''
-            : ''),
+          : fac.dataType === 'Checkbox'
+            ? false
+            : fac.dataType === 'Numeric'
+              ? fac.value || ''
+              : ''),
     };
   });
 };

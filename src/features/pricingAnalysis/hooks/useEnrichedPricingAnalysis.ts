@@ -6,21 +6,18 @@ import {
   type GetMarketComparableByIdResponseType,
   type MarketComparableDetailType,
   type GetPricingAnalysisResponseType,
-  PriceAnalysisConfigResponse,
+  PricingAnalysisConfigResponse,
 } from '../schemas';
-import priceAnalysisConfig from '../data/priceAnalysis.config.json';
+import pricingAnalysisConfig from '../data/pricingAnalysis.config.json';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 
 // Stable fallback for new pricing analyses — avoids creating a new object every render
 const EMPTY_PRICING_SELECTION = { approaches: [] } as unknown as GetPricingAnalysisResponseType;
 
-// Parse config at module level — priceAnalysisConfig is a static JSON import,
+// Parse config at module level — pricingAnalysisConfig is a static JSON import,
 // so parsing inside the hook body creates a new reference every render and
 // causes infinite re-render loops when used as a useEffect dependency.
-const pricingConfigParsed = PriceAnalysisConfigResponse.safeParse(priceAnalysisConfig);
-if (!pricingConfigParsed.success) {
-  console.error('PriceAnalysis config schema error', pricingConfigParsed.error.flatten());
-}
+const pricingConfigParsed = PricingAnalysisConfigResponse.safeParse(pricingAnalysisConfig);
 const PRICING_CONFIG_DATA = pricingConfigParsed.success ? pricingConfigParsed.data : undefined;
 const PRICING_CONFIGURATION = PRICING_CONFIG_DATA?.approaches;
 

@@ -8,9 +8,11 @@ import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import PhotoPreviewModal from '../PhotoPreviewModal';
+import type { PreviewablePhoto } from '../PhotoPreviewModal';
+import { PhotoGridView } from '../gallery';
 import type { GalleryImage, TopicPhotoDisplay } from '../../types/gallery';
 import { toGalleryImage, toTopicPhotoDisplay } from '../../types/gallery';
-import type { PhotoTopicDtoType } from '@shared/schemas/v1';
+import type { PhotoTopicDtoType, GalleryPhotoDtoType } from '@shared/schemas/v1';
 import {
   useGetPhotoTopics,
   useCreatePhotoTopic,
@@ -18,7 +20,7 @@ import {
   useDeletePhotoTopic,
   useAssignPhotoToTopic,
 } from '../../api/photo';
-import { useGetGalleryPhotos, useAddGalleryPhoto } from '../../api/gallery';
+import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 
 const LAYOUT_OPTIONS = [
@@ -172,67 +174,6 @@ const TopicItem = ({
   );
 };
 
-// PhotoCard Component - Enhanced with better hover effects
-const PhotoCard = ({
-  photo,
-  onDelete,
-  onView,
-}: {
-  photo: TopicPhotoDisplay;
-  onDelete: () => void;
-  onView: () => void;
-}) => {
-  return (
-    <div className="group relative">
-      {/* Image Container */}
-      <div
-        className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1"
-        onClick={onView}
-      >
-        <img
-          src={photo.thumbnailSrc}
-          alt={photo.fileName}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-        {/* Quick Actions */}
-        <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onView();
-            }}
-            className="p-2 bg-white/95 backdrop-blur-sm rounded-lg text-gray-600 hover:bg-emerald-500 hover:text-white shadow-lg transition-all duration-200 hover:scale-110"
-            title="View full size"
-          >
-            <Icon name="expand" className="text-sm" />
-          </button>
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="p-2 bg-white/95 backdrop-blur-sm rounded-lg text-gray-600 hover:bg-red-500 hover:text-white shadow-lg transition-all duration-200 hover:scale-110"
-            title="Remove photo"
-          >
-            <Icon name="trash" className="text-sm" />
-          </button>
-        </div>
-
-        {/* File Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <p className="text-white text-sm font-medium truncate drop-shadow-lg">{photo.caption || photo.fileName}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Upload Placeholder Component - Enhanced design
 const UploadPlaceholder = ({
   onClick,
@@ -290,6 +231,18 @@ export const PhotosTab = () => {
   const { data: galleryData } = useGetGalleryPhotos(appraisalId);
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
   const { mutateAsync: uploadDocument } = useUploadDocument();
+  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } = useUpdateGalleryPhoto();
+
+  // Build a lookup from documentId → GalleryPhotoDtoType for description editing
+  const galleryPhotoByDocId = useMemo(() => {
+    const map = new Map<string, GalleryPhotoDtoType>();
+    if (galleryData?.photos) {
+      for (const p of galleryData.photos as GalleryPhotoDtoType[]) {
+        map.set(p.documentId, p);
+      }
+    }
+    return map;
+  }, [galleryData]);
 
   const topics = topicsData?.topics || [];
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
@@ -299,13 +252,12 @@ export const PhotosTab = () => {
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
   const [isDragging, setIsDragging] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<TopicPhotoDisplay | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<(PreviewablePhoto & { documentId?: string }) | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     type: 'topic' | 'photo';
     id: string;
     name: string;
   } | null>(null);
-
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSessionIdRef = useRef<string | null>(null);
@@ -334,6 +286,35 @@ export const PhotosTab = () => {
   const galleryImages: GalleryImage[] = useMemo(
     () => (galleryData?.photos ?? []).map(toGalleryImage),
     [galleryData]
+  );
+
+  // Map topic photos → GalleryImage[] for PhotoGridView
+  const gridImages: GalleryImage[] = useMemo(
+    () =>
+      topicPhotos.map((photo, idx) => {
+        const dto = galleryPhotoByDocId.get(photo.documentId);
+        return {
+          id: photo.id,
+          documentId: photo.documentId,
+          photoNumber: photo.photoNumber ?? idx + 1,
+          src: photo.src,
+          thumbnailSrc: photo.thumbnailSrc,
+          alt: photo.caption || photo.fileName,
+          fileName: dto?.fileName ?? `Photo #${photo.photoNumber ?? idx + 1}`,
+          caption: photo.caption ?? dto?.caption ?? null,
+          description: photo.caption ?? dto?.caption ?? undefined,
+          photoType: dto?.photoType ?? 'general',
+          photoCategory: dto?.photoCategory ?? null,
+          isInUse: dto?.isInUse ?? false,
+          latitude: dto?.latitude ?? null,
+          longitude: dto?.longitude ?? null,
+          capturedAt: dto?.capturedAt ?? null,
+          fileExtension: dto?.fileExtension,
+          mimeType: dto?.mimeType,
+          fileSizeBytes: dto?.fileSizeBytes,
+        };
+      }),
+    [topicPhotos, galleryPhotoByDocId],
   );
 
   const totalPhotos = topics.reduce((sum, t) => sum + t.photoCount, 0);
@@ -750,37 +731,21 @@ export const PhotosTab = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-2">
-              {/* Upload Placeholder */}
-              <UploadPlaceholder
-                onClick={() => setShowPhotoSourceModal(true)}
-                isDragging={false}
+            <div className="p-2">
+              <PhotoGridView
+                images={gridImages}
+                onImageClick={image => setPreviewPhoto(image)}
+                onImageDelete={image =>
+                  setDeleteConfirm({ type: 'photo', id: image.id, name: image.fileName || image.alt })
+                }
+                showUsedBadge={false}
+                prepend={
+                  <UploadPlaceholder
+                    onClick={() => setShowPhotoSourceModal(true)}
+                    isDragging={false}
+                  />
+                }
               />
-
-              {/* Photos */}
-              {topicPhotos.map(photo => (
-                <PhotoCard
-                  key={photo.id}
-                  photo={photo}
-                  onDelete={() =>
-                    setDeleteConfirm({ type: 'photo', id: photo.id, name: photo.caption || photo.fileName })
-                  }
-                  onView={() => setPreviewPhoto(photo)}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Empty State */}
-          {selectedTopicId && !isDragging && topicPhotos.length === 0 && (
-            <div className="text-center py-8 mt-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
-                <Icon name="camera" className="text-2xl text-emerald-500" />
-              </div>
-              <p className="text-sm font-medium text-gray-600">No photos yet</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Drag photos here or click "Add Photos" to get started
-              </p>
             </div>
           )}
         </div>
@@ -833,13 +798,40 @@ export const PhotosTab = () => {
       {previewPhoto && (
         <PhotoPreviewModal
           photo={previewPhoto}
-          photos={topicPhotos}
+          photos={gridImages}
           onClose={() => setPreviewPhoto(null)}
           onNavigate={setPreviewPhoto}
+          showInUseStatus={false}
           onDelete={() => {
-            setDeleteConfirm({ type: 'photo', id: previewPhoto.id, name: previewPhoto.caption || previewPhoto.fileName });
+            setDeleteConfirm({ type: 'photo', id: previewPhoto.id, name: previewPhoto.caption || previewPhoto.fileName || 'Photo' });
             setPreviewPhoto(null);
           }}
+          onSaveDescription={async (caption: string) => {
+            if (!appraisalId || !previewPhoto.documentId) return;
+            try {
+              const dto = galleryPhotoByDocId.get(previewPhoto.documentId);
+              if (!dto) {
+                toast.error('Gallery photo not found');
+                return;
+              }
+              await updateGalleryPhotoApi({
+                appraisalId,
+                photoId: dto.id,
+                caption: caption || null,
+                photoCategory: dto.photoCategory ?? null,
+                latitude: dto.latitude ?? null,
+                longitude: dto.longitude ?? null,
+                capturedAt: dto.capturedAt ?? null,
+              });
+              setPreviewPhoto(prev =>
+                prev ? { ...prev, caption: caption || null } : null,
+              );
+              toast.success('Description updated');
+            } catch {
+              toast.error('Failed to update description');
+            }
+          }}
+          isSavingDescription={isUpdatingDescription}
         />
       )}
     </div>

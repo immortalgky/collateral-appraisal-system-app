@@ -94,10 +94,8 @@ export const LawsRegulationTab = () => {
           remark: i.remark,
           images: i.images.map(img => ({
             id: img.id,
-            documentId: img.documentId,
+            galleryPhotoId: img.galleryPhotoId,
             displaySequence: img.displaySequence,
-            fileName: img.fileName,
-            filePath: img.filePath,
             title: img.title,
             description: img.description,
           })),

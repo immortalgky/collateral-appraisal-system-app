@@ -377,10 +377,7 @@ const generalStructureField: FormField[] = [
     label: 'Other',
     name: 'structureTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'structureType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'structureType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'structureType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -397,10 +394,7 @@ const roofFrameField: FormField[] = [
     label: 'Other',
     name: 'roofFrameTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'roofFrameType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -417,10 +411,7 @@ const roofField: FormField[] = [
     label: 'Other',
     name: 'roofTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'roofType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'roofType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -437,10 +428,7 @@ const ceilingField: FormField[] = [
     label: 'Other',
     name: 'ceilingTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'ceilingType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'ceilingType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'ceilingType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -458,10 +446,7 @@ const wallField: FormField[] = [
     label: 'Other',
     name: 'interiorWallTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
   },
   {
     type: 'checkbox-group',
@@ -476,10 +461,7 @@ const wallField: FormField[] = [
     label: 'Other',
     name: 'exteriorWallTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -523,10 +505,7 @@ const fenceField: FormField[] = [
     label: 'Other',
     name: 'fenceTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'fenceType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'fenceType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'fenchType', is: '99', operator: 'contains' },
   },
 ];
 

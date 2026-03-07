@@ -331,10 +331,8 @@ const condoLocationFields: FormField[] = [
     label: 'Other',
     name: 'publicUtilityTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    required: false,
+    showWhen: { field: 'publicUtility', is: '99', operator: 'contains' },
   },
 ];
 
@@ -563,10 +561,7 @@ const condoFacilityFields: FormField[] = [
     label: 'Other',
     name: 'facilityTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'facilityType', is: '99', operator: 'in' },
-    requiredWhen: { field: 'facilityType', is: '99', operator: 'in' },
-    maxLength: 100,
-    showCharCount: true,
+    showWhen: { field: 'facilityType', is: '99', operator: 'contains' },
   },
 ];
 

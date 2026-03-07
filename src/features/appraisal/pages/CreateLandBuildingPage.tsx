@@ -9,6 +9,8 @@ import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import TitleDeedForm from '../forms/TitleDeedForm';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -25,12 +27,13 @@ import {
   type createLandAndBuildingFormType,
 } from '../schemas/form';
 import toast from 'react-hot-toast';
-import { mapLandAndBuildingPropertyResponseToForm, mapLandAndBuildingFormDataToApiPayload } from '../utils/mappers';
+import {
+  mapLandAndBuildingFormDataToApiPayload,
+  mapLandAndBuildingPropertyResponseToForm,
+} from '../utils/mappers';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
-
-// TODO: Add proper defaults when schema is finalized
 
 const CreateLandBuildingPage = () => {
   const navigate = useNavigate();
@@ -47,7 +50,15 @@ const CreateLandBuildingPage = () => {
     defaultValues: createLandAndBuildingFormDefault,
     resolver: zodResolver(createLandAndBuildingForm),
   });
-  const { handleSubmit, getValues, reset } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
+
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const { data: propertyData, isLoading } = useGetLandAndBuildingPropertyById(
     appraisalId,
@@ -84,6 +95,7 @@ const CreateLandBuildingPage = () => {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Property land and building updated successfully');
             setSaveAction(null);
           },
@@ -105,7 +117,8 @@ const CreateLandBuildingPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Property land and building created successfully');
             setSaveAction(null);
-            navigate(`/appraisal/${appraisalId}/property/land-building/${response.id}`);
+            skipWarning();
+            navigate(`/appraisal/${appraisalId}/property/land-building/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -133,6 +146,7 @@ const CreateLandBuildingPage = () => {
         },
         {
           onSuccess: () => {
+            reset(getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
           },
@@ -154,8 +168,9 @@ const CreateLandBuildingPage = () => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             toast.success('Draft saved successfully');
             setSaveAction(null);
-            if (response.id) {
-              navigate(`/appraisal/${appraisalId}/property/land-building/${response.id}`);
+            if (response.propertyId) {
+              skipWarning();
+              navigate(`/appraisal/${appraisalId}/property/land-building/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -296,6 +311,12 @@ const CreateLandBuildingPage = () => {
               <div className="flex items-center gap-4">
                 <CancelButton />
                 <div className="h-6 w-px bg-gray-200" />
+                {hasDirtyFields && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Unsaved changes
+                  </span>
+                )}
               </div>
               <div className="flex gap-3">
                 <Button
@@ -319,6 +340,8 @@ const CreateLandBuildingPage = () => {
               </div>
             </div>
           </div>
+
+          <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>
     </div>

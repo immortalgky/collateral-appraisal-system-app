@@ -418,7 +418,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     }
   };
 
-  const handleGoToPriceAnalysis = (groupId: string) => {
+  const handleGoToPricingAnalysis = (groupId: string) => {
     const group = groups.find(g => g.id === groupId);
     const paId = group?.pricingAnalysisId;
     if (paId) {
@@ -578,7 +578,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onCopy={handleCopyProperty}
                 onPaste={handlePasteProperty}
                 onDelete={handleDeleteProperty}
-                onGoToPriceAnalysis={handleGoToPriceAnalysis}
+                onGoToPricingAnalysis={handleGoToPricingAnalysis}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
               />

@@ -1,4 +1,4 @@
-import type { GetPricingAnalysisResponseType, PriceAnalysisConfigType } from '../schemas';
+import type { GetPricingAnalysisResponseType, PricingAnalysisConfigType } from '../schemas';
 import type { Approach, Method } from '../types/selection';
 
 // Reverse mapping: server types → config types
@@ -21,15 +21,15 @@ const normalizeApproachType = (t: string) => SERVER_TO_CONFIG_APPROACH[t] ?? t;
 const normalizeMethodType = (t: string) => SERVER_TO_CONFIG_METHOD[t] ?? t;
 
 export function createInitialState(
-  priceAnalysisConfig: PriceAnalysisConfigType[],
-  priceAnalysisData: GetPricingAnalysisResponseType,
+  pricingAnalysisConfig: PricingAnalysisConfigType[],
+  pricingAnalysisData: GetPricingAnalysisResponseType,
 ): Approach[] {
-  const apiApproaches = priceAnalysisData?.approaches ?? [];
+  const apiApproaches = pricingAnalysisData?.approaches ?? [];
   const apiApproachByType = new Map(
     apiApproaches.map(a => [normalizeApproachType(a.approachType), a]),
   );
 
-  return priceAnalysisConfig.map((confAppr: PriceAnalysisConfigType) => {
+  return pricingAnalysisConfig.map((confAppr: PricingAnalysisConfigType) => {
     const apiAppr = apiApproachByType.get(confAppr.approachType);
 
     const apiMethods = apiAppr?.methods ?? [];
