@@ -9,10 +9,17 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../context/AppraisalContext';
 import { MapPreview } from './MapPreview';
 import { useAuthStore } from '@/features/auth/store';
-import { useAddComment, useUpdateComment, useDeleteComment, useGetComments, useGetRequestById } from '@/features/request/api';
+import {
+  useAddComment,
+  useUpdateComment,
+  useDeleteComment,
+  useGetComments,
+  useGetRequestById,
+} from '@/features/request/api';
 import { useGetAppointments } from '../api/appointment';
 import { useGetAppraisalFees } from '../api/fee';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
 interface AppraisalRightMenuProps {
   onClose?: () => void;
@@ -29,7 +36,7 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
   const { appraisal, isLoading } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
-  const currentUser = useAuthStore((state) => state.user);
+  const currentUser = useAuthStore(state => state.user);
 
   // Fetch related data
   const { data: requestData } = useGetRequestById(requestId);
@@ -39,8 +46,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
   // Derive latest appointment (most recent by appointmentDateTime)
   const latestAppointment = useMemo(() => {
     if (appointments.length === 0) return null;
-    return [...appointments].sort((a, b) =>
-      new Date(b.appointmentDateTime).getTime() - new Date(a.appointmentDateTime).getTime()
+    return [...appointments].sort(
+      (a, b) =>
+        new Date(b.appointmentDateTime).getTime() - new Date(a.appointmentDateTime).getTime(),
     )[0];
   }, [appointments]);
 
@@ -77,7 +85,10 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
         data: {
           comment: newComment.trim(),
           commentedBy: currentUser.username,
-          commentedByName: `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() || currentUser.username || 'Anonymous',
+          commentedByName:
+            `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() ||
+            currentUser.username ||
+            'Anonymous',
         },
       },
       {
@@ -177,7 +188,6 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
     }
   };
 
-
   if (isLoading || !appraisal) {
     return (
       <div className="flex flex-col h-full p-4">
@@ -249,10 +259,12 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
       </div>
 
       {/* Content */}
-      <div className={clsx(
-        "flex-1 min-h-0",
-        activeTab === 'overview' ? "overflow-y-auto p-4" : "flex flex-col"
-      )}>
+      <div
+        className={clsx(
+          'flex-1 min-h-0',
+          activeTab === 'overview' ? 'overflow-y-auto p-4' : 'flex flex-col',
+        )}
+      >
         {activeTab === 'overview' ? (
           <div className="flex flex-col gap-5">
             {/* Status & Type */}
@@ -265,7 +277,13 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="diagram-project"
                   label="Type"
-                  value={appraisal.appraisalType || 'Not set'}
+                  value={
+                    appraisal.appraisalType ? (
+                      <ParameterDisplay group="AppraisalType" code={appraisal.appraisalType} />
+                    ) : (
+                      'Not set'
+                    )
+                  }
                   muted={!appraisal.appraisalType}
                 />
               </div>
@@ -278,7 +296,13 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="bullseye"
                   label="Type"
-                  value={requestData?.purpose || 'Not set'}
+                  value={
+                    requestData?.purpose ? (
+                      <ParameterDisplay group="AppraisalPurpose" code={requestData?.purpose} />
+                    ) : (
+                      'Not set'
+                    )
+                  }
                   muted={!requestData?.purpose}
                 />
               </div>
@@ -342,7 +366,13 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="circle-check"
                   label="Payment Status"
-                  value={feeSummary?.paymentStatus || 'Not set'}
+                  value={
+                    feeSummary?.paymentStatus ? (
+                      <ParameterDisplay group="FeePaymentStatus" code={feeSummary?.paymentStatus} />
+                    ) : (
+                      'Not set'
+                    )
+                  }
                   muted={!feeSummary?.paymentStatus}
                 />
                 <InfoRow
@@ -385,7 +415,7 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
               {isCommentsLoading ? (
                 // Skeleton loading
                 <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
+                  {[1, 2, 3].map(i => (
                     <div key={i} className="p-2.5 bg-gray-50 rounded-lg animate-pulse">
                       <div className="flex items-start gap-2">
                         <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
@@ -414,14 +444,14 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   {comments.map(comment => {
                     const isOwnComment = comment.commentedBy === currentUser?.username;
                     const isEditing = editingId === comment.id;
-                    const displayName = comment.commentedBy === currentUser?.username ? 'Me' : comment.commentedByName;
+                    const displayName =
+                      comment.commentedBy === currentUser?.username
+                        ? 'Me'
+                        : comment.commentedByName;
                     const timeDisplay = getRelativeTimeString(comment.commentedAt);
 
                     return (
-                      <div
-                        key={comment.id}
-                        className="group relative p-2.5 bg-gray-50 rounded-lg"
-                      >
+                      <div key={comment.id} className="group relative p-2.5 bg-gray-50 rounded-lg">
                         {isEditing ? (
                           // Edit mode
                           <div className="flex flex-col gap-2">

@@ -3,8 +3,15 @@ import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
 import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { type Control, type FieldValues, useController, useFieldArray, useFormContext, } from 'react-hook-form';
+import {
+  type Control,
+  type FieldValues,
+  useController,
+  useFieldArray,
+  useFormContext,
+} from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
 interface FormTableProps {
   name: string;
@@ -464,7 +471,13 @@ const TableCell = ({ name, index, editIndex, value, header, control }: TableCell
       {editIndex === index ? (
         renderInput()
       ) : (
-        <div className={isNumber ? 'text-right' : 'truncate'}>{formatDisplayValue(value)}</div>
+        <div className={isNumber ? 'text-right' : 'truncate'}>
+          {header.inputType === 'dropdown' && header.group ? (
+            <ParameterDisplay group={header.group} code={value} />
+          ) : (
+            formatDisplayValue(value)
+          )}
+        </div>
       )}
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>

@@ -9,6 +9,7 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { format } from 'date-fns';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
 // Format date as DD/MM/YYYY
 const formatDate = (dateString?: string): string => {
@@ -527,8 +528,12 @@ function TaskListingPage() {
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.customerName}</td>
                       <td className="px-3 py-2.5 text-gray-600">{task.taskType}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.purpose}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.propertyType}</td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {<ParameterDisplay group="AppraisalPurpose" code={task.purpose} />}
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {<ParameterDisplay group="PropertyType" code={task.propertyType} />}
+                      </td>
                       <td className="px-3 py-2.5">
                         <Badge type="status" value={task.status} size="sm" />
                       </td>
