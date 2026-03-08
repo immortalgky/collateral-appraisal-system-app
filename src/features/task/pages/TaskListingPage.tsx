@@ -527,7 +527,9 @@ function TaskListingPage() {
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.customerName}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.taskType}</td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {<ParameterDisplay group="TaskType" code={task.taskType} />}
+                      </td>
                       <td className="px-3 py-2.5 text-gray-600">
                         {<ParameterDisplay group="AppraisalPurpose" code={task.purpose} />}
                       </td>
