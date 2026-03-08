@@ -11,7 +11,7 @@ const RequestDetailDto = z.object({
   hasAppraisalBook: z.boolean(),
   loanDetail: z.object({
     bankingSegment: z.string().min(1, 'Banking segment is required.'),
-    loanApplicationNumber: z.string().nullable(),
+    loanApplicationNumber: z.string().max(10).nullable(),
     facilityLimit: z.coerce.number().min(1, 'Facility limit must be greater than 0.'),
     additionalFacilityLimit: z.number().nullable(),
     previousFacilityLimit: z.number().nullable(),
@@ -21,11 +21,11 @@ const RequestDetailDto = z.object({
   prevAppraisalValue: z.number().nullable(),
   prevAppraisalDate: z.string().nullable(),
   address: z.object({
-    houseNumber: z.string().nullable(),
-    projectName: z.string().nullable(),
-    moo: z.string().nullable(),
-    soi: z.string().nullable(),
-    road: z.string().nullable(),
+    houseNumber: z.string().max(10).min(1, 'House number is required.'),
+    projectName: z.string().max(100).nullable(),
+    moo: z.string().max(10).nullable(),
+    soi: z.string().max(100).nullable(),
+    road: z.string().max(100).nullable(),
     subDistrict: z.string().min(1, 'Sub district is required.'),
     subDistrictName: z.string().nullable(),
     district: z.string().min(1, 'District is required.'),
@@ -35,8 +35,8 @@ const RequestDetailDto = z.object({
     postcode: z.string().nullable(),
   }),
   contact: z.object({
-    contactPersonName: z.string().min(1, 'Contact person name is required.'),
-    contactPersonPhone: z.string().min(1, 'Contact person phone number is required.'),
+    contactPersonName: z.string().max(100).min(1, 'Contact person name is required.'),
+    contactPersonPhone: z.string().max(40).min(1, 'Contact person phone number is required.'),
     dealerCode: z.string().nullable(),
   }),
   appointment: z.object({
@@ -50,8 +50,8 @@ const RequestDetailDto = z.object({
   }),
 });
 const RequestCustomerDto = z.object({
-  name: z.string().min(1, 'Customer name is required.'),
-  contactNumber: z.string().min(1, 'Contact number is required.'),
+  name: z.string().max(200).min(1, 'Customer name is required.'),
+  contactNumber: z.string().max(20).min(1, 'Contact number is required.'),
 });
 const RequestPropertyDto = z.object({
   propertyType: z.string().min(1, 'Property type is required.'),
@@ -235,7 +235,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   collateralStatus: '',
   titleNumber: '',
   titleType: '',
-  titleDetail: '',
+  notes: '',
   bookNumber: '',
   pageNumber: '',
   rawang: '',
@@ -292,6 +292,5 @@ export const requestTitleDefault: RequestTitleDtoType = {
     provinceName: '',
     postcode: '',
   },
-  notes: '',
   documents: [],
 };

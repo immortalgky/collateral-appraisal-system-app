@@ -84,7 +84,7 @@ export const requestFields: FormField[] = [
     label: 'Loan Application No',
     name: 'detail.loanDetail.loanApplicationNumber',
     wrapperClassName: 'col-span-1',
-    required: true,
+    maxLength: 10,
   },
   {
     type: 'number-input',
@@ -98,12 +98,14 @@ export const requestFields: FormField[] = [
     label: 'Increase Limit Amount',
     name: 'detail.loanDetail.additionalFacilityLimit',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: '02' },
   },
   {
     type: 'number-input',
     label: 'Old Limit Amount',
     name: 'detail.loanDetail.previousFacilityLimit',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: '02' },
   },
 ];
 
@@ -118,30 +120,36 @@ export const addressFields: FormField[] = [
     label: 'House No',
     name: 'houseNumber',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Village/Building',
     name: 'projectName',
     wrapperClassName: 'col-span-4',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Moo',
     name: 'moo',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
   },
   {
     type: 'text-input',
     label: 'Soi',
     name: 'soi',
     wrapperClassName: 'col-span-2',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Road',
     name: 'road',
     wrapperClassName: 'col-span-2',
+    maxLength: 100,
   },
   {
     type: 'location-selector',
@@ -191,6 +199,7 @@ export const contactFields: FormField[] = [
     name: 'contactPersonName',
     wrapperClassName: 'col-span-3',
     required: true,
+    maxLength: 100,
   },
   {
     type: 'text-input',
@@ -198,6 +207,7 @@ export const contactFields: FormField[] = [
     name: 'contactPersonPhone',
     wrapperClassName: 'col-span-3',
     required: true,
+    maxLength: 40,
   },
   {
     type: 'dropdown',
@@ -264,12 +274,13 @@ export const customersFieldConfig: FieldArrayField = {
   required: true,
   minItems: 1,
   fields: [
-    { type: 'text-input', name: 'name', label: 'Customer Name', required: true },
+    { type: 'text-input', name: 'name', label: 'Customer Name', required: true, maxLength: 200 },
     {
       type: 'text-input',
       name: 'contactNumber',
       label: 'Contact Number',
       required: true,
+      maxLength: 20,
     },
   ],
 };
@@ -304,6 +315,7 @@ export const propertiesFieldConfig: FieldArrayField = {
 // Collateral type groups for conditional validation
 const LAND_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS'];
 const TITLE_NUMBER_TYPES = ['L', 'B', 'LB', 'LSL', 'LSB', 'LS'];
+const OWNER_NAME_TYPES = ['L', 'B', 'LB', 'LSL', 'LSB', 'LS', 'U'];
 const BUILDING_REQUIRED_TYPES = ['B', 'LB', 'LSB', 'LS'];
 
 // --- Rendering configs (used by sub-form components for <FormFields>) ---
@@ -333,26 +345,30 @@ export const titleLandFields: FormField[] = [
     name: 'titleType',
     group: 'DeedType',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: TITLE_NUMBER_TYPES, operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Book Number',
     name: 'bookNumber',
     wrapperClassName: 'col-span-1',
+    maxLength: 10,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Page Number',
     name: 'pageNumber',
     wrapperClassName: 'col-span-1',
+    maxLength: 10,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -365,12 +381,16 @@ export const titleLandFields: FormField[] = [
     label: 'Land Parcel Number',
     name: 'landParcelNumber',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Survey Number',
     name: 'surveyNumber',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -378,6 +398,8 @@ export const titleLandFields: FormField[] = [
     name: 'areaRai',
     wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
+    maxIntegerDigits: 5,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -385,6 +407,9 @@ export const titleLandFields: FormField[] = [
     name: 'areaNgan',
     wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
+    maxIntegerDigits: 1,
+    max: 4,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -392,20 +417,22 @@ export const titleLandFields: FormField[] = [
     name: 'areaSquareWa',
     wrapperClassName: 'col-span-2',
     decimalPlaces: 2,
+    maxIntegerDigits: 3,
+    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
-    required: true,
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
     type: 'textarea',
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
 ];
 
@@ -416,7 +443,6 @@ export const titleBuildingFields: FormField[] = [
     name: 'buildingType',
     group: 'BuildingType',
     wrapperClassName: 'col-span-3',
-    required: true,
     requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
   },
   {
@@ -424,7 +450,6 @@ export const titleBuildingFields: FormField[] = [
     label: 'Usage Area',
     name: 'usableArea',
     wrapperClassName: 'col-span-3',
-    required: true,
     requiredWhen: {
       field: 'collateralType',
       operator: 'in',
@@ -437,7 +462,6 @@ export const titleBuildingFields: FormField[] = [
     label: 'Number of Building',
     name: 'numberOfBuilding',
     wrapperClassName: 'col-span-3',
-    required: true,
     requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
   },
@@ -455,36 +479,38 @@ export const titleCondoFields: FormField[] = [
     name: 'titleType',
     group: 'DeedType',
     wrapperClassName: 'col-span-2',
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
+    requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Room Number',
     name: 'roomNumber',
     wrapperClassName: 'col-span-2',
-    required: true,
     requiredWhen: { field: 'collateralType', is: 'U' },
+    maxLength: 10,
   },
   {
     type: 'text-input',
     label: 'Floor Number',
     name: 'floorNumber',
     wrapperClassName: 'col-span-2',
-    required: true,
     requiredWhen: { field: 'collateralType', is: 'U' },
+    maxLength: 10,
   },
   {
     type: 'text-input',
     label: 'Building Number',
     name: 'buildingNumber',
     wrapperClassName: 'col-span-2',
-    required: true,
     requiredWhen: { field: 'collateralType', is: 'U' },
+    maxLength: 10,
   },
   {
     type: 'text-input',
@@ -493,29 +519,34 @@ export const titleCondoFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     required: true,
     requiredWhen: { field: 'collateralType', is: 'U' },
+    maxLength: 100,
   },
   {
     type: 'number-input',
     label: 'Usage Area (Sq.M)',
     name: 'usableArea',
     wrapperClassName: 'col-span-2',
-    required: true,
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: {
+      field: 'collateralType',
+      operator: 'in',
+      is: [...BUILDING_REQUIRED_TYPES, 'U'],
+    },
     decimalPlaces: 2,
+    maxIntegerDigits: 3,
   },
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
-    required: true,
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
     type: 'textarea',
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
 ];
 
@@ -578,8 +609,7 @@ export const titleMachineFields: FormField[] = [
     label: 'Registration No',
     name: 'registrationNo',
     wrapperClassName: 'col-span-3',
-    required: true,
-    requiredWhen: { field: 'collateralType', is: 'MAC' },
+    requiredWhen: { field: 'installationStatus', is: '1' },
   },
   {
     type: 'text-input',
@@ -587,7 +617,7 @@ export const titleMachineFields: FormField[] = [
     name: 'invoiceNumber',
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'MAC' },
+    requiredWhen: { field: 'installationStatus', is: '2' },
   },
   {
     type: 'number-input',
@@ -606,30 +636,36 @@ export const titleAddressFields: FormField[] = [
     label: 'House Number',
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    required: true,
+    maxLength: 10,
   },
   {
     type: 'text-input',
     label: 'Village/Building Name',
     name: 'titleAddress.projectName',
     wrapperClassName: 'col-span-4',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Moo',
     name: 'titleAddress.moo',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
   },
   {
     type: 'text-input',
     label: 'Soi',
     name: 'titleAddress.soi',
     wrapperClassName: 'col-span-2',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Road',
     name: 'titleAddress.road',
     wrapperClassName: 'col-span-2',
+    maxLength: 100,
   },
   {
     type: 'location-selector',
@@ -672,30 +708,36 @@ export const dopaAddressFields: FormField[] = [
     label: 'House No',
     name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    required: true,
   },
   {
     type: 'text-input',
     label: 'Village/Building Name',
     name: 'dopaAddress.projectName',
     wrapperClassName: 'col-span-4',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Moo',
     name: 'dopaAddress.moo',
     wrapperClassName: 'col-span-2',
+    maxLength: 10,
   },
   {
     type: 'text-input',
     label: 'Soi',
     name: 'dopaAddress.soi',
     wrapperClassName: 'col-span-2',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Road',
     name: 'dopaAddress.road',
     wrapperClassName: 'col-span-2',
+    maxLength: 100,
   },
   {
     type: 'location-selector',

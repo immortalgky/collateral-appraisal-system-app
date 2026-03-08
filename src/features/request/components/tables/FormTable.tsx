@@ -3,7 +3,13 @@ import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
 import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { type Control, type FieldValues, useController, useFieldArray, useFormContext, } from 'react-hook-form';
+import {
+  type Control,
+  type FieldValues,
+  useController,
+  useFieldArray,
+  useFormContext,
+} from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
 
 interface FormTableProps {

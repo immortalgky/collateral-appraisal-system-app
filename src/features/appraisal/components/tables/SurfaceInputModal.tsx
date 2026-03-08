@@ -88,26 +88,27 @@ const SurfaceInputModal = ({
 
         {/* Form Content */}
         <FormProvider {...methods}>
-          <form onSubmit={(e) => { e.stopPropagation(); handleSubmit(onSubmit)(e); }}>
+          <form
+            onSubmit={e => {
+              e.stopPropagation();
+              handleSubmit(onSubmit)(e);
+            }}
+          >
             <div className="px-6 py-5 space-y-5">
               {/* Floor Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Floor Range
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Floor Range</label>
                 <div className="grid grid-cols-2 gap-4">
                   <NumberInput
                     label="From Floor"
                     value={fromFloorNumber ?? undefined}
                     onChange={e => setValue('fromFloorNumber', e.target.value)}
-                    placeholder="1"
                     decimalPlaces={0}
                   />
                   <NumberInput
                     label="To Floor"
                     value={toFloorNumber ?? undefined}
                     onChange={e => setValue('toFloorNumber', e.target.value)}
-                    placeholder="2"
                     decimalPlaces={0}
                   />
                 </div>
@@ -115,9 +116,7 @@ const SurfaceInputModal = ({
 
               {/* Floor Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Type
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Floor Type</label>
                 <Dropdown
                   group="FloorType"
                   value={floorType}
