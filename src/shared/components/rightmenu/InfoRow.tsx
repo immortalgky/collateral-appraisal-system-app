@@ -1,10 +1,11 @@
 import clsx from 'clsx';
 import Icon from '../Icon';
+import type { ReactNode } from 'react';
 
 interface InfoRowProps {
   icon: string;
   label: string;
-  value: string;
+  value: ReactNode;
   muted?: boolean;
 }
 

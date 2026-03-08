@@ -344,7 +344,7 @@ function RequestListingPage() {
                       <Badge type="status" value={request.status} />
                     </td>
                     <td className="px-4 py-2.5 text-gray-600">
-                      <ParameterDisplay group="PURPOSE" code={request.purpose} />
+                      <ParameterDisplay group="AppraisalPurpose" code={request.purpose} />
                     </td>
                     <td className="px-4 py-2.5">
                       <Badge type="channel" value={request.channel}>
