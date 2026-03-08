@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { mapLandAndBuildingPMAPropertyResponseToForm } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
+import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { FormProvider } from '@/shared/components/form';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -19,7 +20,6 @@ import RightMenuPortal from '@/shared/components/RightMenuPortal';
 
 const LandBuildingPMAPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
-
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
 
   const methods = useForm<landAndBuildingPMAFormType>({
@@ -39,7 +39,8 @@ const LandBuildingPMAPage = () => {
   //   propertyId,
   // );
 
-  const data = {};
+  const propertyData = undefined; // TODO: replace with useGetLandAndBuildingPMAPropertyById(appraisalId, propertyId)
+  const isLoading = false;
   const isPending = false;
 
   const onSubmit: SubmitHandler<landAndBuildingPMAFormType> = data => {
@@ -73,6 +74,17 @@ const LandBuildingPMAPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {/* NavAnchors */}
+      <div className="shrink-0 pb-4">
+        <NavAnchors
+          containerId="form-scroll-container"
+          anchors={[
+            { label: 'PMA', id: 'pma-section', icon: 'file-invoice-dollar' },
+            { label: 'Property', id: 'property-section', icon: 'house-chimney' },
+          ]}
+        />
+      </div>
+
       <FormProvider methods={methods} schema={landAndBuildingPMAForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -88,8 +100,7 @@ const LandBuildingPMAPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Building Form */}
-                  <Section className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section id="pma-section" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
                     <LandBuildingPMAForm />
                   </Section>
                 </div>
@@ -98,7 +109,6 @@ const LandBuildingPMAPage = () => {
           </div>
 
           {/* Sticky Action Buttons */}
-
           <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">

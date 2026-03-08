@@ -64,13 +64,13 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
   ];
 
   const statsRows = [
-    { label: 'Coefficient of decision', value: coefficientOfDecision },
-    { label: 'Standard error', value: standardError },
-    { label: 'Intersection point', value: intersectionPoint },
-    { label: 'Slope', value: slope },
-    { label: 'Final value', value: finalValue },
-    { label: 'Lowest estimate', value: lowestEstimate },
-    { label: 'Highest estimate', value: highestEstimate },
+    { label: 'Coefficient of decision', value: coefficientOfDecision, decimals: 4 },
+    { label: 'Standard error', value: standardError, decimals: 2 },
+    { label: 'Intersection point', value: intersectionPoint, decimals: 2 },
+    { label: 'Slope', value: slope, decimals: 2 },
+    { label: 'Final value', value: finalValue, decimals: 2 },
+    { label: 'Lowest estimate', value: lowestEstimate, decimals: 2 },
+    { label: 'Highest estimate', value: highestEstimate, decimals: 2 },
   ];
 
   return (
@@ -89,18 +89,22 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
       </button>
 
       {isOpen && (
-        <div className="border-t border-gray-300 px-4 py-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="border-t border-gray-300 px-3 py-3">
+          <div className="flex flex-col lg:flex-row gap-4">
             {/* Left: Stats table */}
-            <div>
-              <table className="w-full text-sm">
+            <div className="min-w-0 overflow-hidden lg:w-[280px] lg:flex-shrink-0">
+              <table className="w-full text-xs table-fixed">
+                <colgroup>
+                  <col className="w-[55%]" />
+                  <col className="w-[45%]" />
+                </colgroup>
                 <tbody>
                   {statsRows.map(row => (
                     <tr key={row.label} className="border-b border-gray-100">
-                      <td className="py-2 pr-4 text-gray-600">{row.label}</td>
-                      <td className="py-2 text-right font-medium">
+                      <td className="py-1 pr-2 text-gray-600 truncate">{row.label}</td>
+                      <td className="py-1 text-right font-medium truncate">
                         {typeof row.value === 'number'
-                          ? row.value.toLocaleString(undefined, { maximumFractionDigits: 4 })
+                          ? row.value.toLocaleString(undefined, { maximumFractionDigits: row.decimals ?? 2 })
                           : row.value}
                       </td>
                     </tr>
@@ -110,21 +114,24 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
             </div>
 
             {/* Right: Scatter chart */}
-            <div className="h-[300px]">
+            <div className="h-[220px] min-w-0 flex-1">
               {scatterData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 20 }}>
+                  <ScatterChart margin={{ top: 5, right: 10, bottom: 18, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       type="number"
                       dataKey="x"
                       name="Weighted Score"
-                      label={{ value: 'Weighted Score', position: 'bottom', offset: 0 }}
+                      tick={{ fontSize: 11 }}
+                      label={{ value: 'Weighted Score', position: 'bottom', offset: 0, fontSize: 11 }}
                     />
                     <YAxis
                       type="number"
                       dataKey="y"
                       name="Adjusted Value"
+                      tick={{ fontSize: 11 }}
+                      width={70}
                       tickFormatter={v => v.toLocaleString()}
                     />
                     <Tooltip
@@ -151,7 +158,7 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
                         strokeDasharray="5 5"
                       />
                     )}
-                    <Scatter data={scatterData} fill="#3b82f6" />
+                    <Scatter data={scatterData} fill="#3b82f6" r={4} />
                   </ScatterChart>
                 </ResponsiveContainer>
               ) : (

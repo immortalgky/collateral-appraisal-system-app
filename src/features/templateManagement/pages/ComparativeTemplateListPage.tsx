@@ -4,12 +4,15 @@ import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import TemplateTable from '../components/TemplateTable';
-import { useGetCompTemplates, useDeleteCompTemplate } from '../api/comparativeTemplate';
+import {
+  useDeleteComparativeAnalysisTemplate,
+  useGetComparativeAnalysisTemplates,
+} from '../api/comparativeTemplate';
 
 const ComparativeTemplateListPage = () => {
   const navigate = useNavigate();
-  const { data: templates = [], isLoading } = useGetCompTemplates();
-  const deleteMutation = useDeleteCompTemplate();
+  const { data: templates = [], isLoading } = useGetComparativeAnalysisTemplates();
+  const deleteMutation = useDeleteComparativeAnalysisTemplate();
 
   const handleDelete = (id: string) => {
     if (!confirm('Are you sure you want to delete this template?')) return;

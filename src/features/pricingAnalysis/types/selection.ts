@@ -8,8 +8,8 @@ import type {
 export interface PricingAnalysisMethodRequest {
   id: string;
   methodType: string;
-  isCandidated: boolean;
   isSelected: boolean;
+  isIncluded: boolean;
   appraisalValue: number;
 }
 
@@ -17,7 +17,7 @@ export interface PricingAnalysisApproachRequest {
   id: string;
   approachType: string;
   appraisalValue: number;
-  isCandidated: boolean;
+  isSelected: boolean;
   methods: PricingAnalysisMethodRequest[];
 }
 
@@ -32,8 +32,8 @@ export interface Method {
   label: string;
   icon: string;
   appraisalValue: number;
+  isIncluded: boolean;
   isSelected: boolean;
-  isCandidated: boolean;
 }
 
 export interface Approach {
@@ -42,8 +42,8 @@ export interface Approach {
   label: string;
   icon: string;
   appraisalValue: number;
-  isCandidated: boolean; // if no method means not selected
-  methods: Method[]; // selected methods from database
+  isSelected: boolean;
+  methods: Method[];
 }
 
 export interface GroupDetails {

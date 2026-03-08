@@ -1,0 +1,31 @@
+{
+  "sidebar": {
+    "menu": "Menu",
+    "system": "System",
+    "dashboard": "Dashboard",
+    "requests": "Requests",
+    "appraisals": "Appraisals",
+    "tasks": "Tasks",
+    "templates": "Templates",
+    "settings": "Settings"
+  },
+  "userMenu": {
+    "yourProfile": "Your profile",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "search": {
+    "placeholder": "Search everything...",
+    "searchIn": "Search in",
+    "recent": "Recent",
+    "tip": "Use filters to narrow down results",
+    "filters": {
+      "all": "All",
+      "requests": "Requests",
+      "customers": "Customers",
+      "properties": "Properties",
+      "documents": "Documents"
+    }
+  },
+  "notifications": "Notifications"
+}

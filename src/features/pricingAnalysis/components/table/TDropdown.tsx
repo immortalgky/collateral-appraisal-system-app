@@ -40,6 +40,7 @@ export type ListBoxItem = {
   value: string | undefined;
   label: string;
   id?: string | number;
+  colorClass?: string;
 };
 
 const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
@@ -99,7 +100,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
         >
           {dropdownOptions.map(option => (
             <ListBoxOption key={option.id ?? option.value} value={option}>
-              {option.label}
+              <span className={option.colorClass}>{option.label}</span>
             </ListBoxOption>
           ))}
         </ListBox>
@@ -116,7 +117,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
         <HeadlessListboxButton
           ref={ref}
           className={clsx(
-            'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
+            'relative w-full rounded-lg border text-left text-xs transition-colors duration-200 pr-9',
             'focus:outline-none focus:ring-2',
             disabled
               ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
@@ -130,7 +131,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             <Icon style="regular" name="chevron-down" className="size-3.5" />
           </div>
           <HeadlessListboxSelectedOption
-            placeholder={<div className="px-3 py-2 text-gray-400">{placeholder}</div>}
+            placeholder={<div className="px-2.5 py-1 text-gray-400">{placeholder}</div>}
             options={children}
           />
         </HeadlessListboxButton>
@@ -152,7 +153,7 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
     <HeadlessListboxOption
       value={value}
       className={clsx(
-        'group flex gap-2 px-3 py-2 text-sm cursor-pointer transition-colors',
+        'group flex gap-2 px-2 py-1 text-xs cursor-pointer transition-colors',
         'data-focus:bg-gray-100 data-focus:text-gray-900',
         'data-selected:bg-gray-100 data-selected:text-gray-900 data-selected:font-medium',
       )}

@@ -31,6 +31,7 @@ import { MoveToGroupModal } from '../MoveToGroupModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import { PropertyContextMenu } from '../PropertyContextMenu';
 import type { PropertyItem } from '../../types';
+import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
@@ -74,6 +75,7 @@ interface PropertiesTabProps {
 export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
+  const basePath = usePropertyBasePath();
 
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
@@ -339,11 +341,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       if (appraisalId) {
         const routeSegment = getRouteSegment(property.type);
         navigate(
-          `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+          `/appraisal/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
         );
       }
     },
-    [appraisalId, navigate],
+    [appraisalId, basePath, navigate],
   );
 
   const handleMoveToProperty = useCallback(

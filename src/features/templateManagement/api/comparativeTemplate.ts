@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
-  TemplateDtoType,
-  GetTemplateByIdResponseType,
-  CreateTemplateRequestType,
-  UpdateTemplateRequestType,
   AddFactorToTemplateRequest2Type,
+  CreateComparativeAnalysisTemplateRequestType,
+  CreateComparativeAnalysisTemplateResponseType,
+  GetComparativeAnalysisTemplateByIdResponseType,
+  TemplateDtoType,
+  UpdateComparativeAnalysisTemplateRequestType,
 } from '@/shared/schemas/v1';
 import { templateMgmtKeys } from './queryKeys';
 
-export const useGetCompTemplates = () => {
+export const useGetComparativeAnalysisTemplates = () => {
   return useQuery({
     queryKey: templateMgmtKeys.compTemplates,
     queryFn: async (): Promise<TemplateDtoType[]> => {
@@ -19,22 +20,24 @@ export const useGetCompTemplates = () => {
   });
 };
 
-export const useGetCompTemplateById = (id?: string) => {
+export const useGetComparativeAnalysisTemplateById = (id?: string) => {
   return useQuery({
     queryKey: templateMgmtKeys.compTemplateDetail(id!),
     enabled: !!id,
-    queryFn: async (): Promise<GetTemplateByIdResponseType> => {
+    queryFn: async (): Promise<GetComparativeAnalysisTemplateByIdResponseType> => {
       const { data } = await axios.get(`/comparative-analysis-templates/${id}`);
       return data;
     },
   });
 };
 
-export const useCreateCompTemplate = () => {
+export const useCreateComparativeAnalysisTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreateTemplateRequestType) => {
+    mutationFn: async (
+      request: CreateComparativeAnalysisTemplateRequestType,
+    ): Promise<CreateComparativeAnalysisTemplateResponseType> => {
       const { data } = await axios.post('/comparative-analysis-templates', request);
       return data;
     },
@@ -44,22 +47,27 @@ export const useCreateCompTemplate = () => {
   });
 };
 
-export const useUpdateCompTemplate = () => {
+export const useUpdateComparativeAnalysisTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...body }: UpdateTemplateRequestType & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...body
+    }: UpdateComparativeAnalysisTemplateRequestType & { id: string }) => {
       const { data } = await axios.put(`/comparative-analysis-templates/${id}`, body);
       return data;
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: templateMgmtKeys.compTemplates });
-      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.compTemplateDetail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.compTemplateDetail(variables.id),
+      });
     },
   });
 };
 
-export const useDeleteCompTemplate = () => {
+export const useDeleteComparativeAnalysisTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -72,21 +80,29 @@ export const useDeleteCompTemplate = () => {
   });
 };
 
-export const useAddFactorToCompTemplate = () => {
+export const useAddFactorToComparativeAnalysisTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ templateId, ...body }: AddFactorToTemplateRequest2Type & { templateId: string }) => {
-      const { data } = await axios.post(`/comparative-analysis-templates/${templateId}/factors`, body);
+    mutationFn: async ({
+      templateId,
+      ...body
+    }: AddFactorToTemplateRequest2Type & { templateId: string }) => {
+      const { data } = await axios.post(
+        `/comparative-analysis-templates/${templateId}/factors`,
+        body,
+      );
       return data;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.compTemplateDetail(variables.templateId) });
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.compTemplateDetail(variables.templateId),
+      });
     },
   });
 };
 
-export const useRemoveFactorFromCompTemplate = () => {
+export const useRemoveFactorFromComparativeAnalysisTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -94,7 +110,9 @@ export const useRemoveFactorFromCompTemplate = () => {
       await axios.delete(`/comparative-analysis-templates/${templateId}/factors/${factorId}`);
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.compTemplateDetail(variables.templateId) });
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.compTemplateDetail(variables.templateId),
+      });
     },
   });
 };

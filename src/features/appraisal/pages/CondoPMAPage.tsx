@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
+import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { FormProvider } from '@/shared/components/form';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
@@ -15,7 +16,6 @@ import CondoPMAForm from '../forms/CondoPMAForm';
 
 const CondoPMAPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
-
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
 
   const methods = useForm<condoPMAFormType>({
@@ -32,7 +32,8 @@ const CondoPMAPage = () => {
 
   //const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
 
-  const propertyData = {};
+  const propertyData = undefined; // TODO: replace with useGetCondoPMAPropertyById(appraisalId, propertyId)
+  const isLoading = false;
   const isPending = false;
 
   const onSubmit: SubmitHandler<condoPMAFormType> = data => {
@@ -63,8 +64,20 @@ const CondoPMAPage = () => {
       </div>
     );
   }
+
   return (
     <div className="flex flex-col h-full min-h-0">
+      {/* NavAnchors */}
+      <div className="shrink-0 pb-4">
+        <NavAnchors
+          containerId="form-scroll-container"
+          anchors={[
+            { label: 'PMA', id: 'pma-section', icon: 'file-invoice-dollar' },
+            { label: 'Property', id: 'property-section', icon: 'city' },
+          ]}
+        />
+      </div>
+
       <FormProvider methods={methods} schema={condoPMAForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -80,8 +93,7 @@ const CondoPMAPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Building Form */}
-                  <Section className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section id="pma-section" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
                     <CondoPMAForm />
                   </Section>
                 </div>

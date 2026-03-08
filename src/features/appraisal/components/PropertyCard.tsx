@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import { PropertyCardContent } from './PropertyCardContent';
+import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 
 // Map property type to route a segment
 const getRouteSegment = (type: string): string => {
@@ -33,6 +34,7 @@ interface PropertyCardProps {
 export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: PropertyCardProps) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
+  const basePath = usePropertyBasePath();
 
   const sortableData = useMemo(
     () => ({ type: 'property' as const, property, groupId }),
@@ -62,7 +64,7 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
       navigate(
-        `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+        `/appraisal/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
       );
     }
   };

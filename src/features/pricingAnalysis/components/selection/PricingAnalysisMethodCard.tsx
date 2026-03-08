@@ -10,6 +10,7 @@ interface PricingAnalysisMethodCardProps {
   onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
+  onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
 }
 
 export const PricingAnalysisMethodCard = ({
@@ -19,37 +20,35 @@ export const PricingAnalysisMethodCard = ({
   method,
   onToggleMethod,
   onSelectCalculationMethod,
-
   onSelectCandidateMethod,
+  onDeleteMethod,
 }: PricingAnalysisMethodCardProps) => {
   if (viewMode === 'editing') {
     return (
       <div
         className={clsx(
-          'flex flex-col items-center h-14 transition-all duration-300 rounded-lg',
-          method.isSelected ? 'text-primary' : 'text-gray-400',
+          'flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-all duration-200',
+          'bg-primary/5 text-primary',
         )}
       >
-        <button
-          className={clsx(
-            'grid grid-cols-12 items-center justify-start cursor-pointer w-full h-full transition-all duration-300 px-4 py-2 rounded-lg',
-            method.isSelected ? '  text-primary' : '',
-            'hover:bg-primary/10',
-          )}
-          onClick={() =>
-            onToggleMethod({ approachType: approachType, methodType: method.methodType })
-          }
-        >
-          <div className="col-span-1">
-            <Icon name={'check'} style="solid" className={clsx('size-3')} />
-          </div>
-          <div className="col-span-1">
-            <Icon name={method.icon} style="solid" className="size-3" />
-          </div>
-          <div className="col-span-10 flex flex-row items-center justify-start">
-            <span>{method.label}</span>
-          </div>
-        </button>
+        <Icon name={method.icon} style="solid" className="size-3 shrink-0" />
+        <span className="flex-1 text-left font-medium">{method.label}</span>
+        {onDeleteMethod && method.id && (
+          <button
+            type="button"
+            className="shrink-0 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteMethod({ approachType, methodType: method.methodType });
+            }}
+          >
+            <Icon
+              name="trash"
+              style="solid"
+              className="size-3.5 text-gray-400 hover:text-red-500 transition-colors"
+            />
+          </button>
+        )}
       </div>
     );
   }
@@ -57,54 +56,53 @@ export const PricingAnalysisMethodCard = ({
   return (
     <div
       className={clsx(
-        'grid grid-cols-12 gap-4 items-center h-16 py-2 px-4 transition-all duration-300 rounded-lg',
-        'hover:bg-primary/10',
-        method.isCandidated ? 'text-primary' : 'text-gray-400',
+        'flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200',
+        'hover:bg-gray-50',
+        method.isSelected ? 'text-primary' : 'text-gray-500',
       )}
     >
-      <div className="col-span-1 flex items-center justify-center">
-        <button
-          type="button"
-          onClick={() =>
-            onSelectCandidateMethod({ approachType: approachType, methodType: method.methodType })
-          }
-          className="cursor-pointer"
+      {/* Candidate checkbox */}
+      <button
+        type="button"
+        onClick={() =>
+          onSelectCandidateMethod({ approachType, methodType: method.methodType })
+        }
+        className="cursor-pointer shrink-0"
+      >
+        <div
+          className={clsx(
+            'size-4 rounded border-2 flex items-center justify-center transition-all',
+            method.isSelected
+              ? 'bg-primary border-primary'
+              : 'border-gray-300 hover:border-gray-400',
+          )}
         >
-          <Icon
-            name="check"
-            style="solid"
-            className={clsx(
-              'size-4 transition-transform duration-300 ease-in-out',
-              method.isCandidated ? 'text-primary' : 'text-gray-400',
-            )}
-          />
-        </button>
-      </div>
-      <div className="col-span-1 flex items-center">
-        <Icon name={method.icon} style="solid" className="size-4" />
-      </div>
-      <div className="col-span-9 flex flex-col">
-        <div className="flex">
-          <span>{method.label}</span>
+          {method.isSelected && (
+            <Icon name="check" style="solid" className="size-2.5 text-white" />
+          )}
         </div>
-        <div className="flex items-center justify-start gap-1 py-1 text-xs">
-          <Icon name="baht-sign" style="light" className="size-4" />
+      </button>
+      <Icon name={method.icon} style="solid" className="size-4 shrink-0" />
+      <div className="flex-1 flex flex-col min-w-0">
+        <span className={clsx('text-sm', method.isSelected && 'font-medium')}>
+          {method.label}
+        </span>
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <Icon name="baht-sign" style="light" className="size-3" />
           <span className="truncate">{Number(method.appraisalValue).toLocaleString()}</span>
         </div>
       </div>
-      <div className="col-span-1 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => onSelectCalculationMethod({ approachType, methodType: method.methodType })}
-          className="cursor-pointer items-center justify-end"
-        >
-          <Icon
-            name="pen"
-            style="solid"
-            className={clsx('size-4 transition-transform duration-300 ease-in-out text-black')}
-          />
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => onSelectCalculationMethod({ approachType, methodType: method.methodType })}
+        className="cursor-pointer shrink-0 p-1 rounded hover:bg-gray-100"
+      >
+        <Icon
+          name="pen"
+          style="solid"
+          className="size-3.5 text-gray-500 hover:text-primary transition-colors"
+        />
+      </button>
     </div>
   );
 };

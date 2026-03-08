@@ -11,7 +11,7 @@ import {
   calcTotalSecondRevision,
 } from '@features/pricingAnalysis/domain/calculateDirectComparison.ts';
 import { shouldAutoDefault } from '../domain/shouldAutoDefault';
-import type { MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
+import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath.ts';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
@@ -23,9 +23,10 @@ import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAna
 export function buildDirectComparisonCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
   property: Record<string, any>;
+  allFactors: FactorDataType[];
 }): DerivedFieldRule[] {
   /** Calculation section */
-  const { surveys = [], property } = args;
+  const { surveys = [], property, allFactors } = args;
   const {
     adjustmentFactors: adjustmentFactorsPath,
     calculation: calculationPath,
@@ -103,7 +104,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           targetPath: calculationLandAreaDiffPath({ column: columnIndex }),
           deps: [],
           compute: () => {
-            const propertyLandArea = getPropertyValueByFactorCode('05', property) ?? 0;
+            const propertyLandArea = getPropertyValueByFactorCode('05', property, allFactors) ?? 0;
             const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '05');
             const surveyLandArea = findSurveyLandArea
               ? readFactorValue({
@@ -130,7 +131,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
           compute: () => {
-            const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
+            const propertyUsableArea = getPropertyValueByFactorCode('12', property, allFactors) ?? 0;
             const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({
@@ -227,7 +228,7 @@ export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: DirectComparisonQualitativeFormType[];
 }): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
+  const { surveys = [], qualitativeRows = [] } = args;
 
   const {
     qualitativeLevel: qualitativeLevelPath,
@@ -237,9 +238,15 @@ export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
   return qualitativeRows
     .map((_, rowIndex: number) =>
       surveys.map((_, columnIndex: number) => {
+        const target = adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex });
         return {
-          targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+          targetPath: target,
           deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
+          when: ({ getValues }) => {
+            const curr = getValues(target);
+            // Only auto-default when empty — preserve restored/user-edited values
+            return curr == null || curr === '';
+          },
           compute: ({ getValues }) => {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
@@ -255,7 +262,7 @@ export function buildDirectComparisonAdjustmentFactorAmountRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
+  const { surveys = [], qualitativeRows = [] } = args;
 
   const {
     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,

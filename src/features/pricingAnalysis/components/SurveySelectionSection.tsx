@@ -28,8 +28,10 @@ export function SurveySelectionSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-lg border-b border-neutral-300 py-2">Comparative Analysis</div>
-      <div className="px-4 mt-4">
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
+        <h3 className="text-base font-semibold text-gray-800">Comparative Analysis</h3>
+      </div>
+      <div className="px-4">
         <div className="flex flex-col gap-2">
           <button
             type="button"

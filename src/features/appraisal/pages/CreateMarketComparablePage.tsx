@@ -89,6 +89,13 @@ const CreateMarketComparablePage = () => {
         if (factor.dataType === 'Checkbox') {
           return { ...found, value: found.value === true || found.value === 'true' };
         }
+        if (factor.dataType === 'CheckboxGroup') {
+          let parsed = found.value;
+          if (typeof found.value === 'string') {
+            try { parsed = JSON.parse(found.value); } catch { parsed = []; }
+          }
+          return { ...found, value: Array.isArray(parsed) ? parsed : [] };
+        }
         return found;
       })
       .filter(Boolean);
@@ -112,7 +119,12 @@ const CreateMarketComparablePage = () => {
     // Convert factorData values to string
     const factorData = (data.factorData ?? []).map(factor => ({
       ...factor,
-      value: factor.value === null || factor.value === undefined ? '' : String(factor.value),
+      value:
+        factor.value === null || factor.value === undefined
+          ? ''
+          : Array.isArray(factor.value)
+            ? JSON.stringify(factor.value)
+            : String(factor.value),
     }));
 
     if (isEditMode && marketId) {

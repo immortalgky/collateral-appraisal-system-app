@@ -5,13 +5,22 @@ export function readFactorValue(s: {
 }) {
   switch (s.dataType) {
     case 'Numeric':
-      return s.fieldDecimal;
+      return s.value;
     case 'Text':
     case 'Dropdown':
+    case 'CheckboxGroup':
     case 'Data':
-      return s.value; // confirm enum name
-    default:
-      return '';
+    default: {
+      if (!s.value) return '';
+      // Handle JSON array strings like '["01","02","03"]' → '01,02,03'
+      if (s.value.startsWith('[')) {
+        try {
+          const arr = JSON.parse(s.value);
+          if (Array.isArray(arr)) return arr.join(',');
+        } catch { /* not valid JSON, return as-is */ }
+      }
+      return s.value;
+    }
   }
 }
 
@@ -22,10 +31,12 @@ export function toNum(v: unknown, fallback: number): number {
 }
 
 /** Compute the number of full years from a date string until today. */
-export function yearDiffFromToday(dateStr: string | null | undefined): number {
-  if (!dateStr) return 0;
+export function yearDiffFromToday(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null;
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return 0;
-  const diffMs = Date.now() - d.getTime();
-  return Math.max(0, Math.round(diffMs / (365.25 * 24 * 60 * 60 * 1000)));
+  const now = new Date();
+  const monthDiff =
+    (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+  return Math.max(0, Math.round(monthDiff / 12));
 }

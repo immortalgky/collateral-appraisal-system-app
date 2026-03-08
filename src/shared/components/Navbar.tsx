@@ -4,14 +4,16 @@ import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@shared/components/LanguageSwitcher';
 
 const searchFilters = [
-  { id: 'all', label: 'All', icon: 'layer-group', color: 'gray' },
-  { id: 'requests', label: 'Requests', icon: 'folder-open', color: 'blue' },
-  { id: 'customers', label: 'Customers', icon: 'users', color: 'purple' },
-  { id: 'properties', label: 'Properties', icon: 'building', color: 'amber' },
-  { id: 'documents', label: 'Documents', icon: 'file-lines', color: 'teal' },
-];
+  { id: 'all', labelKey: 'search.filters.all', icon: 'layer-group', color: 'gray' },
+  { id: 'requests', labelKey: 'search.filters.requests', icon: 'folder-open', color: 'blue' },
+  { id: 'customers', labelKey: 'search.filters.customers', icon: 'users', color: 'purple' },
+  { id: 'properties', labelKey: 'search.filters.properties', icon: 'building', color: 'amber' },
+  { id: 'documents', labelKey: 'search.filters.documents', icon: 'file-lines', color: 'teal' },
+] as const;
 
 const filterColorStyles: Record<string, { bg: string; text: string; activeBg: string }> = {
   gray: { bg: 'bg-gray-100', text: 'text-gray-500', activeBg: 'bg-gray-200' },
@@ -26,6 +28,7 @@ export default function Navbar({
 }: {
   userNavigation: Record<string, string>[];
 }): React.ReactNode {
+  const { t } = useTranslation('nav');
   const currentUser = useAuthStore(state => state.user);
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -78,13 +81,13 @@ export default function Navbar({
                 type="button"
                 onClick={() => setSearchFocused(true)}
                 className={clsx(
-                  'flex items-center gap-1.5 ml-2 px-2 py-1 rounded-lg text-xs font-medium transition-all',
+                  'flex items-center gap-1.5 ml-2 px-2 h-7 rounded-lg text-xs font-medium transition-all',
                   activeColorStyle.bg,
                   activeColorStyle.text,
                 )}
               >
                 <Icon name={activeFilter.icon} style="solid" className="size-3" />
-                <span className="hidden sm:inline">{activeFilter.label}</span>
+                <span className="hidden sm:inline leading-none">{t(activeFilter.labelKey)}</span>
                 <Icon name="chevron-down" style="solid" className="size-2.5 opacity-60" />
               </button>
 
@@ -100,7 +103,7 @@ export default function Navbar({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
-                placeholder={`Search ${activeFilter.id === 'all' ? 'everything' : activeFilter.label.toLowerCase()}...`}
+                placeholder={t('search.placeholder')}
                 aria-label="Search"
                 className="block w-full bg-transparent py-2.5 pl-2 pr-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none ring-0 border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none"
                 style={{ outline: 'none', boxShadow: 'none' }}
@@ -113,7 +116,7 @@ export default function Navbar({
                 {/* Filter Options */}
                 <div className="p-2 border-b border-gray-100">
                   <p className="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Search in
+                    {t('search.searchIn')}
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {searchFilters.map(filter => {
@@ -137,7 +140,7 @@ export default function Navbar({
                           )}
                         >
                           <Icon name={filter.icon} style="solid" className="size-3.5" />
-                          {filter.label}
+                          {t(filter.labelKey)}
                         </button>
                       );
                     })}
@@ -147,7 +150,7 @@ export default function Navbar({
                 {/* Recent Searches or Quick Actions */}
                 <div className="p-2">
                   <p className="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Recent
+                    {t('search.recent')}
                   </p>
                   <div className="mt-1 space-y-0.5">
                     {['REQ-2024-001', 'John Smith', 'Bangkok property'].map((item, idx) => (
@@ -170,7 +173,7 @@ export default function Navbar({
                 {/* Search Tips */}
                 <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
                   <p className="text-xs text-gray-500">
-                    <span className="font-medium">Tip:</span> Use filters to narrow down results
+                    <span className="font-medium">Tip:</span> {t('search.tip')}
                   </p>
                 </div>
               </div>
@@ -180,12 +183,15 @@ export default function Navbar({
 
         {/* Right side actions */}
         <div className="flex items-center gap-x-3 lg:gap-x-4">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
           {/* Notification button */}
           <button
             type="button"
             className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
           >
-            <span className="sr-only">View notifications</span>
+            <span className="sr-only">{t('notifications')}</span>
             <Icon name="bell" style="regular" className="size-5" />
             {/* Notification indicator */}
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white" />
@@ -241,7 +247,7 @@ export default function Navbar({
                       style="regular"
                       className="size-4 text-gray-400"
                     />
-                    {item.name}
+                    {item.nameKey ? t(item.nameKey as never) : item.name}
                   </a>
                 </MenuItem>
               ))}

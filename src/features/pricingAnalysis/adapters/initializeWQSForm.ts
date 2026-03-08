@@ -61,6 +61,7 @@ function buildFinalValue(property: Record<string, unknown>) {
     lowestEstimate: 0,
     highestEstimate: 0,
     appraisalPriceRounded: 0,
+    priceDifferentiate: 0,
   };
 }
 

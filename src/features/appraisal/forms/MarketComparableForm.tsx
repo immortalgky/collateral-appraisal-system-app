@@ -7,7 +7,9 @@ import {
   useGetMarketComparableTemplateById,
 } from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
-import Icon from '@/shared/components/Icon'; // SectionRow component for consistent section styling with icons
+import Icon from '@/shared/components/Icon';
+import { getTranslatedFactorName } from '@shared/utils/translationUtils';
+import { useLocaleStore } from '@shared/store';
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -57,6 +59,7 @@ const FactorsSkeleton = () => (
 );
 
 const MarketComparableForm = () => {
+  const language = useLocaleStore((s) => s.language);
   const { getValues, setValue, reset } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
   const isInitialSetup = useRef(true);
@@ -261,7 +264,7 @@ const MarketComparableForm = () => {
               {factors.map((fac: any, index: number) => {
                 const fields: FormField[] = [buildFormField(fac, index)];
                 return (
-                  <SectionRow key={fac.factorCode} title={fac.factorName} icon="sliders">
+                  <SectionRow key={fac.factorCode} title={getTranslatedFactorName(fac.translations, language)} icon="sliders">
                     <FormFields fields={fields} />
                   </SectionRow>
                 );

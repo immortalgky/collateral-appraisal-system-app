@@ -1,4 +1,4 @@
-import type { NavItem, NavItemWithAccess, WorkflowActivity } from './navigation';
+import type { NavContext, NavItem, NavItemWithAccess, WorkflowActivity } from './navigation';
 
 /**
  * Application-specific navigation for appraisal detail pages.
@@ -61,6 +61,23 @@ export const applicationNavigation: NavItem[] = [
       'appraisal_approver',
     ],
     editableRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
+  },
+  {
+    name: 'Property Information (PMA)',
+    href: '/appraisal/:appraisalId/property-pma',
+    icon: 'buildings',
+    iconColor: 'text-purple-500',
+    iconStyle: 'solid',
+    allowedRoles: [
+      'admin',
+      'task_assigner',
+      'external_appraiser',
+      'internal_appraiser',
+      'appraisal_checker',
+      'appraisal_approver',
+    ],
+    editableRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
+    showWhen: (ctx) => ctx.isPma === true,
   },
   {
     name: 'Document Checklist',
@@ -209,18 +226,24 @@ function canRoleEdit(item: NavItem, role: WorkflowActivity): boolean {
 }
 
 /**
- * Filter navigation items based on user's role (only returns viewable items)
+ * Filter navigation items based on user's role and optional context conditions
  */
-function filterNavItemsByRole(items: NavItem[], role: WorkflowActivity): NavItem[] {
-  return items.filter(item => canRoleView(item, role));
+function filterNavItemsByRole(items: NavItem[], role: WorkflowActivity, context?: NavContext): NavItem[] {
+  return items.filter(item => {
+    if (item.showWhen && (!context || !item.showWhen(context))) return false;
+    return canRoleView(item, role);
+  });
 }
 
 /**
  * Get navigation items with resolved access levels for a role
  */
-function getNavItemsWithAccess(items: NavItem[], role: WorkflowActivity): NavItemWithAccess[] {
+function getNavItemsWithAccess(items: NavItem[], role: WorkflowActivity, context?: NavContext): NavItemWithAccess[] {
   return items
-    .filter(item => canRoleView(item, role))
+    .filter(item => {
+      if (item.showWhen && (!context || !item.showWhen(context))) return false;
+      return canRoleView(item, role);
+    })
     .map(item => ({
       ...item,
       canView: true, // Already filtered for viewable items
@@ -248,8 +271,9 @@ export const getAppraisalNavigation = ({ appraisalId, requestId }: AppraisalNavP
 export const getAppraisalNavigationByRole = (
   { appraisalId, requestId }: AppraisalNavParams,
   role: WorkflowActivity,
+  context?: NavContext,
 ): NavItem[] =>
-  filterNavItemsByRole(applicationNavigation, role).map(item => ({
+  filterNavItemsByRole(applicationNavigation, role, context).map(item => ({
     ...item,
     href: item.href.replace(':appraisalId', appraisalId).replace(':requestId', requestId ?? ''),
   }));
@@ -279,8 +303,9 @@ export const getFooterNavigationByRole = (role: WorkflowActivity): NavItem[] =>
 export const getAppraisalNavigationWithAccess = (
   { appraisalId, requestId }: AppraisalNavParams,
   role: WorkflowActivity,
+  context?: NavContext,
 ): NavItemWithAccess[] =>
-  getNavItemsWithAccess(applicationNavigation, role).map(item => ({
+  getNavItemsWithAccess(applicationNavigation, role, context).map(item => ({
     ...item,
     href: item.href.replace(':appraisalId', appraisalId).replace(':requestId', requestId ?? ''),
   }));

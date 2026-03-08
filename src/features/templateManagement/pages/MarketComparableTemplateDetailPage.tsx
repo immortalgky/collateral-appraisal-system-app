@@ -70,7 +70,7 @@ const MarketComparableTemplateDetailPage = () => {
     }
   };
 
-  const handleAddFactors = (selections: { factorId: string; isMandatory: boolean }[]) => {
+  const handleAddFactors = (selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[]) => {
     if (!templateId) return;
     const baseSequence = (templateDetail?.factors?.length ?? 0) + 1;
     let completed = 0;

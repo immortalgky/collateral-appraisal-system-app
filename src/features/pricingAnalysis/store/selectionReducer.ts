@@ -84,8 +84,8 @@ export type SelectionAction =
  */
 const getVisibleApproach = (approaches: Approach[] = []) => {
   return approaches
-    .filter(appr => appr.methods.some(method => method.isSelected))
-    .map(appr => ({ ...appr, methods: appr.methods.filter(method => method.isSelected) }));
+    .filter(appr => appr.methods.some(method => method.isIncluded))
+    .map(appr => ({ ...appr, methods: appr.methods.filter(method => method.isIncluded) }));
 };
 
 /** convert visible approaches and methods into one string to compare changes */
@@ -102,12 +102,12 @@ const selectionKey = (approaches: Approach[] = []) => {
     .join('}');
 };
 
-const checkMethodIsCandidated = (methods: Method[]): string | null => {
-  return methods.find(method => method.isCandidated)?.methodType ?? null;
+const checkMethodIsSelected = (methods: Method[]): string | null => {
+  return methods.find(method => method.isSelected)?.methodType ?? null;
 };
 
-const checkApproachIsCandidated = (approaches: Approach[]): string | null => {
-  return approaches.find(appr => appr.isCandidated)?.approachType ?? null;
+const checkApproachIsSelected = (approaches: Approach[]): string | null => {
+  return approaches.find(appr => appr.isSelected)?.approachType ?? null;
 };
 
 const cloneApproaches = (approaches: Approach[]): Approach[] => {
@@ -175,18 +175,18 @@ export function approachMethodReducer(
           /** if approach matches the payload, loop finds a matching method type */
           return {
             ...appr,
-            /** either select or deselect, reset approach's appraisal value to 0 and reset candidate */
+            /** either select or deselect, reset approach's appraisal value to 0 and reset selection */
             appraisalValue: 0,
-            isCandidated: false,
+            isSelected: false,
             methods: appr.methods.map(method => {
               /** if a method type not matches, return it */
               if (method.methodType !== action.payload.methodType) return method;
 
-              /** if a method type is match and method is selected, flip the status to false */
-              if (method.isSelected) return { ...method, appraisalValue: 0, isSelected: false };
+              /** if a method type is match and method is included, flip the status to false */
+              if (method.isIncluded) return { ...method, appraisalValue: 0, isIncluded: false };
 
-              /** if a method type is match and method is not selected, flip status to true */
-              return { ...method, appraisalValue: 0, isSelected: true };
+              /** if a method type is match and method is not included, flip status to true */
+              return { ...method, appraisalValue: 0, isIncluded: true };
             }),
           };
         }),
@@ -217,17 +217,17 @@ export function approachMethodReducer(
 
       let visibleApproach = getVisibleApproach(state.editDraft);
 
-      /** If changed, reset candidate appraisal value of approach by 0 */
+      /** If changed, reset selection and appraisal value of approach by 0 */
       if (changed) {
         visibleApproach = visibleApproach.map(appr => ({
           ...appr,
-          /** reset candidate and approach's appraisal value to 0  */
+          /** reset selection and approach's appraisal value to 0  */
           appraisalValue: 0,
-          isCandidated: false,
+          isSelected: false,
           methods: appr.methods.map(method => {
             return {
               ...method,
-              isCandidated: false,
+              isSelected: false,
             };
           }),
         }));
@@ -272,8 +272,8 @@ export function approachMethodReducer(
         summarySelected: state.summarySelected.map(appr => {
           if (appr.approachType !== action.payload.approachType) return appr;
 
-          const candidatedMethod = checkMethodIsCandidated(appr.methods);
-          if (action.payload.methodType === candidatedMethod) return appr;
+          const selectedMethod = checkMethodIsSelected(appr.methods);
+          if (action.payload.methodType === selectedMethod) return appr;
 
           return {
             ...appr,
@@ -282,7 +282,7 @@ export function approachMethodReducer(
                 ?.appraisalValue ?? 0,
             methods: appr.methods.map(method => ({
               ...method,
-              isCandidated: method.methodType === action.payload.methodType,
+              isSelected: method.methodType === action.payload.methodType,
             })),
           };
         }),
@@ -293,21 +293,21 @@ export function approachMethodReducer(
     case 'SUMMARY_SELECT_APPROACH': {
       if (state.summarySelected == null) return state;
 
-      // every approach must got selected method
-      const allApproachHavecandidated = state.summarySelected.every(appr =>
-        appr.methods.some(method => method.isCandidated),
+      // every approach must have a selected method
+      const allApproachHaveSelected = state.summarySelected.every(appr =>
+        appr.methods.some(method => method.isSelected),
       );
 
-      if (!allApproachHavecandidated) return state;
+      if (!allApproachHaveSelected) return state;
 
-      const candidatedApproach = checkApproachIsCandidated(state.summarySelected);
-      if (action.payload.approachType === candidatedApproach) return state;
+      const selectedApproach = checkApproachIsSelected(state.summarySelected);
+      if (action.payload.approachType === selectedApproach) return state;
 
       const nextState: SelectionState = {
         ...state,
         summarySelected: state.summarySelected.map(appr => ({
           ...appr,
-          isCandidated: appr.approachType === action.payload.approachType,
+          isSelected: appr.approachType === action.payload.approachType,
         })),
       };
       return nextState;
@@ -359,19 +359,22 @@ export function approachMethodReducer(
       const nextState: SelectionState = {
         ...state,
         summarySelected: state.summarySelected.map(appr => {
+          const updatedMethods = appr.methods.map(method => {
+            if (
+              method.methodType === action.payload.methodType &&
+              appr.approachType === action.payload.approachType
+            )
+              return {
+                ...method,
+                appraisalValue: action.payload.appraisalValue,
+              };
+            return method;
+          });
+          const selectedMethod = updatedMethods.find(m => m.isSelected);
           return {
             ...appr,
-            methods: appr.methods.map(method => {
-              if (
-                method.methodType === action.payload.methodType &&
-                appr.approachType === action.payload.approachType
-              )
-                return {
-                  ...method,
-                  appraisalValue: action.payload.appraisalValue,
-                };
-              return method;
-            }),
+            methods: updatedMethods,
+            appraisalValue: selectedMethod?.appraisalValue ?? appr.appraisalValue,
           };
         }),
       };

@@ -12,6 +12,9 @@ export interface AppraisalData {
   status?: string;
   appraisalType?: string;
   priority?: string;
+
+  /** Whether this appraisal is a PMA (Property Market Assessment) */
+  isPma?: boolean;
 }
 
 interface AppraisalContextValue {
@@ -58,4 +61,13 @@ export function useAppraisalContext(): AppraisalContextValue {
 export function useAppraisalRequestId(): string | undefined {
   const context = useContext(AppraisalContext);
   return context?.appraisal?.requestId;
+}
+
+/**
+ * Hook to get the isPma flag from appraisal context
+ * Returns false if not in appraisal context or still loading
+ */
+export function useAppraisalIsPma(): boolean {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.isPma ?? false;
 }

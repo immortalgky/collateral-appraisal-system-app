@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigation';
 
 type SidebarProps = {
@@ -172,6 +173,7 @@ function MenuItem({ item, isChild = false, collapsed = false }: { item: NavItem;
 }
 
 export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNode {
+  const { t } = useTranslation('nav');
   const sidebarOpen = useUIStore(state => state.sidebarOpen);
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
 
@@ -221,7 +223,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
             {/* Navigation */}
             <nav className="flex flex-1 flex-col px-4 py-4">
               <div className="px-3 mb-2">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.menu')}</span>
               </div>
 
               <ul className="flex flex-col gap-1">
@@ -232,7 +234,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 
               <div className="mt-auto pt-4 border-t border-gray-100">
                 <div className="px-3 mb-2">
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">System</span>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.system')}</span>
                 </div>
                 <ul className="flex flex-col gap-1">
                   <li>
@@ -243,7 +245,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                       <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
                         <Icon name="gear" style="solid" className="size-4 text-gray-500" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700">Settings</span>
+                      <span className="text-sm font-medium text-gray-700">{t('sidebar.settings')}</span>
                     </Link>
                   </li>
                 </ul>
@@ -257,6 +259,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 }
 
 export default function Sidebar({ navigation, logo }: SidebarProps): React.ReactNode {
+  const { t } = useTranslation('nav');
   const location = useLocation();
   const isSettingsActive = location.pathname === '/settings';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
@@ -297,7 +300,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
         <nav className={clsx('flex flex-1 flex-col py-4 transition-all duration-300', sidebarCollapsed ? 'px-1' : 'px-4')}>
           {!sidebarCollapsed && (
             <div className="px-3 mb-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.menu')}</span>
             </div>
           )}
 
@@ -311,14 +314,14 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
           <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100')}>
             {!sidebarCollapsed && (
               <div className="px-3 mb-2">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">System</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.system')}</span>
               </div>
             )}
             <ul className="flex flex-col gap-1">
               <li>
                 <Link
                   to="/settings"
-                  title={sidebarCollapsed ? 'Settings' : undefined}
+                  title={sidebarCollapsed ? t('sidebar.settings') : undefined}
                   className={clsx(
                     'group flex items-center py-2.5 px-3 rounded-xl transition-all duration-200',
                     isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50',
@@ -329,7 +332,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
                     <Icon name="gear" style="solid" className="size-4 text-gray-500" />
                   </div>
                   {!sidebarCollapsed && (
-                    <span className="text-sm font-medium text-gray-700">Settings</span>
+                    <span className="text-sm font-medium text-gray-700">{t('sidebar.settings')}</span>
                   )}
                 </Link>
               </li>
