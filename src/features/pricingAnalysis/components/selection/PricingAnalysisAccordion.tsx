@@ -6,6 +6,7 @@ import { PropertyCardContent } from '@features/appraisal/components/PropertyCard
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PropertyGroupItemDto } from '@features/appraisal/api';
+import type { PricingAnalysisConfigType } from '../../schemas';
 import { mapGroupItemToPropertyItem } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
 
 interface PricingAnalysisAccordionProps {
@@ -38,6 +39,17 @@ interface PricingAnalysisAccordionProps {
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
+
+  onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
+  onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
+  pricingConfiguration?: PricingAnalysisConfigType[];
+  deleteConfirm?: {
+    isOpen: boolean;
+    hasData: boolean;
+    isDeleting: boolean;
+    confirmDelete: () => void;
+    cancelDelete: () => void;
+  };
 }
 
 export const PricingAnalysisAccordion = ({
@@ -62,6 +74,11 @@ export const PricingAnalysisAccordion = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
+
+  onAddMethod,
+  onDeleteMethod,
+  pricingConfiguration,
+  deleteConfirm,
 }: PricingAnalysisAccordionProps) => {
   /** Map group properties to PropertyItem for rendering */
   const propertyItems = useMemo(
@@ -103,9 +120,9 @@ export const PricingAnalysisAccordion = ({
         <div className="col-span-4 flex items-center justify-end gap-1">
           <div className="flex flex-row gap-1 items-center justify-end">
             <span>
-              {state.summarySelected?.find(appr => appr.isCandidated)
+              {state.summarySelected?.find(appr => appr.isSelected)
                 ? (Number(
-                    state.summarySelected?.find(appr => appr.isCandidated)?.appraisalValue,
+                    state.summarySelected?.find(appr => appr.isSelected)?.appraisalValue,
                   ).toLocaleString() ?? 0)
                 : 0}
             </span>
@@ -178,6 +195,10 @@ export const PricingAnalysisAccordion = ({
                 onCancelEditMode={onCancelEditMode}
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCandidateApproach={onSelectCandidateApproach}
+                onAddMethod={onAddMethod}
+                onDeleteMethod={onDeleteMethod}
+                pricingConfiguration={pricingConfiguration}
+                deleteConfirm={deleteConfirm}
               />
             </div>
           </div>

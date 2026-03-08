@@ -993,10 +993,16 @@ const MethodDto = z
     methodType: z.string(),
     methodValue: z.number().nullable(),
     isSelected: z.boolean(),
+    comparativeAnalysisTemplateId: z.string().uuid().nullable(),
   })
   .passthrough();
 const ApproachDto = z
-  .object({ id: z.string().uuid(), approachType: z.string(), methods: z.array(MethodDto) })
+  .object({
+    id: z.string().uuid(),
+    approachType: z.string(),
+    isSelected: z.boolean(),
+    methods: z.array(MethodDto),
+  })
   .passthrough();
 const GetPricingAnalysisResponse = z
   .object({
@@ -1036,6 +1042,7 @@ const UpdateFinalValueRequest = z
     landArea: z.number().nullish().default(null),
     appraisalPrice: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
+    priceDifferentiate: z.number().nullish().default(null),
     hasBuildingCost: z.boolean().nullish().default(null),
     buildingCost: z.number().nullish().default(null),
     appraisalPriceWithBuilding: z.number().nullish().default(null),
@@ -1051,6 +1058,7 @@ const UpdateFinalValueResponse = z
     landArea: z.number().nullable(),
     appraisalPrice: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
+    priceDifferentiate: z.number().nullable(),
     hasBuildingCost: z.boolean(),
     buildingCost: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
@@ -1154,6 +1162,7 @@ const SetFinalValueRequest = z
     landArea: z.number().nullish().default(null),
     appraisalPrice: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
+    priceDifferentiate: z.number().nullish().default(null),
     hasBuildingCost: z.boolean().nullish().default(null),
     buildingCost: z.number().nullish().default(null),
     appraisalPriceWithBuilding: z.number().nullish().default(null),
@@ -1169,6 +1178,7 @@ const SetFinalValueResponse = z
     landArea: z.number().nullable(),
     appraisalPrice: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
+    priceDifferentiate: z.number().nullable(),
     hasBuildingCost: z.boolean(),
     buildingCost: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
@@ -1176,7 +1186,11 @@ const SetFinalValueResponse = z
   })
   .passthrough();
 const SelectMethodResponse = z
-  .object({ id: z.string().uuid(), methodType: z.string(), status: z.string() })
+  .object({
+    id: z.string().uuid(),
+    methodType: z.string(),
+    finalAppraisedValue: z.number().nullable(),
+  })
   .passthrough();
 const ComparativeFactorInput = z
   .object({
@@ -1196,7 +1210,10 @@ const FactorScoreInput = z
     displaySequence: z.number().int(),
     value: z.string().nullish().default(null),
     score: z.number().nullish().default(null),
+    intensity: z.number().nullish().default(null),
     adjustmentPct: z.number().nullish().default(null),
+    adjustmentAmt: z.number().nullish().default(null),
+    comparisonResult: z.string().nullish().default(null),
     remarks: z.string().nullish().default(null),
   })
   .passthrough();
@@ -1206,13 +1223,26 @@ const CalculationInput = z
     offeringPrice: z.number().nullish().default(null),
     offeringPriceUnit: z.string().nullish().default(null),
     adjustOfferPricePct: z.number().nullish().default(null),
+    adjustOfferPriceAmt: z.number().nullish().default(null),
     sellingPrice: z.number().nullish().default(null),
+    sellingPriceUnit: z.string().nullish().default(null),
     buySellYear: z.number().int().nullish().default(null),
     buySellMonth: z.number().int().nullish().default(null),
     adjustedPeriodPct: z.number().nullish().default(null),
     cumulativeAdjPeriod: z.number().nullish().default(null),
+    landAreaDeficient: z.number().nullish().default(null),
+    landAreaDeficientUnit: z.string().nullish().default(null),
+    landPrice: z.number().nullish().default(null),
+    landValueAdjustment: z.number().nullish().default(null),
+    usableAreaDeficient: z.number().nullish().default(null),
+    usableAreaDeficientUnit: z.string().nullish().default(null),
+    usableAreaPrice: z.number().nullish().default(null),
+    buildingValueAdjustment: z.number().nullish().default(null),
+    totalFactorDiffPct: z.number().nullish().default(null),
+    totalFactorDiffAmt: z.number().nullish().default(null),
     totalAdjustedValue: z.number().nullish().default(null),
     weight: z.number().nullish().default(null),
+    weightedAdjustedValue: z.number().nullish().default(null),
   })
   .passthrough();
 const SaveComparativeAnalysisRequest = z
@@ -1220,6 +1250,8 @@ const SaveComparativeAnalysisRequest = z
     comparativeFactors: z.array(ComparativeFactorInput),
     factorScores: z.array(FactorScoreInput),
     calculations: z.array(CalculationInput),
+    comparativeAnalysisTemplateId: z.string().uuid().nullish().default(null),
+    appraisalValue: z.number().nullish().default(null),
   })
   .passthrough();
 const SaveComparativeAnalysisResponse = z
@@ -1232,6 +1264,9 @@ const SaveComparativeAnalysisResponse = z
     success: z.boolean(),
   })
   .passthrough();
+const ResetPricingMethodResult = z
+  .object({ methodId: z.string().uuid(), success: z.boolean() })
+  .passthrough();
 const RecalculateFactorsResponse = z
   .object({ pricingCalculationId: z.string().uuid(), totalFactorDiffPct: z.number().nullable() })
   .passthrough();
@@ -1243,7 +1278,15 @@ const LinkComparableRequest = z
   })
   .passthrough();
 const LinkComparableResponse = z
-  .object({ linkId: z.string().uuid(), calculationId: z.string().uuid() })
+  .object({
+    linkId: z.string().uuid(),
+    calculationId: z.string().uuid(),
+    offerPrice: z.number().nullable(),
+    offerPriceAdjustmentPercent: z.number().nullable(),
+    offerPriceAdjustmentAmount: z.number().nullable(),
+    salePrice: z.number().nullable(),
+    saleDate: z.string().datetime({ offset: true }).nullable(),
+  })
   .passthrough();
 const GetPricingAnalysisByGroupResponse = z
   .object({
@@ -1291,7 +1334,10 @@ const FactorScoreDto = z
     value: z.string().nullable(),
     score: z.number().nullable(),
     weightedScore: z.number().nullable(),
+    intensity: z.number().nullable(),
     adjustmentPct: z.number().nullable(),
+    adjustmentAmt: z.number().nullable(),
+    comparisonResult: z.string().nullable(),
     remarks: z.string().nullable(),
   })
   .passthrough();
@@ -1303,13 +1349,38 @@ const CalculationDto = z
     offeringPrice: z.number().nullable(),
     offeringPriceUnit: z.string().nullable(),
     adjustOfferPricePct: z.number().nullable(),
+    adjustOfferPriceAmt: z.number().nullable(),
     sellingPrice: z.number().nullable(),
+    sellingPriceUnit: z.string().nullable(),
     buySellYear: z.number().int().nullable(),
     buySellMonth: z.number().int().nullable(),
     adjustedPeriodPct: z.number().nullable(),
     cumulativeAdjPeriod: z.number().nullable(),
+    landAreaDeficient: z.number().nullable(),
+    landAreaDeficientUnit: z.string().nullable(),
+    landPrice: z.number().nullable(),
+    landValueAdjustment: z.number().nullable(),
+    usableAreaDeficient: z.number().nullable(),
+    usableAreaDeficientUnit: z.string().nullable(),
+    usableAreaPrice: z.number().nullable(),
+    buildingValueAdjustment: z.number().nullable(),
     totalFactorDiffPct: z.number().nullable(),
+    totalFactorDiffAmt: z.number().nullable(),
     totalAdjustedValue: z.number().nullable(),
+    weight: z.number().nullable(),
+    weightedAdjustedValue: z.number().nullable(),
+  })
+  .passthrough();
+const RsqResultDto = z
+  .object({
+    id: z.string().uuid(),
+    coefficientOfDecision: z.number().nullable(),
+    standardError: z.number().nullable(),
+    intersectionPoint: z.number().nullable(),
+    slope: z.number().nullable(),
+    rsqFinalValue: z.number().nullable(),
+    lowestEstimate: z.number().nullable(),
+    highestEstimate: z.number().nullable(),
   })
   .passthrough();
 const GetComparativeFactorsResponse = z
@@ -1317,10 +1388,13 @@ const GetComparativeFactorsResponse = z
     pricingAnalysisId: z.string().uuid(),
     methodId: z.string().uuid(),
     methodType: z.string(),
+    comparativeAnalysisTemplateId: z.string().uuid().nullable(),
+    methodValue: z.number().nullable(),
     linkedComparables: z.array(LinkedComparableDto),
     comparativeFactors: z.array(ComparativeFactorDto),
     factorScores: z.array(FactorScoreDto),
     calculations: z.array(CalculationDto),
+    rsqResult: RsqResultDto.nullish().default(null),
   })
   .passthrough();
 const CompletePricingAnalysisRequest = z
@@ -1392,12 +1466,14 @@ const UpdateMarketComparableTemplateRequest = z
   })
   .passthrough();
 const UpdateMarketComparableTemplateResponse = z.object({ id: z.string().uuid() }).passthrough();
+const FactorTranslationDto = z
+  .object({ language: z.string(), factorName: z.string() })
+  .passthrough();
 const TemplateFactorDto = z
   .object({
     templateFactorId: z.string().uuid(),
     factorId: z.string().uuid(),
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.number().int().nullable(),
@@ -1406,6 +1482,7 @@ const TemplateFactorDto = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean(),
     isActive: z.boolean(),
+    translations: z.array(FactorTranslationDto),
   })
   .passthrough();
 const MarketComparableTemplateDetailDto = z
@@ -1478,7 +1555,6 @@ const FactorDataDto = z
     id: z.string().uuid(),
     factorId: z.string().uuid(),
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: FactorDataType,
     fieldLength: z.number().int().nullable(),
@@ -1486,6 +1562,7 @@ const FactorDataDto = z
     parameterGroup: z.string().nullable(),
     value: z.string().nullable(),
     otherRemarks: z.string().nullable(),
+    translations: z.array(FactorTranslationDto),
   })
   .partial()
   .passthrough();
@@ -1591,14 +1668,17 @@ const AddMarketComparableImageRequest = z
   })
   .passthrough();
 const AddMarketComparableImageResponse = z.object({ imageId: z.string().uuid() }).passthrough();
+const FactorTranslationRequest = z
+  .object({ language: z.string(), factorName: z.string() })
+  .passthrough();
 const UpdateMarketComparableFactorRequest = z
   .object({
-    factorName: z.string(),
     fieldName: z.string(),
-    dataType: z.string().nullable(),
+    dataType: z.string(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
+    translations: z.array(FactorTranslationRequest),
   })
   .passthrough();
 const UpdateMarketComparableFactorResponse = z.object({ id: z.string().uuid() }).passthrough();
@@ -1606,13 +1686,13 @@ const MarketComparableFactorDto = z
   .object({
     id: z.string().uuid(),
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
     isActive: z.boolean(),
+    translations: z.array(FactorTranslationDto),
   })
   .passthrough();
 const GetMarketComparableFactorsResponse = z
@@ -1621,12 +1701,12 @@ const GetMarketComparableFactorsResponse = z
 const CreateMarketComparableFactorRequest = z
   .object({
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
+    translations: z.array(FactorTranslationRequest),
   })
   .passthrough();
 const CreateMarketComparableFactorResponse = z.object({ id: z.string().uuid() }).passthrough();
@@ -1798,14 +1878,106 @@ const GetDocumentChecklistResponse = z
     propertyTypeGroups: z.array(PropertyTypeDocumentGroupDto),
   })
   .passthrough();
-const UpdateTemplateRequest = z
+const SaveDecisionSummaryRequest = z
+  .object({
+    isPriceVerified: z.boolean().nullable().default(null),
+    conditionType: z.string().nullable().default(null),
+    condition: z.string().nullable().default(null),
+    remarkType: z.string().nullable().default(null),
+    remark: z.string().nullable().default(null),
+    appraiserOpinionType: z.string().nullable().default(null),
+    appraiserOpinion: z.string().nullable().default(null),
+    committeeOpinionType: z.string().nullable().default(null),
+    committeeOpinion: z.string().nullable().default(null),
+    totalAppraisalPriceReview: z.number().nullable().default(null),
+    additionalAssumptions: z.string().nullable().default(null),
+  })
+  .partial()
+  .passthrough();
+const SaveDecisionSummaryResponse = z
+  .object({
+    id: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    isPriceVerified: z.boolean().nullable(),
+    conditionType: z.string().nullable(),
+    condition: z.string().nullable(),
+    remarkType: z.string().nullable(),
+    remark: z.string().nullable(),
+    appraiserOpinionType: z.string().nullable(),
+    appraiserOpinion: z.string().nullable(),
+    committeeOpinionType: z.string().nullable(),
+    committeeOpinion: z.string().nullable(),
+    totalAppraisalPriceReview: z.number().nullable(),
+    additionalAssumptions: z.string().nullable(),
+  })
+  .passthrough();
+const ApproachMatrixRow = z
+  .object({
+    propertyGroupId: z.string().uuid(),
+    groupNumber: z.number().int(),
+    approachType: z.string(),
+    finalValue: z.number().nullable(),
+    finalValueRounded: z.number().nullable(),
+    groupSummaryValue: z.number().nullable(),
+  })
+  .passthrough();
+const GovernmentPriceRow = z
+  .object({
+    titleNumber: z.string().nullable(),
+    areaSquareWa: z.number().nullable(),
+    isMissingFromSurvey: z.boolean(),
+    governmentPricePerSqWa: z.number().nullable(),
+    governmentPrice: z.number().nullable(),
+  })
+  .passthrough();
+const DecisionApprovalListItem = z
+  .object({
+    committeeMemberId: z.string().uuid(),
+    memberName: z.string(),
+    role: z.string(),
+    vote: z.string().nullable(),
+    voteLabel: z.string(),
+    remark: z.string().nullable(),
+    votedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const GetDecisionSummaryResponse = z
+  .object({
+    approachMatrix: z.array(ApproachMatrixRow),
+    totalAppraisalPrice: z.number(),
+    forceSellingPrice: z.number(),
+    buildingInsurance: z.number(),
+    governmentPrices: z.array(GovernmentPriceRow),
+    governmentPriceTotalArea: z.number(),
+    governmentPriceAvgPerSqWa: z.number(),
+    totalAppraisalPriceReview: z.number().nullable(),
+    forceSellingPriceReview: z.number().nullable(),
+    buildingInsuranceReview: z.number(),
+    committeeName: z.string().nullable(),
+    reviewStatus: z.string().nullable(),
+    reviewId: z.string().uuid().nullable(),
+    approvalList: z.array(DecisionApprovalListItem).nullable(),
+    decisionId: z.string().uuid().nullable(),
+    isPriceVerified: z.boolean().nullable(),
+    conditionType: z.string().nullable(),
+    condition: z.string().nullable(),
+    remarkType: z.string().nullable(),
+    remark: z.string().nullable(),
+    appraiserOpinionType: z.string().nullable(),
+    appraiserOpinion: z.string().nullable(),
+    committeeOpinionType: z.string().nullable(),
+    committeeOpinion: z.string().nullable(),
+    additionalAssumptions: z.string().nullable(),
+  })
+  .passthrough();
+const UpdateComparativeAnalysisTemplateRequest = z
   .object({
     templateName: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean().nullable(),
   })
   .passthrough();
-const UpdateTemplateResponse = z
+const UpdateComparativeAnalysisTemplateResponse = z
   .object({
     id: z.string().uuid(),
     templateCode: z.string(),
@@ -1822,9 +1994,11 @@ const TemplateFactorDto2 = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean(),
     defaultWeight: z.number().nullable(),
+    defaultIntensity: z.number().nullable(),
+    isCalculationFactor: z.boolean(),
   })
   .passthrough();
-const GetTemplateByIdResponse = z
+const GetComparativeAnalysisTemplateByIdResponse = z
   .object({
     id: z.string().uuid(),
     templateCode: z.string(),
@@ -1832,7 +2006,8 @@ const GetTemplateByIdResponse = z
     propertyType: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean(),
-    factors: z.array(TemplateFactorDto2),
+    comparativeFactors: z.array(TemplateFactorDto2),
+    calculationFactors: z.array(z.unknown()),
   })
   .passthrough();
 const TemplateDto = z
@@ -1846,8 +2021,10 @@ const TemplateDto = z
     factorCount: z.number().int(),
   })
   .passthrough();
-const GetTemplatesResponse = z.object({ templates: z.array(TemplateDto) }).passthrough();
-const CreateTemplateRequest = z
+const GetComparativeAnalysisTemplatesResponse = z
+  .object({ templates: z.array(TemplateDto) })
+  .passthrough();
+const CreateComparativeAnalysisTemplateRequest = z
   .object({
     templateCode: z.string(),
     templateName: z.string(),
@@ -1855,7 +2032,7 @@ const CreateTemplateRequest = z
     description: z.string().nullish().default(null),
   })
   .passthrough();
-const CreateTemplateResponse = z
+const CreateComparativeAnalysisTemplateResponse = z
   .object({
     templateId: z.string().uuid(),
     templateCode: z.string(),
@@ -1871,6 +2048,8 @@ const AddFactorToTemplateRequest2 = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean().optional().default(false),
     defaultWeight: z.number().nullish().default(null),
+    defaultIntensity: z.number().nullish().default(null),
+    isCalculationFactor: z.boolean().optional().default(false),
   })
   .passthrough();
 const AddFactorToTemplateResponse2 = z
@@ -1881,7 +2060,37 @@ const AddFactorToTemplateResponse2 = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean(),
     defaultWeight: z.number().nullable(),
+    defaultIntensity: z.number().nullable(),
+    isCalculationFactor: z.boolean(),
   })
+  .passthrough();
+const SubmitVoteRequest = z
+  .object({ vote: z.string(), remark: z.string().nullable() })
+  .passthrough();
+const SubmitVoteResponse = z
+  .object({ voteId: z.string().uuid(), reviewStatus: z.string(), isAutoApproved: z.boolean() })
+  .passthrough();
+const ApprovalListItem = z
+  .object({
+    committeeMemberId: z.string().uuid(),
+    memberName: z.string(),
+    role: z.string(),
+    vote: z.string().nullable(),
+    voteLabel: z.string(),
+    remark: z.string().nullable(),
+    votedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const GetApprovalListResponse = z
+  .object({
+    committeeName: z.string().nullable(),
+    reviewStatus: z.string().nullable(),
+    reviewId: z.string().uuid().nullable(),
+    items: z.array(ApprovalListItem),
+  })
+  .passthrough();
+const AssignCommitteeResponse = z
+  .object({ reviewId: z.string().uuid(), committeeName: z.string() })
   .passthrough();
 const CommitteeDto = z
   .object({
@@ -4215,6 +4424,7 @@ export const schemas = {
   CalculationInput,
   SaveComparativeAnalysisRequest,
   SaveComparativeAnalysisResponse,
+  ResetPricingMethodResult,
   RecalculateFactorsResponse,
   LinkComparableRequest,
   LinkComparableResponse,
@@ -4224,6 +4434,7 @@ export const schemas = {
   ComparativeFactorDto,
   FactorScoreDto,
   CalculationDto,
+  RsqResultDto,
   GetComparativeFactorsResponse,
   CompletePricingAnalysisRequest,
   CompletePricingAnalysisResponse,
@@ -4237,6 +4448,7 @@ export const schemas = {
   AddApproachResponse,
   UpdateMarketComparableTemplateRequest,
   UpdateMarketComparableTemplateResponse,
+  FactorTranslationDto,
   TemplateFactorDto,
   MarketComparableTemplateDetailDto,
   GetMarketComparableTemplateByIdResponse,
@@ -4264,6 +4476,7 @@ export const schemas = {
   DeleteMarketComparableResponse,
   AddMarketComparableImageRequest,
   AddMarketComparableImageResponse,
+  FactorTranslationRequest,
   UpdateMarketComparableFactorRequest,
   UpdateMarketComparableFactorResponse,
   MarketComparableFactorDto,
@@ -4295,16 +4508,27 @@ export const schemas = {
   DocumentChecklistItemDto,
   PropertyTypeDocumentGroupDto,
   GetDocumentChecklistResponse,
-  UpdateTemplateRequest,
-  UpdateTemplateResponse,
+  SaveDecisionSummaryRequest,
+  SaveDecisionSummaryResponse,
+  ApproachMatrixRow,
+  GovernmentPriceRow,
+  DecisionApprovalListItem,
+  GetDecisionSummaryResponse,
+  UpdateComparativeAnalysisTemplateRequest,
+  UpdateComparativeAnalysisTemplateResponse,
   TemplateFactorDto2,
-  GetTemplateByIdResponse,
+  GetComparativeAnalysisTemplateByIdResponse,
   TemplateDto,
-  GetTemplatesResponse,
-  CreateTemplateRequest,
-  CreateTemplateResponse,
+  GetComparativeAnalysisTemplatesResponse,
+  CreateComparativeAnalysisTemplateRequest,
+  CreateComparativeAnalysisTemplateResponse,
   AddFactorToTemplateRequest2,
   AddFactorToTemplateResponse2,
+  SubmitVoteRequest,
+  SubmitVoteResponse,
+  ApprovalListItem,
+  GetApprovalListResponse,
+  AssignCommitteeResponse,
   CommitteeDto,
   PaginatedResultOfCommitteeDto,
   GetCommitteesResponse,
@@ -4627,9 +4851,20 @@ export type AddFactorToTemplateRequestType = z.infer<typeof AddFactorToTemplateR
 
 // Comparative Analysis Template types
 export type TemplateDtoType = z.infer<typeof TemplateDto>;
-export type GetTemplateByIdResponseType = z.infer<typeof GetTemplateByIdResponse>;
-export type GetTemplatesResponseType = z.infer<typeof GetTemplatesResponse>;
-export type CreateTemplateRequestType = z.infer<typeof CreateTemplateRequest>;
-export type UpdateTemplateRequestType = z.infer<typeof UpdateTemplateRequest>;
+export type GetComparativeAnalysisTemplateByIdResponseType = z.infer<
+  typeof GetComparativeAnalysisTemplateByIdResponse
+>;
+export type GetComparativeAnalysisTemplatesResponseType = z.infer<
+  typeof GetComparativeAnalysisTemplatesResponse
+>;
+export type CreateComparativeAnalysisTemplateRequestType = z.infer<
+  typeof CreateComparativeAnalysisTemplateRequest
+>;
+export type CreateComparativeAnalysisTemplateResponseType = z.infer<
+  typeof CreateComparativeAnalysisTemplateResponse
+>;
+export type UpdateComparativeAnalysisTemplateRequestType = z.infer<
+  typeof UpdateComparativeAnalysisTemplateRequest
+>;
 export type TemplateFactorDto2Type = z.infer<typeof TemplateFactorDto2>;
 export type AddFactorToTemplateRequest2Type = z.infer<typeof AddFactorToTemplateRequest2>;

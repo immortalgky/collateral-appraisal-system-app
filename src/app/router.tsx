@@ -30,6 +30,7 @@ import MarketComparableTemplateListPage from '@features/templateManagement/pages
 import MarketComparableTemplateDetailPage from '@features/templateManagement/pages/MarketComparableTemplateDetailPage';
 import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
+import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -191,6 +192,23 @@ export const router = createBrowserRouter([
         element: <AppointmentAndFeePage />,
       },
       {
+        path: 'property-pma',
+        children: [
+          {
+            index: true,
+            element: <PropertyInformationPage />,
+          },
+          {
+            path: 'condo/:propertyId',
+            element: <CondoPMAPage />,
+          },
+          {
+            path: 'land-building/:propertyId',
+            element: <LandBuildingPMAPage />,
+          },
+        ],
+      },
+      {
         path: 'property',
         children: [
           {
@@ -261,7 +279,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'summary',
-        element: <PlaceholderPage title="Summary & Decision" />,
+        element: <DecisionSummaryPage />,
       },
       {
         path: 'groups/:groupId/pricing-analysis',

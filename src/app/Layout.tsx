@@ -19,9 +19,10 @@ import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useUIStore } from '@shared/store';
 
 const userNavigation = [
-  { name: 'Your profile', href: '#' },
+  { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
   {
     name: 'Sign out',
+    nameKey: 'userMenu.signOut',
     href: 'https://localhost:7111/connect/logout?client_id=spa&post_logout_redirect_uri=https://localhost:3000/',
   },
 ];

@@ -11,7 +11,7 @@ import {
   getCollapsibleNavigationByRole,
   getFooterNavigationByRole,
 } from '@shared/config/appraisalNavigation';
-import { useAppraisalRequestId } from '@features/appraisal/context/AppraisalContext';
+import { useAppraisalRequestId, useAppraisalIsPma } from '@features/appraisal/context/AppraisalContext';
 
 type AppraisalSidebarProps = {
   appraisalId: string;
@@ -180,13 +180,16 @@ export function MobileAppraisalSidebar({
   const sidebarOpen = useUIStore(state => state.sidebarOpen);
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
   const requestId = useAppraisalRequestId();
+  const isPma = useAppraisalIsPma();
   const user = useUserStore(state => state.user);
   const role = user?.role ?? 'viewer';
 
+  const navContext = useMemo(() => ({ isPma }), [isPma]);
+
   // Get role-filtered navigation
   const applicationNav = useMemo(
-    () => getAppraisalNavigationByRole({ appraisalId, requestId }, role),
-    [appraisalId, requestId, role],
+    () => getAppraisalNavigationByRole({ appraisalId, requestId }, role, navContext),
+    [appraisalId, requestId, role, navContext],
   );
   const generalItems = useMemo(
     () => [...getGeneralNavigationByRole(role), ...getCollapsibleNavigationByRole(role)],
@@ -284,15 +287,18 @@ export default function AppraisalSidebar({
   logo,
 }: AppraisalSidebarProps): React.ReactNode {
   const requestId = useAppraisalRequestId();
+  const isPma = useAppraisalIsPma();
   const user = useUserStore(state => state.user);
   const role = user?.role ?? 'viewer';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
+  const navContext = useMemo(() => ({ isPma }), [isPma]);
+
   // Get role-filtered navigation
   const applicationNav = useMemo(
-    () => getAppraisalNavigationByRole({ appraisalId, requestId }, role),
-    [appraisalId, requestId, role],
+    () => getAppraisalNavigationByRole({ appraisalId, requestId }, role, navContext),
+    [appraisalId, requestId, role, navContext],
   );
   const generalItems = useMemo(
     () => [...getGeneralNavigationByRole(role), ...getCollapsibleNavigationByRole(role)],

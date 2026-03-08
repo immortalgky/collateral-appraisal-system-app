@@ -88,4 +88,5 @@ export const saleGridFieldPath = {
   usableArea: () => 'saleAdjustmentGridAppraisalPrice.usableArea',
   appraisalPrice: () => 'saleAdjustmentGridAppraisalPrice.appraisalPrice',
   appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded',
+  priceDifferentiate: () => 'saleAdjustmentGridAppraisalPrice.priceDifferentiate',
 };

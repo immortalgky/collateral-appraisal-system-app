@@ -8,7 +8,7 @@ import { COLLATERAL_TYPE } from '../data/constants';
 import toast from 'react-hot-toast';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
-import { useSaveComparativeAnalysis } from '../api';
+import { useSaveComparativeAnalysis, useResetMethod } from '../api';
 import { WQSForm } from './WQSForm';
 import type {
   CalculationType,
@@ -19,11 +19,14 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { syncWQSFormSurveys } from '@features/pricingAnalysis/adapters/syncWQSFormSurveys.ts';
 import { initializeWQSForm } from '@features/pricingAnalysis/adapters/initializeWQSForm.ts';
 import { restoreWQSFromSavedData } from '@features/pricingAnalysis/adapters/restoreWQSFromSavedData.ts';
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
+import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
+import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
 
 interface WQSPanelProps {
   activeMethod?: {
@@ -36,11 +39,13 @@ interface WQSPanelProps {
   property: Record<string, unknown> | undefined;
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
-  methodTemplates: TemplateDetailType[] | null | undefined;
+  templateList: TemplateDtoType[] | undefined;
   linkedComparables: LinkedComparableType[] | undefined;
   savedComparativeFactors?: ComparativeFactorType[];
   savedFactorScores?: FactorScoreType[];
   savedCalculations?: CalculationType[];
+  savedComparativeAnalysisTemplateId?: string | null;
+  savedMethodValue?: number | null;
   onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
@@ -51,11 +56,13 @@ export function WQSPanel({
   property,
   marketSurveys,
   allFactors,
-  methodTemplates: templates,
+  templateList,
   linkedComparables,
   savedComparativeFactors,
   savedFactorScores,
   savedCalculations,
+  savedComparativeAnalysisTemplateId,
+  savedMethodValue,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -87,14 +94,20 @@ export function WQSPanel({
   };
 
   const [collateralType, setCollateralType] = useState<string>('');
-  const [pricingTemplateType, setPricingTemplateType] = useState<string>('');
+  const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>(undefined);
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
+  // Look up template id from the list by code, then fetch detail
+  const selectedTemplateId = (templateList ?? []).find(t => t.templateCode === selectedTemplateCode)?.id;
+  const templateDetailQuery = useGetComparativeAnalysisTemplateById(selectedTemplateId);
+
   /** cancel calculation dialog state */
   const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
+  const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
 
   const saveMutation = useSaveComparativeAnalysis();
+  const resetMutation = useResetMethod();
 
   /** Form handler — skips full Zod validation so we can save factors/scores independently */
   const handleOnSubmit = async () => {
@@ -106,17 +119,19 @@ export function WQSPanel({
     const value = getValues();
 
     try {
+      const appraisalValue = value.WQSFinalValue?.appraisalPriceRounded ?? null;
+
       const request = mapWQSFormToSubmitSchema({
         WQSForm: value,
+        comparativeAnalysisTemplateId: selectedTemplateId,
       });
+      request.appraisalValue = appraisalValue;
 
       await saveMutation.mutateAsync({
         id: activeMethod.pricingAnalysisId,
         methodId,
         request,
       });
-
-      const appraisalValue = value.WQSFinalValue?.appraisalPriceRounded;
       if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
           approachType: activeMethod.approachType,
@@ -131,16 +146,20 @@ export function WQSPanel({
     }
   };
 
-  const handleOnSaveDraft = () => {
-    const currentValue = getValues();
-    reset(currentValue);
-  };
-
   /** template selection handler */
-  const handleOnGenerate = () => {
+  const handleOnGenerate = async () => {
     setIsGenerated(false);
 
-    const template = (templates ?? []).find(t => t?.templateCode === pricingTemplateType);
+    let template: TemplateDetailType | undefined;
+    // Ensure template detail is fetched before initializing
+    let templateData = templateDetailQuery.data;
+    if (!templateData && selectedTemplateId) {
+      const result = await templateDetailQuery.refetch();
+      templateData = result.data;
+    }
+    if (templateData && allFactors) {
+      template = adaptTemplateFromApi(templateData, allFactors);
+    }
     setPricingTemplate(template);
 
     // single source of truth: init now (use existing linked comparables)
@@ -163,8 +182,8 @@ export function WQSPanel({
     setCollateralType(collateralType);
   };
 
-  const handleOnSelectTemplate = (templateId: string) => {
-    setPricingTemplateType(templateId);
+  const handleOnSelectTemplate = (templateCode: string) => {
+    setSelectedTemplateCode(templateCode);
   };
 
   /** cancel calculation handler */
@@ -179,6 +198,25 @@ export function WQSPanel({
 
   const handleOnDenyCancelCalculationMethod = () => {
     setisShowCanceledDialog(false);
+  };
+
+  /** reset handler */
+  const handleOnReset = () => setIsShowResetDialog(true);
+  const handleOnConfirmReset = async () => {
+    setIsShowResetDialog(false);
+    if (!activeMethod?.pricingAnalysisId || !methodId) return;
+    try {
+      await resetMutation.mutateAsync({
+        pricingAnalysisId: activeMethod.pricingAnalysisId,
+        methodId,
+      });
+      setIsGenerated(false);
+      setPricingTemplate(undefined);
+      reset();
+      toast.success('Method reset successfully');
+    } catch {
+      toast.error('Failed to reset method');
+    }
   };
 
   const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
@@ -215,6 +253,19 @@ export function WQSPanel({
         savedCalculations,
         reset,
       });
+      // Set appraisal price from saved method value AFTER reset, with shouldDirty
+      // so derived rules won't overwrite it with the calculated final value
+      if (savedMethodValue != null && savedMethodValue !== 0) {
+        setValue('WQSFinalValue.appraisalPriceRounded' as any, savedMethodValue, { shouldDirty: true });
+      }
+      // Restore template selection from saved data
+      if (savedComparativeAnalysisTemplateId) {
+        const savedTemplate = (templateList ?? []).find(t => t.id === savedComparativeAnalysisTemplateId);
+        if (savedTemplate) {
+          if (savedTemplate.propertyType) setCollateralType(savedTemplate.propertyType);
+          if (savedTemplate.templateCode) setSelectedTemplateCode(savedTemplate.templateCode);
+        }
+      }
       setIsGenerated(true);
       return;
     }
@@ -231,6 +282,15 @@ export function WQSPanel({
     });
     setIsGenerated(true);
   }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors, savedFactorScores]);
+
+  // Restore pricingTemplate when template detail query resolves (e.g. after restore from saved data)
+  useEffect(() => {
+    if (pricingTemplate) return;
+    if (!isGenerated) return;
+    if (!templateDetailQuery.data || !allFactors) return;
+    const template = adaptTemplateFromApi(templateDetailQuery.data, allFactors);
+    setPricingTemplate(template);
+  }, [templateDetailQuery.data, allFactors, isGenerated, pricingTemplate]);
 
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
@@ -295,41 +355,48 @@ export function WQSPanel({
           }}
           template={{
             onSelectTemplate: handleOnSelectTemplate,
-            value: pricingTemplateType,
+            value: selectedTemplateCode,
             options:
-              (templates ?? [])
-                .filter(template => template?.collateralType === collateralType)
-                .map(template => {
-                  return {
-                    value: template?.templateCode ?? '',
-                    label: template?.templateName ?? '',
-                  };
-                }) ?? [],
+              (templateList ?? [])
+                .filter(t => t.propertyType === collateralType)
+                .map(t => ({
+                  value: t.templateCode,
+                  label: t.templateName,
+                })),
           }}
         />
         {!isLoading && (
-          <div className="flex-1 min-h-0">
-            <WQSForm
-              {...methods}
-              property={property}
-              marketSurveys={marketSurveys}
-              comparativeMarketSurveys={comparativeSurveys}
-              template={pricingTemplate}
-              allFactors={allFactors}
-              onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
-            />
+          <>
+            <div className="flex-1 min-h-0 overflow-auto">
+              <WQSForm
+                {...methods}
+                property={property}
+                marketSurveys={marketSurveys}
+                comparativeMarketSurveys={comparativeSurveys}
+                template={pricingTemplate}
+                allFactors={allFactors}
+                onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+              />
+            </div>
             <MethodFooterActions
-              onSaveDraft={handleOnSaveDraft}
               onCancel={handleOnCancelCalculationMethod}
+              onReset={handleOnReset}
+              showReset={!!savedComparativeFactors && savedComparativeFactors.length > 0}
               isSubmitting={saveMutation.isPending}
             />
-          </div>
+          </>
         )}
         <ConfirmDialog
           isOpen={isShowCanceledDialog}
           onClose={handleOnDenyCancelCalculationMethod}
           onConfirm={handleOnConfirmCancelCalculationMethod}
           message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
+        />
+        <ConfirmDialog
+          isOpen={isShowResetDialog}
+          onClose={() => setIsShowResetDialog(false)}
+          onConfirm={handleOnConfirmReset}
+          message="Are you sure you want to reset this method? All calculation data will be cleared."
         />
       </form>
     </FormProvider>

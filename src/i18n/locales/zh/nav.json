@@ -1,0 +1,31 @@
+{
+  "sidebar": {
+    "menu": "菜单",
+    "system": "系统",
+    "dashboard": "仪表盘",
+    "requests": "请求",
+    "appraisals": "评估",
+    "tasks": "任务",
+    "templates": "模板",
+    "settings": "设置"
+  },
+  "userMenu": {
+    "yourProfile": "个人资料",
+    "settings": "设置",
+    "signOut": "退出登录"
+  },
+  "search": {
+    "placeholder": "搜索所有内容...",
+    "searchIn": "搜索范围",
+    "recent": "最近",
+    "tip": "使用筛选器缩小搜索结果",
+    "filters": {
+      "all": "全部",
+      "requests": "请求",
+      "customers": "客户",
+      "properties": "资产",
+      "documents": "文档"
+    }
+  },
+  "notifications": "通知"
+}

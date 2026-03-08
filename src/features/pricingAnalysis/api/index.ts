@@ -8,18 +8,18 @@ import {
   type FactorDataType,
   type GetComparativeFactorsResponseType,
   type GetPricingAnalysisResponseType,
-  GetPricingTemplateByMethodResponse,
-  type GetPricingTemplatesByMethodResponseType,
   type LinkComparableRequestType,
   type LinkComparableResponseType,
+  type RecalculateFactorsResponseType,
+  type ResetPricingMethodResultType,
   type SaveComparativeAnalysisRequestType,
   type SaveComparativeAnalysisResponseType,
+  type SelectMethodResponseType,
+  type SetFinalValueRequestType,
+  type SetFinalValueResponseType,
+  type UpdateFinalValueRequestType,
+  type UpdateFinalValueResponseType,
 } from '../schemas';
-import {
-  DIRECT_COMPARISON_TEMPLATES,
-  SALE_GRID_TEMPLATES,
-  WQS_TEMPLATES,
-} from '../data/templatesData';
 import { pricingAnalysisKeys } from './queryKeys';
 
 // ==================== Real API Hooks ====================
@@ -166,7 +166,15 @@ export function useSaveComparativeAnalysis() {
       return response;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.comparativeFactors(variables.id, variables.methodId),
+      });
+      // Mark detail as stale without refetching immediately
+      // (immediate refetch triggers INIT which resets activeMethod and hides the form)
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.id),
+        refetchType: 'none',
+      });
     },
   });
 }
@@ -237,43 +245,197 @@ export function useUnlinkComparable() {
   });
 }
 
-// ==================== Mocked Hooks (Backend endpoints missing) ====================
-
 /**
- * TODO: Connect to real API when GET /pricing-analysis-templates?methodType={type} is available
- * Currently mocked with static data — no backend endpoint exists yet.
+ * Delete a pricing analysis method
+ * DELETE /pricing-analysis/{id}/approaches/{approachId}/methods/{methodId}
  */
-export function useGetPricingTemplate(methodType: string) {
-  return useQuery({
-    queryKey: pricingAnalysisKeys.template(methodType),
-    queryFn: async (): Promise<GetPricingTemplatesByMethodResponseType> => {
-      await new Promise(resolve => setTimeout(resolve, 500));
+export function useDeletePricingAnalysisMethod() {
+  const queryClient = useQueryClient();
 
-      let parse;
-      switch (methodType) {
-        case 'DC_MARKET':
-          parse = GetPricingTemplateByMethodResponse.safeParse(DIRECT_COMPARISON_TEMPLATES);
-          break;
-        case 'SAG_MARKET':
-          parse = GetPricingTemplateByMethodResponse.safeParse(SALE_GRID_TEMPLATES);
-          break;
-        case 'WQS_MARKET':
-          parse = GetPricingTemplateByMethodResponse.safeParse(WQS_TEMPLATES);
-          break;
-        default:
-          parse = GetPricingTemplateByMethodResponse.safeParse(null);
-      }
-
-      if (!parse.success) throw parse.error;
-      return parse.data;
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      approachId,
+      methodId,
+    }: {
+      pricingAnalysisId: string;
+      approachId: string;
+      methodId: string;
+    }): Promise<void> => {
+      await axios.delete(
+        `/pricing-analysis/${pricingAnalysisId}/approaches/${approachId}/methods/${methodId}`,
+      );
     },
-    enabled: !!methodType,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
-    retry: 1,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
   });
 }
+
+// ==================== Select Method Hook ====================
+
+/**
+ * Select a method as primary (sets others in the same approach to Alternative)
+ * POST /pricing-analysis/{id}/methods/{methodId}/select
+ */
+export function useSelectMethod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+    }): Promise<SelectMethodResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/select`,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
+  });
+}
+
+// ==================== Final Value Hooks ====================
+
+/**
+ * Set final value for a pricing method
+ * POST /pricing-analysis/{id}/methods/{methodId}/final-value
+ */
+export function useSetFinalValue() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: SetFinalValueRequestType;
+    }): Promise<SetFinalValueResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/final-value`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
+  });
+}
+
+/**
+ * Update final value for a pricing method
+ * PUT /pricing-analysis/{id}/final-values/{valueId}
+ */
+export function useUpdateFinalValue() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      valueId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      valueId: string;
+      request: UpdateFinalValueRequestType;
+    }): Promise<UpdateFinalValueResponseType> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/final-values/${valueId}`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
+  });
+}
+
+// ==================== Recalculate & Reset Hooks ====================
+
+/**
+ * Recalculate factors for a pricing method
+ * POST /pricing-analysis/{id}/methods/{methodId}/recalculate-factors
+ */
+export function useRecalculateFactors() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+    }): Promise<RecalculateFactorsResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/recalculate-factors`,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.comparativeFactors(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+    },
+  });
+}
+
+/**
+ * Reset a pricing method's results
+ * DELETE /pricing-analysis/{id}/methods/{methodId}/reset
+ */
+export function useResetMethod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+    }): Promise<ResetPricingMethodResultType> => {
+      const { data: response } = await axios.delete(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/reset`,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.comparativeFactors(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
+  });
+}
+
+// ==================== Template & Factor Hooks ====================
 
 /**
  * Fetch all market comparable factors

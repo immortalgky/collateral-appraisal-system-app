@@ -307,10 +307,8 @@ export function buildWQSFinalValueDerivedRules(args: {
     finalValuSlope: finalValuSlopePath,
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
-    finalValueLandArea: finalValueLandAreaPath,
-    finalValueUsableArea: finalValueUsableAreaPath,
-    finalValueAppraisalPrice: finalValueAppraisalPricePath,
     finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
+    finalValuePriceDifferentiate: finalValuePriceDifferentiatePath,
   } = wqsFieldPath;
 
   const rules: DerivedFieldRule[] = [
@@ -459,36 +457,12 @@ export function buildWQSFinalValueDerivedRules(args: {
       },
     },
     {
-      targetPath: finalValueAppraisalPricePath(),
-      deps: [finalValueFinalValueRoundedPath(), finalValueLandAreaPath()],
+      targetPath: finalValuePriceDifferentiatePath(),
+      deps: [finalValueAppraisalPriceRoundedPath(), finalValueFinalValueRoundedPath()],
       compute: ({ getValues }) => {
+        const appraisalPriceRounded = getValues(finalValueAppraisalPriceRoundedPath()) ?? 0;
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
-
-        const landArea = getValues(finalValueLandAreaPath());
-        if (landArea) {
-          return round2(finalValueRounded * landArea);
-        }
-
-        const usableArea = getValues(finalValueUsableAreaPath());
-        if (usableArea) {
-          return round2(finalValueRounded * usableArea);
-        }
-
-        return round2(finalValueRounded);
-      },
-    },
-    {
-      targetPath: finalValueAppraisalPriceRoundedPath(),
-      deps: [finalValueAppraisalPricePath()],
-      when: ({ getValues, getFieldState, formState }) => {
-        const target = finalValueAppraisalPriceRoundedPath();
-        const curr = getValues(target) ?? 0;
-        const { isDirty } = getFieldState(target, formState);
-        return shouldAutoDefault({ value: curr, isDirty });
-      },
-      compute: ({ getValues }) => {
-        const appraisalPrice = getValues(finalValueAppraisalPricePath()) ?? 0;
-        return floorToTenThousands(appraisalPrice);
+        return appraisalPriceRounded - finalValueRounded;
       },
     },
   ];

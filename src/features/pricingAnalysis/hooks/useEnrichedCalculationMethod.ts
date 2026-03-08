@@ -1,16 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  GetPricingTemplateByMethodResponse,
-  type GetComparativeFactorsResponseType,
-  type GetPricingTemplatesByMethodResponseType,
-} from '../schemas';
+import type { GetComparativeFactorsResponseType } from '../schemas';
 import axios from '@shared/api/axiosInstance';
-import {
-  DIRECT_COMPARISON_TEMPLATES,
-  SALE_GRID_TEMPLATES,
-  WQS_TEMPLATES,
-} from '../data/templatesData';
 import { pricingAnalysisKeys } from '../api/queryKeys';
+import { useGetComparativeAnalysisTemplates } from '@features/templateManagement/api/comparativeTemplate';
 
 interface UseEnrichedCalculationMethodProps {
   pricingAnalysisId: string;
@@ -21,36 +13,9 @@ interface UseEnrichedCalculationMethodProps {
 export function useEnrichedCalculationMethod({
   pricingAnalysisId,
   methodId,
-  methodType,
 }: UseEnrichedCalculationMethodProps) {
-  // Step 1: Fetch pricing template that belong to method type
-  const pricingTemplateQuery = useQuery({
-    queryKey: pricingAnalysisKeys.template(methodType),
-    queryFn: async (): Promise<GetPricingTemplatesByMethodResponseType> => {
-      let parse;
-      switch (methodType) {
-        case 'WQS_MARKET':
-          parse = GetPricingTemplateByMethodResponse.safeParse(WQS_TEMPLATES);
-          break;
-        case 'SAG_MARKET':
-          parse = GetPricingTemplateByMethodResponse.safeParse(SALE_GRID_TEMPLATES);
-          break;
-        case 'DC_MARKET':
-          parse = GetPricingTemplateByMethodResponse.safeParse(DIRECT_COMPARISON_TEMPLATES);
-          break;
-        default:
-          parse = GetPricingTemplateByMethodResponse.safeParse(null);
-      }
-
-      if (!parse.success) throw parse.error;
-      return parse.data;
-    },
-    enabled: !!methodType,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
-    retry: 1,
-  });
+  // Step 1: Fetch all templates (for template dropdown list)
+  const templatesQuery = useGetComparativeAnalysisTemplates();
 
   // Step 2: Fetch comparative factors
   const comparativeFactorsQuery = useQuery({
@@ -67,15 +32,15 @@ export function useEnrichedCalculationMethod({
     staleTime: Infinity,
   });
 
-  const isLoading = pricingTemplateQuery.isLoading || comparativeFactorsQuery.isLoading;
+  const isLoading = templatesQuery.isLoading || comparativeFactorsQuery.isLoading;
   const error = comparativeFactorsQuery.error;
 
-  const pricingTemplate = pricingTemplateQuery.data?.templates;
   const comparativeFactors = comparativeFactorsQuery.data;
 
   const calculationMethodData = {
-    pricingTemplate,
+    pricingTemplate: undefined as undefined,
     comparativeFactors,
+    templateList: templatesQuery.data,
   };
 
   return {

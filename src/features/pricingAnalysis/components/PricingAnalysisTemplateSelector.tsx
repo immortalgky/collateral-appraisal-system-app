@@ -23,18 +23,18 @@ export function PricingAnalysisTemplateSelector({
   template,
 }: PricingAnalysisTemplateSelectorProps) {
   return (
-    <div>
-      <div className="flex flex-row gap-2">
-        <div className="text-2xl">
-          <Icon name={icon} />
+    <div className="flex flex-col gap-4 mt-4">
+      <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
+          <Icon name={icon} className="size-4" />
         </div>
-        <span className="text-2xl">{methodName}</span>
+        <h2 className="text-lg font-semibold text-gray-900">{methodName}</h2>
       </div>
-      <div className="grid grid-cols-12 items-end gap-4">
-        <div className="col-span-2 flex h-full items-center">
-          <span>Pricing Analysis Template</span>
+      <div className="flex items-end gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+        <div className="flex h-full items-center text-sm font-medium text-gray-600 shrink-0">
+          Pricing Analysis Template
         </div>
-        <div className="col-span-3">
+        <div className="flex-1 min-w-0">
           <Dropdown
             label="Collateral Type"
             options={collateralType.options}
@@ -44,7 +44,7 @@ export function PricingAnalysisTemplateSelector({
             }}
           />
         </div>
-        <div className="col-span-3">
+        <div className="flex-1 min-w-0">
           <Dropdown
             label="Template"
             options={template.options}
@@ -54,15 +54,13 @@ export function PricingAnalysisTemplateSelector({
             }}
           />
         </div>
-        <div className="col-span-2">
-          <button
-            type="button"
-            onClick={() => onGenerate()}
-            className="px-4 py-2 border border-primary text-primary rounded-lg cursor-pointer hover:bg-primary/10"
-          >
-            Generate
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => onGenerate()}
+          className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-primary/90 transition-colors shrink-0"
+        >
+          Generate
+        </button>
       </div>
     </div>
   );

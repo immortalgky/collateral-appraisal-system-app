@@ -23,6 +23,7 @@ import {
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
+import { useLocaleStore } from '@shared/store';
 import { format } from 'date-fns';
 
 interface WQSScoringSectionProps {
@@ -79,6 +80,7 @@ export function WQSScoringSection({
   } = wqsFieldPath;
 
   const serverData = useContext(ServerDataCtx);
+  const language = useLocaleStore(s => s.language);
   const { control, getValues, setValue } = useFormContext();
   const {
     fields: scoringFactorFields,
@@ -156,18 +158,16 @@ export function WQSScoringSection({
 
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
-  const leftColumnBody =
-    'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-2.5 sticky left-0 z-20 w-[350px] min-w-[350px] max-w-[350px] h-14 whitespace-nowrap';
   const bgGradientLeft =
     'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
-  const rightColumnBody =
-    'border-b border-gray-300 text-left font-medium sticky right-[0px] z-30 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap';
-  const surveyStyle = 'px-3 py-2.5 border-b border-r border-gray-300';
+  const leftColumnBody =
+    'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-1.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] h-10 whitespace-nowrap';
+  const surveyStyle = 'px-3 py-1.5 border-b border-r border-gray-300';
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl">
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="table table-sm min-w-max border-separate border-spacing-0">
+        <table className="table table-xs min-w-max border-separate border-spacing-0">
           <thead className="bg-neutral-50">
             <tr className="border-b border-gray-300">
               <th
@@ -182,7 +182,7 @@ export function WQSScoringSection({
               <th
                 rowSpan={comparativeSurveys.length > 0 ? 2 : 1}
                 className={clsx(
-                  'bg-gray-50 border-r border-b border-gray-300 text-left font-medium sticky top-0 left-[350px] z-30 w-[100px] min-w-[100px] max-w-[100px] whitespace-nowrap',
+                  'bg-gray-50 border-r border-b border-gray-300 text-left font-medium sticky top-0 left-[250px] z-30 w-[100px] min-w-[100px] max-w-[100px] whitespace-nowrap',
                 )}
               >
                 <div className="text-wrap">Clutter Weight</div>
@@ -190,7 +190,7 @@ export function WQSScoringSection({
               <th
                 colSpan={2}
                 className={clsx(
-                  'bg-gray-50 border-b border-gray-300 text-center font-medium sticky left-[450px] top-0 z-30 h-[40px] min-h-[40px] max-h-[40px] whitespace-nowrap',
+                  'bg-gray-50 border-b border-gray-300 text-center font-medium sticky left-[350px] top-0 z-30 h-[32px] min-h-[32px] max-h-[32px] whitespace-nowrap',
                   bgGradient,
                 )}
               >
@@ -199,7 +199,7 @@ export function WQSScoringSection({
               {comparativeSurveys.length > 0 && (
                 <th
                   colSpan={comparativeSurveys.length}
-                  className="bg-gray-50 border-b border-r border-gray-300 text-center font-medium sticky top-0 z-23 h-[40px] min-h-[40px] max-h-[40px] whitespace-nowrap"
+                  className="bg-gray-50 border-b border-r border-gray-300 text-center font-medium sticky top-0 z-23 h-[32px] min-h-[32px] max-h-[32px] whitespace-nowrap"
                 >
                   <div>Comparative Data</div>
                 </th>
@@ -207,32 +207,23 @@ export function WQSScoringSection({
               <th
                 rowSpan={2}
                 className={clsx(
-                  'bg-gray-50 border-b border-gray-300 text-center font-medium sticky top-0 z-23 h-[40px] min-h-[40px] max-h-[40px] whitespace-nowrap',
+                  'bg-gray-50 border-b border-gray-300 text-center font-medium sticky top-0 z-23 h-[32px] min-h-[32px] max-h-[32px] whitespace-nowrap',
                 )}
               >
                 <div>Collateral</div>
-              </th>
-              <th
-                rowSpan={2}
-                className={clsx(
-                  'bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-25 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap',
-                  bgGradientLeft,
-                )}
-              >
-                <div></div>
               </th>
             </tr>
             <tr className="border-b border-gray-300">
               <td
                 className={clsx(
-                  'bg-gray-50 border-b border-r border-gray-300 text-left font-medium px-3 py-2.5 sticky left-[450px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-14 whitespace-nowrap',
+                  'bg-gray-50 border-b border-r border-gray-300 text-left font-medium px-3 py-1.5 sticky left-[350px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-10 whitespace-nowrap',
                 )}
               >
                 Intensity
               </td>
               <td
                 className={clsx(
-                  'bg-gray-50 border-b border-gray-300 text-left font-medium px-3 py-2.5 sticky left-[550px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-14 whitespace-nowrap',
+                  'bg-gray-50 border-b border-gray-300 text-left font-medium px-3 py-1.5 sticky left-[450px] z-30 w-[100px] min-w-[100px] max-w-[100px] h-10 whitespace-nowrap',
                   bgGradient,
                 )}
               >
@@ -243,7 +234,7 @@ export function WQSScoringSection({
                   <th
                     key={survey.id}
                     className={
-                      'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[40px] h-[70px] min-h-[70px] max-h-[70px] z-23 whitespace-nowrap'
+                      'bg-gray-50 font-medium text-center px-3 py-1.5 border-r border-b border-gray-300 sticky top-[32px] h-[52px] min-h-[52px] max-h-[52px] z-23 whitespace-nowrap'
                     }
                   >
                     <div className="flex flex-col">
@@ -269,40 +260,52 @@ export function WQSScoringSection({
                     cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                   )
                   .map(cf => ({
-                    label: getFactorDesciption(cf.factorCode, serverData.allFactors ?? []) ?? '',
+                    label: getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ?? '',
                     value: cf.factorCode,
                   }));
                 const isTemplateFactor = (template?.calculationFactors ?? []).some(
                   t => t.factorCode === selected,
                 );
                 return (
-                  <tr key={factor.id}>
+                  <tr key={factor.id} className="group">
                     <td className={clsx('bg-white border-r', leftColumnBody)}>
-                      <div className="truncate">
-                        {isTemplateFactor ? (
-                          <RHFInputCell
-                            fieldName={scoringFactorCodePath({ row: rowIndex })}
-                            inputType="display"
-                            accessor={({ value }) =>
-                              value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
-                            }
-                          />
-                        ) : (
-                          <RHFInputCell
-                            fieldName={scoringFactorCodePath({ row: rowIndex })}
-                            inputType="select"
-                            options={options}
-                            onSelectChange={(value) => {
-                              const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
-                              setValue(`WQSScores.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
-                            }}
-                          />
+                      <div className="flex items-center gap-1">
+                        <div className="flex-1 min-w-0 truncate">
+                          {isTemplateFactor ? (
+                            <RHFInputCell
+                              fieldName={scoringFactorCodePath({ row: rowIndex })}
+                              inputType="display"
+                              accessor={({ value }) =>
+                                value ? getFactorDesciption(value.toString(), serverData.allFactors ?? [], language) : ''
+                              }
+                            />
+                          ) : (
+                            <RHFInputCell
+                              fieldName={scoringFactorCodePath({ row: rowIndex })}
+                              inputType="select"
+                              options={options}
+                              onSelectChange={(value) => {
+                                const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
+                                setValue(`WQSScores.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                              }}
+                            />
+                          )}
+                        </div>
+                        {!isTemplateFactor && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRow(rowIndex)}
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-2.5" />
+                          </button>
                         )}
                       </div>
                     </td>
                     <td
                       className={clsx(
-                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
+                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[250px]',
                       )}
                     >
                       <RHFInputCell
@@ -312,7 +315,7 @@ export function WQSScoringSection({
                     </td>
                     <td
                       className={clsx(
-                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
+                        'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
                       )}
                     >
                       <RHFInputCell
@@ -323,7 +326,7 @@ export function WQSScoringSection({
                     {/* weight * intensity */}
                     <td
                       className={clsx(
-                        'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[550px]',
+                        'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
                         bgGradient,
                       )}
                     >
@@ -403,23 +406,6 @@ export function WQSScoringSection({
                         </div>
                       </div>
                     </td>
-                    <td className={clsx('bg-white', bgGradientLeft, rightColumnBody)}>
-                      {/* if rowIndex > template factors length, show delete button */}
-                      {!isTemplateFactor && (
-                        <div className="flex flex-row justify-center items-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleRemoveRow(rowIndex);
-                            }}
-                            className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
-                            title="Delete"
-                          >
-                            <Icon style="solid" name="trash" className="size-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </td>
                   </tr>
                 );
               })
@@ -438,17 +424,17 @@ export function WQSScoringSection({
               </td>
               <td
                 className={clsx(
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[250px]',
+                )}
+              ></td>
+              <td
+                className={clsx(
                   'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
                 )}
               ></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
-                )}
-              ></td>
-              <td
-                className={clsx(
-                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[550px]',
+                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
                   bgGradient,
                 )}
               ></td>
@@ -456,12 +442,6 @@ export function WQSScoringSection({
                 return <td key={survey.id} className={clsx(surveyStyle)}></td>;
               })}
               <td className={clsx('border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 sticky right-0 z-25 bg-white w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
 
             {/* total score row */}
@@ -469,21 +449,21 @@ export function WQSScoringSection({
               <td className={clsx('bg-white border-r', leftColumnBody)}></td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[250px]',
                 )}
               >
                 <RHFInputCell fieldName={totalWeightPath()} inputType="display" />
               </td>
               <td
                 className={clsx(
-                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
+                  'bg-white border-b border-r border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[350px]',
                 )}
               >
                 <RHFInputCell fieldName={totalIntensityPath()} inputType="display" />
               </td>
               <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[550px]',
+                  'bg-white border-b border-gray-300 w-[100px] max-w-[100px] min-w-[100px] z-30 sticky left-[450px]',
                   bgGradient,
                 )}
               >
@@ -549,12 +529,6 @@ export function WQSScoringSection({
                   </div>
                 </div>
               </td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 sticky right-0 z-25 bg-white w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
 
             {/* scoring criteria */}
@@ -563,7 +537,7 @@ export function WQSScoringSection({
                 <div className="flex flex-row justify-start items-center">{`Scoring Criteria : 1-2 Very low, 3-4 Fair, 5-6 Average, 7-8 Good, 9-10 Very Good`}</div>
               </td>
               <td
-                colSpan={comparativeSurveys?.length + 2}
+                colSpan={comparativeSurveys?.length + 1}
                 className={clsx('bg-white border-b border-gray-300')}
               ></td>
             </tr>
@@ -572,14 +546,14 @@ export function WQSScoringSection({
             <tr>
               <td className={clsx('bg-gray-200', leftColumnBody)}>Initial Price</td>
               <td
+                className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-gray-200 border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-gray-200 border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-gray-200 border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -587,26 +561,20 @@ export function WQSScoringSection({
                 return <td key={survey.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
               })}
               <td className={clsx('bg-gray-200 border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-gray-200 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Offering Price</span>
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -622,12 +590,6 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -637,14 +599,14 @@ export function WQSScoringSection({
                 </div>
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -662,12 +624,6 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -675,14 +631,14 @@ export function WQSScoringSection({
                 <span>(Amount)</span>
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -700,26 +656,20 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Selling Price</span>
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -740,24 +690,18 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -786,26 +730,20 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 Adjusted Selling Price (%)
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -825,12 +763,6 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -840,14 +772,14 @@ export function WQSScoringSection({
                 </div>
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -866,26 +798,20 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <span>Adjusted Value</span>
               </td>
               <td
+                className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[350px] z-30')}
               ></td>
               <td
-                className={clsx('bg-white border-b border-gray-300 sticky left-[450px] z-30')}
-              ></td>
-              <td
                 className={clsx(
-                  'bg-white border-b border-gray-300 sticky left-[550px] z-30',
+                  'bg-white border-b border-gray-300 sticky left-[450px] z-30',
                   bgGradient,
                 )}
               ></td>
@@ -903,12 +829,6 @@ export function WQSScoringSection({
                 );
               })}
               <td className={clsx('bg-white border-b border-gray-300')}></td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-white sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
 
             {/* Final Value row */}
@@ -916,25 +836,19 @@ export function WQSScoringSection({
               <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
                 Final Value
               </td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[250px] z-30')}></td>
               <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30', bgGradient)}></td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30', bgGradient)}></td>
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
-              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-2.5 text-right font-semibold')}>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-right font-semibold')}>
                 <RHFInputCell
                   fieldName={finalValueFinalValuePath()}
                   inputType="display"
                   accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
                 />
               </td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-gray-100 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
 
             {/* Final Value (Rounded) row */}
@@ -942,9 +856,9 @@ export function WQSScoringSection({
               <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
                 {'Final Value (Rounded)'}
               </td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[250px] z-30')}></td>
               <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[550px] z-30', bgGradient)}></td>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30', bgGradient)}></td>
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
@@ -954,12 +868,6 @@ export function WQSScoringSection({
                   inputType="number"
                 />
               </td>
-              <td
-                className={clsx(
-                  'border-b border-gray-300 bg-gray-100 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]',
-                  bgGradientLeft,
-                )}
-              ></td>
             </tr>
           </tbody>
         </table>

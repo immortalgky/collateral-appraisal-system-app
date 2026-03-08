@@ -47,6 +47,27 @@ export type MarketComparableDataType = z.infer<typeof schemas.MarketComparableDt
 // -- Factor Data --
 export type FactorDataType = z.infer<typeof schemas.FactorDataDto>;
 
+// -- Final Value --
+export type SetFinalValueRequestType = z.infer<typeof schemas.SetFinalValueRequest>;
+export type SetFinalValueResponseType = z.infer<typeof schemas.SetFinalValueResponse>;
+export type UpdateFinalValueRequestType = z.infer<typeof schemas.UpdateFinalValueRequest>;
+export type UpdateFinalValueResponseType = z.infer<typeof schemas.UpdateFinalValueResponse>;
+
+// -- Select Method --
+export type SelectMethodResponseType = z.infer<typeof schemas.SelectMethodResponse>;
+
+// -- Recalculate & Reset --
+export type RecalculateFactorsResponseType = z.infer<typeof schemas.RecalculateFactorsResponse>;
+export type ResetPricingMethodResultType = z.infer<typeof schemas.ResetPricingMethodResult>;
+
+// -- Update Method/Approach --
+export type UpdateMethodRequestType = z.infer<typeof schemas.UpdateMethodRequest>;
+export type UpdateApproachRequestType = z.infer<typeof schemas.UpdateApproachRequest>;
+
+// -- Complete Pricing Analysis --
+export type CompletePricingAnalysisRequestType = z.infer<typeof schemas.CompletePricingAnalysisRequest>;
+export type CompletePricingAnalysisResponseType = z.infer<typeof schemas.CompletePricingAnalysisResponse>;
+
 // ==================== Local-only types (not from server) ====================
 
 // -- Pricing Analysis Configuration (parsed from local JSON config) --

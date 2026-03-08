@@ -71,4 +71,5 @@ export const wqsFieldPath = {
   finalValueUsableArea: () => `WQSFinalValue.usableArea`,
   finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice`,
   finalValueAppraisalPriceRounded: () => `WQSFinalValue.appraisalPriceRounded`,
+  finalValuePriceDifferentiate: () => `WQSFinalValue.priceDifferentiate`,
 };

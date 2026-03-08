@@ -1,7 +1,12 @@
 import { useFormContext, useWatch } from 'react-hook-form';
+import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import { toFiniteNumber } from '@features/pricingAnalysis/domain/calculateWQS.ts';
+import {
+  type DerivedFieldRule,
+  useDerivedFields,
+} from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 
 export const AdjustFinalValueSection = ({ property }: { property: Record<string, unknown> }) => {
   const {
@@ -10,113 +15,131 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     finalValueHasBuildingCost: hasBuildingCostPath,
     finalValueLandArea: landAreaPath,
     finalValueUsableArea: usableAreaPath,
-    finalValueAppraisalPrice: appraisalPricePath,
+    finalValueFinalValueRounded: finalValueRoundedPath,
     finalValueAppraisalPriceRounded: appraisalPriceRoundedPath,
+    finalValuePriceDifferentiate: priceDifferentiatePath,
   } = wqsFieldPath;
 
   const { control } = useFormContext();
   const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
-  const appraisalPrice = useWatch({ control, name: appraisalPricePath() }) ?? 0;
-  const appraisalPriceRounded = useWatch({ control, name: appraisalPriceRoundedPath() }) ?? 0;
+
+  // Auto-fill appraisalPriceRounded from finalValueRounded, but only when empty.
+  // Once filled (by auto-fill or user edit), it won't be overwritten.
+  // Form re-init (Generate) resets it to 0, re-enabling auto-fill.
+  const rules: DerivedFieldRule[] = [
+    {
+      targetPath: appraisalPriceRoundedPath(),
+      deps: [finalValueRoundedPath()],
+      compute: ({ getValues }) => Number(getValues(finalValueRoundedPath())) || 0,
+      when: ({ getValues }) => {
+        const current = Number(getValues(appraisalPriceRoundedPath())) || 0;
+        return current === 0;
+      },
+    },
+  ];
+  useDerivedFields({ rules });
 
   const isLand = property.propertyType === 'L';
   const isUsable = property.propertyType === 'U';
   const areaUnit = isLand ? 'Sq. Wa' : 'Sq. m.';
   const areaFieldPath = isLand ? landAreaPath() : usableAreaPath();
 
-  const differentiate = toFiniteNumber(appraisalPrice) - toFiniteNumber(appraisalPriceRounded);
-
   return (
-    <div className="flex flex-col gap-3 text-sm py-2">
+    <div className="flex flex-col gap-3 text-sm">
       {/* Coefficient of decision */}
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-3 text-gray-600">Coefficient of decision</div>
-        <div className="col-span-6">
+      <div className="flex items-center gap-4">
+        <span className="w-44 text-gray-500">Coefficient of decision</span>
+        <RHFInputCell
+          fieldName={coeffPath()}
+          inputType="display"
+          accessor={({ value }) => {
+            const coeff = toFiniteNumber(value);
+            return coeff < 0.85 ? (
+              <div className="flex items-center gap-4 text-danger">
+                <span className="font-medium">{value}</span>
+                <span className="text-xs">{'Consider for the market survey data'}</span>
+              </div>
+            ) : (
+              <span className="font-medium text-gray-800">{value}</span>
+            );
+          }}
+        />
+      </div>
+
+      {/* Include Area toggle */}
+      <div className="flex items-center gap-4">
+        <span className="w-44 text-gray-500">Include Area</span>
+        <RHFInputCell
+          fieldName={includeLandAreaPath()}
+          inputType="toggle"
+          toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
+        />
+      </div>
+
+      {/* Area (shown when include area is on) */}
+      {includeLandArea && (isLand || isUsable) && (
+        <div className="flex items-center gap-4">
+          <span className="w-44 text-gray-500">Area</span>
+          <span className="font-medium text-gray-800">
+            <RHFInputCell
+              fieldName={areaFieldPath}
+              inputType="display"
+              accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+            />
+          </span>
+          <span className="text-gray-500">{areaUnit}</span>
+        </div>
+      )}
+
+      {/* Final Value (Rounded) */}
+      <div className="flex items-center gap-4">
+        <span className="w-44 text-gray-500">Final Value (Rounded)</span>
+        <span className="font-medium text-gray-800">
           <RHFInputCell
-            fieldName={coeffPath()}
+            fieldName={finalValueRoundedPath()}
+            inputType="display"
+            accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+          />
+        </span>
+        <span className="text-gray-500">Baht</span>
+      </div>
+
+      {/* Appraisal Price */}
+      <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
+        <span className="w-44 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
+        <div className="w-40">
+          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType="number" />
+        </div>
+        <span className="text-gray-500">Baht</span>
+        <div className="flex items-center">
+          <RHFInputCell
+            fieldName={priceDifferentiatePath()}
             inputType="display"
             accessor={({ value }) => {
-              const coeff = toFiniteNumber(value);
-              return coeff < 0.85 ? (
-                <div className="flex items-center gap-4 text-danger">
-                  <span>{value}</span>
-                  <span className="text-xs">{'Consider for the market survey data'}</span>
-                </div>
-              ) : (
-                <span>{value}</span>
+              const num = Number(value) || 0;
+              if (num === 0) return <span className="text-gray-400">-</span>;
+              const color = num > 0 ? 'text-green-600' : 'text-red-600';
+              const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
+              const icon = num > 0 ? 'arrow-up' : 'arrow-down';
+              return (
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}>
+                  <Icon name={icon} style="solid" className="size-3" />
+                  {Math.abs(num).toLocaleString()}
+                </span>
               );
             }}
           />
         </div>
       </div>
 
-      {/* Include Area toggle */}
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-3 text-gray-600">Include Area</div>
-        <div className="col-span-2">
-          <RHFInputCell
-            fieldName={includeLandAreaPath()}
-            inputType="toggle"
-            toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
-          />
-        </div>
-      </div>
-
-      {/* Area (shown when include area is on) */}
-      {includeLandArea && (isLand || isUsable) && (
-        <div className="grid grid-cols-12 items-center">
-          <div className="col-span-3 text-gray-600">Area</div>
-          <div className="col-span-2 text-right">
-            <RHFInputCell
-              fieldName={areaFieldPath}
-              inputType="display"
-              accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
-            />
-          </div>
-          <div className="col-span-1 pl-2 text-gray-500">{areaUnit}</div>
-        </div>
-      )}
-
-      {/* Appraisal Price */}
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-3 text-gray-600">Appraisal Price</div>
-        <div className="col-span-2 text-right">
-          <RHFInputCell
-            fieldName={appraisalPricePath()}
-            inputType="display"
-            accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
-          />
-        </div>
-        <div className="col-span-1 pl-2 text-gray-500">Baht</div>
-      </div>
-
-      {/* Appraisal Price (Rounded) + differentiate */}
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-3 text-gray-600">{'Appraisal Price (Rounded)'}</div>
-        <div className="col-span-2">
-          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType="number" />
-        </div>
-        <div className="col-span-1 pl-2 text-gray-500">Baht</div>
-        {differentiate !== 0 && (
-          <>
-            <div className="col-span-2 text-right text-gray-500">
-              {differentiate > 0 ? '+' : ''}{differentiate.toLocaleString()}
-            </div>
-            <div className="col-span-1 pl-2 text-xs text-gray-400">differentiate</div>
-          </>
-        )}
-      </div>
-
       {/* Include building cost toggle */}
-      <div className="grid grid-cols-12 items-center">
-        <div className="col-span-3 text-gray-600">Include building cost</div>
-        <div className="col-span-2">
-          <RHFInputCell
-            fieldName={hasBuildingCostPath()}
-            inputType="toggle"
-            toggle={{ checked: false, options: ['No', 'Yes'] }}
-          />
-        </div>
+      <div className="flex items-center gap-4">
+        <span className="w-44 text-gray-500">Include building cost</span>
+        <RHFInputCell
+          fieldName={hasBuildingCostPath()}
+          inputType="toggle"
+          toggle={{ checked: false, options: ['No', 'Yes'] }}
+        />
       </div>
     </div>
   );

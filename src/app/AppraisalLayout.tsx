@@ -29,6 +29,7 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   appointment: { label: 'Appointment & Fee', icon: 'calendar-check' },
   summary: { label: 'Summary & Decision', icon: 'clipboard-check' },
   property: { label: 'Property Information', icon: 'buildings' },
+  'property-pma': { label: 'Property Information (PMA)', icon: 'buildings' },
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
   groups: { label: 'Groups', icon: 'layer-group' },
 };
@@ -83,10 +84,12 @@ function AppraisalLayout() {
       const pageSegment = pathSegments[2]; // 'administration', 'property', etc.
       const pageInfo = routeLabels[pageSegment];
       if (pageInfo) {
+        const isPropertyRoute = pageSegment === 'property' || pageSegment === 'property-pma';
+
         // Handle nested property routes: /appraisal/:id/property/land/new
         // Determine which tab the user came from so the breadcrumb links back correctly
         let propertyHrefSuffix = '';
-        if (pageSegment === 'property' && pathSegments.length >= 4) {
+        if (isPropertyRoute && pathSegments.length >= 4) {
           const propertyType = pathSegments[3];
           if (propertyType === 'market-comparable') {
             propertyHrefSuffix = '?tab=markets';
@@ -117,14 +120,15 @@ function AppraisalLayout() {
           icon: pageInfo.icon,
         });
 
-        // Add property sub-route breadcrumb
-        if (pageSegment === 'property' && pathSegments.length >= 4) {
+        // Add property sub-route breadcrumb (for both property and property-pma)
+        if (isPropertyRoute && pathSegments.length >= 4) {
           const propertyType = pathSegments[3]; // 'land', 'building', 'condo', 'land-building', 'market-comparable'
           const propertyInfo = propertySubRouteLabels[propertyType];
           if (propertyInfo) {
             const isNew = pathSegments[4] === 'new';
+            const pmaLabel = pageSegment === 'property-pma' ? ' (PMA)' : '';
             items.push({
-              label: isNew ? `New ${propertyInfo.label}` : propertyInfo.label,
+              label: isNew ? `New ${propertyInfo.label}${pmaLabel}` : `${propertyInfo.label}${pmaLabel}`,
               href: location.pathname,
               icon: propertyInfo.icon,
             });
@@ -152,6 +156,7 @@ function AppraisalLayout() {
             status: appraisalData.status ?? undefined,
             appraisalType: appraisalData.appraisalType ?? undefined,
             priority: appraisalData.priority ?? undefined,
+            isPma: (appraisalData as any).isPma ?? true, // TODO: change default back to false once backend returns isPma
           }
         : null,
       isLoading: isAppraisalLoading,

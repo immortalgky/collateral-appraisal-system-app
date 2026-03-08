@@ -23,9 +23,9 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
 import { MethodSectionRenderer } from '@features/pricingAnalysis/components/MethodSectionRenderer';
 import type { PricingServerData } from '@features/pricingAnalysis/types/selection';
-import { useCreatePricingAnalysis } from '@features/pricingAnalysis/api';
 import { propertyGroupKeys } from '@features/appraisal/api/propertyGroup';
 import { useQueryClient } from '@tanstack/react-query';
+import axios from '@shared/api/axiosInstance';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
 
@@ -63,49 +63,57 @@ function PricingAnalysisPage() {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const createPricingAnalysis = useCreatePricingAnalysis();
-  const hasTriggeredCreate = useRef(false);
+
+  const [createState, setCreateState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [createError, setCreateError] = useState<string>('');
+  const creatingRef = useRef(false);
 
   // Auto-create pricing analysis when navigating to "new" route
   useEffect(() => {
-    if (pricingAnalysisId || !groupId || hasTriggeredCreate.current) return;
-    hasTriggeredCreate.current = true;
+    if (pricingAnalysisId || !groupId) return;
+    // Prevent duplicate call from React 18 Strict Mode double-mount
+    if (creatingRef.current) return;
+    creatingRef.current = true;
 
-    createPricingAnalysis.mutate(
-      { groupId },
-      {
-        onSuccess: (result) => {
-          // Invalidate group detail so pricingAnalysisId is updated in cache
-          if (appraisalId) {
-            queryClient.invalidateQueries({
-              queryKey: propertyGroupKeys.detail(appraisalId, groupId),
-            });
-          }
-          // Redirect to the existing pricing analysis route
-          navigate(
-            `/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${result.id}`,
-            { replace: true },
-          );
-        },
-      },
-    );
-  }, [pricingAnalysisId, groupId, appraisalId, createPricingAnalysis, navigate, queryClient]);
+    setCreateState('loading');
+
+    axios
+      .post(`/property-groups/${groupId}/pricing-analysis`)
+      .then(({ data }) => {
+        const newId = data?.id;
+        if (!newId) {
+          creatingRef.current = false;
+          setCreateState('error');
+          setCreateError('No ID returned from server');
+          return;
+        }
+        if (appraisalId) {
+          queryClient.invalidateQueries({
+            queryKey: propertyGroupKeys.detail(appraisalId, groupId),
+          });
+        }
+        navigate(
+          `/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`,
+          { replace: true },
+        );
+      })
+      .catch((err) => {
+        creatingRef.current = false;
+        setCreateState('error');
+        setCreateError(err?.message ?? 'An unexpected error occurred.');
+      });
+  }, [pricingAnalysisId, groupId, appraisalId, navigate, queryClient]);
 
   // Show error with retry if auto-create failed
-  if (!pricingAnalysisId && createPricingAnalysis.isError) {
+  if (!pricingAnalysisId && createState === 'error') {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
         <Icon name="circle-exclamation" style="solid" className="text-2xl text-danger" />
         <p className="text-sm text-gray-700 font-medium">Failed to create pricing analysis</p>
-        <p className="text-xs text-gray-400">
-          {createPricingAnalysis.error?.message ?? 'An unexpected error occurred.'}
-        </p>
+        <p className="text-xs text-gray-400">{createError}</p>
         <button
           type="button"
-          onClick={() => {
-            hasTriggeredCreate.current = false;
-            createPricingAnalysis.reset();
-          }}
+          onClick={() => setCreateState('idle')}
           className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
         >
           Retry
@@ -166,24 +174,32 @@ function PricingAnalysisContent({
   // (2) Own the reducer
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);
 
+  // Track viewMode so INIT can preserve editing mode after add/delete mutations
+  const viewModeRef = useRef(state.viewMode);
+  useEffect(() => {
+    viewModeRef.current = state.viewMode;
+  }, [state.viewMode]);
+
   // (3) INIT effect — depends on actual data, not loading boolean
   useEffect(() => {
     if (!groupDetail || !pricingConfiguration || !pricingSelection || !allFactors) return;
     const approaches = createInitialState(pricingConfiguration, pricingSelection);
+
+    const wasEditing = viewModeRef.current === 'editing';
 
     dispatch({
       type: 'INIT',
       payload: { pricingAnalysisId, approaches },
     });
 
-    // If no methods are selected yet (freshly created), enter edit mode
-    // so the user can pick approaches/methods. Otherwise show summary.
-    const hasSelections = approaches.some(a => a.methods.some(m => m.isSelected));
-    if (hasSelections) {
-      dispatch({ type: 'SUMMARY_ENTER' });
-    } else {
+    // If user was in editing mode (e.g. after add/delete mutation), stay in editing mode
+    if (wasEditing) {
       dispatch({ type: 'EDIT_ENTER' });
+      return;
     }
+
+    // Always start in summary mode — user opens the edit modal explicitly
+    dispatch({ type: 'SUMMARY_ENTER' });
   }, [groupDetail, pricingConfiguration, pricingSelection, allFactors, pricingAnalysisId]);
 
   // (4) Selection actions
@@ -279,6 +295,10 @@ function PricingAnalysisContent({
                         onCancelEditMode={selectionActions.cancelEdit}
                         onSelectCandidateMethod={selectionActions.selectCandidateMethod}
                         onSelectCandidateApproach={selectionActions.selectCandidateApproach}
+                        onAddMethod={selectionActions.addMethod}
+                        onDeleteMethod={selectionActions.requestDeleteMethod}
+                        pricingConfiguration={pricingConfiguration}
+                        deleteConfirm={selectionActions.deleteConfirm}
                       />
                       {!isCalcLoading && (
                         <MethodSectionRenderer

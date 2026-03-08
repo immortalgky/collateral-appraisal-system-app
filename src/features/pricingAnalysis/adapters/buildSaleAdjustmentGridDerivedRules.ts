@@ -15,16 +15,17 @@ import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDe
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { saleGridFieldPath } from '@/features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
 import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode';
-import type { MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
+import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue';
 
 export function buildSaleGridCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
   property: Record<string, any>;
+  allFactors: FactorDataType[];
 }): DerivedFieldRule[] {
   /** Calculation section */
-  const { surveys = [], property } = args;
+  const { surveys = [], property, allFactors } = args;
   const {
     adjustmentFactors: adjustmentFactorsPath,
     calculation: calculationPath,
@@ -131,7 +132,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
           compute: () => {
-            const propertyUsableArea = getPropertyValueByFactorCode('12', property) ?? 0;
+            const propertyUsableArea = getPropertyValueByFactorCode('12', property, allFactors) ?? 0;
             const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({
@@ -223,10 +224,11 @@ export function buildSaleGridCalculationDerivedRules(args: {
           deps: [],
           when: ({ getValues, getFieldState, formState }) => {
             const target = calculationWeightPath({ column: columnIndex });
-            const weight = getValues(calculationWeightPath({ column: columnIndex })) ?? 0;
-            const curr = getValues(target);
+            const weight = getValues(target) ?? 0;
             const { isDirty } = getFieldState(target, formState);
-            return shouldAutoDefault({ value: curr, isDirty }) || weight > 1 || weight < 0;
+            // Only auto-default when empty/zero and not user-edited, or out of valid range
+            if (isDirty) return weight > 1 || weight < 0;
+            return !weight || weight > 1 || weight < 0;
           },
           compute: () => {
             const numberOfSurveys = surveys.length ?? 0;
@@ -257,7 +259,7 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
+  const { surveys = [], qualitativeRows = [] } = args;
 
   const {
     qualitativeLevel: qualitativeLevelPath,
@@ -267,9 +269,15 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   return qualitativeRows
     .map((_, rowIndex: number) =>
       surveys.map((_, columnIndex: number) => {
+        const target = adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex });
         return {
-          targetPath: adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+          targetPath: target,
           deps: [qualitativeLevelPath({ row: rowIndex, column: columnIndex })],
+          when: ({ getValues }) => {
+            const curr = getValues(target);
+            // Only auto-default when empty — preserve restored/user-edited values
+            return curr == null || curr === '';
+          },
           compute: ({ getValues }) => {
             const level =
               getValues(qualitativeLevelPath({ row: rowIndex, column: columnIndex })) ?? null;
@@ -285,7 +293,7 @@ export function buildSaleGridAdjustmentFactorAmountRules(args: {
   surveys: MarketComparableDetailType[];
   qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
 }): DerivedFieldRule[] {
-  const { surveys = [], qualitativeRows } = args;
+  const { surveys = [], qualitativeRows = [] } = args;
 
   const {
     adjustmentFactorAdjustAmount: adjustmentFactorAdjustAmountPath,

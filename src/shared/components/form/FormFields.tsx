@@ -21,11 +21,7 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import {
-  evaluateConditions,
-  extractConditionFields,
-  setNestedValue,
-} from './conditions';
+import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
 import type { FormField } from './types';
 
 // =============================================================================
@@ -284,7 +280,15 @@ function FieldRenderer({
           disabled: isDisabled,
           ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
-        return <TextInput {...fieldProps} {...passedField} {...textProps} inputMask={inputMask} error={error?.message} />;
+        return (
+          <TextInput
+            {...fieldProps}
+            {...passedField}
+            {...textProps}
+            inputMask={inputMask}
+            error={error?.message}
+          />
+        );
       }
 
       case 'number-input': {
@@ -346,22 +350,12 @@ function FieldRenderer({
       }
 
       case 'boolean-toggle': {
-        const {
-          type: _bt,
-          name: _bn,
-          key: _bk,
-          ...boolToggleRest
-        } = passedField;
+        const { type: _bt, name: _bn, key: _bk, ...boolToggleRest } = passedField;
         return <FormBooleanToggle {...boolToggleRest} name={name} disabled={isDisabled} />;
       }
 
       case 'string-toggle': {
-        const {
-          type: _st,
-          name: _sn,
-          key: _sk,
-          ...strToggleRest
-        } = passedField;
+        const { type: _st, name: _sn, key: _sk, ...strToggleRest } = passedField;
         return <FormStringToggle {...strToggleRest} name={name} disabled={isDisabled} />;
       }
 
