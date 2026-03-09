@@ -232,7 +232,7 @@ export const createRequestFormDefault: createRequestFormType = {
 };
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
-  collateralStatus: '',
+  collateralStatus: false,
   titleNumber: '',
   titleType: '',
   notes: '',
@@ -251,7 +251,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vehicleAppointmentLocation: '',
   vin: '',
   licensePlateNumber: '',
-  registrationStatus: '',
+  registrationStatus: false,
   registrationNo: '',
   machineType: '',
   installationStatus: '',
