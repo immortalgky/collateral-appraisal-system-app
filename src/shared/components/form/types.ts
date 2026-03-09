@@ -90,6 +90,8 @@ interface BaseFormField {
   disabledValue?: unknown;
   /** Mark as required (shows asterisk, overrides schema) */
   required?: boolean;
+  /** Unconditionally hide the field (excluded from rendering and schema) */
+  hide?: boolean;
 
   // Conditional visibility (values kept when hidden)
   /** Show field when condition is met */
@@ -301,6 +303,8 @@ export interface LocationSelectorField extends BaseFormField {
 
 export interface FieldArrayField extends BaseFormField {
   type: 'field-array';
+  /** Display label used in validation error messages */
+  label?: string;
   /** Child fields defining the shape of each array element */
   fields: FormField[];
   /** Minimum number of items (maps to z.array().min()) */

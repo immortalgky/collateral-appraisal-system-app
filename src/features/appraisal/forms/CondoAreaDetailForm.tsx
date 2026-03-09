@@ -6,12 +6,12 @@ interface CondoAreaDetailFormProps {
 function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   return (
     <div className="col-span-12 border-2 rounded-2xl border-gray-100">
-      <FormTable headers={propertiesTableHeader} name={name} sumColumns={['areaSize']} />
+      <FormTable columns={condoAreaColumns} name={name} sumColumns={['areaSize']} />
     </div>
   );
 }
 
-const propertiesTableHeader = [
+const condoAreaColumns = [
   { rowNumberColumn: true as const, label: '#' },
   { name: 'areaDescription', label: 'Area Detail', width: '70%' },
   {

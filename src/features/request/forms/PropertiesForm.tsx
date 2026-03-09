@@ -7,7 +7,7 @@ const PropertiesForm = () => {
       <SectionHeader title="Properties" />
       <FormTable
         name="properties"
-        headers={propertiesTableHeader}
+        columns={propertiesColumns}
         sumColumns={['sellingPrice']}
         totalFieldName="detail.loanDetail.totalSellingPrice"
       />
@@ -15,7 +15,7 @@ const PropertiesForm = () => {
   );
 };
 
-const propertiesTableHeader = [
+const propertiesColumns = [
   {
     name: 'propertyType',
     label: 'Property Type',

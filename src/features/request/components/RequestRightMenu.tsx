@@ -72,7 +72,8 @@ const RequestRightMenu = ({
   const { control } = useFormContext();
 
   // Only use form state for overview tab data (titles, creator, requestor)
-  const titles = (useWatch({ control, name: 'titles' }) || []) as { titleDocuments?: unknown[] }[];
+  const requestDocuments = (useWatch({ control, name: 'documents' }) || []) as { fileName?: string | null }[];
+  const titles = (useWatch({ control, name: 'titles' }) || []) as { titleDocuments?: unknown[]; documents?: { fileName?: string | null }[] }[];
   const creator = useWatch({ control, name: 'creator' }) as UserDtoType;
   const requestor = useWatch({ control, name: 'requestor' }) as UserDtoType;
 
@@ -98,11 +99,13 @@ const RequestRightMenu = ({
     }
   }, [localComments, requestId, onLocalCommentsChange]);
 
-  // Count total title documents across all titles
-  const totalTitleDocs = titles.reduce(
-    (sum, title) => sum + (title.titleDocuments?.length || 0),
-    0,
-  );
+  // Count total uploaded attachments (request-level + title-level documents with a file)
+  const totalAttachments =
+    requestDocuments.filter(doc => doc.fileName).length +
+    titles.reduce(
+      (sum, title) => sum + (title.documents?.filter(doc => doc.fileName)?.length || 0),
+      0,
+    );
 
   // Helper to get initials from name
   const getInitials = (name: string): string => {
@@ -327,12 +330,6 @@ const RequestRightMenu = ({
                   muted={!requestData?.createdAt}
                 />
                 <InfoRow
-                  icon="calendar-clock"
-                  label="Due Date"
-                  value={requestData?.dueDate ? formatDate(requestData.dueDate) : 'Not set'}
-                  muted={!requestData?.dueDate}
-                />
-                <InfoRow
                   icon="calendar-check"
                   label="Completed"
                   value={formatDate(requestData?.completedAt)}
@@ -346,7 +343,7 @@ const RequestRightMenu = ({
               <SidebarLabel>Summary</SidebarLabel>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <StatCard label="Titles" value={String(titles.length)} icon="file-certificate" />
-                <StatCard label="Attachments" value={String(totalTitleDocs)} icon="paperclip" />
+                <StatCard label="Attachments" value={String(totalAttachments)} icon="paperclip" />
               </div>
             </div>
 

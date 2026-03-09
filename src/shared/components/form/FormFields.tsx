@@ -178,7 +178,7 @@ export function FormFields({
 
   return (
     <>
-      {fields.map(field => (
+      {fields.filter(f => !f.hide).map(field => (
         <FieldRenderer
           key={field.key ?? field.name}
           control={control}

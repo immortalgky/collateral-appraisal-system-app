@@ -163,6 +163,7 @@ const MarketComparableForm = () => {
       label: '',
       wrapperClassName: 'col-span-12',
       required: true,
+      maxLength: 200,
     },
     {
       type: 'datetime-input',
@@ -175,18 +176,23 @@ const MarketComparableForm = () => {
       name: 'sourceInfo',
       label: '',
       wrapperClassName: 'col-span-12',
+      maxLength: 200,
     },
     {
       type: 'number-input',
       name: 'offerPrice',
       label: '',
       wrapperClassName: 'col-span-12',
+      maxIntegerDigits: 15,
+      decimalPlaces: 2,
     },
     {
       type: 'number-input',
       name: 'salePrice',
       label: '',
       wrapperClassName: 'col-span-12',
+      maxIntegerDigits: 15,
+      decimalPlaces: 2,
     },
     {
       type: 'date-input',

@@ -3,6 +3,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import ActionBar from '@shared/components/ActionBar';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import UnsavedChangesDialog from '@shared/components/UnsavedChangesDialog';
@@ -540,43 +541,36 @@ const CreateLawAndRegulationPage = () => {
         </div>
 
         {/* Sticky Action Buttons */}
-        <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" type="button" onClick={navigateBack}>
-                Cancel
-              </Button>
-              <div className="h-6 w-px bg-gray-200" />
-              {isDirty && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  Unsaved changes
-                </span>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() => handleSave('draft')}
-                isLoading={isPending && saveAction === 'draft'}
-                disabled={isPending}
-              >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save draft
-              </Button>
-              <Button
-                type="button"
-                onClick={() => handleSave('submit')}
-                isLoading={isPending && saveAction === 'submit'}
-                disabled={isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ActionBar>
+          <ActionBar.Left>
+            <Button variant="ghost" type="button" onClick={navigateBack}>
+              Cancel
+            </Button>
+            <ActionBar.Divider />
+            <ActionBar.UnsavedIndicator show={isDirty} />
+          </ActionBar.Left>
+          <ActionBar.Right>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => handleSave('draft')}
+              isLoading={isPending && saveAction === 'draft'}
+              disabled={isPending}
+            >
+              <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+              Save draft
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleSave('submit')}
+              isLoading={isPending && saveAction === 'submit'}
+              disabled={isPending}
+            >
+              <Icon name="check" style="solid" className="size-4 mr-2" />
+              Save
+            </Button>
+          </ActionBar.Right>
+        </ActionBar>
 
         {/* Delete Confirmation */}
         <ConfirmDialog

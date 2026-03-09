@@ -12,6 +12,7 @@ import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
+import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -298,30 +299,23 @@ const CreateMarketComparablePage = () => {
           </div>
 
           {/* Sticky Action Bar */}
-          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <CancelButton />
-                <div className="h-6 w-px bg-gray-200" />
-                {isDirty && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Unsaved changes
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  isLoading={isPending}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ActionBar>
+            <ActionBar.Left>
+              <CancelButton />
+              <ActionBar.Divider />
+              <ActionBar.UnsavedIndicator show={isDirty} />
+            </ActionBar.Left>
+            <ActionBar.Right>
+              <Button
+                type="submit"
+                isLoading={isPending}
+                disabled={isPending}
+              >
+                <Icon name="check" style="solid" className="size-4 mr-2" />
+                Save
+              </Button>
+            </ActionBar.Right>
+          </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />
         </form>

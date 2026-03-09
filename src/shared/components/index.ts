@@ -1,4 +1,5 @@
 // Core UI Components
+export { default as ActionBar } from './ActionBar';
 export { default as Alert } from './Alert';
 export { default as Badge } from './Badge';
 export { default as Button } from './Button';
