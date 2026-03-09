@@ -70,7 +70,7 @@ export const RHFInputCell = ({
         error={error?.message}
         inputMode="numeric"
         className={clsx(
-          'w-full border border-gray-300 rounded-lg px-2 py-2 focus:scroll-smooth',
+          'w-full border border-gray-300 rounded-lg px-1.5 py-0.5 text-xs focus:scroll-smooth',
           disabled && 'opacity-50 cursor-not-allowed bg-gray-100',
         )}
       />

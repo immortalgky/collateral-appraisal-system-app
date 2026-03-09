@@ -1,5 +1,6 @@
-import { type FormField, FormFields } from '@/shared/components/form';
+import { FormFields } from '@/shared/components/form';
 import { SectionHeader } from '@shared/components';
+import { appointmentAndFeeFields } from '../configs/fields';
 
 const AppointmentAndFeeForm = () => {
   return (
@@ -13,42 +14,5 @@ const AppointmentAndFeeForm = () => {
     </div>
   );
 };
-
-const appointmentAndFeeFields: FormField[] = [
-  {
-    type: 'dropdown',
-    label: 'Fee Payment Type',
-    name: 'detail.fee.feePaymentType',
-    group: 'FeePaymentMethod',
-    wrapperClassName: 'col-span-1',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Fee Remark',
-    name: 'detail.fee.feeNotes',
-    wrapperClassName: 'col-span-1',
-  },
-  {
-    type: 'number-input',
-    label: 'Bank Absorb Amount',
-    name: 'detail.fee.absorbedAmount',
-    wrapperClassName: 'col-span-1',
-  },
-  {
-    type: 'datetime-input',
-    label: 'Appointment Date/Time',
-    name: 'detail.appointment.appointmentDateTime',
-    wrapperClassName: 'col-span-2',
-    required: true,
-  },
-  {
-    type: 'textarea',
-    label: 'Location Detail',
-    name: 'detail.appointment.appointmentLocation',
-    wrapperClassName: 'col-span-2',
-    required: true,
-  },
-];
 
 export default AppointmentAndFeeForm;

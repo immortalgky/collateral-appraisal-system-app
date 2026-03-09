@@ -47,7 +47,7 @@ export function restoreWQSFromSavedData({
     linkIdMap.set(lc.marketComparableId, lc.linkId);
   }
 
-  // Restore comparativeFactors — preserve existing record id
+  // Restore comparativeFactors — ALL factors for the top table
   const comparativeFactors = [...savedComparativeFactors]
     .sort((a, b) => a.displaySequence - b.displaySequence)
     .map(cf => ({
@@ -81,7 +81,7 @@ export function restoreWQSFromSavedData({
       factorId,
       factorCode: factorCodeMap.get(factorId) ?? '',
       weight: firstScore?.factorWeight ?? 0,
-      intensity: 0,
+      intensity: firstScore?.intensity ?? 0,
       surveys: surveyScores.map(s => ({
         id: s.id,
         marketId: s.marketComparableId ?? '',
@@ -115,7 +115,7 @@ export function restoreWQSFromSavedData({
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
       offeringPriceMeasurementUnit: saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
       offeringPriceAdjustmentPct: saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
-      offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+      offeringPriceAdjustmentAmt: saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
       sellingPriceMeasurementUnit: (surveyMap.get('20') as string) ?? '',
       sellingPriceAdjustmentYear: saved?.adjustedPeriodPct ?? toNum(surveyMap.get('23'), 3),
@@ -166,6 +166,7 @@ export function restoreWQSFromSavedData({
         lowestEstimate: 0,
         highestEstimate: 0,
         appraisalPriceRounded: 0,
+        priceDifferentiate: 0,
       },
       generateAt: new Date().toISOString(),
     },

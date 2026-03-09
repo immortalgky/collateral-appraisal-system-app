@@ -13,7 +13,7 @@ import type { RadioOption } from '../components/inputs/RadioGroup';
 export function getParametersByGroup(group: string): Parameter[] {
   const { parameters } = useParameterStore.getState();
   const { country, language } = useLocaleStore.getState();
-  const key = `${group}.${country}.${language}`;
+  const key = `${group}.${country}.${language}`.toLowerCase();
   return parameters[key] ?? [];
 }
 
@@ -45,7 +45,7 @@ export function useParametersByGroup(group: string): Parameter[] {
   const language = useLocaleStore(state => state.language);
 
   return useMemo(() => {
-    const key = `${group}.${country}.${language}`;
+    const key = `${group}.${country}.${language}`.toLowerCase();
     return parameters[key] ?? [];
   }, [parameters, group, country, language]);
 }

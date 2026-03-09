@@ -61,7 +61,7 @@ export function calcAdjustedValue(
   const amt = Number(offeringPriceAdjustmentAmt) || 0;
 
   if (pct > 0) return round2(price - (price * pct) / 100);
-  if (amt > 0) return round2(price - amt);
+  if (amt > 0) return round2(amt);
   return round2(price);
 }
 

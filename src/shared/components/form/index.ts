@@ -47,6 +47,7 @@ export type {
   SwitchField,
   AppraisalSelectorField,
   LocationSelectorField,
+  FieldArrayField,
   // Condition types
   ConditionOperator,
   FieldCondition,
@@ -62,3 +63,13 @@ export {
   getAllFieldConstraints,
   type FieldConstraints,
 } from './utils';
+
+// Schema Builder
+export {
+  mergeSchemas,
+  buildFormSchema,
+  type MergeSchemaOptions,
+} from './schemaBuilder';
+
+// Condition Evaluation (shared between UI and schema builder)
+export { evaluateCondition, evaluateConditions } from './conditions';

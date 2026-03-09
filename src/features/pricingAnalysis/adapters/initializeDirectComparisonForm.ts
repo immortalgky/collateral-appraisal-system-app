@@ -102,6 +102,7 @@ export function initializeDirectComparisonForm({
           usableArea: property.usableArea ?? undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
+          priceDifferentiate: 0,
         },
       },
       { keepDirty: false, keepDirtyValues: false, keepTouched: false },
@@ -131,7 +132,8 @@ export function initializeDirectComparisonForm({
         (calcFact: TemplateCalculationFactorType) => ({
           factorId: factorIdMap.get(calcFact.factorCode) ?? '',
           factorCode: calcFact.factorCode,
-          qualitatives: (comparativeSurveys ?? []).map(() => ({
+          qualitatives: (comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => ({
+            marketId: survey.id,
             qualitativeLevel: 'E',
           })),
         }),
@@ -159,7 +161,7 @@ export function initializeDirectComparisonForm({
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: survey.saleDate ?? '',
             sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
-            numberOfYears: 10, // TODO: convert selling date to number of year
+            numberOfYears: yearDiffFromToday(survey.saleDate),
 
             adjustedValue: 0,
 
@@ -190,6 +192,7 @@ export function initializeDirectComparisonForm({
         usableArea: property.usableArea ?? undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
+        priceDifferentiate: 0,
       },
     },
     { keepDirty: false, keepDirtyValues: false, keepTouched: false },

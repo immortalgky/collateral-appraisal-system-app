@@ -5,10 +5,18 @@ import Icon from '@shared/components/Icon';
 import Checkbox from '@shared/components/inputs/Checkbox';
 import type { MarketComparableFactorDtoType } from '@/shared/schemas/v1';
 import clsx from 'clsx';
+import { getTranslatedFactorName } from '@shared/utils/translationUtils';
+import { useLocaleStore } from '@shared/store';
 
 interface SelectedFactor {
   factorId: string;
   isMandatory: boolean;
+  isCalculationFactor: boolean;
+}
+
+interface SelectedState {
+  isMandatory: boolean;
+  isCalculationFactor: boolean;
 }
 
 interface AddFactorModalProps {
@@ -21,8 +29,9 @@ interface AddFactorModalProps {
 }
 
 const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isAdding }: AddFactorModalProps) => {
+  const language = useLocaleStore((s) => s.language);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<Map<string, boolean>>(new Map());
+  const [selected, setSelected] = useState<Map<string, SelectedState>>(new Map());
 
   const availableFactors = factors.filter(
     (f) => f.isActive && !excludeFactorIds.includes(f.id),
@@ -31,7 +40,7 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
   const filtered = availableFactors.filter(
     (f) =>
       f.factorCode.toLowerCase().includes(search.toLowerCase()) ||
-      f.factorName.toLowerCase().includes(search.toLowerCase()),
+      getTranslatedFactorName(f.translations, language).toLowerCase().includes(search.toLowerCase()),
   );
 
   const toggleSelect = (factorId: string) => {
@@ -40,7 +49,7 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
       if (next.has(factorId)) {
         next.delete(factorId);
       } else {
-        next.set(factorId, false);
+        next.set(factorId, { isMandatory: false, isCalculationFactor: false });
       }
       return next;
     });
@@ -49,15 +58,26 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
   const toggleMandatory = (factorId: string, isMandatory: boolean) => {
     setSelected((prev) => {
       const next = new Map(prev);
-      next.set(factorId, isMandatory);
+      const current = next.get(factorId);
+      if (current) next.set(factorId, { ...current, isMandatory });
+      return next;
+    });
+  };
+
+  const toggleCalculation = (factorId: string, isCalculationFactor: boolean) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      const current = next.get(factorId);
+      if (current) next.set(factorId, { ...current, isCalculationFactor });
       return next;
     });
   };
 
   const handleAdd = () => {
-    const selections = Array.from(selected.entries()).map(([factorId, isMandatory]) => ({
+    const selections = Array.from(selected.entries()).map(([factorId, state]) => ({
       factorId,
-      isMandatory,
+      isMandatory: state.isMandatory,
+      isCalculationFactor: state.isCalculationFactor,
     }));
     onAdd(selections);
     setSelected(new Map());
@@ -74,7 +94,7 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
     setSelected((prev) => {
       const next = new Map(prev);
       for (const f of filtered) {
-        if (!next.has(f.id)) next.set(f.id, false);
+        if (!next.has(f.id)) next.set(f.id, { isMandatory: false, isCalculationFactor: false });
       }
       return next;
     });
@@ -123,12 +143,13 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
                 <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">Name</th>
                 <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">Data Type</th>
                 <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">Mandatory</th>
+                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">Calculation</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((factor) => {
                 const isSelected = selected.has(factor.id);
-                const isMandatory = selected.get(factor.id) ?? false;
+                const state = selected.get(factor.id);
                 return (
                   <tr
                     key={factor.id}
@@ -138,17 +159,25 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
                     )}
                     onClick={() => toggleSelect(factor.id)}
                   >
-                    <td className="py-2 px-3 text-center">
+                    <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onChange={() => toggleSelect(factor.id)} />
                     </td>
                     <td className="py-2 px-3 text-sm font-mono text-gray-700">{factor.factorCode}</td>
-                    <td className="py-2 px-3 text-sm text-gray-900">{factor.factorName}</td>
+                    <td className="py-2 px-3 text-sm text-gray-900">{getTranslatedFactorName(factor.translations, language)}</td>
                     <td className="py-2 px-3 text-sm text-gray-600">{factor.dataType}</td>
                     <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
                       {isSelected && (
                         <Checkbox
-                          checked={isMandatory}
+                          checked={state?.isMandatory ?? false}
                           onChange={(checked) => toggleMandatory(factor.id, checked)}
+                        />
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      {isSelected && (
+                        <Checkbox
+                          checked={state?.isCalculationFactor ?? false}
+                          onChange={(checked) => toggleCalculation(factor.id, checked)}
                         />
                       )}
                     </td>

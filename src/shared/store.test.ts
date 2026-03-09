@@ -357,9 +357,9 @@ describe('useParameterStore', () => {
     });
 
     const { parameters } = useParameterStore.getState();
-    expect(parameters['collateral.TH.en']).toHaveLength(2);
-    expect(parameters['collateral.TH.en'][0].code).toBe('01');
-    expect(parameters['collateral.TH.en'][1].code).toBe('02');
+    expect(parameters['collateral.th.en']).toHaveLength(2);
+    expect(parameters['collateral.th.en'][0].code).toBe('01');
+    expect(parameters['collateral.th.en'][1].code).toBe('02');
   });
 
   // ------------------------------------------
@@ -378,9 +378,9 @@ describe('useParameterStore', () => {
 
     const { parameters } = useParameterStore.getState();
     expect(Object.keys(parameters)).toHaveLength(3);
-    expect(parameters['collateral.TH.en']).toHaveLength(1);
-    expect(parameters['status.TH.en']).toHaveLength(1);
-    expect(parameters['collateral.TH.th']).toHaveLength(1);
+    expect(parameters['collateral.th.en']).toHaveLength(1);
+    expect(parameters['status.th.en']).toHaveLength(1);
+    expect(parameters['collateral.th.th']).toHaveLength(1);
   });
 
   // ------------------------------------------

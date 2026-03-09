@@ -55,10 +55,10 @@ export const DirectComparisonForm = ({
           {comparativeMarketSurveys.length > 0 && (
             <>
               <div>
-                <div className="text-lg border-b border-neutral-300 py-2">
-                  Calculation of Appraisal Value
+                <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
+                  <h3 className="text-base font-semibold text-gray-800">Calculation of Appraisal Value</h3>
                 </div>
-                <div className="px-4 mt-4">
+                <div className="px-4">
                   <DirectComparisonScoringSection
                     property={property}
                     template={template}
@@ -67,8 +67,10 @@ export const DirectComparisonForm = ({
                 </div>
               </div>
               <div>
-                <div className="text-lg border-b border-neutral-300 py-2">Adjust Final Value</div>
-                <div className="px-4 mt-4">
+                <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
+                  <h3 className="text-base font-semibold text-gray-800">Adjust Final Value</h3>
+                </div>
+                <div className="px-4">
                   <DirectComparisonAdjustAppraisalPriceSection property={property} />
                 </div>
               </div>

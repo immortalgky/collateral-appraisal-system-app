@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
+import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
@@ -45,12 +46,13 @@ export const PropertyTableRow = ({
 }: PropertyTableRowProps) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
+  const basePath = usePropertyBasePath();
 
   const handleClick = () => {
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
       navigate(
-        `/appraisal/${appraisalId}/property/${routeSegment}/${property.id}?groupId=${groupId}`,
+        `/appraisal/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
       );
     }
   };

@@ -31,7 +31,7 @@ export const useParameterStore = create<ParameterStore>(set => ({
   setParameters: (params: Parameter[]) => {
     const mapped: StoredParameters = {};
     for (const param of params) {
-      const name = `${param.group}.${param.country}.${param.language}`;
+      const name = `${param.group}.${param.country}.${param.language}`.toLowerCase();
       if (Array.isArray(mapped[name])) {
         mapped[name].push(param);
       } else {
@@ -88,9 +88,10 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
 }));
 
 export const useLocaleStore = create<LocaleStore>(set => ({
-  country: 'TH',
-  language: 'EN',
-  setLocale: (country: string, language: string) => set({ country, language }),
+  country: 'th',
+  language: 'en',
+  setLocale: (country: string, language: string) =>
+    set({ country: country.toLowerCase(), language: language.toLowerCase() }),
 }));
 
 /**

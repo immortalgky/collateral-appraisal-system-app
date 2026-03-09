@@ -105,6 +105,7 @@ export function initializeSaleAdjustmentGridForm({
           usableArea: property.usableArea ?? undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
+          priceDifferentiate: 0,
         },
       },
       { keepDirty: false, keepDirtyValues: false, keepTouched: false },
@@ -163,7 +164,7 @@ export function initializeSaleAdjustmentGridForm({
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
             sellingDate: survey.saleDate ?? '',
             sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
-            numberOfYears: 10, // TODO: convert selling date to number of year
+            numberOfYears: yearDiffFromToday(survey.saleDate),
             adjustedValue: 0,
 
             // adjusted value
@@ -197,6 +198,7 @@ export function initializeSaleAdjustmentGridForm({
         usableArea: property.usableArea ?? undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
+        priceDifferentiate: 0,
       },
     },
     { keepDirty: false, keepDirtyValues: false, keepTouched: false },

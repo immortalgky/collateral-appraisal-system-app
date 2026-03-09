@@ -1,4 +1,4 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { FormFields } from '@/shared/components/form';
 import SurfaceTable from '../components/tables/SurfaceTable';
 import { BuildingDetail } from '../components/tables/BuildingDetail';
 import Icon from '@/shared/components/Icon';
@@ -7,6 +7,26 @@ import {
   usePropertyNameSoftDefault,
   type UsePropertyNameSoftDefaultOptions,
 } from '../hooks/usePropertyNameSoftDefault';
+  buildingInfoField,
+  buildingTypeField,
+  decorationField,
+  encroachmentField,
+  buildingMaterialField,
+  buildingStyleField,
+  isResidentialField,
+  constructionStyleField,
+  generalStructureField,
+  roofFrameField,
+  roofField,
+  ceilingField,
+  wallField,
+  fenceField,
+  constTypeFeild,
+  utilizationFeild,
+  buildingArea,
+  remarkBuildingField,
+} from '../configs/fields';
+
 interface BuildingDetailFormProps {
   prefix?: string;
   isLoaded: boolean;
@@ -129,343 +149,11 @@ const BuildingDetailForm = ({ prefix, isLoaded, softDefault }: BuildingDetailFor
       </SectionRow>
 
       <SectionRow title="Remark" icon="comment" isLast>
-        <FormFields fields={remarkField} />
+        <FormFields fields={remarkBuildingField} />
       </SectionRow>
     </div>
   );
 };
-
-const buildingInfoField: FormField[] = [
-  {
-    type: 'text-input',
-    label: 'Property Name',
-    name: 'propertyName',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Building No.',
-    name: 'buildingNumber',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'House No.',
-    name: 'houseNumber',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Model Name',
-    name: 'modelName',
-    wrapperClassName: 'col-span-6',
-    required: true,
-  },
-  {
-    type: 'boolean-toggle',
-    label: 'Check Owner',
-    name: 'isOwnerVerified',
-    required: true,
-    options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-3',
-  },
-  {
-    type: 'text-input',
-    label: 'Owner',
-    name: 'ownerName',
-    wrapperClassName: 'col-span-4',
-    required: true,
-    disableWhen: { field: 'isOwnerVerified', is: false },
-    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
-  },
-  {
-    type: 'text-input',
-    label: 'Construction on Title Deed No.',
-    name: 'builtOnTitleNumber',
-    wrapperClassName: 'col-span-5',
-    required: true,
-  },
-  {
-    type: 'radio-group',
-    label: 'Building Condition',
-    group: 'BuildingCondition',
-    orientation: 'horizontal',
-    name: 'buildingConditionType',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'boolean-toggle',
-    label: 'Under Construction',
-    name: 'isUnderConstruction',
-    wrapperClassName: 'col-span-3',
-    options: ['No', 'Yes'],
-  },
-  {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
-    wrapperClassName: 'col-span-3',
-    disableWhen: { field: 'isUnderConstruction', is: true },
-  },
-  {
-    type: 'datetime-input',
-    label: 'License Expiration Date',
-    name: 'constructionLicenseExpirationDate',
-    wrapperClassName: 'col-span-3',
-  },
-  {
-    type: 'boolean-toggle',
-    label: 'Is Appraise',
-    name: 'isAppraisable',
-    required: true,
-    options: ['Not Appraise', 'Appraise'],
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'boolean-toggle',
-    label: 'Is Obligation',
-    name: 'hasObligation',
-    options: ['No Obligation', 'Mortgage as Security'],
-    wrapperClassName: 'col-span-6',
-  },
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligationDetails',
-    wrapperClassName: 'col-span-12',
-    required: true,
-    showWhen: { field: 'hasObligation', is: true },
-  },
-];
-
-const buildingTypeField: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'buildingType',
-    orientation: 'horizontal',
-    group: 'BuildingType',
-    wrapperClassName: 'col-span-12',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Building Type Other',
-    name: 'buildingTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'buildingType', is: '99', operator: 'equals' },
-  },
-  {
-    type: 'number-input',
-    label: 'Total Floor',
-    name: 'numberOfFloors',
-    wrapperClassName: 'col-span-2',
-    required: true,
-  },
-];
-
-const decorationField: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'decorationType',
-    orientation: 'horizontal',
-    group: 'Decoration',
-    wrapperClassName: 'col-span-12',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Decoration Other',
-    name: 'decorationTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'decorationType', is: '99', operator: 'equals' },
-  },
-];
-
-const encroachmentField: FormField[] = [
-  {
-    type: 'boolean-toggle',
-    label: '',
-    name: 'isEncroachingOthers',
-    options: ['Is not Encroaching', 'Is Encroaching'],
-    wrapperClassName: 'col-span-4 flex items-center',
-  },
-  {
-    type: 'number-input',
-    label: 'Encroaching Area',
-    name: 'encroachingOthersArea',
-    wrapperClassName: 'col-span-2',
-    disableWhen: { field: 'isEncroachingOthers', is: false },
-  },
-  {
-    type: 'text-input',
-    label: 'Encroachment Remark',
-    name: 'encroachingOthersRemark',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'isEncroachingOthers', is: true },
-  },
-];
-
-const buildingMaterialField: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'buildingMaterialType',
-    orientation: 'horizontal',
-    group: 'BuildingMaterial',
-    wrapperClassName: 'col-span-12',
-  },
-];
-
-const buildingStyleField: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'buildingStyleType',
-    orientation: 'horizontal',
-    group: 'BuildingStyle',
-    wrapperClassName: 'col-span-12',
-  },
-];
-
-const isResidentialField: FormField[] = [
-  {
-    type: 'boolean-toggle',
-    label: '',
-    name: 'isResidential',
-    options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-10 flex items-center',
-  },
-  {
-    type: 'number-input',
-    label: 'Building Age',
-    name: 'buildingAge',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'textarea',
-    label: 'Due To',
-    name: 'residentialRemark',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'isResidential', is: false },
-  },
-];
-const constructionStyleField: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'constructionStyleType',
-    orientation: 'horizontal',
-    group: 'ConstructionStyle',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'textarea',
-    label: 'Remark',
-    name: 'constructionStyleRemark',
-    wrapperClassName: 'col-span-12',
-    required: false,
-  },
-];
-
-const generalStructureField: FormField[] = [
-  {
-    type: 'checkbox-group',
-    name: 'structureType',
-    orientation: 'horizontal',
-    group: 'GeneralStructure',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'structureTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'structureType', is: '99', operator: 'in' },
-  },
-];
-
-const roofFrameField: FormField[] = [
-  {
-    type: 'checkbox-group',
-    name: 'roofFrameType',
-    orientation: 'horizontal',
-    group: 'RoofFrame',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'roofFrameTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofFrameType', is: '99', operator: 'in' },
-  },
-];
-
-const roofField: FormField[] = [
-  {
-    type: 'checkbox-group',
-    name: 'roofType',
-    orientation: 'horizontal',
-    group: 'Roof',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'roofTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofType', is: '99', operator: 'in' },
-  },
-];
-
-const ceilingField: FormField[] = [
-  {
-    type: 'checkbox-group',
-    name: 'ceilingType',
-    orientation: 'horizontal',
-    group: 'Ceiling',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'ceilingTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'ceilingType', is: '99', operator: 'in' },
-  },
-];
-
-const wallField: FormField[] = [
-  {
-    type: 'checkbox-group',
-    label: 'Interior',
-    name: 'interiorWallType',
-    orientation: 'horizontal',
-    group: 'Interior',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'interiorWallTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'interiorWallType', is: '99', operator: 'in' },
-  },
-  {
-    type: 'checkbox-group',
-    label: 'Exterior',
-    name: 'exteriorWallType',
-    orientation: 'horizontal',
-    group: 'Exterior',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'exteriorWallTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'exteriorWallType', is: '99', operator: 'in' },
-  },
-];
 
 const surfaceTableHeader = [
   {
@@ -491,77 +179,6 @@ const surfaceTableHeader = [
     label: 'Floor Surface',
     inputType: 'dropdown' as const,
     group: 'FloorSurface',
-  },
-];
-
-const fenceField: FormField[] = [
-  {
-    type: 'checkbox-group',
-    name: 'fenceType',
-    orientation: 'horizontal',
-    group: 'Fence',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other',
-    name: 'fenceTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'fenchType', is: '99', operator: 'in' },
-  },
-];
-
-const constTypeFeild: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'constructionType',
-    orientation: 'horizontal',
-    group: 'ConstructionType',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'textarea',
-    label: 'Other',
-    name: 'constructionTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'constructionType', is: '99', operator: 'equals' },
-  },
-];
-
-const buildingArea: FormField[] = [
-  {
-    type: 'number-input',
-    name: 'totalBuildingArea',
-    label: 'Total Building Area (sq.m.)',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-];
-
-const utilizationFeild: FormField[] = [
-  {
-    type: 'radio-group',
-    name: 'utilizationType',
-    orientation: 'horizontal',
-    group: 'Utilization',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'textarea',
-    label: 'Other',
-    name: 'utilizationTypeOther',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'utilizationType', is: '99', operator: 'equals' },
-  },
-];
-
-const remarkField: FormField[] = [
-  {
-    type: 'textarea',
-    label: 'Remark',
-    name: 'remark',
-    wrapperClassName: 'col-span-12',
-    required: false,
   },
 ];
 

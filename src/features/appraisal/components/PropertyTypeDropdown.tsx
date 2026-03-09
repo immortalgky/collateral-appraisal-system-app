@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from '@shared/components/Icon';
 import clsx from 'clsx';
+import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 
 export const PROPERTY_TYPES = [
   {
@@ -95,6 +96,7 @@ export const PropertyTypeDropdown = ({
 }: PropertyTypeDropdownProps) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
+  const propertyBasePath = usePropertyBasePath();
 
   const handleSelect = (propertyType: (typeof PROPERTY_TYPES)[number]) => {
     if (onSelectType) {
@@ -103,11 +105,11 @@ export const PropertyTypeDropdown = ({
 
     if (!disableDefaultNavigation && propertyType.route) {
       // Navigate to the create page under appraisal context
-      const basePath = appraisalId
-        ? `/appraisal/${appraisalId}/property/${propertyType.route}/new`
+      const targetPath = appraisalId
+        ? `/appraisal/${appraisalId}/${propertyBasePath}/${propertyType.route}/new`
         : `/${propertyType.route}-detail`;
 
-      navigate(`${basePath}?groupId=${groupId}&type=${encodeURIComponent(propertyType.type)}`);
+      navigate(`${targetPath}?groupId=${groupId}&type=${encodeURIComponent(propertyType.type)}`);
     }
   };
 

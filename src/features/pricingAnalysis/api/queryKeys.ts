@@ -7,4 +7,6 @@ export const pricingAnalysisKeys = {
   allFactors: ['all-factors'] as const,
   comparables: (appraisalId: string) => ['appraisals', appraisalId, 'comparables'] as const,
   marketComparableDetail: (id: string) => ['market-comparables', 'detail', id] as const,
+  finalValue: (id: string, methodId: string) =>
+    ['price-analysis', id, 'final-value', methodId] as const,
 };

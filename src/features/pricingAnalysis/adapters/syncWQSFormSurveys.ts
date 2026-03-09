@@ -40,39 +40,52 @@ export function syncWQSFormSurveys({
         displaySeq: index + 1,
       })),
       WQSScores:
-        getValues('WQSScores')?.map(score => ({
-          ...score,
-          surveys: comparativeSurveys.map(survey => ({ marketId: survey.id, surveyScore: 0 })),
-        })) ?? [],
+        getValues('WQSScores')?.map(score => {
+          // Build lookup of existing survey scores by marketId
+          const prevScoreMap = new Map<string, number>();
+          for (const s of score.surveys ?? []) prevScoreMap.set(s.marketId, s.surveyScore);
+          return {
+            ...score,
+            surveys: comparativeSurveys.map(survey => ({
+              marketId: survey.id,
+              surveyScore: prevScoreMap.get(survey.id) ?? 0,
+            })),
+          };
+        }) ?? [],
       WQSTotalScores: {
-        totalWeight: 0,
-        totalIntensity: 0,
-        totalWeightedIntensity: 0,
+        ...currentFormValue.WQSTotalScores,
         surveys: comparativeSurveys.map(survey => ({
           marketId: survey.id.toString(),
         })),
-        totalCollateralScore: 0,
-        totalWeightedCollateralScore: 0,
       },
-      WQSCalculations: comparativeSurveys.map((survey: MarketComparableDetailType) => {
-        const surveyMap = new Map(
-          survey.factorData?.map((s: FactorDataType) => [
-            s.factorCode,
-            readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
-          ]),
-        );
-        return {
-          marketId: survey.id.toString(),
-          offeringPrice: survey.offerPrice ?? 0,
-          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
-          offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
-          sellingPrice: survey.salePrice ?? 0,
-          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
-          sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
-          numberOfYears: yearDiffFromToday(survey.saleDate),
-        };
-      }) as WQSCalculationType[],
+      WQSCalculations: (() => {
+        const prevCalcMap = new Map<string, WQSCalculationType>();
+        for (const c of currentFormValue.WQSCalculations ?? []) {
+          prevCalcMap.set(c.marketId, c);
+        }
+        return comparativeSurveys.map((survey: MarketComparableDetailType) => {
+          const existing = prevCalcMap.get(survey.id.toString());
+          if (existing) return existing;
+
+          const surveyMap = new Map(
+            survey.factorData?.map((s: FactorDataType) => [
+              s.factorCode,
+              readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
+            ]),
+          );
+          return {
+            marketId: survey.id.toString(),
+            offeringPrice: survey.offerPrice ?? 0,
+            offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+            offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
+            sellingPrice: survey.salePrice ?? 0,
+            sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
+            numberOfYears: yearDiffFromToday(survey.saleDate),
+          };
+        }) as WQSCalculationType[];
+      })(),
     },
     { isDirty: true },
   );

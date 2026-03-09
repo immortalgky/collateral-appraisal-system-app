@@ -67,19 +67,19 @@ const Checkbox = ({
             isDisabled
               ? 'cursor-not-allowed bg-gray-50 border-gray-200'
               : 'cursor-pointer border-gray-200 hover:border-gray-400 hover:bg-gray-50/50',
-            'data-checked:border-gray-700 data-checked:bg-gray-50',
+            'data-checked:border-primary data-checked:bg-primary/5',
             error && 'border-danger',
           )}
         >
           {/* Checkbox indicator */}
           <span
             className={clsx(
-              'flex items-center justify-center rounded border-2 transition-all duration-200 shrink-0',
+              'flex items-center justify-center rounded-md border-2 transition-all duration-200 shrink-0',
               sizeStyles[size],
               isDisabled
                 ? 'bg-gray-100 border-gray-300'
-                : 'border-gray-300 group-hover:border-gray-500',
-              'group-data-checked:bg-gray-700 group-data-checked:border-gray-700',
+                : 'border-gray-300 group-hover:border-primary/40',
+              'group-data-checked:bg-primary group-data-checked:border-primary',
             )}
           >
             <Icon
@@ -135,13 +135,13 @@ const Checkbox = ({
       >
         <span
           className={clsx(
-            'flex items-center justify-center rounded border-2 transition-all duration-150 mt-0.5 shrink-0',
+            'flex items-center justify-center rounded-md border-2 transition-all duration-150 mt-0.5 shrink-0',
             sizeStyles[size],
             isDisabled
               ? 'bg-gray-100 border-gray-300'
-              : 'border-gray-300 group-hover:border-gray-500',
-            'group-data-checked:bg-gray-700 group-data-checked:border-gray-700',
-            'group-focus:ring-2 group-focus:ring-gray-200 group-focus:ring-offset-1',
+              : 'border-gray-300 group-hover:border-primary/40',
+            'group-data-checked:bg-primary group-data-checked:border-primary',
+            'group-focus:ring-2 group-focus:ring-primary/20 group-focus:ring-offset-1',
             error && 'border-danger',
           )}
         >

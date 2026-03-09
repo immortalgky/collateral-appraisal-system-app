@@ -1,19 +1,16 @@
-import { useState } from 'react';
-import { type FormField, FormFields } from '@/shared/components/form';
+import { FormFields } from '@/shared/components/form';
+import { dopaAddressFields } from '../configs/fields';
 import TitleInformationHeader from '../components/TitleInformationHeader';
 import { useFormContext } from 'react-hook-form';
-import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 
 interface DopaAdressFormProps {
   index: number;
 }
 
 const DopaAddressForm = ({ index }: DopaAdressFormProps) => {
-  const { getValues, setValue, watch } = useFormContext();
-  const [selectedAddress, setSelectedAddress] = useState<ThaiAddress | null>(null);
+  const { getValues, setValue } = useFormContext();
 
   const prefix = `titles.${index}.dopaAddress`;
-  const postcode = watch(`${prefix}.postcode`);
 
   const handleCopy = () => {
     const titleAddress = getValues(`titles.${index}.titleAddress`);
@@ -31,139 +28,12 @@ const DopaAddressForm = ({ index }: DopaAdressFormProps) => {
     setValue(`${prefix}.road`, titleAddress.road);
   };
 
-  const handleAddressSelect = (address: ThaiAddress | null) => {
-    setSelectedAddress(address);
-    if (address) {
-      setValue(`${prefix}.subDistrict`, address.subDistrictCode);
-      setValue(`${prefix}.subDistrictName`, address.subDistrictName);
-      setValue(`${prefix}.district`, address.districtCode);
-      setValue(`${prefix}.districtName`, address.districtName);
-      setValue(`${prefix}.province`, address.provinceCode);
-      setValue(`${prefix}.provinceName`, address.provinceName);
-      setValue(`${prefix}.postcode`, address.postcode);
-    } else {
-      setValue(`${prefix}.subDistrict`, '');
-      setValue(`${prefix}.subDistrictName`, '');
-      setValue(`${prefix}.district`, '');
-      setValue(`${prefix}.districtName`, '');
-      setValue(`${prefix}.province`, '');
-      setValue(`${prefix}.provinceName`, '');
-      setValue(`${prefix}.postcode`, '');
-    }
-  };
-
   return (
     <>
       <TitleInformationHeader title="DOPA address" onCopy={handleCopy} className="col-span-6" />
-      <FormFields fields={dopaAddressFieldsTop} namePrefix={'titles'} index={index} />
-
-      {/* Address autocomplete row */}
-      {/*<div className="col-span-2">*/}
-      {/*  <AddressAutocomplete*/}
-      {/*    label="Sub District"*/}
-      {/*    value={selectedAddress}*/}
-      {/*    onChange={handleAddressSelect}*/}
-      {/*    required*/}
-      {/*  />*/}
-      {/*</div>*/}
-
-      {/*<div className="col-span-2">*/}
-      {/*  <TextInput*/}
-      {/*    label="District"*/}
-      {/*    value={selectedAddress?.districtName || ''}*/}
-      {/*    onChange={() => {}}*/}
-      {/*    disabled*/}
-      {/*    required*/}
-      {/*  />*/}
-      {/*</div>*/}
-
-      {/*<div className="col-span-2">*/}
-      {/*  <TextInput*/}
-      {/*    label="Province"*/}
-      {/*    value={selectedAddress?.provinceName || ''}*/}
-      {/*    onChange={() => {}}*/}
-      {/*    disabled*/}
-      {/*    required*/}
-      {/*  />*/}
-      {/*</div>*/}
-
-      {/*<div className="col-span-2">*/}
-      {/*  <TextInput*/}
-      {/*    label="Postcode"*/}
-      {/*    value={selectedAddress?.postcode || postcode || ''}*/}
-      {/*    onChange={() => {}}*/}
-      {/*    disabled*/}
-      {/*  />*/}
-      {/*</div>*/}
+      <FormFields fields={dopaAddressFields} namePrefix={'titles'} index={index} />
     </>
   );
 };
-
-// Fields before the autocomplete row
-export const dopaAddressFieldsTop: FormField[] = [
-  {
-    type: 'text-input',
-    label: 'House No',
-    name: 'dopaAddress.houseNumber',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Village/Building Name',
-    name: 'dopaAddress.projectName',
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'text-input',
-    label: 'Moo',
-    name: 'dopaAddress.moo',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Soi',
-    name: 'dopaAddress.soi',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Road',
-    name: 'dopaAddress.road',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'location-selector',
-    label: 'Sub District',
-    name: 'dopaAddress.subDistrict',
-    districtField: 'dopaAddress.district',
-    districtNameField: 'dopaAddress.districtName',
-    provinceField: 'dopaAddress.province',
-    provinceNameField: 'dopaAddress.provinceName',
-    postcodeField: 'dopaAddress.postcode',
-    subDistrictNameField: 'dopaAddress.subDistrictName',
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'District',
-    name: 'dopaAddress.districtName',
-    disabled: true,
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Province',
-    name: 'dopaAddress.provinceName',
-    disabled: true,
-    wrapperClassName: 'col-span-2',
-  },
-  {
-    type: 'text-input',
-    label: 'Postcode',
-    name: 'dopaAddress.postcode',
-    disabled: true,
-    wrapperClassName: 'col-span-2',
-  },
-];
 
 export default DopaAddressForm;

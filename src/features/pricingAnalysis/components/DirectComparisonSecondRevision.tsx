@@ -28,24 +28,20 @@ export function DirectComparisonSecondRevision({
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
   const leftColumnBody =
-    'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-2.5 sticky left-0 z-20 w-[350px] min-w-[350px] max-w-[350px] h-14 whitespace-nowrap';
-  const bgGradientLeft =
-    'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
+    'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-1.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] h-10 whitespace-nowrap';
   const collateralColumnBody =
-    'border-b border-gray-300 text-left font-medium sticky right-[70px] z-25 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap';
-  const actionColumnBody =
-    'border-b border-gray-300 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]';
-  const surveyStyle = 'px-3 py-2.5 border-b border-r border-gray-300';
+    'border-b border-r border-gray-300 text-left font-medium px-3 py-1.5 w-[200px] min-w-[200px] max-w-[200px] whitespace-nowrap';
+  const surveyStyle = 'px-3 py-1.5 border-b border-r border-gray-300';
 
   return (
     <>
       <tr>
-        <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>2nd Revision</td>
+        <td className={clsx('bg-gray-100', leftColumnBody, bgGradient)}>2nd Revision</td>
         {comparativeSurveys.map((survey: MarketComparableDetailType) => {
-          return <td key={survey.id} className={clsx('bg-gray-200', surveyStyle)}></td>;
+          return <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>;
         })}
-        <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
-        <td className={clsx('bg-gray-200', actionColumnBody)}></td>
+        <td className={clsx('bg-gray-100', collateralColumnBody)}></td>
+
       </tr>
       {collateralType === 'LB' && (
         <>
@@ -71,8 +67,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -99,8 +95,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -122,8 +118,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
         </>
       )}
@@ -149,8 +145,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -175,8 +171,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -200,8 +196,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -220,8 +216,8 @@ export function DirectComparisonSecondRevision({
                 </td>
               );
             })}
-            <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-            <td className={clsx('bg-white', actionColumnBody)}></td>
+            <td className={clsx('bg-white', collateralColumnBody)}></td>
+
           </tr>
         </>
       )}

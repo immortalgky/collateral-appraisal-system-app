@@ -5,15 +5,15 @@ import { WQSPanel } from '@features/pricingAnalysis/components/WQSPanel.tsx';
 import type { PricingServerData } from '../types/selection';
 import type {
   GetComparativeFactorsResponseType,
-  TemplateDetailType,
 } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
   serverData: PricingServerData;
   calculationMethodData: {
-    pricingTemplate: TemplateDetailType[] | null | undefined;
     comparativeFactors: GetComparativeFactorsResponseType | undefined;
+    templateList: TemplateDtoType[] | undefined;
   };
   onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
@@ -33,11 +33,13 @@ export function MethodSectionRenderer({
     property: serverData.properties,
     marketSurveys: serverData.marketSurveyDetails,
     allFactors: serverData.allFactors,
-    methodTemplates: calculationMethodData.pricingTemplate,
+    templateList: calculationMethodData.templateList,
     linkedComparables: calculationMethodData.comparativeFactors?.linkedComparables,
     savedComparativeFactors: calculationMethodData.comparativeFactors?.comparativeFactors,
     savedFactorScores: calculationMethodData.comparativeFactors?.factorScores,
     savedCalculations: calculationMethodData.comparativeFactors?.calculations,
+    savedComparativeAnalysisTemplateId: calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
+    savedMethodValue: calculationMethodData.comparativeFactors?.methodValue ?? null,
     onCalculationSave,
     onCalculationMethodDirty,
     onCancelCalculationMethod,

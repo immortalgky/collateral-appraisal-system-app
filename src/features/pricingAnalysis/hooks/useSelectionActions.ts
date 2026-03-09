@@ -8,6 +8,17 @@ import type { SelectionAction, SelectionState } from '../store/selectionReducer'
 import type { Approach, Method } from '../types/selection';
 import { useSaveEditingSelection } from '../store/saveEditingSelection';
 import { pricingAnalysisKeys } from '../api/queryKeys';
+import {
+  useAddPricingAnalysisApproach,
+  useAddPricingAnalysisMethod,
+  useDeletePricingAnalysisMethod,
+  useSelectMethod,
+} from '../api';
+import {
+  isServerId,
+  mapToServerApproachType,
+  mapToServerMethodType,
+} from '../store/saveEditingSelection';
 
 type MethodKey = { approachType: string; methodType: string };
 
@@ -64,11 +75,11 @@ export function useSelectionActions({
   const saveEdit = async () => {
     const selections =
       state.editDraft
-        .filter((a: Approach) => a.methods.some((m: Method) => m.isSelected))
+        .filter((a: Approach) => a.methods.some((m: Method) => m.isIncluded))
         .map((a: Approach) => ({
           approachType: a.approachType,
           methodTypes: a.methods
-            .filter((m: Method) => m.isSelected)
+            .filter((m: Method) => m.isIncluded)
             .map((m: Method) => m.methodType),
         }))
         .sort((a, b) => a.approachType.localeCompare(b.approachType)) ?? [];
@@ -93,6 +104,7 @@ export function useSelectionActions({
         pricingAnalysisId,
         groupId,
         selections,
+        existingApproaches: state.editDraft,
       });
 
       dispatch({ type: 'EDIT_SAVE' });
@@ -116,6 +128,8 @@ export function useSelectionActions({
     }
   };
 
+  const selectMethodMutation = useSelectMethod();
+
   const selectCandidateMethod = (arg: MethodKey) => {
     const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
     const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
@@ -126,11 +140,23 @@ export function useSelectionActions({
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_METHOD', payload: arg });
+
+    // Persist selection to server
+    if (method?.id && isServerId(method.id)) {
+      selectMethodMutation.mutate(
+        { pricingAnalysisId, methodId: method.id },
+        {
+          onError: (err: any) => {
+            toast.error(err?.apiError?.detail ?? 'Failed to select method');
+          },
+        },
+      );
+    }
   };
 
   const selectCandidateApproach = (approachType: string) => {
     const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
-    const method = appr?.methods.some((m: Method) => m.isCandidated);
+    const method = appr?.methods.some((m: Method) => m.isSelected);
 
     if (!method) {
       toast.error('Method does not select');
@@ -164,6 +190,79 @@ export function useSelectionActions({
     });
   };
 
+  // ==================== Add Method ====================
+  const addApproachMutation = useAddPricingAnalysisApproach();
+  const addMethodMutation = useAddPricingAnalysisMethod();
+
+  const addMethod = async (arg: MethodKey) => {
+    try {
+      const appr = state.editDraft.find((a: Approach) => a.approachType === arg.approachType);
+      let approachId = appr?.id;
+
+      // If approach doesn't have a server UUID, create it first
+      if (!approachId || !isServerId(approachId)) {
+        const res = await addApproachMutation.mutateAsync({
+          pricingAnalysisId,
+          request: { approachType: mapToServerApproachType(arg.approachType) },
+        });
+        approachId = res.id;
+      }
+
+      await addMethodMutation.mutateAsync({
+        pricingAnalysisId,
+        approachId,
+        request: { methodType: mapToServerMethodType(arg.methodType) },
+      });
+
+      toast.success('Method added');
+    } catch (err: any) {
+      toast.error(err?.apiError?.detail ?? 'Failed to add method');
+    }
+  };
+
+  // ==================== Delete Method ====================
+  const deleteMethodMutation = useDeletePricingAnalysisMethod();
+  const { isOpen: isDeleteOpen, onOpen: openDelete, onClose: closeDelete } = useDisclosure();
+  const [pendingDelete, setPendingDelete] = useState<(MethodKey & { methodId: string; hasData: boolean }) | null>(null);
+
+  const requestDeleteMethod = (arg: MethodKey) => {
+    const appr = state.editDraft.find((a: Approach) => a.approachType === arg.approachType);
+    const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
+    if (!method?.id || !isServerId(method.id) || !appr?.id || !isServerId(appr.id)) return;
+
+    setPendingDelete({
+      ...arg,
+      methodId: method.id,
+      hasData: (method.appraisalValue ?? 0) > 0,
+    });
+    openDelete();
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+
+    const appr = state.editDraft.find((a: Approach) => a.approachType === pendingDelete.approachType);
+    if (!appr?.id || !isServerId(appr.id)) return;
+
+    try {
+      await deleteMethodMutation.mutateAsync({
+        pricingAnalysisId,
+        approachId: appr.id,
+        methodId: pendingDelete.methodId,
+      });
+      toast.success('Method deleted');
+      setPendingDelete(null);
+      closeDelete();
+    } catch (err: any) {
+      toast.error(err?.apiError?.detail ?? 'Failed to delete method');
+    }
+  };
+
+  const cancelDelete = () => {
+    setPendingDelete(null);
+    closeDelete();
+  };
+
   return {
     enterEdit,
     cancelEdit,
@@ -174,12 +273,23 @@ export function useSelectionActions({
     saveSummary,
     cancelPricingAccordion,
     changeSystemCalculation,
+    addMethod,
+    requestDeleteMethod,
 
     confirm: {
       isOpen: isConfirmOpen,
       pending: pendingDeselect,
       confirmDeselect,
       cancelDeselect,
+    },
+
+    deleteConfirm: {
+      isOpen: isDeleteOpen,
+      pending: pendingDelete,
+      hasData: pendingDelete?.hasData ?? false,
+      confirmDelete,
+      cancelDelete,
+      isDeleting: deleteMethodMutation.isPending,
     },
   };
 }

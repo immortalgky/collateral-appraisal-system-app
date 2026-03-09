@@ -1,5 +1,6 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useContext, useMemo } from 'react';
+import { format } from 'date-fns';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
@@ -26,6 +27,7 @@ import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/g
 import { SaleAdjustmentGridSecondRevision } from '@features/pricingAnalysis/components/SaleAdjustmentGridSecondRevision.tsx';
 import { qualitativeDefault } from '@features/pricingAnalysis/domain/qualitativeDefault.ts';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
+import { useLocaleStore } from '@shared/store';
 
 interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -75,6 +77,7 @@ export const SaleAdjustmentGridScoringSection = ({
   } = saleGridFieldPath;
 
   const serverData = useContext(ServerDataCtx);
+  const language = useLocaleStore(s => s.language);
   const { control, getValues, setValue } = useFormContext();
   const {
     fields: qualitativeFactorFields,
@@ -142,10 +145,11 @@ export const SaleAdjustmentGridScoringSection = ({
     const rules = buildSaleGridCalculationDerivedRules({
       surveys: comparativeSurveys,
       property: property,
+      allFactors: serverData.allFactors ?? [],
     });
 
     return rules;
-  }, [comparativeSurveys, property]);
+  }, [comparativeSurveys, property, serverData.allFactors]);
 
   const adjustPercentDefaultRules: DerivedFieldRule<any>[] = useMemo(() => {
     return buildSaleGridAdjustmentFactorDefaultPercentRules({
@@ -176,46 +180,42 @@ export const SaleAdjustmentGridScoringSection = ({
   const bgGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full';
   const leftColumnBody =
-    'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-2.5 sticky left-0 z-20 w-[350px] min-w-[350px] max-w-[350px] h-14 whitespace-nowrap';
-  const bgGradientLeft =
-    'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
+    'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-1.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] h-10 whitespace-nowrap';
   const collateralColumnBody =
-    'border-b border-gray-300 text-left font-medium sticky right-[70px] z-25 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap';
-  const actionColumnBody =
-    'border-b border-gray-300 sticky right-0 z-25 w-[70px] min-w-[70px] max-w-[70px]';
-  const surveyColumnBody = 'px-3 py-2.5 border-b border-r border-gray-300';
+    'border-b border-r border-gray-300 text-left font-medium px-3 py-1.5 w-[200px] min-w-[200px] max-w-[200px] whitespace-nowrap';
+  const surveyColumnBody = 'px-3 py-1.5 border-b border-r border-gray-300';
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col border border-gray-300 rounded-xl">
       <div className="flex-1 min-h-0 overflow-auto border-separate border-spacing-0">
-        <table className="table table-sm min-w-max">
-          <thead className="bg-neutral-50">
-            <tr className="border-b border-gray-300">
+        <table className="table table-xs min-w-max">
+          <thead className="bg-gray-50/95 backdrop-blur-sm">
+            <tr className="border-b border-gray-200">
               <th
                 rowSpan={comparativeSurveys.length > 0 ? 2 : 1}
                 className={clsx(
-                  'bg-gray-50 border-gray-300 text-left font-medium sticky top-0 left-0 z-25 w-[250px] min-w-[250px] max-w-[250px] whitespace-nowrap',
+                  'bg-gray-50/95 backdrop-blur-sm border-gray-200 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-0 left-0 z-25 w-[250px] min-w-[250px] max-w-[250px] px-3 py-1.5 whitespace-nowrap',
                   bgGradient,
                 )}
               >
-                <div>Factors</div>
+                Factors
               </th>
               {comparativeSurveys.length > 0 && (
                 <th
                   colSpan={comparativeSurveys.length}
-                  className="bg-gray-50 border-b border-r border-gray-300 text-center font-medium sticky top-0 z-23 h-[40px] min-h-[40px] max-h-[40px] whitespace-nowrap"
+                  className="bg-gray-50 border-b border-r border-gray-300 text-center font-medium sticky top-0 z-23 h-[32px] min-h-[32px] max-h-[32px] whitespace-nowrap"
                 >
                   <div>Comparative Data</div>
                 </th>
               )}
-              <th rowSpan={2} className={clsx('bg-gray-50', collateralColumnBody, bgGradientLeft)}>
-                <div>Collateral</div>
-              </th>
               <th
-                rowSpan={2}
-                className="bg-gray-50 border-b border-gray-300 text-center sticky top-0 right-0 z-25 w-[70px] min-w-[70px] max-w-[70px] whitespace-nowrap"
+                rowSpan={comparativeSurveys.length > 0 ? 2 : 1}
+                className={clsx(
+                  'bg-gray-50/95 backdrop-blur-sm text-xs font-semibold text-gray-500 uppercase tracking-wider',
+                  collateralColumnBody,
+                )}
               >
-                <div></div>
+                Collateral
               </th>
             </tr>
             <tr className="border-b border-gray-300">
@@ -224,7 +224,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   <th
                     key={survey.id}
                     className={
-                      'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[40px] h-[45px] min-h-[45px] max-h-[45px] z-23 whitespace-nowrap'
+                      'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[32px] h-[32px] min-h-[32px] max-h-[32px] z-23 whitespace-nowrap'
                     }
                   >
                     <div>{survey.surveyName}</div>
@@ -244,40 +244,53 @@ export const SaleAdjustmentGridScoringSection = ({
                   cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                 )
                 .map(cf => ({
-                  label: getFactorDesciption(cf.factorCode, serverData.allFactors ?? []) ?? '',
+                  label: getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ?? '',
                   value: cf.factorCode,
                 }));
               const isTemplateFactor = (template?.calculationFactors ?? []).some(
                 t => t.factorCode === selected,
               );
               return (
-                <tr key={field.id}>
+                <tr key={field.id} className="group">
                   <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                    <div className="truncate">
-                      {isTemplateFactor ? (
-                        <RHFInputCell
-                          fieldName={qualitativeFactorCodePath({ row: rowIndex })}
-                          inputType="display"
-                          accessor={({ value }) =>
-                            value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
-                          }
-                        />
-                      ) : (
-                        <RHFInputCell
-                          fieldName={qualitativeFactorCodePath({ row: rowIndex })}
-                          inputType="select"
-                          options={options}
-                          onSelectChange={(value) => {
-                            const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
-                            const fid = factor?.factorId ?? factor?.id ?? '';
-                            setValue(`saleAdjustmentGridQualitatives.${rowIndex}.factorId`, fid);
-                            setValue(`saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorId`, fid);
-                          }}
-                        />
+                    <div className="flex items-center gap-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate">
+                          {isTemplateFactor ? (
+                            <RHFInputCell
+                              fieldName={qualitativeFactorCodePath({ row: rowIndex })}
+                              inputType="display"
+                              accessor={({ value }) =>
+                                value ? getFactorDesciption(value.toString(), serverData.allFactors ?? [], language) : ''
+                              }
+                            />
+                          ) : (
+                            <RHFInputCell
+                              fieldName={qualitativeFactorCodePath({ row: rowIndex })}
+                              inputType="select"
+                              options={options}
+                              onSelectChange={(value) => {
+                                const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
+                                const fid = factor?.factorId ?? factor?.id ?? '';
+                                setValue(`saleAdjustmentGridQualitatives.${rowIndex}.factorId`, fid);
+                                setValue(`saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorId`, fid);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      {!isTemplateFactor && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRow(rowIndex)}
+                          className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Delete"
+                        >
+                          <Icon style="solid" name="trash" className="size-2.5" />
+                        </button>
                       )}
                     </div>
                   </td>
-
                   {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                     return (
                       <td key={survey.id} className={clsx(surveyColumnBody)}>
@@ -290,9 +303,9 @@ export const SaleAdjustmentGridScoringSection = ({
                               })}
                               inputType="select"
                               options={[
-                                { label: 'Equal', value: 'E' },
-                                { label: 'Inferior', value: 'I' },
-                                { label: 'Better', value: 'B' },
+                                { label: 'Equal', value: 'E', colorClass: 'text-gray-600' },
+                                { label: 'Inferior', value: 'I', colorClass: 'text-red-600' },
+                                { label: 'Better', value: 'B', colorClass: 'text-green-600' },
                               ]}
                             />
                           </div>
@@ -323,38 +336,21 @@ export const SaleAdjustmentGridScoringSection = ({
                     );
                   })}
 
-                  <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}>
+                  <td className={clsx('bg-white', collateralColumnBody)}>
                     <RHFInputCell
                       fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => {
                         return (
                           <div
-                            title={getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                            title={getPropertyValueByFactorCode(value.toString(), property, serverData.allFactors ?? []) ?? ''}
                             className="truncate"
                           >
-                            {getPropertyValueByFactorCode(value.toString(), property) ?? ''}
+                            {getPropertyValueByFactorCode(value.toString(), property, serverData.allFactors ?? []) ?? ''}
                           </div>
                         );
                       }}
                     />
-                  </td>
-                  <td className={clsx('bg-white', actionColumnBody)}>
-                    {/* if rowIndex > template factors length, show delete button */}
-                    {!isTemplateFactor && (
-                      <div className="flex flex-row justify-center items-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleRemoveRow(rowIndex);
-                          }}
-                          className="w-8 h-8 flex items-center justify-center cursor-pointer rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors "
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-3.5" />
-                        </button>
-                      </div>
-                    )}
                   </td>
                 </tr>
               );
@@ -372,18 +368,16 @@ export const SaleAdjustmentGridScoringSection = ({
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
 
             {/* initial value */}
             <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Initial Price</td>
+              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Initial Price</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
-                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+                return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-gray-200', actionColumnBody)}></td>
+              <td className={clsx('bg-gray-100', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -402,8 +396,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -425,8 +418,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -448,8 +440,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -472,25 +463,35 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>Number of Years</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
                 const hasSalePrice = !!survey.salePrice;
+                const saleDateLabel = (() => {
+                  if (!survey.saleDate) return '';
+                  const d = new Date(survey.saleDate);
+                  if (isNaN(d.getTime())) return '';
+                  const buddhistYear = d.getFullYear() + 543;
+                  return `${format(d, 'MMM')} ${buddhistYear}`;
+                })();
                 return (
                   <td key={survey.id} className={clsx('text-right', surveyColumnBody, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
-                    <RHFInputCell
-                      fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
-                      inputType="display"
-                    />
+                    <div className="flex flex-col items-end gap-0.5">
+                      <RHFInputCell
+                        fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
+                        inputType="display"
+                      />
+                      {saleDateLabel && (
+                        <span className="text-xs text-gray-400">{saleDateLabel}</span>
+                      )}
+                    </div>
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -514,8 +515,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -539,8 +539,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -559,8 +558,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
 
             {/* 2nd revision */}
@@ -573,12 +571,11 @@ export const SaleAdjustmentGridScoringSection = ({
 
             {/* adjust factors */}
             <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjusted Value</td>
+              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Adjusted Value</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
-                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+                return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-gray-200', actionColumnBody)}></td>
+              <td className={clsx('bg-gray-100', collateralColumnBody)}></td>
             </tr>
             {adjustmentFactorsFields.map((field, rowIndex) => {
               return (
@@ -589,7 +586,7 @@ export const SaleAdjustmentGridScoringSection = ({
                         fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
                         accessor={({ value }) =>
-                          value ? getFactorDesciption(value.toString(), serverData.allFactors ?? []) : ''
+                          value ? getFactorDesciption(value.toString(), serverData.allFactors ?? [], language) : ''
                         }
                       />
                     }
@@ -659,7 +656,7 @@ export const SaleAdjustmentGridScoringSection = ({
                       </td>
                     );
                   })}
-                  <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}>
+                  <td className={clsx('bg-white', collateralColumnBody)}>
                     <div className="flex flex-row justify-items-center items-center">
                       <RHFInputCell
                         fieldName={adjustmentFactorsRemarkPath({ row: rowIndex })}
@@ -667,7 +664,6 @@ export const SaleAdjustmentGridScoringSection = ({
                       />
                     </div>
                   </td>
-                  <td className={clsx('bg-white', actionColumnBody)}></td>
                 </tr>
               );
             })}
@@ -700,8 +696,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -722,18 +717,16 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
 
             {/* adjust weighted */}
             <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Adjust Weight</td>
+              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Adjust Weight</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
-                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+                return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-gray-200', actionColumnBody)}></td>
+              <td className={clsx('bg-gray-100', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -751,8 +744,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -771,17 +763,16 @@ export const SaleAdjustmentGridScoringSection = ({
                   </td>
                 );
               })}
-              <td className={clsx('bg-white', collateralColumnBody, bgGradientLeft)}></td>
-              <td className={clsx('bg-white', actionColumnBody)}></td>
+              <td className={clsx('bg-white', collateralColumnBody)}></td>
             </tr>
 
             {/* final value */}
             <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>Final Value</td>
+              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Final Value</td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
-                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+                return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-gray-200 text-right', collateralColumnBody, bgGradientLeft)}>
+              <td className={clsx('bg-gray-100 text-right', collateralColumnBody)}>
                 <div>
                   <RHFInputCell
                     fieldName={finalValuePath()}
@@ -792,19 +783,17 @@ export const SaleAdjustmentGridScoringSection = ({
                   />
                 </div>
               </td>
-              <td className={clsx('bg-gray-200', actionColumnBody)}></td>
             </tr>
             <tr>
-              <td className={clsx('bg-gray-200', leftColumnBody, bgGradient)}>
+              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>
                 {'Final Value (Rounded)'}
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
-                return <td key={survey.id} className={clsx('bg-gray-200', surveyColumnBody)}></td>;
+                return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-gray-200', collateralColumnBody, bgGradientLeft)}>
+              <td className={clsx('bg-gray-100', collateralColumnBody)}>
                 <RHFInputCell fieldName={finalValueRoundedPath()} inputType="number" />
               </td>
-              <td className={clsx('bg-gray-200', actionColumnBody)}></td>
             </tr>
           </tbody>
         </table>

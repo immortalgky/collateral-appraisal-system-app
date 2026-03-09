@@ -3,17 +3,27 @@ import type { SaveComparativeAnalysisRequestType } from '../schemas';
 
 interface MapWQSFormToSubmitSchemaProps {
   WQSForm: WQSFormType;
+  comparativeAnalysisTemplateId?: string | null;
 }
 
 export function mapWQSFormToSubmitSchema({
   WQSForm,
+  comparativeAnalysisTemplateId,
 }: MapWQSFormToSubmitSchemaProps): SaveComparativeAnalysisRequestType {
+  // Build set of factorIds used for scoring (WQSScores)
+  const scoringFactorIds = new Set(
+    (WQSForm.WQSScores ?? [])
+      .map(s => s.factorId)
+      .filter(Boolean),
+  );
+
   return {
+    comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
     comparativeFactors: (WQSForm.comparativeFactors ?? []).map((cf, index) => ({
       id: cf.id || null,
       factorId: cf.factorId || null,
       displaySequence: index,
-      isSelectedForScoring: true,
+      isSelectedForScoring: scoringFactorIds.has(cf.factorId),
       remarks: null,
     })),
 
@@ -30,6 +40,7 @@ export function mapWQSFormToSubmitSchema({
           factorWeight: score.weight ?? 0,
           displaySequence: index,
           score: survey.surveyScore,
+          intensity: score.intensity ?? null,
         });
       }
 
@@ -41,23 +52,27 @@ export function mapWQSFormToSubmitSchema({
         factorWeight: score.weight ?? 0,
         displaySequence: index,
         score: score.collateral ?? 0,
+        intensity: score.intensity ?? null,
       });
 
       return entries;
     }),
 
-    calculations: (WQSForm.WQSCalculations ?? []).map(calc => ({
+    calculations: (WQSForm.WQSCalculations ?? []).map(calc => {
+      const hasOfferingPrice = calc.offeringPrice != null && calc.offeringPrice !== 0;
+      return {
       marketComparableId: calc.marketId,
-      offeringPrice: calc.offeringPrice ?? null,
+      offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
       offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
-      adjustOfferPricePct: calc.offeringPriceAdjustmentPct ?? null,
-      sellingPrice: calc.sellingPrice ?? null,
-      buySellYear: calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
+      adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
+      adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
+      sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
+      buySellYear: !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
       buySellMonth: null,
-      adjustedPeriodPct: calc.sellingPriceAdjustmentYear ?? null,
-      cumulativeAdjPeriod: calc.totalAdjustedSellingPrice ?? null,
+      adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
+      cumulativeAdjPeriod: !hasOfferingPrice ? (calc.totalAdjustedSellingPrice ?? null) : null,
       totalAdjustedValue: calc.adjustedValue ?? null,
       weight: null,
-    })),
+    }}),
   };
 }

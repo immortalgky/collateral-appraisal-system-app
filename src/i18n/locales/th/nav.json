@@ -1,0 +1,31 @@
+{
+  "sidebar": {
+    "menu": "เมนู",
+    "system": "ระบบ",
+    "dashboard": "แดชบอร์ด",
+    "requests": "คำขอ",
+    "appraisals": "การประเมิน",
+    "tasks": "งาน",
+    "templates": "เทมเพลต",
+    "settings": "ตั้งค่า"
+  },
+  "userMenu": {
+    "yourProfile": "โปรไฟล์ของคุณ",
+    "settings": "ตั้งค่า",
+    "signOut": "ออกจากระบบ"
+  },
+  "search": {
+    "placeholder": "ค้นหาทั้งหมด...",
+    "searchIn": "ค้นหาใน",
+    "recent": "ล่าสุด",
+    "tip": "ใช้ตัวกรองเพื่อจำกัดผลลัพธ์",
+    "filters": {
+      "all": "ทั้งหมด",
+      "requests": "คำขอ",
+      "customers": "ลูกค้า",
+      "properties": "ทรัพย์สิน",
+      "documents": "เอกสาร"
+    }
+  },
+  "notifications": "การแจ้งเตือน"
+}

@@ -15,6 +15,13 @@ export type WorkflowActivity =
   | 'viewer'; // Read-only access
 
 /**
+ * Contextual data used by NavItem.showWhen to conditionally display items
+ */
+export type NavContext = {
+  isPma?: boolean;
+};
+
+/**
  * Navigation item with role-based access control
  */
 export type NavItem = {
@@ -30,6 +37,8 @@ export type NavItem = {
   editableRoles?: WorkflowActivity[];
   /** Roles that are explicitly denied access. Takes precedence over allowedRoles */
   deniedRoles?: WorkflowActivity[];
+  /** Optional condition. Item shown only when this returns true. If undefined, always shown. */
+  showWhen?: (context: NavContext) => boolean;
 };
 
 /**

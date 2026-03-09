@@ -21,7 +21,9 @@ import {
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
-import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
+import PropertyPhotoSection, {
+  type PropertyPhotoSectionRef,
+} from '../components/PropertyPhotoSection';
 
 const CreateCondoPage = () => {
   const navigate = useNavigate();
