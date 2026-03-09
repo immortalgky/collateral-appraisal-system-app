@@ -679,6 +679,7 @@ export const titleAddressFields: FormField[] = [
     postcodeField: 'titleAddress.postcode',
     subDistrictNameField: 'titleAddress.subDistrictName',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
@@ -706,7 +707,7 @@ export const titleAddressFields: FormField[] = [
 export const dopaAddressFields: FormField[] = [
   {
     type: 'text-input',
-    label: 'House No',
+    label: 'House Number',
     name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
@@ -751,6 +752,7 @@ export const dopaAddressFields: FormField[] = [
     postcodeField: 'dopaAddress.postcode',
     subDistrictNameField: 'dopaAddress.subDistrictName',
     wrapperClassName: 'col-span-2',
+    required: true,
   },
   {
     type: 'text-input',
@@ -801,6 +803,8 @@ export const titlesFieldConfig: FieldArrayField = {
     ...titleCondoFields,
     ...titleVehicleFields,
     ...titleMachineFields,
+    ...titleAddressFields,
+    ...dopaAddressFields,
     // Schema-only fields (not in any rendering config)
     { type: 'text-input', name: 'titleDetail', label: 'Title Detail' },
     { type: 'text-input', name: 'aerialMapName', label: 'Aerial Map Name' },
