@@ -18,6 +18,7 @@ import {
 } from '@features/pricingAnalysis/adapters/buildDirectComparisonDerivedRules';
 import { DirectComparisonSecondRevision } from './DirectComparisonSecondRevision';
 import { qualitativeDefault } from '../domain/qualitativeDefault';
+import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription';
 import { useLocaleStore } from '@shared/store';
 import type {
@@ -80,6 +81,7 @@ export const DirectComparisonScoringSection = ({
   } = directComparisonPath;
 
   const serverData = useContext(ServerDataCtx);
+  const groupCollateralType = deriveGroupCollateralType(serverData?.groupDetail?.properties ?? []);
   const language = useLocaleStore(s => s.language);
   const { control, getValues, setValue } = useFormContext();
   const {
@@ -564,10 +566,10 @@ export const DirectComparisonScoringSection = ({
             </tr>
 
             {/* 2nd revision */}
-            {(template?.collateralType === 'LB' || template?.collateralType === 'C') && (
+            {(groupCollateralType === 'LB' || groupCollateralType === 'C') && (
               <DirectComparisonSecondRevision
                 comparativeSurveys={comparativeSurveys}
-                collateralType={template.collateralType}
+                collateralType={groupCollateralType}
               />
             )}
 

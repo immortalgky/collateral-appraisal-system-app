@@ -25,6 +25,7 @@ import type {
 import { FactorValueDisplay } from './FactorValueDisplay';
 import { SaleAdjustmentGridSecondRevision } from '@features/pricingAnalysis/components/SaleAdjustmentGridSecondRevision.tsx';
 import { qualitativeDefault } from '@features/pricingAnalysis/domain/qualitativeDefault.ts';
+import { deriveGroupCollateralType } from '@features/pricingAnalysis/domain/deriveGroupCollateralType';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { useLocaleStore } from '@shared/store';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
@@ -77,6 +78,7 @@ export const SaleAdjustmentGridScoringSection = ({
   } = saleGridFieldPath;
 
   const serverData = useContext(ServerDataCtx);
+  const groupCollateralType = deriveGroupCollateralType(serverData?.groupDetail?.properties ?? []);
   const language = useLocaleStore(s => s.language);
   const { control, getValues, setValue } = useFormContext();
   const {
@@ -563,10 +565,10 @@ export const SaleAdjustmentGridScoringSection = ({
             </tr>
 
             {/* 2nd revision */}
-            {(template?.collateralType === 'LB' || template?.collateralType === 'C') && (
+            {(groupCollateralType === 'LB' || groupCollateralType === 'C') && (
               <SaleAdjustmentGridSecondRevision
                 comparativeSurveys={comparativeSurveys}
-                collateralType={template.collateralType}
+                collateralType={groupCollateralType}
               />
             )}
 
