@@ -165,6 +165,8 @@ export const landLocationField: FormField[] = [
     label: 'Distance',
     name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -255,6 +257,8 @@ export const landFillField: FormField[] = [
     label: 'Soil Level',
     name: 'soilLevel',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
 ];
 
@@ -271,6 +275,7 @@ export const roadField: FormField[] = [
     label: 'Right of Way',
     name: 'rightOfWay',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
     decimalPlaces: 0,
   },
   {
@@ -593,6 +598,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'North Estimate Length',
     name: 'northBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -606,6 +613,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'South Estimate Length',
     name: 'southBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -619,6 +628,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'East Estimate Length',
     name: 'eastBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -632,6 +643,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'West Estimate Length',
     name: 'westBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
 ];
 
@@ -762,6 +775,9 @@ export const buildingInfoField: FormField[] = [
     name: 'constructionCompletionPercent',
     wrapperClassName: 'col-span-3',
     disableWhen: { field: 'isUnderConstruction', is: true },
+    maxIntegerDigits: 3,
+    decimalPlaces: 2,
+    max: 100,
   },
   {
     type: 'datetime-input',
@@ -811,6 +827,8 @@ export const buildingTypeField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'buildingType', is: '99' },
     requiredWhen: { field: 'buildingType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'number-input',
@@ -858,6 +876,8 @@ export const encroachmentField: FormField[] = [
     name: 'encroachingOthersArea',
     wrapperClassName: 'col-span-2',
     disableWhen: { field: 'isEncroachingOthers', is: false },
+    maxIntegerDigits: 8,
+    decimalPlaces: 2,
   },
   {
     type: 'textarea',
@@ -1105,6 +1125,8 @@ export const buildingArea: FormField[] = [
     label: 'Total Building Area (sq.m.)',
     wrapperClassName: 'col-span-3',
     required: true,
+    maxIntegerDigits: 8,
+    decimalPlaces: 2,
   },
 ];
 

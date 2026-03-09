@@ -125,7 +125,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
               <Icon style="regular" name="chevron-down" className="size-3.5" />
             </div>
-            <div className="px-3 py-2">
+            <div className="px-3 py-2 truncate">
               {selected?.value ? (
                 `${selected.value} - ${selected.label}`
               ) : (
@@ -133,7 +133,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
               )}
             </div>
           </HeadlessListboxButton>
-          <HeadlessListboxOptions className="absolute left-0 mt-1 w-full bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50">
+          <HeadlessListboxOptions className="absolute left-0 mt-1 w-full bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 max-h-80 overflow-y-auto">
             {children}
           </HeadlessListboxOptions>
         </div>
@@ -158,7 +158,7 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
       {({ selected }) => (
         <div className="flex items-center gap-2 w-full">
           {selected && <Icon style="solid" name="check" className="size-3.5 text-gray-600" />}
-          <span className={selected ? '' : 'ml-5'}>{children}</span>
+          <span className={clsx('truncate', selected ? '' : 'ml-5')}>{children}</span>
         </div>
       )}
     </HeadlessListboxOption>

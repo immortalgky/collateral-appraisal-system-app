@@ -84,6 +84,7 @@ export const requestFields: FormField[] = [
     label: 'Loan Application No',
     name: 'detail.loanDetail.loanApplicationNumber',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'channel', is: ['LOS', 'CLS'], operator: 'in' },
     maxLength: 20,
   },
   {
@@ -372,7 +373,6 @@ export const titleLandFields: FormField[] = [
     name: 'bookNumber',
     wrapperClassName: 'col-span-1',
     maxLength: 10,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -380,7 +380,6 @@ export const titleLandFields: FormField[] = [
     name: 'pageNumber',
     wrapperClassName: 'col-span-1',
     maxLength: 10,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -395,7 +394,6 @@ export const titleLandFields: FormField[] = [
     name: 'landParcelNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -403,7 +401,6 @@ export const titleLandFields: FormField[] = [
     name: 'surveyNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -427,6 +424,14 @@ export const titleLandFields: FormField[] = [
     label: 'Sq.wa',
     name: 'areaSquareWa',
     wrapperClassName: 'col-span-2',
+    requiredWhen: {
+      conditions: [
+        { field: 'areaRai', operator: 'isEmpty' },
+        { field: 'areaNgan', operator: 'isEmpty' },
+        { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
+      ],
+      match: 'all',
+    },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
   },
@@ -700,9 +705,23 @@ export const titleAddressFields: FormField[] = [
   {
     type: 'text-input',
     label: 'District',
+    name: 'titleAddress.district',
+    wrapperClassName: 'col-span-3',
+    hide: true,
+  },
+  {
+    type: 'text-input',
+    label: 'District',
     name: 'titleAddress.districtName',
     disabled: true,
     wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'titleAddress.province',
+    wrapperClassName: 'col-span-3',
+    hide: true,
   },
   {
     type: 'text-input',
@@ -773,9 +792,23 @@ export const dopaAddressFields: FormField[] = [
   {
     type: 'text-input',
     label: 'District',
+    name: 'dopaAddress.district',
+    wrapperClassName: 'col-span-2',
+    hide: true,
+  },
+  {
+    type: 'text-input',
+    label: 'District',
     name: 'dopaAddress.districtName',
     disabled: true,
     wrapperClassName: 'col-span-2',
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'dopaAddress.province',
+    wrapperClassName: 'col-span-2',
+    hide: true,
   },
   {
     type: 'text-input',
@@ -812,6 +845,8 @@ function deduplicateByName(fields: FormField[]): FormField[] {
 export const titlesFieldConfig: FieldArrayField = {
   type: 'field-array',
   name: 'titles',
+  required: true,
+  minItems: 1,
   fields: deduplicateByName([
     ...titleInfoFields,
     ...titleLandFields,
