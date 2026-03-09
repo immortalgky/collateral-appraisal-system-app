@@ -84,13 +84,14 @@ export const requestFields: FormField[] = [
     label: 'Loan Application No',
     name: 'detail.loanDetail.loanApplicationNumber',
     wrapperClassName: 'col-span-1',
-    maxLength: 10,
+    maxLength: 20,
   },
   {
     type: 'number-input',
     label: 'Apply/Limit Amount',
     name: 'detail.loanDetail.facilityLimit',
     wrapperClassName: 'col-span-1',
+    maxIntegerDigits: 15,
     required: true,
   },
   {
@@ -98,6 +99,7 @@ export const requestFields: FormField[] = [
     label: 'Increase Limit Amount',
     name: 'detail.loanDetail.additionalFacilityLimit',
     wrapperClassName: 'col-span-1',
+    maxIntegerDigits: 15,
     requiredWhen: { field: 'purpose', is: '02' },
   },
   {
@@ -105,6 +107,7 @@ export const requestFields: FormField[] = [
     label: 'Old Limit Amount',
     name: 'detail.loanDetail.previousFacilityLimit',
     wrapperClassName: 'col-span-1',
+    maxIntegerDigits: 15,
     requiredWhen: { field: 'purpose', is: '02' },
   },
 ];
@@ -243,6 +246,7 @@ export const appointmentAndFeeFields: FormField[] = [
     label: 'Bank Absorb Amount',
     name: 'detail.fee.absorbedAmount',
     wrapperClassName: 'col-span-1',
+    maxIntegerDigits: 15,
   },
   {
     type: 'datetime-input',
@@ -257,7 +261,7 @@ export const appointmentAndFeeFields: FormField[] = [
     name: 'detail.appointment.appointmentLocation',
     wrapperClassName: 'col-span-2',
     required: true,
-    maxLength: 4000,
+    maxLength: 200,
     showCharCount: true,
   },
 ];
@@ -304,7 +308,13 @@ export const propertiesFieldConfig: FieldArrayField = {
       label: 'Building Type',
       group: 'BuildingType',
     },
-    { type: 'number-input', name: 'sellingPrice', label: 'Selling Price', required: true },
+    {
+      type: 'number-input',
+      name: 'sellingPrice',
+      label: 'Selling Price',
+      maxIntegerDigits: 15,
+      required: true,
+    },
   ],
 };
 
@@ -353,6 +363,7 @@ export const titleLandFields: FormField[] = [
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
+    maxLength: 40,
     requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
@@ -376,6 +387,7 @@ export const titleLandFields: FormField[] = [
     label: 'Rawang',
     name: 'rawang',
     wrapperClassName: 'col-span-2',
+    maxLength: 30,
   },
   {
     type: 'text-input',
@@ -400,7 +412,6 @@ export const titleLandFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
     maxIntegerDigits: 5,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -410,7 +421,6 @@ export const titleLandFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 1,
     max: 4,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -419,13 +429,13 @@ export const titleLandFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     decimalPlaces: 2,
     maxIntegerDigits: 3,
-    requiredWhen: { field: 'collateralType', is: LAND_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
+    maxLength: 100,
     requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
@@ -433,6 +443,7 @@ export const titleLandFields: FormField[] = [
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    maxLength: 200,
     requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
 ];
@@ -457,6 +468,7 @@ export const titleBuildingFields: FormField[] = [
       is: [...BUILDING_REQUIRED_TYPES, 'U'],
     },
     decimalPlaces: 2,
+    maxIntegerDigits: 3,
   },
   {
     type: 'number-input',
@@ -465,6 +477,7 @@ export const titleBuildingFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
+    maxIntegerDigits: 3,
   },
 ];
 
@@ -487,6 +500,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
+    maxLength: 40,
     requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
@@ -540,6 +554,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
+    maxLength: 100,
     requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
@@ -547,6 +562,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    maxLength: 200,
     requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
 ];
