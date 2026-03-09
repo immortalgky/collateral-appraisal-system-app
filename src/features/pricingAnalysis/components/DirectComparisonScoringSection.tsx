@@ -31,8 +31,8 @@ import type {
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
-import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode.ts';
+import { FactorValueDisplay } from './FactorValueDisplay';
+import { ScrollableTableContainer } from './ScrollableTableContainer';
 
 interface DirectComparisonScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -189,7 +189,7 @@ export const DirectComparisonScoringSection = ({
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col border border-gray-300 rounded-xl">
-      <div className="flex-1 min-h-0 overflow-auto border-separate border-spacing-0">
+      <ScrollableTableContainer className="flex-1 min-h-0">
         <table className="table table-xs min-w-max">
           <thead className="bg-gray-50/95 backdrop-blur-sm">
             <tr className="border-b border-gray-200">
@@ -320,15 +320,13 @@ export const DirectComparisonScoringSection = ({
                                 (factor: FactorDataType) => factor.factorCode === value,
                               );
                               if (factorData) {
-                                const factorValue = readFactorValue({
-                                  dataType: factorData.dataType,
-                                  fieldDecimal: factorData.fieldDecimal,
-                                  value: factorData.value,
-                                });
                                 return (
-                                  <div title={factorValue?.toString() ?? ''} className="truncate">
-                                    {factorValue ?? ''}
-                                  </div>
+                                  <FactorValueDisplay
+                                    value={factorData.value as string | undefined}
+                                    dataType={factorData.dataType as string | undefined}
+                                    parameterGroup={factorData.parameterGroup as string | undefined}
+                                    fieldDecimal={factorData.fieldDecimal as number | undefined}
+                                  />
                                 );
                               }
                               return '';
@@ -344,13 +342,16 @@ export const DirectComparisonScoringSection = ({
                       fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => {
+                        const factor = (serverData.allFactors ?? []).find((f: FactorDataType) => f.factorCode === value);
+                        const fieldName = factor?.fieldName as string | undefined;
+                        const raw = fieldName ? property[fieldName] : null;
+                        const rawStr = raw != null ? String(raw) : null;
                         return (
-                          <div
-                            title={getPropertyValueByFactorCode(value.toString(), property, serverData.allFactors ?? []) ?? ''}
-                            className="truncate"
-                          >
-                            {getPropertyValueByFactorCode(value.toString(), property, serverData.allFactors ?? []) ?? ''}
-                          </div>
+                          <FactorValueDisplay
+                            value={rawStr}
+                            dataType={factor?.dataType as string | undefined}
+                            parameterGroup={factor?.parameterGroup as string | undefined}
+                          />
                         );
                       }}
                     />
@@ -752,7 +753,7 @@ export const DirectComparisonScoringSection = ({
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollableTableContainer>
     </div>
   );
 };

@@ -44,6 +44,9 @@
     "invalidEmail": "Invalid email address",
     "invalidNumber": "Invalid number"
   },
+  "hint": {
+    "scrollWithArrowKeys": "Scroll table with arrow keys"
+  },
   "language": {
     "en": "EN",
     "th": "TH",
