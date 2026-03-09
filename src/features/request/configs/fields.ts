@@ -387,6 +387,7 @@ export const titleLandFields: FormField[] = [
     label: 'Rawang',
     name: 'rawang',
     wrapperClassName: 'col-span-2',
+    maxLength: 30,
   },
   {
     type: 'text-input',
