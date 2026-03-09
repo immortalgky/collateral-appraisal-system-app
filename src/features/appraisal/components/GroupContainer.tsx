@@ -47,7 +47,6 @@ export const GroupContainer = React.memo(
       data: droppableData,
     });
 
-
     // Memoize item IDs so SortableContext doesn't get a new array reference every render
     // (especially important for empty groups where [] !== [])
     const sortableItemIds = useMemo(() => group.items.map(item => item.id), [group.items]);
@@ -139,11 +138,14 @@ export const GroupContainer = React.memo(
           </div>
           <div className="flex items-center gap-2">
             <button
-              className="px-2 py-0.5 bg-orange-100 text-orange-700 hover:text-red-500 hover:bg-red-50 cursor-pointer rounded text-[10px] font-medium"
+              className="px-2 py-1 bg-orange-100 text-orange-700 hover:text-red-500 hover:bg-red-50 cursor-pointer rounded text-[14px] font-medium"
               onClick={() => handleOnClickPricingButton()}
               title="Appraise Collateral"
             >
-              AP
+              <div className="flex flex-row items-center justify-center gap-1">
+                <Icon name="badge-dollar" className="text-xl" />
+                AP
+              </div>
             </button>
           </div>
         </div>
