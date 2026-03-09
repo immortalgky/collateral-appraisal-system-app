@@ -19,7 +19,21 @@ export type WorkflowActivity =
  */
 export type NavContext = {
   isPma?: boolean;
+  status?: string;
 };
+
+/** Configurable list of statuses that make all menus read-only. Add/remove as needed. */
+export const TERMINAL_STATUSES: string[] = [
+  'completed',
+  'approved',
+  'rejected',
+  'cancelled',
+];
+
+export function isTerminalStatus(status: string | undefined): boolean {
+  if (!status) return false;
+  return TERMINAL_STATUSES.some(s => s.toLowerCase() === status.toLowerCase());
+}
 
 /**
  * Navigation item with role-based access control
