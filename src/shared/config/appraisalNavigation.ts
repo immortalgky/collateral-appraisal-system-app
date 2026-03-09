@@ -1,4 +1,5 @@
 import type { NavContext, NavItem, NavItemWithAccess, WorkflowActivity } from './navigation';
+import { isTerminalStatus } from './navigation';
 
 /**
  * Application-specific navigation for appraisal detail pages.
@@ -212,7 +213,9 @@ function canRoleView(item: NavItem, role: WorkflowActivity): boolean {
 /**
  * Check if a role can edit a navigation item's content
  */
-function canRoleEdit(item: NavItem, role: WorkflowActivity): boolean {
+function canRoleEdit(item: NavItem, role: WorkflowActivity, context?: NavContext): boolean {
+  // Read-only status overrides role
+  if (context && isTerminalStatus(context.status)) return false;
   // Must be able to view first
   if (!canRoleView(item, role)) {
     return false;
@@ -247,7 +250,7 @@ function getNavItemsWithAccess(items: NavItem[], role: WorkflowActivity, context
     .map(item => ({
       ...item,
       canView: true, // Already filtered for viewable items
-      canEdit: canRoleEdit(item, role),
+      canEdit: canRoleEdit(item, role, context),
     }));
 }
 
@@ -315,10 +318,10 @@ export const getAppraisalNavigationWithAccess = (
  * @param pageName - The page name (e.g., 'Administration', 'Appointment & Fee')
  * @param role - User's workflow activity role
  */
-export const canEditAppraisalPage = (pageName: string, role: WorkflowActivity): boolean => {
+export const canEditAppraisalPage = (pageName: string, role: WorkflowActivity, context?: NavContext): boolean => {
   const item = applicationNavigation.find(nav => nav.name === pageName);
   if (!item) return false;
-  return canRoleEdit(item, role);
+  return canRoleEdit(item, role, context);
 };
 
 /**
@@ -339,6 +342,7 @@ export const canViewAppraisalPage = (pageName: string, role: WorkflowActivity): 
 export const getPageAccessByPath = (
   path: string,
   role: WorkflowActivity,
+  context?: NavContext,
 ): { canView: boolean; canEdit: boolean } => {
   // Extract the page segment from paths like /appraisal/:id/administration
   const pathSegments = path.split('/').filter(Boolean);
@@ -361,6 +365,6 @@ export const getPageAccessByPath = (
 
   return {
     canView: canViewAppraisalPage(pageName, role),
-    canEdit: canEditAppraisalPage(pageName, role),
+    canEdit: canEditAppraisalPage(pageName, role, context),
   };
 };

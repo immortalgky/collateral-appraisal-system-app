@@ -6,12 +6,12 @@ import Icon from './Icon';
 import clsx from 'clsx';
 import type { NavItem } from '@shared/config/navigation';
 import {
-  getAppraisalNavigationByRole,
+  getAppraisalNavigationWithAccess,
   getGeneralNavigationByRole,
   getCollapsibleNavigationByRole,
   getFooterNavigationByRole,
 } from '@shared/config/appraisalNavigation';
-import { useAppraisalRequestId, useAppraisalIsPma } from '@features/appraisal/context/AppraisalContext';
+import { useAppraisalRequestId, useAppraisalIsPma, useAppraisalStatus } from '@features/appraisal/context/AppraisalContext';
 
 type AppraisalSidebarProps = {
   appraisalId: string;
@@ -36,9 +36,10 @@ const getIconBgClass = (iconColor: string | undefined) => {
   return colorMap[iconColor] || 'bg-gray-100';
 };
 
-function CompactMenuItem({ item, collapsed = false }: { item: NavItem; collapsed?: boolean }) {
+function CompactMenuItem({ item, collapsed = false }: { item: NavItem & { canEdit?: boolean }; collapsed?: boolean }) {
   const location = useLocation();
   const isActive = location.pathname === item.href;
+  const isReadOnly = item.canEdit === false;
   const iconStyle = (item.iconStyle || 'solid') as
     | 'solid'
     | 'regular'
@@ -46,6 +47,27 @@ function CompactMenuItem({ item, collapsed = false }: { item: NavItem; collapsed
     | 'thin'
     | 'duotone'
     | 'brands';
+
+  const iconWithBadge = (
+    <div
+      className={clsx(
+        'relative w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+        isActive ? 'bg-primary/10' : getIconBgClass(item.iconColor),
+        'group-hover:scale-105',
+      )}
+    >
+      <Icon
+        name={item.icon}
+        style={iconStyle}
+        className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
+      />
+      {isReadOnly && (
+        <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-white flex items-center justify-center">
+          <Icon name="lock" style="solid" className="size-1.5 text-gray-400" />
+        </div>
+      )}
+    </div>
+  );
 
   if (collapsed) {
     return (
@@ -57,19 +79,7 @@ function CompactMenuItem({ item, collapsed = false }: { item: NavItem; collapsed
           isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
         )}
       >
-        <div
-          className={clsx(
-            'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-            isActive ? 'bg-primary/10' : getIconBgClass(item.iconColor),
-            'group-hover:scale-105',
-          )}
-        >
-          <Icon
-            name={item.icon}
-            style={iconStyle}
-            className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
-          />
-        </div>
+        {iconWithBadge}
       </Link>
     );
   }
@@ -82,19 +92,7 @@ function CompactMenuItem({ item, collapsed = false }: { item: NavItem; collapsed
         isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
       )}
     >
-      <div
-        className={clsx(
-          'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-          isActive ? 'bg-primary/10' : getIconBgClass(item.iconColor),
-          'group-hover:scale-105',
-        )}
-      >
-        <Icon
-          name={item.icon}
-          style={iconStyle}
-          className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
-        />
-      </div>
+      {iconWithBadge}
       <span className={clsx('text-sm font-medium', isActive ? 'text-primary' : 'text-gray-700')}>
         {item.name}
       </span>
@@ -181,14 +179,15 @@ export function MobileAppraisalSidebar({
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
   const requestId = useAppraisalRequestId();
   const isPma = useAppraisalIsPma();
+  const status = useAppraisalStatus();
   const user = useUserStore(state => state.user);
   const role = user?.role ?? 'viewer';
 
-  const navContext = useMemo(() => ({ isPma }), [isPma]);
+  const navContext = useMemo(() => ({ isPma, status }), [isPma, status]);
 
-  // Get role-filtered navigation
+  // Get role-filtered navigation with access levels
   const applicationNav = useMemo(
-    () => getAppraisalNavigationByRole({ appraisalId, requestId }, role, navContext),
+    () => getAppraisalNavigationWithAccess({ appraisalId, requestId }, role, navContext),
     [appraisalId, requestId, role, navContext],
   );
   const generalItems = useMemo(
@@ -288,16 +287,17 @@ export default function AppraisalSidebar({
 }: AppraisalSidebarProps): React.ReactNode {
   const requestId = useAppraisalRequestId();
   const isPma = useAppraisalIsPma();
+  const status = useAppraisalStatus();
   const user = useUserStore(state => state.user);
   const role = user?.role ?? 'viewer';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
-  const navContext = useMemo(() => ({ isPma }), [isPma]);
+  const navContext = useMemo(() => ({ isPma, status }), [isPma, status]);
 
-  // Get role-filtered navigation
+  // Get role-filtered navigation with access levels
   const applicationNav = useMemo(
-    () => getAppraisalNavigationByRole({ appraisalId, requestId }, role, navContext),
+    () => getAppraisalNavigationWithAccess({ appraisalId, requestId }, role, navContext),
     [appraisalId, requestId, role, navContext],
   );
   const generalItems = useMemo(
