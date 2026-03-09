@@ -10,12 +10,12 @@ import type {
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '../schemas';
-import { readFactorValue } from '../domain/readFactorValue';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
-import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode.ts';
+import { FactorValueDisplay } from './FactorValueDisplay';
 import { useMemo, useState } from 'react';
 import { useLocaleStore } from '@shared/store';
 import type { ComparativeFactorsFormType } from '../schemas/saleAdjustmentGridForm';
+import { ScrollableTableContainer } from './ScrollableTableContainer';
 
 interface ComparativeFactorTableProps {
   comparativeMarketSurveys: MarketComparableDataType[];
@@ -83,7 +83,7 @@ export function ComparativeFactorTable({
 
   return (
     <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-xl flex flex-col overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-auto">
+      <ScrollableTableContainer className="flex-1 min-h-0">
         <table className="table table-xs w-full">
           <thead className="sticky top-0 z-30">
             <tr className="border-b border-gray-200">
@@ -213,20 +213,16 @@ export function ComparativeFactorTable({
                       fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => {
+                        const factor = allFactors?.find(f => f.factorCode === value);
+                        const fieldName = factor?.fieldName as string | undefined;
+                        const raw = fieldName ? property[fieldName] : null;
+                        const rawStr = raw != null ? String(raw) : null;
                         return (
-                          <div
-                            title={
-                              getPropertyValueByFactorCode(
-                                value.toString(),
-                                property,
-                                allFactors,
-                              ) ?? ''
-                            }
-                            className="truncate"
-                          >
-                            {getPropertyValueByFactorCode(value.toString(), property, allFactors) ??
-                              ''}
-                          </div>
+                          <FactorValueDisplay
+                            value={rawStr}
+                            dataType={factor?.dataType as string | undefined}
+                            parameterGroup={factor?.parameterGroup as string | undefined}
+                          />
                         );
                       }}
                     />
@@ -243,15 +239,13 @@ export function ComparativeFactorTable({
                                 (factor: FactorDataType) => factor.factorCode === value,
                               );
                               if (factorData) {
-                                const factorValue = readFactorValue({
-                                  dataType: factorData.dataType,
-                                  fieldDecimal: factorData.fieldDecimal,
-                                  value: factorData.value,
-                                });
                                 return (
-                                  <div title={factorValue?.toString() ?? ''} className="truncate">
-                                    {factorValue ?? ''}
-                                  </div>
+                                  <FactorValueDisplay
+                                    value={factorData.value as string | undefined}
+                                    dataType={factorData.dataType as string | undefined}
+                                    parameterGroup={factorData.parameterGroup as string | undefined}
+                                    fieldDecimal={factorData.fieldDecimal as number | undefined}
+                                  />
                                 );
                               }
                               return '';
@@ -289,7 +283,7 @@ export function ComparativeFactorTable({
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollableTableContainer>
       <ConfirmDialog
         isOpen={deleteIndex !== null}
         onClose={() => setDeleteIndex(null)}

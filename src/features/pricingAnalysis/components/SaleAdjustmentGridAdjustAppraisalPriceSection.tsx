@@ -5,6 +5,7 @@ import {
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
+import { useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
@@ -23,6 +24,8 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     appraisalPriceRounded: appraisalPriceRoundedPath,
     priceDifferentiate: priceDifferentiatePath,
   } = saleGridFieldPath;
+
+  const prevAppraisalPriceRef = useRef<number | null>(null);
 
   const rules: DerivedFieldRule[] = [
     {
@@ -58,8 +61,20 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
       deps: [appraisalPricePath()],
       compute: ({ getValues }) => Number(getValues(appraisalPricePath())) || 0,
       when: ({ getValues }) => {
+        const depValue = Number(getValues(appraisalPricePath())) || 0;
         const current = Number(getValues(appraisalPriceRoundedPath())) || 0;
-        return current === 0;
+
+        if (prevAppraisalPriceRef.current === null) {
+          prevAppraisalPriceRef.current = depValue;
+          return current === 0;
+        }
+
+        if (prevAppraisalPriceRef.current !== depValue) {
+          prevAppraisalPriceRef.current = depValue;
+          return true;
+        }
+
+        return false;
       },
     },
   ];

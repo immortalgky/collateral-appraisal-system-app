@@ -1,8 +1,9 @@
 import clsx from 'clsx';
 import { Icon } from '@/shared/components';
 import type { FactorDataType, MarketComparableDetailType } from '../schemas';
-import { readFactorValue } from '../domain/readFactorValue';
 import { getFactorDesciption } from '../domain/getFactorDescription';
+import { FactorValueDisplay } from './FactorValueDisplay';
+import { ScrollableTableContainer } from './ScrollableTableContainer';
 
 interface SurveySelectionTableProps {
   surveys: MarketComparableDetailType[];
@@ -48,7 +49,7 @@ export function SurveySelectionTable({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto">
+    <ScrollableTableContainer className="flex-1 min-h-0">
       <table className="table table-xs w-full">
         <thead className="sticky top-0 z-30">
           <tr className="border-b border-gray-200">
@@ -154,20 +155,19 @@ export function SurveySelectionTable({
                   const factorData = survey.factorData?.find(
                     f => f.factorCode === col.factorCode,
                   );
-                  const value = factorData
-                    ? readFactorValue({
-                        dataType: (factorData.dataType as string) ?? '',
-                        fieldDecimal: factorData.fieldDecimal,
-                        value: factorData.value,
-                      })
-                    : null;
                   return (
                     <td
                       key={col.factorCode}
                       className="px-3 py-2 border-b border-gray-100 text-sm text-gray-600 whitespace-nowrap"
-                      title={String(value ?? '')}
                     >
-                      {value || '-'}
+                      {factorData ? (
+                        <FactorValueDisplay
+                          value={factorData.value as string | undefined}
+                          dataType={factorData.dataType as string | undefined}
+                          parameterGroup={factorData.parameterGroup as string | undefined}
+                          fieldDecimal={factorData.fieldDecimal as number | undefined}
+                        />
+                      ) : '-'}
                     </td>
                   );
                 })}
@@ -176,6 +176,6 @@ export function SurveySelectionTable({
           })}
         </tbody>
       </table>
-    </div>
+    </ScrollableTableContainer>
   );
 }

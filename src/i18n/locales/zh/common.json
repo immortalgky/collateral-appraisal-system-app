@@ -44,6 +44,9 @@
     "invalidEmail": "邮箱地址无效",
     "invalidNumber": "数字无效"
   },
+  "hint": {
+    "scrollWithArrowKeys": "使用方向键滚动表格"
+  },
   "language": {
     "en": "EN",
     "th": "TH",
