@@ -363,6 +363,7 @@ export const titleLandFields: FormField[] = [
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
+    maxLength: 40,
     requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
@@ -433,6 +434,7 @@ export const titleLandFields: FormField[] = [
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
+    maxLength: 100,
     requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
@@ -440,6 +442,7 @@ export const titleLandFields: FormField[] = [
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    maxLength: 200,
     requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
 ];
@@ -464,6 +467,7 @@ export const titleBuildingFields: FormField[] = [
       is: [...BUILDING_REQUIRED_TYPES, 'U'],
     },
     decimalPlaces: 2,
+    maxIntegerDigits: 3,
   },
   {
     type: 'number-input',
@@ -472,6 +476,7 @@ export const titleBuildingFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
+    maxIntegerDigits: 3,
   },
 ];
 
@@ -494,6 +499,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
+    maxLength: 40,
     requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
@@ -547,6 +553,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Owner',
     name: 'ownerName',
     wrapperClassName: 'col-span-6',
+    maxLength: 100,
     requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
@@ -554,6 +561,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Title Detail',
     name: 'notes',
     wrapperClassName: 'col-span-6',
+    maxLength: 200,
     requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
   },
 ];

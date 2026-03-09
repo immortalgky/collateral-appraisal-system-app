@@ -99,6 +99,7 @@ export const landInfoField: FormField[] = [
     disableWhen: { field: 'isOwnerVerified', is: false },
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
   },
   {
     type: 'boolean-toggle',
@@ -730,6 +731,7 @@ export const buildingInfoField: FormField[] = [
     required: true,
     disableWhen: { field: 'isOwnerVerified', is: false },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
   },
   {
     type: 'text-input',
@@ -1287,6 +1289,7 @@ export const condoFields: FormField[] = [
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disableWhen: { field: 'isOwnerVerified', is: false },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
   },
   {
     type: 'radio-group',
