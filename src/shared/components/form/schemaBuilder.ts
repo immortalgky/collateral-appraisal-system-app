@@ -46,9 +46,10 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
   switch (field.type) {
     case 'text-input': {
       let s = z.string();
+      const textLabel = getFieldLabel(field);
       if (staticRequired && field.minLength == null) s = s.min(1, requiredMsg);
-      if (field.minLength != null) s = s.min(field.minLength);
-      if (field.maxLength != null) s = s.max(field.maxLength);
+      if (field.minLength != null) s = s.min(field.minLength, `${textLabel} must be at least ${field.minLength} characters`);
+      if (field.maxLength != null) s = s.max(field.maxLength, `${textLabel} must be at most ${field.maxLength} characters`);
       if (field.formatPattern) {
         s = s.regex(new RegExp(field.formatPattern), field.formatPatternMessage);
       }
@@ -58,8 +59,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
 
     case 'textarea': {
       let s = z.string();
+      const textareaLabel = getFieldLabel(field);
       if (staticRequired) s = s.min(1, requiredMsg);
-      if (field.maxLength != null) s = s.max(field.maxLength);
+      if (field.maxLength != null) s = s.max(field.maxLength, `${textareaLabel} must be at most ${field.maxLength} characters`);
       if (field.formatPattern) {
         s = s.regex(new RegExp(field.formatPattern), field.formatPatternMessage);
       }
@@ -69,8 +71,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
 
     case 'number-input': {
       let n = z.coerce.number();
-      if (field.min != null) n = n.min(field.min);
-      if (field.max != null) n = n.max(field.max);
+      const numLabel = getFieldLabel(field);
+      if (field.min != null) n = n.min(field.min, `${numLabel} must be at least ${field.min}`);
+      if (field.max != null) n = n.max(field.max, `${numLabel} must be at most ${field.max}`);
       if (field.allowNegative === false) n = n.nonnegative();
       if (field.decimalPlaces != null && field.decimalPlaces >= 0) {
         n = n.multipleOf(Math.pow(10, -field.decimalPlaces));
@@ -114,7 +117,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
     case 'select-input':
     case 'dropdown':
     case 'radio-group':
-      schema = staticRequired ? z.string().min(1, requiredMsg) : z.string();
+      schema = staticRequired
+        ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }).min(1, requiredMsg)
+        : z.string();
       break;
 
     case 'checkbox-group': {
@@ -139,9 +144,10 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
         : z.object(elementShape);
 
       let arr = z.array(elementSchema);
-      if (staticRequired && field.minItems != null) arr = arr.min(field.minItems);
-      else if (staticRequired) arr = arr.min(1);
-      if (field.maxItems != null) arr = arr.max(field.maxItems);
+      const arrLabel = getFieldLabel(field);
+      if (staticRequired && field.minItems != null) arr = arr.min(field.minItems, `${arrLabel} must have at least ${field.minItems} item(s)`);
+      else if (staticRequired) arr = arr.min(1, `${arrLabel} must have at least 1 item`);
+      if (field.maxItems != null) arr = arr.max(field.maxItems, `${arrLabel} must have at most ${field.maxItems} item(s)`);
       schema = arr;
       break;
     }

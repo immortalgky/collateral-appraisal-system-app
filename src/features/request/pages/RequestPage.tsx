@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import {
   createRequestForm,
@@ -26,11 +26,13 @@ import RequestForm from '../forms/RequestForm';
 import AppointmentAndFeeForm from '../forms/AppointmentAndFeeForm';
 import TitleInformationForm from '../forms/TitleInformationForm';
 import AttachDocumentForm from '../forms/AttachDocumentForm';
-import { createUploadSession, useCreateRequest, useGetRequestById, useSubmitRequest, useUpdateRequest, } from '../api';
+import { createUploadSession, useCreateRequest, useDeleteRequest, useGetRequestById, useSubmitRequest, useUpdateRequest, } from '../api';
 import { mapRequestResponseToForm } from '../utils/mappers';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import DeleteButton from '@/shared/components/buttons/DeleteButton';
 import DuplicateButton from '@/shared/components/buttons/DuplicateButton';
@@ -62,6 +64,7 @@ interface RequestPageProps {
  */
 function RequestPage({ readOnly = false }: RequestPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = useAuthStore(state => state.user);
 
   // Get requestId from URL params - determines create vs edit mode
@@ -116,18 +119,23 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
   // Reset form when switching between create/edit mode or when requestId changes
   useEffect(() => {
     if (!isEditMode) {
-      // Create mode: reset to defaults and set the current user
-      reset(createRequestFormDefault);
-      if (currentUser) {
-        const userDto: UserDtoType = {
-          userId: currentUser.username,
-          username: currentUser.name,
-        };
-        setValue('creator', userDto);
-        setValue('requestor', userDto);
+      // Create mode: check for duplicate data from navigation state
+      if (location.state?.duplicateData) {
+        reset(location.state.duplicateData);
+      } else {
+        // Reset to defaults and set the current user
+        reset(createRequestFormDefault);
+        if (currentUser) {
+          const userDto: UserDtoType = {
+            userId: currentUser.username,
+            username: currentUser.name,
+          };
+          setValue('creator', userDto);
+          setValue('requestor', userDto);
+        }
       }
     }
-  }, [isEditMode, requestId, currentUser, reset, setValue]);
+  }, [isEditMode, requestId, currentUser, reset, setValue, location.state]);
 
   // Update form when data is fetched (edit mode only)
   // Note: Comments are managed separately by RequestRightMenu via useGetComments API
@@ -143,7 +151,10 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
   const { mutate: updateRequest, isPending: isUpdating } = useUpdateRequest();
   const { mutate: submitRequest, isPending: isSubmitting } = useSubmitRequest();
 
-  const isPending = isCreating || isUpdating || isSubmitting;
+  const deleteRequest = useDeleteRequest();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const isPending = isCreating || isUpdating || isSubmitting || deleteRequest.isPending;
 
   // Track which save action is in progress (for loading state on the correct button)
   const [saveAction, setSaveAction] = useState<'draft' | 'save' | 'submit' | null>(null);
@@ -196,6 +207,25 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     return sessionPromiseRef.current;
   }, []);
 
+  const handleDelete = () => {
+    if (!requestId) return;
+    deleteRequest.mutate(requestId, {
+      onSuccess: () => {
+        toast.success('Request deleted successfully');
+        navigate('/requests');
+      },
+      onError: (error: any) => {
+        toast.error(error.apiError?.detail || 'Failed to delete request.');
+        setIsDeleteDialogOpen(false);
+      },
+    });
+  };
+
+  const handleDuplicate = () => {
+    const currentData = getValues();
+    navigate('/requests/new', { state: { duplicateData: currentData } });
+  };
+
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
     console.log('[onSubmit] Validation passed, submitting data:', data);
     setSaveAction('save');
@@ -245,6 +275,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
             toast.success('Request created successfully');
             setSaveAction(null);
             if (response.id) {
+              reset(getValues());
               navigate(`/requests/${response.id}`);
             }
           },
@@ -306,6 +337,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.id) {
+              reset(getValues());
               navigate(`/requests/${response.id}`);
             }
           },
@@ -336,6 +368,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
             onSuccess: () => {
               toast.success('Request submitted successfully');
               setSaveAction(null);
+              reset(getValues());
               navigate('/requests');
             },
             onError: (error: any) => {
@@ -500,58 +533,59 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
 
             {/* Sticky Action buttons - hidden in readOnly mode */}
             {!readOnly && (
-              <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <CancelButton />
-                    <div className="h-6 w-px bg-gray-200" />
-                    <div className="flex gap-3">
-                      <DeleteButton />
-                      <DuplicateButton />
-                    </div>
-                    {isDirty && (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        Unsaved changes
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      type="button"
-                      onClick={handleSaveDraft}
-                      isLoading={isPending && saveAction === 'draft'}
-                      disabled={isPending}
-                    >
-                      <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                      Save draft
-                    </Button>
-                    <Button
-                      variant="outline"
-                      type="submit"
-                      isLoading={isPending && saveAction === 'save'}
-                      disabled={isPending}
-                    >
-                      <Icon style="solid" name="check" className="size-4 mr-2" />
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleSubmitRequest}
-                      isLoading={isPending && saveAction === 'submit'}
-                      disabled={isPending}
-                    >
-                      <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                      Submit
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <ActionBar>
+                <ActionBar.Left>
+                  <CancelButton />
+                  <ActionBar.Divider />
+                  <DeleteButton onClick={() => setIsDeleteDialogOpen(true)} disabled={!isEditMode || isPending} />
+                  <DuplicateButton onClick={handleDuplicate} disabled={!isEditMode || isPending} />
+                  <ActionBar.UnsavedIndicator show={isDirty} />
+                </ActionBar.Left>
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
+                    Save draft
+                  </Button>
+                  <Button
+                    variant="outline"
+                    type="submit"
+                    isLoading={isPending && saveAction === 'save'}
+                    disabled={isPending}
+                  >
+                    <Icon style="solid" name="check" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSubmitRequest}
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
+                    Submit
+                  </Button>
+                </ActionBar.Right>
+              </ActionBar>
             )}
           </div>
 
           <UnsavedChangesDialog blocker={blocker} />
+          <ConfirmDialog
+            isOpen={isDeleteDialogOpen}
+            onClose={() => setIsDeleteDialogOpen(false)}
+            onConfirm={handleDelete}
+            title="Delete Request"
+            message="Are you sure you want to delete this request? This action cannot be undone."
+            confirmText="Delete"
+            variant="danger"
+            isLoading={deleteRequest.isPending}
+          />
 
           {/* Right Menu - rendered via portal to layout (only when not in readOnly mode) */}
           {!readOnly && (

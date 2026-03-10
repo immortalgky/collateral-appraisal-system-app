@@ -107,7 +107,8 @@ const TitleInformationForm = () => {
 
   const handleDuplicateTitle = (index: number) => {
     const titleToDuplicate = titles[index];
-    append({ ...titleToDuplicate });
+    const { id, documents, ...rest } = titleToDuplicate;
+    append({ ...rest, id: undefined, documents: [] });
     setEditIndex(titles.length);
   };
 
@@ -449,159 +450,204 @@ const TitleTableView = ({
     );
   }
 
-  return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-14">
-              #
-            </th>
-            <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
-              Property Type
-            </th>
-            <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
-              Title Number
-            </th>
-            <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
-              Rawang
-            </th>
-            <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4">
-              Area
-            </th>
-            <th className="text-center text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-24">
-              Documents
-            </th>
-            <th className="text-center text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-10">
-              Status
-            </th>
-            {!isReadOnly && (
-              <th className="text-right text-xs font-semibold text-gray-600 uppercase tracking-wider py-3 px-4 w-32">
-                Actions
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {titles?.map((title, index) => {
-            const isComplete = isTitleComplete(index);
+  const getTitleDetails = (title: RequestTitleDtoType) => {
+    const details: { label: string; value: string }[] = [];
+    const type = title?.collateralType;
 
-            return (
-              <tr
-                key={index}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => onSelect(index)}
-              >
-                <td className="py-3 px-4">
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/20 text-primary text-sm font-medium">
-                    {index + 1}
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                      <Icon
-                        style="solid"
-                        name={getCollateralTypeIcon(title?.collateralType)}
-                        className="size-4 text-gray-500"
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {getCollateralTypeLabel(title?.collateralType)}
-                    </span>
+    // Title info (land types + condo)
+    if (['L', 'LB', 'LSL', 'LS', 'LSB', 'B', 'U'].includes(type)) {
+      const titleStr = title?.titleType || title?.titleNumber
+        ? `${title?.titleType ? `${title.titleType}: ` : ''}${title?.titleNumber || ''}`
+        : null;
+      if (titleStr) details.push({ label: 'Title', value: titleStr });
+    }
+
+    // Province + district
+    const province = title?.titleAddress?.provinceName || title?.titleAddress?.province;
+    const district = title?.titleAddress?.districtName || title?.titleAddress?.district;
+    if (province) {
+      details.push({ label: 'Location', value: district ? `${province} / ${district}` : province });
+    }
+
+    // Area (land types)
+    if (['L', 'LB', 'LSL', 'LS', 'LSB'].includes(type)) {
+      const hasArea = title?.areaRai || title?.areaNgan || title?.areaSquareWa;
+      if (hasArea) {
+        details.push({ label: 'Area', value: `${title?.areaRai || 0}-${title?.areaNgan || 0}-${title?.areaSquareWa || 0}` });
+      }
+    }
+
+    // Usable area (condo + building types)
+    if (['U', 'B', 'LB', 'LSB', 'LS'].includes(type) && title?.usableArea) {
+      details.push({ label: 'Usable Area', value: `${title.usableArea} sq.m` });
+    }
+
+    // Condo-specific
+    if (type === 'U') {
+      if (title?.condoName) details.push({ label: 'Condo', value: title.condoName });
+      const room = [title?.roomNumber && `Room ${title.roomNumber}`, title?.floorNumber && `Floor ${title.floorNumber}`].filter(Boolean).join(', ');
+      if (room) details.push({ label: 'Unit', value: room });
+    }
+
+    // Vehicle-specific
+    if (type === 'VEH') {
+      if (title?.licensePlateNumber) details.push({ label: 'License Plate', value: title.licensePlateNumber });
+      if (title?.vehicleType) details.push({ label: 'Vehicle Type', value: title.vehicleType });
+    }
+
+    // Machine-specific
+    if (type === 'MAC') {
+      if (title?.machineType) details.push({ label: 'Machine Type', value: title.machineType });
+      if (title?.numberOfMachine) details.push({ label: 'Qty', value: String(title.numberOfMachine) });
+    }
+
+    // Owner
+    if (title?.ownerName) details.push({ label: 'Owner', value: title.ownerName });
+
+    return details;
+  };
+
+  return (
+    <div className="space-y-3">
+      {titles?.map((title, index) => {
+        const isComplete = isTitleComplete(index);
+        const details = getTitleDetails(title);
+        const docStats = getRequiredDocStats(title?.documents);
+
+        return (
+          <div
+            key={index}
+            className={clsx(
+              'group relative rounded-xl border bg-white shadow-sm hover:shadow-md cursor-pointer transition-all duration-200',
+              isComplete ? 'border-gray-200 hover:border-primary/30' : 'border-amber-200 hover:border-amber-300',
+            )}
+            onClick={() => onSelect(index)}
+          >
+            {/* Left accent bar */}
+            <div
+              className={clsx(
+                'absolute left-0 top-3 bottom-3 w-1 rounded-full',
+                isComplete ? 'bg-success' : 'bg-amber-400',
+              )}
+            />
+
+            <div className="flex items-center gap-4 pl-5 pr-4 py-3.5">
+              {/* Left: Type badge */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className={clsx(
+                  'w-10 h-10 rounded-xl flex items-center justify-center',
+                  'bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-primary/10',
+                )}>
+                  <Icon
+                    style="solid"
+                    name={getCollateralTypeIcon(title?.collateralType)}
+                    className="size-4.5 text-primary"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 leading-tight">
+                    {getCollateralTypeLabel(title?.collateralType)}
                   </div>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">{title?.titleNumber || '-'}</td>
-                <td className="py-3 px-4 text-sm text-gray-600">{title?.rawang || '-'}</td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {title?.collateralType === 'U'
-                    ? `${title?.usableArea} sq.m`
-                    : `${title?.areaRai || 0}-${title?.areaNgan || 0}-${title?.areaSquareWa || 0}`}
-                </td>
-                <td className="py-3 px-4 text-center">
-                  {(() => {
-                    const docStats = getRequiredDocStats(title?.documents);
-                    if (docStats.total === 0) {
-                      return <span className="text-xs text-gray-400">-</span>;
-                    }
-                    const isDocComplete = docStats.completed === docStats.total;
-                    return (
-                      <div
-                        className={clsx(
-                          'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-                          isDocComplete
-                            ? 'bg-success/10 text-success'
-                            : 'bg-amber-100 text-amber-700',
-                        )}
-                      >
-                        <Icon
-                          style="solid"
-                          name={isDocComplete ? 'check' : 'asterisk'}
-                          className="size-2.5"
-                        />
-                        {docStats.completed}/{docStats.total}
-                      </div>
-                    );
-                  })()}
-                </td>
-                <td className="py-3 px-4 text-center">
+                  <div className="text-xs text-gray-400 mt-0.5">#{index + 1}</div>
+                </div>
+              </div>
+
+              {/* Center: Dynamic details as pills */}
+              <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 pt-0.5">
+                {details.map((detail, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 text-xs ring-1 ring-gray-100"
+                  >
+                    <span className="text-gray-400 font-medium">{detail.label}</span>
+                    <span className="text-gray-700">{detail.value}</span>
+                  </span>
+                ))}
+                {details.length === 0 && (
+                  <span className="text-xs text-gray-300 italic">No details filled in yet</span>
+                )}
+              </div>
+
+              {/* Right: Status indicators + actions */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Doc stats badge */}
+                {docStats.total > 0 && (
                   <div
                     className={clsx(
-                      'inline-flex items-center justify-center w-6 h-6 rounded-full',
-                      isComplete ? 'bg-success/20 text-success' : 'bg-amber-100 text-amber-600',
+                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
+                      docStats.completed === docStats.total
+                        ? 'bg-success/10 text-success ring-1 ring-success/20'
+                        : 'bg-amber-50 text-amber-600 ring-1 ring-amber-200',
                     )}
                   >
                     <Icon
                       style="solid"
-                      name={isComplete ? 'check' : 'exclamation'}
+                      name="file-lines"
                       className="size-3"
                     />
+                    {docStats.completed}/{docStats.total}
                   </div>
-                </td>
-                {!isReadOnly && (
-                  <td className="py-3 px-4">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          onSelect(index);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                        title="Edit"
-                      >
-                        <Icon style="solid" name="pen" className="size-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          onDuplicate(index);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors"
-                        title="Duplicate"
-                      >
-                        <Icon style="regular" name="copy" className="size-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          onDelete(index);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
-                        title="Delete"
-                      >
-                        <Icon style="solid" name="trash" className="size-3.5" />
-                      </button>
-                    </div>
-                  </td>
                 )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+
+                {/* Completion indicator */}
+                <div
+                  className={clsx(
+                    'w-7 h-7 rounded-lg flex items-center justify-center',
+                    isComplete
+                      ? 'bg-success/10 text-success ring-1 ring-success/20'
+                      : 'bg-amber-50 text-amber-500 ring-1 ring-amber-200',
+                  )}
+                >
+                  <Icon
+                    style="solid"
+                    name={isComplete ? 'check' : 'exclamation'}
+                    className="size-3"
+                  />
+                </div>
+
+                {/* Actions - show on hover */}
+                {!isReadOnly && (
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onSelect(index);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-primary/10 hover:text-primary transition-colors"
+                      title="Edit"
+                    >
+                      <Icon style="solid" name="pen" className="size-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onDuplicate(index);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-secondary/10 hover:text-secondary transition-colors"
+                      title="Duplicate"
+                    >
+                      <Icon style="regular" name="copy" className="size-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onDelete(index);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-danger/10 hover:text-danger transition-colors"
+                      title="Delete"
+                    >
+                      <Icon style="solid" name="trash" className="size-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

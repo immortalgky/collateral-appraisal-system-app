@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -23,17 +24,31 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
   const { control } = useFormContext();
   const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
 
-  // Auto-fill appraisalPriceRounded from finalValueRounded, but only when empty.
-  // Once filled (by auto-fill or user edit), it won't be overwritten.
-  // Form re-init (Generate) resets it to 0, re-enabling auto-fill.
+  // Track previous finalValueRounded to detect actual changes.
+  // On initial load: preserve saved appraisalPriceRounded (auto-fill only if 0).
+  // After initial load: always auto-default when finalValueRounded changes.
+  const prevFinalValueRef = useRef<number | null>(null);
+
   const rules: DerivedFieldRule[] = [
     {
       targetPath: appraisalPriceRoundedPath(),
       deps: [finalValueRoundedPath()],
       compute: ({ getValues }) => Number(getValues(finalValueRoundedPath())) || 0,
       when: ({ getValues }) => {
+        const depValue = Number(getValues(finalValueRoundedPath())) || 0;
         const current = Number(getValues(appraisalPriceRoundedPath())) || 0;
-        return current === 0;
+
+        if (prevFinalValueRef.current === null) {
+          prevFinalValueRef.current = depValue;
+          return current === 0;
+        }
+
+        if (prevFinalValueRef.current !== depValue) {
+          prevFinalValueRef.current = depValue;
+          return true;
+        }
+
+        return false;
       },
     },
   ];

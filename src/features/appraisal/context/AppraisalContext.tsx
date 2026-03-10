@@ -1,4 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { isTerminalStatus } from '@shared/config/navigation';
+import { canEditAppraisalPage } from '@shared/config/appraisalNavigation';
+import { useUserStore } from '@shared/store';
 
 /**
  * Appraisal data returned from the backend
@@ -70,4 +73,36 @@ export function useAppraisalRequestId(): string | undefined {
 export function useAppraisalIsPma(): boolean {
   const context = useContext(AppraisalContext);
   return context?.appraisal?.isPma ?? false;
+}
+
+/**
+ * Hook to get the appraisal status
+ * Returns undefined if not in appraisal context or still loading
+ */
+export function useAppraisalStatus(): string | undefined {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.status;
+}
+
+/**
+ * Hook to determine if the appraisal is in read-only mode.
+ * Combines terminal status check with per-page role-based edit permission.
+ * @param pageName - Optional page name to also check role-based edit permission
+ */
+export function useAppraisalReadOnly(pageName?: string): {
+  isReadOnly: boolean;
+  isTerminalStatus: boolean;
+  status: string | undefined;
+} {
+  const context = useContext(AppraisalContext);
+  const role = useUserStore(state => state.user?.role ?? 'viewer');
+  const status = context?.appraisal?.status;
+  const terminal = isTerminalStatus(status);
+
+  let isReadOnly = terminal;
+  if (!isReadOnly && pageName) {
+    isReadOnly = !canEditAppraisalPage(pageName, role, { status });
+  }
+
+  return { isReadOnly, isTerminalStatus: terminal, status };
 }

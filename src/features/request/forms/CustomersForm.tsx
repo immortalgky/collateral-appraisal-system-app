@@ -5,15 +5,15 @@ const CustomersForm = () => {
   return (
     <div>
       <SectionHeader title="Customers" />
-      <FormTable headers={customersTableHeader} name={'customers'} />
+      <FormTable columns={customersColumns} name={'customers'} />
     </div>
   );
 };
 
-const customersTableHeader = [
-  { label: 'Seq.no', rowNumberColumn: true as true },
-  { name: 'name', label: 'Customer Name' },
-  { name: 'contactNumber', label: 'Contact Number' },
+const customersColumns = [
+  { label: 'Seq.no', rowNumberColumn: true as const },
+  { name: 'name', label: 'Customer Name', maxLength: 80 },
+  { name: 'contactNumber', label: 'Contact Number', maxLength: 20 },
 ];
 
 export default CustomersForm;

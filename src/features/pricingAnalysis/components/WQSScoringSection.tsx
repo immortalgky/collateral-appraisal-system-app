@@ -25,6 +25,7 @@ import {
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { useLocaleStore } from '@shared/store';
 import { format } from 'date-fns';
+import { ScrollableTableContainer } from './ScrollableTableContainer';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -166,7 +167,7 @@ export function WQSScoringSection({
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl">
-      <div className="flex-1 min-h-0 overflow-auto">
+      <ScrollableTableContainer className="flex-1 min-h-0">
         <table className="table table-xs min-w-max border-separate border-spacing-0">
           <thead className="bg-neutral-50">
             <tr className="border-b border-gray-300">
@@ -871,7 +872,7 @@ export function WQSScoringSection({
             </tr>
           </tbody>
         </table>
-      </div>
+      </ScrollableTableContainer>
     </div>
   );
 }

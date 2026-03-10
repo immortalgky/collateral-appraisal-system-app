@@ -99,6 +99,7 @@ export const landInfoField: FormField[] = [
     disableWhen: { field: 'isOwnerVerified', is: false },
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
   },
   {
     type: 'boolean-toggle',
@@ -164,6 +165,8 @@ export const landLocationField: FormField[] = [
     label: 'Distance',
     name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -246,6 +249,7 @@ export const landFillField: FormField[] = [
     name: 'landFillPercent',
     wrapperClassName: 'col-span-6',
     decimalPlaces: 2,
+    maxIntegerDigits: 3,
     max: 100,
   },
   {
@@ -253,6 +257,8 @@ export const landFillField: FormField[] = [
     label: 'Soil Level',
     name: 'soilLevel',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
 ];
 
@@ -262,12 +268,14 @@ export const roadField: FormField[] = [
     label: 'Road Width',
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 3,
   },
   {
     type: 'number-input',
     label: 'Right of Way',
     name: 'rightOfWay',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
     decimalPlaces: 0,
   },
   {
@@ -275,6 +283,7 @@ export const roadField: FormField[] = [
     label: 'Wide frontage of land adjacent to the road',
     name: 'roadFrontage',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 3,
   },
   {
     type: 'number-input',
@@ -282,6 +291,7 @@ export const roadField: FormField[] = [
     name: 'numberOfSidesFacingRoad',
     wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
+    maxIntegerDigits: 1,
   },
   {
     type: 'text-input',
@@ -436,6 +446,7 @@ export const expropriateField: FormField[] = [
     label: 'Royal Decree',
     name: 'royalDecree',
     wrapperClassName: 'col-span-3',
+    maxLength: 20,
   },
   {
     type: 'textarea',
@@ -472,6 +483,7 @@ export const encroachedField: FormField[] = [
     name: 'encroachmentArea',
     wrapperClassName: 'col-span-3',
     disableWhen: { field: 'isEncroached', is: false },
+    maxIntegerDigits: 8,
   },
   {
     type: 'textarea',
@@ -498,6 +510,7 @@ export const LimitationOther: FormField[] = [
     name: 'electricityDistance',
     wrapperClassName: 'col-span-3',
     disableWhen: { field: 'hasElectricity', is: false },
+    maxIntegerDigits: 3,
   },
   {
     type: 'checkbox',
@@ -585,6 +598,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'North Estimate Length',
     name: 'northBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -598,6 +613,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'South Estimate Length',
     name: 'southBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -611,6 +628,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'East Estimate Length',
     name: 'eastBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
@@ -624,6 +643,8 @@ export const sizeAndBoundary: FormField[] = [
     label: 'West Estimate Length',
     name: 'westBoundaryLength',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
 ];
 
@@ -633,12 +654,14 @@ export const otherInformationField: FormField[] = [
     label: 'Pond Area',
     name: 'pondArea',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
     label: 'Depth of Pit',
     name: 'pondDepth',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
   },
   {
     type: 'checkbox',
@@ -721,6 +744,7 @@ export const buildingInfoField: FormField[] = [
     required: true,
     disableWhen: { field: 'isOwnerVerified', is: false },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
   },
   {
     type: 'text-input',
@@ -751,6 +775,9 @@ export const buildingInfoField: FormField[] = [
     name: 'constructionCompletionPercent',
     wrapperClassName: 'col-span-3',
     disableWhen: { field: 'isUnderConstruction', is: true },
+    maxIntegerDigits: 3,
+    decimalPlaces: 2,
+    max: 100,
   },
   {
     type: 'datetime-input',
@@ -800,6 +827,8 @@ export const buildingTypeField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'buildingType', is: '99' },
     requiredWhen: { field: 'buildingType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'number-input',
@@ -807,6 +836,8 @@ export const buildingTypeField: FormField[] = [
     name: 'numberOfFloors',
     wrapperClassName: 'col-span-2',
     required: true,
+    maxIntegerDigits: 3,
+    decimalPlaces: 1,
   },
 ];
 
@@ -845,6 +876,8 @@ export const encroachmentField: FormField[] = [
     name: 'encroachingOthersArea',
     wrapperClassName: 'col-span-2',
     disableWhen: { field: 'isEncroachingOthers', is: false },
+    maxIntegerDigits: 8,
+    decimalPlaces: 2,
   },
   {
     type: 'textarea',
@@ -892,6 +925,8 @@ export const isResidentialField: FormField[] = [
     name: 'buildingAge',
     wrapperClassName: 'col-span-2',
     required: true,
+    maxIntegerDigits: 3,
+    decimalPlaces: 1,
   },
   {
     type: 'textarea',
@@ -1090,6 +1125,8 @@ export const buildingArea: FormField[] = [
     label: 'Total Building Area (sq.m.)',
     wrapperClassName: 'col-span-3',
     required: true,
+    maxIntegerDigits: 8,
+    decimalPlaces: 2,
   },
 ];
 
@@ -1160,6 +1197,7 @@ export const condoFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     required: true,
     decimalPlaces: 0,
+    maxIntegerDigits: 3,
   },
   {
     type: 'text-input',
@@ -1199,6 +1237,7 @@ export const condoFields: FormField[] = [
     name: 'usableArea',
     wrapperClassName: 'col-span-3',
     required: true,
+    maxIntegerDigits: 5,
   },
   // Location selector (sub-district autocomplete that populates district, province, postcode)
   {
@@ -1272,6 +1311,7 @@ export const condoFields: FormField[] = [
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disableWhen: { field: 'isOwnerVerified', is: false },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
   },
   {
     type: 'radio-group',
@@ -1335,12 +1375,14 @@ export const condoLocationFields: FormField[] = [
     label: 'Distance',
     name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 8,
   },
   {
     type: 'number-input',
     label: 'Road Width',
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 8,
   },
   {
     type: 'number-input',
@@ -1406,6 +1448,8 @@ export const ageHeightCondoFields: FormField[] = [
     label: 'Building Age (Years)',
     name: 'buildingAge',
     wrapperClassName: 'col-span-4',
+    maxIntegerDigits: 3,
+    decimalPlaces: 1,
   },
   {
     type: 'number-input',
@@ -1413,6 +1457,7 @@ export const ageHeightCondoFields: FormField[] = [
     name: 'numberOfFloors',
     wrapperClassName: 'col-span-4',
     required: true,
+    maxIntegerDigits: 3,
   },
 ];
 
@@ -1529,7 +1574,7 @@ export const floorFormFields: FormField[] = [
 
 export const roofFormFields: FormField[] = [
   {
-    type: 'radio-group',
+    type: 'checkbox-group',
     label: '',
     name: 'roofType',
     wrapperClassName: 'col-span-12',
