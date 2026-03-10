@@ -215,7 +215,7 @@ export const createRequestFormDefault: createRequestFormType = {
       dealerCode: '',
     },
     appointment: {
-      appointmentDateTime: '',
+      appointmentDateTime: null,
       appointmentLocation: '',
     },
     fee: {
