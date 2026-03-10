@@ -1,4 +1,4 @@
-import type { FieldArrayField, FormField } from '@/shared/components/form';
+import type { FormField } from '@/shared/components/form';
 
 /** Prefix all field names for schema building (short → full dotted path). */
 export function prefixFields(fields: FormField[], prefix: string): FormField[] {
@@ -1338,12 +1338,12 @@ export const condoFields: FormField[] = [
     maxLength: 100,
   },
   {
-    type: 'boolean-toggle',
+    type: 'dropdown',
     label: 'Document Validation',
-    name: 'isDocumentValidated',
+    name: 'documentValidationResultType',
+    group: 'DocumentValidation',
     wrapperClassName: 'col-span-12',
     required: true,
-    options: ['Not Consistent', 'Correctly Matched'],
   },
 ];
 
@@ -1763,4 +1763,159 @@ export const allAppraisalFields: FormField[] = [
   ...allBuildingFields,
   ...allLandBuildingFields,
   ...allCondoFields,
+];
+
+// =============================================================================
+// Land titles fields
+// =============================================================================
+export const landtitlesFields: FormField[] = [
+  {
+    name: 'titleType',
+    label: 'Title Type',
+    type: 'dropdown',
+    group: 'DeedType',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  {
+    name: 'titleNumber',
+    label: 'Title Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 40,
+  },
+  {
+    name: 'bookNumber',
+    label: 'Book Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+    maxLength: 10,
+  },
+  {
+    name: 'pageNumber',
+    label: 'Page Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+    maxLength: 10,
+  },
+  {
+    name: 'rawang',
+    label: 'Rawang',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+    maxLength: 30,
+  },
+  {
+    name: 'landParcelNumber',
+    label: 'Land Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+    maxLength: 10,
+  },
+  {
+    name: 'surveyNumber',
+    label: 'Survey Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+    maxLength: 10,
+  },
+  {
+    name: 'mapSheetNumber',
+    label: 'Sheet Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    name: 'aerialMapName',
+    label: 'Aerial Photo Name',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    name: 'aerialMapNumber',
+    label: 'Aerial Photo Number',
+    type: 'text-input',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    name: 'rai',
+    label: 'Rai',
+    type: 'number-input',
+    wrapperClassName: 'col-span-2',
+    decimalPlaces: 0,
+    maxIntegerDigits: 5,
+  },
+  {
+    name: 'ngan',
+    label: 'Ngan',
+    type: 'number-input',
+    wrapperClassName: 'col-span-2',
+    decimalPlaces: 0,
+    maxIntegerDigits: 1,
+    max: 3,
+  },
+  {
+    name: 'squareWa',
+    label: 'Sq.Wa',
+    type: 'number-input',
+    wrapperClassName: 'col-span-2',
+    requiredWhen: {
+      conditions: [
+        { field: 'rai', operator: 'isEmpty' },
+        { field: 'ngan', operator: 'isEmpty' },
+      ],
+      match: 'all',
+    },
+    decimalPlaces: 2,
+    maxIntegerDigits: 3,
+  },
+  {
+    name: 'boundaryMarkerType',
+    label: 'Boundary Marker',
+    type: 'dropdown',
+    group: 'BoundaryMarker',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    name: 'boundaryMarkerRemark',
+    label: 'Boundary Other',
+    type: 'textarea',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+    showCharCount: true,
+    showWhen: { field: 'boundaryMarkerType', is: '99' },
+  },
+  {
+    name: 'documentValidationResultType',
+    label: 'Document Validate',
+    type: 'dropdown',
+    group: 'DocumentValidation',
+    wrapperClassName: 'col-span-12',
+    required: true,
+  },
+  {
+    name: 'isMissingFromSurvey',
+    label: 'Missed out on the survey',
+    type: 'boolean-toggle',
+    options: ['No', 'Yes'],
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    name: 'governmentPricePerSqWa',
+    label: 'Government Price per Sq.Wa',
+    type: 'number-input',
+    wrapperClassName: 'col-span-4',
+    maxIntegerDigits: 16,
+    decimalPlaces: 2,
+  },
+  {
+    name: 'governmentPrice',
+    label: 'Government Price',
+    type: 'number-input',
+    wrapperClassName: 'col-span-4',
+    disabled: true,
+    maxIntegerDigits: 16,
+    decimalPlaces: 2,
+  },
 ];

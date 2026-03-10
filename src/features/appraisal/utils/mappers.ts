@@ -202,7 +202,7 @@ export const mapCondoPropertyResponseToForm = (
     buildingConditionType: response.buildingConditionType ?? '',
     hasObligation: response.hasObligation ?? false,
     obligationDetails: response.obligationDetails ?? '',
-    isDocumentValidated: response.isDocumentValidated ?? true,
+    documentValidationResultType: response.documentValidationResultType ?? '',
 
     locationType: response.locationType ?? '',
     street: response.street ?? '',

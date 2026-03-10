@@ -417,7 +417,7 @@ export const titleLandFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
     maxIntegerDigits: 1,
-    max: 4,
+    max: 3,
   },
   {
     type: 'number-input',
