@@ -241,7 +241,7 @@
       }
     },
     "/requests/{id}/draft": {
-      "patch": {
+      "put": {
         "tags": ["Requests"],
         "summary": "Update a draft request",
         "description": "Updates an existing draft request.",
@@ -3342,6 +3342,65 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResetPricingMethodResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pricing-analysis/{id}/approaches/{approachId}/methods/{methodId}": {
+      "delete": {
+        "tags": ["PricingAnalysis"],
+        "summary": "Remove a pricing method",
+        "description": "Removes a pricing method and all its child data (factors, scores, calculations, comparable links, final value, RSQ result). If the method was selected, clears approach selection and final appraised value.",
+        "operationId": "RemoveMethod",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "approachId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "methodId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveMethodResult"
                 }
               }
             }
@@ -13694,7 +13753,10 @@
             "nullable": true
           },
           "roofType": {
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "default": null,
             "nullable": true
           },
@@ -13900,6 +13962,7 @@
           "detail",
           "customers",
           "properties",
+          "titles",
           "documents",
           "comments"
         ],
@@ -13907,13 +13970,16 @@
         "properties": {
           "sessionId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "purpose": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "channel": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "requestor": {
             "$ref": "#/components/schemas/UserInfoDto"
@@ -13922,37 +13988,49 @@
             "$ref": "#/components/schemas/UserInfoDto"
           },
           "priority": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isPma": {
             "type": "boolean"
           },
           "detail": {
-            "$ref": "#/components/schemas/RequestDetailDto2"
+            "$ref": "#/components/schemas/RequestDetailDto"
           },
           "customers": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestCustomerDto"
-            }
+            },
+            "nullable": true
           },
           "properties": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestPropertyDto"
-            }
+            },
+            "nullable": true
+          },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestTitleDto"
+            },
+            "nullable": true
           },
           "documents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestDocumentDto"
-            }
+            },
+            "nullable": true
           },
           "comments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestCommentDto"
-            }
+            },
+            "nullable": true
           }
         }
       },
@@ -15693,13 +15771,16 @@
         "properties": {
           "sessionId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "purpose": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "channel": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "requestor": {
             "$ref": "#/components/schemas/UserInfoDto"
@@ -15708,43 +15789,49 @@
             "$ref": "#/components/schemas/UserInfoDto"
           },
           "priority": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isPma": {
             "type": "boolean"
           },
           "detail": {
-            "$ref": "#/components/schemas/RequestDetailDto2"
+            "$ref": "#/components/schemas/RequestDetailDto"
           },
           "customers": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestCustomerDto"
-            }
+            },
+            "nullable": true
           },
           "properties": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestPropertyDto"
-            }
+            },
+            "nullable": true
           },
           "titles": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestTitleDto"
-            }
+            },
+            "nullable": true
           },
           "documents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestDocumentDto"
-            }
+            },
+            "nullable": true
           },
           "comments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestCommentDto"
-            }
+            },
+            "nullable": true
           }
         }
       },
@@ -18181,7 +18268,10 @@
             "nullable": true
           },
           "roofType": {
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "nullable": true
           },
           "roofTypeOther": {
@@ -23056,6 +23146,19 @@
           }
         }
       },
+      "RemoveMethodResult": {
+        "required": ["methodId", "success"],
+        "type": "object",
+        "properties": {
+          "methodId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
       "RemovePropertyFromGroupResponse": {
         "required": ["success"],
         "type": "object",
@@ -24195,49 +24298,6 @@
           "assignedType": {
             "type": "string",
             "default": null,
-            "nullable": true
-          }
-        }
-      },
-      "SourceSystemDto": {
-        "required": [
-          "channel",
-          "requestDate",
-          "requestBy",
-          "requestByName",
-          "createdDate",
-          "creator",
-          "creatorName"
-        ],
-        "type": "object",
-        "properties": {
-          "channel": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "requestBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestByName": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "creator": {
-            "type": "string",
-            "nullable": true
-          },
-          "creatorName": {
-            "type": "string",
             "nullable": true
           }
         }
@@ -25635,7 +25695,10 @@
             "nullable": true
           },
           "roofType": {
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "default": null,
             "nullable": true
           },
@@ -25781,43 +25844,43 @@
       },
       "UpdateDraftRequestRequest": {
         "required": [
-          "id",
-          "sessionId",
-          "detail",
-          "isPMA",
           "purpose",
+          "channel",
+          "requestor",
+          "creator",
           "priority",
-          "sourceSystem",
+          "isPma",
+          "detail",
           "customers",
           "properties",
-          "documents",
-          "comments",
-          "titles"
+          "titles",
+          "documents"
         ],
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "sessionId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "detail": {
-            "$ref": "#/components/schemas/RequestDetailDto2"
-          },
-          "isPMA": {
-            "type": "boolean"
-          },
           "purpose": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
+          },
+          "channel": {
+            "type": "string",
+            "nullable": true
+          },
+          "requestor": {
+            "$ref": "#/components/schemas/UserInfoDto"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/UserInfoDto"
           },
           "priority": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
-          "sourceSystem": {
-            "$ref": "#/components/schemas/SourceSystemDto"
+          "isPma": {
+            "type": "boolean"
+          },
+          "detail": {
+            "$ref": "#/components/schemas/RequestDetailDto"
           },
           "customers": {
             "type": "array",
@@ -25833,24 +25896,19 @@
             },
             "nullable": true
           },
+          "titles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestTitleDto"
+            },
+            "nullable": true
+          },
           "documents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequestDocumentDto"
             },
             "nullable": true
-          },
-          "comments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestCommentDto"
-            }
-          },
-          "titles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequestTitleDto"
-            }
           }
         }
       },
@@ -27899,10 +27957,12 @@
         "type": "object",
         "properties": {
           "purpose": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "channel": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "requestor": {
             "$ref": "#/components/schemas/UserInfoDto"
@@ -27911,7 +27971,8 @@
             "$ref": "#/components/schemas/UserInfoDto"
           },
           "priority": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isPma": {
             "type": "boolean"

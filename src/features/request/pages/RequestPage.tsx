@@ -26,9 +26,19 @@ import RequestForm from '../forms/RequestForm';
 import AppointmentAndFeeForm from '../forms/AppointmentAndFeeForm';
 import TitleInformationForm from '../forms/TitleInformationForm';
 import AttachDocumentForm from '../forms/AttachDocumentForm';
-import { createUploadSession, useCreateRequest, useDeleteRequest, useGetRequestById, useSubmitRequest, useUpdateRequest, } from '../api';
+import {
+  createUploadSession,
+  useCreateDraftRequest,
+  useCreateRequest,
+  useDeleteRequest,
+  useGetRequestById,
+  useSubmitRequest,
+  useUpdateDraftRequest,
+  useUpdateRequest,
+} from '../api';
 import { mapRequestResponseToForm } from '../utils/mappers';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
+import type { CreateDraftRequestRequestType } from '../api';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -114,7 +124,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     formState: { errors, isDirty },
   } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty && !readOnly);
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty && !readOnly);
 
   // Reset form when switching between create/edit mode or when requestId changes
   useEffect(() => {
@@ -150,11 +160,19 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
   const { mutate: createRequest, isPending: isCreating } = useCreateRequest();
   const { mutate: updateRequest, isPending: isUpdating } = useUpdateRequest();
   const { mutate: submitRequest, isPending: isSubmitting } = useSubmitRequest();
+  const { mutate: createDraftRequest, isPending: isCreatingDraft } = useCreateDraftRequest();
+  const { mutate: updateDraftRequest, isPending: isUpdatingDraft } = useUpdateDraftRequest();
 
   const deleteRequest = useDeleteRequest();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const isPending = isCreating || isUpdating || isSubmitting || deleteRequest.isPending;
+  const isPending =
+    isCreating ||
+    isUpdating ||
+    isSubmitting ||
+    isCreatingDraft ||
+    isUpdatingDraft ||
+    deleteRequest.isPending;
 
   // Track which save action is in progress (for loading state on the correct button)
   const [saveAction, setSaveAction] = useState<'draft' | 'save' | 'submit' | null>(null);
@@ -212,6 +230,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     deleteRequest.mutate(requestId, {
       onSuccess: () => {
         toast.success('Request deleted successfully');
+        skipWarning();
         navigate('/requests');
       },
       onError: (error: any) => {
@@ -275,7 +294,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
             toast.success('Request created successfully');
             setSaveAction(null);
             if (response.id) {
-              reset(getValues());
+              skipWarning();
               navigate(`/requests/${response.id}`);
             }
           },
@@ -294,7 +313,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
 
     if (isEditMode && requestId) {
       // Update existing request as draft
-      updateRequest(
+      updateDraftRequest(
         {
           id: requestId,
           request: {
@@ -317,7 +336,6 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
       );
     } else {
       // Create new request as draft - include pending comments from local state
-      // Don't send id/requestId - backend will assign them
       const commentsForApi = pendingComments.map(c => ({
         comment: c.comment,
         commentedBy: c.commentedBy,
@@ -326,18 +344,18 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
         lastModifiedAt: c.lastModifiedAt ?? null,
       }));
 
-      createRequest(
+      createDraftRequest(
         {
           ...data,
-          sessionId: uploadSessionIdRef.current || '',
+          sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
-        } as CreateRequestRequestType,
+        } as CreateDraftRequestRequestType,
         {
           onSuccess: response => {
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.id) {
-              reset(getValues());
+              skipWarning();
               navigate(`/requests/${response.id}`);
             }
           },
@@ -368,7 +386,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
             onSuccess: () => {
               toast.success('Request submitted successfully');
               setSaveAction(null);
-              reset(getValues());
+              skipWarning();
               navigate('/requests');
             },
             onError: (error: any) => {
@@ -412,7 +430,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
           createRequest(
             {
               ...data,
-              sessionId: uploadSessionIdRef.current || '',
+              sessionId: uploadSessionIdRef.current,
               comments: commentsForApi,
             } as CreateRequestRequestType,
             {
@@ -537,7 +555,10 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
                 <ActionBar.Left>
                   <CancelButton />
                   <ActionBar.Divider />
-                  <DeleteButton onClick={() => setIsDeleteDialogOpen(true)} disabled={!isEditMode || isPending} />
+                  <DeleteButton
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    disabled={!isEditMode || isPending}
+                  />
                   <DuplicateButton onClick={handleDuplicate} disabled={!isEditMode || isPending} />
                   <ActionBar.UnsavedIndicator show={isDirty} />
                 </ActionBar.Left>

@@ -58,7 +58,7 @@ export default function PaymentInformationSection({
   // Determine payment status
   const getPaymentStatus = () => {
     if (fee) {
-      switch (fee.paymentStatus.toLowerCase()) {
+      switch (fee?.paymentStatus?.toLowerCase()) {
         case 'paid':
           return { label: 'Paid', color: 'success' };
         case 'partial':
@@ -371,6 +371,7 @@ export default function PaymentInformationSection({
             : null
         }
         isEditing={editingPaymentId !== null}
+        maxAmount={remaining}
       />
 
       {/* Delete Confirmation Dialog */}
