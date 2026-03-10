@@ -3117,7 +3117,7 @@ const GetCondoPropertyResponse = z
     upperFloorMaterialTypeOther: z.string().nullable(),
     bathroomFloorMaterialType: z.string().nullable(),
     bathroomFloorMaterialTypeOther: z.string().nullable(),
-    roofType: z.string().nullable(),
+    roofType: z.array(z.string()).nullable(),
     roofTypeOther: z.string().nullable(),
     areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable(),
     totalBuildingArea: z.number().nullable(),
