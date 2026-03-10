@@ -1,6 +1,11 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
-import { allAppraisalFields } from '../configs/fields';
+import {
+  allBuildingFields,
+  allCondoFields,
+  allLandBuildingFields,
+  allLandFields,
+} from '../configs/fields';
 
 const landTitleItem = z.object({
   titleNumber: z.string(),
@@ -29,7 +34,7 @@ export const createLandFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
 });
 
-export const createLandForm = buildFormSchema(allAppraisalFields, createLandFormBase);
+export const createLandForm = buildFormSchema(allLandFields, createLandFormBase);
 
 const surfaceFormItem = z.object({
   fromFloorNumber: z.coerce.number().nullable().optional(),
@@ -68,7 +73,7 @@ export const createBuildingFormBase = z.object({
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
 });
 
-export const createBuildingForm = buildFormSchema(allAppraisalFields, createBuildingFormBase);
+export const createBuildingForm = buildFormSchema(allBuildingFields, createBuildingFormBase);
 
 const AreaDetailDto = z
   .object({
@@ -82,7 +87,7 @@ export const createCondoFormBase = z.object({
   areaDetails: z.array(AreaDetailDto).nullable(),
 });
 
-export const createCondoForm = buildFormSchema(allAppraisalFields, createCondoFormBase);
+export const createCondoForm = buildFormSchema(allCondoFields, createCondoFormBase);
 
 export const createLandAndBuildingFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
@@ -91,7 +96,7 @@ export const createLandAndBuildingFormBase = z.object({
 });
 
 export const createLandAndBuildingForm = buildFormSchema(
-  allAppraisalFields,
+  allLandBuildingFields,
   createLandAndBuildingFormBase,
 );
 
@@ -274,7 +279,7 @@ export const createBuildingFormDefault: createBuildingFormType = {
   buildingConditionType: '',
   isUnderConstruction: false,
   constructionCompletionPercent: 100,
-  constructionLicenseExpirationDate: '',
+  constructionLicenseExpirationDate: null,
   isAppraisable: false,
   hasObligation: false,
   obligationDetails: '',
@@ -366,7 +371,7 @@ export const createCondoFormDefault: createCondoFormType = {
   upperFloorMaterialTypeOther: '',
   bathroomFloorMaterialType: '',
   bathroomFloorMaterialTypeOther: '',
-  roofType: '',
+  roofType: [],
   roofTypeOther: '',
   areaDetails: [],
   totalBuildingArea: 0,
@@ -475,7 +480,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   buildingConditionType: '',
   isUnderConstruction: false,
   constructionCompletionPercent: 100,
-  constructionLicenseExpirationDate: '',
+  constructionLicenseExpirationDate: null,
   isAppraisable: false,
   buildingType: '',
   buildingTypeOther: '',
