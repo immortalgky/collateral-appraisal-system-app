@@ -4,7 +4,7 @@ import Icon from '@shared/components/Icon';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { FeeItem } from '../types/appointmentAndFee';
-import { FEE_ITEM_TYPE_OPTIONS, FEE_TYPE_OPTIONS, VAT_PERCENTAGE, } from '../types/appointmentAndFee';
+import { FEE_ITEM_TYPE_OPTIONS, VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import type { AppraisalFeeItemDtoType } from '@shared/schemas/v1';
 import AddFeeModal from './AddFeeModal';
 
@@ -172,7 +172,7 @@ export default function FeeInformationSection({
         name="feePaymentType"
         label="Fee Payment Type"
         required
-        options={FEE_TYPE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
+        group="FeePaymentMethod"
         value={feePaymentType || ''}
         onChange={value => onUpdateFeePaymentType?.(value)}
         disabled={isFeePaymentTypeUpdating}

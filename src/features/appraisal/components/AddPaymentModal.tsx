@@ -16,6 +16,7 @@ interface AddPaymentModalProps {
   onSubmit: (data: AddPaymentFormData) => void;
   defaultValues?: { paymentDate: string; amount: number } | null;
   isEditing?: boolean;
+  maxAmount?: number;
 }
 
 /**
@@ -27,12 +28,14 @@ export default function AddPaymentModal({
   onSubmit,
   defaultValues,
   isEditing = false,
+  maxAmount,
 }: AddPaymentModalProps) {
   const {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
     setValue,
+    setError,
     watch,
   } = useForm<AddPaymentFormData>({
     resolver: zodResolver(AddPaymentFormSchema),
@@ -57,12 +60,22 @@ export default function AddPaymentModal({
   };
 
   const handleFormSubmit = (data: AddPaymentFormData) => {
+    if (maxAmount == 0 || (maxAmount && data.amount > maxAmount)) {
+      setError('amount', { type: 'manual', message: `Amount cannot exceed ${maxAmount}` });
+      return;
+    }
+
     onSubmit(data);
     handleClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={isEditing ? 'Edit Payment' : 'Add Payment'} size="sm">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={isEditing ? 'Edit Payment' : 'Add Payment'}
+      size="sm"
+    >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
         {/* Payment Date */}
         <DateInput
