@@ -1,84 +1,70 @@
 import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
+import { type FormField } from '@/shared/components/form';
 import { formatNumber } from '@/shared/utils/formatUtils';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  useController,
-  useFieldArray,
-  useForm,
-  useFormContext,
   type Control,
   type FieldValues,
+  useController,
+  useFieldArray,
+  useFormContext,
 } from 'react-hook-form';
 import LandTitleInputModal from '../LandTitleInputModal';
 
 interface LandTitleTableProps {
   name: string;
-  headers: LandTitleTableHeader[];
-}
-
-type LandTitleTableHeader = LandTitleTableRegularHeader | LandTitleTableRowNumberHeader;
-
-interface LandTitleTableRegularHeader {
-  name: string;
-  label: string;
-  type?: 'text-input' | 'number-input' | 'dropdown' | 'radio-group' | 'date-input';
-  disabled?: boolean;
-  colSpan?: number;
-  options?: { value: any; label: string }[];
-  required?: boolean;
-  orientation?: 'horizontal' | 'vertical';
-  decimalPlace?: number;
-}
-
-interface LandTitleTableRowNumberHeader {
-  rowNumberColumn: true;
-  label: string;
+  fields: FormField[];
+  showRowNumber?: boolean;
+  stickyColumns?: number;
 }
 
 interface TableCellProps {
   name: string;
   index: number;
-  editIndex: number | undefined;
   value: string;
-  header: LandTitleTableRegularHeader;
+  field: FormField;
+  row: Record<string, any>;
+  allFields: FormField[];
   control: Control<FieldValues, any, FieldValues>;
 }
 
-// TODO: Find and add unique key
-const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
+const LandTitleTable = ({
+  name,
+  fields,
+  showRowNumber,
+  stickyColumns = 0,
+}: LandTitleTableProps) => {
+  const tableFields = fields.filter(f => !('showWhen' in f && f.showWhen));
   const { control, getValues } = useFormContext();
-
   const { append, remove, update } = useFieldArray({ control, name });
   const values = getValues(name) || [];
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [stickyOffsets, setStickyOffsets] = useState<number[]>([]);
+  const totalSticky = (showRowNumber ? 1 : 0) + stickyColumns;
+
+  const computeOffsets = useCallback(() => {
+    if (!tableRef.current || stickyColumns <= 0) return;
+    const headerCells = tableRef.current.querySelectorAll('thead th');
+    const offsets: number[] = [];
+    let cumulative = 0;
+    for (let i = 0; i < totalSticky && i < headerCells.length; i++) {
+      offsets.push(cumulative);
+      cumulative += (headerCells[i] as HTMLElement).offsetWidth;
+    }
+    setStickyOffsets(offsets);
+  }, [stickyColumns, totalSticky]);
+
+  useEffect(() => {
+    computeOffsets();
+  }, [computeOffsets, values.length]);
+
+  const [modalState, setModalState] = useState<
+    { type: 'add' } | { type: 'edit'; index: number } | null
+  >(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
-
-  const editForm = useForm();
-  const addForm = useForm();
-
-  const handleAddSave = () => {
-    const data = addForm.getValues();
-    append(data);
-    addForm.reset({});
-    setIsAddOpen(false);
-  };
-
-  const handleEditSave = () => {
-    const data = editForm.getValues();
-    update(editIndex!, data);
-    setEditIndex(null);
-    setIsEditOpen(false);
-  };
-
-  const handleEditOpen = (index: number) => {
-    setEditIndex(index);
-    editForm.reset(values[index]);
-    setIsEditOpen(true);
-  };
 
   const handleDeleteRow = (index: number) => {
     setDeleteConfirmIndex(index);
@@ -106,10 +92,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
           <p className="text-xs text-gray-400 mt-0.5 mb-3">Click the button below to add a title</p>
           <button
             type="button"
-            onClick={() => {
-              addForm.reset({});
-              setIsAddOpen(true);
-            }}
+            onClick={() => setModalState({ type: 'add' })}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
           >
             <Icon style="solid" name="plus" className="size-2.5" />
@@ -119,81 +102,96 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
       ) : (
         <>
           <div className="max-h-60 overflow-auto border border-gray-200 rounded-lg min-w-0">
-            <table className="table table-zebra table-xs min-w-max">
+            <table ref={tableRef} className="table table-zebra table-xs min-w-max">
               <thead>
                 <tr>
-                  {headers.map((header, index) => (
+                  {showRowNumber && (
                     <th
-                      key={index}
-                      className={`bg-primary-700 text-white text-xs font-medium py-2 px-3 text-left ${
-                        index === 0 ? 'first:rounded-tl-lg sticky left-0 z-10' : ''
-                      }`}
+                      className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-left first:rounded-tl-lg sticky z-10"
+                      style={{ left: stickyOffsets[0] ?? 0 }}
                     >
-                      {header.label}
+                      #
                     </th>
-                  ))}
-                  <th
-                    className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-right sticky right-0 w-20"
-                  >
+                  )}
+                  {tableFields.map((field, index) => {
+                    const stickyIndex = (showRowNumber ? 1 : 0) + index;
+                    const isSticky = stickyIndex < totalSticky;
+                    return (
+                      <th
+                        key={index}
+                        className={`bg-primary-700 text-white text-xs font-medium py-2 px-3 text-left ${
+                          isSticky ? 'sticky z-10' : ''
+                        } ${!showRowNumber && index === 0 ? 'first:rounded-tl-lg' : ''}`}
+                        style={isSticky ? { left: stickyOffsets[stickyIndex] ?? 0 } : undefined}
+                      >
+                        {'label' in field ? field.label : field.name}
+                      </th>
+                    );
+                  })}
+                  <th className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-right sticky right-0 w-20">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {values.map((field: Record<string, any>, index: number) => (
-                  <tr key={index}>
-                    {headers.map((header, inner_index) => {
-                      if ('name' in header) {
+                {values.map((row: Record<string, any>, index: number) => {
+                  const rowBg = index % 2 === 1 ? 'bg-base-200' : 'bg-base-100';
+                  return (
+                    <tr key={index}>
+                      {showRowNumber && (
+                        <td
+                          className={`py-1.5 px-3 sticky z-10 ${rowBg}`}
+                          style={{ left: stickyOffsets[0] ?? 0 }}
+                        >
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                            {index + 1}
+                          </span>
+                        </td>
+                      )}
+                      {tableFields.map((field, innerIndex) => {
+                        const stickyIndex = (showRowNumber ? 1 : 0) + innerIndex;
+                        const isSticky = stickyIndex < totalSticky;
                         return (
                           <td
-                            key={inner_index}
-                            className={`py-1.5 px-3 text-xs ${inner_index === 0 ? 'sticky left-0 z-10 bg-inherit' : ''}`}
+                            key={innerIndex}
+                            className={`py-1.5 px-3 text-xs ${isSticky ? `sticky z-10 ${rowBg}` : ''}`}
+                            style={isSticky ? { left: stickyOffsets[stickyIndex] ?? 0 } : undefined}
                           >
                             <TableCell
                               name={name}
                               index={index}
-                              value={field[header.name]}
-                              header={header}
+                              value={row[field.name]}
+                              field={field}
+                              row={row}
+                              allFields={fields}
                               control={control}
-                              editIndex={undefined}
                             />
                           </td>
                         );
-                      } else {
-                        return (
-                          <td
-                            key={inner_index}
-                            className={`py-1.5 px-3 ${inner_index === 0 ? 'sticky left-0 z-10 bg-inherit' : ''}`}
+                      })}
+                      <td className={`py-1.5 px-3 sticky right-0 z-10 ${rowBg}`}>
+                        <div className="flex gap-1 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setModalState({ type: 'edit', index })}
+                            className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                            title="Edit"
                           >
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
-                              {index + 1}
-                            </span>
-                          </td>
-                        );
-                      }
-                    })}
-                    <td className="py-1.5 px-3 sticky right-0 z-10 bg-inherit">
-                      <div className="flex gap-1 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleEditOpen(index)}
-                          className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                          title="Edit"
-                        >
-                          <Icon style="solid" name="pen" className="size-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRow(index)}
-                          className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-3" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                            <Icon style="solid" name="pen" className="size-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRow(index)}
+                            className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-3" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -201,10 +199,7 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
           <div className="border-t border-gray-100">
             <button
               type="button"
-              onClick={() => {
-                addForm.reset({});
-                setIsAddOpen(true);
-              }}
+              onClick={() => setModalState({ type: 'add' })}
               className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
             >
               <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
@@ -215,22 +210,19 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
           </div>
         </>
       )}
-      {isAddOpen && (
+      {modalState && (
         <LandTitleInputModal
-          headers={headers.filter((h): h is LandTitleTableRegularHeader => 'name' in h)}
-          popupForm={addForm}
-          onCancel={() => setIsAddOpen(false)}
-          onConfirm={handleAddSave}
-          isEdit={false}
-        />
-      )}
-      {isEditOpen && (
-        <LandTitleInputModal
-          headers={headers.filter((h): h is LandTitleTableRegularHeader => 'name' in h)}
-          popupForm={editForm}
-          onCancel={() => setIsEditOpen(false)}
-          onConfirm={handleEditSave}
-          isEdit={true}
+          fields={fields}
+          defaultValues={modalState.type === 'edit' ? values[modalState.index] : undefined}
+          onCancel={() => setModalState(null)}
+          onSave={data => {
+            if (modalState.type === 'add') {
+              append(data);
+            } else {
+              update(modalState.index, data);
+            }
+            setModalState(null);
+          }}
         />
       )}
 
@@ -249,17 +241,17 @@ const LandTitleTable = ({ name, headers }: LandTitleTableProps) => {
   );
 };
 
-const TableCell = ({ name, index, value, header, control }: TableCellProps) => {
-  const cellName = `${name}.${index}.${header.name}`;
+const TableCell = ({ name, index, value, field, row, allFields, control }: TableCellProps) => {
+  const cellName = `${name}.${index}.${field.name}`;
   const {
     fieldState: { error },
   } = useController({ name: cellName, control });
 
   // Format number values
-  if (header.type === 'number-input' && value != null && value !== '') {
+  if (field.type === 'number-input' && value != null && value !== '') {
     const numValue = typeof value === 'number' ? value : Number(value);
     if (!isNaN(numValue)) {
-      const formatted = formatNumber(numValue, header.decimalPlace ?? 0);
+      const formatted = formatNumber(numValue, field.decimalPlaces ?? 0);
       return (
         <div>
           <div>{formatted}</div>
@@ -269,13 +261,51 @@ const TableCell = ({ name, index, value, header, control }: TableCellProps) => {
     }
   }
 
-  // Lookup option label (use loose equality for boolean values like true vs "true")
-  // eslint-disable-next-line eqeqeq
-  const label = header?.options?.find((opt) => opt.value == value)?.label ?? value;
+  // Check if field uses parameterGroup (no inline options)
+  const hasGroup = 'group' in field && field.group;
+  const hasOptions = 'options' in field && field.options;
+  const groupFieldTypes = ['dropdown', 'radio-group', 'checkbox-group', 'boolean-toggle', 'string-toggle'];
+
+  if (hasGroup && !hasOptions && groupFieldTypes.includes(field.type)) {
+    const dependentField = allFields.find(
+      f => 'showWhen' in f && f.showWhen && 'field' in f.showWhen && f.showWhen.field === field.name,
+    );
+    const depValue = dependentField ? row[dependentField.name] : null;
+    return (
+      <div>
+        <div>
+          <ParameterDisplay group={field.group!} code={value} />
+          {depValue ? ` - ${depValue}` : ''}
+        </div>
+        {error && <div className="mt-1 text-xs text-danger">{error?.message}</div>}
+      </div>
+    );
+  }
+
+  // Lookup option label for dropdown/radio-group (use loose equality for boolean values)
+  let displayValue = value;
+  if (field.type === 'boolean-toggle' && 'options' in field && field.options) {
+    displayValue = value ? field.options[1] : field.options[0];
+  } else if (
+    (field.type === 'dropdown' || field.type === 'radio-group') &&
+    'options' in field &&
+    field.options
+  ) {
+    const matched = field.options.find(opt => opt.value == value);
+    if (matched) displayValue = matched.label;
+  }
+
+  const dependentField = allFields.find(
+    f => 'showWhen' in f && f.showWhen && 'field' in f.showWhen && f.showWhen.field === field.name,
+  );
+  if (dependentField) {
+    const depValue = row[dependentField.name];
+    if (depValue) displayValue = `${displayValue} - ${depValue}`;
+  }
 
   return (
     <div>
-      <div>{label}</div>
+      <div>{displayValue}</div>
       {error && <div className="mt-1 text-xs text-danger">{error?.message}</div>}
     </div>
   );

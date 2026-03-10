@@ -19,7 +19,7 @@ const RequestTitleDocumentDto = z
     titleId: z.string().uuid().nullable(),
     documentId: z.string().uuid().nullable(),
     documentType: z.string().nullable(),
-    filename: z.string().nullable(),
+    fileName: z.string().nullable(),
     prefix: z.string().nullable(),
     set: z.number().int(),
     notes: z.string().nullable(),
@@ -157,6 +157,7 @@ const FeeDto = z
     feePaymentType: z.string().nullable(),
     feeNotes: z.string().nullable(),
     absorbedAmount: z.number().nullable(),
+    totalSellingPrice: z.number().nullish().default(null),
   })
   .passthrough();
 const RequestDetailDto = z
@@ -200,11 +201,11 @@ const RequestDocumentDto = z
   .passthrough();
 const UpdateRequestRequest = z
   .object({
-    purpose: z.string(),
-    channel: z.string(),
+    purpose: z.string().nullable(),
+    channel: z.string().nullable(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string(),
+    priority: z.string().nullable(),
     isPma: z.boolean(),
     detail: RequestDetailDto.nullable(),
     customers: z.array(RequestCustomerDto).nullable(),
@@ -214,48 +215,63 @@ const UpdateRequestRequest = z
   })
   .passthrough();
 const UpdateRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-const RequestDetailDto2 = z
-  .object({
-    hasAppraisalBook: z.boolean(),
-    loanDetail: LoanDetailDto.nullable(),
-    prevAppraisalId: z.string().uuid().nullable(),
-    address: AddressDto2.nullable(),
-    contact: ContactDto.nullable(),
-    appointment: AppointmentDto.nullable(),
-    fee: FeeDto.nullable(),
-  })
-  .passthrough();
-const GetRequestByIdResult = z
+const GetRequestByIdResponse = z
   .object({
     id: z.string().uuid(),
-    requestNumber: z.string(),
+    requestNumber: z.string().nullable(),
     status: z.string(),
-    purpose: z.string(),
-    channel: z.string(),
+    purpose: z.string().nullable(),
+    channel: z.string().nullable(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string(),
+    priority: z.string().nullable(),
     isPma: z.boolean(),
-    detail: RequestDetailDto2,
-    customers: z.array(RequestCustomerDto),
-    properties: z.array(RequestPropertyDto),
-    titles: z.array(RequestTitleDto),
-    documents: z.array(RequestDocumentDto),
+    detail: RequestDetailDto.nullable(),
+    customers: z.array(RequestCustomerDto).nullable(),
+    properties: z.array(RequestPropertyDto).nullable(),
+    titles: z.array(RequestTitleDto).nullable(),
+    documents: z.array(RequestDocumentDto).nullable(),
   })
   .partial()
   .passthrough();
 const DeleteRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-const SourceSystemDto = z
+const UpdateDraftRequestRequest = z
   .object({
+    purpose: z.string().nullable(),
     channel: z.string().nullable(),
-    requestDate: z.string().datetime({ offset: true }).nullable(),
-    requestBy: z.string().nullable(),
-    requestByName: z.string().nullable(),
-    createdDate: z.string().datetime({ offset: true }),
-    creator: z.string().nullable(),
-    creatorName: z.string().nullable(),
+    requestor: UserInfoDto,
+    creator: UserInfoDto,
+    priority: z.string().nullable(),
+    isPma: z.boolean(),
+    detail: RequestDetailDto.nullable(),
+    customers: z.array(RequestCustomerDto).nullable(),
+    properties: z.array(RequestPropertyDto).nullable(),
+    titles: z.array(RequestTitleDto).nullable(),
+    documents: z.array(RequestDocumentDto).nullable(),
   })
   .passthrough();
+const UpdateDraftRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const SubmitRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const GetRequestListItem = z
+  .object({
+    id: z.string().uuid(),
+    requestNumber: z.string(),
+    status: z.string(),
+    purpose: z.string().nullable(),
+    channel: z.string().nullable(),
+    priority: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+const PaginatedResultOfGetRequestListItem = z
+  .object({
+    items: z.array(GetRequestListItem),
+    count: z.number().int(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+  })
+  .passthrough();
+const GetRequestsResponse = z.object({ result: PaginatedResultOfGetRequestListItem }).passthrough();
 const RequestCommentDto = z
   .object({
     id: z.string().uuid(),
@@ -267,88 +283,73 @@ const RequestCommentDto = z
     lastModifiedAt: z.string().datetime({ offset: true }).nullable(),
   })
   .passthrough();
-const UpdateDraftRequestRequest = z
-  .object({
-    id: z.string().uuid(),
-    sessionId: z.string().uuid(),
-    detail: RequestDetailDto2,
-    isPMA: z.boolean(),
-    purpose: z.string(),
-    priority: z.string(),
-    sourceSystem: SourceSystemDto,
-    customers: z.array(RequestCustomerDto).nullable(),
-    properties: z.array(RequestPropertyDto).nullable(),
-    documents: z.array(RequestDocumentDto).nullable(),
-    comments: z.array(RequestCommentDto),
-    titles: z.array(RequestTitleDto),
-  })
-  .passthrough();
-const UpdateDraftRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-const SubmitRequestRequest = z.object({ id: z.string().uuid() }).passthrough();
-const SubmitRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-const RequestDto = z
-  .object({
-    id: z.string().uuid(),
-    requestNumber: z.string(),
-    status: z.string(),
-    purpose: z.string(),
-    channel: z.string(),
-    requestor: UserInfoDto,
-    creator: UserInfoDto,
-    priority: z.string(),
-    isPma: z.boolean(),
-    detail: RequestDetailDto2,
-    customers: z.array(RequestCustomerDto),
-    properties: z.array(RequestPropertyDto),
-    documents: z.array(RequestDocumentDto),
-    titles: z.array(RequestTitleDto),
-  })
-  .partial()
-  .passthrough();
-const PaginatedResultOfRequestDto = z
-  .object({
-    items: z.array(RequestDto),
-    count: z.number().int(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-  })
-  .passthrough();
-const GetRequestResult = z.object({ result: PaginatedResultOfRequestDto }).passthrough();
 const CreateRequestRequest = z
   .object({
-    sessionId: z.string().uuid(),
-    purpose: z.string(),
-    channel: z.string(),
+    sessionId: z.string().uuid().nullable(),
+    purpose: z.string().nullable(),
+    channel: z.string().nullable(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string(),
+    priority: z.string().nullable(),
     isPma: z.boolean(),
-    detail: RequestDetailDto2,
-    customers: z.array(RequestCustomerDto),
-    properties: z.array(RequestPropertyDto),
-    titles: z.array(RequestTitleDto),
-    documents: z.array(RequestDocumentDto),
-    comments: z.array(RequestCommentDto),
+    detail: RequestDetailDto.nullable(),
+    customers: z.array(RequestCustomerDto).nullable(),
+    properties: z.array(RequestPropertyDto).nullable(),
+    titles: z.array(RequestTitleDto).nullable(),
+    documents: z.array(RequestDocumentDto).nullable(),
+    comments: z.array(RequestCommentDto).nullable(),
   })
   .passthrough();
 const CreateRequestResponse = z.object({ id: z.string().uuid() }).passthrough();
 const CreateDraftRequestRequest = z
   .object({
-    sessionId: z.string().uuid(),
-    purpose: z.string(),
-    channel: z.string(),
+    sessionId: z.string().uuid().nullable(),
+    purpose: z.string().nullable(),
+    channel: z.string().nullable(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string(),
+    priority: z.string().nullable(),
     isPma: z.boolean(),
-    detail: RequestDetailDto2,
-    customers: z.array(RequestCustomerDto),
-    properties: z.array(RequestPropertyDto),
-    documents: z.array(RequestDocumentDto),
-    comments: z.array(RequestCommentDto),
+    detail: RequestDetailDto.nullable(),
+    customers: z.array(RequestCustomerDto).nullable(),
+    properties: z.array(RequestPropertyDto).nullable(),
+    titles: z.array(RequestTitleDto).nullable(),
+    documents: z.array(RequestDocumentDto).nullable(),
+    comments: z.array(RequestCommentDto).nullable(),
   })
   .passthrough();
 const CreateDraftRequestResponse = z.object({ id: z.string().uuid() }).passthrough();
+const DocumentItemDto = z
+  .object({
+    id: z.string().uuid(),
+    documentId: z.string().uuid().nullable(),
+    documentType: z.string().nullable(),
+    fileName: z.string().nullable(),
+    filePath: z.string().nullable(),
+    notes: z.string().nullable(),
+    isRequired: z.boolean(),
+    uploadedBy: z.string().nullable(),
+    uploadedByName: z.string().nullable(),
+    uploadedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const DocumentSectionDto = z
+  .object({
+    titleId: z.string().uuid().nullable(),
+    titleIdentifier: z.string().nullable(),
+    collateralType: z.string().nullable(),
+    totalDocuments: z.number().int(),
+    uploadedDocuments: z.number().int(),
+    documents: z.array(DocumentItemDto),
+  })
+  .passthrough();
+const GetRequestDocumentsByRequestIdResponse = z
+  .object({
+    totalDocuments: z.number().int(),
+    totalUploaded: z.number().int(),
+    sections: z.array(DocumentSectionDto),
+  })
+  .passthrough();
 const UpdateRequestCommentRequest = z.object({ comment: z.string() }).passthrough();
 const UpdateRequestCommentResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 const RemoveRequestCommentResponse = z.object({ isSuccess: z.boolean() }).passthrough();
@@ -415,6 +416,27 @@ const GetPermissionByIdResponse = z
   .object({ id: z.string().uuid(), permissionCode: z.string(), description: z.string() })
   .passthrough();
 const DeletePermissionResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const UpdateProfileRequest = z
+  .object({
+    firstName: z.string(),
+    lastName: z.string(),
+    avatarUrl: z.string().nullable(),
+    position: z.string().nullable(),
+    department: z.string().nullable(),
+  })
+  .passthrough();
+const UpdateProfileResponse = z
+  .object({
+    id: z.string().uuid(),
+    username: z.string(),
+    email: z.string().nullable(),
+    firstName: z.string(),
+    lastName: z.string(),
+    avatarUrl: z.string().nullable(),
+    position: z.string().nullable(),
+    department: z.string().nullable(),
+  })
+  .passthrough();
 const TokenRequest = z
   .object({
     grantType: z.string(),
@@ -432,6 +454,11 @@ const RegisterUserRequest = z
     username: z.string(),
     password: z.string(),
     email: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    avatarUrl: z.string().nullable(),
+    position: z.string().nullable(),
+    department: z.string().nullable(),
     permissions: z.array(RegisterUserPermissionDto),
     roles: z.array(z.string().uuid()),
   })
@@ -449,6 +476,20 @@ const RegisterClientRequest = z
   .passthrough();
 const RegisterClientResponse = z
   .object({ clientId: z.string().nullable(), clientSecret: z.string().nullable() })
+  .passthrough();
+const MeResponse = z
+  .object({
+    id: z.string().uuid(),
+    username: z.string(),
+    email: z.string().nullable(),
+    firstName: z.string(),
+    lastName: z.string(),
+    avatarUrl: z.string().nullable(),
+    position: z.string().nullable(),
+    department: z.string().nullable(),
+    roles: z.array(z.string()),
+    permissions: z.array(z.string()),
+  })
   .passthrough();
 const MarkNotificationAsReadResponse = z
   .object({ success: z.boolean(), message: z.string() })
@@ -488,6 +529,18 @@ const NotificationDto = z
 const GetUserNotificationsResponse = z
   .object({ notifications: z.array(NotificationDto) })
   .passthrough();
+const ParameterDto = z
+  .object({
+    parId: z.number().int().nullable(),
+    group: z.string().nullable(),
+    country: z.string().nullable(),
+    language: z.string().nullable(),
+    code: z.string().nullable(),
+    description: z.string().nullable(),
+    isActive: z.boolean().nullable(),
+    seqNo: z.number().int().nullable(),
+  })
+  .passthrough();
 const DocumentLink = z
   .object({
     entityType: z.string(),
@@ -503,15 +556,53 @@ const Input = z
 const CreateUploadSessionResponse = z
   .object({ sessionId: z.string().uuid(), expiresAt: z.string().datetime({ offset: true }) })
   .passthrough();
-const UploadDocumentResult = z
+const UploadDocumentResponse = z
   .object({
-    isSuccess: z.boolean(),
     documentId: z.string().uuid(),
     fileName: z.string(),
+    fileExtension: z.string(),
     fileSize: z.number().int(),
+    mimeType: z.string(),
+    storageUrl: z.string(),
+    documentType: z.string(),
+    documentCategory: z.string(),
+    description: z.string().nullable(),
+    uploadedBy: z.string(),
+    uploadedByName: z.string(),
+    uploadedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
 const KickstartWorkflowRequest = z.object({ requestId: z.number().int() }).passthrough();
+const KickstartWorkflowResponse = z.object({ correlationId: z.string().uuid() }).passthrough();
+const TaskItem = z
+  .object({
+    id: z.string().uuid(),
+    appraisalNumber: z.string().nullable(),
+    customerName: z.string().nullable(),
+    taskType: z.string().nullable(),
+    purpose: z.string().nullable(),
+    propertyType: z.string().nullable(),
+    status: z.string().nullable(),
+    appointmentDateTime: z.string().datetime({ offset: true }).nullable(),
+    assigneeUserId: z.string().nullable(),
+    requestedAt: z.string().datetime({ offset: true }).nullable(),
+    receivedDate: z.string().datetime({ offset: true }).nullable(),
+    movement: z.string().nullable(),
+    slaDays: z.number().int(),
+    olaActual: z.number().int(),
+    olaDiff: z.number().int(),
+    priority: z.string().nullable(),
+  })
+  .passthrough();
+const PaginatedResultOfTaskItem = z
+  .object({
+    items: z.array(TaskItem),
+    count: z.number().int(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+  })
+  .passthrough();
+const GetTasksResponse = z.object({ result: PaginatedResultOfTaskItem }).passthrough();
 const CompleteActivityRequest = z
   .object({ correlationId: z.string().uuid(), activityName: z.string(), actionTaken: z.string() })
   .passthrough();
@@ -838,7 +929,6 @@ const PaginatedResultOfQuotationDto = z
 const GetQuotationsResponse = z.object({ quotations: PaginatedResultOfQuotationDto }).passthrough();
 const CreateQuotationRequest = z
   .object({
-    quotationNumber: z.string(),
     dueDate: z.string().datetime({ offset: true }),
     requestedBy: z.string().uuid(),
     requestedByName: z.string(),
@@ -875,7 +965,23 @@ const UpdatePricingAnalysisRequest = z
   })
   .passthrough();
 const UpdatePricingAnalysisResponse = z.object({ id: z.string().uuid() }).passthrough();
-const ApproachDto = z.object({ id: z.string().uuid(), approachType: z.string() }).passthrough();
+const MethodDto = z
+  .object({
+    id: z.string().uuid(),
+    methodType: z.string(),
+    methodValue: z.number().nullable(),
+    isSelected: z.boolean(),
+    comparativeAnalysisTemplateId: z.string().uuid().nullable(),
+  })
+  .passthrough();
+const ApproachDto = z
+  .object({
+    id: z.string().uuid(),
+    approachType: z.string(),
+    isSelected: z.boolean(),
+    methods: z.array(MethodDto),
+  })
+  .passthrough();
 const GetPricingAnalysisResponse = z
   .object({
     id: z.string().uuid(),
@@ -914,6 +1020,7 @@ const UpdateFinalValueRequest = z
     landArea: z.number().nullish().default(null),
     appraisalPrice: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
+    priceDifferentiate: z.number().nullish().default(null),
     hasBuildingCost: z.boolean().nullish().default(null),
     buildingCost: z.number().nullish().default(null),
     appraisalPriceWithBuilding: z.number().nullish().default(null),
@@ -929,6 +1036,7 @@ const UpdateFinalValueResponse = z
     landArea: z.number().nullable(),
     appraisalPrice: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
+    priceDifferentiate: z.number().nullable(),
     hasBuildingCost: z.boolean(),
     buildingCost: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
@@ -1032,6 +1140,7 @@ const SetFinalValueRequest = z
     landArea: z.number().nullish().default(null),
     appraisalPrice: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
+    priceDifferentiate: z.number().nullish().default(null),
     hasBuildingCost: z.boolean().nullish().default(null),
     buildingCost: z.number().nullish().default(null),
     appraisalPriceWithBuilding: z.number().nullish().default(null),
@@ -1047,6 +1156,7 @@ const SetFinalValueResponse = z
     landArea: z.number().nullable(),
     appraisalPrice: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
+    priceDifferentiate: z.number().nullable(),
     hasBuildingCost: z.boolean(),
     buildingCost: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
@@ -1054,7 +1164,11 @@ const SetFinalValueResponse = z
   })
   .passthrough();
 const SelectMethodResponse = z
-  .object({ id: z.string().uuid(), methodType: z.string(), status: z.string() })
+  .object({
+    id: z.string().uuid(),
+    methodType: z.string(),
+    finalAppraisedValue: z.number().nullable(),
+  })
   .passthrough();
 const ComparativeFactorInput = z
   .object({
@@ -1074,7 +1188,10 @@ const FactorScoreInput = z
     displaySequence: z.number().int(),
     value: z.string().nullish().default(null),
     score: z.number().nullish().default(null),
+    intensity: z.number().nullish().default(null),
     adjustmentPct: z.number().nullish().default(null),
+    adjustmentAmt: z.number().nullish().default(null),
+    comparisonResult: z.string().nullish().default(null),
     remarks: z.string().nullish().default(null),
   })
   .passthrough();
@@ -1084,13 +1201,26 @@ const CalculationInput = z
     offeringPrice: z.number().nullish().default(null),
     offeringPriceUnit: z.string().nullish().default(null),
     adjustOfferPricePct: z.number().nullish().default(null),
+    adjustOfferPriceAmt: z.number().nullish().default(null),
     sellingPrice: z.number().nullish().default(null),
+    sellingPriceUnit: z.string().nullish().default(null),
     buySellYear: z.number().int().nullish().default(null),
     buySellMonth: z.number().int().nullish().default(null),
     adjustedPeriodPct: z.number().nullish().default(null),
     cumulativeAdjPeriod: z.number().nullish().default(null),
+    landAreaDeficient: z.number().nullish().default(null),
+    landAreaDeficientUnit: z.string().nullish().default(null),
+    landPrice: z.number().nullish().default(null),
+    landValueAdjustment: z.number().nullish().default(null),
+    usableAreaDeficient: z.number().nullish().default(null),
+    usableAreaDeficientUnit: z.string().nullish().default(null),
+    usableAreaPrice: z.number().nullish().default(null),
+    buildingValueAdjustment: z.number().nullish().default(null),
+    totalFactorDiffPct: z.number().nullish().default(null),
+    totalFactorDiffAmt: z.number().nullish().default(null),
     totalAdjustedValue: z.number().nullish().default(null),
     weight: z.number().nullish().default(null),
+    weightedAdjustedValue: z.number().nullish().default(null),
   })
   .passthrough();
 const SaveComparativeAnalysisRequest = z
@@ -1098,9 +1228,11 @@ const SaveComparativeAnalysisRequest = z
     comparativeFactors: z.array(ComparativeFactorInput),
     factorScores: z.array(FactorScoreInput),
     calculations: z.array(CalculationInput),
+    comparativeAnalysisTemplateId: z.string().uuid().nullish().default(null),
+    appraisalValue: z.number().nullish().default(null),
   })
   .passthrough();
-const SaveComparativeAnalysisResult = z
+const SaveComparativeAnalysisResponse = z
   .object({
     pricingAnalysisId: z.string().uuid(),
     methodId: z.string().uuid(),
@@ -1109,6 +1241,12 @@ const SaveComparativeAnalysisResult = z
     calculationsCount: z.number().int(),
     success: z.boolean(),
   })
+  .passthrough();
+const ResetPricingMethodResult = z
+  .object({ methodId: z.string().uuid(), success: z.boolean() })
+  .passthrough();
+const RemoveMethodResult = z
+  .object({ methodId: z.string().uuid(), success: z.boolean() })
   .passthrough();
 const RecalculateFactorsResponse = z
   .object({ pricingCalculationId: z.string().uuid(), totalFactorDiffPct: z.number().nullable() })
@@ -1121,7 +1259,15 @@ const LinkComparableRequest = z
   })
   .passthrough();
 const LinkComparableResponse = z
-  .object({ linkId: z.string().uuid(), calculationId: z.string().uuid() })
+  .object({
+    linkId: z.string().uuid(),
+    calculationId: z.string().uuid(),
+    offerPrice: z.number().nullable(),
+    offerPriceAdjustmentPercent: z.number().nullable(),
+    offerPriceAdjustmentAmount: z.number().nullable(),
+    salePrice: z.number().nullable(),
+    saleDate: z.string().datetime({ offset: true }).nullable(),
+  })
   .passthrough();
 const GetPricingAnalysisByGroupResponse = z
   .object({
@@ -1169,7 +1315,10 @@ const FactorScoreDto = z
     value: z.string().nullable(),
     score: z.number().nullable(),
     weightedScore: z.number().nullable(),
+    intensity: z.number().nullable(),
     adjustmentPct: z.number().nullable(),
+    adjustmentAmt: z.number().nullable(),
+    comparisonResult: z.string().nullable(),
     remarks: z.string().nullable(),
   })
   .passthrough();
@@ -1181,24 +1330,52 @@ const CalculationDto = z
     offeringPrice: z.number().nullable(),
     offeringPriceUnit: z.string().nullable(),
     adjustOfferPricePct: z.number().nullable(),
+    adjustOfferPriceAmt: z.number().nullable(),
     sellingPrice: z.number().nullable(),
+    sellingPriceUnit: z.string().nullable(),
     buySellYear: z.number().int().nullable(),
     buySellMonth: z.number().int().nullable(),
     adjustedPeriodPct: z.number().nullable(),
     cumulativeAdjPeriod: z.number().nullable(),
+    landAreaDeficient: z.number().nullable(),
+    landAreaDeficientUnit: z.string().nullable(),
+    landPrice: z.number().nullable(),
+    landValueAdjustment: z.number().nullable(),
+    usableAreaDeficient: z.number().nullable(),
+    usableAreaDeficientUnit: z.string().nullable(),
+    usableAreaPrice: z.number().nullable(),
+    buildingValueAdjustment: z.number().nullable(),
     totalFactorDiffPct: z.number().nullable(),
+    totalFactorDiffAmt: z.number().nullable(),
     totalAdjustedValue: z.number().nullable(),
+    weight: z.number().nullable(),
+    weightedAdjustedValue: z.number().nullable(),
   })
   .passthrough();
-const GetComparativeFactorsResult = z
+const RsqResultDto = z
+  .object({
+    id: z.string().uuid(),
+    coefficientOfDecision: z.number().nullable(),
+    standardError: z.number().nullable(),
+    intersectionPoint: z.number().nullable(),
+    slope: z.number().nullable(),
+    rsqFinalValue: z.number().nullable(),
+    lowestEstimate: z.number().nullable(),
+    highestEstimate: z.number().nullable(),
+  })
+  .passthrough();
+const GetComparativeFactorsResponse = z
   .object({
     pricingAnalysisId: z.string().uuid(),
     methodId: z.string().uuid(),
     methodType: z.string(),
+    comparativeAnalysisTemplateId: z.string().uuid().nullable(),
+    methodValue: z.number().nullable(),
     linkedComparables: z.array(LinkedComparableDto),
     comparativeFactors: z.array(ComparativeFactorDto),
     factorScores: z.array(FactorScoreDto),
     calculations: z.array(CalculationDto),
+    rsqResult: RsqResultDto.nullish().default(null),
   })
   .passthrough();
 const CompletePricingAnalysisRequest = z
@@ -1270,12 +1447,14 @@ const UpdateMarketComparableTemplateRequest = z
   })
   .passthrough();
 const UpdateMarketComparableTemplateResponse = z.object({ id: z.string().uuid() }).passthrough();
+const FactorTranslationDto = z
+  .object({ language: z.string(), factorName: z.string() })
+  .passthrough();
 const TemplateFactorDto = z
   .object({
     templateFactorId: z.string().uuid(),
     factorId: z.string().uuid(),
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.number().int().nullable(),
@@ -1284,6 +1463,7 @@ const TemplateFactorDto = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean(),
     isActive: z.boolean(),
+    translations: z.array(FactorTranslationDto),
   })
   .passthrough();
 const MarketComparableTemplateDetailDto = z
@@ -1299,7 +1479,7 @@ const MarketComparableTemplateDetailDto = z
     updatedOn: z.string().datetime({ offset: true }).nullable(),
   })
   .passthrough();
-const GetMarketComparableTemplateByIdResult = z
+const GetMarketComparableTemplateByIdResponse = z
   .object({ template: MarketComparableTemplateDetailDto })
   .passthrough();
 const MarketComparableTemplateDto = z
@@ -1314,7 +1494,7 @@ const MarketComparableTemplateDto = z
     updatedOn: z.string().datetime({ offset: true }).nullable(),
   })
   .passthrough();
-const GetMarketComparableTemplatesResult = z
+const GetMarketComparableTemplatesResponse = z
   .object({ templates: z.array(MarketComparableTemplateDto) })
   .passthrough();
 const CreateMarketComparableTemplateRequest = z
@@ -1334,6 +1514,76 @@ const AddFactorToTemplateRequest = z
   })
   .passthrough();
 const AddFactorToTemplateResponse = z.object({ templateFactorId: z.string().uuid() }).passthrough();
+const UpdateMarketComparableRequest = z
+  .object({
+    propertyType: z.string(),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullish().default(null),
+    sourceInfo: z.string().nullish().default(null),
+    notes: z.string().nullish().default(null),
+    templateId: z.string().uuid().nullish().default(null),
+    offerPrice: z.number().nullish().default(null),
+    offerPriceAdjustmentPercent: z.number().nullish().default(null),
+    offerPriceAdjustmentAmount: z.number().nullish().default(null),
+    salePrice: z.number().nullish().default(null),
+    saleDate: z.string().datetime({ offset: true }).nullish().default(null),
+  })
+  .passthrough();
+const UpdateMarketComparableResponse = z.object({ success: z.boolean() }).passthrough();
+const FactorDataType = z.unknown();
+const FactorDataDto = z
+  .object({
+    id: z.string().uuid(),
+    factorId: z.string().uuid(),
+    factorCode: z.string(),
+    fieldName: z.string(),
+    dataType: FactorDataType,
+    fieldLength: z.number().int().nullable(),
+    fieldDecimal: z.number().int().nullable(),
+    parameterGroup: z.string().nullable(),
+    value: z.string().nullable(),
+    otherRemarks: z.string().nullable(),
+    translations: z.array(FactorTranslationDto),
+  })
+  .partial()
+  .passthrough();
+const ImageDto = z
+  .object({
+    id: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
+    displaySequence: z.number().int(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+const MarketComparableDetailDto = z
+  .object({
+    id: z.string().uuid(),
+    comparableNumber: z.string(),
+    propertyType: z.string(),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullable(),
+    sourceInfo: z.string().nullable(),
+    offerPrice: z.number().nullable(),
+    offerPriceAdjustmentPercent: z.number().nullable(),
+    offerPriceAdjustmentAmount: z.number().nullable(),
+    salePrice: z.number().nullable(),
+    saleDate: z.string().datetime({ offset: true }).nullable(),
+    notes: z.string().nullable(),
+    templateId: z.string().uuid().nullable(),
+    createdOn: z.string().datetime({ offset: true }).nullable(),
+    createdBy: z.string().nullable(),
+    updatedOn: z.string().datetime({ offset: true }).nullable(),
+    updatedBy: z.string().nullable(),
+    factorData: z.array(FactorDataDto),
+    images: z.array(ImageDto),
+  })
+  .partial()
+  .passthrough();
+const GetMarketComparableByIdResponse = z
+  .object({ marketComparable: MarketComparableDetailDto })
+  .passthrough();
 const FactorDataItem = z
   .object({
     factorId: z.string().uuid(),
@@ -1344,25 +1594,21 @@ const FactorDataItem = z
 const SetMarketComparableFactorDataRequest = z
   .object({ factorData: z.array(FactorDataItem) })
   .passthrough();
+const SetMarketComparableFactorDataResponse = z.object({ success: z.boolean() }).passthrough();
 const MarketComparableDto = z
   .object({
     id: z.string().uuid(),
     comparableNumber: z.string(),
     propertyType: z.string(),
-    province: z.string(),
-    district: z.string().nullable(),
-    subDistrict: z.string().nullable(),
-    address: z.string().nullable(),
-    transactionType: z.string().nullable(),
-    transactionDate: z.string().datetime({ offset: true }).nullable(),
-    transactionPrice: z.number().nullable(),
-    pricePerUnit: z.number().nullable(),
-    unitType: z.string().nullable(),
-    dataSource: z.string(),
-    dataConfidence: z.string().nullable(),
-    isVerified: z.boolean(),
-    status: z.string(),
-    surveyDate: z.string().datetime({ offset: true }),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullable(),
+    sourceInfo: z.string().nullable(),
+    offerPrice: z.number().nullable(),
+    offerPriceAdjustmentPercent: z.number().nullable(),
+    offerPriceAdjustmentAmount: z.number().nullable(),
+    salePrice: z.number().nullable(),
+    saleDate: z.string().datetime({ offset: true }).nullable(),
+    notes: z.string().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
   })
   .partial()
@@ -1380,129 +1626,143 @@ const GetMarketComparablesResponse = z
   .passthrough();
 const CreateMarketComparableRequest = z
   .object({
-    comparableNumber: z.string(),
     propertyType: z.string(),
-    province: z.string(),
-    dataSource: z.string(),
-    surveyDate: z.string().datetime({ offset: true }),
-    district: z.string().nullish().default(null),
-    subDistrict: z.string().nullish().default(null),
-    address: z.string().nullish().default(null),
-    latitude: z.number().nullish().default(null),
-    longitude: z.number().nullish().default(null),
-    transactionType: z.string().nullish().default(null),
-    transactionDate: z.string().datetime({ offset: true }).nullish().default(null),
-    transactionPrice: z.number().nullish().default(null),
-    pricePerUnit: z.number().nullish().default(null),
-    unitType: z.string().nullish().default(null),
-    description: z.string().nullish().default(null),
+    surveyName: z.string(),
+    infoDateTime: z.string().datetime({ offset: true }).nullish().default(null),
+    sourceInfo: z.string().nullish().default(null),
     notes: z.string().nullish().default(null),
     templateId: z.string().uuid().nullish().default(null),
+    offerPrice: z.number().nullish().default(null),
+    offerPriceAdjustmentPercent: z.number().nullish().default(null),
+    offerPriceAdjustmentAmount: z.number().nullish().default(null),
+    salePrice: z.number().nullish().default(null),
+    saleDate: z.string().datetime({ offset: true }).nullish().default(null),
   })
   .passthrough();
 const CreateMarketComparableResponse = z.object({ id: z.string().uuid() }).passthrough();
-const FactorDataDto = z
-  .object({
-    id: z.string().uuid(),
-    factorId: z.string().uuid(),
-    value: z.string().nullable(),
-    otherRemarks: z.string().nullable(),
-  })
-  .partial()
-  .passthrough();
-const ImageDto = z
-  .object({
-    id: z.string().uuid(),
-    documentId: z.string().uuid(),
-    displaySequence: z.number().int(),
-    title: z.string().nullable(),
-    description: z.string().nullable(),
-  })
-  .partial()
-  .passthrough();
-const MarketComparableDetailDto = z
-  .object({
-    id: z.string().uuid(),
-    comparableNumber: z.string(),
-    propertyType: z.string(),
-    province: z.string(),
-    district: z.string().nullable(),
-    subDistrict: z.string().nullable(),
-    address: z.string().nullable(),
-    latitude: z.number().nullable(),
-    longitude: z.number().nullable(),
-    transactionType: z.string().nullable(),
-    transactionDate: z.string().datetime({ offset: true }).nullable(),
-    transactionPrice: z.number().nullable(),
-    pricePerUnit: z.number().nullable(),
-    unitType: z.string().nullable(),
-    dataSource: z.string(),
-    dataConfidence: z.string().nullable(),
-    isVerified: z.boolean(),
-    verifiedAt: z.string().datetime({ offset: true }).nullable(),
-    verifiedBy: z.string().uuid().nullable(),
-    status: z.string(),
-    expiryDate: z.string().datetime({ offset: true }).nullable(),
-    surveyDate: z.string().datetime({ offset: true }),
-    surveyedBy: z.string().uuid().nullable(),
-    description: z.string().nullable(),
-    notes: z.string().nullable(),
-    templateId: z.string().uuid().nullable(),
-    createdOn: z.string().datetime({ offset: true }).nullable(),
-    createdBy: z.string().nullable(),
-    updatedOn: z.string().datetime({ offset: true }).nullable(),
-    updatedBy: z.string().nullable(),
-    factorData: z.array(FactorDataDto),
-    images: z.array(ImageDto),
-  })
-  .partial()
-  .passthrough();
-const GetMarketComparableByIdResponse = z
-  .object({ marketComparable: MarketComparableDetailDto })
-  .passthrough();
+const DeleteMarketComparableResponse = z.object({ isSuccess: z.boolean() }).passthrough();
 const AddMarketComparableImageRequest = z
   .object({
-    documentId: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
     title: z.string().nullish().default(null),
     description: z.string().nullish().default(null),
   })
   .passthrough();
 const AddMarketComparableImageResponse = z.object({ imageId: z.string().uuid() }).passthrough();
+const FactorTranslationRequest = z
+  .object({ language: z.string(), factorName: z.string() })
+  .passthrough();
 const UpdateMarketComparableFactorRequest = z
   .object({
-    factorName: z.string(),
     fieldName: z.string(),
+    dataType: z.string(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
+    translations: z.array(FactorTranslationRequest),
   })
   .passthrough();
-const UpdateMarketComparableFactorResult = z.object({ id: z.string().uuid() }).passthrough();
+const UpdateMarketComparableFactorResponse = z.object({ id: z.string().uuid() }).passthrough();
 const MarketComparableFactorDto = z
   .object({
     id: z.string().uuid(),
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
     isActive: z.boolean(),
+    translations: z.array(FactorTranslationDto),
   })
+  .passthrough();
+const GetMarketComparableFactorsResponse = z
+  .object({ factors: z.array(MarketComparableFactorDto) })
   .passthrough();
 const CreateMarketComparableFactorRequest = z
   .object({
     factorCode: z.string(),
-    factorName: z.string(),
     fieldName: z.string(),
     dataType: z.string(),
     fieldLength: z.number().int().nullable(),
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
+    translations: z.array(FactorTranslationRequest),
   })
   .passthrough();
 const CreateMarketComparableFactorResponse = z.object({ id: z.string().uuid() }).passthrough();
+const UpdatePaymentRequest = z
+  .object({ paymentAmount: z.number(), paymentDate: z.string().datetime({ offset: true }) })
+  .passthrough();
+const UpdateFeeItemRequest = z
+  .object({ feeCode: z.string(), feeDescription: z.string(), feeAmount: z.number() })
+  .passthrough();
+const UpdateFeeRequest = z.object({ feePaymentType: z.string() }).passthrough();
+const RejectFeeItemRequest = z
+  .object({ rejectedBy: z.string().uuid(), reason: z.string() })
+  .passthrough();
+const RecordPaymentRequest = z
+  .object({
+    paymentAmount: z.number(),
+    paymentDate: z.string().datetime({ offset: true }),
+    paymentMethod: z.string().nullish().default(null),
+    paymentReference: z.string().nullish().default(null),
+    remarks: z.string().nullish().default(null),
+  })
+  .passthrough();
+const AppraisalFeeItemDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalFeeId: z.string().uuid(),
+    feeCode: z.string(),
+    feeDescription: z.string(),
+    feeAmount: z.number(),
+    requiresApproval: z.boolean(),
+    approvalStatus: z.string().nullable(),
+    approvedBy: z.string().uuid().nullable(),
+    approvedAt: z.string().datetime({ offset: true }).nullable(),
+    rejectionReason: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+const PaymentHistoryDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalFeeId: z.string().uuid(),
+    paymentAmount: z.number(),
+    paymentDate: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const AppraisalFeeDto = z
+  .object({
+    id: z.string().uuid(),
+    assignmentId: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    feePaymentType: z.string(),
+    feeNotes: z.string(),
+    totalFeeBeforeVAT: z.number(),
+    vatRate: z.number(),
+    vatAmount: z.number(),
+    totalFeeAfterVAT: z.number(),
+    bankAbsorbAmount: z.number(),
+    customerPayableAmount: z.number(),
+    totalPaidAmount: z.number(),
+    outstandingAmount: z.number(),
+    paymentStatus: z.string(),
+    inspectionFeeAmount: z.number().nullable(),
+    createdAt: z.string().datetime({ offset: true }).nullable(),
+    items: z.array(AppraisalFeeItemDto),
+    paymentHistory: z.array(PaymentHistoryDto),
+  })
+  .partial()
+  .passthrough();
+const GetAppraisalFeesResponse = z.object({ fees: z.array(AppraisalFeeDto) }).passthrough();
+const ApproveFeeItemRequest = z.object({ approvedBy: z.string().uuid() }).passthrough();
+const AddFeeItemRequest = z
+  .object({ feeCode: z.string(), feeDescription: z.string(), feeAmount: z.number() })
+  .passthrough();
+const AddFeeItemResult = z.object({ itemId: z.string().uuid() }).passthrough();
 const UpdateDocumentTypeRequest = z
   .object({
     name: z.string(),
@@ -1529,6 +1789,9 @@ const DocumentTypeDto = z
   })
   .partial()
   .passthrough();
+const GetDocumentTypesResponse = z
+  .object({ documentTypes: z.array(DocumentTypeDto) })
+  .passthrough();
 const CreateDocumentTypeRequest = z
   .object({
     code: z.string(),
@@ -1538,7 +1801,7 @@ const CreateDocumentTypeRequest = z
     sortOrder: z.number().int().optional().default(0),
   })
   .passthrough();
-const CreateDocumentTypeResult = z
+const CreateDocumentTypeResponse = z
   .object({ id: z.string().uuid(), code: z.string(), name: z.string() })
   .passthrough();
 const DocumentRequirementDto = z
@@ -1548,8 +1811,9 @@ const DocumentRequirementDto = z
     documentTypeCode: z.string(),
     documentTypeName: z.string(),
     documentTypeCategory: z.string().nullable(),
-    collateralTypeCode: z.string().nullable(),
-    collateralTypeName: z.string().nullable(),
+    propertyTypeCode: z.string().nullable(),
+    propertyTypeName: z.string().nullable(),
+    purposeCode: z.string().nullable(),
     isRequired: z.boolean(),
     isActive: z.boolean(),
     notes: z.string().nullable(),
@@ -1558,10 +1822,14 @@ const DocumentRequirementDto = z
   })
   .partial()
   .passthrough();
+const GetDocumentRequirementsResponse = z
+  .object({ requirements: z.array(DocumentRequirementDto) })
+  .passthrough();
 const CreateDocumentRequirementRequest = z
   .object({
     documentTypeId: z.string().uuid(),
-    collateralTypeCode: z.string().nullable(),
+    propertyTypeCode: z.string().nullable(),
+    purposeCode: z.string().nullable(),
     isRequired: z.boolean(),
     notes: z.string().nullable(),
   })
@@ -1578,27 +1846,119 @@ const DocumentChecklistItemDto = z
   })
   .partial()
   .passthrough();
-const CollateralDocumentGroupDto = z
+const PropertyTypeDocumentGroupDto = z
   .object({
-    collateralTypeCode: z.string(),
-    collateralTypeName: z.string(),
+    propertyTypeCode: z.string(),
+    propertyTypeName: z.string(),
     documents: z.array(z.unknown()),
   })
   .passthrough();
 const GetDocumentChecklistResponse = z
   .object({
     applicationDocuments: z.array(DocumentChecklistItemDto),
-    collateralGroups: z.array(CollateralDocumentGroupDto),
+    propertyTypeGroups: z.array(PropertyTypeDocumentGroupDto),
   })
   .passthrough();
-const UpdateTemplateRequest = z
+const SaveDecisionSummaryRequest = z
+  .object({
+    isPriceVerified: z.boolean().nullable().default(null),
+    conditionType: z.string().nullable().default(null),
+    condition: z.string().nullable().default(null),
+    remarkType: z.string().nullable().default(null),
+    remark: z.string().nullable().default(null),
+    appraiserOpinionType: z.string().nullable().default(null),
+    appraiserOpinion: z.string().nullable().default(null),
+    committeeOpinionType: z.string().nullable().default(null),
+    committeeOpinion: z.string().nullable().default(null),
+    totalAppraisalPriceReview: z.number().nullable().default(null),
+    additionalAssumptions: z.string().nullable().default(null),
+  })
+  .partial()
+  .passthrough();
+const SaveDecisionSummaryResponse = z
+  .object({
+    id: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    isPriceVerified: z.boolean().nullable(),
+    conditionType: z.string().nullable(),
+    condition: z.string().nullable(),
+    remarkType: z.string().nullable(),
+    remark: z.string().nullable(),
+    appraiserOpinionType: z.string().nullable(),
+    appraiserOpinion: z.string().nullable(),
+    committeeOpinionType: z.string().nullable(),
+    committeeOpinion: z.string().nullable(),
+    totalAppraisalPriceReview: z.number().nullable(),
+    additionalAssumptions: z.string().nullable(),
+  })
+  .passthrough();
+const ApproachMatrixRow = z
+  .object({
+    propertyGroupId: z.string().uuid(),
+    groupNumber: z.number().int(),
+    approachType: z.string(),
+    finalValue: z.number().nullable(),
+    finalValueRounded: z.number().nullable(),
+    groupSummaryValue: z.number().nullable(),
+  })
+  .passthrough();
+const GovernmentPriceRow = z
+  .object({
+    titleNumber: z.string().nullable(),
+    areaSquareWa: z.number().nullable(),
+    isMissingFromSurvey: z.boolean(),
+    governmentPricePerSqWa: z.number().nullable(),
+    governmentPrice: z.number().nullable(),
+  })
+  .passthrough();
+const DecisionApprovalListItem = z
+  .object({
+    committeeMemberId: z.string().uuid(),
+    memberName: z.string(),
+    role: z.string(),
+    vote: z.string().nullable(),
+    voteLabel: z.string(),
+    remark: z.string().nullable(),
+    votedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const GetDecisionSummaryResponse = z
+  .object({
+    approachMatrix: z.array(ApproachMatrixRow),
+    totalAppraisalPrice: z.number(),
+    forceSellingPrice: z.number(),
+    buildingInsurance: z.number(),
+    governmentPrices: z.array(GovernmentPriceRow),
+    governmentPriceTotalArea: z.number(),
+    governmentPriceAvgPerSqWa: z.number(),
+    totalAppraisalPriceReview: z.number().nullable(),
+    forceSellingPriceReview: z.number().nullable(),
+    buildingInsuranceReview: z.number(),
+    committeeName: z.string().nullable(),
+    reviewStatus: z.string().nullable(),
+    reviewId: z.string().uuid().nullable(),
+    approvalList: z.array(DecisionApprovalListItem).nullable(),
+    decisionId: z.string().uuid().nullable(),
+    isPriceVerified: z.boolean().nullable(),
+    conditionType: z.string().nullable(),
+    condition: z.string().nullable(),
+    remarkType: z.string().nullable(),
+    remark: z.string().nullable(),
+    appraiserOpinionType: z.string().nullable(),
+    appraiserOpinion: z.string().nullable(),
+    committeeOpinionType: z.string().nullable(),
+    committeeOpinion: z.string().nullable(),
+    additionalAssumptions: z.string().nullable(),
+  })
+  .passthrough();
+const UpdateComparativeAnalysisTemplateRequest = z
   .object({
     templateName: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean().nullable(),
   })
   .passthrough();
-const UpdateTemplateResult = z
+const UpdateComparativeAnalysisTemplateResponse = z
   .object({
     id: z.string().uuid(),
     templateCode: z.string(),
@@ -1615,9 +1975,11 @@ const TemplateFactorDto2 = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean(),
     defaultWeight: z.number().nullable(),
+    defaultIntensity: z.number().nullable(),
+    isCalculationFactor: z.boolean(),
   })
   .passthrough();
-const GetTemplateByIdResult = z
+const GetComparativeAnalysisTemplateByIdResponse = z
   .object({
     id: z.string().uuid(),
     templateCode: z.string(),
@@ -1625,7 +1987,8 @@ const GetTemplateByIdResult = z
     propertyType: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean(),
-    factors: z.array(TemplateFactorDto2),
+    comparativeFactors: z.array(TemplateFactorDto2),
+    calculationFactors: z.array(z.unknown()),
   })
   .passthrough();
 const TemplateDto = z
@@ -1639,7 +2002,10 @@ const TemplateDto = z
     factorCount: z.number().int(),
   })
   .passthrough();
-const CreateTemplateRequest = z
+const GetComparativeAnalysisTemplatesResponse = z
+  .object({ templates: z.array(TemplateDto) })
+  .passthrough();
+const CreateComparativeAnalysisTemplateRequest = z
   .object({
     templateCode: z.string(),
     templateName: z.string(),
@@ -1647,7 +2013,7 @@ const CreateTemplateRequest = z
     description: z.string().nullish().default(null),
   })
   .passthrough();
-const CreateTemplateResult = z
+const CreateComparativeAnalysisTemplateResponse = z
   .object({
     templateId: z.string().uuid(),
     templateCode: z.string(),
@@ -1663,9 +2029,11 @@ const AddFactorToTemplateRequest2 = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean().optional().default(false),
     defaultWeight: z.number().nullish().default(null),
+    defaultIntensity: z.number().nullish().default(null),
+    isCalculationFactor: z.boolean().optional().default(false),
   })
   .passthrough();
-const AddFactorToTemplateResult = z
+const AddFactorToTemplateResponse2 = z
   .object({
     templateFactorId: z.string().uuid(),
     templateId: z.string().uuid(),
@@ -1673,7 +2041,37 @@ const AddFactorToTemplateResult = z
     displaySequence: z.number().int(),
     isMandatory: z.boolean(),
     defaultWeight: z.number().nullable(),
+    defaultIntensity: z.number().nullable(),
+    isCalculationFactor: z.boolean(),
   })
+  .passthrough();
+const SubmitVoteRequest = z
+  .object({ vote: z.string(), remark: z.string().nullable() })
+  .passthrough();
+const SubmitVoteResponse = z
+  .object({ voteId: z.string().uuid(), reviewStatus: z.string(), isAutoApproved: z.boolean() })
+  .passthrough();
+const ApprovalListItem = z
+  .object({
+    committeeMemberId: z.string().uuid(),
+    memberName: z.string(),
+    role: z.string(),
+    vote: z.string().nullable(),
+    voteLabel: z.string(),
+    remark: z.string().nullable(),
+    votedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const GetApprovalListResponse = z
+  .object({
+    committeeName: z.string().nullable(),
+    reviewStatus: z.string().nullable(),
+    reviewId: z.string().uuid().nullable(),
+    items: z.array(ApprovalListItem),
+  })
+  .passthrough();
+const AssignCommitteeResponse = z
+  .object({ reviewId: z.string().uuid(), committeeName: z.string() })
   .passthrough();
 const CommitteeDto = z
   .object({
@@ -1711,6 +2109,41 @@ const CreateCommitteeRequest = z
   })
   .passthrough();
 const CreateCommitteeResponse = z.object({ id: z.string().uuid() }).passthrough();
+const RejectAssignmentRequest = z.object({ reason: z.string() }).passthrough();
+const AssignmentDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    assignmentType: z.string(),
+    assignmentStatus: z.string(),
+    assigneeUserId: z.string().nullable(),
+    assigneeCompanyId: z.string().nullable(),
+    internalAppraiserId: z.string().nullable(),
+    assignmentMethod: z.string(),
+    reassignmentNumber: z.number().int(),
+    progressPercent: z.number().int(),
+    assignedAt: z.string().datetime({ offset: true }),
+    assignedBy: z.string(),
+    startedAt: z.string().datetime({ offset: true }).nullable(),
+    completedAt: z.string().datetime({ offset: true }).nullable(),
+    rejectionReason: z.string().nullable(),
+    cancellationReason: z.string().nullable(),
+    createdAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const GetAssignmentsResponse = z.object({ assignments: z.array(AssignmentDto) }).passthrough();
+const AssignAppraisalRequest = z
+  .object({
+    assignmentType: z.string(),
+    assigneeUserId: z.string().nullish().default(null),
+    assigneeCompanyId: z.string().nullish().default(null),
+    assignmentMethod: z.string().nullish().default(null),
+    internalAppraiserId: z.string().nullish().default(null),
+    assignedBy: z.string().nullish().default(null),
+  })
+  .passthrough();
+const AssignAppraisalResponse = z.object({ assignmentId: z.string().uuid() }).passthrough();
+const CancelAssignmentRequest = z.object({ reason: z.string() }).passthrough();
 const UpdateVesselPropertyRequest = z
   .object({
     propertyName: z.string().nullable().default(null),
@@ -1881,14 +2314,21 @@ const UpdatePropertyGroupRequest = z
   .object({ groupName: z.string(), description: z.string().nullable(), useSystemCalc: z.boolean() })
   .passthrough();
 const UpdatePropertyGroupResponse = z.object({ id: z.string().uuid() }).passthrough();
+const PropertyPhotoDto = z
+  .object({ mappingId: z.string().uuid(), documentId: z.string().uuid(), isThumbnail: z.boolean() })
+  .passthrough();
 const PropertyGroupItemDto = z
   .object({
-    propertyId: z.string().uuid(),
-    sequenceInGroup: z.number().int(),
-    propertyType: z.string(),
-    appraisalDetailId: z.string().uuid(),
-    location: z.string(),
+    propertyId: z.string().uuid().nullable(),
+    sequenceInGroup: z.number().int().nullable(),
+    propertyType: z.string().nullable(),
+    appraisalDetailId: z.string().uuid().nullable(),
+    propertyName: z.string().nullable(),
+    area: z.number().nullable(),
+    location: z.string().nullable(),
+    photos: z.array(PropertyPhotoDto).nullable(),
   })
+  .partial()
   .passthrough();
 const GetPropertyGroupByIdResponse = z
   .object({
@@ -1897,10 +2337,15 @@ const GetPropertyGroupByIdResponse = z
     groupName: z.string(),
     description: z.string().nullable(),
     useSystemCalc: z.boolean(),
+    pricingAnalysisId: z.string().uuid().nullable(),
     properties: z.array(PropertyGroupItemDto),
   })
   .passthrough();
 const DeletePropertyGroupResponse = z.object({ success: z.boolean() }).passthrough();
+const UpdatePhotoTopicRequest = z
+  .object({ topicName: z.string(), sortOrder: z.number().int(), displayColumns: z.number().int() })
+  .passthrough();
+const UpdatePhotoTopicResult = z.object({ id: z.string().uuid() }).passthrough();
 const UpdateMachineryPropertyRequest = z
   .object({
     propertyName: z.string().nullable().default(null),
@@ -1976,6 +2421,31 @@ const GetMachineryPropertyResponse = z
     remark: z.string().nullable(),
     other: z.string().nullable(),
     appraiserOpinion: z.string().nullable(),
+  })
+  .passthrough();
+const LandTitleItemData = z
+  .object({
+    id: z.string().uuid().nullable(),
+    titleNumber: z.string(),
+    titleType: z.string(),
+    bookNumber: z.string().nullish().default(null),
+    pageNumber: z.string().nullish().default(null),
+    landParcelNumber: z.string().nullish().default(null),
+    surveyNumber: z.string().nullish().default(null),
+    mapSheetNumber: z.string().nullish().default(null),
+    rawang: z.string().nullish().default(null),
+    aerialMapName: z.string().nullish().default(null),
+    aerialMapNumber: z.string().nullish().default(null),
+    rai: z.number().nullish().default(null),
+    ngan: z.number().nullish().default(null),
+    squareWa: z.number().nullish().default(null),
+    hasBoundaryMarker: z.boolean().nullish().default(null),
+    boundaryMarkerRemark: z.string().nullish().default(null),
+    isDocumentValidated: z.boolean().nullish().default(null),
+    isMissingFromSurvey: z.boolean().nullish().default(null),
+    governmentPricePerSqWa: z.number().nullish().default(null),
+    governmentPrice: z.number().nullish().default(null),
+    remark: z.string().nullish().default(null),
   })
   .passthrough();
 const UpdateLandPropertyRequest = z
@@ -2058,6 +2528,7 @@ const UpdateLandPropertyRequest = z
     hasBuilding: z.boolean().nullable().default(null),
     hasBuildingOther: z.string().nullable().default(null),
     remark: z.string().nullable().default(null),
+    titles: z.array(LandTitleItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -2147,8 +2618,48 @@ const GetLandPropertyResponse = z
     hasBuilding: z.boolean().nullable(),
     hasBuildingOther: z.string().nullable(),
     remark: z.string().nullable(),
+    titles: z.array(LandTitleItemData).nullable(),
   })
   .partial()
+  .passthrough();
+const DepreciationPeriodItemData = z
+  .object({
+    atYear: z.number().int(),
+    toYear: z.number().int(),
+    depreciationPerYear: z.number(),
+    totalDepreciationPct: z.number(),
+    priceDepreciation: z.number(),
+  })
+  .passthrough();
+const DepreciationItemData = z
+  .object({
+    id: z.string().uuid().nullable(),
+    depreciationMethod: z.string(),
+    areaDescription: z.string().nullish().default(null),
+    area: z.number().optional().default(0),
+    year: z.number().int().optional().default(0),
+    isBuilding: z.boolean().optional().default(true),
+    pricePerSqMBeforeDepreciation: z.number().optional().default(0),
+    priceBeforeDepreciation: z.number().optional().default(0),
+    pricePerSqMAfterDepreciation: z.number().optional().default(0),
+    priceAfterDepreciation: z.number().optional().default(0),
+    depreciationYearPct: z.number().optional().default(0),
+    totalDepreciationPct: z.number().optional().default(0),
+    priceDepreciation: z.number().optional().default(0),
+    depreciationPeriods: z.array(DepreciationPeriodItemData).nullish().default(null),
+  })
+  .passthrough();
+const SurfaceItemData = z
+  .object({
+    id: z.string().uuid().nullable(),
+    fromFloorNumber: z.number().int(),
+    toFloorNumber: z.number().int(),
+    floorType: z.string().nullish().default(null),
+    floorStructureType: z.string().nullish().default(null),
+    floorStructureTypeOther: z.string().nullish().default(null),
+    floorSurfaceType: z.string().nullish().default(null),
+    floorSurfaceTypeOther: z.string().nullish().default(null),
+  })
   .passthrough();
 const UpdateLandAndBuildingPropertyRequest = z
   .object({
@@ -2227,6 +2738,7 @@ const UpdateLandAndBuildingPropertyRequest = z
     westBoundaryLength: z.number().nullable().default(null),
     pondArea: z.number().nullable().default(null),
     pondDepth: z.number().nullable().default(null),
+    titles: z.array(LandTitleItemData).nullable().default(null),
     buildingNumber: z.string().nullable().default(null),
     modelName: z.string().nullable().default(null),
     builtOnTitleNumber: z.string().nullable().default(null),
@@ -2280,8 +2792,50 @@ const UpdateLandAndBuildingPropertyRequest = z
     forcedSalePrice: z.number().nullable().default(null),
     landRemark: z.string().nullable().default(null),
     buildingRemark: z.string().nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
+  .passthrough();
+const BuildingAppraisalDepreciationPeriodDto = z
+  .object({
+    id: z.string().uuid(),
+    atYear: z.number().int(),
+    toYear: z.number().int(),
+    depreciationPerYear: z.number(),
+    totalDepreciationPct: z.number(),
+    priceDepreciation: z.number(),
+  })
+  .passthrough();
+const BuildingAppraisalDepreciationDetailDto = z
+  .object({
+    id: z.string().uuid(),
+    areaDescription: z.string().nullable(),
+    area: z.number(),
+    pricePerSqMBeforeDepreciation: z.number(),
+    priceBeforeDepreciation: z.number(),
+    year: z.number().int(),
+    isBuilding: z.boolean(),
+    depreciationMethod: z.string(),
+    depreciationYearPct: z.number(),
+    totalDepreciationPct: z.number(),
+    priceDepreciation: z.number(),
+    pricePerSqMAfterDepreciation: z.number(),
+    priceAfterDepreciation: z.number(),
+    depreciationPeriods: z.array(BuildingAppraisalDepreciationPeriodDto),
+  })
+  .passthrough();
+const BuildingAppraisalSurfaceDto = z
+  .object({
+    id: z.string().uuid(),
+    fromFloorNumber: z.number().int(),
+    toFloorNumber: z.number().int(),
+    floorType: z.string().nullable(),
+    floorStructureType: z.string().nullable(),
+    floorStructureTypeOther: z.string().nullable(),
+    floorSurfaceType: z.string().nullable(),
+    floorSurfaceTypeOther: z.string().nullable(),
+  })
   .passthrough();
 const GetLandAndBuildingPropertyResponse = z
   .object({
@@ -2368,6 +2922,7 @@ const GetLandAndBuildingPropertyResponse = z
     pondDepth: z.number().nullable(),
     hasBuilding: z.boolean().nullable(),
     hasBuildingOther: z.string().nullable(),
+    titles: z.array(LandTitleItemData).nullable(),
     buildingNumber: z.string().nullable(),
     modelName: z.string().nullable(),
     builtOnTitleNumber: z.string().nullable(),
@@ -2417,6 +2972,25 @@ const GetLandAndBuildingPropertyResponse = z
     forcedSalePrice: z.number().nullable(),
     landRemark: z.string().nullable(),
     buildingRemark: z.string().nullable(),
+    depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
+    surfaces: z.array(BuildingAppraisalSurfaceDto),
+  })
+  .passthrough();
+const UpdateGalleryPhotoRequest = z
+  .object({
+    photoCategory: z.string().nullable(),
+    caption: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
+    capturedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
+const UpdateGalleryPhotoResponse = z.object({ id: z.string().uuid() }).passthrough();
+const CondoAppraisalAreaDetailDto = z
+  .object({
+    id: z.string().uuid().nullable(),
+    areaDescription: z.string().nullable(),
+    areaSize: z.number().nullable(),
   })
   .passthrough();
 const UpdateCondoPropertyRequest = z
@@ -2468,8 +3042,9 @@ const UpdateCondoPropertyRequest = z
     upperFloorMaterialTypeOther: z.string().nullable().default(null),
     bathroomFloorMaterialType: z.string().nullable().default(null),
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
-    roofType: z.string().nullable().default(null),
+    roofType: z.array(z.string()).nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
+    areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable().default(null),
     totalBuildingArea: z.number().nullable().default(null),
     isExpropriated: z.boolean().nullable().default(null),
     expropriationRemark: z.string().nullable().default(null),
@@ -2542,8 +3117,9 @@ const GetCondoPropertyResponse = z
     upperFloorMaterialTypeOther: z.string().nullable(),
     bathroomFloorMaterialType: z.string().nullable(),
     bathroomFloorMaterialTypeOther: z.string().nullable(),
-    roofType: z.string().nullable(),
+    roofType: z.array(z.string()).nullable(),
     roofTypeOther: z.string().nullable(),
+    areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable(),
     totalBuildingArea: z.number().nullable(),
     isExpropriated: z.boolean().nullable(),
     expropriationRemark: z.string().nullable(),
@@ -2620,6 +3196,8 @@ const UpdateBuildingPropertyRequest = z
     sellingPrice: z.number().nullable().default(null),
     forcedSalePrice: z.number().nullable().default(null),
     remark: z.string().nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -2684,9 +3262,138 @@ const GetBuildingPropertyResponse = z
     sellingPrice: z.number().nullable(),
     forcedSalePrice: z.number().nullable(),
     remark: z.string().nullable(),
+    depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
+    surfaces: z.array(BuildingAppraisalSurfaceDto),
   })
   .passthrough();
+const UpdateAppendixLayoutRequest = z.object({ layoutColumns: z.number().int() }).passthrough();
+const UpdateAppendixLayoutResponse = z
+  .object({ appendixId: z.string().uuid(), layoutColumns: z.number().int() })
+  .passthrough();
+const UnsetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
+const SetPropertyThumbnailResult = z.object({ mappingId: z.string().uuid() }).passthrough();
+const LawAndRegulationImageInput = z
+  .object({
+    id: z.string().uuid().nullable(),
+    galleryPhotoId: z.string().uuid(),
+    displaySequence: z.number().int(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  })
+  .passthrough();
+const LawAndRegulationItemInput = z
+  .object({
+    id: z.string().uuid().nullable(),
+    headerCode: z.string(),
+    remark: z.string().nullable(),
+    images: z.array(LawAndRegulationImageInput),
+  })
+  .passthrough();
+const SaveLawAndRegulationsRequest = z
+  .object({ items: z.array(LawAndRegulationItemInput) })
+  .passthrough();
+const SaveLawAndRegulationsResponse = z
+  .object({ appraisalId: z.string().uuid(), itemCount: z.number().int(), success: z.boolean() })
+  .passthrough();
+const LawAndRegulationImageDto = z
+  .object({
+    id: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
+    displaySequence: z.number().int(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+  })
+  .passthrough();
+const LawAndRegulationDto = z
+  .object({
+    id: z.string().uuid(),
+    headerCode: z.string(),
+    remark: z.string().nullable(),
+    images: z.array(LawAndRegulationImageDto),
+  })
+  .passthrough();
+const GetLawAndRegulationsResult = z.object({ items: z.array(LawAndRegulationDto) }).passthrough();
+const ReorderPropertiesInGroupRequest = z
+  .object({ orderedPropertyIds: z.array(z.string().uuid()) })
+  .passthrough();
+const ReorderPropertiesInGroupResponse = z.object({ success: z.boolean() }).passthrough();
 const RemovePropertyFromGroupResponse = z.object({ success: z.boolean() }).passthrough();
+const RemoveAppendixDocumentResponse = z.object({ success: z.boolean() }).passthrough();
+const MovePropertyToGroupRequest = z
+  .object({ targetGroupId: z.string().uuid(), targetPosition: z.number().int().nullable() })
+  .passthrough();
+const MovePropertyToGroupResponse = z.object({ success: z.boolean() }).passthrough();
+const LinkPhotoToPropertyRequest = z
+  .object({
+    appraisalPropertyId: z.string().uuid(),
+    photoPurpose: z.string(),
+    sectionReference: z.string().nullable(),
+    linkedBy: z.string(),
+  })
+  .passthrough();
+const LinkPhotoToPropertyResponse = z.object({ mappingId: z.string().uuid() }).passthrough();
+const LinkAppraisalComparableRequest = z
+  .object({
+    marketComparableId: z.string().uuid(),
+    sequenceNumber: z.number().int(),
+    originalPricePerUnit: z.number(),
+    weight: z.number().nullish().default(null),
+    selectionReason: z.string().nullish().default(null),
+    notes: z.string().nullish().default(null),
+  })
+  .passthrough();
+const LinkAppraisalComparableResponse = z
+  .object({
+    id: z.string().uuid(),
+    sequenceNumber: z.number().int(),
+    originalPricePerUnit: z.number(),
+    weight: z.number(),
+  })
+  .passthrough();
+const ComparableAdjustmentDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalComparableId: z.string().uuid(),
+    adjustmentCategory: z.string(),
+    adjustmentType: z.string(),
+    adjustmentPercent: z.number(),
+    adjustmentDirection: z.string(),
+    subjectValue: z.string().nullable(),
+    comparableValue: z.string().nullable(),
+    justification: z.string().nullable(),
+  })
+  .partial()
+  .passthrough();
+const AppraisalComparableDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    marketComparableId: z.string().uuid(),
+    sequenceNumber: z.number().int(),
+    weight: z.number(),
+    originalPricePerUnit: z.number(),
+    adjustedPricePerUnit: z.number(),
+    totalAdjustmentPct: z.number(),
+    weightedValue: z.number(),
+    selectionReason: z.string().nullable(),
+    notes: z.string().nullable(),
+    comparableNumber: z.string(),
+    comparablePropertyType: z.string(),
+    comparableSurveyName: z.string(),
+    comparableInfoDateTime: z.string().datetime({ offset: true }).nullable(),
+    comparableSourceInfo: z.string().nullable(),
+    comparableOfferPrice: z.number().nullable(),
+    comparableOfferPriceAdjustmentPercent: z.number().nullable(),
+    comparableOfferPriceAdjustmentAmount: z.number().nullable(),
+    comparableSalePrice: z.number().nullable(),
+    comparableSaleDate: z.string().datetime({ offset: true }).nullable(),
+    adjustments: z.array(ComparableAdjustmentDto),
+  })
+  .partial()
+  .passthrough();
+const GetAppraisalComparablesResponse = z
+  .object({ comparables: z.array(AppraisalComparableDto) })
+  .passthrough();
 const PropertyGroupDto = z
   .object({
     id: z.string().uuid(),
@@ -2704,6 +3411,78 @@ const CreatePropertyGroupRequest = z
 const CreatePropertyGroupResponse = z
   .object({ id: z.string().uuid(), groupNumber: z.number().int() })
   .passthrough();
+const TopicPhotoDto = z
+  .object({
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+    photoNumber: z.number().int(),
+    caption: z.string().nullable(),
+  })
+  .passthrough();
+const PhotoTopicDto = z
+  .object({
+    id: z.string().uuid(),
+    topicName: z.string(),
+    sortOrder: z.number().int(),
+    displayColumns: z.number().int(),
+    photoCount: z.number().int(),
+    photos: z.array(TopicPhotoDto),
+  })
+  .passthrough();
+const GetPhotoTopicsResult = z.object({ topics: z.array(PhotoTopicDto) }).passthrough();
+const CreatePhotoTopicRequest = z
+  .object({
+    topicName: z.string(),
+    sortOrder: z.number().int(),
+    displayColumns: z.number().int().optional().default(1),
+  })
+  .passthrough();
+const CreatePhotoTopicResult = z.object({ id: z.string().uuid() }).passthrough();
+const GalleryPhotoDto = z
+  .object({
+    id: z.string().uuid(),
+    documentId: z.string().uuid(),
+    photoNumber: z.number().int(),
+    photoType: z.string(),
+    photoCategory: z.string().nullable(),
+    caption: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
+    capturedAt: z.string().datetime({ offset: true }).nullable(),
+    uploadedAt: z.string().datetime({ offset: true }),
+    isInUse: z.boolean(),
+    photoTopicIds: z.array(z.string().uuid()),
+    fileName: z.string().nullable(),
+    filePath: z.string().nullable(),
+    fileExtension: z.string().nullable(),
+    mimeType: z.string().nullable(),
+    fileSizeBytes: z.number().int().nullable(),
+    uploadedByName: z.string().nullable(),
+  })
+  .passthrough();
+const GetGalleryPhotosResult = z.object({ photos: z.array(GalleryPhotoDto) }).passthrough();
+const AddGalleryPhotoRequest = z
+  .object({
+    documentId: z.string().uuid(),
+    photoType: z.string(),
+    uploadedBy: z.string(),
+    photoCategory: z.string().nullish().default(null),
+    caption: z.string().nullish().default(null),
+    latitude: z.number().nullish().default(null),
+    longitude: z.number().nullish().default(null),
+    capturedAt: z.string().datetime({ offset: true }).nullish().default(null),
+    photoTopicIds: z.array(z.string().uuid()).nullish().default(null),
+    fileName: z.string().nullish().default(null),
+    filePath: z.string().nullish().default(null),
+    fileExtension: z.string().nullish().default(null),
+    mimeType: z.string().nullish().default(null),
+    fileSizeBytes: z.number().int().nullish().default(null),
+    uploadedByName: z.string().nullish().default(null),
+  })
+  .passthrough();
+const AddGalleryPhotoResponse = z
+  .object({ id: z.string().uuid(), photoNumber: z.number().int() })
+  .passthrough();
 const AppraisalDto = z
   .object({
     id: z.string().uuid(),
@@ -2716,7 +3495,12 @@ const AppraisalDto = z
     slaDueDate: z.string().datetime({ offset: true }).nullable(),
     slaStatus: z.string().nullable(),
     propertyCount: z.number().int(),
-    createdOn: z.string().datetime({ offset: true }).nullable(),
+    createdAt: z.string().datetime({ offset: true }).nullable(),
+    appointmentDateTime: z.string().datetime({ offset: true }).nullable(),
+    assigneeUserId: z.string().uuid().nullable(),
+    assignmentStatus: z.string().nullable(),
+    assignedDate: z.string().datetime({ offset: true }).nullable(),
+    province: z.string().nullable(),
   })
   .partial()
   .passthrough();
@@ -2760,6 +3544,28 @@ const GetAppraisalByIdResponse = z
     updatedBy: z.string().nullable(),
   })
   .partial()
+  .passthrough();
+const AppendixDocumentResponse = z
+  .object({
+    id: z.string().uuid(),
+    galleryPhotoId: z.string().uuid(),
+    documentId: z.string().uuid(),
+    displaySequence: z.number().int(),
+  })
+  .passthrough();
+const AppraisalAppendixResponse = z
+  .object({
+    id: z.string().uuid(),
+    appendixTypeId: z.string().uuid(),
+    appendixTypeCode: z.string(),
+    appendixTypeName: z.string(),
+    sortOrder: z.number().int(),
+    layoutColumns: z.number().int(),
+    documents: z.array(AppendixDocumentResponse),
+  })
+  .passthrough();
+const GetAppraisalAppendicesResponse = z
+  .object({ items: z.array(AppraisalAppendixResponse) })
   .passthrough();
 const CreateVesselPropertyRequest = z
   .object({
@@ -2884,6 +3690,30 @@ const CreateMachineryPropertyRequest = z
 const CreateMachineryPropertyResponse = z
   .object({ propertyId: z.string().uuid(), detailId: z.string().uuid() })
   .passthrough();
+const LandTitleItemRequest = z
+  .object({
+    titleNumber: z.string(),
+    titleType: z.string(),
+    bookNumber: z.string().nullish().default(null),
+    pageNumber: z.string().nullish().default(null),
+    landParcelNumber: z.string().nullish().default(null),
+    surveyNumber: z.string().nullish().default(null),
+    mapSheetNumber: z.string().nullish().default(null),
+    rawang: z.string().nullish().default(null),
+    aerialMapName: z.string().nullish().default(null),
+    aerialMapNumber: z.string().nullish().default(null),
+    rai: z.number().nullish().default(null),
+    ngan: z.number().nullish().default(null),
+    squareWa: z.number().nullish().default(null),
+    hasBoundaryMarker: z.boolean().nullish().default(null),
+    boundaryMarkerRemark: z.string().nullish().default(null),
+    isDocumentValidated: z.boolean().nullish().default(null),
+    isMissingFromSurvey: z.boolean().nullish().default(null),
+    governmentPricePerSqWa: z.number().nullish().default(null),
+    governmentPrice: z.number().nullish().default(null),
+    remark: z.string().nullish().default(null),
+  })
+  .passthrough();
 const CreateLandPropertyRequest = z
   .object({
     ownerName: z.string(),
@@ -2965,6 +3795,7 @@ const CreateLandPropertyRequest = z
     hasBuilding: z.boolean().nullish().default(null),
     hasBuildingOther: z.string().nullish().default(null),
     remark: z.string().nullish().default(null),
+    titles: z.array(LandTitleItemRequest).nullish().default(null),
   })
   .passthrough();
 const CreateLandPropertyResponse = z
@@ -3057,7 +3888,7 @@ const CreateLandAndBuildingPropertyRequest = z
     buildingAge: z.number().int().nullable().default(null),
     constructionYear: z.number().int().nullable().default(null),
     residentialRemark: z.string().nullable().default(null),
-    buildingCondition: z.string().nullable().default(null),
+    buildingConditionType: z.string().nullable().default(null),
     isUnderConstruction: z.boolean().nullable().default(null),
     constructionCompletionPercent: z.number().nullable().default(null),
     constructionLicenseExpirationDate: z
@@ -3072,8 +3903,8 @@ const CreateLandAndBuildingPropertyRequest = z
     buildingAreaUnit: z.string().nullable().default(null),
     usableArea: z.number().nullable().default(null),
     numberOfFloors: z.number().int().nullable().default(null),
-    buildingMaterial: z.string().nullable().default(null),
-    buildingStyle: z.string().nullable().default(null),
+    buildingMaterialType: z.string().nullable().default(null),
+    buildingStyleType: z.string().nullable().default(null),
     isResidential: z.boolean().nullable().default(null),
     constructionStyleType: z.string().nullable().default(null),
     constructionStyleRemark: z.string().nullable().default(null),
@@ -3109,6 +3940,9 @@ const CreateLandAndBuildingPropertyRequest = z
     forcedSalePrice: z.number().nullable().default(null),
     landRemark: z.string().nullable().default(null),
     buildingRemark: z.string().nullable().default(null),
+    titles: z.array(LandTitleItemRequest).nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -3164,8 +3998,9 @@ const CreateCondoPropertyRequest = z
     upperFloorMaterialTypeOther: z.string().nullable().default(null),
     bathroomFloorMaterialType: z.string().nullable().default(null),
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
-    roofType: z.string().nullable().default(null),
+    roofType: z.array(z.string()).nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
+    areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable().default(null),
     totalBuildingArea: z.number().nullable().default(null),
     isExpropriated: z.boolean().nullable().default(null),
     expropriationRemark: z.string().nullable().default(null),
@@ -3246,14 +4081,160 @@ const CreateBuildingPropertyRequest = z
     sellingPrice: z.number().nullable().default(null),
     forcedSalePrice: z.number().nullable().default(null),
     remark: z.string().nullable().default(null),
+    depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
+    surfaces: z.array(SurfaceItemData).nullable().default(null),
   })
   .partial()
   .passthrough();
 const CreateBuildingPropertyResponse = z
   .object({ propertyId: z.string().uuid(), detailId: z.string().uuid() })
   .passthrough();
+const AssignPhotoToTopicRequest = z
+  .object({ photoTopicIds: z.array(z.string().uuid()) })
+  .passthrough();
+const AssignPhotoToTopicResult = z
+  .object({ photoId: z.string().uuid(), photoTopicIds: z.array(z.string().uuid()) })
+  .passthrough();
 const AddPropertyToGroupRequest = z.object({ propertyId: z.string().uuid() }).passthrough();
 const AddPropertyToGroupResponse = z.object({ success: z.boolean() }).passthrough();
+const AddAppendixDocumentRequest = z
+  .object({ galleryPhotoId: z.string().uuid(), displaySequence: z.number().int() })
+  .passthrough();
+const AddAppendixDocumentResponse = z
+  .object({ documentId: z.string().uuid(), appendixId: z.string().uuid() })
+  .passthrough();
+const RescheduleAppointmentRequest = z
+  .object({
+    changedBy: z.string(),
+    newDateTime: z.string().datetime({ offset: true }),
+    reason: z.string().nullish().default(null),
+  })
+  .passthrough();
+const AppointmentDto2 = z
+  .object({
+    id: z.string().uuid(),
+    assignmentId: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    appointmentDateTime: z.string().datetime({ offset: true }),
+    proposedDate: z.string().datetime({ offset: true }).nullable(),
+    locationDetail: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
+    status: z.string(),
+    reason: z.string().nullable(),
+    approvedBy: z.string().nullable(),
+    approvedAt: z.string().datetime({ offset: true }).nullable(),
+    rescheduleCount: z.number().int(),
+    appointedBy: z.string(),
+    contactPerson: z.string().nullable(),
+    contactPhone: z.string().nullable(),
+    createdOn: z.string().datetime({ offset: true }).nullable(),
+  })
+  .partial()
+  .passthrough();
+const GetAppointmentsResponse = z.object({ appointments: z.array(AppointmentDto2) }).passthrough();
+const CreateAppointmentRequest = z
+  .object({
+    assignmentId: z.string().uuid(),
+    appointmentDateTime: z.string().datetime({ offset: true }),
+    appointedBy: z.string(),
+    locationDetail: z.string().nullish().default(null),
+    contactPerson: z.string().nullish().default(null),
+    contactPhone: z.string().nullish().default(null),
+  })
+  .passthrough();
+const CreateAppointmentResponse = z.object({ appointmentId: z.string().uuid() }).passthrough();
+const CancelAppointmentRequest = z
+  .object({ changedBy: z.string(), reason: z.string().nullish().default(null) })
+  .passthrough();
+const ApproveAppointmentRequest = z.object({ approvedBy: z.string() }).passthrough();
+const CreateUploadSessionRequest = z
+  .object({ clientReference: z.string(), externalCaseKey: z.string() })
+  .passthrough();
+const UploadLimitation = z
+  .object({
+    maxFiles: z.number().int(),
+    maxFileBytes: z.number().int(),
+    maxTotalBytes: z.number().int(),
+  })
+  .passthrough();
+const CreateUploadSessionResponse2 = z
+  .object({
+    uploadSessionId: z.string().uuid(),
+    status: z.string(),
+    expiresAt: z.string(),
+    limits: UploadLimitation,
+  })
+  .passthrough();
+const QuotationDto2 = z
+  .object({
+    id: z.string().uuid(),
+    companyId: z.string().uuid(),
+    companyName: z.string(),
+    totalAmount: z.number(),
+    status: z.string(),
+    submittedAt: z.string().datetime({ offset: true }),
+    isWinner: z.boolean(),
+  })
+  .passthrough();
+const GetQuotationsResponse2 = z.object({ quotations: z.array(QuotationDto2) }).passthrough();
+const ApproveQuotationRequest = z.object({ approvalReason: z.string().nullable() }).passthrough();
+const UploadDocumentResponse2 = z
+  .object({
+    documentId: z.string().uuid(),
+    fileName: z.string(),
+    contentType: z.string(),
+    sizeInBytes: z.number().int(),
+  })
+  .passthrough();
+const GetDocumentResponse = z
+  .object({
+    id: z.string().uuid(),
+    fileName: z.string(),
+    contentType: z.string(),
+    fileSizeBytes: z.number().int(),
+    documentType: z.string().nullable(),
+    category: z.string().nullable(),
+    downloadUrl: z.string(),
+    createdOn: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const ResubmitRequestResult = z
+  .object({
+    status: z.string(),
+    message: z.string(),
+    errorCode: z.string().nullish().default(null),
+  })
+  .passthrough();
+const RequestDetailDto2 = z
+  .object({
+    hasAppraisalBook: z.boolean(),
+    loanDetail: LoanDetailDto.nullable(),
+    prevAppraisalId: z.string().uuid().nullable(),
+    address: AddressDto2.nullable(),
+    contact: ContactDto.nullable(),
+    appointment: AppointmentDto.nullable(),
+    fee: FeeDto.nullable(),
+  })
+  .passthrough();
+const CreateRequestRequest2 = z
+  .object({
+    uploadSessionId: z.string().nullable(),
+    purpose: z.string(),
+    channel: z.string(),
+    requestor: UserInfoDto,
+    creator: UserInfoDto,
+    priority: z.string(),
+    isPma: z.boolean(),
+    detail: RequestDetailDto2,
+    customers: z.array(RequestCustomerDto),
+    properties: z.array(RequestPropertyDto),
+    titles: z.array(RequestTitleDto),
+    documents: z.array(RequestDocumentDto),
+    comments: z.array(RequestCommentDto),
+  })
+  .passthrough();
+const CreateRequestResponse2 = z.object({ requestId: z.string().uuid() }).passthrough();
 const SimulateTaskCompletionRequest = z
   .object({
     correlationId: z.string().uuid().nullable().default(null),
@@ -3283,12 +4264,6 @@ const SimulateTransitionCompletedRequest = z
   .partial()
   .passthrough();
 
-export const UpdateBuildingPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-export const UpdateCondoPropertyResponse = z.object({ isSuccess: z.boolean() }).passthrough();
-export const UpdateLandAndBuildingPropertyResponse = z
-  .object({ isSuccess: z.boolean() })
-  .passthrough();
-
 export const schemas = {
   AddressDto,
   RequestTitleDocumentDto,
@@ -3307,22 +4282,22 @@ export const schemas = {
   RequestDocumentDto,
   UpdateRequestRequest,
   UpdateRequestResponse,
-  RequestDetailDto2,
-  GetRequestByIdResult,
+  GetRequestByIdResponse,
   DeleteRequestResponse,
-  SourceSystemDto,
-  RequestCommentDto,
   UpdateDraftRequestRequest,
   UpdateDraftRequestResponse,
-  SubmitRequestRequest,
   SubmitRequestResponse,
-  RequestDto,
-  PaginatedResultOfRequestDto,
-  GetRequestResult,
+  GetRequestListItem,
+  PaginatedResultOfGetRequestListItem,
+  GetRequestsResponse,
+  RequestCommentDto,
   CreateRequestRequest,
   CreateRequestResponse,
   CreateDraftRequestRequest,
   CreateDraftRequestResponse,
+  DocumentItemDto,
+  DocumentSectionDto,
+  GetRequestDocumentsByRequestIdResponse,
   UpdateRequestCommentRequest,
   UpdateRequestCommentResponse,
   RemoveRequestCommentResponse,
@@ -3344,23 +4319,31 @@ export const schemas = {
   CreatePermissionResponse,
   GetPermissionByIdResponse,
   DeletePermissionResponse,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
   TokenRequest,
   RegisterUserPermissionDto,
   RegisterUserRequest,
   RegisterUserResponse,
   RegisterClientRequest,
   RegisterClientResponse,
+  MeResponse,
   MarkNotificationAsReadResponse,
   WorkflowStepDto,
   GetWorkflowStatusResponse,
   NotificationType,
   NotificationDto,
   GetUserNotificationsResponse,
+  ParameterDto,
   DocumentLink,
   Input,
   CreateUploadSessionResponse,
-  UploadDocumentResult,
+  UploadDocumentResponse,
   KickstartWorkflowRequest,
+  KickstartWorkflowResponse,
+  TaskItem,
+  PaginatedResultOfTaskItem,
+  GetTasksResponse,
   CompleteActivityRequest,
   AssignmentOverrideRequest,
   StartWorkflowRequest,
@@ -3406,6 +4389,7 @@ export const schemas = {
   GetQuotationByIdResponse,
   UpdatePricingAnalysisRequest,
   UpdatePricingAnalysisResponse,
+  MethodDto,
   ApproachDto,
   GetPricingAnalysisResponse,
   UpdateMethodRequest,
@@ -3429,7 +4413,9 @@ export const schemas = {
   FactorScoreInput,
   CalculationInput,
   SaveComparativeAnalysisRequest,
-  SaveComparativeAnalysisResult,
+  SaveComparativeAnalysisResponse,
+  ResetPricingMethodResult,
+  RemoveMethodResult,
   RecalculateFactorsResponse,
   LinkComparableRequest,
   LinkComparableResponse,
@@ -3439,7 +4425,8 @@ export const schemas = {
   ComparativeFactorDto,
   FactorScoreDto,
   CalculationDto,
-  GetComparativeFactorsResult,
+  RsqResultDto,
+  GetComparativeFactorsResponse,
   CompletePricingAnalysisRequest,
   CompletePricingAnalysisResponse,
   AddMethodRequest,
@@ -3452,94 +4439,183 @@ export const schemas = {
   AddApproachResponse,
   UpdateMarketComparableTemplateRequest,
   UpdateMarketComparableTemplateResponse,
+  FactorTranslationDto,
   TemplateFactorDto,
   MarketComparableTemplateDetailDto,
-  GetMarketComparableTemplateByIdResult,
+  GetMarketComparableTemplateByIdResponse,
   MarketComparableTemplateDto,
-  GetMarketComparableTemplatesResult,
+  GetMarketComparableTemplatesResponse,
   CreateMarketComparableTemplateRequest,
   CreateMarketComparableTemplateResponse,
   AddFactorToTemplateRequest,
   AddFactorToTemplateResponse,
+  UpdateMarketComparableRequest,
+  UpdateMarketComparableResponse,
+  FactorDataType,
+  FactorDataDto,
+  ImageDto,
+  MarketComparableDetailDto,
+  GetMarketComparableByIdResponse,
   FactorDataItem,
   SetMarketComparableFactorDataRequest,
+  SetMarketComparableFactorDataResponse,
   MarketComparableDto,
   PaginatedResultOfMarketComparableDto,
   GetMarketComparablesResponse,
   CreateMarketComparableRequest,
   CreateMarketComparableResponse,
-  FactorDataDto,
-  ImageDto,
-  MarketComparableDetailDto,
-  GetMarketComparableByIdResponse,
+  DeleteMarketComparableResponse,
   AddMarketComparableImageRequest,
   AddMarketComparableImageResponse,
+  FactorTranslationRequest,
   UpdateMarketComparableFactorRequest,
-  UpdateMarketComparableFactorResult,
+  UpdateMarketComparableFactorResponse,
   MarketComparableFactorDto,
+  GetMarketComparableFactorsResponse,
   CreateMarketComparableFactorRequest,
   CreateMarketComparableFactorResponse,
+  UpdatePaymentRequest,
+  UpdateFeeItemRequest,
+  UpdateFeeRequest,
+  RejectFeeItemRequest,
+  RecordPaymentRequest,
+  AppraisalFeeItemDto,
+  PaymentHistoryDto,
+  AppraisalFeeDto,
+  GetAppraisalFeesResponse,
+  ApproveFeeItemRequest,
+  AddFeeItemRequest,
+  AddFeeItemResult,
   UpdateDocumentTypeRequest,
   UpdateDocumentRequirementRequest,
   DocumentTypeDto,
+  GetDocumentTypesResponse,
   CreateDocumentTypeRequest,
-  CreateDocumentTypeResult,
+  CreateDocumentTypeResponse,
   DocumentRequirementDto,
+  GetDocumentRequirementsResponse,
   CreateDocumentRequirementRequest,
   CreateDocumentRequirementResponse,
   DocumentChecklistItemDto,
-  CollateralDocumentGroupDto,
+  PropertyTypeDocumentGroupDto,
   GetDocumentChecklistResponse,
-  UpdateTemplateRequest,
-  UpdateTemplateResult,
+  SaveDecisionSummaryRequest,
+  SaveDecisionSummaryResponse,
+  ApproachMatrixRow,
+  GovernmentPriceRow,
+  DecisionApprovalListItem,
+  GetDecisionSummaryResponse,
+  UpdateComparativeAnalysisTemplateRequest,
+  UpdateComparativeAnalysisTemplateResponse,
   TemplateFactorDto2,
-  GetTemplateByIdResult,
+  GetComparativeAnalysisTemplateByIdResponse,
   TemplateDto,
-  CreateTemplateRequest,
-  CreateTemplateResult,
+  GetComparativeAnalysisTemplatesResponse,
+  CreateComparativeAnalysisTemplateRequest,
+  CreateComparativeAnalysisTemplateResponse,
   AddFactorToTemplateRequest2,
-  AddFactorToTemplateResult,
+  AddFactorToTemplateResponse2,
+  SubmitVoteRequest,
+  SubmitVoteResponse,
+  ApprovalListItem,
+  GetApprovalListResponse,
+  AssignCommitteeResponse,
   CommitteeDto,
   PaginatedResultOfCommitteeDto,
   GetCommitteesResponse,
   CreateCommitteeRequest,
   CreateCommitteeResponse,
+  RejectAssignmentRequest,
+  AssignmentDto,
+  GetAssignmentsResponse,
+  AssignAppraisalRequest,
+  AssignAppraisalResponse,
+  CancelAssignmentRequest,
   UpdateVesselPropertyRequest,
   GetVesselPropertyResponse,
   UpdateVehiclePropertyRequest,
   GetVehiclePropertyResponse,
   UpdatePropertyGroupRequest,
   UpdatePropertyGroupResponse,
+  PropertyPhotoDto,
   PropertyGroupItemDto,
   GetPropertyGroupByIdResponse,
   DeletePropertyGroupResponse,
+  UpdatePhotoTopicRequest,
+  UpdatePhotoTopicResult,
   UpdateMachineryPropertyRequest,
   GetMachineryPropertyResponse,
+  LandTitleItemData,
   UpdateLandPropertyRequest,
   GetLandPropertyResponse,
+  DepreciationPeriodItemData,
+  DepreciationItemData,
+  SurfaceItemData,
   UpdateLandAndBuildingPropertyRequest,
+  BuildingAppraisalDepreciationPeriodDto,
+  BuildingAppraisalDepreciationDetailDto,
+  BuildingAppraisalSurfaceDto,
   GetLandAndBuildingPropertyResponse,
+  UpdateGalleryPhotoRequest,
+  UpdateGalleryPhotoResponse,
+  CondoAppraisalAreaDetailDto,
   UpdateCondoPropertyRequest,
   GetCondoPropertyResponse,
   UpdateBuildingPropertyRequest,
   GetBuildingPropertyResponse,
+  UpdateAppendixLayoutRequest,
+  UpdateAppendixLayoutResponse,
+  UnsetPropertyThumbnailResult,
+  SetPropertyThumbnailResult,
+  LawAndRegulationImageInput,
+  LawAndRegulationItemInput,
+  SaveLawAndRegulationsRequest,
+  SaveLawAndRegulationsResponse,
+  LawAndRegulationImageDto,
+  LawAndRegulationDto,
+  GetLawAndRegulationsResult,
+  ReorderPropertiesInGroupRequest,
+  ReorderPropertiesInGroupResponse,
   RemovePropertyFromGroupResponse,
+  RemoveAppendixDocumentResponse,
+  MovePropertyToGroupRequest,
+  MovePropertyToGroupResponse,
+  LinkPhotoToPropertyRequest,
+  LinkPhotoToPropertyResponse,
+  LinkAppraisalComparableRequest,
+  LinkAppraisalComparableResponse,
+  ComparableAdjustmentDto,
+  AppraisalComparableDto,
+  GetAppraisalComparablesResponse,
   PropertyGroupDto,
   GetPropertyGroupsResponse,
   CreatePropertyGroupRequest,
   CreatePropertyGroupResponse,
+  TopicPhotoDto,
+  PhotoTopicDto,
+  GetPhotoTopicsResult,
+  CreatePhotoTopicRequest,
+  CreatePhotoTopicResult,
+  GalleryPhotoDto,
+  GetGalleryPhotosResult,
+  AddGalleryPhotoRequest,
+  AddGalleryPhotoResponse,
   AppraisalDto,
   PaginatedResultOfAppraisalDto,
   GetAppraisalsResponse,
   CreateAppraisalRequest,
   CreateAppraisalResponse,
   GetAppraisalByIdResponse,
+  AppendixDocumentResponse,
+  AppraisalAppendixResponse,
+  GetAppraisalAppendicesResponse,
   CreateVesselPropertyRequest,
   CreateVesselPropertyResponse,
   CreateVehiclePropertyRequest,
   CreateVehiclePropertyResponse,
   CreateMachineryPropertyRequest,
   CreateMachineryPropertyResponse,
+  LandTitleItemRequest,
   CreateLandPropertyRequest,
   CreateLandPropertyResponse,
   CreateLandAndBuildingPropertyRequest,
@@ -3548,8 +4624,31 @@ export const schemas = {
   CreateCondoPropertyResponse,
   CreateBuildingPropertyRequest,
   CreateBuildingPropertyResponse,
+  AssignPhotoToTopicRequest,
+  AssignPhotoToTopicResult,
   AddPropertyToGroupRequest,
   AddPropertyToGroupResponse,
+  AddAppendixDocumentRequest,
+  AddAppendixDocumentResponse,
+  RescheduleAppointmentRequest,
+  AppointmentDto2,
+  GetAppointmentsResponse,
+  CreateAppointmentRequest,
+  CreateAppointmentResponse,
+  CancelAppointmentRequest,
+  ApproveAppointmentRequest,
+  CreateUploadSessionRequest,
+  UploadLimitation,
+  CreateUploadSessionResponse2,
+  QuotationDto2,
+  GetQuotationsResponse2,
+  ApproveQuotationRequest,
+  UploadDocumentResponse2,
+  GetDocumentResponse,
+  ResubmitRequestResult,
+  RequestDetailDto2,
+  CreateRequestRequest2,
+  CreateRequestResponse2,
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
@@ -3561,12 +4660,203 @@ export type GetAppraisalByIdResponseType = z.infer<typeof GetAppraisalByIdRespon
 export type UpdateBuildingPropertyRequestType = z.infer<typeof UpdateBuildingPropertyRequest>;
 export type CreateLandBuildingRequestType = z.infer<typeof CreateLandAndBuildingPropertyRequest>;
 export type CreateLandBuildingResponseType = z.infer<typeof CreateLandAndBuildingPropertyResponse>;
-export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;
 export type UpdateCondoPropertyRequestType = z.infer<typeof UpdateCondoPropertyRequest>;
-export type UpdateCondoPropertyResponseType = z.infer<typeof UpdateCondoPropertyResponse>;
 export type UpdateLandAndBuildingPropertyRequestType = z.infer<
   typeof UpdateLandAndBuildingPropertyRequest
 >;
-export type UpdateLandAndBuildingPropertyResponseType = z.infer<
-  typeof UpdateLandAndBuildingPropertyResponse
+export type UpdateLandPropertyRequestType = z.infer<typeof UpdateLandPropertyRequest>;
+
+// Property Create types
+export type CreateLandPropertyRequestType = z.infer<typeof CreateLandPropertyRequest>;
+export type CreateLandPropertyResponseType = z.infer<typeof CreateLandPropertyResponse>;
+export type CreateBuildingPropertyRequestType = z.infer<typeof CreateBuildingPropertyRequest>;
+export type CreateBuildingPropertyResponseType = z.infer<typeof CreateBuildingPropertyResponse>;
+export type CreateCondoPropertyRequestType = z.infer<typeof CreateCondoPropertyRequest>;
+export type CreateCondoPropertyResponseType = z.infer<typeof CreateCondoPropertyResponse>;
+
+// Property Get types
+export type GetLandPropertyResponseType = z.infer<typeof GetLandPropertyResponse>;
+export type GetBuildingPropertyResponseType = z.infer<typeof GetBuildingPropertyResponse>;
+export type GetCondoPropertyResponseType = z.infer<typeof GetCondoPropertyResponse>;
+export type GetLandAndBuildingPropertyResponseType = z.infer<
+  typeof GetLandAndBuildingPropertyResponse
 >;
+
+// Property Update response types
+// export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;
+// export type UpdateCondoPropertyResponseType = z.infer<typeof UpdateCondoPropertyResponse>;
+// export type UpdateLandAndBuildingPropertyResponseType = z.infer<
+//   typeof UpdateLandAndBuildingPropertyResponse
+// >;
+// export type UpdateLandPropertyResponseType = z.infer<typeof UpdateLandPropertyResponse>;
+
+// LandTitleItemRequest type
+export type LandTitleItemRequestType = z.infer<typeof LandTitleItemRequest>;
+
+// Task types
+export type TaskItemType = z.infer<typeof TaskItem>;
+export type PaginatedResultOfTaskItemType = z.infer<typeof PaginatedResultOfTaskItem>;
+export type GetTasksResponseType = z.infer<typeof GetTasksResponse>;
+
+// Assignment types
+export type AssignmentDtoType = z.infer<typeof AssignmentDto>;
+export type GetAssignmentsResponseType = z.infer<typeof GetAssignmentsResponse>;
+export type AssignAppraisalRequestType = z.infer<typeof AssignAppraisalRequest>;
+export type AssignAppraisalResponseType = z.infer<typeof AssignAppraisalResponse>;
+export type RejectAssignmentRequestType = z.infer<typeof RejectAssignmentRequest>;
+export type CancelAssignmentRequestType = z.infer<typeof CancelAssignmentRequest>;
+
+// Quotation types
+export type QuotationDtoType = z.infer<typeof QuotationDto>;
+export type PaginatedResultOfQuotationDtoType = z.infer<typeof PaginatedResultOfQuotationDto>;
+export type GetQuotationsResponseType = z.infer<typeof GetQuotationsResponse>;
+export type CreateQuotationRequestType = z.infer<typeof CreateQuotationRequest>;
+export type CreateQuotationResponseType = z.infer<typeof CreateQuotationResponse>;
+export type GetQuotationByIdResponseType = z.infer<typeof GetQuotationByIdResponse>;
+
+// Market Comparable types
+export type MarketComparableDtoType = z.infer<typeof MarketComparableDto>;
+export type PaginatedResultOfMarketComparableDtoType = z.infer<
+  typeof PaginatedResultOfMarketComparableDto
+>;
+export type GetMarketComparablesResponseType = z.infer<typeof GetMarketComparablesResponse>;
+export type CreateMarketComparableRequestType = z.infer<typeof CreateMarketComparableRequest>;
+export type CreateMarketComparableResponseType = z.infer<typeof CreateMarketComparableResponse>;
+export type MarketComparableDetailDtoType = z.infer<typeof MarketComparableDetailDto>;
+export type GetMarketComparableByIdResponseType = z.infer<typeof GetMarketComparableByIdResponse>;
+export type MarketComparableTemplateDtoType = z.infer<typeof MarketComparableTemplateDto>;
+export type GetMarketComparableTemplatesResponseType = z.infer<
+  typeof GetMarketComparableTemplatesResponse
+>;
+export type MarketComparableFactorDtoType = z.infer<typeof MarketComparableFactorDto>;
+export type GetMarketComparableFactorsResponseType = z.infer<
+  typeof GetMarketComparableFactorsResponse
+>;
+export type UpdateMarketComparableRequestType = z.infer<typeof UpdateMarketComparableRequest>;
+export type UpdateMarketComparableResponseType = z.infer<typeof UpdateMarketComparableResponse>;
+export type GetMarketComparableTemplateByIdResponseType = z.infer<
+  typeof GetMarketComparableTemplateByIdResponse
+>;
+export type DeleteMarketComparableResponseType = z.infer<typeof DeleteMarketComparableResponse>;
+
+// Appraisal Comparable types
+export type LinkAppraisalComparableRequestType = z.infer<typeof LinkAppraisalComparableRequest>;
+export type LinkAppraisalComparableResponseType = z.infer<typeof LinkAppraisalComparableResponse>;
+export type ComparableAdjustmentDtoType = z.infer<typeof ComparableAdjustmentDto>;
+export type AppraisalComparableDtoType = z.infer<typeof AppraisalComparableDto>;
+export type GetAppraisalComparablesResponseType = z.infer<typeof GetAppraisalComparablesResponse>;
+
+// Appointment types
+export type AppointmentDto2Type = z.infer<typeof AppointmentDto2>;
+export type GetAppointmentsResponseType = z.infer<typeof GetAppointmentsResponse>;
+export type CreateAppointmentRequestType = z.infer<typeof CreateAppointmentRequest>;
+export type CreateAppointmentResponseType = z.infer<typeof CreateAppointmentResponse>;
+export type RescheduleAppointmentRequestType = z.infer<typeof RescheduleAppointmentRequest>;
+export type CancelAppointmentRequestType = z.infer<typeof CancelAppointmentRequest>;
+export type ApproveAppointmentRequestType = z.infer<typeof ApproveAppointmentRequest>;
+
+// Fee types
+export type AppraisalFeeItemDtoType = z.infer<typeof AppraisalFeeItemDto>;
+export type AppraisalFeeDtoType = z.infer<typeof AppraisalFeeDto>;
+export type GetAppraisalFeesResponseType = z.infer<typeof GetAppraisalFeesResponse>;
+// export type CreateAppraisalFeeRequestType = z.infer<typeof CreateAppraisalFeeRequest>;
+// export type CreateAppraisalFeeResponseType = z.infer<typeof CreateAppraisalFeeResponse>;
+export type ApproveFeeItemRequestType = z.infer<typeof ApproveFeeItemRequest>;
+export type RejectFeeItemRequestType = z.infer<typeof RejectFeeItemRequest>;
+export type RecordPaymentRequestType = z.infer<typeof RecordPaymentRequest>;
+export type UpdatePaymentRequestType = z.infer<typeof UpdatePaymentRequest>;
+export type AddFeeItemRequestType = z.infer<typeof AddFeeItemRequest>;
+export type UpdateFeeItemRequestType = z.infer<typeof UpdateFeeItemRequest>;
+
+// Document Checklist types
+export type DocumentChecklistItemDtoType = z.infer<typeof DocumentChecklistItemDto>;
+export type PropertyTypeDocumentGroupDtoType = z.infer<typeof PropertyTypeDocumentGroupDto>;
+export type GetDocumentChecklistResponseType = z.infer<typeof GetDocumentChecklistResponse>;
+export type DocumentTypeDtoType = z.infer<typeof DocumentTypeDto>;
+export type GetDocumentTypesResponseType = z.infer<typeof GetDocumentTypesResponse>;
+export type DocumentRequirementDtoType = z.infer<typeof DocumentRequirementDto>;
+export type GetDocumentRequirementsResponseType = z.infer<typeof GetDocumentRequirementsResponse>;
+
+// Gallery types
+export type GalleryPhotoDtoType = z.infer<typeof GalleryPhotoDto>;
+export type GetGalleryPhotosResultType = z.infer<typeof GetGalleryPhotosResult>;
+export type AddGalleryPhotoRequestType = z.infer<typeof AddGalleryPhotoRequest>;
+export type AddGalleryPhotoResponseType = z.infer<typeof AddGalleryPhotoResponse>;
+export type UpdateGalleryPhotoRequestType = z.infer<typeof UpdateGalleryPhotoRequest>;
+export type UpdateGalleryPhotoResponseType = z.infer<typeof UpdateGalleryPhotoResponse>;
+// export type MarkPhotoForReportRequestType = z.infer<typeof MarkPhotoForReportRequest>;
+// export type MarkPhotoForReportResultType = z.infer<typeof MarkPhotoForReportResult>;
+// export type UnmarkPhotoFromReportResultType = z.infer<typeof UnmarkPhotoFromReportResult>;
+export type LinkPhotoToPropertyRequestType = z.infer<typeof LinkPhotoToPropertyRequest>;
+export type LinkPhotoToPropertyResponseType = z.infer<typeof LinkPhotoToPropertyResponse>;
+
+// Photo Topic types
+export type TopicPhotoDtoType = z.infer<typeof TopicPhotoDto>;
+export type PhotoTopicDtoType = z.infer<typeof PhotoTopicDto>;
+export type GetPhotoTopicsResultType = z.infer<typeof GetPhotoTopicsResult>;
+export type CreatePhotoTopicRequestType = z.infer<typeof CreatePhotoTopicRequest>;
+export type CreatePhotoTopicResultType = z.infer<typeof CreatePhotoTopicResult>;
+export type UpdatePhotoTopicRequestType = z.infer<typeof UpdatePhotoTopicRequest>;
+export type UpdatePhotoTopicResultType = z.infer<typeof UpdatePhotoTopicResult>;
+export type AssignPhotoToTopicRequestType = z.infer<typeof AssignPhotoToTopicRequest>;
+export type AssignPhotoToTopicResultType = z.infer<typeof AssignPhotoToTopicResult>;
+
+// Property photos & DnD reorder/move
+export type PropertyPhotoDtoType = z.infer<typeof PropertyPhotoDto>;
+export type ReorderPropertiesInGroupRequestType = z.infer<typeof ReorderPropertiesInGroupRequest>;
+export type ReorderPropertiesInGroupResponseType = z.infer<typeof ReorderPropertiesInGroupResponse>;
+export type MovePropertyToGroupRequestType = z.infer<typeof MovePropertyToGroupRequest>;
+export type MovePropertyToGroupResponseType = z.infer<typeof MovePropertyToGroupResponse>;
+export type RemovePropertyFromGroupResponseType = z.infer<typeof RemovePropertyFromGroupResponse>;
+export type SetPropertyThumbnailResultType = z.infer<typeof SetPropertyThumbnailResult>;
+export type UnsetPropertyThumbnailResultType = z.infer<typeof UnsetPropertyThumbnailResult>;
+
+// Law and Regulation types
+export type LawAndRegulationImageDtoType = z.infer<typeof LawAndRegulationImageDto>;
+export type LawAndRegulationDtoType = z.infer<typeof LawAndRegulationDto>;
+export type GetLawAndRegulationsResultType = z.infer<typeof GetLawAndRegulationsResult>;
+export type LawAndRegulationImageInputType = z.infer<typeof LawAndRegulationImageInput>;
+export type LawAndRegulationItemInputType = z.infer<typeof LawAndRegulationItemInput>;
+export type SaveLawAndRegulationsRequestType = z.infer<typeof SaveLawAndRegulationsRequest>;
+export type SaveLawAndRegulationsResponseType = z.infer<typeof SaveLawAndRegulationsResponse>;
+
+// Market Comparable Factor types (for template management)
+export type CreateMarketComparableFactorRequestType = z.infer<
+  typeof CreateMarketComparableFactorRequest
+>;
+export type UpdateMarketComparableFactorRequestType = z.infer<
+  typeof UpdateMarketComparableFactorRequest
+>;
+
+// Market Comparable Template detail types
+export type MarketComparableTemplateDetailDtoType = z.infer<
+  typeof MarketComparableTemplateDetailDto
+>;
+export type CreateMarketComparableTemplateRequestType = z.infer<
+  typeof CreateMarketComparableTemplateRequest
+>;
+export type UpdateMarketComparableTemplateRequestType = z.infer<
+  typeof UpdateMarketComparableTemplateRequest
+>;
+export type TemplateFactorDtoType = z.infer<typeof TemplateFactorDto>;
+export type AddFactorToTemplateRequestType = z.infer<typeof AddFactorToTemplateRequest>;
+
+// Comparative Analysis Template types
+export type TemplateDtoType = z.infer<typeof TemplateDto>;
+export type GetComparativeAnalysisTemplateByIdResponseType = z.infer<
+  typeof GetComparativeAnalysisTemplateByIdResponse
+>;
+export type GetComparativeAnalysisTemplatesResponseType = z.infer<
+  typeof GetComparativeAnalysisTemplatesResponse
+>;
+export type CreateComparativeAnalysisTemplateRequestType = z.infer<
+  typeof CreateComparativeAnalysisTemplateRequest
+>;
+export type CreateComparativeAnalysisTemplateResponseType = z.infer<
+  typeof CreateComparativeAnalysisTemplateResponse
+>;
+export type UpdateComparativeAnalysisTemplateRequestType = z.infer<
+  typeof UpdateComparativeAnalysisTemplateRequest
+>;
+export type TemplateFactorDto2Type = z.infer<typeof TemplateFactorDto2>;
+export type AddFactorToTemplateRequest2Type = z.infer<typeof AddFactorToTemplateRequest2>;

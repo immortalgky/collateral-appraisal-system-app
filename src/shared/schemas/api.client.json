@@ -13605,8 +13605,8 @@
             "default": null,
             "nullable": true
           },
-          "isDocumentValidated": {
-            "type": "boolean",
+          "documentValidationResultType": {
+            "type": "string",
             "default": null,
             "nullable": true
           },
@@ -17998,7 +17998,7 @@
           "buildingConditionType",
           "hasObligation",
           "obligationDetails",
-          "isDocumentValidated",
+          "documentValidationResultType",
           "locationType",
           "street",
           "soi",
@@ -18152,8 +18152,8 @@
             "type": "string",
             "nullable": true
           },
-          "isDocumentValidated": {
-            "type": "boolean",
+          "documentValidationResultType": {
+            "type": "string",
             "nullable": true
           },
           "locationType": {
@@ -21427,8 +21427,8 @@
             "default": null,
             "nullable": true
           },
-          "hasBoundaryMarker": {
-            "type": "boolean",
+          "boundaryMarkerType": {
+            "type": "string",
             "default": null,
             "nullable": true
           },
@@ -21437,8 +21437,8 @@
             "default": null,
             "nullable": true
           },
-          "isDocumentValidated": {
-            "type": "boolean",
+          "documentValidationResultType": {
+            "type": "string",
             "default": null,
             "nullable": true
           },
@@ -21534,8 +21534,8 @@
             "default": null,
             "nullable": true
           },
-          "hasBoundaryMarker": {
-            "type": "boolean",
+          "boundaryMarkerType": {
+            "type": "string",
             "default": null,
             "nullable": true
           },
@@ -21544,8 +21544,8 @@
             "default": null,
             "nullable": true
           },
-          "isDocumentValidated": {
-            "type": "boolean",
+          "documentValidationResultType": {
+            "type": "string",
             "default": null,
             "nullable": true
           },
@@ -25547,8 +25547,8 @@
             "default": null,
             "nullable": true
           },
-          "isDocumentValidated": {
-            "type": "boolean",
+          "documentValidationResultType": {
+            "type": "string",
             "default": null,
             "nullable": true
           },
