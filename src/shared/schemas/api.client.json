@@ -241,7 +241,7 @@
       }
     },
     "/requests/{id}/draft": {
-      "patch": {
+      "put": {
         "tags": ["Requests"],
         "summary": "Update a draft request",
         "description": "Updates an existing draft request.",
@@ -18268,7 +18268,10 @@
             "nullable": true
           },
           "roofType": {
-            "type": "string",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "nullable": true
           },
           "roofTypeOther": {
