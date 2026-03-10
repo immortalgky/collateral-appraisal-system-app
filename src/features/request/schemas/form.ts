@@ -145,7 +145,7 @@ const createRequestFormBase = z.object({
   detail: RequestDetailDto,
   customers: z.array(RequestCustomerDto),
   properties: z.array(RequestPropertyDto),
-  titles: z.array(RequestTitleDto),
+  titles: z.array(RequestTitleDto).min(1, 'titles must have at least 1 item(s)'),
   documents: z.array(RequestDocumentDto),
   comments: z.array(RequestCommentDto),
 });

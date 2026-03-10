@@ -201,11 +201,11 @@ const RequestDocumentDto = z
   .passthrough();
 const UpdateRequestRequest = z
   .object({
-    purpose: z.string().nullable(),
-    channel: z.string().nullable(),
+    purpose: z.string(),
+    channel: z.string(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string().nullable(),
+    priority: z.string(),
     isPma: z.boolean(),
     detail: RequestDetailDto.nullable(),
     customers: z.array(RequestCustomerDto).nullable(),
@@ -235,19 +235,53 @@ const GetRequestByIdResponse = z
   .partial()
   .passthrough();
 const DeleteRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
+const RequestDetailDto2 = z
+  .object({
+    hasAppraisalBook: z.boolean(),
+    loanDetail: LoanDetailDto.nullable(),
+    prevAppraisalId: z.string().uuid().nullable(),
+    address: AddressDto2.nullable(),
+    contact: ContactDto.nullable(),
+    appointment: AppointmentDto.nullable(),
+    fee: FeeDto.nullable(),
+  })
+  .passthrough();
+const SourceSystemDto = z
+  .object({
+    channel: z.string().nullable(),
+    requestDate: z.string().datetime({ offset: true }).nullable(),
+    requestBy: z.string().nullable(),
+    requestByName: z.string().nullable(),
+    createdDate: z.string().datetime({ offset: true }),
+    creator: z.string().nullable(),
+    creatorName: z.string().nullable(),
+  })
+  .passthrough();
+const RequestCommentDto = z
+  .object({
+    id: z.string().uuid(),
+    requestId: z.string().uuid(),
+    comment: z.string(),
+    commentedBy: z.string(),
+    commentedByName: z.string(),
+    commentedAt: z.string().datetime({ offset: true }),
+    lastModifiedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
 const UpdateDraftRequestRequest = z
   .object({
-    purpose: z.string().nullable(),
-    channel: z.string().nullable(),
-    requestor: UserInfoDto,
-    creator: UserInfoDto,
-    priority: z.string().nullable(),
-    isPma: z.boolean(),
-    detail: RequestDetailDto.nullable(),
+    id: z.string().uuid(),
+    sessionId: z.string().uuid(),
+    detail: RequestDetailDto2,
+    isPMA: z.boolean(),
+    purpose: z.string(),
+    priority: z.string(),
+    sourceSystem: SourceSystemDto,
     customers: z.array(RequestCustomerDto).nullable(),
     properties: z.array(RequestPropertyDto).nullable(),
-    titles: z.array(RequestTitleDto).nullable(),
     documents: z.array(RequestDocumentDto).nullable(),
+    comments: z.array(RequestCommentDto),
+    titles: z.array(RequestTitleDto),
   })
   .passthrough();
 const UpdateDraftRequestResponse = z.object({ isSuccess: z.boolean() }).passthrough();
@@ -272,50 +306,38 @@ const PaginatedResultOfGetRequestListItem = z
   })
   .passthrough();
 const GetRequestsResponse = z.object({ result: PaginatedResultOfGetRequestListItem }).passthrough();
-const RequestCommentDto = z
-  .object({
-    id: z.string().uuid(),
-    requestId: z.string().uuid(),
-    comment: z.string(),
-    commentedBy: z.string(),
-    commentedByName: z.string(),
-    commentedAt: z.string().datetime({ offset: true }),
-    lastModifiedAt: z.string().datetime({ offset: true }).nullable(),
-  })
-  .passthrough();
 const CreateRequestRequest = z
   .object({
-    sessionId: z.string().uuid().nullable(),
-    purpose: z.string().nullable(),
-    channel: z.string().nullable(),
+    sessionId: z.string().uuid(),
+    purpose: z.string(),
+    channel: z.string(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string().nullable(),
+    priority: z.string(),
     isPma: z.boolean(),
-    detail: RequestDetailDto.nullable(),
-    customers: z.array(RequestCustomerDto).nullable(),
-    properties: z.array(RequestPropertyDto).nullable(),
-    titles: z.array(RequestTitleDto).nullable(),
-    documents: z.array(RequestDocumentDto).nullable(),
-    comments: z.array(RequestCommentDto).nullable(),
+    detail: RequestDetailDto2,
+    customers: z.array(RequestCustomerDto),
+    properties: z.array(RequestPropertyDto),
+    titles: z.array(RequestTitleDto),
+    documents: z.array(RequestDocumentDto),
+    comments: z.array(RequestCommentDto),
   })
   .passthrough();
 const CreateRequestResponse = z.object({ id: z.string().uuid() }).passthrough();
 const CreateDraftRequestRequest = z
   .object({
-    sessionId: z.string().uuid().nullable(),
-    purpose: z.string().nullable(),
-    channel: z.string().nullable(),
+    sessionId: z.string().uuid(),
+    purpose: z.string(),
+    channel: z.string(),
     requestor: UserInfoDto,
     creator: UserInfoDto,
-    priority: z.string().nullable(),
+    priority: z.string(),
     isPma: z.boolean(),
-    detail: RequestDetailDto.nullable(),
-    customers: z.array(RequestCustomerDto).nullable(),
-    properties: z.array(RequestPropertyDto).nullable(),
-    titles: z.array(RequestTitleDto).nullable(),
-    documents: z.array(RequestDocumentDto).nullable(),
-    comments: z.array(RequestCommentDto).nullable(),
+    detail: RequestDetailDto2,
+    customers: z.array(RequestCustomerDto),
+    properties: z.array(RequestPropertyDto),
+    documents: z.array(RequestDocumentDto),
+    comments: z.array(RequestCommentDto),
   })
   .passthrough();
 const CreateDraftRequestResponse = z.object({ id: z.string().uuid() }).passthrough();
@@ -1243,9 +1265,6 @@ const SaveComparativeAnalysisResponse = z
   })
   .passthrough();
 const ResetPricingMethodResult = z
-  .object({ methodId: z.string().uuid(), success: z.boolean() })
-  .passthrough();
-const RemoveMethodResult = z
   .object({ methodId: z.string().uuid(), success: z.boolean() })
   .passthrough();
 const RecalculateFactorsResponse = z
@@ -3042,7 +3061,7 @@ const UpdateCondoPropertyRequest = z
     upperFloorMaterialTypeOther: z.string().nullable().default(null),
     bathroomFloorMaterialType: z.string().nullable().default(null),
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
-    roofType: z.array(z.string()).nullable().default(null),
+    roofType: z.string().nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
     areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable().default(null),
     totalBuildingArea: z.number().nullable().default(null),
@@ -3998,7 +4017,7 @@ const CreateCondoPropertyRequest = z
     upperFloorMaterialTypeOther: z.string().nullable().default(null),
     bathroomFloorMaterialType: z.string().nullable().default(null),
     bathroomFloorMaterialTypeOther: z.string().nullable().default(null),
-    roofType: z.array(z.string()).nullable().default(null),
+    roofType: z.string().nullable().default(null),
     roofTypeOther: z.string().nullable().default(null),
     areaDetails: z.array(CondoAppraisalAreaDetailDto).nullable().default(null),
     totalBuildingArea: z.number().nullable().default(null),
@@ -4206,17 +4225,6 @@ const ResubmitRequestResult = z
     errorCode: z.string().nullish().default(null),
   })
   .passthrough();
-const RequestDetailDto2 = z
-  .object({
-    hasAppraisalBook: z.boolean(),
-    loanDetail: LoanDetailDto.nullable(),
-    prevAppraisalId: z.string().uuid().nullable(),
-    address: AddressDto2.nullable(),
-    contact: ContactDto.nullable(),
-    appointment: AppointmentDto.nullable(),
-    fee: FeeDto.nullable(),
-  })
-  .passthrough();
 const CreateRequestRequest2 = z
   .object({
     uploadSessionId: z.string().nullable(),
@@ -4284,13 +4292,15 @@ export const schemas = {
   UpdateRequestResponse,
   GetRequestByIdResponse,
   DeleteRequestResponse,
+  RequestDetailDto2,
+  SourceSystemDto,
+  RequestCommentDto,
   UpdateDraftRequestRequest,
   UpdateDraftRequestResponse,
   SubmitRequestResponse,
   GetRequestListItem,
   PaginatedResultOfGetRequestListItem,
   GetRequestsResponse,
-  RequestCommentDto,
   CreateRequestRequest,
   CreateRequestResponse,
   CreateDraftRequestRequest,
@@ -4415,7 +4425,6 @@ export const schemas = {
   SaveComparativeAnalysisRequest,
   SaveComparativeAnalysisResponse,
   ResetPricingMethodResult,
-  RemoveMethodResult,
   RecalculateFactorsResponse,
   LinkComparableRequest,
   LinkComparableResponse,
@@ -4646,7 +4655,6 @@ export const schemas = {
   UploadDocumentResponse2,
   GetDocumentResponse,
   ResubmitRequestResult,
-  RequestDetailDto2,
   CreateRequestRequest2,
   CreateRequestResponse2,
   SimulateTaskCompletionRequest,

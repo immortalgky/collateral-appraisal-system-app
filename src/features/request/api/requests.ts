@@ -16,6 +16,10 @@ const {
   UpdateRequestResponse,
   DeleteRequestResponse,
   SubmitRequestResponse,
+  CreateDraftRequestRequest,
+  CreateDraftRequestResponse,
+  UpdateDraftRequestRequest,
+  UpdateDraftRequestResponse,
 } = schemas;
 
 // Types for API responses
@@ -25,6 +29,10 @@ export type UpdateRequestRequestType = z.infer<typeof UpdateRequestRequest>;
 export type UpdateRequestResponseType = z.infer<typeof UpdateRequestResponse>;
 export type DeleteRequestResponseType = z.infer<typeof DeleteRequestResponse>;
 export type SubmitRequestResponseType = z.infer<typeof SubmitRequestResponse>;
+export type CreateDraftRequestRequestType = z.infer<typeof CreateDraftRequestRequest>;
+export type CreateDraftRequestResponseType = z.infer<typeof CreateDraftRequestResponse>;
+export type UpdateDraftRequestRequestType = z.infer<typeof UpdateDraftRequestRequest>;
+export type UpdateDraftRequestResponseType = z.infer<typeof UpdateDraftRequestResponse>;
 
 // Query params for request listing
 export interface GetRequestsParams {
@@ -164,6 +172,49 @@ export const useDeleteRequest = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['requests'] });
+    },
+  });
+};
+
+/**
+ * Hook for creating a new draft request
+ * POST /requests/draft
+ */
+export const useCreateDraftRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: CreateDraftRequestRequestType): Promise<CreateDraftRequestResponseType> => {
+      const { data } = await axios.post('/requests/draft', request);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['requests'] });
+    },
+  });
+};
+
+/**
+ * Hook for updating an existing draft request
+ * PUT /requests/{id}/draft
+ */
+export const useUpdateDraftRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      request,
+    }: {
+      id: string;
+      request: UpdateDraftRequestRequestType;
+    }): Promise<UpdateDraftRequestResponseType> => {
+      const { data } = await axios.put(`/requests/${id}/draft`, request);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
   });
 };
