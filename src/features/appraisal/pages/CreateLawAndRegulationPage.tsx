@@ -72,7 +72,7 @@ const CreateLawAndRegulationPage = () => {
   });
 
   const { formState: { isDirty } } = methods;
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // Image & UI state
   const [images, setImages] = useState<LocalImage[]>([]);
@@ -447,6 +447,7 @@ const CreateLawAndRegulationPage = () => {
           onSuccess: () => {
             toast.success(action === 'draft' ? 'Draft saved' : 'Saved successfully');
             setSaveAction(null);
+            skipWarning();
             navigateBack();
           },
           onError: () => {
