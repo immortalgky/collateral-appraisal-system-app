@@ -1785,11 +1785,7 @@ export const materialAndStyleField: FormField[] = [
   ...constructionStyleField,
 ];
 
-export const roofAndCeilingField: FormField[] = [
-  ...roofFrameField,
-  ...roofField,
-  ...ceilingField,
-];
+export const roofAndCeilingField: FormField[] = [...roofFrameField, ...roofField, ...ceilingField];
 
 export const constructionAndUseField: FormField[] = [
   ...fenceField,
@@ -2149,3 +2145,227 @@ export const landtitlesFields: FormField[] = [
     decimalPlaces: 2,
   },
 ];
+
+// =============================================================================
+// PMA fields
+// =============================================================================
+export const pmaField: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Selling Price',
+    name: 'sellingPrice',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxIntegerDigits: 15,
+  },
+  {
+    type: 'number-input',
+    label: 'Force Selling Price',
+    name: 'forcedSalePrice',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxIntegerDigits: 15,
+  },
+  {
+    type: 'number-input',
+    label: 'Building Insurance',
+    name: 'buildingInsurancePrice',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxIntegerDigits: 15,
+  },
+];
+
+// =============================================================================
+// Land and building PMA fields
+// =============================================================================
+
+export const landAndBuildingPMAFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Rawang',
+    name: 'rawang',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 30,
+  },
+  {
+    type: 'text-input',
+    label: 'Land No.',
+    name: 'landNo',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Survey No.',
+    name: 'surveyNo',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Title Deed No.',
+    name: 'titleNo',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 200,
+  },
+  {
+    type: 'text-input',
+    label: 'Book No.',
+    name: 'bookNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Page No.',
+    name: 'pageNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'number-input',
+    label: 'Rai',
+    name: 'areaRai',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    decimalPlaces: 0,
+    maxIntegerDigits: 5,
+  },
+  {
+    type: 'number-input',
+    label: 'Ngan',
+    name: 'areaNgan',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    decimalPlaces: 0,
+    maxIntegerDigits: 1,
+    max: 3,
+  },
+  {
+    type: 'number-input',
+    label: 'Wa',
+    name: 'areaSquareWa',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'districtName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'provinceName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+];
+
+// =============================================================================
+// Condominium PMA fields
+// =============================================================================
+export const condoPMAFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Construction on Title Deed No.',
+    name: 'builtOnTitleNumber',
+    wrapperClassName: 'col-span-6',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'Condominium Registration No.',
+    name: 'condoRegistrationNumber',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'Condominium Name.',
+    name: 'condoName',
+    wrapperClassName: 'col-span-6',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'Room No.',
+    name: 'roomNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'Floor No.',
+    name: 'floorNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'Building No.',
+    name: 'buildingNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+  },
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'districtName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'provinceName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+];
+
+export const allCondoPMAFields: FormField[] = [...pmaField, ...condoPMAFields];
+
+export const allLandAndBuildingPMAFields: FormField[] = [...pmaField, ...landAndBuildingPMAFields];

@@ -1,10 +1,10 @@
 import type {
-  condoPMAFormType,
+  createCondoPMAFormType,
   createBuildingFormType,
   createCondoFormType,
   createLandAndBuildingFormType,
   createLandFormType,
-  landAndBuildingPMAFormType,
+  createLandAndBuildingPMAFormType,
 } from '@/features/appraisal/schemas/form';
 import type {
   GetLandPropertyResponseType,
@@ -401,7 +401,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
 
 export const mapLandAndBuildingPMAPropertyResponseToForm = (
   response: GetLandAndBuildingPMAPropertyByIdResultType,
-): landAndBuildingPMAFormType => {
+): createLandAndBuildingPMAFormType => {
   const addressLookup = response.subDistrict
     ? findAddressBySubDistrictCode(response.subDistrict)
     : undefined;
@@ -429,7 +429,7 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
 
 export const mapCondoPMAPropertyResponseToForm = (
   response: GetCondoPMAPropertyByIdResultType,
-): condoPMAFormType => {
+): createCondoPMAFormType => {
   const addressLookup = response.subDistrict
     ? findAddressBySubDistrictCode(response.subDistrict)
     : undefined;

@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  landAndBuildingPMAForm,
-  landAndBuildingPMAFormDefault,
-  type landAndBuildingPMAFormType,
+  createLandAndBuildingPMAForm,
+  createLandAndBuildingPMAFormDefault,
+  type createLandAndBuildingPMAFormType,
 } from '../schemas/form';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
@@ -22,11 +22,16 @@ const LandBuildingPMAPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
 
-  const methods = useForm<landAndBuildingPMAFormType>({
-    defaultValues: landAndBuildingPMAFormDefault,
-    resolver: zodResolver(landAndBuildingPMAForm),
+  const methods = useForm<createLandAndBuildingPMAFormType>({
+    defaultValues: createLandAndBuildingPMAFormDefault,
+    resolver: zodResolver(createLandAndBuildingPMAForm),
   });
-  const { handleSubmit, getValues, reset, formState: { isDirty } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { isDirty },
+  } = methods;
 
   const { blocker } = useUnsavedChangesWarning(isDirty);
 
@@ -43,7 +48,7 @@ const LandBuildingPMAPage = () => {
   const isLoading = false;
   const isPending = false;
 
-  const onSubmit: SubmitHandler<landAndBuildingPMAFormType> = data => {
+  const onSubmit: SubmitHandler<createLandAndBuildingPMAFormType> = data => {
     setSaveAction('submit');
 
     //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
@@ -85,7 +90,7 @@ const LandBuildingPMAPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={landAndBuildingPMAForm}>
+      <FormProvider methods={methods} schema={createLandAndBuildingPMAForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -100,7 +105,11 @@ const LandBuildingPMAPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  <Section id="pma-section" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="pma-section"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <LandBuildingPMAForm />
                   </Section>
                 </div>
