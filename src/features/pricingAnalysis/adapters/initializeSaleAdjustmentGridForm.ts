@@ -10,7 +10,11 @@ import type {
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue';
 import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetSaleAdjustmentGridInitialValueProps {
@@ -73,7 +77,7 @@ export function initializeSaleAdjustmentGridForm({
               marketId: survey.id,
               offeringPrice: survey.offerPrice ?? 0,
               offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
               offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
               sellingPrice: survey.salePrice ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
@@ -99,6 +103,7 @@ export function initializeSaleAdjustmentGridForm({
           finalValueRounded: 0,
         },
         saleAdjustmentGridAppraisalPrice: {
+          includeLandArea: false,
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
@@ -158,7 +163,7 @@ export function initializeSaleAdjustmentGridForm({
             marketId: survey.id,
             offeringPrice: survey.offerPrice ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
             offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
             sellingPrice: survey.salePrice ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
@@ -192,6 +197,7 @@ export function initializeSaleAdjustmentGridForm({
         finalValueRounded: 0,
       },
       saleAdjustmentGridAppraisalPrice: {
+        includeLandArea: false,
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,

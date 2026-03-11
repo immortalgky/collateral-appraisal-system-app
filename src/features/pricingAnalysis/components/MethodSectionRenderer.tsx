@@ -3,9 +3,7 @@ import { SaleAdjustmentGridPanel } from '@features/pricingAnalysis/components/Sa
 import { DirectComparisonPanel } from '@features/pricingAnalysis/components/DirectComparisonPanel.tsx';
 import { WQSPanel } from '@features/pricingAnalysis/components/WQSPanel.tsx';
 import type { PricingServerData } from '../types/selection';
-import type {
-  GetComparativeFactorsResponseType,
-} from '../schemas';
+import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface MethodSectionRendererProps {
@@ -15,7 +13,11 @@ interface MethodSectionRendererProps {
     comparativeFactors: GetComparativeFactorsResponseType | undefined;
     templateList: TemplateDtoType[] | undefined;
   };
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -38,7 +40,8 @@ export function MethodSectionRenderer({
     savedComparativeFactors: calculationMethodData.comparativeFactors?.comparativeFactors,
     savedFactorScores: calculationMethodData.comparativeFactors?.factorScores,
     savedCalculations: calculationMethodData.comparativeFactors?.calculations,
-    savedComparativeAnalysisTemplateId: calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
+    savedComparativeAnalysisTemplateId:
+      calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
     savedMethodValue: calculationMethodData.comparativeFactors?.methodValue ?? null,
     onCalculationSave,
     onCalculationMethodDirty,
