@@ -99,7 +99,7 @@ const CreateLandPage = () => {
             toast.success('Property land created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisal/${appraisalId}/property/land/${response.propertyId}`);
+            navigate(`/appraisals/${appraisalId}/property/land/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -149,7 +149,7 @@ const CreateLandPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisal/${appraisalId}/property/land/${response.propertyId}`);
+              navigate(`/appraisals/${appraisalId}/property/land/${response.propertyId}`);
             }
           },
           onError: (error: any) => {

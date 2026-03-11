@@ -202,7 +202,7 @@ const CreateMarketComparablePage = () => {
           skipWarning();
           toast.success('Market comparable created successfully');
           if (appraisalId) {
-            navigate(`/appraisal/${appraisalId}/property/market-comparable/${response.id}`);
+            navigate(`/appraisals/${appraisalId}/property/market-comparable/${response.id}`);
           } else {
             navigate(`/market-comparable/detail?id=${response.id}`);
           }

@@ -74,11 +74,11 @@ export const LawsRegulationTab = () => {
   const [deleteTarget, setDeleteTarget] = useState<LawAndRegulationDtoType | null>(null);
 
   const handleCreate = () => {
-    navigate(`/appraisal/${appraisalId}/property/law-and-regulation/new`);
+    navigate(`/appraisals/${appraisalId}/property/law-and-regulation/new`);
   };
 
   const handleItemClick = (item: LawAndRegulationDtoType) => {
-    navigate(`/appraisal/${appraisalId}/property/law-and-regulation/${item.id}`);
+    navigate(`/appraisals/${appraisalId}/property/law-and-regulation/${item.id}`);
   };
 
   const handleDeleteConfirm = () => {

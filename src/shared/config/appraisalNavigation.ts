@@ -15,7 +15,7 @@ import { isTerminalStatus } from './navigation';
 export const applicationNavigation: NavItem[] = [
   {
     name: 'Request Information',
-    href: '/appraisal/:appraisalId/request/:requestId',
+    href: '/appraisals/:appraisalId/request/:requestId',
     icon: 'square-info',
     iconColor: 'text-emerald-500',
     iconStyle: 'solid',
@@ -24,7 +24,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Administration',
-    href: '/appraisal/:appraisalId/administration',
+    href: '/appraisals/:appraisalId/administration',
     icon: 'user-tie',
     iconColor: 'text-indigo-500',
     iconStyle: 'solid',
@@ -33,7 +33,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Appointment & Fee',
-    href: '/appraisal/:appraisalId/appointment',
+    href: '/appraisals/:appraisalId/appointment',
     icon: 'calendar-check',
     iconColor: 'text-orange-500',
     iconStyle: 'solid',
@@ -49,7 +49,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Property Information',
-    href: '/appraisal/:appraisalId/property',
+    href: '/appraisals/:appraisalId/property',
     icon: 'buildings',
     iconColor: 'text-purple-500',
     iconStyle: 'solid',
@@ -65,7 +65,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Property Information (PMA)',
-    href: '/appraisal/:appraisalId/property-pma',
+    href: '/appraisals/:appraisalId/property-pma',
     icon: 'buildings',
     iconColor: 'text-purple-500',
     iconStyle: 'solid',
@@ -82,7 +82,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Document Checklist',
-    href: '/appraisal/:appraisalId/documents',
+    href: '/appraisals/:appraisalId/documents',
     icon: 'file-circle-check',
     iconColor: 'text-teal-500',
     iconStyle: 'solid',
@@ -98,7 +98,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Summary & Decision',
-    href: '/appraisal/:appraisalId/summary',
+    href: '/appraisals/:appraisalId/summary',
     icon: 'paper-plane',
     iconColor: 'text-sky-500',
     iconStyle: 'solid',
@@ -145,7 +145,7 @@ export const generalNavigationCompact: NavItem[] = [
   },
   {
     name: 'Appraisal Search',
-    href: '/appraisal/search',
+    href: '/appraisals/search',
     icon: 'magnifying-glass',
     iconColor: 'text-cyan-500',
     iconStyle: 'solid',
@@ -344,7 +344,7 @@ export const getPageAccessByPath = (
   role: WorkflowActivity,
   context?: NavContext,
 ): { canView: boolean; canEdit: boolean } => {
-  // Extract the page segment from paths like /appraisal/:id/administration
+  // Extract the page segment from paths like /appraisals/:id/administration
   const pathSegments = path.split('/').filter(Boolean);
   const pageSegment = pathSegments[2]; // 'administration', 'appointment', etc.
 

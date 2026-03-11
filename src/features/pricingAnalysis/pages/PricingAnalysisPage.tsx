@@ -93,7 +93,7 @@ function PricingAnalysisPage() {
           });
         }
         navigate(
-          `/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`,
+          `/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`,
           { replace: true },
         );
       })

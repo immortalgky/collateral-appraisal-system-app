@@ -34,6 +34,7 @@ const landInformationFields: FormField[] = [
     provinceNameField: 'provinceName',
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
     wrapperClassName: 'col-span-3',
   },
 

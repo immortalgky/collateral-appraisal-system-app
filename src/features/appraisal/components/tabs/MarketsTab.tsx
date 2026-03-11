@@ -38,12 +38,12 @@ export const MarketsTab = () => {
 
   const handleCreateSelect = (_type: string, _groupId: string, code: string) => {
     navigate(
-      `/appraisal/${appraisalId}/property/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
+      `/appraisals/${appraisalId}/property/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
     );
   };
 
   const handleViewComparable = (marketComparableId: string) => {
-    navigate(`/appraisal/${appraisalId}/property/market-comparable/${marketComparableId}`);
+    navigate(`/appraisals/${appraisalId}/property/market-comparable/${marketComparableId}`);
   };
 
   const handleUnlink = (comparableId: string) => {

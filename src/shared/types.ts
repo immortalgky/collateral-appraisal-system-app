@@ -42,10 +42,14 @@ export type BreadcrumbStore = {
   reset: () => void;
 };
 
+export type AddressSource = 'title' | 'dopa';
+
 export type AddressStore = {
-  addresses: ThaiAddress[];
-  setAddresses: (addresses: ThaiAddress[]) => void;
-  searchBySubDistrict: (query: string) => ThaiAddress[];
+  titleAddresses: ThaiAddress[];
+  dopaAddresses: ThaiAddress[];
+  setTitleAddresses: (addresses: ThaiAddress[]) => void;
+  setDopaAddresses: (addresses: ThaiAddress[]) => void;
+  searchBySubDistrict: (query: string, source?: AddressSource) => ThaiAddress[];
 };
 
 export type LocaleStore = {

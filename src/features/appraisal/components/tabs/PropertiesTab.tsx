@@ -341,7 +341,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       if (appraisalId) {
         const routeSegment = getRouteSegment(property.type);
         navigate(
-          `/appraisal/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+          `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
         );
       }
     },
@@ -424,9 +424,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     const group = groups.find(g => g.id === groupId);
     const paId = group?.pricingAnalysisId;
     if (paId) {
-      navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${paId}`);
+      navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${paId}`);
     } else {
-      navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis`);
+      navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis`);
     }
   };
 

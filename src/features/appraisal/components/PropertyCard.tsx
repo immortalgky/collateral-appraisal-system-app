@@ -64,7 +64,7 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
       navigate(
-        `/appraisal/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+        `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
       );
     }
   };

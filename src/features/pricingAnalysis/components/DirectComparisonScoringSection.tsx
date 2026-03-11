@@ -186,8 +186,8 @@ export const DirectComparisonScoringSection = ({
   const leftColumnBody =
     'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-1.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] h-10 whitespace-nowrap';
   const collateralColumnBody =
-    'border-b border-r border-gray-300 text-left font-medium px-3 py-1.5 w-[200px] min-w-[200px] max-w-[200px] whitespace-nowrap';
-  const surveyColumnBody = 'px-3 py-1.5 border-b border-r border-gray-300';
+    'border-b border-r border-gray-300 text-left font-medium px-3 py-1.5 w-[200px] min-w-[200px] max-w-[200px] whitespace-nowrap overflow-hidden bg-white';
+  const surveyColumnBody = 'px-3 py-1.5 border-b border-r border-gray-300 min-w-[250px]';
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white overflow-hidden flex flex-col border border-gray-300 rounded-xl">
@@ -228,7 +228,7 @@ export const DirectComparisonScoringSection = ({
                   <th
                     key={survey.id}
                     className={
-                      'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[32px] h-[32px] min-h-[32px] max-h-[32px] z-23 whitespace-nowrap'
+                      'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[32px] h-[32px] min-h-[32px] max-h-[32px] z-23 whitespace-nowrap min-w-[250px]'
                     }
                   >
                     <div>{survey.surveyName}</div>

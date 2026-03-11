@@ -8,6 +8,7 @@ import ErrorBoundary from '@shared/components/ErrorBoundary';
 import Icon from '@shared/components/Icon';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
+import { useAddressesQuery } from '@shared/api/addresses';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
@@ -79,6 +80,15 @@ function ParameterLoader() {
   return null;
 }
 
+/**
+ * Non-rendering component that handles address loading.
+ * useAddressesQuery fetches once and hydrates the Zustand store inside queryFn.
+ */
+function AddressLoader() {
+  useAddressesQuery();
+  return null;
+}
+
 function Layout() {
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
@@ -97,6 +107,7 @@ function Layout() {
       onToggle={toggleRightMenu}
     >
       <ParameterLoader />
+      <AddressLoader />
       <div className="h-screen flex flex-col">
         <MobileSidebar navigation={navigation} logo={Logo} />
         <Sidebar navigation={navigation} logo={Logo} />

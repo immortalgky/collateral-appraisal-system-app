@@ -67,7 +67,7 @@ const RadioGroup = ({
     lg: 'h-2.5 w-2.5',
   };
 
-  // Button variant - renders as segmented button group
+  // Button variant - renders as segmented pill group
   if (variant === 'button') {
     return (
       <Field className={clsx('flex flex-col', className)}>
@@ -79,7 +79,10 @@ const RadioGroup = ({
           onChange={onChange}
           disabled={disabled}
           name={name}
-          className="inline-flex rounded-lg bg-primary/10 p-1"
+          className={clsx(
+            'inline-flex flex-wrap rounded-full bg-gray-100/80 p-1 gap-0.5',
+            disabled && 'opacity-60',
+          )}
         >
           {resolvedOptions.map(option => (
             <HeadlessRadio
@@ -87,11 +90,12 @@ const RadioGroup = ({
               value={option.value}
               disabled={option.disabled || disabled}
               className={clsx(
-                'group relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
+                'group relative px-4 py-1.5 text-sm font-medium rounded-full',
+                'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
                 'cursor-pointer data-disabled:cursor-not-allowed',
-                'data-checked:bg-white data-checked:text-primary data-checked:shadow-sm',
-                'data-[checked=false]:text-primary/50 data-[checked=false]:hover:text-primary/70',
-                'focus:outline-none focus:ring-2 focus:ring-primary/20',
+                'data-checked:bg-primary data-checked:text-white data-checked:shadow-md data-checked:shadow-primary/25',
+                'data-[checked=false]:text-gray-500 data-[checked=false]:hover:text-gray-600',
+                'focus:outline-none',
               )}
             >
               <span className="flex items-center gap-2">

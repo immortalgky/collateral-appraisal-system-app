@@ -112,7 +112,7 @@ export function useSelectionActions({
       const isNew = !pricingAnalysisId;
       if (isNew && result.pricingAnalysisId) {
         navigate(
-          `/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${result.pricingAnalysisId}`,
+          `/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${result.pricingAnalysisId}`,
           { replace: true },
         );
       }
@@ -180,7 +180,7 @@ export function useSelectionActions({
   };
 
   const cancelPricingAccordion = () => {
-    navigate(`/appraisal/${appraisalId}/property`);
+    navigate(`/appraisals/${appraisalId}/property`);
   };
 
   const changeSystemCalculation = (method: boolean) => {

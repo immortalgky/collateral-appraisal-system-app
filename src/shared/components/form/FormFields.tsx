@@ -231,6 +231,21 @@ function FieldRenderer({
     }
   }, [isDisabled, name, field.disabledValue, getValues, setValue]);
 
+  // Clear field value when hidden by showWhen/hideWhen (clearOnHide defaults to true)
+  useEffect(() => {
+    if (isVisible) return;
+    if (field.clearOnHide === false) return;
+
+    const clearValue = field.hiddenValue ?? null;
+    const currentValue = getValues(name);
+    if (currentValue !== clearValue) {
+      setValue(name, clearValue, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+    }
+  }, [isVisible, name, field.clearOnHide, field.hiddenValue, getValues, setValue]);
+
   const {
     field: fieldProps,
     fieldState: { error },
@@ -259,6 +274,8 @@ function FieldRenderer({
     disabled: _d,
     required: _r,
     disabledValue: _dv,
+    clearOnHide: _coh,
+    hiddenValue: _hv,
     formatPattern: _fp,
     formatPatternMessage: _fpm,
     inputMask,
@@ -395,6 +412,7 @@ function FieldRenderer({
           wrap: cgWrap,
           size: cgSize,
           orientation: _cgOri,
+          variant: cgVariant,
           ...cgGroupOrOptions
         } = passedField;
         return (
@@ -405,6 +423,7 @@ function FieldRenderer({
             className={cgClass}
             wrap={cgWrap}
             size={cgSize}
+            variant={cgVariant}
             {...cgGroupOrOptions}
           />
         );
@@ -419,6 +438,7 @@ function FieldRenderer({
           className: rgClass,
           size: rgSize,
           orientation: rgOri,
+          variant: rgVariant,
           ...rgGroupOrOptions
         } = passedField;
         return (
@@ -429,6 +449,7 @@ function FieldRenderer({
             className={rgClass}
             size={rgSize}
             orientation={rgOri}
+            variant={rgVariant}
             {...rgGroupOrOptions}
           />
         );
@@ -495,6 +516,7 @@ function FieldRenderer({
             provinceNameField={prefixFieldPath(passedField.provinceNameField)}
             postcodeField={prefixFieldPath(passedField.postcodeField) ?? ''}
             subDistrictNameField={prefixFieldPath(passedField.subDistrictNameField)}
+            addressSource={passedField.addressSource}
             error={error?.message}
             className={passedField.className}
             {...locationProps}

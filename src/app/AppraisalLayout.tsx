@@ -74,19 +74,19 @@ function AppraisalLayout() {
     const appraisalNo = appraisalData?.appraisalNumber || appraisalData?.id || appraisalId;
     const items = [
       { label: 'Task', href: '/tasks', icon: 'list-check' },
-      { label: appraisalNo || '...', href: `/appraisal/${appraisalId}`, icon: 'file-certificate' },
+      { label: appraisalNo || '...', href: `/appraisals/${appraisalId}`, icon: 'file-certificate' },
     ];
 
     // Get current page from route
     const pathSegments = location.pathname.split('/').filter(Boolean);
-    // Path is like: /appraisal/:appraisalId/administration or /appraisal/:appraisalId/property/land/new
+    // Path is like: /appraisals/:appraisalId/administration or /appraisals/:appraisalId/property/land/new
     if (pathSegments.length >= 3) {
       const pageSegment = pathSegments[2]; // 'administration', 'property', etc.
       const pageInfo = routeLabels[pageSegment];
       if (pageInfo) {
         const isPropertyRoute = pageSegment === 'property' || pageSegment === 'property-pma';
 
-        // Handle nested property routes: /appraisal/:id/property/land/new
+        // Handle nested property routes: /appraisals/:id/property/land/new
         // Determine which tab the user came from so the breadcrumb links back correctly
         let propertyHrefSuffix = '';
         if (isPropertyRoute && pathSegments.length >= 4) {
@@ -98,11 +98,11 @@ function AppraisalLayout() {
           }
         }
 
-        // Pricing analysis: /appraisal/:id/groups/:groupId/pricing-analysis[/:pricingAnalysisId]
+        // Pricing analysis: /appraisals/:id/groups/:groupId/pricing-analysis[/:pricingAnalysisId]
         if (pageSegment === 'groups' && pathSegments.includes('pricing-analysis')) {
           items.push({
             label: 'Property Information',
-            href: `/appraisal/${appraisalId}/property`,
+            href: `/appraisals/${appraisalId}/property`,
             icon: 'buildings',
           });
           items.push({
@@ -116,7 +116,7 @@ function AppraisalLayout() {
         // Add page breadcrumb
         items.push({
           label: pageInfo.label,
-          href: `/appraisal/${appraisalId}/${pageSegment}${propertyHrefSuffix}`,
+          href: `/appraisals/${appraisalId}/${pageSegment}${propertyHrefSuffix}`,
           icon: pageInfo.icon,
         });
 

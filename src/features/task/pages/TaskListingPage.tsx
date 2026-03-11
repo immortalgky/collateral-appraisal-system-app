@@ -173,7 +173,7 @@ function TaskListingPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const handleDoubleClick = (taskId: string) => {
-    navigate(`/appraisal/${taskId}`);
+    navigate(`/appraisals/${taskId}`);
   };
 
   const handleContextMenu = (e: React.MouseEvent, taskId: string) => {
@@ -191,7 +191,7 @@ function TaskListingPage() {
     const task = listTasks.find(t => t.id === contextMenu.taskId);
     switch (action) {
       case 'open':
-        navigate(`/appraisal/${contextMenu.taskId}`);
+        navigate(`/appraisals/${contextMenu.taskId}`);
         break;
       case 'copyReportNo':
         if (task && task.appraisalNumber) {
@@ -518,7 +518,7 @@ function TaskListingPage() {
                           <span
                             onClick={e => {
                               e.stopPropagation();
-                              navigate(`/appraisal/${task.id}`);
+                              navigate(`/appraisals/${task.id}`);
                             }}
                             className="font-medium text-primary hover:underline cursor-pointer"
                           >
