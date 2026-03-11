@@ -261,7 +261,9 @@ export function WQSScoringSection({
                     cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                   )
                   .map(cf => ({
-                    label: getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ?? '',
+                    label:
+                      getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ??
+                      '',
                     value: cf.factorCode,
                   }));
                 const isTemplateFactor = (template?.calculationFactors ?? []).some(
@@ -277,7 +279,13 @@ export function WQSScoringSection({
                               fieldName={scoringFactorCodePath({ row: rowIndex })}
                               inputType="display"
                               accessor={({ value }) =>
-                                value ? getFactorDesciption(value.toString(), serverData.allFactors ?? [], language) : ''
+                                value
+                                  ? getFactorDesciption(
+                                      value.toString(),
+                                      serverData.allFactors ?? [],
+                                      language,
+                                    )
+                                  : ''
                               }
                             />
                           ) : (
@@ -285,9 +293,14 @@ export function WQSScoringSection({
                               fieldName={scoringFactorCodePath({ row: rowIndex })}
                               inputType="select"
                               options={options}
-                              onSelectChange={(value) => {
-                                const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
-                                setValue(`WQSScores.${rowIndex}.factorId`, factor?.factorId ?? factor?.id ?? '');
+                              onSelectChange={value => {
+                                const factor = serverData.allFactors?.find(
+                                  (f: FactorDataType) => f.factorCode === value,
+                                );
+                                setValue(
+                                  `WQSScores.${rowIndex}.factorId`,
+                                  factor?.factorId ?? factor?.id ?? '',
+                                );
                               }}
                             />
                           )}
@@ -613,12 +626,18 @@ export function WQSScoringSection({
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustAmt = !!(
+                  getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) > 0
+                );
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
                     {hasOfferPrice && (
                       <RHFInputCell
-                        fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
+                        fieldName={calculationOfferingPriceAdjustmentPctPath({
+                          column: columnIndex,
+                        })}
                         inputType="number"
+                        disabled={hasAdjustAmt}
                       />
                     )}
                   </td>
@@ -645,12 +664,18 @@ export function WQSScoringSection({
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustPct = !!(
+                  getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) > 0
+                );
                 return (
                   <td key={survey.id} className={clsx(surveyStyle)}>
                     {hasOfferPrice && (
                       <RHFInputCell
-                        fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
+                        fieldName={calculationOfferingPriceAdjustmentAmtPath({
+                          column: columnIndex,
+                        })}
                         inputType="number"
+                        disabled={hasAdjustPct}
                       />
                     )}
                   </td>
@@ -679,7 +704,10 @@ export function WQSScoringSection({
                 const hasOfferPrice = !!survey.offerPrice;
                 if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={survey.id} className={clsx(surveyStyle, 'text-right', hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(surveyStyle, 'text-right', hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -717,7 +745,14 @@ export function WQSScoringSection({
                   return `${format(d, 'MMM')} ${buddhistYear}`;
                 })();
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyStyle, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(
+                      'text-right',
+                      surveyStyle,
+                      (hasOfferPrice || !hasSalePrice) && 'opacity-50',
+                    )}
+                  >
                     <div className="flex flex-col items-end gap-0.5">
                       <RHFInputCell
                         fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
@@ -789,7 +824,10 @@ export function WQSScoringSection({
                 const hasOfferPrice = !!survey.offerPrice;
                 if (!hasSalePrice) return <td key={survey.id} className={clsx(surveyStyle)}></td>;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyStyle, hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx('text-right', surveyStyle, hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -837,13 +875,26 @@ export function WQSScoringSection({
               <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
                 Final Value
               </td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[250px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30', bgGradient)}></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}
+              ></td>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30',
+                  bgGradient,
+                )}
+              ></td>
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
-              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-right font-semibold')}>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-right font-semibold',
+                )}
+              >
                 <RHFInputCell
                   fieldName={finalValueFinalValuePath()}
                   inputType="display"
@@ -857,17 +908,23 @@ export function WQSScoringSection({
               <td className={clsx('bg-gray-100 border-r font-semibold', leftColumnBody)}>
                 {'Final Value (Rounded)'}
               </td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[250px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}></td>
-              <td className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30', bgGradient)}></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[250px] z-30')}
+              ></td>
+              <td
+                className={clsx('bg-gray-100 border-b border-gray-300 sticky left-[350px] z-30')}
+              ></td>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 sticky left-[450px] z-30',
+                  bgGradient,
+                )}
+              ></td>
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
               <td className={clsx('bg-gray-100 border-b border-gray-300 px-1 py-1')}>
-                <RHFInputCell
-                  fieldName={finalValueFinalValueRoundedPath()}
-                  inputType="number"
-                />
+                <RHFInputCell fieldName={finalValueFinalValueRoundedPath()} inputType="number" />
               </td>
             </tr>
           </tbody>

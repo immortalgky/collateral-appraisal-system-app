@@ -93,6 +93,7 @@ const SaleAdjustmentGridAdjustmentFactor = z
 
 const SaleAdjustmentGridAppraisalPrice = z
   .object({
+    includeLandArea: z.boolean(),
     landArea: z.number().nullable().optional(),
     usableArea: z.number().nullable().optional(),
     appraisalPrice: z.number(),
