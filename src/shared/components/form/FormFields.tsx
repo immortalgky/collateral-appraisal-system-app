@@ -178,17 +178,19 @@ export function FormFields({
 
   return (
     <>
-      {fields.filter(f => !f.hide).map(field => (
-        <FieldRenderer
-          key={field.key ?? field.name}
-          control={control}
-          field={field}
-          namePrefix={namePrefix}
-          index={index}
-          schema={schema as z.ZodObject<any> | undefined}
-          globalShowCharCount={showCharCount}
-        />
-      ))}
+      {fields
+        .filter(f => !f.hide)
+        .map(field => (
+          <FieldRenderer
+            key={field.key ?? field.name}
+            control={control}
+            field={field}
+            namePrefix={namePrefix}
+            index={index}
+            schema={schema as z.ZodObject<any> | undefined}
+            globalShowCharCount={showCharCount}
+          />
+        ))}
     </>
   );
 }
@@ -240,7 +242,7 @@ function FieldRenderer({
     const currentValue = getValues(name);
     if (currentValue !== clearValue) {
       setValue(name, clearValue, {
-        shouldDirty: true,
+        shouldDirty: false,
         shouldValidate: false,
       });
     }
