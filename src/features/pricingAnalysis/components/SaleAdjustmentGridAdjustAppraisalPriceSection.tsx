@@ -86,13 +86,17 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
       {property.propertyType === 'L' && (
         <div className="flex items-center gap-4">
           <span className="w-44 text-gray-500">Land Area</span>
-          <span className="font-medium text-gray-800">{(getValues(landAreaPath()) ?? 0).toLocaleString()}</span>
+          <span className="font-medium text-gray-800">
+            {(getValues(landAreaPath()) ?? 0).toLocaleString()}
+          </span>
         </div>
       )}
       {property.propertyType === 'U' && (
         <div className="flex items-center gap-4">
           <span className="w-44 text-gray-500">Usable Area</span>
-          <span className="font-medium text-gray-800">{(getValues(usableAreaPath()) ?? 0).toLocaleString()}</span>
+          <span className="font-medium text-gray-800">
+            {(getValues(usableAreaPath()) ?? 0).toLocaleString()}
+          </span>
         </div>
       )}
       <div className="flex items-center gap-4">
@@ -125,7 +129,9 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
               const icon = num > 0 ? 'arrow-up' : 'arrow-down';
               return (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
+                >
                   <Icon name={icon} style="solid" className="size-3" />
                   {Math.abs(num).toLocaleString()}
                 </span>

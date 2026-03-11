@@ -92,12 +92,11 @@ function PricingAnalysisPage() {
             queryKey: propertyGroupKeys.detail(appraisalId, groupId),
           });
         }
-        navigate(
-          `/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`,
-          { replace: true },
-        );
+        navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`, {
+          replace: true,
+        });
       })
-      .catch((err) => {
+      .catch(err => {
         creatingRef.current = false;
         setCreateState('error');
         setCreateError(err?.message ?? 'An unexpected error occurred.');
