@@ -2,7 +2,7 @@ import type { ListBoxItem } from '../inputs/Dropdown';
 import type { FormStringToggleOption } from '../inputs/FormStringToggle';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { CheckboxOption } from '../inputs/CheckboxGroup';
-import type { AtLeastOne } from '@/shared/types';
+import type { AddressSource, AtLeastOne } from '@/shared/types';
 
 // =============================================================================
 // Conditional Field Types
@@ -93,11 +93,15 @@ interface BaseFormField {
   /** Unconditionally hide the field (excluded from rendering and schema) */
   hide?: boolean;
 
-  // Conditional visibility (values kept when hidden)
+  // Conditional visibility
   /** Show field when condition is met */
   showWhen?: ConditionInput;
   /** Hide field when condition is met */
   hideWhen?: ConditionInput;
+  /** Clear field value when hidden by showWhen/hideWhen (default: true) */
+  clearOnHide?: boolean;
+  /** Value to set when field is cleared on hide (default: null) */
+  hiddenValue?: unknown;
 
   // Conditional disabled state
   /** Disable field when condition is met */
@@ -243,6 +247,8 @@ interface BaseCheckboxGroupField extends BaseFormField {
   wrap?: boolean;
   size?: 'sm' | 'md';
   orientation?: 'horizontal' | 'vertical';
+  /** Visual variant: 'tag' (default), 'chip', or 'button' */
+  variant?: 'tag' | 'chip' | 'button';
 }
 
 export type RadioGroupField = BaseRadioGroupField &
@@ -253,6 +259,8 @@ interface BaseRadioGroupField extends BaseFormField {
   label?: string;
   size?: 'sm' | 'md' | 'lg';
   orientation?: 'horizontal' | 'vertical';
+  /** Visual variant: 'default' (radio circles), 'card', or 'button' (pill style) */
+  variant?: 'default' | 'card' | 'button';
 }
 
 export interface SwitchField extends BaseFormField {
@@ -295,6 +303,8 @@ export interface LocationSelectorField extends BaseFormField {
   postcodeField: string;
   /** Form path for sub-district name (optional) */
   subDistrictNameField?: string;
+  /** Which address dataset to search: 'title' | 'dopa'. Defaults to searching both. */
+  addressSource?: AddressSource;
 }
 
 // =============================================================================

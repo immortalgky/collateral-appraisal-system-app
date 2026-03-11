@@ -112,6 +112,7 @@ const propertyField: FormField[] = [
     provinceNameField: 'provinceName',
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
     wrapperClassName: 'col-span-3',
     required: true,
   },

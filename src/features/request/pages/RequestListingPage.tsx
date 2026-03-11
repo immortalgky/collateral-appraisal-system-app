@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useRelativeTime } from '@/shared/hooks/useFormatters';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useDeleteRequest, useGetRequests } from '../api';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Icon from '@/shared/components/Icon';
@@ -10,11 +12,12 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
-type SortField = 'requestNumber' | 'status' | 'purpose' | 'channel' | 'priority' | 'requestor';
+type SortField = 'requestNumber' | 'status' | 'purpose' | 'channel' | 'priority' | 'customerName' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 function RequestListingPage() {
   const navigate = useNavigate();
+  const formatRelativeTime = useRelativeTime();
 
   // Pagination state
   const [pageNumber, setPageNumber] = useState(0);
@@ -64,21 +67,7 @@ function RequestListingPage() {
   };
 
   // Fetch requests - backend handles filtering and sorting
-  const { data, isLoading: isQueryLoading, isError, error } = useGetRequests(requestParams);
-
-  // Add minimum loading delay for better UX (show skeleton)
-  const [minLoadingDone, setMinLoadingDone] = useState(true);
-
-  useEffect(() => {
-    if (isQueryLoading) {
-      setMinLoadingDone(false);
-      setTimeout(() => {
-        setMinLoadingDone(true);
-      }, 500); // 500ms minimum loading time
-    }
-  }, [isQueryLoading]);
-
-  const isLoading = isQueryLoading || !minLoadingDone;
+  const { data, isLoading: isQueryLoading, isFetching, isError, error } = useGetRequests(requestParams);
 
   // Extract paginated result
   const paginatedResult = data?.result ?? data;
@@ -86,16 +75,26 @@ function RequestListingPage() {
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
+  // First load vs refetch
+  const isFirstLoad = isQueryLoading && requests.length === 0;
+  const isRefetching = isFetching && !isFirstLoad;
+
+  // Status summary counts
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const req of requests) {
+      if (req.status) {
+        counts[req.status] = (counts[req.status] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [requests]);
+
   // Filter options
-  const statusOptions = ['Draft', 'Pending', 'InProgress', 'Completed', 'Cancelled', 'Rejected'];
-  const purposeOptions = ['NewLoan', 'Refinance', 'Review', 'Collateral'];
+  const statusOptions = ['Draft', 'New'];
+  const purposeParams = useParametersByGroup('AppraisalPurpose');
 
-  const handleDoubleClick = (requestId: string) => {
-    navigate(`/requests/${requestId}`);
-  };
-
-  const handleEdit = (e: React.MouseEvent, requestId: string) => {
-    e.stopPropagation();
+  const handleRowClick = (requestId: string) => {
     navigate(`/requests/${requestId}`);
   };
 
@@ -154,6 +153,10 @@ function RequestListingPage() {
 
   const hasFilters = searchTerm || statusFilter || purposeFilter;
 
+  const handleStatusChipClick = (status: string) => {
+    setStatusFilter(prev => (prev === status ? '' : status));
+  };
+
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -179,6 +182,23 @@ function RequestListingPage() {
           New Request
         </Button>
       </div>
+
+      {/* Status Summary Chips */}
+      {Object.keys(statusCounts).length > 0 && (
+        <div className="shrink-0 flex items-center gap-2 flex-wrap">
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <button
+              key={status}
+              onClick={() => handleStatusChipClick(status)}
+              className={`transition-all rounded-full ${statusFilter === status ? 'ring-2 ring-primary/30' : ''}`}
+            >
+              <Badge type="status" value={status} size="sm">
+                {status} {count}
+              </Badge>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Filters Bar */}
       <div className="shrink-0 flex items-center gap-3 pb-1">
@@ -219,34 +239,52 @@ function RequestListingPage() {
           className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-28"
         >
           <option value="">All Purpose</option>
-          {purposeOptions.map(purpose => (
-            <option key={purpose} value={purpose}>
-              {purpose}
+          {purposeParams.map(p => (
+            <option key={p.code} value={p.code}>
+              {p.description}
             </option>
           ))}
         </select>
 
         {/* Clear Filters */}
         {hasFilters && (
-          <button
-            onClick={handleClearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-          >
-            <Icon style="solid" name="xmark" className="size-3" />
-            Clear
-          </button>
+          <Button variant="ghost" size="xs" onClick={handleClearFilters}>
+            <Icon style="solid" name="xmark" className="size-3 mr-1" />
+            Clear all
+          </Button>
         )}
       </div>
+
+      {/* Active Filter Chips */}
+      {hasFilters && (
+        <div className="shrink-0 flex items-center gap-2 flex-wrap">
+          {statusFilter && (
+            <Badge type="status" value={statusFilter} size="sm" removable onRemove={() => setStatusFilter('')}>
+              Status: {statusFilter}
+            </Badge>
+          )}
+          {purposeFilter && (
+            <Badge size="sm" removable onRemove={() => setPurposeFilter('')}>
+              Purpose: {purposeFilter}
+            </Badge>
+          )}
+          {searchTerm && (
+            <Badge size="sm" removable onRemove={() => setSearchTerm('')}>
+              Search: &ldquo;{searchTerm}&rdquo;
+            </Badge>
+          )}
+        </div>
+      )}
 
       {/* Table */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 sticky top-0 z-10">
+            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
                 <th
                   onClick={() => handleSort('requestNumber')}
-                  className="text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none"
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'requestNumber' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     Request #
@@ -254,8 +292,17 @@ function RequestListingPage() {
                   </div>
                 </th>
                 <th
+                  onClick={() => handleSort('customerName')}
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'customerName' ? 'bg-primary/5' : ''}`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    Customer
+                    <SortIcon field="customerName" />
+                  </div>
+                </th>
+                <th
                   onClick={() => handleSort('status')}
-                  className="text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none"
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'status' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     Status
@@ -263,8 +310,17 @@ function RequestListingPage() {
                   </div>
                 </th>
                 <th
+                  onClick={() => handleSort('priority')}
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'priority' ? 'bg-primary/5' : ''}`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    Priority
+                    <SortIcon field="priority" />
+                  </div>
+                </th>
+                <th
                   onClick={() => handleSort('purpose')}
-                  className="text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none"
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'purpose' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     Purpose
@@ -273,7 +329,7 @@ function RequestListingPage() {
                 </th>
                 <th
                   onClick={() => handleSort('channel')}
-                  className="text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none"
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'channel' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     Channel
@@ -281,43 +337,35 @@ function RequestListingPage() {
                   </div>
                 </th>
                 <th
-                  onClick={() => handleSort('priority')}
-                  className="text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none"
+                  onClick={() => handleSort('createdAt')}
+                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'createdAt' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Priority
-                    <SortIcon field="priority" />
+                    Created At
+                    <SortIcon field="createdAt" />
                   </div>
                 </th>
-                <th
-                  onClick={() => handleSort('requestor')}
-                  className="text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none"
-                >
-                  <div className="flex items-center gap-1.5">
-                    Requestor
-                    <SortIcon field="requestor" />
-                  </div>
-                </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 w-24">Actions</th>
+                <th className="text-center font-medium text-gray-600 px-4 py-2.5 w-20">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
+            <tbody className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}>
+              {isFirstLoad ? (
                 <TableRowSkeleton
                   columns={[
                     { width: 'w-24' },
+                    { width: 'w-28' },
                     { width: 'w-20' },
+                    { width: 'w-14' },
                     { width: 'w-20' },
                     { width: 'w-16' },
-                    { width: 'w-14' },
-                    { width: 'w-24' },
+                    { width: 'w-20' },
                     { width: 'w-16' },
                   ]}
                   rows={5}
                 />
               ) : requests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16">
+                  <td colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-gray-500 font-medium">No requests found</p>
@@ -331,17 +379,37 @@ function RequestListingPage() {
                 requests.map(request => (
                   <tr
                     key={request.id}
-                    onDoubleClick={() => request.id && handleDoubleClick(request.id)}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    title="Double-click to open"
+                    onClick={() => request.id && handleRowClick(request.id)}
+                    className="hover:bg-gray-50 even:bg-gray-50/50 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-2.5">
-                      <span className="font-medium text-gray-900">
+                      <span
+                        className="font-medium text-primary hover:underline cursor-pointer"
+                        onClick={e => {
+                          e.stopPropagation();
+                          request.id && navigate(`/requests/${request.id}`);
+                        }}
+                      >
                         {request.requestNumber || '-'}
                       </span>
                     </td>
                     <td className="px-4 py-2.5">
+                      <div className="flex flex-col">
+                        <span className="text-gray-600">
+                          {request.customerName || (
+                            <span className="text-gray-300 italic text-xs">-</span>
+                          )}
+                        </span>
+                        {request.contactNumber && (
+                          <span className="text-gray-400 text-xs">{request.contactNumber}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5">
                       <Badge type="status" value={request.status} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge type="priority" value={request.priority} />
                     </td>
                     <td className="px-4 py-2.5 text-gray-600">
                       <ParameterDisplay group="AppraisalPurpose" code={request.purpose} />
@@ -351,21 +419,18 @@ function RequestListingPage() {
                         <ParameterDisplay group="CHANNEL" code={request.channel} />
                       </Badge>
                     </td>
-                    <td className="px-4 py-2.5">
-                      <Badge type="priority" value={request.priority} />
+                    <td className="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">
+                      {request.createdAt
+                        ? (() => {
+                            const { relative, absolute } = formatRelativeTime(request.createdAt);
+                            return <span title={absolute}>{relative}</span>;
+                          })()
+                        : (
+                          <span className="text-gray-300 italic">-</span>
+                        )}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600">
-                      {request.requestor?.username || '-'}
-                    </td>
                     <td className="px-4 py-2.5">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={e => request.id && handleEdit(e, request.id)}
-                          className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-primary transition-colors"
-                          title="Edit"
-                        >
-                          <Icon style="regular" name="pen-to-square" className="size-4" />
-                        </button>
+                      <div className="flex items-center justify-center">
                         <button
                           onClick={e => request.id && handleDelete(e, request.id)}
                           className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
@@ -380,6 +445,12 @@ function RequestListingPage() {
               )}
             </tbody>
           </table>
+          {/* Refetch spinner overlay */}
+          {isRefetching && (
+            <div className="flex justify-center py-2">
+              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+            </div>
+          )}
         </div>
 
         {/* Pagination */}

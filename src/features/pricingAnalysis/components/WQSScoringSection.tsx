@@ -163,7 +163,7 @@ export function WQSScoringSection({
     'after:absolute after:left-[-2rem] after:top-0 after:h-full after:w-4 after:bg-gradient-to-l after:from-black/5 after:to-transparent after:translate-x-full';
   const leftColumnBody =
     'border-b border-gray-300 text-left font-medium text-gray-600 px-3 py-1.5 sticky left-0 z-20 w-[250px] min-w-[250px] max-w-[250px] h-10 whitespace-nowrap';
-  const surveyStyle = 'px-3 py-1.5 border-b border-r border-gray-300';
+  const surveyStyle = 'px-3 py-1.5 border-b border-r border-gray-300 min-w-[220px]';
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl">
@@ -235,7 +235,7 @@ export function WQSScoringSection({
                   <th
                     key={survey.id}
                     className={
-                      'bg-gray-50 font-medium text-center px-3 py-1.5 border-r border-b border-gray-300 sticky top-[32px] h-[52px] min-h-[52px] max-h-[52px] z-23 whitespace-nowrap'
+                      'bg-gray-50 font-medium text-center px-3 py-1.5 border-r border-b border-gray-300 sticky top-[32px] h-[52px] min-h-[52px] max-h-[52px] z-23 whitespace-nowrap min-w-[220px]'
                     }
                   >
                     <div className="flex flex-col">

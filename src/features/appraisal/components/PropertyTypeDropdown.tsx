@@ -106,7 +106,7 @@ export const PropertyTypeDropdown = ({
     if (!disableDefaultNavigation && propertyType.route) {
       // Navigate to the create page under appraisal context
       const targetPath = appraisalId
-        ? `/appraisal/${appraisalId}/${propertyBasePath}/${propertyType.route}/new`
+        ? `/appraisals/${appraisalId}/${propertyBasePath}/${propertyType.route}/new`
         : `/${propertyType.route}-detail`;
 
       navigate(`${targetPath}?groupId=${groupId}&type=${encodeURIComponent(propertyType.type)}`);

@@ -29,7 +29,7 @@ const LAYOUT_OPTIONS = [
   { value: 3 as const, label: '3', icon: 'table-cells' },
 ];
 
-// TopicItem Component - Enhanced with emerald theme
+// TopicItem Component
 const TopicItem = ({
   topic,
   isSelected,
@@ -58,8 +58,8 @@ const TopicItem = ({
       className={clsx(
         'group relative rounded-xl transition-all duration-200',
         isSelected
-          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/25'
-          : 'bg-white border border-gray-100 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-500/5'
+          ? 'bg-primary shadow-lg shadow-primary/25'
+          : 'bg-white border border-gray-100 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5'
       )}
     >
       {isEditing ? (
@@ -73,7 +73,7 @@ const TopicItem = ({
               if (e.key === 'Escape') setIsEditing(false);
             }}
             onBlur={handleSave}
-            className="w-full px-3 py-2 text-sm border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400"
+            className="w-full px-3 py-2 text-sm border border-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
             autoFocus
           />
         </div>
@@ -86,7 +86,7 @@ const TopicItem = ({
                 'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors',
                 isSelected
                   ? 'bg-white/20 text-white'
-                  : 'bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100'
+                  : 'bg-primary/10 text-primary group-hover:bg-primary/20'
               )}
             >
               <Icon name="images" style="solid" className="text-sm" />
@@ -121,7 +121,7 @@ const TopicItem = ({
                   'px-2 py-0.5 rounded-full text-xs font-medium',
                   isSelected
                     ? 'bg-white/20 text-white'
-                    : 'bg-emerald-100 text-emerald-600'
+                    : 'bg-primary/10 text-primary'
                 )}
               >
                 {topic.photoCount}
@@ -146,7 +146,7 @@ const TopicItem = ({
                   'p-1.5 rounded-lg transition-colors',
                   isSelected
                     ? 'text-white/70 hover:text-white hover:bg-white/10'
-                    : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'
+                    : 'text-gray-400 hover:text-primary hover:bg-primary/10'
                 )}
               >
                 <Icon name="pen" className="text-xs" />
@@ -187,29 +187,29 @@ const UploadPlaceholder = ({
     className={clsx(
       'aspect-[4/3] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300',
       isDragging
-        ? 'border-emerald-400 bg-emerald-50 scale-[1.02] shadow-lg shadow-emerald-500/20'
-        : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50 hover:shadow-md'
+        ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg shadow-primary/20'
+        : 'border-gray-200 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md'
     )}
   >
     <div
       className={clsx(
         'w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300',
         isDragging
-          ? 'bg-emerald-100 text-emerald-600 scale-110'
-          : 'bg-gray-100 text-gray-400 group-hover:bg-emerald-100 group-hover:text-emerald-500'
+          ? 'bg-primary/20 text-primary scale-110'
+          : 'bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary'
       )}
     >
       <Icon name={isDragging ? 'cloud-arrow-down' : 'plus'} className="text-2xl" />
     </div>
     <p className={clsx(
       'text-sm font-medium transition-colors',
-      isDragging ? 'text-emerald-700' : 'text-gray-600'
+      isDragging ? 'text-primary' : 'text-gray-600'
     )}>
       {isDragging ? 'Drop photos here' : 'Add photos'}
     </p>
     <p className={clsx(
       'text-xs mt-1 transition-colors',
-      isDragging ? 'text-emerald-500' : 'text-gray-400'
+      isDragging ? 'text-primary/70' : 'text-gray-400'
     )}>
       Click or drag & drop
     </p>
@@ -539,8 +539,8 @@ export const PhotosTab = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center animate-pulse">
-            <Icon name="images" className="text-xl text-emerald-500" />
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+            <Icon name="images" className="text-xl text-primary" />
           </div>
           <p className="text-sm text-gray-500">Loading photos...</p>
         </div>
@@ -553,7 +553,7 @@ export const PhotosTab = () => {
       {/* Left Panel - Topics List */}
       <div className="w-[300px] flex-shrink-0 flex flex-col bg-gradient-to-b from-gray-50/50 to-white rounded-2xl p-4">
         {/* Header Card */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-4 mb-4 shadow-lg shadow-emerald-500/20">
+        <div className="bg-primary rounded-xl p-4 mb-4 shadow-lg shadow-primary/20">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
               <Icon name="layer-group" style="solid" className="text-white text-lg" />
@@ -572,7 +572,7 @@ export const PhotosTab = () => {
           <button
             type="button"
             onClick={() => setIsAddingTopic(true)}
-            className="w-full mb-4 py-2.5 px-4 rounded-xl border-2 border-dashed border-emerald-200 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium"
+            className="w-full mb-4 py-2.5 px-4 rounded-xl border-2 border-dashed border-primary/30 text-primary hover:border-primary hover:bg-primary/5 transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium"
           >
             <Icon name="plus" />
             New Topic
@@ -581,7 +581,7 @@ export const PhotosTab = () => {
 
         {/* Add Topic Input */}
         {isAddingTopic && (
-          <div className="mb-4 p-4 bg-white rounded-xl border border-emerald-100 shadow-sm">
+          <div className="mb-4 p-4 bg-white rounded-xl border border-primary/10 shadow-sm">
             <input
               type="text"
               value={newTopicName}
@@ -594,11 +594,11 @@ export const PhotosTab = () => {
                 }
               }}
               placeholder="Topic name..."
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 mb-3"
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary mb-3"
               autoFocus
             />
             <div className="flex gap-2">
-              <Button size="sm" variant="primary" onClick={handleAddTopic} className="flex-1 !bg-emerald-500 hover:!bg-emerald-600">
+              <Button size="sm" variant="primary" onClick={handleAddTopic} className="flex-1">
                 <Icon name="check" className="mr-1.5" />
                 Add
               </Button>
@@ -633,8 +633,8 @@ export const PhotosTab = () => {
 
           {topics.length === 0 && !isAddingTopic && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
-                <Icon name="folder-open" className="text-2xl text-emerald-500" />
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Icon name="folder-open" className="text-2xl text-primary" />
               </div>
               <p className="text-sm font-medium text-gray-600">No topics yet</p>
               <p className="text-xs text-gray-400 mt-1 max-w-[180px] mx-auto">
@@ -658,8 +658,8 @@ export const PhotosTab = () => {
             {/* Selected Topic Title */}
             {selectedTopic && (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <Icon name="images" style="solid" className="text-emerald-600 text-sm" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Icon name="images" style="solid" className="text-primary text-sm" />
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-gray-800">{selectedTopic.topicName}</h4>
@@ -683,7 +683,7 @@ export const PhotosTab = () => {
                     className={clsx(
                       'w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200',
                       selectedTopic?.displayColumns === option.value
-                        ? 'bg-white text-emerald-600 shadow-sm'
+                        ? 'bg-white text-primary shadow-sm'
                         : 'text-gray-400 hover:text-gray-600'
                     )}
                     title={`${option.value} column${option.value > 1 ? 's' : ''}`}
@@ -700,7 +700,7 @@ export const PhotosTab = () => {
               size="sm"
               onClick={() => setShowPhotoSourceModal(true)}
               disabled={!selectedTopicId}
-              className="!bg-emerald-500 hover:!bg-emerald-600 !shadow-lg !shadow-emerald-500/25"
+              className="!shadow-lg !shadow-primary/25"
             >
               <Icon name="plus" className="mr-1.5" />
               Add Photos
@@ -721,13 +721,13 @@ export const PhotosTab = () => {
               </p>
             </div>
           ) : isDragging ? (
-            <div className="h-full flex items-center justify-center border-2 border-dashed border-emerald-400 rounded-2xl bg-emerald-50/50 m-2">
+            <div className="h-full flex items-center justify-center border-2 border-dashed border-primary rounded-2xl bg-primary/5 m-2">
               <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4 animate-bounce">
-                  <Icon name="cloud-arrow-down" className="text-3xl text-emerald-600" />
+                <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4 animate-bounce">
+                  <Icon name="cloud-arrow-down" className="text-3xl text-primary" />
                 </div>
-                <p className="text-xl font-semibold text-emerald-700">Drop photos here</p>
-                <p className="text-sm text-emerald-500 mt-1">Release to upload to "{selectedTopic?.topicName}"</p>
+                <p className="text-xl font-semibold text-primary">Drop photos here</p>
+                <p className="text-sm text-primary/70 mt-1">Release to upload to "{selectedTopic?.topicName}"</p>
               </div>
             </div>
           ) : (

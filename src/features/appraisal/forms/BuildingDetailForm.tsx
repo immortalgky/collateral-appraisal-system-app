@@ -16,7 +16,8 @@ import {
   roofFrameField,
   roofField,
   ceilingField,
-  wallField,
+  interiorWallFields,
+  exteriorWallFields,
   fenceField,
   constTypeFeild,
   utilizationFeild,
@@ -55,6 +56,12 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
+const Card = ({ children }: { children: ReactNode }) => (
+  <div className="col-span-12 bg-gray-50 rounded-lg p-3">
+    <div className="grid grid-cols-12 gap-3">{children}</div>
+  </div>
+);
+
 const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
   return (
     <div className="grid grid-cols-5 gap-6">
@@ -74,56 +81,61 @@ const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
         <FormFields fields={encroachmentField} />
       </SectionRow>
 
-      <SectionRow title="Building Material" icon="cubes">
-        <FormFields fields={buildingMaterialField} />
-      </SectionRow>
-
-      <SectionRow title="Building Style" icon="ruler-combined">
-        <FormFields fields={buildingStyleField} />
+      <SectionRow title="Material & Style" icon="cubes">
+        <Card>
+          <FormFields fields={buildingMaterialField} />
+        </Card>
+        <Card>
+          <FormFields fields={buildingStyleField} />
+        </Card>
+        <Card>
+          <FormFields fields={constructionStyleField} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Is Residential" icon="house">
         <FormFields fields={isResidentialField} />
       </SectionRow>
 
-      <SectionRow title="Construction Style" icon="hammer">
-        <FormFields fields={constructionStyleField} />
-      </SectionRow>
-
       <SectionRow title="General Structure" icon="warehouse">
         <FormFields fields={generalStructureField} />
       </SectionRow>
 
-      <SectionRow title="Roof Frame" icon="house-chimney">
-        <FormFields fields={roofFrameField} />
-      </SectionRow>
-
-      <SectionRow title="Roof" icon="tent">
-        <FormFields fields={roofField} />
-      </SectionRow>
-
-      <SectionRow title="Ceiling" icon="border-top-left">
-        <FormFields fields={ceilingField} />
+      <SectionRow title="Roof & Ceiling" icon="house-chimney">
+        <Card>
+          <FormFields fields={roofFrameField} />
+        </Card>
+        <Card>
+          <FormFields fields={roofField} />
+        </Card>
+        <Card>
+          <FormFields fields={ceilingField} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Wall" icon="square">
-        <FormFields fields={wallField} />
+        <Card>
+          <FormFields fields={interiorWallFields} />
+        </Card>
+        <Card>
+          <FormFields fields={exteriorWallFields} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Surface" icon="layer-group">
         <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} />
       </SectionRow>
 
-      <SectionRow title="Fence" icon="fence">
-        <FormFields fields={fenceField} />
-      </SectionRow>
-
-      <SectionRow title="Construction Type" icon="gears">
-        <FormFields fields={constTypeFeild} />
-      </SectionRow>
-
-      <SectionRow title="Utilization" icon="hand-holding">
-        <FormFields fields={utilizationFeild} />
+      <SectionRow title="Construction & Use" icon="gears">
+        <Card>
+          <FormFields fields={fenceField} />
+        </Card>
+        <Card>
+          <FormFields fields={constTypeFeild} />
+        </Card>
+        <Card>
+          <FormFields fields={utilizationFeild} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Building Detail" icon="table">

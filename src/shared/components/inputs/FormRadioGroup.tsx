@@ -13,6 +13,7 @@ interface FormRadioGroupBaseProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   orientation?: 'horizontal' | 'vertical';
+  variant?: 'default' | 'card' | 'button';
 }
 
 const FormRadioGroup = ({
@@ -22,6 +23,7 @@ const FormRadioGroup = ({
   className,
   size,
   orientation,
+  variant,
   ...groupOrOptions
 }: FormRadioGroupProps) => {
   const { control } = useFormContext();
@@ -40,6 +42,7 @@ const FormRadioGroup = ({
       className={className}
       size={size}
       orientation={orientation}
+      variant={variant}
       name={name}
       {...groupOrOptions}
     />

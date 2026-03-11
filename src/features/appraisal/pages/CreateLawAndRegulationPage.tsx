@@ -432,7 +432,7 @@ const CreateLawAndRegulationPage = () => {
     ];
   };
 
-  const navigateBack = () => navigate(`/appraisal/${appraisalId}/property?tab=laws`);
+  const navigateBack = () => navigate(`/appraisals/${appraisalId}/property?tab=laws`);
 
   const handleSave = (action: 'draft' | 'submit') => {
     if (!appraisalId) return;

@@ -40,7 +40,7 @@ const AppraisalIndexRedirect = () => {
   const requestId = useAppraisalRequestId();
 
   if (requestId) {
-    return <Navigate to={`/appraisal/${appraisalId}/request/${requestId}`} replace />;
+    return <Navigate to={`/appraisals/${appraisalId}/request/${requestId}`} replace />;
   }
 
   // Fallback if no requestId yet (shouldn't happen due to loading state in layout)
@@ -171,7 +171,7 @@ export const router = createBrowserRouter([
   },
   // Appraisal Application Routes (separate layout with application sidebar)
   {
-    path: 'appraisal/:appraisalId',
+    path: 'appraisals/:appraisalId',
     element: <AppraisalLayout />,
     errorElement: <ErrorPage />,
     children: [

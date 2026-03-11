@@ -60,32 +60,33 @@ export function isToday(date: Date): boolean {
   );
 }
 
-/**
- * Get relative time string (e.g., "2 days ago", "in 3 hours")
- * @param date Date to get relative time for
- */
-export function getRelativeTimeString(date: Date | string | number): string {
-  const d = typeof date === 'object' ? date : new Date(date);
-  const now = new Date();
-  const diffMs = d.getTime() - now.getTime();
-  const diffSec = Math.round(diffMs / 1000);
-  const diffMin = Math.round(diffSec / 60);
-  const diffHour = Math.round(diffMin / 60);
-  const diffDay = Math.round(diffHour / 24);
+const RELATIVE_UNITS: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
+  { unit: 'year', ms: 365.25 * 24 * 60 * 60 * 1000 },
+  { unit: 'month', ms: 30 * 24 * 60 * 60 * 1000 },
+  { unit: 'week', ms: 7 * 24 * 60 * 60 * 1000 },
+  { unit: 'day', ms: 24 * 60 * 60 * 1000 },
+  { unit: 'hour', ms: 60 * 60 * 1000 },
+  { unit: 'minute', ms: 60 * 1000 },
+];
 
-  if (diffDay > 0) {
-    return diffDay === 1 ? 'in 1 day' : `in ${diffDay} days`;
-  } else if (diffDay < 0) {
-    return diffDay === -1 ? '1 day ago' : `${-diffDay} days ago`;
-  } else if (diffHour > 0) {
-    return diffHour === 1 ? 'in 1 hour' : `in ${diffHour} hours`;
-  } else if (diffHour < 0) {
-    return diffHour === -1 ? '1 hour ago' : `${-diffHour} hours ago`;
-  } else if (diffMin > 0) {
-    return diffMin === 1 ? 'in 1 minute' : `in ${diffMin} minutes`;
-  } else if (diffMin < 0) {
-    return diffMin === -1 ? '1 minute ago' : `${-diffMin} minutes ago`;
-  } else {
-    return 'just now';
+/**
+ * Get relative time string (e.g., "2 days ago", "yesterday", "5 นาทีที่แล้ว")
+ * Uses Intl.RelativeTimeFormat for locale-aware output.
+ * @param date Date to get relative time for
+ * @param locale BCP 47 locale string (default: 'en-US')
+ */
+export function getRelativeTimeString(date: Date | string | number, locale = 'en-US'): string {
+  const d = typeof date === 'object' ? date : new Date(date);
+  const diffMs = d.getTime() - Date.now();
+  const absDiffMs = Math.abs(diffMs);
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+  for (const { unit, ms } of RELATIVE_UNITS) {
+    if (absDiffMs >= ms || unit === 'minute') {
+      const value = Math.round(diffMs / ms);
+      return rtf.format(value, unit);
+    }
   }
+
+  return rtf.format(0, 'minute');
 }

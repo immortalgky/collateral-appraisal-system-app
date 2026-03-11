@@ -129,13 +129,13 @@ const Checkbox = ({
         name={name}
         value={value}
         className={clsx(
-          'group flex items-start gap-2.5',
+          'group flex items-center gap-2.5',
           !isDisabled && 'cursor-pointer',
         )}
       >
         <span
           className={clsx(
-            'flex items-center justify-center rounded-md border-2 transition-all duration-150 mt-0.5 shrink-0',
+            'flex items-center justify-center rounded-md border-2 transition-all duration-150 shrink-0',
             sizeStyles[size],
             isDisabled
               ? 'bg-gray-100 border-gray-300'

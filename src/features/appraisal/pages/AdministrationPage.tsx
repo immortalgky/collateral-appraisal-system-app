@@ -671,10 +671,6 @@ const AdministrationPage = () => {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" type="button" disabled={!isDirty}>
-                  <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                  Save Draft
-                </Button>
                 <Button type="submit" disabled={isCreating}>
                   {isCreating ? (
                     <>

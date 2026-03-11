@@ -101,7 +101,7 @@ const CreateCondoPage = () => {
             toast.success('Property condominium created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
+            navigate(`/appraisals/${appraisalId}/property/condo/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -151,7 +151,7 @@ const CreateCondoPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
+              navigate(`/appraisals/${appraisalId}/property/condo/${response.propertyId}`);
             }
           },
           onError: (error: any) => {

@@ -1,24 +1,25 @@
 import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
+import BoundaryFields from '../components/BoundaryFields';
 import {
   allocationField,
   anticipationProsperityField,
+  electricityField,
   encroachedField,
   evictionField,
   expropriateField,
+  landBoundaryField,
   landEntranceField,
   landFillField,
   landInfoField,
   landLocationField,
   landUseField,
-  LimitationOther,
   otherInformationField,
   plotLocationField,
   publicUtilityField,
   remarkLandField,
   roadField,
   roadSurfaceField,
-  sizeAndBoundary,
   transpotationField,
 } from '../configs/fields';
 
@@ -49,6 +50,12 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
+const Card = ({ children }: { children: React.ReactNode }) => (
+  <div className="col-span-12 bg-gray-50 rounded-lg p-3">
+    <div className="grid grid-cols-12 gap-3">{children}</div>
+  </div>
+);
+
 const LandDetailForm = () => {
   return (
     <div className="w-full max-w-full overflow-hidden">
@@ -70,50 +77,59 @@ const LandDetailForm = () => {
           <FormFields fields={landFillField} />
         </SectionRow>
 
-        <SectionRow title="Road" icon="road">
-          <FormFields fields={roadField} />
+        <SectionRow title="Road & Surface" icon="road">
+          <Card>
+            <FormFields fields={roadField} />
+          </Card>
+          <Card>
+            <FormFields fields={roadSurfaceField} />
+          </Card>
         </SectionRow>
 
-        <SectionRow title="Road Surface" icon="road-circle-check">
-          <FormFields fields={roadSurfaceField} />
-        </SectionRow>
-
-        <SectionRow title="Public Utility" icon="bolt">
-          <FormFields fields={publicUtilityField} />
-        </SectionRow>
-
-        <SectionRow title="Land Use" icon="seedling">
-          <FormFields fields={landUseField} />
-        </SectionRow>
-
-        <SectionRow title="Land Entrance-Exit" icon="door-open">
-          <FormFields fields={landEntranceField} />
-        </SectionRow>
-
-        <SectionRow title="Transportation" icon="car">
-          <FormFields fields={transpotationField} />
-        </SectionRow>
-
-        <SectionRow title="Anticipation of Prosperity" icon="chart-line">
-          <FormFields fields={anticipationProsperityField} />
+        <SectionRow title="Land Access & Utilities" icon="bolt">
+          <Card>
+            <FormFields fields={publicUtilityField} />
+          </Card>
+          <Card>
+            <FormFields fields={landUseField} />
+          </Card>
+          <Card>
+            <FormFields fields={landEntranceField} />
+          </Card>
+          <Card>
+            <FormFields fields={transpotationField} />
+          </Card>
         </SectionRow>
 
         <SectionRow title="Limitation" icon="triangle-exclamation">
-          <FormFields fields={expropriateField} />
-          <FormFields fields={encroachedField} />
-          <FormFields fields={LimitationOther} />
+          <Card>
+            <FormFields fields={expropriateField} />
+          </Card>
+          <Card>
+            <FormFields fields={encroachedField} />
+          </Card>
+          <Card>
+            <FormFields fields={electricityField} />
+          </Card>
+          <Card>
+            <FormFields fields={landBoundaryField} />
+          </Card>
         </SectionRow>
 
-        <SectionRow title="Eviction" icon="ban">
-          <FormFields fields={evictionField} />
-        </SectionRow>
-
-        <SectionRow title="Allocation" icon="th-large">
-          <FormFields fields={allocationField} />
+        <SectionRow title="Assessment" icon="chart-line">
+          <Card>
+            <FormFields fields={anticipationProsperityField} />
+          </Card>
+          <Card>
+            <FormFields fields={evictionField} />
+          </Card>
+          <Card>
+            <FormFields fields={allocationField} />
+          </Card>
         </SectionRow>
 
         <SectionRow title="Size and Boundary" icon="ruler-combined">
-          <FormFields fields={sizeAndBoundary} />
+          <BoundaryFields />
         </SectionRow>
 
         <SectionRow title="Other Information" icon="circle-info">

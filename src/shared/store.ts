@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
+  AddressSource,
   AddressStore,
   BreadcrumbItem,
   BreadcrumbStore,
@@ -13,7 +14,7 @@ import type {
   UserStore,
 } from './types';
 import type { Parameter } from './types/api';
-import { mockThaiAddresses, type ThaiAddress } from './data/thaiAddresses';
+import type { ThaiAddress } from './data/thaiAddresses';
 import type { WorkflowActivity } from './config/navigation';
 
 export const useUIStore = create<UIStore>(set => ({
@@ -75,13 +76,19 @@ export const useBreadcrumbStore = create<BreadcrumbStore>(set => ({
 }));
 
 export const useAddressStore = create<AddressStore>((set, get) => ({
-  // Initialize with mock data, will be replaced by API data later
-  addresses: mockThaiAddresses,
-  setAddresses: (addresses: ThaiAddress[]) => set({ addresses }),
-  searchBySubDistrict: (query: string): ThaiAddress[] => {
+  titleAddresses: [],
+  dopaAddresses: [],
+  setTitleAddresses: (addresses: ThaiAddress[]) => set({ titleAddresses: addresses }),
+  setDopaAddresses: (addresses: ThaiAddress[]) => set({ dopaAddresses: addresses }),
+  searchBySubDistrict: (query: string, source?: AddressSource): ThaiAddress[] => {
     if (!query.trim()) return [];
     const normalizedQuery = query.toLowerCase().trim();
-    return get().addresses.filter(addr =>
+    const { titleAddresses, dopaAddresses } = get();
+    const pool =
+      source === 'title' ? titleAddresses
+      : source === 'dopa' ? dopaAddresses
+      : [...titleAddresses, ...dopaAddresses];
+    return pool.filter(addr =>
       addr.subDistrictName.toLowerCase().includes(normalizedQuery),
     );
   },
