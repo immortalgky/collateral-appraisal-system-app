@@ -278,6 +278,8 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
     if (e.relatedTarget && row.contains(e.relatedTarget as Node)) return;
     requestAnimationFrame(() => {
       if (suppressBlurRef.current || row.contains(document.activeElement)) return;
+      // Skip blur if a dropdown inside this row is open (options render outside the row via portal)
+      if (row.querySelector('[data-headlessui-state*="open"]')) return;
       suppressBlurRef.current = true;
       setBlurConfirm(true);
     });
