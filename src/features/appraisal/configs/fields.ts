@@ -2298,6 +2298,7 @@ export const condoPMAFields: FormField[] = [
     name: 'builtOnTitleNumber',
     wrapperClassName: 'col-span-6',
     required: true,
+    maxLength: 200,
   },
   {
     type: 'text-input',
@@ -2305,6 +2306,7 @@ export const condoPMAFields: FormField[] = [
     name: 'condoRegistrationNumber',
     wrapperClassName: 'col-span-3',
     required: true,
+    maxLength: 10,
   },
   {
     type: 'text-input',
@@ -2312,6 +2314,7 @@ export const condoPMAFields: FormField[] = [
     name: 'condoName',
     wrapperClassName: 'col-span-6',
     required: true,
+    maxLength: 100,
   },
   {
     type: 'text-input',
@@ -2319,13 +2322,16 @@ export const condoPMAFields: FormField[] = [
     name: 'roomNumber',
     wrapperClassName: 'col-span-1',
     required: true,
+    maxLength: 10,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Floor No.',
     name: 'floorNumber',
     wrapperClassName: 'col-span-1',
     required: true,
+    maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'text-input',
@@ -2333,6 +2339,7 @@ export const condoPMAFields: FormField[] = [
     name: 'buildingNumber',
     wrapperClassName: 'col-span-1',
     required: true,
+    maxLength: 30,
   },
   {
     type: 'location-selector',

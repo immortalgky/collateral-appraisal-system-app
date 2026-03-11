@@ -73,7 +73,10 @@ const CreateMarketComparablePage = () => {
     resolver: zodResolver(createMarketComparableForm),
   });
 
-  const { handleSubmit, formState: { isDirty } } = methods;
+  const {
+    handleSubmit,
+    formState: { isDirty },
+  } = methods;
 
   const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
@@ -93,7 +96,11 @@ const CreateMarketComparablePage = () => {
         if (factor.dataType === 'CheckboxGroup') {
           let parsed = found.value;
           if (typeof found.value === 'string') {
-            try { parsed = JSON.parse(found.value); } catch { parsed = []; }
+            try {
+              parsed = JSON.parse(found.value);
+            } catch {
+              parsed = [];
+            }
           }
           return { ...found, value: Array.isArray(parsed) ? parsed : [] };
         }
@@ -154,7 +161,9 @@ const CreateMarketComparablePage = () => {
               queryKey: ['appraisals', appraisalId, 'comparables'],
             });
           }
+          skipWarning();
           toast.success('Market comparable updated successfully');
+          navigate(`/appraisals/${appraisalId}/property?tab=markets`);
         },
         onError: (error: any) => {
           toast.error(
@@ -235,9 +244,7 @@ const CreateMarketComparablePage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            ...(appraisalId
-              ? [{ label: 'Photos', id: 'photos-section', icon: 'images' }]
-              : []),
+            ...(appraisalId ? [{ label: 'Photos', id: 'photos-section', icon: 'images' }] : []),
             { label: 'Comparable', id: 'comparable-section', icon: 'chart-line' },
             { label: 'Survey Factors', id: 'factors-section', icon: 'sliders' },
           ]}
@@ -282,9 +289,15 @@ const CreateMarketComparablePage = () => {
                   <Section id="comparable-section" anchor>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Icon name="magnifying-glass-location" style="solid" className="w-5 h-5 text-orange-600" />
+                        <Icon
+                          name="magnifying-glass-location"
+                          style="solid"
+                          className="w-5 h-5 text-orange-600"
+                        />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Comparable Information</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Comparable Information
+                      </h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                   </Section>
@@ -306,11 +319,7 @@ const CreateMarketComparablePage = () => {
               <ActionBar.UnsavedIndicator show={isDirty} />
             </ActionBar.Left>
             <ActionBar.Right>
-              <Button
-                type="submit"
-                isLoading={isPending}
-                disabled={isPending}
-              >
+              <Button type="submit" isLoading={isPending} disabled={isPending}>
                 <Icon name="check" style="solid" className="size-4 mr-2" />
                 Save
               </Button>

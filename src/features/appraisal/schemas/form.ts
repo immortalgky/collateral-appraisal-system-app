@@ -578,7 +578,7 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   templateId: '',
   templateCode: '',
   notes: '',
-  infoDateTime: '',
+  infoDateTime: null,
   sourceInfo: '',
   propertyType: '',
   comparableNumber: '',
