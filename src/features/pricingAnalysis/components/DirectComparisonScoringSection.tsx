@@ -420,7 +420,9 @@ export const DirectComparisonScoringSection = ({
                       inputType="display"
                       accessor={({ value }) => {
                         if (!value) return '';
-                        const unit = survey.offerPriceUnit ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit) : '';
+                        const unit = survey.offerPriceUnit
+                          ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
+                          : '';
                         return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
@@ -504,7 +506,9 @@ export const DirectComparisonScoringSection = ({
                       inputType="display"
                       accessor={({ value }) => {
                         if (!value) return '';
-                        const unit = survey.salePriceUnit ? getParameterDescription('MeasurementUnits', survey.salePriceUnit) : '';
+                        const unit = survey.salePriceUnit
+                          ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
+                          : '';
                         return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
@@ -617,7 +621,7 @@ export const DirectComparisonScoringSection = ({
             </tr>
 
             {/* 2nd revision */}
-            {(groupCollateralType === 'LB' || groupCollateralType === 'C') && (
+            {(groupCollateralType === 'LB' || groupCollateralType === 'U') && (
               <DirectComparisonSecondRevision
                 comparativeSurveys={comparativeSurveys}
                 collateralType={groupCollateralType}
