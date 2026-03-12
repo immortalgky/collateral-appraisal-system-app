@@ -7,6 +7,7 @@ import Breadcrumb from '@shared/components/Breadcrumb';
 import ErrorBoundary from '@shared/components/ErrorBoundary';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
+import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
 import { useGetAppraisalById } from '@features/appraisal/api/appraisal';
@@ -50,6 +51,15 @@ const propertySubRouteLabels: Record<string, { label: string; icon: string }> = 
  */
 function ParameterLoader() {
   useParametersQuery();
+  return null;
+}
+
+/**
+ * Non-rendering component that handles address loading.
+ * useAddressesQuery fetches once and hydrates the Zustand store inside queryFn.
+ */
+function AddressLoader() {
+  useAddressesQuery();
   return null;
 }
 
@@ -213,6 +223,7 @@ function AppraisalLayout() {
   return (
     <AppraisalProvider value={contextValue}>
       <ParameterLoader />
+      <AddressLoader />
       <div className="h-screen flex flex-col">
         <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />

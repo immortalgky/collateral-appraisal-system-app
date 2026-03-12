@@ -9,8 +9,10 @@ import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
 import toast from 'react-hot-toast';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const MarketComparableListingPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market comparable data (general pool, no appraisalId needed)
   const { data: marketComparables, isLoading } = useGetMarketComparables();
@@ -104,24 +106,26 @@ const MarketComparableListingPage = () => {
                   headers={headers}
                   data={items}
                   onSelect={handleEditSelect}
-                  onDelete={handleDelete}
+                  onDelete={isReadOnly ? undefined : handleDelete}
                 />
               </Section>
             </div>
-            <div className="border-t border-gray-100 sticky bottom-0 pt-3">
-              <button
-                type="button"
-                onClick={handleOpenModal}
-                className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
-                    border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1
-                    transition-colors rounded-lg"
-              >
-                <div className="w-6 h-6 rounded-full bg-neutral-5 flex items-center justify-center">
-                  <Icon style="solid" name="circle-plus" className="size-3 text-neutral-5" />
-                </div>
-                Add market comparable
-              </button>
-            </div>
+            {!isReadOnly && (
+              <div className="border-t border-gray-100 sticky bottom-0 pt-3">
+                <button
+                  type="button"
+                  onClick={handleOpenModal}
+                  className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
+                      border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1
+                      transition-colors rounded-lg"
+                >
+                  <div className="w-6 h-6 rounded-full bg-neutral-5 flex items-center justify-center">
+                    <Icon style="solid" name="circle-plus" className="size-3 text-neutral-5" />
+                  </div>
+                  Add market comparable
+                </button>
+              </div>
+            )}
             {isOpenModal && (
               <CollateralSelectModal
                 items={collateralItems}

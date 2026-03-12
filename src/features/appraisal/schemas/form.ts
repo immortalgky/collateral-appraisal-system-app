@@ -177,7 +177,9 @@ export const createMarketComparableForm = z
     propertyType: z.string().nullable().optional(),
     comparableNumber: z.string().nullable().optional(),
     offerPrice: z.coerce.number().nullable().optional(),
+    offerPriceUnit: z.string().nullable().optional(),
     salePrice: z.coerce.number().nullable().optional(),
+    salePriceUnit: z.string().nullable().optional(),
     saleDate: z.string().datetime({ local: true, offset: true }).nullable().optional(),
   })
   .passthrough();
@@ -583,6 +585,8 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   propertyType: '',
   comparableNumber: '',
   offerPrice: null,
+  offerPriceUnit: null,
   salePrice: null,
+  salePriceUnit: null,
   saleDate: null,
 };

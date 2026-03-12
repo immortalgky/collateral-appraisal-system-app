@@ -263,7 +263,7 @@ const LinkToPropertyModal = ({
   );
 };
 
-export const GalleryTab = () => {
+export const GalleryTab = ({ readOnly }: { readOnly?: boolean }) => {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
@@ -539,6 +539,7 @@ export const GalleryTab = () => {
 
     const onDragEnter = (e: DragEvent) => {
       e.preventDefault();
+      if (readOnly) return;
       dragCounterRef.current++;
       if (dragCounterRef.current === 1) {
         setIsDragging(true);
@@ -551,6 +552,7 @@ export const GalleryTab = () => {
 
     const onDragLeave = (e: DragEvent) => {
       e.preventDefault();
+      if (readOnly) return;
       dragCounterRef.current--;
       if (dragCounterRef.current <= 0) {
         dragCounterRef.current = 0;
@@ -560,6 +562,7 @@ export const GalleryTab = () => {
 
     const onDrop = (e: DragEvent) => {
       e.preventDefault();
+      if (readOnly) return;
       dragCounterRef.current = 0;
       setIsDragging(false);
       const files = Array.from(e.dataTransfer?.files ?? []);
@@ -691,23 +694,27 @@ export const GalleryTab = () => {
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Icon name="cloud-arrow-up" className="mr-2" />
-          Upload Photos
-        </Button>
+        {!readOnly && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Icon name="cloud-arrow-up" className="mr-2" />
+            Upload Photos
+          </Button>
+        )}
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleFileSelect}
-          className="hidden"
-        />
+        {!readOnly && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        )}
       </div>
 
       {/* Statistics */}
@@ -808,7 +815,7 @@ export const GalleryTab = () => {
           </div>
 
           {/* Select All */}
-          {filteredImages.length > 0 && (
+          {filteredImages.length > 0 && !readOnly && (
             <button
               type="button"
               onClick={handleSelectAll}
@@ -873,7 +880,16 @@ export const GalleryTab = () => {
               </Button>
             </div>
           ) : (
+            readOnly ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                <Icon name="image" className="text-3xl text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-500">No photos</p>
+            </div>
+          ) : (
             <EmptyGalleryState onUpload={() => fileInputRef.current?.click()} />
+          )
           )
         ) : (
           <>
@@ -919,7 +935,7 @@ export const GalleryTab = () => {
       )}
 
       {/* Bulk Action Toolbar */}
-      {selectedImageIds.size > 0 && (
+      {selectedImageIds.size > 0 && !readOnly && (
         <BulkActionToolbar
           selectedCount={selectedImageIds.size}
           onDelete={handleBulkDelete}
@@ -956,7 +972,7 @@ export const GalleryTab = () => {
             }
           }}
           isSavingDescription={isUpdating}
-          onDelete={() => {
+          onDelete={readOnly ? undefined : () => {
             handleImageDelete(selectedImage);
             setSelectedImage(null);
           }}

@@ -2,6 +2,7 @@ import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@headlessui/react';
 import { z } from 'zod';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 // TODO: Import from proper location when files are created
 const buildingDetailSchema = z.object({
@@ -15,6 +16,7 @@ const BuildingDetail = ({ name: _name }: { name: string }) => (
 );
 
 function CreateCollateralBuilding() {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const methods = useForm<BuildingDetailFormValue>({
     resolver: zodResolver(buildingDetailSchema),
     defaultValues: {
@@ -55,7 +57,7 @@ function CreateCollateralBuilding() {
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <BuildingDetail name={'buildings'} />
-          <Button onClick={() => onDraft()}>Save Draft</Button>
+          {!isReadOnly && <Button onClick={() => onDraft()}>Save Draft</Button>}
         </form>
       </FormProvider>
     </div>

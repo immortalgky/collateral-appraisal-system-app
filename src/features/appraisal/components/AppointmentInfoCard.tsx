@@ -6,6 +6,7 @@ interface AppointmentInfoCardProps {
   appointment: AppointmentDto2Type | null;
   onReschedule: () => void;
   onCancel?: () => void;
+  readOnly?: boolean;
 }
 
 /**
@@ -16,6 +17,7 @@ export default function AppointmentInfoCard({
   appointment,
   onReschedule,
   onCancel,
+  readOnly,
 }: AppointmentInfoCardProps) {
   const hasAppointment = Boolean(appointment);
 
@@ -61,14 +63,16 @@ export default function AppointmentInfoCard({
           </div>
 
           {/* Right Section - Schedule Button */}
-          <button
-            type="button"
-            onClick={onReschedule}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors shadow-sm"
-          >
-            <Icon name="calendar-plus" style="solid" className="w-5 h-5" />
-            <span className="text-sm font-medium">Schedule Appointment</span>
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={onReschedule}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors shadow-sm"
+            >
+              <Icon name="calendar-plus" style="solid" className="w-5 h-5" />
+              <span className="text-sm font-medium">Schedule Appointment</span>
+            </button>
+          )}
         </div>
       </div>
     );
@@ -127,26 +131,28 @@ export default function AppointmentInfoCard({
         </div>
 
         {/* Right Section - Action Buttons */}
-        <div className="flex items-center gap-2">
-          {onCancel && appointment.status.toLowerCase() !== 'cancelled' && (
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            {onCancel && appointment.status.toLowerCase() !== 'cancelled' && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
+              >
+                <Icon name="xmark" style="solid" className="w-4 h-4" />
+                <span className="text-sm font-medium">Cancel</span>
+              </button>
+            )}
             <button
               type="button"
-              onClick={onCancel}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
+              onClick={onReschedule}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-secondary bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors"
             >
-              <Icon name="xmark" style="solid" className="w-4 h-4" />
-              <span className="text-sm font-medium">Cancel</span>
+              <Icon name="clock-rotate-left" style="solid" className="w-5 h-5" />
+              <span className="text-sm font-medium uppercase tracking-wider">Re-Schedule</span>
             </button>
-          )}
-          <button
-            type="button"
-            onClick={onReschedule}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-secondary bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors"
-          >
-            <Icon name="clock-rotate-left" style="solid" className="w-5 h-5" />
-            <span className="text-sm font-medium uppercase tracking-wider">Re-Schedule</span>
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

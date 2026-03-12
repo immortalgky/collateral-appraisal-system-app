@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,8 +37,11 @@ import {
   createMarketComparableFormDefault,
   type createMarketComparableFormType,
 } from '../schemas/form';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { FormReadOnlyContext } from '@/shared/components/form/context';
 
 const CreateMarketComparablePage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -108,7 +111,7 @@ const CreateMarketComparablePage = () => {
       })
       .filter(Boolean);
 
-    methods.reset({
+    return {
       surveyName: marketComparable.marketComparable.surveyName,
       propertyType: marketComparable.marketComparable.propertyType,
       templateCode: template?.template.templateCode,
@@ -117,11 +120,33 @@ const CreateMarketComparablePage = () => {
       sourceInfo: marketComparable.marketComparable.sourceInfo,
       templateId: marketComparable.marketComparable.templateId,
       offerPrice: marketComparable.marketComparable.offerPrice ?? null,
+      offerPriceUnit: marketComparable.marketComparable.offerPriceUnit ?? null,
       salePrice: marketComparable.marketComparable.salePrice ?? null,
+      salePriceUnit: marketComparable.marketComparable.salePriceUnit ?? null,
       saleDate: marketComparable.marketComparable.saleDate ?? null,
       factorData: factorDataValue,
-    });
+    };
   }, [isEditMode, marketComparable, template]);
+
+  const formDefaults = mapComparableToForm ?? createMarketComparableFormDefault;
+
+  const methods = useForm<createMarketComparableFormType>({
+    defaultValues: formDefaults,
+    resolver: zodResolver(createMarketComparableForm),
+  });
+
+  const {
+    handleSubmit,
+    formState: { isDirty },
+  } = methods;
+
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
+
+  useEffect(() => {
+    if (isEditMode && mapComparableToForm) {
+      methods.reset(mapComparableToForm);
+    }
+  }, [isEditMode, mapComparableToForm]);
 
   const onSubmit: SubmitHandler<createMarketComparableFormType> = data => {
     // Convert factorData values to string
@@ -148,7 +173,9 @@ const CreateMarketComparablePage = () => {
           offerPrice: data.offerPrice ?? null,
           offerPriceAdjustmentPercent: null,
           offerPriceAdjustmentAmount: null,
+          offerPriceUnit: data.offerPriceUnit ?? null,
           salePrice: data.salePrice ?? null,
+          salePriceUnit: data.salePriceUnit ?? null,
           saleDate: data.saleDate || null,
           factorData,
         };
@@ -183,7 +210,9 @@ const CreateMarketComparablePage = () => {
         offerPrice: data.offerPrice ?? null,
         offerPriceAdjustmentPercent: null,
         offerPriceAdjustmentAmount: null,
+        offerPriceUnit: data.offerPriceUnit ?? null,
         salePrice: data.salePrice ?? null,
+        salePriceUnit: data.salePriceUnit ?? null,
         saleDate: data.saleDate || null,
         factorData,
       };
@@ -227,8 +256,9 @@ const CreateMarketComparablePage = () => {
 
   const { isOpen, onToggle } = useDisclosure();
 
-  // Loading state
-  const isLoading = isEditMode && (isLoadingComparable || isLoadingTemplate);
+  // Loading state — block render until both data sources are available in edit mode
+  const isLoading =
+    isEditMode && (isLoadingComparable || isLoadingTemplate || !marketComparable || !template);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -252,82 +282,88 @@ const CreateMarketComparablePage = () => {
       </div>
 
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+        <FormReadOnlyContext.Provider value={isReadOnly}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <div
+              id="form-scroll-container"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photo Section (appraisal context only) */}
-                  {appraisalId && (
-                    <Section id="photos-section" anchor>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Icon name="images" style="solid" className="w-5 h-5 text-blue-600" />
+              <ResizableSidebar
+                isOpen={isOpen}
+                onToggle={onToggle}
+                openedWidth="w-1/5"
+                closedWidth="w-1/50"
+              >
+                <ResizableSidebar.Main>
+                  <div className="flex-auto flex flex-col gap-6 min-w-0">
+                    {/* Photo Section (appraisal context only) */}
+                    {appraisalId && (
+                      <Section id="photos-section" anchor>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <Icon name="images" style="solid" className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                        <div className="h-px bg-gray-200 mb-4" />
+                        <MarketComparablePhotoSection
+                          ref={photoSectionRef}
+                          appraisalId={appraisalId}
+                          marketComparableId={marketId ?? undefined}
+                          images={marketComparable?.marketComparable?.images}
+                        />
+                      </Section>
+                    )}
+
+                    {/* Comparable Information Header */}
+                    <Section id="comparable-section" anchor>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
+                          <Icon
+                            name="magnifying-glass-location"
+                            style="solid"
+                            className="w-5 h-5 text-orange-600"
+                          />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          Comparable Information
+                        </h2>
                       </div>
                       <div className="h-px bg-gray-200 mb-4" />
-                      <MarketComparablePhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        marketComparableId={marketId ?? undefined}
-                        images={marketComparable?.marketComparable?.images}
-                      />
                     </Section>
-                  )}
 
-                  {/* Comparable Information Header */}
-                  <Section id="comparable-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Icon
-                          name="magnifying-glass-location"
-                          style="solid"
-                          className="w-5 h-5 text-orange-600"
-                        />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Comparable Information
-                      </h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                  </Section>
+                    {/* Market Comparable Form */}
+                    <Section anchor className="flex flex-col gap-6">
+                      <MarketComparableForm />
+                    </Section>
+                  </div>
+                </ResizableSidebar.Main>
+              </ResizableSidebar>
+            </div>
 
-                  {/* Market Comparable Form */}
-                  <Section anchor className="flex flex-col gap-6">
-                    <MarketComparableForm />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+            {/* Sticky Action Bar */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!isReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={isDirty} />
+                  </>
+                )}
+              </ActionBar.Left>
+              <ActionBar.Right>
+                <Button type="submit" isLoading={isPending} disabled={isPending}>
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            </ActionBar>
 
-          {/* Sticky Action Bar */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
-              <ActionBar.Divider />
-              <ActionBar.UnsavedIndicator show={isDirty} />
-            </ActionBar.Left>
-            <ActionBar.Right>
-              <Button type="submit" isLoading={isPending} disabled={isPending}>
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
-          </ActionBar>
-
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormReadOnlyContext.Provider>
       </FormProvider>
     </div>
   );

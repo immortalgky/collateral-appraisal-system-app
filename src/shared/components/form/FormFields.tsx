@@ -1,5 +1,5 @@
 import { type Control, type FieldValues, useController, useFormContext, useWatch, } from 'react-hook-form';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -234,17 +234,26 @@ function FieldRenderer({
   }, [isDisabled, name, field.disabledValue, getValues, setValue]);
 
   // Clear field value when hidden by showWhen/hideWhen (clearOnHide defaults to true)
-  useEffect(() => {
-    if (isVisible) return;
-    if (field.clearOnHide === false) return;
+  const prevVisibleRef = useRef<boolean | null>(null);
 
-    const clearValue = field.hiddenValue ?? null;
-    const currentValue = getValues(name);
-    if (currentValue !== clearValue) {
-      setValue(name, clearValue, {
-        shouldDirty: false,
-        shouldValidate: false,
-      });
+  useEffect(() => {
+    const wasVisible = prevVisibleRef.current;
+    prevVisibleRef.current = isVisible;
+
+    // Only clear on a genuine visible → hidden transition.
+    // Skip if: initial mount (null), still hidden (false→false), or became visible.
+    // This prevents clearing during form init and reset() propagation delays.
+    if (!isVisible && wasVisible === true) {
+      if (field.clearOnHide === false) return;
+
+      const clearValue = field.hiddenValue ?? null;
+      const currentValue = getValues(name);
+      if (currentValue !== clearValue) {
+        setValue(name, clearValue, {
+          shouldDirty: false,
+          shouldValidate: false,
+        });
+      }
     }
   }, [isVisible, name, field.clearOnHide, field.hiddenValue, getValues, setValue]);
 

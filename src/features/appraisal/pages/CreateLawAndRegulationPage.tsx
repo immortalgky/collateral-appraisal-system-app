@@ -31,6 +31,8 @@ import {
   createLawAndRegulationFormDefault,
   type CreateLawAndRegulationFormType,
 } from '../schemas/lawAndRegulation';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { FormReadOnlyContext } from '@/shared/components/form/context';
 
 const LAW_HEADER_GROUP = 'Header';
 
@@ -61,6 +63,7 @@ const formFields: FormField[] = [
 ];
 
 const CreateLawAndRegulationPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
   const { appraisalId, itemId } = useParams<{ appraisalId: string; itemId?: string }>();
   const isEditMode = Boolean(itemId);
@@ -471,6 +474,7 @@ const CreateLawAndRegulationPage = () => {
 
   return (
     <FormProvider {...methods}>
+      <FormReadOnlyContext.Provider value={isReadOnly}>
       <div className="flex flex-col h-full min-h-0">
         {/* Scrollable Form Content */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth">
@@ -521,19 +525,21 @@ const CreateLawAndRegulationPage = () => {
                 <PhotoGridView
                   images={gridImages}
                   onImageClick={handleImageClick}
-                  onImageDelete={handleImageDelete}
+                  onImageDelete={isReadOnly ? undefined : handleImageDelete}
                   showUsedBadge={false}
                   prepend={
-                    <div
-                      onClick={() => setShowPhotoSourceModal(true)}
-                      className="aspect-[4/3] rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
-                    >
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-3">
-                        <Icon name="plus" className="text-2xl" />
+                    !isReadOnly ? (
+                      <div
+                        onClick={() => setShowPhotoSourceModal(true)}
+                        className="aspect-[4/3] rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
+                      >
+                        <div className="w-14 h-14 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-3">
+                          <Icon name="plus" className="text-2xl" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-600">Add photos</p>
+                        <p className="text-xs text-gray-400 mt-1">Click or drag & drop</p>
                       </div>
-                      <p className="text-sm font-medium text-gray-600">Add photos</p>
-                      <p className="text-xs text-gray-400 mt-1">Click or drag & drop</p>
-                    </div>
+                    ) : undefined
                   }
                 />
               </div>
@@ -547,30 +553,36 @@ const CreateLawAndRegulationPage = () => {
             <Button variant="ghost" type="button" onClick={navigateBack}>
               Cancel
             </Button>
-            <ActionBar.Divider />
-            <ActionBar.UnsavedIndicator show={isDirty} />
+            {!isReadOnly && (
+              <>
+                <ActionBar.Divider />
+                <ActionBar.UnsavedIndicator show={isDirty} />
+              </>
+            )}
           </ActionBar.Left>
-          <ActionBar.Right>
-            <Button
-              variant="ghost"
-              type="button"
-              onClick={() => handleSave('draft')}
-              isLoading={isPending && saveAction === 'draft'}
-              disabled={isPending}
-            >
-              <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-              Save draft
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handleSave('submit')}
-              isLoading={isPending && saveAction === 'submit'}
-              disabled={isPending}
-            >
-              <Icon name="check" style="solid" className="size-4 mr-2" />
-              Save
-            </Button>
-          </ActionBar.Right>
+          {!isReadOnly && (
+            <ActionBar.Right>
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => handleSave('draft')}
+                isLoading={isPending && saveAction === 'draft'}
+                disabled={isPending}
+              >
+                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                Save draft
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleSave('submit')}
+                isLoading={isPending && saveAction === 'submit'}
+                disabled={isPending}
+              >
+                <Icon name="check" style="solid" className="size-4 mr-2" />
+                Save
+              </Button>
+            </ActionBar.Right>
+          )}
         </ActionBar>
 
         {/* Delete Confirmation */}
@@ -611,13 +623,13 @@ const CreateLawAndRegulationPage = () => {
             onClose={() => setPreviewPhoto(null)}
             onNavigate={setPreviewPhoto}
             showInUseStatus={false}
-            onDelete={() => {
+            onDelete={isReadOnly ? undefined : () => {
               setDeleteTarget({
                 galleryPhotoId: previewPhoto.id,
                 fileName: previewPhoto.fileName ?? 'this image',
               });
             }}
-            onSaveDescription={async (caption: string) => {
+            onSaveDescription={isReadOnly ? undefined : async (caption: string) => {
               if (!appraisalId) return;
               try {
                 const dto = galleryPhotoDtoMap.get(previewPhoto.id);
@@ -642,6 +654,7 @@ const CreateLawAndRegulationPage = () => {
           />
         )}
       </div>
+      </FormReadOnlyContext.Provider>
     </FormProvider>
   );
 };

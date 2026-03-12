@@ -1,5 +1,27 @@
 import { z } from 'zod';
 
+const SearchResultItem = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    subtitle: z.string().nullable(),
+    status: z.string().nullable(),
+    category: z.string(),
+    navigateTo: z.string(),
+    icon: z.string().nullable(),
+    metadata: z.object({}).partial().passthrough(),
+  })
+  .passthrough();
+const GlobalSearchResults = z
+  .object({
+    requests: z.array(SearchResultItem),
+    customers: z.array(z.unknown()),
+    properties: z.array(z.unknown()),
+  })
+  .passthrough();
+const GlobalSearchResult = z
+  .object({ results: GlobalSearchResults, totalCount: z.number().int() })
+  .passthrough();
 const AddressDto = z
   .object({
     houseNumber: z.string().nullable(),
@@ -260,6 +282,9 @@ const GetRequestListItem = z
     purpose: z.string().nullable(),
     channel: z.string().nullable(),
     priority: z.string().nullable(),
+    customerName: z.string().nullable(),
+    contactNumber: z.string().nullable(),
+    createdAt: z.string().datetime({ offset: true }),
   })
   .partial()
   .passthrough();
@@ -539,6 +564,20 @@ const ParameterDto = z
     description: z.string().nullable(),
     isActive: z.boolean().nullable(),
     seqNo: z.number().int().nullable(),
+  })
+  .passthrough();
+const AddressDto3 = z
+  .object({
+    provinceCode: z.string(),
+    provinceName: z.string(),
+    provinceNameEn: z.string(),
+    districtCode: z.string(),
+    districtName: z.string(),
+    districtNameEn: z.string(),
+    subDistrictCode: z.string(),
+    subDistrictName: z.string(),
+    subDistrictNameEn: z.string(),
+    postcode: z.string(),
   })
   .passthrough();
 const DocumentLink = z
@@ -1527,6 +1566,8 @@ const UpdateMarketComparableRequest = z
     offerPriceAdjustmentAmount: z.number().nullish().default(null),
     salePrice: z.number().nullish().default(null),
     saleDate: z.string().datetime({ offset: true }).nullish().default(null),
+    offerPriceUnit: z.string().nullish().default(null),
+    salePriceUnit: z.string().nullish().default(null),
   })
   .passthrough();
 const UpdateMarketComparableResponse = z.object({ success: z.boolean() }).passthrough();
@@ -1570,6 +1611,8 @@ const MarketComparableDetailDto = z
     offerPriceAdjustmentAmount: z.number().nullable(),
     salePrice: z.number().nullable(),
     saleDate: z.string().datetime({ offset: true }).nullable(),
+    offerPriceUnit: z.string().nullable(),
+    salePriceUnit: z.string().nullable(),
     notes: z.string().nullable(),
     templateId: z.string().uuid().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
@@ -1608,6 +1651,8 @@ const MarketComparableDto = z
     offerPriceAdjustmentAmount: z.number().nullable(),
     salePrice: z.number().nullable(),
     saleDate: z.string().datetime({ offset: true }).nullable(),
+    offerPriceUnit: z.string().nullable(),
+    salePriceUnit: z.string().nullable(),
     notes: z.string().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
   })
@@ -1637,6 +1682,8 @@ const CreateMarketComparableRequest = z
     offerPriceAdjustmentAmount: z.number().nullish().default(null),
     salePrice: z.number().nullish().default(null),
     saleDate: z.string().datetime({ offset: true }).nullish().default(null),
+    offerPriceUnit: z.string().nullish().default(null),
+    salePriceUnit: z.string().nullish().default(null),
   })
   .passthrough();
 const CreateMarketComparableResponse = z.object({ id: z.string().uuid() }).passthrough();
@@ -1892,14 +1939,19 @@ const SaveDecisionSummaryResponse = z
     additionalAssumptions: z.string().nullable(),
   })
   .passthrough();
-const ApproachMatrixRow = z
+const ApproachItem = z
+  .object({
+    approachType: z.string(),
+    approachValue: z.number().nullable(),
+    isSelected: z.boolean(),
+  })
+  .passthrough();
+const ApproachMatrixGroup = z
   .object({
     propertyGroupId: z.string().uuid(),
     groupNumber: z.number().int(),
-    approachType: z.string(),
-    finalValue: z.number().nullable(),
-    finalValueRounded: z.number().nullable(),
     groupSummaryValue: z.number().nullable(),
+    approaches: z.array(ApproachItem),
   })
   .passthrough();
 const GovernmentPriceRow = z
@@ -1924,7 +1976,7 @@ const DecisionApprovalListItem = z
   .passthrough();
 const GetDecisionSummaryResponse = z
   .object({
-    approachMatrix: z.array(ApproachMatrixRow),
+    approachMatrix: z.array(ApproachMatrixGroup),
     totalAppraisalPrice: z.number(),
     forceSellingPrice: z.number(),
     buildingInsurance: z.number(),
@@ -2618,6 +2670,7 @@ const GetLandPropertyResponse = z
     hasBuilding: z.boolean().nullable(),
     hasBuildingOther: z.string().nullable(),
     remark: z.string().nullable(),
+    totalLandAreaInSqWa: z.number(),
     titles: z.array(LandTitleItemData).nullable(),
   })
   .partial()
@@ -2922,6 +2975,7 @@ const GetLandAndBuildingPropertyResponse = z
     pondDepth: z.number().nullable(),
     hasBuilding: z.boolean().nullable(),
     hasBuildingOther: z.string().nullable(),
+    totalLandAreaInSqWa: z.number(),
     titles: z.array(LandTitleItemData).nullable(),
     buildingNumber: z.string().nullable(),
     modelName: z.string().nullable(),
@@ -3387,6 +3441,8 @@ const AppraisalComparableDto = z
     comparableOfferPriceAdjustmentAmount: z.number().nullable(),
     comparableSalePrice: z.number().nullable(),
     comparableSaleDate: z.string().datetime({ offset: true }).nullable(),
+    comparableOfferPriceUnit: z.string().nullable(),
+    comparableSalePriceUnit: z.string().nullable(),
     adjustments: z.array(ComparableAdjustmentDto),
   })
   .partial()
@@ -4265,6 +4321,9 @@ const SimulateTransitionCompletedRequest = z
   .passthrough();
 
 export const schemas = {
+  SearchResultItem,
+  GlobalSearchResults,
+  GlobalSearchResult,
   AddressDto,
   RequestTitleDocumentDto,
   RequestTitleDto,
@@ -4335,6 +4394,7 @@ export const schemas = {
   NotificationDto,
   GetUserNotificationsResponse,
   ParameterDto,
+  AddressDto3,
   DocumentLink,
   Input,
   CreateUploadSessionResponse,
@@ -4501,7 +4561,8 @@ export const schemas = {
   GetDocumentChecklistResponse,
   SaveDecisionSummaryRequest,
   SaveDecisionSummaryResponse,
-  ApproachMatrixRow,
+  ApproachItem,
+  ApproachMatrixGroup,
   GovernmentPriceRow,
   DecisionApprovalListItem,
   GetDecisionSummaryResponse,

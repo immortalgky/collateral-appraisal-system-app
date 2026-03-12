@@ -26,6 +26,7 @@ import AddToQuotationModal from '../components/AddToQuotationModal';
 import CreateQuotationModal from '../components/CreateQuotationModal';
 import { useAuthStore } from '@features/auth/store.ts';
 import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.ts';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const AdministrationPage = () => {
   const { appraisalId } = useParams<{ appraisalId: string }>();
@@ -34,8 +35,10 @@ const AdministrationPage = () => {
   // API hooks
   const { data: assignments, isLoading: isLoadingAssignment } = useGetAssignment(appraisalId ?? '');
   const currentAssignment = assignments?.[0] ?? null;
-  const isReadOnly =
+  const { isReadOnly: navReadOnly } = useAppraisalReadOnly('Administration');
+  const localReadOnly =
     !!currentAssignment && currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
+  const isReadOnly = navReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
 
   // Fetch assigned staff/company by ID for display

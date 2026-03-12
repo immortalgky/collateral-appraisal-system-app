@@ -1,46 +1,38 @@
 import Icon from '@/shared/components/Icon';
 import { formatNumber } from '@/shared/utils/formatUtils';
-import type { ApproachMatrixRow } from '../../api/decisionSummary';
+import type { ApproachMatrixGroup } from '../../api/decisionSummary';
 
 interface ApproachMatrixTableProps {
-  rows: ApproachMatrixRow[];
+  groups: ApproachMatrixGroup[];
 }
 
 const APPROACH_COLUMNS = [
-  { key: 'Market Comparison', label: 'Market Comparison' },
-  { key: 'Cost', label: 'Cost' },
-  { key: 'Income', label: 'Income' },
-  { key: 'Residual', label: 'Residual' },
+  { key: 'Market', label: 'Market Comparison Approach' },
+  { key: 'Cost', label: 'Cost Approach' },
+  { key: 'Income', label: 'Income Approach' },
+  { key: 'Residual', label: 'Residual Approach' },
 ] as const;
 
 /**
  * Read-only table displaying the decision approach matrix.
- * Pivots rows by groupNumber, columns = approach types + Summary column.
+ * Each group contains nested approaches with approachType, approachValue, and isSelected.
  */
-const ApproachMatrixTable = ({ rows }: ApproachMatrixTableProps) => {
-  // Group rows by groupNumber
-  const groupMap = new Map<number, Map<string, ApproachMatrixRow>>();
-  const groupSummaries = new Map<number, number | null>();
+const ApproachMatrixTable = ({ groups }: ApproachMatrixTableProps) => {
+  const sortedGroups = [...groups].sort((a, b) => a.groupNumber - b.groupNumber);
 
-  for (const row of rows) {
-    if (!groupMap.has(row.groupNumber)) {
-      groupMap.set(row.groupNumber, new Map());
-    }
-    groupMap.get(row.groupNumber)!.set(row.approachType, row);
+  // Derive which approaches have at least one selected group
+  const selectedApproaches = new Set(
+    groups.flatMap(g =>
+      (g.approaches ?? [])
+        .filter(a => a.isSelected)
+        .map(a => a.approachType),
+    ),
+  );
 
-    // Capture groupSummaryValue (should be same for all rows in a group)
-    if (row.groupSummaryValue != null) {
-      groupSummaries.set(row.groupNumber, row.groupSummaryValue);
-    }
-  }
-
-  const sortedGroups = Array.from(groupMap.keys()).sort((a, b) => a - b);
-
-  // Calculate total summary
-  const totalSummary = sortedGroups.reduce((sum, groupNum) => {
-    const val = groupSummaries.get(groupNum);
-    return sum + (val ?? 0);
-  }, 0);
+  const totalSummary = sortedGroups.reduce(
+    (sum, group) => sum + (group.groupSummaryValue ?? 0),
+    0,
+  );
 
   return (
     <div className="overflow-x-auto">
@@ -50,49 +42,47 @@ const ApproachMatrixTable = ({ rows }: ApproachMatrixTableProps) => {
             <th className="px-4 py-3 text-left font-medium rounded-tl-lg">Group</th>
             {APPROACH_COLUMNS.map(col => (
               <th key={col.key} className="px-4 py-3 text-right font-medium">
-                {col.label}
+                <div className="flex items-center justify-end gap-2">
+                  {selectedApproaches.has(col.key) && (
+                    <Icon
+                      name="circle-check"
+                      style="solid"
+                      className="w-4 h-4 text-white shrink-0"
+                    />
+                  )}
+                  {col.label}
+                </div>
               </th>
             ))}
             <th className="px-4 py-3 text-right font-medium rounded-tr-lg">Summary</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {sortedGroups.map(groupNum => {
-            const approaches = groupMap.get(groupNum)!;
-            const summary = groupSummaries.get(groupNum);
+          {sortedGroups.map(group => (
+            <tr key={group.groupNumber} className="hover:bg-gray-50">
+              <td className="px-4 py-3 font-medium text-gray-900">
+                {group.groupNumber}
+              </td>
+              {APPROACH_COLUMNS.map(col => {
+                const approach = group.approaches?.find(a => a.approachType === col.key);
 
-            return (
-              <tr key={groupNum} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  Group {groupNum}
-                </td>
-                {APPROACH_COLUMNS.map(col => {
-                  const row = approaches.get(col.key);
-                  const value = row?.finalValueRounded ?? row?.finalValue;
-
-                  return (
-                    <td key={col.key} className="px-4 py-3 text-right text-gray-700">
-                      {value != null ? (
-                        <div className="flex items-center justify-end gap-2">
-                          <Icon
-                            name="circle-check"
-                            style="solid"
-                            className="w-4 h-4 text-teal-500 shrink-0"
-                          />
-                          <span>{formatNumber(value, 2)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
-                    </td>
-                  );
-                })}
-                <td className="px-4 py-3 text-right font-medium text-gray-900">
-                  {summary != null ? formatNumber(summary, 2) : '-'}
-                </td>
-              </tr>
-            );
-          })}
+                return (
+                  <td key={col.key} className="px-4 py-3 text-right text-gray-700">
+                    {approach?.approachValue != null ? (
+                      <span className={approach.isSelected ? 'font-semibold' : ''}>
+                        {formatNumber(approach.approachValue, 2)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300">-</span>
+                    )}
+                  </td>
+                );
+              })}
+              <td className="px-4 py-3 text-right font-medium text-gray-900">
+                {group.groupSummaryValue != null ? formatNumber(group.groupSummaryValue, 2) : '-'}
+              </td>
+            </tr>
+          ))}
         </tbody>
         <tfoot>
           <tr className="bg-teal-50 font-semibold border-t-2 border-teal-200">

@@ -19,7 +19,7 @@ const getPropertyIcon = (code: string | null | undefined): string | null => {
   return match?.icon ?? null;
 };
 
-export const MarketsTab = () => {
+export const MarketsTab = ({ readOnly }: { readOnly?: boolean }) => {
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
@@ -113,13 +113,15 @@ export const MarketsTab = () => {
             appraisal
           </p>
         </div>
-        <PropertyTypeDropdown
-          groupId=""
-          onSelectType={handleCreateSelect}
-          buttonLabel="Create Comparable"
-          disableDefaultNavigation
-          align="right"
-        />
+        {!readOnly && (
+          <PropertyTypeDropdown
+            groupId=""
+            onSelectType={handleCreateSelect}
+            buttonLabel="Create Comparable"
+            disableDefaultNavigation
+            align="right"
+          />
+        )}
       </div>
 
       {/* Comparable List */}
@@ -133,12 +135,14 @@ export const MarketsTab = () => {
             <p className="text-xs text-gray-400 mt-1 mb-4">
               Create a market comparable to analyze comparable properties
             </p>
-            <PropertyTypeDropdown
-              groupId=""
-              onSelectType={handleCreateSelect}
-              buttonLabel="Create First Comparable"
-              disableDefaultNavigation
-            />
+            {!readOnly && (
+              <PropertyTypeDropdown
+                groupId=""
+                onSelectType={handleCreateSelect}
+                buttonLabel="Create First Comparable"
+                disableDefaultNavigation
+              />
+            )}
           </div>
         </FormCard>
       ) : (
@@ -213,17 +217,19 @@ export const MarketsTab = () => {
                     >
                       <Icon name="pencil" style="solid" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleUnlink(comparable.id);
-                      }}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
-                      title="Unlink comparable"
-                    >
-                      <Icon name="trash-can" style="solid" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleUnlink(comparable.id);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
+                        title="Unlink comparable"
+                      >
+                        <Icon name="trash-can" style="solid" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

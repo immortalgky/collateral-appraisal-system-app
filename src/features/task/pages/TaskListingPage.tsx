@@ -67,18 +67,12 @@ function TaskListingPage() {
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(25);
 
-  // Search and filter state
+  // Search state
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [taskTypeFilter, setTaskTypeFilter] = useState('');
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState('');
 
   // Sorting state (for list view)
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-
-  // Debounced search value
-  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -100,38 +94,21 @@ function TaskListingPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Reset to first page when filters or sorting change
+  // Reset to first page when sorting changes
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, statusFilter, taskTypeFilter, propertyTypeFilter, sortField, sortDirection]);
+  }, [sortField, sortDirection]);
 
   // Build request params for list view
   const listRequestParams = {
     pageNumber,
     pageSize,
-    search: debouncedSearch || undefined,
-    status: statusFilter || undefined,
-    taskType: taskTypeFilter || undefined,
-    propertyType: propertyTypeFilter || undefined,
     sortBy: sortField ?? undefined,
     sortDirection: sortField ? sortDirection : undefined,
   };
 
   // Build request params for Kanban view (no pagination)
-  const kanbanRequestParams = {
-    search: debouncedSearch || undefined,
-    status: statusFilter || undefined,
-    taskType: taskTypeFilter || undefined,
-    propertyType: propertyTypeFilter || undefined,
-  };
+  const kanbanRequestParams = {};
 
   // Fetch tasks for list view
   const {
@@ -168,7 +145,16 @@ function TaskListingPage() {
 
   // Extract paginated result for the list view
   const paginatedResult: TaskListResponse | undefined = listData;
-  const listTasks = (paginatedResult?.items ?? []) as Task[];
+  const allListTasks = (paginatedResult?.items ?? []) as Task[];
+  const listTasks = searchTerm
+    ? allListTasks.filter(t => {
+        const term = searchTerm.toLowerCase();
+        return (
+          t.appraisalNumber?.toLowerCase().includes(term) ||
+          t.customerName?.toLowerCase().includes(term)
+        );
+      })
+    : allListTasks;
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -231,12 +217,9 @@ function TaskListingPage() {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
-    setTaskTypeFilter('');
-    setPropertyTypeFilter('');
   };
 
-  const hasFilters = searchTerm || statusFilter || taskTypeFilter || propertyTypeFilter;
+  const hasFilters = !!searchTerm;
 
   if (isError) {
     return (
@@ -314,20 +297,14 @@ function TaskListingPage() {
           />
           <input
             type="text"
-            placeholder="Search appraisal report..."
+            placeholder="Search by appraisal number or customer name..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"
           />
         </div>
 
-        {/* Filters Button */}
-        <button className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 flex items-center gap-1.5">
-          <Icon style="solid" name="filter" className="size-3.5" />
-          FILTERS
-        </button>
-
-        {/* Clear Filters */}
+        {/* Clear Search */}
         {hasFilters && (
           <button
             onClick={handleClearFilters}
@@ -586,7 +563,21 @@ function TaskListingPage() {
       ) : (
         // Grid View - Kanban Board
         <div className="flex-1 min-h-0">
-          <TaskKanbanBoard tasks={kanbanTasks || []} groupBy={groupBy} isLoading={isLoading} />
+          <TaskKanbanBoard
+            tasks={
+              searchTerm
+                ? (kanbanTasks || []).filter(t => {
+                    const term = searchTerm.toLowerCase();
+                    return (
+                      t.appraisalNumber?.toLowerCase().includes(term) ||
+                      t.customerName?.toLowerCase().includes(term)
+                    );
+                  })
+                : kanbanTasks || []
+            }
+            groupBy={groupBy}
+            isLoading={isLoading}
+          />
         </div>
       )}
 
