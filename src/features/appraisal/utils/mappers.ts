@@ -291,7 +291,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
     plotLocationType: response.plotLocationType ?? [],
-    plotLocationTypeOther: response.plotLocationOther ?? '',
+    plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
     landFillTypeOther: response.landFillTypeOther ?? '',
     landFillPercent: response.landFillPercent ?? 0,
@@ -389,7 +389,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
-    remark: response.buildingRemark ?? '',
+    remark: response.remark ?? '',
     surfaces: (response as any).surfaces ?? [],
     depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
       ...item,

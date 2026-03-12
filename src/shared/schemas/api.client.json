@@ -10,6 +10,60 @@
     }
   ],
   "paths": {
+    "/search": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "Global search across requests, customers, and properties",
+        "description": "Unified search endpoint for the global search bar.",
+        "operationId": "GlobalSearch",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalSearchResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/requests/{requestId}/titles": {
       "get": {
         "tags": ["Request Titles"],
@@ -375,6 +429,41 @@
               "type": "integer",
               "format": "int32",
               "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purpose",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1569,6 +1658,52 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parameters/addresses/title": {
+      "get": {
+        "tags": ["Parameter"],
+        "summary": "Get title addresses",
+        "description": "Retrieve all Thai address entries from the Title (Department of Lands) dataset.",
+        "operationId": "GetTitleAddresses",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddressDto3"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parameters/addresses/dopa": {
+      "get": {
+        "tags": ["Parameter"],
+        "summary": "Get DOPA addresses",
+        "description": "Retrieve all Thai address entries from the DOPA (Department of Provincial Administration) dataset.",
+        "operationId": "GetDopaAddresses",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddressDto3"
+                  }
                 }
               }
             }
@@ -11050,6 +11185,53 @@
         },
         "nullable": true
       },
+      "AddressDto3": {
+        "required": [
+          "provinceCode",
+          "provinceName",
+          "provinceNameEn",
+          "districtCode",
+          "districtName",
+          "districtNameEn",
+          "subDistrictCode",
+          "subDistrictName",
+          "subDistrictNameEn",
+          "postcode"
+        ],
+        "type": "object",
+        "properties": {
+          "provinceCode": {
+            "type": "string"
+          },
+          "provinceName": {
+            "type": "string"
+          },
+          "provinceNameEn": {
+            "type": "string"
+          },
+          "districtCode": {
+            "type": "string"
+          },
+          "districtName": {
+            "type": "string"
+          },
+          "districtNameEn": {
+            "type": "string"
+          },
+          "subDistrictCode": {
+            "type": "string"
+          },
+          "subDistrictName": {
+            "type": "string"
+          },
+          "subDistrictNameEn": {
+            "type": "string"
+          },
+          "postcode": {
+            "type": "string"
+          }
+        }
+      },
       "AppendixDocumentResponse": {
         "required": ["id", "galleryPhotoId", "documentId", "displaySequence"],
         "type": "object",
@@ -11296,6 +11478,14 @@
             "format": "date-time",
             "nullable": true
           },
+          "comparableOfferPriceUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "comparableSalePriceUnit": {
+            "type": "string",
+            "nullable": true
+          },
           "adjustments": {
             "type": "array",
             "items": {
@@ -11522,15 +11712,25 @@
           }
         }
       },
-      "ApproachMatrixRow": {
-        "required": [
-          "propertyGroupId",
-          "groupNumber",
-          "approachType",
-          "finalValue",
-          "finalValueRounded",
-          "groupSummaryValue"
-        ],
+      "ApproachItem": {
+        "required": ["approachType", "approachValue", "isSelected"],
+        "type": "object",
+        "properties": {
+          "approachType": {
+            "type": "string"
+          },
+          "approachValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "isSelected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApproachMatrixGroup": {
+        "required": ["propertyGroupId", "groupNumber", "groupSummaryValue", "approaches"],
         "type": "object",
         "properties": {
           "propertyGroupId": {
@@ -11541,23 +11741,16 @@
             "type": "integer",
             "format": "int32"
           },
-          "approachType": {
-            "type": "string"
-          },
-          "finalValue": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "finalValueRounded": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
           "groupSummaryValue": {
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "approaches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApproachItem"
+            }
           }
         }
       },
@@ -15581,6 +15774,16 @@
             "format": "date-time",
             "default": null,
             "nullable": true
+          },
+          "offerPriceUnit": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "salePriceUnit": {
+            "type": "string",
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -18390,7 +18593,7 @@
           "approachMatrix": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ApproachMatrixRow"
+              "$ref": "#/components/schemas/ApproachMatrixGroup"
             }
           },
           "totalAppraisalPrice": {
@@ -18683,6 +18886,7 @@
           "pondDepth",
           "hasBuilding",
           "hasBuildingOther",
+          "totalLandAreaInSqWa",
           "titles",
           "buildingNumber",
           "modelName",
@@ -19106,6 +19310,10 @@
           "hasBuildingOther": {
             "type": "string",
             "nullable": true
+          },
+          "totalLandAreaInSqWa": {
+            "type": "number",
+            "format": "double"
           },
           "titles": {
             "type": "array",
@@ -19729,6 +19937,10 @@
           "remark": {
             "type": "string",
             "nullable": true
+          },
+          "totalLandAreaInSqWa": {
+            "type": "number",
+            "format": "double"
           },
           "titles": {
             "type": "array",
@@ -20461,6 +20673,18 @@
           "priority": {
             "type": "string",
             "nullable": true
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -21142,6 +21366,39 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "GlobalSearchResult": {
+        "required": ["results", "totalCount"],
+        "type": "object",
+        "properties": {
+          "results": {
+            "$ref": "#/components/schemas/GlobalSearchResults"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GlobalSearchResults": {
+        "required": ["requests", "customers", "properties"],
+        "type": "object",
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResultItem"
+            }
+          },
+          "customers": {
+            "type": "array",
+            "items": {}
+          },
+          "properties": {
+            "type": "array",
+            "items": {}
           }
         }
       },
@@ -21950,6 +22207,14 @@
             "format": "date-time",
             "nullable": true
           },
+          "offerPriceUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "salePriceUnit": {
+            "type": "string",
+            "nullable": true
+          },
           "notes": {
             "type": "string",
             "nullable": true
@@ -22039,6 +22304,14 @@
           "saleDate": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "offerPriceUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "salePriceUnit": {
+            "type": "string",
             "nullable": true
           },
           "notes": {
@@ -24028,6 +24301,48 @@
           },
           "success": {
             "type": "boolean"
+          }
+        }
+      },
+      "SearchResultItem": {
+        "required": [
+          "id",
+          "title",
+          "subtitle",
+          "status",
+          "category",
+          "navigateTo",
+          "icon",
+          "metadata"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string"
+          },
+          "navigateTo": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object"
           }
         }
       },
@@ -27665,6 +27980,16 @@
             "format": "date-time",
             "default": null,
             "nullable": true
+          },
+          "offerPriceUnit": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "salePriceUnit": {
+            "type": "string",
+            "default": null,
+            "nullable": true
           }
         }
       },
@@ -28581,6 +28906,9 @@
     }
   },
   "tags": [
+    {
+      "name": "Search"
+    },
     {
       "name": "Request Titles"
     },

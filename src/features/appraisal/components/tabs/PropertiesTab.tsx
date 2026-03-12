@@ -70,9 +70,10 @@ interface ContextMenuState {
 interface PropertiesTabProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  readOnly?: boolean;
 }
 
-export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps) => {
+export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: PropertiesTabProps) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const basePath = usePropertyBasePath();
@@ -430,36 +431,38 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     }
   };
 
-  const contextMenuItems = [
-    {
-      label: 'Edit',
-      icon: 'pen-to-square',
-      onClick: handleEdit,
-    },
-    {
-      label: 'Move to',
-      icon: 'arrow-right-arrow-left',
-      onClick: handleMoveTo,
-      disabled: groups.length <= 1,
-    },
-    {
-      label: 'Copy',
-      icon: 'copy',
-      onClick: handleCopy,
-    },
-    {
-      label: 'Paste',
-      icon: 'paste',
-      onClick: handlePaste,
-      disabled: !clipboard,
-    },
-    {
-      label: 'Delete',
-      icon: 'trash',
-      onClick: handleDelete,
-      danger: true,
-    },
-  ];
+  const contextMenuItems = readOnly
+    ? [{ label: 'View', icon: 'eye', onClick: handleEdit }]
+    : [
+        {
+          label: 'Edit',
+          icon: 'pen-to-square',
+          onClick: handleEdit,
+        },
+        {
+          label: 'Move to',
+          icon: 'arrow-right-arrow-left',
+          onClick: handleMoveTo,
+          disabled: groups.length <= 1,
+        },
+        {
+          label: 'Copy',
+          icon: 'copy',
+          onClick: handleCopy,
+        },
+        {
+          label: 'Paste',
+          icon: 'paste',
+          onClick: handlePaste,
+          disabled: !clipboard,
+        },
+        {
+          label: 'Delete',
+          icon: 'trash',
+          onClick: handleDelete,
+          danger: true,
+        },
+      ];
 
   // ==================== Loading & Error States ====================
 
@@ -534,24 +537,26 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         </div>
 
         {/* Add New Group Button */}
-        <Button
-          variant="primary"
-          onClick={handleAddGroup}
-          className="flex items-center gap-2"
-          disabled={createGroupMutation.isPending}
-        >
-          {createGroupMutation.isPending ? (
-            <Icon name="spinner" className="animate-spin" />
-          ) : (
-            <Icon name="plus" />
-          )}
-          Add New Group
-        </Button>
+        {!readOnly && (
+          <Button
+            variant="primary"
+            onClick={handleAddGroup}
+            className="flex items-center gap-2"
+            disabled={createGroupMutation.isPending}
+          >
+            {createGroupMutation.isPending ? (
+              <Icon name="spinner" className="animate-spin" />
+            ) : (
+              <Icon name="plus" />
+            )}
+            Add New Group
+          </Button>
+        )}
       </div>
 
       {/* Groups with Drag and Drop (only active for grid view) */}
       <DndContext
-        sensors={sensors}
+        sensors={readOnly ? [] : sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -583,6 +588,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onGoToPricingAnalysis={handleGoToPricingAnalysis}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
+                readOnly={readOnly}
               />
             ))
           )}

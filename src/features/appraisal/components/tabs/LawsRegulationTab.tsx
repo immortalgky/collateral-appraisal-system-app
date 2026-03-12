@@ -21,9 +21,10 @@ interface ItemRowProps {
   item: LawAndRegulationDtoType;
   onClick: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }
 
-const ItemRow = ({ item, onClick, onDelete }: ItemRowProps) => {
+const ItemRow = ({ item, onClick, onDelete, readOnly }: ItemRowProps) => {
   return (
     <div
       onClick={onClick}
@@ -45,16 +46,18 @@ const ItemRow = ({ item, onClick, onDelete }: ItemRowProps) => {
       </div>
 
       {/* Delete button (visible on hover) */}
-      <button
-        type="button"
-        onClick={e => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
-      >
-        <Icon name="trash" style="regular" className="w-4 h-4" />
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+        >
+          <Icon name="trash" style="regular" className="w-4 h-4" />
+        </button>
+      )}
 
       {/* External link icon */}
       <Icon name="arrow-up-right-from-square" className="text-gray-400 group-hover:text-primary" />
@@ -62,7 +65,7 @@ const ItemRow = ({ item, onClick, onDelete }: ItemRowProps) => {
   );
 };
 
-export const LawsRegulationTab = () => {
+export const LawsRegulationTab = ({ readOnly }: { readOnly?: boolean }) => {
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
 
@@ -132,10 +135,12 @@ export const LawsRegulationTab = () => {
             Relevant laws and regulations for property appraisal
           </p>
         </div>
-        <Button size="sm" onClick={handleCreate}>
-          <Icon name="plus" style="solid" className="w-3.5 h-3.5 mr-1.5" />
-          Add
-        </Button>
+        {!readOnly && (
+          <Button size="sm" onClick={handleCreate}>
+            <Icon name="plus" style="solid" className="w-3.5 h-3.5 mr-1.5" />
+            Add
+          </Button>
+        )}
       </div>
 
       {/* Regulations Reference card */}
@@ -170,6 +175,7 @@ export const LawsRegulationTab = () => {
                 item={item}
                 onClick={() => handleItemClick(item)}
                 onDelete={() => setDeleteTarget(item)}
+                readOnly={readOnly}
               />
             ))}
           </div>

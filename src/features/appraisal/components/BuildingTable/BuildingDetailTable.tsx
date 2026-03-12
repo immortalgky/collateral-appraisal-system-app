@@ -8,6 +8,7 @@ import NumberInputCell from './NumberInputCell';
 import DisplayCell from './DisplayCell';
 import DerivedCell from './DerivedCell';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { useFormReadOnly } from '@/shared/components/form/context';
 
 type Align = 'left' | 'right' | 'center';
 
@@ -149,6 +150,7 @@ const BuildingDetailTable = ({
   tableClassName,
   rowGrouping,
 }: BuildingDetailProps) => {
+  const formReadOnly = useFormReadOnly();
   const { getValues, control } = useFormContext();
   const { append, remove } = useFieldArray({
     control,
@@ -227,8 +229,10 @@ const BuildingDetailTable = ({
 
   const isEmpty = values.length === 0;
 
-  const canEdit = !disableEditBtn;
-  const canSave = !disableSaveBtn;
+  const canEdit = !disableEditBtn && !formReadOnly;
+  const canSave = !disableSaveBtn && !formReadOnly;
+  const canAddRow = !disableAddRowBtn && !formReadOnly;
+  const canDelete = !formReadOnly;
 
   const visibleColCount = headers.filter(h => h.type !== 'group').length + 1;
 
@@ -296,14 +300,16 @@ const BuildingDetailTable = ({
               <Icon style="solid" name="pen" className="size-2.5" />
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={() => handleDeleteRow(originalIndex)}
-            className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-            title="Delete"
-          >
-            <Icon style="solid" name="trash" className="size-2.5" />
-          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => handleDeleteRow(originalIndex)}
+              className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+              title="Delete"
+            >
+              <Icon style="solid" name="trash" className="size-2.5" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
@@ -465,7 +471,7 @@ const BuildingDetailTable = ({
             <p className="text-xs text-gray-500 text-center mb-3 max-w-sm">
               Add building details to calculate depreciation.
             </p>
-            {!disableAddRowBtn && (
+            {canAddRow && (
               <button
                 type="button"
                 onClick={handleAddRow}
@@ -476,7 +482,7 @@ const BuildingDetailTable = ({
               </button>
             )}
           </div>
-        ) : !disableAddRowBtn ? (
+        ) : canAddRow ? (
           <div className="p-2 flex items-center justify-center border-t border-neutral-3 bg-gray-50">
             <button
               type="button"

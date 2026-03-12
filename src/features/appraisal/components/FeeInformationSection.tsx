@@ -27,6 +27,7 @@ interface FeeInformationSectionProps {
   onApproveFeeItem?: (feeId: string, itemId: string) => void;
   onRejectFeeItem?: (feeId: string, itemId: string, reason: string) => void;
   isFeePaymentTypeUpdating?: boolean;
+  readOnly?: boolean;
 }
 
 /**
@@ -43,6 +44,7 @@ export default function FeeInformationSection({
   onApproveFeeItem,
   onRejectFeeItem,
   isFeePaymentTypeUpdating,
+  readOnly,
 }: FeeInformationSectionProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
@@ -175,7 +177,7 @@ export default function FeeInformationSection({
         group="FeePaymentMethod"
         value={feePaymentType || ''}
         onChange={value => onUpdateFeePaymentType?.(value)}
-        disabled={isFeePaymentTypeUpdating}
+        disabled={readOnly || isFeePaymentTypeUpdating}
       />
 
       {/* Fee Table */}
@@ -236,7 +238,7 @@ export default function FeeInformationSection({
                   {formatCurrency(item.feeAmount)}
                 </span>
                 <div className="flex items-center justify-center gap-1">
-                  {editable ? (
+                  {!readOnly && editable ? (
                     <>
                       <button
                         type="button"
@@ -257,7 +259,7 @@ export default function FeeInformationSection({
                         <Icon name="trash" style="regular" className="w-4 h-4" />
                       </button>
                     </>
-                  ) : (
+                  ) : !readOnly ? (
                     <>
                       {approval && !item.approvalStatus && (
                         <>
@@ -284,7 +286,7 @@ export default function FeeInformationSection({
                         </>
                       )}
                     </>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -304,7 +306,7 @@ export default function FeeInformationSection({
                         {approval.label}
                       </span>
                     )}
-                    {editable && (
+                    {!readOnly && editable && (
                       <>
                         <button
                           type="button"
@@ -336,16 +338,18 @@ export default function FeeInformationSection({
         })}
 
         {/* Add Fee Button */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
-          >
-            <Icon name="circle-plus" style="solid" className="w-5 h-5" />
-            <span className="text-sm font-medium">Add additional fee</span>
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="bg-white border-b border-gray-200 px-4 py-3">
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
+            >
+              <Icon name="circle-plus" style="solid" className="w-5 h-5" />
+              <span className="text-sm font-medium">Add additional fee</span>
+            </button>
+          </div>
+        )}
 
         {/* Summary Rows */}
         <div className="bg-gray-100 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">

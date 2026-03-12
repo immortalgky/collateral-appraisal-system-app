@@ -36,12 +36,14 @@ const TopicItem = ({
   onSelect,
   onDelete,
   onEdit,
+  readOnly,
 }: {
   topic: PhotoTopicDtoType;
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
   onEdit: (name: string) => void;
+  readOnly?: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(topic.topicName);
@@ -129,44 +131,46 @@ const TopicItem = ({
             )}
 
             {/* Actions */}
-            <div
-              className={clsx(
-                'flex items-center gap-0.5 transition-opacity',
-                isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-              )}
-            >
-              <button
-                type="button"
-                onClick={e => {
-                  e.stopPropagation();
-                  setEditName(topic.topicName);
-                  setIsEditing(true);
-                }}
+            {!readOnly && (
+              <div
                 className={clsx(
-                  'p-1.5 rounded-lg transition-colors',
-                  isSelected
-                    ? 'text-white/70 hover:text-white hover:bg-white/10'
-                    : 'text-gray-400 hover:text-primary hover:bg-primary/10'
+                  'flex items-center gap-0.5 transition-opacity',
+                  isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 )}
               >
-                <Icon name="pen" className="text-xs" />
-              </button>
-              <button
-                type="button"
-                onClick={e => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-                className={clsx(
-                  'p-1.5 rounded-lg transition-colors',
-                  isSelected
-                    ? 'text-white/70 hover:text-white hover:bg-red-500/20'
-                    : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-                )}
-              >
-                <Icon name="trash" className="text-xs" />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setEditName(topic.topicName);
+                    setIsEditing(true);
+                  }}
+                  className={clsx(
+                    'p-1.5 rounded-lg transition-colors',
+                    isSelected
+                      ? 'text-white/70 hover:text-white hover:bg-white/10'
+                      : 'text-gray-400 hover:text-primary hover:bg-primary/10'
+                  )}
+                >
+                  <Icon name="pen" className="text-xs" />
+                </button>
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                  className={clsx(
+                    'p-1.5 rounded-lg transition-colors',
+                    isSelected
+                      ? 'text-white/70 hover:text-white hover:bg-red-500/20'
+                      : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                  )}
+                >
+                  <Icon name="trash" className="text-xs" />
+                </button>
+              </div>
+            )}
           </div>
         </button>
       )}
@@ -216,7 +220,7 @@ const UploadPlaceholder = ({
   </div>
 );
 
-export const PhotosTab = () => {
+export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
   // Get appraisalId from URL params
   const { appraisalId } = useParams<{ appraisalId: string }>();
 
@@ -518,16 +522,17 @@ export const PhotosTab = () => {
   // Drag & Drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    if (!readOnly) setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    if (!readOnly) setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
@@ -568,7 +573,7 @@ export const PhotosTab = () => {
         </div>
 
         {/* Add Topic Button */}
-        {!isAddingTopic && (
+        {!readOnly && !isAddingTopic && (
           <button
             type="button"
             onClick={() => setIsAddingTopic(true)}
@@ -580,7 +585,7 @@ export const PhotosTab = () => {
         )}
 
         {/* Add Topic Input */}
-        {isAddingTopic && (
+        {!readOnly && isAddingTopic && (
           <div className="mb-4 p-4 bg-white rounded-xl border border-primary/10 shadow-sm">
             <input
               type="text"
@@ -628,6 +633,7 @@ export const PhotosTab = () => {
                 setDeleteConfirm({ type: 'topic', id: topic.id, name: topic.topicName })
               }
               onEdit={name => handleEditTopic(topic.id, name)}
+              readOnly={readOnly}
             />
           ))}
 
@@ -695,16 +701,18 @@ export const PhotosTab = () => {
             )}
 
             {/* Add Photos Button */}
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowPhotoSourceModal(true)}
-              disabled={!selectedTopicId}
-              className="!shadow-lg !shadow-primary/25"
-            >
-              <Icon name="plus" className="mr-1.5" />
-              Add Photos
-            </Button>
+            {!readOnly && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowPhotoSourceModal(true)}
+                disabled={!selectedTopicId}
+                className="!shadow-lg !shadow-primary/25"
+              >
+                <Icon name="plus" className="mr-1.5" />
+                Add Photos
+              </Button>
+            )}
           </div>
         </div>
 
@@ -740,10 +748,12 @@ export const PhotosTab = () => {
                 }
                 showUsedBadge={false}
                 prepend={
-                  <UploadPlaceholder
-                    onClick={() => setShowPhotoSourceModal(true)}
-                    isDragging={false}
-                  />
+                  readOnly ? undefined : (
+                    <UploadPlaceholder
+                      onClick={() => setShowPhotoSourceModal(true)}
+                      isDragging={false}
+                    />
+                  )
                 }
               />
             </div>

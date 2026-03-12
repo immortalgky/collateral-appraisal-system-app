@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,8 +27,10 @@ import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const CreateLandPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -39,8 +41,17 @@ const CreateLandPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
+  const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
+
+  const formDefaults = useMemo(() => {
+    if (isEditMode && propertyData) {
+      return mapLandPropertyResponseToForm(propertyData);
+    }
+    return createLandFormDefault;
+  }, [isEditMode, propertyData]);
+
   const methods = useForm<createLandFormType>({
-    defaultValues: createLandFormDefault,
+    defaultValues: formDefaults,
     resolver: zodResolver(createLandForm),
   });
   const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
@@ -48,12 +59,9 @@ const CreateLandPage = () => {
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
-  const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
-
   useEffect(() => {
     if (isEditMode && propertyData) {
-      const formValues = mapLandPropertyResponseToForm(propertyData);
-      reset(formValues);
+      reset(mapLandPropertyResponseToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -161,7 +169,7 @@ const CreateLandPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -182,7 +190,7 @@ const CreateLandPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandForm}>
+      <FormProvider methods={methods} schema={createLandForm} readOnly={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -211,6 +219,7 @@ const CreateLandPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
+                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>
@@ -254,29 +263,35 @@ const CreateLandPage = () => {
           <ActionBar>
             <ActionBar.Left>
               <CancelButton />
-              <ActionBar.Divider />
-              <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                </>
+              )}
             </ActionBar.Left>
-            <ActionBar.Right>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={handleSaveDraft}
-                isLoading={isPending && saveAction === 'draft'}
-                disabled={isPending}
-              >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save draft
-              </Button>
-              <Button
-                type="submit"
-                isLoading={isPending && saveAction === 'submit'}
-                disabled={isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save draft
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
           </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />

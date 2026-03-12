@@ -3,6 +3,7 @@ import { useContext, useMemo } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
+import { getParameterDescription } from '@shared/utils/parameterUtils';
 import { RHFInputCell } from './table/RHFInputCell';
 import { Icon } from '@/shared/components';
 import {
@@ -598,7 +599,11 @@ export function WQSScoringSection({
                     <RHFInputCell
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => (value ? value.toLocaleString() : '')}
+                      accessor={({ value }) => {
+                        if (!value) return '';
+                        const unit = survey.offerPriceUnit ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit) : '';
+                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
+                      }}
                     />
                   </td>
                 );
@@ -712,7 +717,9 @@ export function WQSScoringSection({
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
+                        if (!value) return '';
+                        const unit = survey.salePriceUnit ? getParameterDescription('MeasurementUnits', survey.salePriceUnit) : '';
+                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
                   </td>
