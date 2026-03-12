@@ -3,7 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
-import { toFiniteNumber } from '@features/pricingAnalysis/domain/calculateWQS.ts';
+import { round2, toFiniteNumber } from '@features/pricingAnalysis/domain/calculateWQS.ts';
 import {
   type DerivedFieldRule,
   useDerivedFields,
@@ -17,6 +17,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     finalValueLandArea: landAreaPath,
     finalValueUsableArea: usableAreaPath,
     finalValueFinalValueRounded: finalValueRoundedPath,
+    finalValueAppraisalPrice: finalValueAppraisalPricePath,
     finalValueAppraisalPriceRounded: appraisalPriceRoundedPath,
     finalValuePriceDifferentiate: priceDifferentiatePath,
   } = wqsFieldPath;
@@ -31,11 +32,31 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
 
   const rules: DerivedFieldRule[] = [
     {
-      targetPath: appraisalPriceRoundedPath(),
+      targetPath: finalValueAppraisalPricePath(),
       deps: [finalValueRoundedPath()],
-      compute: ({ getValues }) => Number(getValues(finalValueRoundedPath())) || 0,
+      compute: ({ getValues }) => {
+        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
+
+        const isIncludeLandArea = getValues(includeLandAreaPath());
+        const landArea = getValues(landAreaPath());
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
+        }
+
+        const usableArea = getValues(usableAreaPath());
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
+        }
+
+        return finalValueRounded;
+      },
+    },
+    {
+      targetPath: appraisalPriceRoundedPath(),
+      deps: [finalValueAppraisalPricePath()],
+      compute: ({ getValues }) => Number(getValues(finalValueAppraisalPricePath())) || 0,
       when: ({ getValues }) => {
-        const depValue = Number(getValues(finalValueRoundedPath())) || 0;
+        const depValue = Number(getValues(finalValueAppraisalPricePath())) || 0;
         const current = Number(getValues(appraisalPriceRoundedPath())) || 0;
 
         if (prevFinalValueRef.current === null) {
@@ -137,7 +158,9 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
               const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
               const icon = num > 0 ? 'arrow-up' : 'arrow-down';
               return (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
+                >
                   <Icon name={icon} style="solid" className="size-3" />
                   {Math.abs(num).toLocaleString()}
                 </span>
@@ -148,14 +171,14 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       </div>
 
       {/* Include building cost toggle */}
-      <div className="flex items-center gap-4">
+      {/* <div className="flex items-center gap-4">
         <span className="w-44 text-gray-500">Include building cost</span>
         <RHFInputCell
           fieldName={hasBuildingCostPath()}
           inputType="toggle"
           toggle={{ checked: false, options: ['No', 'Yes'] }}
         />
-      </div>
+      </div> */}
     </div>
   );
 };

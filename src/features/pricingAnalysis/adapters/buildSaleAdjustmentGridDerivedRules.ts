@@ -47,6 +47,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
     calculationWeight: calculationWeightPath,
     calculationWeightAdjustValue: calculationWeightAdjustValuePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
   } = saleGridFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
@@ -104,9 +106,9 @@ export function buildSaleGridCalculationDerivedRules(args: {
         {
           targetPath: calculationLandAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: ({ ctx }) => {
-            const propertyLandArea = ctx.property?.area ?? 0;
-            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '05');
+          compute: ({ getValues }) => {
+            const propertyLandArea = getValues(landAreaPath()) ?? 0;
+            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '02');
             const surveyLandArea = findSurveyLandArea
               ? readFactorValue({
                   dataType: findSurveyLandArea.dataType,
@@ -122,7 +124,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
           targetPath: calculationLandValueIncreaseDecreasePath({ column: columnIndex }),
           deps: [calculationLandPricePath()],
           compute: ({ getValues }) => {
-            const landPrice = getValues('landPrice') ?? 0;
+            const landPrice = getValues(calculationLandPricePath()) ?? 0;
             const landDiff = getValues(calculationLandAreaDiffPath({ column: columnIndex })) ?? 0;
             const landValueIncreaseDecrease = calcIncreaseDecrease(landPrice, landDiff);
             return landValueIncreaseDecrease;
@@ -131,9 +133,9 @@ export function buildSaleGridCalculationDerivedRules(args: {
         {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: () => {
-            const propertyUsableArea = getPropertyValueByFactorCode('12', property, allFactors) ?? 0;
-            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
+          compute: ({ getValues }) => {
+            const propertyUsableArea = getValues(usableAreaPath()) ?? 0;
+            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '14');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({
                   dataType: findSurveyUsableArea.dataType,
@@ -150,7 +152,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
           targetPath: calculationBuildingValueIncreaseDecreasePath({ column: columnIndex }),
           deps: [calculationUsableAreaPricePath()],
           compute: ({ getValues }) => {
-            const usableAreaPrice = getValues('usableAreaPrice') ?? 0;
+            const usableAreaPrice = getValues(calculationUsableAreaPricePath()) ?? 0;
             const usableAreaDiff =
               getValues(calculationUsableAreaDiffPath({ column: columnIndex })) ?? 0;
             const buildingValueIncreaseDecrease = calcIncreaseDecrease(

@@ -123,7 +123,7 @@ export function DirectComparisonSecondRevision({
           </tr>
         </>
       )}
-      {(collateralType === 'LB' || collateralType === 'C') && (
+      {(collateralType === 'LB' || collateralType === 'U') && (
         <>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>

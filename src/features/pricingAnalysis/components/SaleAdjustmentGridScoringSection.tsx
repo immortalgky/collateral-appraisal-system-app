@@ -618,7 +618,7 @@ export const SaleAdjustmentGridScoringSection = ({
             </tr>
 
             {/* 2nd revision */}
-            {(groupCollateralType === 'LB' || groupCollateralType === 'C') && (
+            {(groupCollateralType === 'LB' || groupCollateralType === 'U') && (
               <SaleAdjustmentGridSecondRevision
                 comparativeSurveys={comparativeSurveys}
                 collateralType={groupCollateralType}

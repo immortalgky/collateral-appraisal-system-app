@@ -8,7 +8,6 @@ import type {
   LinkedComparableType,
   MarketComparableDetailType,
 } from '../schemas';
-import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
 
 interface RestoreWQSFromSavedDataProps {
@@ -104,7 +103,14 @@ export function restoreWQSFromSavedData({
     const surveyMap = new Map<string, unknown>();
     for (const s of survey.factorData ?? []) {
       if (s.factorCode) {
-        surveyMap.set(s.factorCode, readFactorValue({ dataType: s.dataType as string, value: s.value as string, fieldDecimal: s.fieldDecimal as number }));
+        surveyMap.set(
+          s.factorCode,
+          readFactorValue({
+            dataType: s.dataType as string,
+            value: s.value as string,
+            fieldDecimal: s.fieldDecimal as number,
+          }),
+        );
       }
     }
 
@@ -113,9 +119,12 @@ export function restoreWQSFromSavedData({
     return {
       marketId: survey.id ?? '',
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
-      offeringPriceMeasurementUnit: saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
-      offeringPriceAdjustmentPct: saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
-      offeringPriceAdjustmentAmt: saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
+      offeringPriceMeasurementUnit:
+        saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
+      offeringPriceAdjustmentPct:
+        saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
+      offeringPriceAdjustmentAmt:
+        saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
       sellingPriceMeasurementUnit: (surveyMap.get('20') as string) ?? '',
       sellingPriceAdjustmentYear: saved?.adjustedPeriodPct ?? toNum(surveyMap.get('23'), 3),
@@ -153,10 +162,12 @@ export function restoreWQSFromSavedData({
       },
       WQSCalculations,
       WQSFinalValue: {
-        landArea: property.titles
-          ? convertLandTitlesToLandArea({ titles: property.titles })
-          : undefined,
-        usableArea: (property?.usableArea as number) ?? undefined,
+        landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        usableArea: property.totalBuildingArea
+          ? Number(property.totalBuildingArea)
+          : property.usableArea
+            ? Number(property.usableArea)
+            : undefined,
         finalValue: 0,
         finalValueRounded: 0,
         coefficientOfDecision: 0,
