@@ -103,14 +103,16 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       </div>
 
       {/* Include Area toggle */}
-      <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Include Area</span>
-        <RHFInputCell
-          fieldName={includeLandAreaPath()}
-          inputType="toggle"
-          toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
-        />
-      </div>
+      {includeLandArea && (isLand || isUsable) && (
+        <div className="flex items-center gap-4">
+          <span className="w-44 text-gray-500">Include Area</span>
+          <RHFInputCell
+            fieldName={includeLandAreaPath()}
+            inputType="toggle"
+            toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
+          />
+        </div>
+      )}
 
       {/* Area (shown when include area is on) */}
       {includeLandArea && (isLand || isUsable) && (
