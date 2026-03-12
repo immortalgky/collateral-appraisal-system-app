@@ -1,4 +1,5 @@
 import { Icon } from '@/shared/components';
+import Badge from '@/shared/components/Badge';
 import clsx from 'clsx';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PricingAnalysisApproachMethodSelector } from './PricingAnalysisApproachMethodSelector';
@@ -35,7 +36,6 @@ interface PricingAnalysisAccordionProps {
   onCancelDeselectMethod: () => void;
   onSystemCalculationChange: (check: boolean) => void;
   systemCalculationMode: string;
-  onCancelPricingAccordion: () => void;
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
@@ -50,6 +50,7 @@ interface PricingAnalysisAccordionProps {
     confirmDelete: () => void;
     cancelDelete: () => void;
   };
+  onManualValueChange?: (arg: { approachType: string; methodType: string; value: number }) => void;
 }
 
 export const PricingAnalysisAccordion = ({
@@ -70,7 +71,6 @@ export const PricingAnalysisAccordion = ({
   onCancelDeselectMethod,
   onSystemCalculationChange,
   systemCalculationMode,
-  onCancelPricingAccordion,
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
@@ -79,6 +79,7 @@ export const PricingAnalysisAccordion = ({
   onDeleteMethod,
   pricingConfiguration,
   deleteConfirm,
+  onManualValueChange,
 }: PricingAnalysisAccordionProps) => {
   /** Map group properties to PropertyItem for rendering */
   const propertyItems = useMemo(
@@ -89,6 +90,9 @@ export const PricingAnalysisAccordion = ({
         .map(mapGroupItemToPropertyItem),
     [group.properties],
   );
+
+  /** Find selected approach name for header badge */
+  const selectedApproach = state.summarySelected?.find(appr => appr.isSelected);
 
   /** accordion effect */
   const detailInnerRef = useRef<HTMLDivElement>(null);
@@ -114,8 +118,20 @@ export const PricingAnalysisAccordion = ({
     <div className="rounded-xl border border-gray-200 bg-white px-2">
       {/* header */}
       <div className="grid grid-cols-12 justify-between items-center h-12">
-        <div className="col-span-8">
-          <span>{`Group: ${group?.number ?? ''} ${group?.name ?? ''} ( ${group?.properties?.length ?? 0} item(s) )`}</span>
+        <div className="col-span-8 flex items-center gap-2">
+          <span className="font-semibold">{`Group: ${group?.number ?? ''} ${group?.name ?? ''}`}</span>
+          <span className="text-sm text-gray-400">{`${group?.properties?.length ?? 0} item(s)`}</span>
+          {selectedApproach && (
+            <Badge
+              size="xs"
+              badgeStyle="soft"
+              type="status"
+              value="inprogress"
+              dot={false}
+            >
+              {selectedApproach.label}
+            </Badge>
+          )}
         </div>
         <div className="col-span-4 flex items-center justify-end gap-1">
           <div className="flex flex-row gap-1 items-center justify-end">
@@ -191,7 +207,6 @@ export const PricingAnalysisAccordion = ({
                 onSummaryModeSave={onSummaryModeSave}
                 onToggleMethod={onToggleMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
-                onCancelPricingAccordion={onCancelPricingAccordion}
                 onCancelEditMode={onCancelEditMode}
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCandidateApproach={onSelectCandidateApproach}
@@ -199,6 +214,7 @@ export const PricingAnalysisAccordion = ({
                 onDeleteMethod={onDeleteMethod}
                 pricingConfiguration={pricingConfiguration}
                 deleteConfirm={deleteConfirm}
+                onManualValueChange={onManualValueChange}
               />
             </div>
           </div>

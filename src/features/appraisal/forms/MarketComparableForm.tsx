@@ -2,10 +2,7 @@ import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import {
-  useGetMarketComparableTemplate,
-  useGetMarketComparableTemplateById,
-} from '../api/marketComparable';
+import { useGetMarketComparableTemplate, useGetMarketComparableTemplateById, } from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import { getTranslatedFactorName } from '@shared/utils/translationUtils';
@@ -59,7 +56,7 @@ const FactorsSkeleton = () => (
 );
 
 const MarketComparableForm = () => {
-  const language = useLocaleStore((s) => s.language);
+  const language = useLocaleStore(s => s.language);
   const { getValues, setValue, reset } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
   const isInitialSetup = useRef(true);
@@ -185,6 +182,8 @@ const MarketComparableForm = () => {
       wrapperClassName: 'col-span-8',
       maxIntegerDigits: 15,
       decimalPlaces: 2,
+      disableWhen: { field: 'salePrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'dropdown',
@@ -192,6 +191,8 @@ const MarketComparableForm = () => {
       label: '',
       group: 'MeasurementUnits',
       wrapperClassName: 'col-span-4',
+      disableWhen: { field: 'salePrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'number-input',
@@ -200,6 +201,8 @@ const MarketComparableForm = () => {
       wrapperClassName: 'col-span-8',
       maxIntegerDigits: 15,
       decimalPlaces: 2,
+      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'dropdown',
@@ -207,12 +210,16 @@ const MarketComparableForm = () => {
       label: '',
       group: 'MeasurementUnits',
       wrapperClassName: 'col-span-4',
+      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'date-input',
       name: 'saleDate',
       label: '',
       wrapperClassName: 'col-span-12',
+      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
   ];
 
@@ -284,7 +291,11 @@ const MarketComparableForm = () => {
               {factors.map((fac: any, index: number) => {
                 const fields: FormField[] = [buildFormField(fac, index)];
                 return (
-                  <SectionRow key={fac.factorCode} title={getTranslatedFactorName(fac.translations, language)} icon="sliders">
+                  <SectionRow
+                    key={fac.factorCode}
+                    title={getTranslatedFactorName(fac.translations, language)}
+                    icon="sliders"
+                  >
                     <FormFields fields={fields} />
                   </SectionRow>
                 );

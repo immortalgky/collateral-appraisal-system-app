@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "menu": "เมนู",
+    "general": "ทั่วไป",
     "system": "ระบบ",
     "dashboard": "แดชบอร์ด",
     "requests": "คำขอ",

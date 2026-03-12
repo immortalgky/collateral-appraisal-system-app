@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "menu": "菜单",
+    "general": "一般的",
     "system": "系统",
     "dashboard": "仪表盘",
     "requests": "请求",

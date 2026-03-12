@@ -142,14 +142,11 @@ export const GroupContainer = React.memo(
           </div>
           <div className="flex items-center gap-2">
             <button
-              className="px-2 py-1 bg-orange-100 text-orange-700 hover:text-red-500 hover:bg-red-50 cursor-pointer rounded text-[14px] font-medium"
+              className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 cursor-pointer rounded-md transition-colors"
               onClick={() => handleOnClickPricingButton()}
-              title="Appraise Collateral"
+              title="Pricing Analysis"
             >
-              <div className="flex flex-row items-center justify-center gap-1">
-                <Icon name="badge-dollar" className="text-xl" />
-                AP
-              </div>
+              <Icon name="badge-dollar" className="text-lg" />
             </button>
           </div>
         </div>

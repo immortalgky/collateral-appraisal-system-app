@@ -1,6 +1,7 @@
 {
   "sidebar": {
     "menu": "Menu",
+    "general": "General",
     "system": "System",
     "dashboard": "Dashboard",
     "requests": "Requests",

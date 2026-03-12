@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
@@ -27,6 +27,8 @@ import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorD
 import { useLocaleStore } from '@shared/store';
 import { format } from 'date-fns';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { MarketComparableDetailModal } from './MarketComparableDetailModal';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -80,6 +82,9 @@ export function WQSScoringSection({
     finalValueFinalValue: finalValueFinalValuePath,
     finalValueFinalValueRounded: finalValueFinalValueRoundedPath,
   } = wqsFieldPath;
+
+  const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
+  const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
 
   const serverData = useContext(ServerDataCtx);
   const language = useLocaleStore(s => s.language);
@@ -240,7 +245,17 @@ export function WQSScoringSection({
                     }
                   >
                     <div className="flex flex-col">
-                      <div className="p-1">{survey.surveyName}</div>
+                      <div className="p-1 flex items-center justify-center gap-1.5">
+                        <span>{survey.surveyName}</span>
+                        <button
+                          type="button"
+                          className="text-gray-500 hover:text-primary-600 transition-colors"
+                          onClick={() => { setSelectedSurveyId(survey.id ?? null); onModalOpen(); }}
+                          title="View market comparable detail"
+                        >
+                          <Icon name="arrow-up-right-from-square" style="solid" className="size-3.5" />
+                        </button>
+                      </div>
                       <div className="flex flex-row justify-between items-center">
                         <span>Score</span>
                         <span>Weighted Score</span>
@@ -937,6 +952,11 @@ export function WQSScoringSection({
           </tbody>
         </table>
       </ScrollableTableContainer>
+      <MarketComparableDetailModal
+        isOpen={isModalOpen}
+        onClose={onModalClose}
+        marketComparableId={selectedSurveyId}
+      />
     </div>
   );
 }

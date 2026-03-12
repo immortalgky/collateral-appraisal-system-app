@@ -30,7 +30,7 @@ export function PricingAnalysisTemplateSelector({
         </div>
         <h2 className="text-lg font-semibold text-gray-900">{methodName}</h2>
       </div>
-      <div className="flex items-end gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+      <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
         <div className="flex h-full items-center text-sm font-medium text-gray-600 shrink-0">
           Pricing Analysis Template
         </div>

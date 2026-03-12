@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { PricingAnalysisApproachCard } from './PricingAnalysisApproachCard';
 import { PricingAnalysisMethodCard } from './PricingAnalysisMethodCard';
+import type { ViewLayout } from './PricingAnalysisMethodCard';
 import { Icon } from '@/shared/components';
 import type { Approach } from '../../types/selection';
 import type { PricingAnalysisConfigType } from '../../schemas';
@@ -9,6 +10,7 @@ import { useState } from 'react';
 
 interface PricingAnalysisApproachAccordionProps {
   viewMode: ViewMode;
+  viewLayout?: ViewLayout;
   approach: Approach;
   onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
@@ -19,10 +21,14 @@ interface PricingAnalysisApproachAccordionProps {
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   configMethods?: PricingAnalysisConfigType['methods'];
+  onViewLayoutChange?: (layout: ViewLayout) => void;
+  isManualMode?: boolean;
+  onManualValueChange?: (arg: { approachType: string; methodType: string; value: number }) => void;
 }
 
 export const PricingAnalysisApproachAccordion = ({
   viewMode,
+  viewLayout = 'grid',
   approach,
   onToggleMethod,
   onSelectCalculationMethod,
@@ -33,6 +39,9 @@ export const PricingAnalysisApproachAccordion = ({
   onAddMethod,
   onDeleteMethod,
   configMethods,
+  onViewLayoutChange,
+  isManualMode,
+  onManualValueChange,
 }: PricingAnalysisApproachAccordionProps) => {
   const hasSelectedMethods = approach.methods.some(m => m.isIncluded);
   const [isOpen, setIsOpen] = useState(viewMode === 'editing' ? true : false);
@@ -44,6 +53,8 @@ export const PricingAnalysisApproachAccordion = ({
   );
   const availableMethods = (configMethods ?? []).filter(cm => !selectedMethodTypes.has(cm.methodType));
 
+  const includedMethods = approach.methods.filter(m => m.isIncluded);
+
   if (viewMode === 'editing') {
     return (
       <div>
@@ -54,29 +65,25 @@ export const PricingAnalysisApproachAccordion = ({
           onToggle={() => setIsOpen(!isOpen)}
           onSelectCandidateApproach={onSelectCandidateApproach}
         />
-        <div
+        {isOpen && <div
           className={clsx(
-            'flex flex-col gap-1 ml-4 pl-4 border-l-2',
-            'transition-all ease-in-out duration-300 overflow-hidden',
+            'flex flex-col gap-1 ml-4 pl-4 border-l-2 mt-2',
             hasSelectedMethods ? 'border-primary/30' : 'border-gray-200',
-            isOpen ? 'max-h-[1000px] opacity-100 mt-2' : 'max-h-0 opacity-0',
           )}
         >
-          {approach.methods
-            .filter(m => m.isIncluded)
-            .map(method => (
-              <PricingAnalysisMethodCard
-                key={method.methodType}
-                viewMode={viewMode}
-                approachId={approach.id}
-                approachType={approach.approachType}
-                method={method}
-                onToggleMethod={onToggleMethod}
-                onSelectCalculationMethod={onSelectCalculationMethod}
-                onSelectCandidateMethod={onSelectCandidateMethod}
-                onDeleteMethod={onDeleteMethod}
-              />
-            ))}
+          {includedMethods.map(method => (
+            <PricingAnalysisMethodCard
+              key={method.methodType}
+              viewMode={viewMode}
+              approachId={approach.id}
+              approachType={approach.approachType}
+              method={method}
+              onToggleMethod={onToggleMethod}
+              onSelectCalculationMethod={onSelectCalculationMethod}
+              onSelectCandidateMethod={onSelectCandidateMethod}
+              onDeleteMethod={onDeleteMethod}
+            />
+          ))}
 
           {/* + Add Method inline list */}
           {onAddMethod && availableMethods.length > 0 && (
@@ -109,40 +116,69 @@ export const PricingAnalysisApproachAccordion = ({
               )}
             </div>
           )}
-        </div>
+        </div>}
       </div>
     );
   }
+
+  // Summary mode — grid or list layout for methods
+  const methodCount = approach.methods.length;
+  const gridCols = methodCount >= 3 ? 'grid-cols-3' : 'grid-cols-2';
 
   return (
     <div>
       <PricingAnalysisApproachCard
         viewMode={viewMode}
+        viewLayout={viewLayout}
         approach={approach}
         isOpen={isOpen}
         onToggle={() => setIsOpen(!isOpen)}
         onSelectCandidateApproach={onSelectCandidateApproach}
+        onViewLayoutChange={onViewLayoutChange}
       />
       <div
         className={clsx(
-          'flex flex-col gap-1 ml-4 pl-4 border-l-2',
-          'transition-all ease-in-out duration-300 overflow-hidden',
+          'mt-2 ml-4 pl-4 border-l-2',
           approach.isSelected ? 'border-primary/30' : 'border-gray-200',
-          'max-h-96 mt-2',
         )}
       >
-        {approach.methods.map(method => (
-          <PricingAnalysisMethodCard
-            key={method.methodType}
-            viewMode={viewMode}
-            approachId={approach.id}
-            approachType={approach.approachType}
-            method={method}
-            onToggleMethod={onToggleMethod}
-            onSelectCandidateMethod={onSelectCandidateMethod}
-            onSelectCalculationMethod={onSelectCalculationMethod}
-          />
-        ))}
+        {viewLayout === 'grid' ? (
+          <div className={clsx('grid gap-2', gridCols)}>
+            {approach.methods.map(method => (
+              <PricingAnalysisMethodCard
+                key={method.methodType}
+                viewMode={viewMode}
+                viewLayout="grid"
+                approachId={approach.id}
+                approachType={approach.approachType}
+                method={method}
+                onToggleMethod={onToggleMethod}
+                onSelectCandidateMethod={onSelectCandidateMethod}
+                onSelectCalculationMethod={onSelectCalculationMethod}
+                isManualMode={isManualMode}
+                onManualValueChange={onManualValueChange}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {approach.methods.map(method => (
+              <PricingAnalysisMethodCard
+                key={method.methodType}
+                viewMode={viewMode}
+                viewLayout="list"
+                approachId={approach.id}
+                approachType={approach.approachType}
+                method={method}
+                onToggleMethod={onToggleMethod}
+                onSelectCandidateMethod={onSelectCandidateMethod}
+                onSelectCalculationMethod={onSelectCalculationMethod}
+                isManualMode={isManualMode}
+                onManualValueChange={onManualValueChange}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -46,6 +46,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       value,
       onChange,
       onBlur,
+      onKeyDown,
       placeholder,
       ...props
     },
@@ -176,6 +177,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           },
         });
       }
+
+      onKeyDown?.(e);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

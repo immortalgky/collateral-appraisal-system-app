@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { Icon } from '@/shared/components';
@@ -30,6 +30,8 @@ import { deriveGroupCollateralType } from '@features/pricingAnalysis/domain/deri
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { useLocaleStore } from '@shared/store';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { MarketComparableDetailModal } from './MarketComparableDetailModal';
 
 interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -77,6 +79,9 @@ export const SaleAdjustmentGridScoringSection = ({
     finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
   } = saleGridFieldPath;
+
+  const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
+  const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
 
   const serverData = useContext(ServerDataCtx);
   const groupCollateralType = deriveGroupCollateralType(serverData?.groupDetail?.properties ?? []);
@@ -230,7 +235,17 @@ export const SaleAdjustmentGridScoringSection = ({
                       'bg-gray-50 font-medium text-center px-3 py-2.5 border-r border-b border-gray-300 sticky top-[32px] h-[32px] min-h-[32px] max-h-[32px] z-23 whitespace-nowrap min-w-[250px]'
                     }
                   >
-                    <div>{survey.surveyName}</div>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>{survey.surveyName}</span>
+                      <button
+                        type="button"
+                        className="text-gray-500 hover:text-primary-600 transition-colors"
+                        onClick={() => { setSelectedSurveyId(survey.id ?? null); onModalOpen(); }}
+                        title="View market comparable detail"
+                      >
+                        <Icon name="arrow-up-right-from-square" style="solid" className="size-3.5" />
+                      </button>
+                    </div>
                   </th>
                 );
               })}
@@ -934,6 +949,11 @@ export const SaleAdjustmentGridScoringSection = ({
           </tbody>
         </table>
       </ScrollableTableContainer>
+      <MarketComparableDetailModal
+        isOpen={isModalOpen}
+        onClose={onModalClose}
+        marketComparableId={selectedSurveyId}
+      />
     </div>
   );
 };
