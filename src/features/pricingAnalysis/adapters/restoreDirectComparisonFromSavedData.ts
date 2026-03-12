@@ -12,7 +12,6 @@ import type {
   MarketComparableDetailType,
 } from '../schemas';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
-import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface RestoreDirectComparisonFromSavedDataProps {
   methodId: string;

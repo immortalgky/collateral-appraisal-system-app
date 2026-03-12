@@ -15,7 +15,6 @@ import {
   toNum,
   yearDiffFromToday,
 } from '@features/pricingAnalysis/domain/readFactorValue';
-import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;

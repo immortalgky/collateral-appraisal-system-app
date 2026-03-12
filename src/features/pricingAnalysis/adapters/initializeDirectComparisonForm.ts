@@ -15,7 +15,6 @@ import {
   toNum,
   yearDiffFromToday,
 } from '@features/pricingAnalysis/domain/readFactorValue.ts';
-import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetDirectComparisonInitialValueProps {
   collateralType: string;

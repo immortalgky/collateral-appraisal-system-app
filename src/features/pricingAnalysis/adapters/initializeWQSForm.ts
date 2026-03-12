@@ -1,7 +1,6 @@
 import type { UseFormReset } from 'react-hook-form';
 import type { WQSCalculationType, WQSFormType } from '../schemas/wqsForm';
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
-import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
 
 interface setWQSInitialValueProps {
@@ -48,10 +47,12 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
 
 function buildFinalValue(property: Record<string, unknown>) {
   return {
-    landArea: property.titles
-      ? convertLandTitlesToLandArea({ titles: property.titles })
-      : undefined,
-    usableArea: property?.usableArea ?? undefined,
+    landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+    usableArea: property.totalBuildingArea
+      ? Number(property.totalBuildingArea)
+      : property.usableArea
+        ? Number(property.usableArea)
+        : undefined,
     finalValue: 0,
     finalValueRounded: 0,
     coefficientOfDecision: 0,
