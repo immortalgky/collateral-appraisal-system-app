@@ -5,6 +5,7 @@ import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext'
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import clsx from 'clsx';
+import { getParameterDescription } from '@shared/utils/parameterUtils';
 import { saleGridFieldPath } from '@features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
 import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
 import type { ComparativeFactorsFormType } from '@features/pricingAnalysis/schemas/directComparisonForm.ts';
@@ -418,7 +419,9 @@ export const SaleAdjustmentGridScoringSection = ({
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
+                        if (!value) return '';
+                        const unit = survey.offerPriceUnit ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit) : '';
+                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
                   </td>
@@ -498,7 +501,9 @@ export const SaleAdjustmentGridScoringSection = ({
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
+                        if (!value) return '';
+                        const unit = survey.salePriceUnit ? getParameterDescription('MeasurementUnits', survey.salePriceUnit) : '';
+                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
                   </td>

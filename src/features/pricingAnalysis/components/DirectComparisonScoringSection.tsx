@@ -9,6 +9,7 @@ import {
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import clsx from 'clsx';
+import { getParameterDescription } from '@shared/utils/parameterUtils';
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath';
 import {
   buildDirectComparisonAdjustmentFactorAmountRules,
@@ -418,7 +419,9 @@ export const DirectComparisonScoringSection = ({
                       fieldName={calculationOfferingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
+                        if (!value) return '';
+                        const unit = survey.offerPriceUnit ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit) : '';
+                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
                   </td>
@@ -500,7 +503,9 @@ export const DirectComparisonScoringSection = ({
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
+                        if (!value) return '';
+                        const unit = survey.salePriceUnit ? getParameterDescription('MeasurementUnits', survey.salePriceUnit) : '';
+                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
                   </td>

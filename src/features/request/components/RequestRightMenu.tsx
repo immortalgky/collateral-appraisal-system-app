@@ -373,21 +373,34 @@ const RequestRightMenu = ({
             {/* Comments list - scrollable */}
             <div className="flex-1 overflow-y-auto min-h-0 p-4">
               {isCommentsLoading && requestId ? (
-                // Skeleton loading (only in edit mode)
-                <div className="space-y-2">
+                // Skeleton loading - alternating left/right bubbles
+                <div className="space-y-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="p-2.5 bg-gray-50 rounded-lg animate-pulse">
-                      <div className="flex items-start gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="h-3 w-16 bg-gray-200 rounded" />
-                            <div className="h-3 w-12 bg-gray-200 rounded" />
+                    <div key={i} className={clsx('flex', i % 2 === 0 ? 'justify-end' : 'justify-start')}>
+                      {i % 2 !== 0 && (
+                        <div className="flex items-start gap-2 max-w-[80%]">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 animate-pulse" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                              <div className="h-3 w-10 bg-gray-200 rounded animate-pulse" />
+                            </div>
+                            <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 animate-pulse">
+                              <div className="h-3 w-full bg-gray-200 rounded" />
+                              <div className="h-3 w-2/3 bg-gray-200 rounded mt-1" />
+                            </div>
                           </div>
-                          <div className="h-3 w-full bg-gray-200 rounded" />
-                          <div className="h-3 w-2/3 bg-gray-200 rounded mt-1" />
                         </div>
-                      </div>
+                      )}
+                      {i % 2 === 0 && (
+                        <div className="max-w-[80%]">
+                          <div className="bg-primary/20 rounded-2xl rounded-tr-sm px-3 py-2 animate-pulse">
+                            <div className="h-3 w-full bg-primary/30 rounded" />
+                            <div className="h-3 w-1/2 bg-primary/30 rounded mt-1" />
+                          </div>
+                          <div className="h-3 w-10 bg-gray-200 rounded mt-1 ml-auto animate-pulse" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -400,88 +413,99 @@ const RequestRightMenu = ({
                   <p className="text-xs text-gray-400 mt-1">Add a comment below</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {comments.map((comment, index) => {
                     const isOwnComment = comment.commentedBy === currentUser?.username;
                     const isEditing = editingIndex === index;
-                    const displayName = isOwnComment ? 'Me' : comment.commentedByName;
                     const timeDisplay = getRelativeTimeString(comment.commentedAt);
 
                     return (
                       <div
                         key={comment.id || comment.tempId || index}
-                        className="group relative p-2.5 bg-gray-50 rounded-lg"
+                        className={clsx('flex', isOwnComment ? 'justify-end' : 'justify-start')}
                       >
-                        {isEditing ? (
-                          // Edit mode
-                          <div className="flex flex-col gap-2">
-                            <textarea
-                              value={editText}
-                              onChange={e => setEditText(e.target.value)}
-                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                              rows={2}
-                            />
-                            <div className="flex gap-1.5 justify-end">
-                              <button
-                                type="button"
-                                onClick={handleCancelEdit}
-                                className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleSaveEdit(index)}
-                                disabled={!editText.trim()}
-                                className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/80 transition-colors disabled:opacity-50"
-                              >
-                                Save
-                              </button>
-                            </div>
+                        {isOwnComment ? (
+                          // Own comment - right-aligned, primary bubble
+                          <div className="max-w-[80%] group">
+                            {isEditing ? (
+                              <div className="flex flex-col gap-2">
+                                <textarea
+                                  value={editText}
+                                  onChange={e => setEditText(e.target.value)}
+                                  className="w-full px-3 py-2 text-xs border border-primary/30 rounded-2xl rounded-tr-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                                  rows={2}
+                                />
+                                <div className="flex gap-1.5 justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveEdit(index)}
+                                    disabled={!editText.trim()}
+                                    className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/80 transition-colors disabled:opacity-50"
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-row-reverse items-start gap-1">
+                                <div className="bg-primary text-white rounded-2xl rounded-tr-sm px-3 py-2 min-w-0 overflow-hidden">
+                                  <p className="text-xs break-words break-all">{comment.comment}</p>
+                                  {comment.lastModifiedAt && (
+                                    <span className="text-[10px] text-white/70 italic">(edited)</span>
+                                  )}
+                                </div>
+                                {/* Hover actions - appear to the left of bubble */}
+                                <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 shrink-0 transition-opacity pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditClick(index, comment)}
+                                    className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-primary hover:bg-primary-50 transition-all"
+                                    title="Edit"
+                                  >
+                                    <Icon style="regular" name="pen" className="size-2.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeleteConfirmIndex(index)}
+                                    className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-danger-500 hover:bg-danger-50 transition-all"
+                                    title="Delete"
+                                  >
+                                    <Icon style="solid" name="xmark" className="size-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            <p className="text-[10px] text-gray-400 mt-0.5 text-right">{timeDisplay}</p>
                           </div>
                         ) : (
-                          // View mode
-                          <div className="flex items-start gap-2">
-                            <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                          // Others' comment - left-aligned, gray bubble with avatar
+                          <div className="flex items-start gap-2 max-w-[80%]">
+                            <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0 mt-4">
                               <span className="text-[10px] font-medium text-primary-700">
                                 {getInitials(comment.commentedByName)}
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 mb-0.5">
                                 <span className="text-xs font-medium text-gray-900">
-                                  {displayName}
+                                  {comment.commentedByName}
                                 </span>
-                                <span className="text-xs text-gray-400">{timeDisplay}</span>
+                                <span className="text-[10px] text-gray-400">{timeDisplay}</span>
+                              </div>
+                              <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
+                                <p className="text-xs break-words break-all">{comment.comment}</p>
                                 {comment.lastModifiedAt && (
-                                  <span className="text-xs text-gray-400 italic">(edited)</span>
+                                  <span className="text-[10px] text-gray-400 italic">(edited)</span>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-600 mt-0.5 break-words">
-                                {comment.comment}
-                              </p>
                             </div>
-                            {/* Show edit/delete only for own comments */}
-                            {isOwnComment && (
-                              <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 shrink-0 transition-opacity">
-                                <button
-                                  type="button"
-                                  onClick={() => handleEditClick(index, comment)}
-                                  className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-primary hover:bg-primary-50 transition-all"
-                                  title="Edit"
-                                >
-                                  <Icon style="regular" name="pen" className="size-2.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setDeleteConfirmIndex(index)}
-                                  className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-danger-500 hover:bg-danger-50 transition-all"
-                                  title="Delete"
-                                >
-                                  <Icon style="solid" name="xmark" className="size-3" />
-                                </button>
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>

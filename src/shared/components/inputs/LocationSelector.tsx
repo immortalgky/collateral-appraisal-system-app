@@ -75,6 +75,11 @@ const LocationSelector = ({
       if (found) {
         setSelectedAddress(found);
 
+        // Populate code fields (self-heal if DB has nulls)
+        setValueRef.current(districtField, found.districtCode);
+        setValueRef.current(provinceField, found.provinceCode);
+        setValueRef.current(postcodeField, found.postcode);
+
         // Populate name fields for display when loading from API
         if (subDistrictNameField) {
           setValueRef.current(subDistrictNameField, found.subDistrictName);

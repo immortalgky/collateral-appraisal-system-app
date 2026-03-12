@@ -28,6 +28,7 @@ export interface PropertyPhotoSectionRef {
 interface PropertyPhotoSectionProps {
   appraisalId: string;
   propertyId?: string;
+  readOnly?: boolean;
 }
 
 interface DeleteTarget {
@@ -36,7 +37,7 @@ interface DeleteTarget {
 }
 
 const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSectionProps>(
-  ({ appraisalId, propertyId }, ref) => {
+  ({ appraisalId, propertyId, readOnly }, ref) => {
     const isCreateMode = !propertyId;
 
     // Pending photo IDs for create mode (linked after property creation)
@@ -463,6 +464,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
           onSetThumbnail={handleSetThumbnail}
           onPreview={handlePreview}
           thumbnailId={thumbnailId}
+          disabled={readOnly}
         />
 
         {/* Photo Source Modal (Upload or Gallery) */}

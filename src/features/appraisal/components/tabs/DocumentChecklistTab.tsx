@@ -171,7 +171,7 @@ const EmptyUploadState = ({
   </div>
 );
 
-export const DocumentChecklistTab = () => {
+export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
@@ -574,7 +574,7 @@ export const DocumentChecklistTab = () => {
               >
                 Collapse All
               </button>
-              {appendices.length > 0 && (
+              {!readOnly && appendices.length > 0 && (
                 <Button
                   variant="primary"
                   size="sm"
@@ -601,10 +601,10 @@ export const DocumentChecklistTab = () => {
             return (
               <div
                 key={appendix.id}
-                onDragOver={e => handleDragOver(e, appendix.id)}
-                onDragLeave={handleDragLeave}
-                onDrop={e => handleDrop(e, appendix.id)}
-                className={clsx('transition-colors', isDragOver && 'bg-primary/5')}
+                onDragOver={readOnly ? undefined : e => handleDragOver(e, appendix.id)}
+                onDragLeave={readOnly ? undefined : handleDragLeave}
+                onDrop={readOnly ? undefined : e => handleDrop(e, appendix.id)}
+                className={clsx('transition-colors', !readOnly && isDragOver && 'bg-primary/5')}
               >
                 {/* Appendix Header */}
                 <div
@@ -630,27 +630,31 @@ export const DocumentChecklistTab = () => {
                   </div>
 
                   <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                    {/* Layout Selector */}
-                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1">
-                      <span className="text-xs text-gray-500">Layout:</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3].map(num => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => handleLayoutChange(appendix, num)}
-                            className={clsx(
-                              'w-6 h-6 rounded text-xs font-medium transition-colors',
-                              appendix.layoutColumns === num
-                                ? 'bg-primary text-white'
-                                : 'text-gray-500 hover:bg-gray-100',
-                            )}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    {!readOnly && (
+                      <>
+                        {/* Layout Selector */}
+                        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1">
+                          <span className="text-xs text-gray-500">Layout:</span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map(num => (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => handleLayoutChange(appendix, num)}
+                                className={clsx(
+                                  'w-6 h-6 rounded text-xs font-medium transition-colors',
+                                  appendix.layoutColumns === num
+                                    ? 'bg-primary text-white'
+                                    : 'text-gray-500 hover:bg-gray-100',
+                                )}
+                              >
+                                {num}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     {/* Preview Button */}
                     <Button
@@ -663,14 +667,16 @@ export const DocumentChecklistTab = () => {
                       Preview
                     </Button>
 
-                    {/* Add Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleAddFiles(appendix.id)}
-                      className="p-1.5 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    >
-                      <Icon name="circle-plus" style="solid" />
-                    </button>
+                    {!readOnly && (
+                      /* Add Button */
+                      <button
+                        type="button"
+                        onClick={() => handleAddFiles(appendix.id)}
+                        className="p-1.5 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      >
+                        <Icon name="circle-plus" style="solid" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -705,12 +711,16 @@ export const DocumentChecklistTab = () => {
                                 <ActionDropdown
                                   onView={() => handleViewDocument(doc)}
                                   onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
-                                  isEditable
+                                  isEditable={!readOnly}
                                 />
                               </div>
                             </div>
                           );
                         })}
+                      </div>
+                    ) : readOnly ? (
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <p className="text-sm text-gray-400">No documents</p>
                       </div>
                     ) : (
                       <EmptyUploadState

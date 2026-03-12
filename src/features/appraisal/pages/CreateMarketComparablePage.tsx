@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,8 +37,11 @@ import {
   createMarketComparableFormDefault,
   type createMarketComparableFormType,
 } from '../schemas/form';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { FormReadOnlyContext } from '@/shared/components/form/context';
 
 const CreateMarketComparablePage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -68,18 +71,8 @@ const CreateMarketComparablePage = () => {
 
   const isPending = isCreating || isUpdating;
 
-  const methods = useForm<createMarketComparableFormType>({
-    defaultValues: createMarketComparableFormDefault,
-    resolver: zodResolver(createMarketComparableForm),
-  });
-
-  const { handleSubmit, formState: { isDirty } } = methods;
-
-  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
-
-  // Populate form for edit
-  useEffect(() => {
-    if (!isEditMode || !marketComparable || !template) return;
+  const mapComparableToForm = useMemo(() => {
+    if (!isEditMode || !marketComparable || !template) return null;
 
     const factorDataValue = template.template.factors
       .map((factor: any) => {
@@ -101,7 +94,7 @@ const CreateMarketComparablePage = () => {
       })
       .filter(Boolean);
 
-    methods.reset({
+    return {
       surveyName: marketComparable.marketComparable.surveyName,
       propertyType: marketComparable.marketComparable.propertyType,
       templateCode: template?.template.templateCode,
@@ -110,11 +103,30 @@ const CreateMarketComparablePage = () => {
       sourceInfo: marketComparable.marketComparable.sourceInfo,
       templateId: marketComparable.marketComparable.templateId,
       offerPrice: marketComparable.marketComparable.offerPrice ?? null,
+      offerPriceUnit: marketComparable.marketComparable.offerPriceUnit ?? null,
       salePrice: marketComparable.marketComparable.salePrice ?? null,
+      salePriceUnit: marketComparable.marketComparable.salePriceUnit ?? null,
       saleDate: marketComparable.marketComparable.saleDate ?? null,
       factorData: factorDataValue,
-    });
+    };
   }, [isEditMode, marketComparable, template]);
+
+  const formDefaults = mapComparableToForm ?? createMarketComparableFormDefault;
+
+  const methods = useForm<createMarketComparableFormType>({
+    defaultValues: formDefaults,
+    resolver: zodResolver(createMarketComparableForm),
+  });
+
+  const { handleSubmit, formState: { isDirty } } = methods;
+
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
+
+  useEffect(() => {
+    if (isEditMode && mapComparableToForm) {
+      methods.reset(mapComparableToForm);
+    }
+  }, [isEditMode, mapComparableToForm]);
 
   const onSubmit: SubmitHandler<createMarketComparableFormType> = data => {
     // Convert factorData values to string
@@ -141,7 +153,9 @@ const CreateMarketComparablePage = () => {
           offerPrice: data.offerPrice ?? null,
           offerPriceAdjustmentPercent: null,
           offerPriceAdjustmentAmount: null,
+          offerPriceUnit: data.offerPriceUnit ?? null,
           salePrice: data.salePrice ?? null,
+          salePriceUnit: data.salePriceUnit ?? null,
           saleDate: data.saleDate || null,
           factorData,
         };
@@ -174,7 +188,9 @@ const CreateMarketComparablePage = () => {
         offerPrice: data.offerPrice ?? null,
         offerPriceAdjustmentPercent: null,
         offerPriceAdjustmentAmount: null,
+        offerPriceUnit: data.offerPriceUnit ?? null,
         salePrice: data.salePrice ?? null,
+        salePriceUnit: data.salePriceUnit ?? null,
         saleDate: data.saleDate || null,
         factorData,
       };
@@ -218,8 +234,8 @@ const CreateMarketComparablePage = () => {
 
   const { isOpen, onToggle } = useDisclosure();
 
-  // Loading state
-  const isLoading = isEditMode && (isLoadingComparable || isLoadingTemplate);
+  // Loading state — block render until both data sources are available in edit mode
+  const isLoading = isEditMode && (isLoadingComparable || isLoadingTemplate || !marketComparable || !template);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -245,6 +261,7 @@ const CreateMarketComparablePage = () => {
       </div>
 
       <FormProvider {...methods}>
+        <FormReadOnlyContext.Provider value={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -302,23 +319,30 @@ const CreateMarketComparablePage = () => {
           <ActionBar>
             <ActionBar.Left>
               <CancelButton />
-              <ActionBar.Divider />
-              <ActionBar.UnsavedIndicator show={isDirty} />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={isDirty} />
+                </>
+              )}
             </ActionBar.Left>
-            <ActionBar.Right>
-              <Button
-                type="submit"
-                isLoading={isPending}
-                disabled={isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  type="submit"
+                  isLoading={isPending}
+                  disabled={isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
           </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />
         </form>
+        </FormReadOnlyContext.Provider>
       </FormProvider>
     </div>
   );

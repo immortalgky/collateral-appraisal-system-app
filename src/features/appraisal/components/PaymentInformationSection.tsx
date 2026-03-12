@@ -22,6 +22,7 @@ interface PaymentInformationSectionProps {
   ) => void;
   onRemovePayment?: (paymentId: string) => void;
   isPaymentPending?: boolean;
+  readOnly?: boolean;
 }
 
 /**
@@ -34,6 +35,7 @@ export default function PaymentInformationSection({
   onUpdatePayment,
   onRemovePayment,
   isPaymentPending,
+  readOnly,
 }: PaymentInformationSectionProps) {
   const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(true);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
@@ -270,26 +272,30 @@ export default function PaymentInformationSection({
                         {formatCurrency(payment.paymentAmount)}
                       </span>
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditingPaymentId(payment.id)}
-                          className="text-gray-400 hover:text-secondary transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
-                          aria-label={`Edit payment of ${formatCurrency(payment.paymentAmount)}`}
-                          title="Edit payment"
-                          disabled={isPaymentPending}
-                        >
-                          <Icon name="pen" style="regular" className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingPaymentId(payment.id)}
-                          className="text-gray-400 hover:text-danger transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
-                          aria-label={`Delete payment of ${formatCurrency(payment.paymentAmount)}`}
-                          title="Delete payment"
-                          disabled={isPaymentPending}
-                        >
-                          <Icon name="trash" style="regular" className="w-3 h-3" />
-                        </button>
+                        {!readOnly && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setEditingPaymentId(payment.id)}
+                              className="text-gray-400 hover:text-secondary transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
+                              aria-label={`Edit payment of ${formatCurrency(payment.paymentAmount)}`}
+                              title="Edit payment"
+                              disabled={isPaymentPending}
+                            >
+                              <Icon name="pen" style="regular" className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingPaymentId(payment.id)}
+                              className="text-gray-400 hover:text-danger transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
+                              aria-label={`Delete payment of ${formatCurrency(payment.paymentAmount)}`}
+                              title="Delete payment"
+                              disabled={isPaymentPending}
+                            >
+                              <Icon name="trash" style="regular" className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -297,15 +303,17 @@ export default function PaymentInformationSection({
               )}
 
               {/* Add Payment Button */}
-              <button
-                type="button"
-                onClick={() => setIsAddPaymentModalOpen(true)}
-                disabled={isPaymentPending}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 mt-3 border-2 border-dashed rounded-lg transition-colors ${isPaymentPending ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400'}`}
-              >
-                <Icon name="circle-plus" style="solid" className="w-4 h-4" />
-                <span className="text-sm font-medium">Add Payment</span>
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => setIsAddPaymentModalOpen(true)}
+                  disabled={isPaymentPending}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 mt-3 border-2 border-dashed rounded-lg transition-colors ${isPaymentPending ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400'}`}
+                >
+                  <Icon name="circle-plus" style="solid" className="w-4 h-4" />
+                  <span className="text-sm font-medium">Add Payment</span>
+                </button>
+              )}
             </div>
           </div>
 

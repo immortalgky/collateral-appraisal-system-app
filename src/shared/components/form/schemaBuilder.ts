@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FormField } from './types';
+import type { FormField, LocationSelectorField } from './types';
 import { evaluateConditions, getNestedValue } from './conditions';
 
 // =============================================================================
@@ -192,6 +192,16 @@ function buildNestedShape(fields: FormField[]): Record<string, z.ZodTypeAny> {
   for (const field of fields) {
     const zodType = buildZodTypeForField(field);
     const segments = field.name.split('.');
+
+    // For location-selector, also emit auxiliary fields so Zod doesn't strip them
+    if (field.type === 'location-selector') {
+      const loc = field as LocationSelectorField;
+      const optionalString = z.string().nullable().optional();
+      if (loc.districtField) tree[loc.districtField] = optionalString;
+      if (loc.provinceField) tree[loc.provinceField] = optionalString;
+      if (loc.postcodeField) tree[loc.postcodeField] = optionalString;
+      if (loc.subDistrictNameField) tree[loc.subDistrictNameField] = optionalString;
+    }
 
     if (segments.length === 1) {
       // Flat name — direct assignment

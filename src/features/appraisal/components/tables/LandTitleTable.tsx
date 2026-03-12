@@ -11,6 +11,7 @@ import {
   useFieldArray,
   useFormContext,
 } from 'react-hook-form';
+import { useFormReadOnly } from '@/shared/components/form/context';
 import LandTitleInputModal from '../LandTitleInputModal';
 
 interface LandTitleTableProps {
@@ -36,6 +37,7 @@ const LandTitleTable = ({
   showRowNumber,
   stickyColumns = 0,
 }: LandTitleTableProps) => {
+  const readOnly = useFormReadOnly();
   const tableFields = fields.filter(f => !('showWhen' in f && f.showWhen));
   const { control, getValues } = useFormContext();
   const { append, remove, update } = useFieldArray({ control, name });
@@ -89,15 +91,19 @@ const LandTitleTable = ({
         <div className="flex flex-col items-center justify-center py-10 border border-dashed border-gray-200 rounded-lg bg-gray-50">
           <Icon name="file-lines" style="regular" className="text-3xl text-gray-300 mb-2" />
           <p className="text-sm font-medium text-gray-500">No land title data</p>
-          <p className="text-xs text-gray-400 mt-0.5 mb-3">Click the button below to add a title</p>
-          <button
-            type="button"
-            onClick={() => setModalState({ type: 'add' })}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
-          >
-            <Icon style="solid" name="plus" className="size-2.5" />
-            Add item
-          </button>
+          {!readOnly && (
+            <>
+              <p className="text-xs text-gray-400 mt-0.5 mb-3">Click the button below to add a title</p>
+              <button
+                type="button"
+                onClick={() => setModalState({ type: 'add' })}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+              >
+                <Icon style="solid" name="plus" className="size-2.5" />
+                Add item
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -128,9 +134,11 @@ const LandTitleTable = ({
                       </th>
                     );
                   })}
-                  <th className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-right sticky right-0 w-20">
-                    Actions
-                  </th>
+                  {!readOnly && (
+                    <th className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-right sticky right-0 w-20">
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -169,26 +177,28 @@ const LandTitleTable = ({
                           </td>
                         );
                       })}
-                      <td className={`py-1.5 px-3 sticky right-0 z-10 ${rowBg}`}>
-                        <div className="flex gap-1 justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setModalState({ type: 'edit', index })}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                            title="Edit"
-                          >
-                            <Icon style="solid" name="pen" className="size-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRow(index)}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                            title="Delete"
-                          >
-                            <Icon style="solid" name="trash" className="size-3" />
-                          </button>
-                        </div>
-                      </td>
+                      {!readOnly && (
+                        <td className={`py-1.5 px-3 sticky right-0 z-10 ${rowBg}`}>
+                          <div className="flex gap-1 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setModalState({ type: 'edit', index })}
+                              className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                              title="Edit"
+                            >
+                              <Icon style="solid" name="pen" className="size-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRow(index)}
+                              className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                              title="Delete"
+                            >
+                              <Icon style="solid" name="trash" className="size-3" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -196,18 +206,20 @@ const LandTitleTable = ({
             </table>
           </div>
 
-          <div className="border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => setModalState({ type: 'add' })}
-              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
-            >
-              <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
-                <Icon style="solid" name="plus" className="size-2.5 text-white" />
-              </div>
-              Add item
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setModalState({ type: 'add' })}
+                className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
+              >
+                <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
+                  <Icon style="solid" name="plus" className="size-2.5 text-white" />
+                </div>
+                Add item
+              </button>
+            </div>
+          )}
         </>
       )}
       {modalState && (

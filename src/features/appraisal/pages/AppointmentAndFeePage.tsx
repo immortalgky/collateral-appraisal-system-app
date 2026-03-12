@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
-import { useAppraisalContext } from '../context/AppraisalContext';
+import { useAppraisalContext, useAppraisalReadOnly } from '../context/AppraisalContext';
 import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
 import RescheduleModal from '../components/RescheduleModal';
@@ -37,6 +37,7 @@ export default function AppointmentAndFeePage() {
   const [isCancelAppointmentModalOpen, setIsCancelAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
+  const { isReadOnly } = useAppraisalReadOnly('Appointment & Fee');
   const appraisalId = appraisal?.appraisalId ?? '';
   const currentUser = useAuthStore(state => state.user);
 
@@ -257,6 +258,7 @@ export default function AppointmentAndFeePage() {
             appointment={latestAppointment}
             onReschedule={() => setIsRescheduleModalOpen(true)}
             onCancel={() => setIsCancelAppointmentModalOpen(true)}
+            readOnly={isReadOnly}
           />
 
           {/* Divider */}
@@ -276,6 +278,7 @@ export default function AppointmentAndFeePage() {
               onApproveFeeItem={handleApproveFeeItem}
               onRejectFeeItem={handleRejectFeeItem}
               isFeePaymentTypeUpdating={updateAppraisalFee.isPending}
+              readOnly={isReadOnly}
             />
 
             {/* Payment Information (Right Column) */}
@@ -288,6 +291,7 @@ export default function AppointmentAndFeePage() {
               isPaymentPending={
                 recordPayment.isPending || updatePayment.isPending || removePayment.isPending
               }
+              readOnly={isReadOnly}
             />
           </div>
         </div>

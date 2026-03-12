@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +12,7 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
 
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
 import {
   decisionSummaryFormDefaults,
@@ -140,14 +141,32 @@ const additionalAssumptionsFields: FormField[] = [
 
 const DecisionSummaryPage = () => {
   const { appraisalId } = useParams<{ appraisalId: string }>();
+  const { isReadOnly } = useAppraisalReadOnly('Summary & Decision');
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
   const { mutate: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
 
   // Form setup
+  const mapDataToForm = useMemo(() => {
+    if (!data) return null;
+    return {
+      isPriceVerified: data.isPriceVerified ?? null,
+      conditionType: data.conditionType ?? null,
+      condition: data.condition ?? null,
+      remarkType: data.remarkType ?? null,
+      remark: data.remark ?? null,
+      appraiserOpinionType: data.appraiserOpinionType ?? null,
+      appraiserOpinion: data.appraiserOpinion ?? null,
+      committeeOpinionType: data.committeeOpinionType ?? null,
+      committeeOpinion: data.committeeOpinion ?? null,
+      totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
+      additionalAssumptions: data.additionalAssumptions ?? null,
+    };
+  }, [data]);
+
   const methods = useForm<DecisionSummaryFormType>({
-    defaultValues: decisionSummaryFormDefaults,
+    defaultValues: mapDataToForm ?? decisionSummaryFormDefaults,
     resolver: zodResolver(decisionSummaryFormSchema),
   });
 
@@ -159,24 +178,11 @@ const DecisionSummaryPage = () => {
 
   const { blocker } = useUnsavedChangesWarning(isDirty);
 
-  // Populate form when data arrives
   useEffect(() => {
-    if (data) {
-      reset({
-        isPriceVerified: data.isPriceVerified ?? null,
-        conditionType: data.conditionType ?? null,
-        condition: data.condition ?? null,
-        remarkType: data.remarkType ?? null,
-        remark: data.remark ?? null,
-        appraiserOpinionType: data.appraiserOpinionType ?? null,
-        appraiserOpinion: data.appraiserOpinion ?? null,
-        committeeOpinionType: data.committeeOpinionType ?? null,
-        committeeOpinion: data.committeeOpinion ?? null,
-        totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
-        additionalAssumptions: data.additionalAssumptions ?? null,
-      });
+    if (mapDataToForm) {
+      reset(mapDataToForm);
     }
-  }, [data, reset]);
+  }, [mapDataToForm, reset]);
 
   const onSubmit = (formData: DecisionSummaryFormType) => {
     if (!appraisalId) return;
@@ -226,14 +232,14 @@ const DecisionSummaryPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <FormProvider methods={methods} schema={decisionSummaryFormSchema}>
+      <FormProvider methods={methods} schema={decisionSummaryFormSchema} readOnly={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">
               {/* 1. Decision Approach */}
               <FormCard title="Decision Approach" icon="table-cells" iconColor="teal">
                 {data?.approachMatrix && data.approachMatrix.length > 0 ? (
-                  <ApproachMatrixTable rows={data.approachMatrix} />
+                  <ApproachMatrixTable groups={data.approachMatrix} />
                 ) : (
                   <p className="text-sm text-gray-500">No approach data available.</p>
                 )}
@@ -338,41 +344,43 @@ const DecisionSummaryPage = () => {
           </div>
 
           {/* 14. Sticky Footer */}
-          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" type="button" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <div className="h-6 w-px bg-gray-200" />
-                {isDirty && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Unsaved changes
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" type="submit" disabled={!isDirty || isSaving}>
-                  <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                  Save
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                      Submit
-                    </>
+          {!isReadOnly && (
+            <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" type="button" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <div className="h-6 w-px bg-gray-200" />
+                  {isDirty && (
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Unsaved changes
+                    </span>
                   )}
-                </Button>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" type="submit" disabled={!isDirty || isSaving}>
+                    <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
+                        Submit
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </form>
       </FormProvider>
 
