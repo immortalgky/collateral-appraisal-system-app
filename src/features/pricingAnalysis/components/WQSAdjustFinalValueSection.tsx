@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useContext, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -8,6 +8,8 @@ import {
   type DerivedFieldRule,
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
+import { ServerDataCtx } from '../store/selectionContext';
+import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 
 export const AdjustFinalValueSection = ({ property }: { property: Record<string, unknown> }) => {
   const {
@@ -75,8 +77,11 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
   ];
   useDerivedFields({ rules });
 
-  const isLand = property.propertyType === 'L';
-  const isUsable = property.propertyType === 'U';
+  const serverData = useContext(ServerDataCtx);
+  const groupCollateralType = deriveGroupCollateralType(serverData?.groupDetail?.properties ?? []);
+
+  const isLand = groupCollateralType === 'L';
+  const isUsable = groupCollateralType === 'U';
   const areaUnit = isLand ? 'Sq. Wa' : 'Sq. m.';
   const areaFieldPath = isLand ? landAreaPath() : usableAreaPath();
 
@@ -103,14 +108,16 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       </div>
 
       {/* Include Area toggle */}
-      <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Include Area</span>
-        <RHFInputCell
-          fieldName={includeLandAreaPath()}
-          inputType="toggle"
-          toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
-        />
-      </div>
+      {(isLand || isUsable) && (
+        <div className="flex items-center gap-4">
+          <span className="w-44 text-gray-500">Include Area</span>
+          <RHFInputCell
+            fieldName={includeLandAreaPath()}
+            inputType="toggle"
+            toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
+          />
+        </div>
+      )}
 
       {/* Area (shown when include area is on) */}
       {includeLandArea && (isLand || isUsable) && (
