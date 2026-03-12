@@ -101,8 +101,6 @@ export function DirectComparisonPanel({
   const selectedTemplateId = (templateList ?? []).find(t => t.templateCode === selectedTemplateCode)?.id;
   const templateDetailQuery = useGetComparativeAnalysisTemplateById(selectedTemplateId);
 
-  /** cancel calculation dialog state */
-  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
 
   const saveMutation = useSaveComparativeAnalysis();
@@ -182,20 +180,6 @@ export function DirectComparisonPanel({
 
   const handleOnSelectTemplate = (templateCode: string) => {
     setSelectedTemplateCode(templateCode);
-  };
-
-  /** cancel calculation handler */
-  const handleOnCancelCalculationMethod = () => {
-    setisShowCanceledDialog(true);
-  };
-
-  const handleOnConfirmCancelCalculationMethod = () => {
-    onCancelCalculationMethod();
-    setisShowCanceledDialog(false);
-  };
-
-  const handleOnDenyCancelCalculationMethod = () => {
-    setisShowCanceledDialog(false);
   };
 
   /** reset handler */
@@ -372,19 +356,13 @@ export function DirectComparisonPanel({
               />
             </div>
             <MethodFooterActions
-              onCancel={handleOnCancelCalculationMethod}
+              onCancel={onCancelCalculationMethod}
               onReset={handleOnReset}
               showReset={!!savedComparativeFactors && savedComparativeFactors.length > 0}
               isSubmitting={saveMutation.isPending}
             />
           </>
         )}
-        <ConfirmDialog
-          isOpen={isShowCanceledDialog}
-          onClose={handleOnDenyCancelCalculationMethod}
-          onConfirm={handleOnConfirmCancelCalculationMethod}
-          message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
-        />
         <ConfirmDialog
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}

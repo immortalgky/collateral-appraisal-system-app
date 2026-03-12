@@ -25,6 +25,11 @@ const filterColorStyles: Record<string, { bg: string; text: string; activeBg: st
   amber: { bg: 'bg-amber-50', text: 'text-amber-500', activeBg: 'bg-amber-100' },
 };
 
+function handleLogout(href: string) {
+  useAuthStore.getState().logout();
+  window.location.replace(href);
+}
+
 export default function Navbar({
   userNavigation,
 }: {
@@ -244,27 +249,44 @@ export default function Navbar({
                   <p className="text-sm font-medium text-gray-900">{`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`}</p>
                   <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
                 </div>
-                {userNavigation.map(item => (
-                  <MenuItem key={item.name}>
-                    <a
-                      href={item.href}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
+                {userNavigation.map(item =>
+                  item.name === 'Sign out' ? (
+                    <MenuItem
+                      key={item.name}
+                      as="button"
+                      type="button"
+                      onClick={() => handleLogout(item.href)}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
                     >
                       <Icon
-                        name={
-                          item.name === 'Your profile'
-                            ? 'user'
-                            : item.name === 'Settings'
-                              ? 'gear'
-                              : 'arrow-right-from-bracket'
-                        }
+                        name="arrow-right-from-bracket"
                         style="regular"
                         className="size-4 text-gray-400"
                       />
                       {item.nameKey ? t(item.nameKey as never) : item.name}
-                    </a>
-                  </MenuItem>
-                ))}
+                    </MenuItem>
+                  ) : (
+                    <MenuItem key={item.name}>
+                      <a
+                        href={item.href}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
+                      >
+                        <Icon
+                          name={
+                            item.name === 'Your profile'
+                              ? 'user'
+                              : item.name === 'Settings'
+                                ? 'gear'
+                                : 'arrow-right-from-bracket'
+                          }
+                          style="regular"
+                          className="size-4 text-gray-400"
+                        />
+                        {item.nameKey ? t(item.nameKey as never) : item.name}
+                      </a>
+                    </MenuItem>
+                  ),
+                )}
               </MenuItems>
             </Menu>
           </div>

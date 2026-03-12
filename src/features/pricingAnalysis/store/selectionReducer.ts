@@ -44,6 +44,7 @@ export type SelectionAction =
       payload: {
         pricingAnalysisId?: string;
         approaches: Approach[];
+        useSystemCalc?: boolean;
       };
     }
   | {
@@ -136,7 +137,7 @@ export function approachMethodReducer(
         editSaved: cloneApproaches(approaches),
         editDraft: cloneApproaches(approaches),
         summarySelected: cloneApproaches(visibleApproach),
-        systemCalculationMode: 'System',
+        systemCalculationMode: action.payload.useSystemCalc === false ? 'FillIn' : 'System',
         pricingAnalysisId: action.payload.pricingAnalysisId,
       };
     }

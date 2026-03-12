@@ -70,8 +70,7 @@ const Toggle = ({
           {/* Sliding pill */}
           <span
             className={clsx(
-              'absolute inset-y-1 w-[calc(50%-2px)] rounded-full',
-              'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              'absolute inset-y-1 w-[calc(50%-2px)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
               error ? 'bg-danger' : 'bg-primary shadow-md shadow-primary/25',
               activeIndex === 0 ? 'translate-x-0' : 'translate-x-[calc(100%+4px)]',
             )}
@@ -89,8 +88,7 @@ const Toggle = ({
                 disabled={isDisabled}
                 onClick={() => handleClick(index)}
                 className={clsx(
-                  'relative z-10 flex items-center justify-center rounded-full select-none font-medium whitespace-nowrap',
-                  'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                  'relative z-10 flex items-center justify-center rounded-full select-none font-medium whitespace-nowrap transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
                   sizeStyles[size].option,
                   isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   isActive

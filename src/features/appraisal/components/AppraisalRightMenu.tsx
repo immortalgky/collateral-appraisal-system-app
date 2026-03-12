@@ -9,6 +9,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext, useAppraisalReadOnly } from '../context/AppraisalContext';
 import { MapPreview } from './MapPreview';
 import { useAuthStore } from '@/features/auth/store';
+import { useAddressStore } from '@/shared/store';
 import {
   useAddComment,
   useUpdateComment,
@@ -58,6 +59,15 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
     if (fees.length === 0) return null;
     return fees[0];
   }, [fees]);
+
+  // Resolve province code to name via address store
+  const titleAddresses = useAddressStore(state => state.titleAddresses);
+  const provinceName = useMemo(() => {
+    const code = (requestData as any)?.detail?.address?.province;
+    if (!code) return null;
+    const match = titleAddresses.find(a => a.provinceCode === code);
+    return match?.provinceName ?? null;
+  }, [requestData, titleAddresses]);
 
   // API queries and mutations for comments
   const { data: commentsData, isLoading: isCommentsLoading } = useGetComments(requestId);
@@ -268,13 +278,81 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
       >
         {activeTab === 'overview' ? (
           <div className="flex flex-col gap-5">
-            {/* Status & Type */}
+            {/* Appraisal Info */}
             <div>
-              <SidebarLabel>Status</SidebarLabel>
+              <SidebarLabel>Appraisal Info</SidebarLabel>
               <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge type="status" value={appraisal.status || 'draft'} />
-                </div>
+                <InfoRow
+                  icon="hashtag"
+                  label="Appraisal No."
+                  value={appraisal.appraisalReportNo || 'Not set'}
+                  muted={!appraisal.appraisalReportNo}
+                />
+                <InfoRow
+                  icon="user"
+                  label="Customer"
+                  value={(requestData as any)?.customers?.[0]?.name || 'Not set'}
+                  muted={!(requestData as any)?.customers?.[0]?.name}
+                />
+                <InfoRow
+                  icon="bullseye"
+                  label="Purpose"
+                  value={
+                    requestData?.purpose ? (
+                      <ParameterDisplay group="AppraisalPurpose" code={requestData?.purpose} />
+                    ) : (
+                      'Not set'
+                    )
+                  }
+                  muted={!requestData?.purpose}
+                />
+                <InfoRow
+                  icon="circle-check"
+                  label="Status"
+                  value={<Badge type="status" value={appraisal.status || 'draft'} />}
+                />
+                <InfoRow
+                  icon="baht-sign"
+                  label="Selling Price"
+                  value={formatCurrency((requestData as any)?.detail?.loanDetail?.totalSellingPrice)}
+                  muted={(requestData as any)?.detail?.loanDetail?.totalSellingPrice == null}
+                />
+                <InfoRow
+                  icon="book"
+                  label="Customer's Own Book"
+                  value={
+                    (requestData as any)?.detail?.hasAppraisalBook != null
+                      ? (requestData as any)?.detail?.hasAppraisalBook
+                        ? 'Yes'
+                        : 'No'
+                      : 'Not set'
+                  }
+                  muted={(requestData as any)?.detail?.hasAppraisalBook == null}
+                />
+                <InfoRow
+                  icon="location-dot"
+                  label="Province"
+                  value={provinceName || 'Not set'}
+                  muted={!provinceName}
+                />
+                <InfoRow
+                  icon="calendar"
+                  label="Requested At"
+                  value={formatDateTime((requestData as any)?.requestedAt)}
+                  muted={!(requestData as any)?.requestedAt}
+                />
+                <InfoRow
+                  icon="flag"
+                  label="Priority"
+                  value={<Badge type="priority" value={appraisal.priority || 'normal'} />}
+                />
+              </div>
+            </div>
+
+            {/* Workflow Progress */}
+            <div>
+              <SidebarLabel>Workflow Progress</SidebarLabel>
+              <div className="mt-2">
                 <InfoRow
                   icon="diagram-project"
                   label="Type"
@@ -287,33 +365,6 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   }
                   muted={!appraisal.appraisalType}
                 />
-              </div>
-            </div>
-
-            {/* Purpose (from request) */}
-            <div>
-              <SidebarLabel>Purpose</SidebarLabel>
-              <div className="mt-2">
-                <InfoRow
-                  icon="bullseye"
-                  label="Type"
-                  value={
-                    requestData?.purpose ? (
-                      <ParameterDisplay group="AppraisalPurpose" code={requestData?.purpose} />
-                    ) : (
-                      'Not set'
-                    )
-                  }
-                  muted={!requestData?.purpose}
-                />
-              </div>
-            </div>
-
-            {/* Priority */}
-            <div>
-              <SidebarLabel>Priority</SidebarLabel>
-              <div className="mt-2">
-                <Badge type="priority" value={appraisal.priority || 'normal'} />
               </div>
             </div>
 

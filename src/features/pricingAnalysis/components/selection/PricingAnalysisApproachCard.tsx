@@ -2,21 +2,27 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import type { Approach } from '../../types/selection';
 import type { ViewMode } from '@features/pricingAnalysis/store/selectionReducer';
+import type { ViewLayout } from './PricingAnalysisMethodCard';
 
-interface PricingAnalysisApproachCard {
+interface PricingAnalysisApproachCardProps {
   viewMode: ViewMode;
+  viewLayout?: ViewLayout;
   approach: Approach;
   isOpen: boolean;
   onToggle: () => void;
   onSelectCandidateApproach: (approachType: string) => void;
+  onViewLayoutChange?: (layout: ViewLayout) => void;
 }
+
 export const PricingAnalysisApproachCard = ({
   viewMode,
+  viewLayout = 'grid',
   approach,
   isOpen,
   onToggle,
   onSelectCandidateApproach,
-}: PricingAnalysisApproachCard) => {
+  onViewLayoutChange,
+}: PricingAnalysisApproachCardProps) => {
   const hasSelectedMethods = approach.methods.some(m => m.isIncluded);
 
   if (viewMode === 'editing') {
@@ -26,13 +32,13 @@ export const PricingAnalysisApproachCard = ({
           type="button"
           onClick={onToggle}
           className={clsx(
-            'cursor-pointer text-sm rounded-lg border transition-all duration-200',
+            'cursor-pointer text-sm rounded-lg border-l-4 border transition-all duration-200',
             hasSelectedMethods
-              ? 'border-primary bg-primary/5 text-primary'
-              : 'border-gray-200 text-gray-500 hover:border-gray-300',
+              ? 'border-l-primary border-primary bg-primary/5 text-primary'
+              : 'border-l-gray-300 border-gray-200 text-gray-500 hover:border-gray-300',
           )}
         >
-          <div className="flex items-center gap-3 h-14 px-4">
+          <div className="flex items-center gap-3 h-12 px-4">
             <Icon
               name={approach.icon}
               style="solid"
@@ -43,7 +49,7 @@ export const PricingAnalysisApproachCard = ({
               name="chevron-down"
               style="solid"
               className={clsx(
-                'size-2 transition-transform duration-300 ease-in-out shrink-0',
+                'size-2 shrink-0',
                 isOpen ? 'rotate-180' : '',
               )}
             />
@@ -57,10 +63,10 @@ export const PricingAnalysisApproachCard = ({
     <div className="flex flex-col">
       <div
         className={clsx(
-          'flex items-center gap-3 h-14 px-3 text-sm rounded-lg',
+          'flex items-center gap-3 h-12 px-3 text-sm rounded-lg border-l-4',
           approach.isSelected
-            ? 'bg-primary/5 border border-primary'
-            : 'border border-transparent',
+            ? 'bg-primary/5 border border-primary border-l-primary'
+            : 'border border-transparent border-l-gray-300',
         )}
       >
         <button
@@ -106,6 +112,34 @@ export const PricingAnalysisApproachCard = ({
           <span>{Number(approach.appraisalValue).toLocaleString()}</span>
           <Icon name="baht-sign" style="light" className="size-2" />
         </div>
+
+        {/* View toggle */}
+        {onViewLayoutChange && (
+          <div className="flex items-center gap-0.5 ml-1 border-l border-gray-200 pl-2">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onViewLayoutChange('grid'); }}
+              className={clsx(
+                'p-1 rounded transition-colors cursor-pointer',
+                viewLayout === 'grid' ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-gray-600',
+              )}
+              title="Grid view"
+            >
+              <Icon name="grid-2" style="solid" className="size-3" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onViewLayoutChange('list'); }}
+              className={clsx(
+                'p-1 rounded transition-colors cursor-pointer',
+                viewLayout === 'list' ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-gray-600',
+              )}
+              title="List view"
+            >
+              <Icon name="list" style="solid" className="size-3" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

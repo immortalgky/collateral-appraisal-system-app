@@ -12,12 +12,26 @@ type SidebarProps = {
   logo: string;
 };
 
-function MenuItem({ item, isChild = false, collapsed = false }: { item: NavItem; isChild?: boolean; collapsed?: boolean }) {
+function MenuItem({
+  item,
+  isChild = false,
+  collapsed = false,
+}: {
+  item: NavItem;
+  isChild?: boolean;
+  collapsed?: boolean;
+}) {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const isActive = location.pathname === item.href;
   const hasChildren = item.children && item.children.length > 0;
-  const iconStyle = (item.iconStyle || 'solid') as 'solid' | 'regular' | 'light' | 'thin' | 'duotone' | 'brands';
+  const iconStyle = (item.iconStyle || 'solid') as
+    | 'solid'
+    | 'regular'
+    | 'light'
+    | 'thin'
+    | 'duotone'
+    | 'brands';
 
   // Get background color class based on icon color
   const getIconBgClass = (iconColor: string | undefined) => {
@@ -51,7 +65,11 @@ function MenuItem({ item, isChild = false, collapsed = false }: { item: NavItem;
                 'group-hover:scale-105',
               )}
             >
-              <Icon name={item.icon} style={iconStyle} className={clsx('size-4', item.iconColor || 'text-gray-500')} />
+              <Icon
+                name={item.icon}
+                style={iconStyle}
+                className={clsx('size-4', item.iconColor || 'text-gray-500')}
+              />
             </div>
           </div>
         </li>
@@ -78,9 +96,18 @@ function MenuItem({ item, isChild = false, collapsed = false }: { item: NavItem;
                 'group-hover:scale-105',
               )}
             >
-              <Icon name={item.icon} style={iconStyle} className={clsx('size-4', item.iconColor || 'text-gray-500')} />
+              <Icon
+                name={item.icon}
+                style={iconStyle}
+                className={clsx('size-4', item.iconColor || 'text-gray-500')}
+              />
             </div>
-            <span className={clsx('text-sm font-medium', isChildActive ? 'text-primary' : 'text-gray-700')}>
+            <span
+              className={clsx(
+                'text-sm font-medium',
+                isChildActive ? 'text-primary' : 'text-gray-700',
+              )}
+            >
               {item.name}
             </span>
           </span>
@@ -99,9 +126,7 @@ function MenuItem({ item, isChild = false, collapsed = false }: { item: NavItem;
             isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
           )}
         >
-          {item.children?.map(child => (
-            <MenuItem key={child.href} item={child} isChild />
-          ))}
+          {item.children?.map(child => <MenuItem key={child.href} item={child} isChild />)}
         </ul>
       </li>
     );
@@ -211,7 +236,10 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                   </span>
                   <div
                     className="w-12 h-1 rounded-full my-0.5"
-                    style={{ background: 'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)' }}
+                    style={{
+                      background:
+                        'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
+                    }}
                   />
                   <span className="text-[10px] font-medium text-gray-400">
                     Collateral Appraisal System
@@ -223,7 +251,9 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
             {/* Navigation */}
             <nav className="flex flex-1 flex-col px-4 py-4">
               <div className="px-3 mb-2">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.menu')}</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  {t('sidebar.general')}
+                </span>
               </div>
 
               <ul className="flex flex-col gap-1">
@@ -234,7 +264,9 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 
               <div className="mt-auto pt-4 border-t border-gray-100">
                 <div className="px-3 mb-2">
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.system')}</span>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {t('sidebar.system')}
+                  </span>
                 </div>
                 <ul className="flex flex-col gap-1">
                   <li>
@@ -245,7 +277,9 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                       <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
                         <Icon name="gear" style="solid" className="size-4 text-gray-500" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{t('sidebar.settings')}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        {t('sidebar.settings')}
+                      </span>
                     </Link>
                   </li>
                 </ul>
@@ -274,7 +308,9 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
     >
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
-        <div className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}>
+        <div
+          className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}
+        >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-7 w-auto" />
@@ -286,7 +322,10 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
                 </span>
                 <div
                   className="w-12 h-1 rounded-full my-0.5"
-                  style={{ background: 'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)' }}
+                  style={{
+                    background:
+                      'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
+                  }}
                 />
                 <span className="text-[10px] font-medium text-gray-400">
                   Collateral Appraisal System
@@ -297,10 +336,17 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
         </div>
 
         {/* Navigation */}
-        <nav className={clsx('flex flex-1 flex-col py-4 transition-all duration-300', sidebarCollapsed ? 'px-1' : 'px-4')}>
+        <nav
+          className={clsx(
+            'flex flex-1 flex-col py-4 transition-all duration-300',
+            sidebarCollapsed ? 'px-1' : 'px-4',
+          )}
+        >
           {!sidebarCollapsed && (
             <div className="px-3 mb-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.menu')}</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                {t('sidebar.general')}
+              </span>
             </div>
           )}
 
@@ -314,7 +360,9 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
           <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100')}>
             {!sidebarCollapsed && (
               <div className="px-3 mb-2">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('sidebar.system')}</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  {t('sidebar.system')}
+                </span>
               </div>
             )}
             <ul className="flex flex-col gap-1">
@@ -332,7 +380,9 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
                     <Icon name="gear" style="solid" className="size-4 text-gray-500" />
                   </div>
                   {!sidebarCollapsed && (
-                    <span className="text-sm font-medium text-gray-700">{t('sidebar.settings')}</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {t('sidebar.settings')}
+                    </span>
                   )}
                 </Link>
               </li>

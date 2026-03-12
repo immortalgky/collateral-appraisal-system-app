@@ -237,7 +237,7 @@ function BuildingDetailPopUpModal({
                   <div className="col-span-3">
                     <FormBooleanToggle
                       label="Is Building"
-                      options={['Yes', 'No']}
+                      options={['No', 'Yes']}
                       name="isBuilding"
                     />
                   </div>
