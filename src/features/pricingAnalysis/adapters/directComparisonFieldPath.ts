@@ -78,6 +78,7 @@ export const directComparisonPath = {
   finalValueRounded: () => 'directComparisonFinalValue.finalValueRounded',
 
   /** Appraisal price */
+  includeLandArea: () => 'directComparisonAppraisalPrice.includeLandArea',
   landArea: () => 'directComparisonAppraisalPrice.landArea',
   usableArea: () => 'directComparisonAppraisalPrice.usableArea',
   appraisalPrice: () => 'directComparisonAppraisalPrice.appraisalPrice',

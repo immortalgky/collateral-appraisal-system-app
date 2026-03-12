@@ -246,7 +246,8 @@ export const SaleAdjustmentGridScoringSection = ({
                   cf => cf.factorCode === selected || !usedFactorCodes.includes(cf.factorCode),
                 )
                 .map(cf => ({
-                  label: getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ?? '',
+                  label:
+                    getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ?? '',
                   value: cf.factorCode,
                 }));
               const isTemplateFactor = (template?.calculationFactors ?? []).some(
@@ -263,7 +264,13 @@ export const SaleAdjustmentGridScoringSection = ({
                               fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                               inputType="display"
                               accessor={({ value }) =>
-                                value ? getFactorDesciption(value.toString(), serverData.allFactors ?? [], language) : ''
+                                value
+                                  ? getFactorDesciption(
+                                      value.toString(),
+                                      serverData.allFactors ?? [],
+                                      language,
+                                    )
+                                  : ''
                               }
                             />
                           ) : (
@@ -271,11 +278,19 @@ export const SaleAdjustmentGridScoringSection = ({
                               fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                               inputType="select"
                               options={options}
-                              onSelectChange={(value) => {
-                                const factor = serverData.allFactors?.find((f: FactorDataType) => f.factorCode === value);
+                              onSelectChange={value => {
+                                const factor = serverData.allFactors?.find(
+                                  (f: FactorDataType) => f.factorCode === value,
+                                );
                                 const fid = factor?.factorId ?? factor?.id ?? '';
-                                setValue(`saleAdjustmentGridQualitatives.${rowIndex}.factorId`, fid);
-                                setValue(`saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorId`, fid);
+                                setValue(
+                                  `saleAdjustmentGridQualitatives.${rowIndex}.factorId`,
+                                  fid,
+                                );
+                                setValue(
+                                  `saleAdjustmentGridAdjustmentFactors.${rowIndex}.factorId`,
+                                  fid,
+                                );
                               }}
                             />
                           )}
@@ -341,7 +356,9 @@ export const SaleAdjustmentGridScoringSection = ({
                       fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        const factor = (serverData.allFactors ?? []).find((f: FactorDataType) => f.factorCode === value);
+                        const factor = (serverData.allFactors ?? []).find(
+                          (f: FactorDataType) => f.factorCode === value,
+                        );
                         const fieldName = factor?.fieldName as string | undefined;
                         const raw = fieldName ? property[fieldName] : null;
                         const rawStr = raw != null ? String(raw) : null;
@@ -376,7 +393,15 @@ export const SaleAdjustmentGridScoringSection = ({
 
             {/* initial value */}
             <tr>
-              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Initial Price</td>
+              <td
+                className={clsx(
+                  'bg-gray-100 !font-semibold !text-gray-700',
+                  leftColumnBody,
+                  bgGradient,
+                )}
+              >
+                Initial Price
+              </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
@@ -410,6 +435,9 @@ export const SaleAdjustmentGridScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
+                const hasAdjustAmt = !!(
+                  getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) > 0
+                );
                 if (!hasOfferPrice)
                   return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
@@ -417,6 +445,7 @@ export const SaleAdjustmentGridScoringSection = ({
                     <RHFInputCell
                       fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
                       inputType="number"
+                      disabled={hasAdjustAmt}
                     />
                   </td>
                 );
@@ -432,14 +461,20 @@ export const SaleAdjustmentGridScoringSection = ({
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasOfferPrice = !!survey.offerPrice;
-                if (!hasOfferPrice)
-                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
+                const hasAdjustPct = !!(
+                  getValues(calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })) > 0
+                );
                 return (
                   <td key={survey.id} className={clsx(surveyColumnBody)}>
-                    <RHFInputCell
-                      fieldName={calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })}
-                      inputType="number"
-                    />
+                    {hasOfferPrice && (
+                      <RHFInputCell
+                        fieldName={calculationOfferingPriceAdjustmentAmtPath({
+                          column: columnIndex,
+                        })}
+                        inputType="number"
+                        disabled={hasAdjustPct}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -455,7 +490,10 @@ export const SaleAdjustmentGridScoringSection = ({
                 if (!hasSalePrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={survey.id} className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(surveyColumnBody, 'text-right', hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -481,7 +519,14 @@ export const SaleAdjustmentGridScoringSection = ({
                   return `${format(d, 'MMM')} ${buddhistYear}`;
                 })();
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyColumnBody, (hasOfferPrice || !hasSalePrice) && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx(
+                      'text-right',
+                      surveyColumnBody,
+                      (hasOfferPrice || !hasSalePrice) && 'opacity-50',
+                    )}
+                  >
                     <div className="flex flex-col items-end gap-0.5">
                       <RHFInputCell
                         fieldName={calculationNumberOfYearsPath({ column: columnIndex })}
@@ -533,7 +578,10 @@ export const SaleAdjustmentGridScoringSection = ({
                 if (!hasSalePrice)
                   return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
-                  <td key={survey.id} className={clsx('text-right', surveyColumnBody, hasOfferPrice && 'opacity-50')}>
+                  <td
+                    key={survey.id}
+                    className={clsx('text-right', surveyColumnBody, hasOfferPrice && 'opacity-50')}
+                  >
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
@@ -574,7 +622,15 @@ export const SaleAdjustmentGridScoringSection = ({
 
             {/* adjust factors */}
             <tr>
-              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Adjusted Value</td>
+              <td
+                className={clsx(
+                  'bg-gray-100 !font-semibold !text-gray-700',
+                  leftColumnBody,
+                  bgGradient,
+                )}
+              >
+                Adjusted Value
+              </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
@@ -589,7 +645,13 @@ export const SaleAdjustmentGridScoringSection = ({
                         fieldName={qualitativeFactorCodePath({ row: rowIndex })}
                         inputType="display"
                         accessor={({ value }) =>
-                          value ? getFactorDesciption(value.toString(), serverData.allFactors ?? [], language) : ''
+                          value
+                            ? getFactorDesciption(
+                                value.toString(),
+                                serverData.allFactors ?? [],
+                                language,
+                              )
+                            : ''
                         }
                       />
                     }
@@ -725,7 +787,15 @@ export const SaleAdjustmentGridScoringSection = ({
 
             {/* adjust weighted */}
             <tr>
-              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Adjust Weight</td>
+              <td
+                className={clsx(
+                  'bg-gray-100 !font-semibold !text-gray-700',
+                  leftColumnBody,
+                  bgGradient,
+                )}
+              >
+                Adjust Weight
+              </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
@@ -771,7 +841,15 @@ export const SaleAdjustmentGridScoringSection = ({
 
             {/* final value */}
             <tr>
-              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>Final Value</td>
+              <td
+                className={clsx(
+                  'bg-gray-100 !font-semibold !text-gray-700',
+                  leftColumnBody,
+                  bgGradient,
+                )}
+              >
+                Final Value
+              </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
@@ -788,7 +866,13 @@ export const SaleAdjustmentGridScoringSection = ({
               </td>
             </tr>
             <tr>
-              <td className={clsx('bg-gray-100 !font-semibold !text-gray-700', leftColumnBody, bgGradient)}>
+              <td
+                className={clsx(
+                  'bg-gray-100 !font-semibold !text-gray-700',
+                  leftColumnBody,
+                  bgGradient,
+                )}
+              >
                 {'Final Value (Rounded)'}
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {

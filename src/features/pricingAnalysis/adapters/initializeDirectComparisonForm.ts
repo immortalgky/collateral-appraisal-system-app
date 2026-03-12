@@ -10,7 +10,11 @@ import type {
   DirectComparisonCalculationFormType,
   DirectComparisonType,
 } from '@features/pricingAnalysis/schemas/directComparisonForm';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue.ts';
 import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetDirectComparisonInitialValueProps {
@@ -74,7 +78,7 @@ export function initializeDirectComparisonForm({
               marketId: survey.id,
               offeringPrice: survey.offerPrice ?? 0,
               offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+              offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
               offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
               sellingPrice: survey.salePrice ?? 0,
               sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
@@ -96,6 +100,7 @@ export function initializeDirectComparisonForm({
           finalValueRounded: 0,
         },
         directComparisonAppraisalPrice: {
+          includeLandArea: false,
           landArea: property.titles
             ? convertLandTitlesToLandArea({ titles: property.titles })
             : undefined,
@@ -155,7 +160,7 @@ export function initializeDirectComparisonForm({
             marketId: survey.id,
             offeringPrice: survey.offerPrice ?? 0,
             offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+            offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
             offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
             sellingPrice: survey.salePrice ?? 0,
             sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
@@ -186,6 +191,7 @@ export function initializeDirectComparisonForm({
         finalValueRounded: 0,
       },
       directComparisonAppraisalPrice: {
+        includeLandArea: false,
         landArea: property.titles
           ? convertLandTitlesToLandArea({ titles: property.titles })
           : undefined,
