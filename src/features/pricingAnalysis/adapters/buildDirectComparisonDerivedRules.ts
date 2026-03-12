@@ -46,6 +46,8 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
     calculationSumFactorAmt: calculationSumFactorAmtPath,
     calculationTotalAdjustedSellingPrice: calculationTotalAdjustedSellingPricePath,
     calculationUsableAreaPrice: calculationUsableAreaPricePath,
+    landArea: landAreaPath,
+    usableArea: usableAreaPath,
   } = directComparisonPath;
 
   const rules: DerivedFieldRule[] = surveys
@@ -103,9 +105,9 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
         {
           targetPath: calculationLandAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: () => {
-            const propertyLandArea = getPropertyValueByFactorCode('05', property, allFactors) ?? 0;
-            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '05');
+          compute: ({ getValues }) => {
+            const propertyLandArea = getValues(landAreaPath());
+            const findSurveyLandArea = (survey.factorData ?? []).find(f => f.factorCode === '02');
             const surveyLandArea = findSurveyLandArea
               ? readFactorValue({
                   dataType: findSurveyLandArea.dataType,
@@ -121,7 +123,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           targetPath: calculationLandValueIncreaseDecreasePath({ column: columnIndex }),
           deps: [calculationLandPricePath()],
           compute: ({ getValues }) => {
-            const landPrice = getValues('landPrice') ?? 0;
+            const landPrice = getValues(calculationLandPricePath()) ?? 0;
             const landDiff = getValues(calculationLandAreaDiffPath({ column: columnIndex })) ?? 0;
             const landValueIncreaseDecrease = calcIncreaseDecrease(landPrice, landDiff);
             return landValueIncreaseDecrease;
@@ -130,9 +132,9 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
         {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
-          compute: () => {
-            const propertyUsableArea = getPropertyValueByFactorCode('12', property, allFactors) ?? 0;
-            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
+          compute: ({ getValues }) => {
+            const propertyUsableArea = getValues(usableAreaPath()) ?? 0;
+            const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '14');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({
                   dataType: findSurveyUsableArea.dataType,
@@ -149,7 +151,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           targetPath: calculationBuildingValueIncreaseDecreasePath({ column: columnIndex }),
           deps: [calculationUsableAreaPricePath()],
           compute: ({ getValues }) => {
-            const usableAreaPrice = getValues('usableAreaPrice') ?? 0;
+            const usableAreaPrice = getValues(calculationUsableAreaPricePath()) ?? 0;
             const usableAreaDiff =
               getValues(calculationUsableAreaDiffPath({ column: columnIndex })) ?? 0;
             const buildingValueIncreaseDecrease = calcIncreaseDecrease(
