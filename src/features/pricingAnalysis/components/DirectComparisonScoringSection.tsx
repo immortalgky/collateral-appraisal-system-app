@@ -325,6 +325,46 @@ export const DirectComparisonScoringSection = ({
                                 { label: 'Inferior', value: 'I', colorClass: 'text-red-600' },
                                 { label: 'Better', value: 'B', colorClass: 'text-green-600' },
                               ]}
+                              onSelectChange={value => {
+                                switch (value) {
+                                  case 'E': {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      0,
+                                    );
+                                  }
+                                  case 'I': {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      5,
+                                    );
+                                  }
+                                  case 'B': {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      -5,
+                                    );
+                                  }
+                                  default: {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      0,
+                                    );
+                                  }
+                                }
+                              }}
                             />
                           </div>
                           <RHFInputCell

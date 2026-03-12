@@ -325,6 +325,46 @@ export const SaleAdjustmentGridScoringSection = ({
                                 { label: 'Inferior', value: 'I', colorClass: 'text-red-600' },
                                 { label: 'Better', value: 'B', colorClass: 'text-green-600' },
                               ]}
+                              onSelectChange={value => {
+                                switch (value) {
+                                  case 'E': {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      0,
+                                    );
+                                  }
+                                  case 'I': {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      5,
+                                    );
+                                  }
+                                  case 'B': {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      -5,
+                                    );
+                                  }
+                                  default: {
+                                    return setValue(
+                                      adjustmentFactorAdjustPercentPath({
+                                        row: rowIndex,
+                                        column: columnIndex,
+                                      }),
+                                      0,
+                                    );
+                                  }
+                                }
+                              }}
                             />
                           </div>
                           <RHFInputCell
@@ -420,7 +460,9 @@ export const SaleAdjustmentGridScoringSection = ({
                       inputType="display"
                       accessor={({ value }) => {
                         if (!value) return '';
-                        const unit = survey.offerPriceUnit ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit) : '';
+                        const unit = survey.offerPriceUnit
+                          ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
+                          : '';
                         return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
@@ -502,7 +544,9 @@ export const SaleAdjustmentGridScoringSection = ({
                       inputType="display"
                       accessor={({ value }) => {
                         if (!value) return '';
-                        const unit = survey.salePriceUnit ? getParameterDescription('MeasurementUnits', survey.salePriceUnit) : '';
+                        const unit = survey.salePriceUnit
+                          ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
+                          : '';
                         return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
