@@ -11,7 +11,9 @@ import {
   constructionMaterialsFormFields,
   condoRoomLayoutFormFields,
   locationViewFormFields,
-  floorFormFields,
+  groundFloorFields,
+  upperFloorFields,
+  bathroomFloorFields,
   roofFormFields,
   expropriationFields,
   condoFacilityFields,
@@ -47,6 +49,12 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
+const Card = ({ children }: { children: ReactNode }) => (
+  <div className="col-span-12 bg-gray-50 rounded-lg p-3">
+    <div className="grid grid-cols-12 gap-3">{children}</div>
+  </div>
+);
+
 function CondoDetailForm() {
   return (
     <div className="grid grid-cols-5 gap-6">
@@ -58,32 +66,40 @@ function CondoDetailForm() {
         <FormFields fields={condoLocationFields} />
       </SectionRow>
 
-      <SectionRow title="Decoration" icon="paint-roller">
-        <FormFields fields={condoDecorationFields} />
+      <SectionRow title="Decoration & Structure" icon="paint-roller">
+        <Card>
+          <FormFields fields={condoDecorationFields} />
+        </Card>
+        <Card>
+          <FormFields fields={ageHeightCondoFields} />
+        </Card>
       </SectionRow>
 
-      <SectionRow title="Age/Height of the Building" icon="calendar-days">
-        <FormFields fields={ageHeightCondoFields} />
-      </SectionRow>
-
-      <SectionRow title="Building Form" icon="building-columns">
-        <FormFields fields={buildingFormFields} />
-      </SectionRow>
-
-      <SectionRow title="Construction Materials" icon="cubes">
-        <FormFields fields={constructionMaterialsFormFields} />
-      </SectionRow>
-
-      <SectionRow title="Room Layout" icon="bed">
-        <FormFields fields={condoRoomLayoutFormFields} />
-      </SectionRow>
-
-      <SectionRow title="Location View" icon="eye">
-        <FormFields fields={locationViewFormFields} />
+      <SectionRow title="Building Design" icon="building-columns">
+        <Card>
+          <FormFields fields={buildingFormFields} />
+        </Card>
+        <Card>
+          <FormFields fields={constructionMaterialsFormFields} />
+        </Card>
+        <Card>
+          <FormFields fields={condoRoomLayoutFormFields} />
+        </Card>
+        <Card>
+          <FormFields fields={locationViewFormFields} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Floor" icon="layer-group">
-        <FormFields fields={floorFormFields} />
+        <Card>
+          <FormFields fields={groundFloorFields} />
+        </Card>
+        <Card>
+          <FormFields fields={upperFloorFields} />
+        </Card>
+        <Card>
+          <FormFields fields={bathroomFloorFields} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Roof" icon="tent">
@@ -97,15 +113,18 @@ function CondoDetailForm() {
       </SectionRow>
 
       <SectionRow title="Expropriation" icon="file-invoice">
-        <FormFields fields={expropriationFields} />
+        <Card>
+          <FormFields fields={expropriationFields} />
+        </Card>
       </SectionRow>
 
-      <SectionRow title="Condominium Facility" icon="dumbbell">
-        <FormFields fields={condoFacilityFields} />
-      </SectionRow>
-
-      <SectionRow title="Environment" icon="tree">
-        <FormFields fields={environmentFields} />
+      <SectionRow title="Facilities & Environment" icon="dumbbell">
+        <Card>
+          <FormFields fields={condoFacilityFields} />
+        </Card>
+        <Card>
+          <FormFields fields={environmentFields} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="In Forest Boundary" icon="tree-city">

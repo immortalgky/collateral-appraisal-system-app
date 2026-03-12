@@ -13,8 +13,10 @@ import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarnin
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import RightMenuPortal from '@/shared/components/RightMenuPortal';
 import CondoPMAForm from '../forms/CondoPMAForm';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const CondoPMAPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
 
@@ -78,7 +80,7 @@ const CondoPMAPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={condoPMAForm}>
+      <FormProvider methods={methods} schema={condoPMAForm} readOnly={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -106,34 +108,40 @@ const CondoPMAPage = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <CancelButton />
-                <div className="h-6 w-px bg-gray-200" />
-                {isDirty && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Unsaved changes
-                  </span>
+                {!isReadOnly && (
+                  <>
+                    <div className="h-6 w-px bg-gray-200" />
+                    {isDirty && (
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Unsaved changes
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </div>
+              {!isReadOnly && (
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                    Save draft
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

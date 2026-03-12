@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,8 +25,10 @@ import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const CreateCondoPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -37,8 +39,17 @@ const CreateCondoPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
+  const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId, propertyId);
+
+  const formDefaults = useMemo(() => {
+    if (isEditMode && propertyData) {
+      return mapCondoPropertyResponseToForm(propertyData);
+    }
+    return createCondoFormDefault;
+  }, [isEditMode, propertyData]);
+
   const methods = useForm<createCondoFormType>({
-    defaultValues: createCondoFormDefault,
+    defaultValues: formDefaults,
     resolver: zodResolver(createCondoForm),
   });
   const {
@@ -51,12 +62,9 @@ const CreateCondoPage = () => {
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
-  const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId, propertyId);
-
   useEffect(() => {
     if (isEditMode && propertyData) {
-      const formValues = mapCondoPropertyResponseToForm(propertyData);
-      reset(formValues);
+      reset(mapCondoPropertyResponseToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -101,7 +109,7 @@ const CreateCondoPage = () => {
             toast.success('Property condominium created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
+            navigate(`/appraisals/${appraisalId}/property/condo/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -151,7 +159,7 @@ const CreateCondoPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisal/${appraisalId}/property/condo/${response.propertyId}`);
+              navigate(`/appraisals/${appraisalId}/property/condo/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -163,7 +171,7 @@ const CreateCondoPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -184,7 +192,7 @@ const CreateCondoPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createCondoForm}>
+      <FormProvider methods={methods} schema={createCondoForm} readOnly={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -213,6 +221,7 @@ const CreateCondoPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
+                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>
@@ -245,29 +254,35 @@ const CreateCondoPage = () => {
           <ActionBar>
             <ActionBar.Left>
               <CancelButton />
-              <ActionBar.Divider />
-              <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                </>
+              )}
             </ActionBar.Left>
-            <ActionBar.Right>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={handleSaveDraft}
-                isLoading={isPending && saveAction === 'draft'}
-                disabled={isPending}
-              >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save draft
-              </Button>
-              <Button
-                type="submit"
-                isLoading={isPending && saveAction === 'submit'}
-                disabled={isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save draft
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
           </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />

@@ -52,7 +52,7 @@ export const PropertyTableRow = ({
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
       navigate(
-        `/appraisal/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+        `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
       );
     }
   };
@@ -97,14 +97,6 @@ export const PropertyTableRow = ({
         <div className="flex items-center gap-1 text-xs text-gray-600">
           <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
           <span>{property.area}</span>
-        </div>
-      </td>
-
-      {/* Price */}
-      <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          <Icon name="baht-sign" className="text-gray-400 text-[10px]" style="solid" />
-          <span className="truncate">{property.priceRange}</span>
         </div>
       </td>
 

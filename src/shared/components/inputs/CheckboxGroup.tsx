@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { useController, useFormContext } from 'react-hook-form';
 import Icon from '../Icon';
 import { useParameterAsCheckboxOptions } from '../../utils/parameterUtils';
+import { useFormReadOnly } from '../form/context';
 import type { AtLeastOne } from '@/shared/types';
 
 export interface CheckboxOption {
@@ -40,10 +41,12 @@ const CheckboxGroup = ({
   wrap = true,
   variant = 'tag',
   size = 'md',
-  disabled = false,
+  disabled: disabledProp = false,
   showClearAll = true,
   clearAllThreshold = 2,
 }: CheckboxGroupProps) => {
+  const formReadOnly = useFormReadOnly();
+  const disabled = disabledProp || formReadOnly;
   const parameterOptions = useParameterAsCheckboxOptions(group ?? '');
   const resolvedOptions = options ?? parameterOptions;
   const { control } = useFormContext();

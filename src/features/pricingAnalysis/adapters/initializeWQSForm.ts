@@ -35,7 +35,7 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
       marketId: survey.id ?? '',
       offeringPrice: survey.offerPrice ?? 0,
       offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
-      offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
+      offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
       offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: survey.salePrice ?? 0,
       sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',

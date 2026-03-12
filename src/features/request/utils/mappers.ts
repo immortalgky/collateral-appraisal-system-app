@@ -1,5 +1,6 @@
 import type { GetRequestByIdResultType } from '../api';
 import type { createRequestFormType } from '../schemas/form';
+import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 
 /**
  * Map Request API response to form values
@@ -28,20 +29,25 @@ export const mapRequestResponseToForm = (
       prevAppraisalReportNo: response.detail?.prevAppraisalReportNo ?? null,
       prevAppraisalValue: response.detail?.prevAppraisalValue ?? null,
       prevAppraisalDate: response.detail?.prevAppraisalDate ?? null,
-      address: {
-        houseNumber: response.detail?.address?.houseNumber ?? '',
-        projectName: response.detail?.address?.projectName ?? '',
-        moo: response.detail?.address?.moo ?? '',
-        soi: response.detail?.address?.soi ?? '',
-        road: response.detail?.address?.road ?? '',
-        subDistrict: response.detail?.address?.subDistrict ?? '',
-        subDistrictName: null,
-        district: response.detail?.address?.district ?? '',
-        districtName: null,
-        province: response.detail?.address?.province ?? '',
-        provinceName: null,
-        postcode: response.detail?.address?.postcode ?? '',
-      },
+      address: (() => {
+        const detailAddrLookup = response.detail?.address?.subDistrict
+          ? findAddressBySubDistrictCode(response.detail.address.subDistrict)
+          : undefined;
+        return {
+          houseNumber: response.detail?.address?.houseNumber ?? '',
+          projectName: response.detail?.address?.projectName ?? '',
+          moo: response.detail?.address?.moo ?? '',
+          soi: response.detail?.address?.soi ?? '',
+          road: response.detail?.address?.road ?? '',
+          subDistrict: response.detail?.address?.subDistrict ?? '',
+          subDistrictName: detailAddrLookup?.subDistrictName ?? null,
+          district: response.detail?.address?.district ?? '',
+          districtName: detailAddrLookup?.districtName ?? null,
+          province: response.detail?.address?.province ?? '',
+          provinceName: detailAddrLookup?.provinceName ?? null,
+          postcode: response.detail?.address?.postcode ?? '',
+        };
+      })(),
       contact: {
         contactPersonName: response.detail?.contact?.contactPersonName ?? '',
         contactPersonPhone: response.detail?.contact?.contactPersonPhone ?? '',

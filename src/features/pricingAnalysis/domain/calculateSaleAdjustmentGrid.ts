@@ -8,6 +8,26 @@ export function floorToTenThousands(num) {
   return Math.floor(num / 10000) * 10000;
 }
 
+export const toFiniteNumber = (v: unknown, fallback = 0): number => {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : fallback;
+
+  if (typeof v === 'string') {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  // If RHF gives you an array (or someone stored a tuple), take the first usable number.
+  if (Array.isArray(v)) {
+    for (const item of v) {
+      const n = toFiniteNumber(item, NaN);
+      if (Number.isFinite(n)) return n;
+    }
+    return fallback;
+  }
+
+  return fallback;
+};
+
 /**
  * Adjusted value from offering price:
  * - pct > 0 => offeringPrice - offeringPrice * pct/100

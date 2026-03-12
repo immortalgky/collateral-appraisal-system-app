@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import Icon from '../Icon';
 import { useAddressStore } from '@/shared/store';
 import type { ThaiAddress } from '@/shared/data/thaiAddresses';
+import type { AddressSource } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
 
 interface AddressAutocompleteProps {
@@ -14,6 +15,7 @@ interface AddressAutocompleteProps {
   disabled?: boolean;
   required?: boolean;
   error?: string;
+  addressSource?: AddressSource;
 }
 
 const AddressAutocomplete = ({
@@ -24,6 +26,7 @@ const AddressAutocomplete = ({
   disabled = false,
   required = false,
   error,
+  addressSource,
 }: AddressAutocompleteProps) => {
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
@@ -32,8 +35,8 @@ const AddressAutocomplete = ({
 
   const filteredAddresses = useMemo(() => {
     if (query.length < 1) return [];
-    return searchBySubDistrict(query).slice(0, 10); // Limit to 10 results
-  }, [query, searchBySubDistrict]);
+    return searchBySubDistrict(query, addressSource).slice(0, 10); // Limit to 10 results
+  }, [query, searchBySubDistrict, addressSource]);
 
   const formatDisplayValue = (address: ThaiAddress | null): string => {
     if (!address) return '';

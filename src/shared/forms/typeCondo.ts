@@ -41,7 +41,7 @@ export const CreateCondoRequest = z
     buildingConditionType: z.string(),
     hasObligation: z.boolean(),
     obligationDetails: z.string(),
-    isDocumentValidated: z.boolean(),
+    documentValidationResultType: z.string(),
 
     locationType: z.string(),
     street: z.string(),
@@ -120,7 +120,7 @@ export const UpdateCondoRequest = z
     buildingConditionType: z.string(),
     hasObligation: z.boolean(),
     obligationDetails: z.string(),
-    isDocumentValidated: z.boolean(),
+    documentValidationResultType: z.string(),
 
     locationType: z.string(),
     street: z.string(),
@@ -199,7 +199,7 @@ export const GetCondoPropertyByIdResult = z
     buildingConditionType: z.string(),
     hasObligation: z.boolean(),
     obligationDetails: z.string(),
-    isDocumentValidated: z.boolean(),
+    documentValidationResultType: z.string(),
 
     locationType: z.string(),
     street: z.string(),

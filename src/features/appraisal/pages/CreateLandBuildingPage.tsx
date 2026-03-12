@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,8 +35,10 @@ import {
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const CreateLandBuildingPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -47,8 +49,20 @@ const CreateLandBuildingPage = () => {
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
 
+  const { data: propertyData, isLoading } = useGetLandAndBuildingPropertyById(
+    appraisalId,
+    propertyId,
+  );
+
+  const formDefaults = useMemo(() => {
+    if (isEditMode && propertyData) {
+      return mapLandAndBuildingPropertyResponseToForm(propertyData);
+    }
+    return createLandAndBuildingFormDefault;
+  }, [isEditMode, propertyData]);
+
   const methods = useForm<createLandAndBuildingFormType>({
-    defaultValues: createLandAndBuildingFormDefault,
+    defaultValues: formDefaults,
     resolver: zodResolver(createLandAndBuildingForm),
   });
   const {
@@ -61,15 +75,10 @@ const CreateLandBuildingPage = () => {
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
-  const { data: propertyData, isLoading } = useGetLandAndBuildingPropertyById(
-    appraisalId,
-    propertyId,
-  );
-
+  // Reset form when API data arrives or updates (edit mode only)
   useEffect(() => {
     if (isEditMode && propertyData) {
-      const formValues = mapLandAndBuildingPropertyResponseToForm(propertyData);
-      reset(formValues);
+      reset(mapLandAndBuildingPropertyResponseToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -119,7 +128,7 @@ const CreateLandBuildingPage = () => {
             toast.success('Property land and building created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisal/${appraisalId}/property/land-building/${response.propertyId}`);
+            navigate(`/appraisals/${appraisalId}/property/land-building/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -171,7 +180,7 @@ const CreateLandBuildingPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisal/${appraisalId}/property/land-building/${response.propertyId}`);
+              navigate(`/appraisals/${appraisalId}/property/land-building/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -186,7 +195,7 @@ const CreateLandBuildingPage = () => {
   // Tab selection state (Land or Building)
   const [activeTab, setActiveTab] = useState<'land' | 'building'>('land');
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -218,7 +227,7 @@ const CreateLandBuildingPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandAndBuildingForm}>
+      <FormProvider methods={methods} schema={createLandAndBuildingForm} readOnly={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -247,6 +256,7 @@ const CreateLandBuildingPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
+                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>
@@ -310,29 +320,35 @@ const CreateLandBuildingPage = () => {
           <ActionBar>
             <ActionBar.Left>
               <CancelButton />
-              <ActionBar.Divider />
-              <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                </>
+              )}
             </ActionBar.Left>
-            <ActionBar.Right>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={handleSaveDraft}
-                isLoading={isPending && saveAction === 'draft'}
-                disabled={isPending}
-              >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save draft
-              </Button>
-              <Button
-                type="submit"
-                isLoading={isPending && saveAction === 'submit'}
-                disabled={isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save draft
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
           </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />

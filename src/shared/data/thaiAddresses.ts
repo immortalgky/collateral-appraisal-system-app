@@ -1,3 +1,6 @@
+import { useAddressStore } from '../store';
+import type { AddressSource } from '../types';
+
 export interface ThaiAddress {
   provinceCode: string;
   provinceName: string;
@@ -8,13 +11,25 @@ export interface ThaiAddress {
   postcode: string;
 }
 
-// Mock data for Thailand administrative divisions
-// Will be replaced with API data later
 /**
- * Find address by subDistrict code
+ * Find the address by subDistrict code from the Zustand store.
+ * @param subDistrictCode - Sub-district code (e.g., '100101')
+ * @param source - 'title' | 'dopa' to search a specific dataset, or omit to search both (title first).
  */
-export const findAddressBySubDistrictCode = (subDistrictCode: string): ThaiAddress | undefined => {
-  return mockThaiAddresses.find(addr => addr.subDistrictCode === subDistrictCode);
+export const findAddressBySubDistrictCode = (
+  subDistrictCode: string,
+  source?: AddressSource,
+): ThaiAddress | undefined => {
+  const store = useAddressStore.getState();
+  if (source === 'title')
+    return store.titleAddresses.find(a => a.subDistrictCode === subDistrictCode);
+  if (source === 'dopa')
+    return store.dopaAddresses.find(a => a.subDistrictCode === subDistrictCode);
+  // No source: search both (title first, then dopa)
+  return (
+    store.titleAddresses.find(a => a.subDistrictCode === subDistrictCode) ??
+    store.dopaAddresses.find(a => a.subDistrictCode === subDistrictCode)
+  );
 };
 
 export const mockThaiAddresses: ThaiAddress[] = [

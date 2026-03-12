@@ -156,7 +156,15 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         if (currentValue === null || currentValue === 0) return;
 
         const multiplier = key === 'k' ? 1000 : 1000000;
-        const newValue = currentValue * multiplier;
+        let newValue = currentValue * multiplier;
+
+        // Clamp to maxIntegerDigits limit
+        if (maxIntegerDigits != null) {
+          const maxAllowed = Math.pow(10, maxIntegerDigits) - 1;
+          if (newValue > maxAllowed) {
+            newValue = maxAllowed;
+          }
+        }
 
         const formatted = formatNumber(newValue);
         setDisplayValue(formatted);

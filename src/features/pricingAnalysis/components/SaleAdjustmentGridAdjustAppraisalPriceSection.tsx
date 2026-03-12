@@ -5,8 +5,11 @@ import {
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import { useRef } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useContext, useRef } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { round2, toFiniteNumber } from '../domain/calculateSaleAdjustmentGrid';
+import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
+import { ServerDataCtx } from '../store/selectionContext';
 
 interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
   property: Record<string, unknown>;
@@ -18,6 +21,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
 
   const {
     finalValueRounded: finalValueRoundedPath,
+    includeLandArea: includeLandAreaPath,
     landArea: landAreaPath,
     usableArea: usableAreaPath,
     appraisalPrice: appraisalPricePath,
@@ -32,19 +36,20 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
       targetPath: appraisalPricePath(),
       deps: [finalValueRoundedPath()],
       compute: ({ getValues }) => {
-        const finalValue = getValues(finalValueRoundedPath()) ?? 0;
+        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
 
+        const isIncludeLandArea = getValues(includeLandAreaPath());
         const landArea = getValues(landAreaPath());
-        if (landArea) {
-          return finalValue * landArea;
+        if (isIncludeLandArea && !!landArea) {
+          return round2(finalValueRounded * (landArea ?? 0));
         }
 
         const usableArea = getValues(usableAreaPath());
-        if (usableArea) {
-          return finalValue * usableArea;
+        if (isIncludeLandArea && !!usableArea) {
+          return round2(finalValueRounded * (usableArea ?? 0));
         }
 
-        return finalValue;
+        return finalValueRounded;
       },
     },
     {
@@ -81,63 +86,83 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
 
   useDerivedFields({ rules: rules });
 
+  const { control } = useFormContext();
+  const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
+
+  const serverData = useContext(ServerDataCtx);
+  const groupCollateralType = deriveGroupCollateralType(serverData?.groupDetail?.properties ?? []);
+  const isLand = groupCollateralType === 'L';
+  const isUsable = groupCollateralType === 'U';
+  const areaUnit = isLand ? 'Sq. Wa' : 'Sq. m.';
+  const areaFieldPath = isLand ? landAreaPath() : usableAreaPath();
+
   return (
     <div className="flex flex-col gap-3 text-sm">
-      {property.propertyType === 'L' && (
+      <div className="flex flex-col gap-3 text-sm py-2">
+        {/* Include Area toggle */}
+        {(isLand || isUsable) && (
+          <div className="flex items-center gap-4">
+            <span className="w-44 text-gray-500">Include Area</span>
+            <RHFInputCell
+              fieldName={includeLandAreaPath()}
+              inputType="toggle"
+              toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
+            />
+          </div>
+        )}
+        {includeLandArea && (
+          <div className="flex items-center gap-4">
+            <span className="w-44 text-gray-500">Area</span>
+            <span className="font-medium text-gray-800">
+              <RHFInputCell
+                fieldName={areaFieldPath}
+                inputType="display"
+                accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+              />
+            </span>
+            <span className="text-gray-500">{areaUnit}</span>
+          </div>
+        )}
         <div className="flex items-center gap-4">
-          <span className="w-44 text-gray-500">Land Area</span>
+          <span className="w-44 text-gray-500">Final Value (Rounded)</span>
           <span className="font-medium text-gray-800">
-            {(getValues(landAreaPath()) ?? 0).toLocaleString()}
+            <RHFInputCell
+              fieldName={finalValueRoundedPath()}
+              inputType={'display'}
+              accessor={({ value }) => {
+                return value?.toLocaleString() ?? '0';
+              }}
+            />
           </span>
+          <span className="text-gray-500">Baht</span>
         </div>
-      )}
-      {property.propertyType === 'U' && (
-        <div className="flex items-center gap-4">
-          <span className="w-44 text-gray-500">Usable Area</span>
-          <span className="font-medium text-gray-800">
-            {(getValues(usableAreaPath()) ?? 0).toLocaleString()}
-          </span>
-        </div>
-      )}
-      <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Final Value (Rounded)</span>
-        <span className="font-medium text-gray-800">
-          <RHFInputCell
-            fieldName={finalValueRoundedPath()}
-            inputType={'display'}
-            accessor={({ value }) => {
-              return value?.toLocaleString() ?? '0';
-            }}
-          />
-        </span>
-        <span className="text-gray-500">Baht</span>
-      </div>
-      <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
-        <span className="w-44 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
-        <div className="w-40">
-          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType={'number'} />
-        </div>
-        <span className="text-gray-500">Baht</span>
-        <div className="flex items-center">
-          <RHFInputCell
-            fieldName={priceDifferentiatePath()}
-            inputType={'display'}
-            accessor={({ value }) => {
-              const num = Number(value) || 0;
-              if (num === 0) return <span className="text-gray-400">-</span>;
-              const color = num > 0 ? 'text-green-600' : 'text-red-600';
-              const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
-              const icon = num > 0 ? 'arrow-up' : 'arrow-down';
-              return (
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
-                >
-                  <Icon name={icon} style="solid" className="size-3" />
-                  {Math.abs(num).toLocaleString()}
-                </span>
-              );
-            }}
-          />
+        <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
+          <span className="w-44 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
+          <div className="w-40">
+            <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType={'number'} />
+          </div>
+          <span className="text-gray-500">Baht</span>
+          <div className="flex items-center">
+            <RHFInputCell
+              fieldName={priceDifferentiatePath()}
+              inputType={'display'}
+              accessor={({ value }) => {
+                const num = Number(value) || 0;
+                if (num === 0) return <span className="text-gray-400">-</span>;
+                const color = num > 0 ? 'text-green-600' : 'text-red-600';
+                const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
+                const icon = num > 0 ? 'arrow-up' : 'arrow-down';
+                return (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
+                  >
+                    <Icon name={icon} style="solid" className="size-3" />
+                    {Math.abs(num).toLocaleString()}
+                  </span>
+                );
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

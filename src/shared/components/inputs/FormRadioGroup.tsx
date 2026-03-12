@@ -1,5 +1,6 @@
 import { useController, useFormContext } from 'react-hook-form';
 import RadioGroup, { type RadioOption } from './RadioGroup';
+import { useFormReadOnly } from '../form/context';
 import type { AtLeastOne } from '@/shared/types';
 
 type GroupOrOptions = AtLeastOne<{ group: string; options: RadioOption[] }>;
@@ -13,17 +14,21 @@ interface FormRadioGroupBaseProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   orientation?: 'horizontal' | 'vertical';
+  variant?: 'default' | 'card' | 'button';
 }
 
 const FormRadioGroup = ({
   name,
   label,
-  disabled,
+  disabled: disabledProp,
   className,
   size,
   orientation,
+  variant,
   ...groupOrOptions
 }: FormRadioGroupProps) => {
+  const formReadOnly = useFormReadOnly();
+  const disabled = disabledProp || formReadOnly;
   const { control } = useFormContext();
   const {
     field,
@@ -40,6 +45,7 @@ const FormRadioGroup = ({
       className={className}
       size={size}
       orientation={orientation}
+      variant={variant}
       name={name}
       {...groupOrOptions}
     />

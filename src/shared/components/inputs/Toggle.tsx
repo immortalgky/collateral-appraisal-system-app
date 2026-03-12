@@ -34,12 +34,12 @@ const Toggle = ({
 
   const sizeStyles = {
     sm: {
-      container: 'p-[3px] text-xs',
-      option: 'py-0.5 px-2',
+      container: 'p-1 text-xs gap-0.5',
+      option: 'py-1 px-3',
     },
     md: {
-      container: 'p-[3px] text-sm',
-      option: 'py-1 px-3',
+      container: 'p-1 text-sm gap-0.5',
+      option: 'py-1.5 px-4',
     },
   };
 
@@ -59,19 +59,21 @@ const Toggle = ({
         )}
         <div
           className={clsx(
-            'relative inline-grid grid-cols-2 rounded-lg border transition-colors duration-200',
+            'relative inline-grid grid-cols-2 rounded-full transition-colors duration-200',
             sizeStyles[size].container,
-            error ? 'border-danger bg-danger-50' : 'border-gray-200 bg-gray-100',
+            error ? 'border border-danger bg-danger-50' : 'bg-gray-100/80',
+            isDisabled && 'opacity-60',
           )}
           role="radiogroup"
           aria-label={label || `Toggle between ${options.join(' and ')}`}
         >
-          {/* Sliding background - uses CSS transform for positioning */}
+          {/* Sliding pill */}
           <span
             className={clsx(
-              'absolute inset-y-[3px] w-[calc(50%-1.5px)] bg-primary rounded-md shadow-sm',
-              'transition-transform duration-200 ease-out',
-              activeIndex === 0 ? 'translate-x-0' : 'translate-x-[calc(100%+3px)]',
+              'absolute inset-y-1 w-[calc(50%-2px)] rounded-full',
+              'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              error ? 'bg-danger' : 'bg-primary shadow-md shadow-primary/25',
+              activeIndex === 0 ? 'translate-x-0' : 'translate-x-[calc(100%+4px)]',
             )}
             aria-hidden="true"
           />
@@ -87,14 +89,15 @@ const Toggle = ({
                 disabled={isDisabled}
                 onClick={() => handleClick(index)}
                 className={clsx(
-                  'relative z-10 flex items-center justify-center rounded-md transition-colors duration-200 select-none font-medium whitespace-nowrap',
+                  'relative z-10 flex items-center justify-center rounded-full select-none font-medium whitespace-nowrap',
+                  'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
                   sizeStyles[size].option,
                   isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   isActive
                     ? 'text-white'
                     : isDisabled
                       ? 'text-gray-400'
-                      : 'text-gray-500 hover:text-gray-700',
+                      : 'text-gray-500 hover:text-gray-600',
                 )}
               >
                 {option}

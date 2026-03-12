@@ -23,6 +23,7 @@ interface GroupContainerProps {
   onGoToPricingAnalysis: (groupId: string) => void;
   hasClipboard: boolean;
   isDeletingGroup?: boolean;
+  readOnly?: boolean;
 }
 
 export const GroupContainer = React.memo(
@@ -40,6 +41,7 @@ export const GroupContainer = React.memo(
     onGoToPricingAnalysis,
     hasClipboard,
     isDeletingGroup = false,
+    readOnly,
   }: GroupContainerProps) => {
     const droppableData = useMemo(() => ({ type: 'group' as const, group }), [group]);
     const { setNodeRef, isOver } = useDroppable({
@@ -102,7 +104,7 @@ export const GroupContainer = React.memo(
         {/* Group Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {isEditing && !readOnly ? (
               <input
                 ref={inputRef}
                 value={editValue}
@@ -113,9 +115,9 @@ export const GroupContainer = React.memo(
               />
             ) : (
               <h2
-                className="text-sm font-semibold text-gray-900 cursor-pointer hover:text-primary transition-colors"
-                onClick={() => setIsEditing(true)}
-                title="Click to rename"
+                className={`text-sm font-semibold text-gray-900 ${readOnly ? '' : 'cursor-pointer hover:text-primary'} transition-colors`}
+                onClick={readOnly ? undefined : () => setIsEditing(true)}
+                title={readOnly ? undefined : 'Click to rename'}
               >
                 {group.name}
               </h2>
@@ -123,18 +125,20 @@ export const GroupContainer = React.memo(
             <span className="text-xs text-gray-500">
               ({group.items.length} item{group.items.length !== 1 ? 's' : ''})
             </span>
-            <button
-              onClick={() => onDeleteGroup(group.id)}
-              disabled={isDeletingGroup}
-              className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Delete group"
-            >
-              {isDeletingGroup ? (
-                <Icon name="spinner" className="text-xs animate-spin" />
-              ) : (
-                <Icon name="trash" className="text-xs" />
-              )}
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => onDeleteGroup(group.id)}
+                disabled={isDeletingGroup}
+                className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Delete group"
+              >
+                {isDeletingGroup ? (
+                  <Icon name="spinner" className="text-xs animate-spin" />
+                ) : (
+                  <Icon name="trash" className="text-xs" />
+                )}
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -199,9 +203,11 @@ export const GroupContainer = React.memo(
         )}
 
         {/* Add Property Button */}
-        <div className="mt-2 flex justify-center">
-          <PropertyTypeDropdown groupId={group.id} />
-        </div>
+        {!readOnly && (
+          <div className="mt-2 flex justify-center">
+            <PropertyTypeDropdown groupId={group.id} />
+          </div>
+        )}
       </div>
     );
   },

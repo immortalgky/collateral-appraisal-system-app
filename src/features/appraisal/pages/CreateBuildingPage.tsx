@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,8 +30,10 @@ import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 const CreateBuildingPage = () => {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -42,8 +44,17 @@ const CreateBuildingPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
+  const { data: propertyData, isLoading } = useGetBuildingPropertyById(appraisalId, propertyId);
+
+  const formDefaults = useMemo(() => {
+    if (isEditMode && propertyData) {
+      return mapBuildingPropertyResponseToForm(propertyData);
+    }
+    return createBuildingFormDefault;
+  }, [isEditMode, propertyData]);
+
   const methods = useForm<createBuildingFormType>({
-    defaultValues: createBuildingFormDefault,
+    defaultValues: formDefaults,
     resolver: zodResolver(createBuildingForm),
   });
   const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
@@ -51,12 +62,9 @@ const CreateBuildingPage = () => {
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
-  const { data: propertyData, isLoading } = useGetBuildingPropertyById(appraisalId, propertyId);
-
   useEffect(() => {
     if (isEditMode && propertyData) {
-      const formValues = mapBuildingPropertyResponseToForm(propertyData);
-      reset(formValues);
+      reset(mapBuildingPropertyResponseToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -103,7 +111,7 @@ const CreateBuildingPage = () => {
             toast.success('Property building created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisal/${appraisalId}/property/building/${response.propertyId}`);
+            navigate(`/appraisals/${appraisalId}/property/building/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -154,7 +162,7 @@ const CreateBuildingPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisal/${appraisalId}/property/building/${response.propertyId}`);
+              navigate(`/appraisals/${appraisalId}/property/building/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -166,7 +174,7 @@ const CreateBuildingPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -187,7 +195,7 @@ const CreateBuildingPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createBuildingForm}>
+      <FormProvider methods={methods} schema={createBuildingForm} readOnly={isReadOnly}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -216,6 +224,7 @@ const CreateBuildingPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
+                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>
@@ -248,29 +257,35 @@ const CreateBuildingPage = () => {
           <ActionBar>
             <ActionBar.Left>
               <CancelButton />
-              <ActionBar.Divider />
-              <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                </>
+              )}
             </ActionBar.Left>
-            <ActionBar.Right>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={handleSaveDraft}
-                isLoading={isPending && saveAction === 'draft'}
-                disabled={isPending}
-              >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save draft
-              </Button>
-              <Button
-                type="submit"
-                isLoading={isPending && saveAction === 'submit'}
-                disabled={isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save draft
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
           </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />

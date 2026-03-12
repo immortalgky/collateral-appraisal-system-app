@@ -119,7 +119,7 @@ export const navigationConfig: NavItem[] = [
   },
   {
     name: 'Appraisal',
-    href: '/appraisal',
+    href: '/appraisals',
     icon: 'magnifying-glass-chart',
     iconColor: 'text-cyan-500',
     iconStyle: 'solid',
@@ -135,14 +135,14 @@ export const navigationConfig: NavItem[] = [
     children: [
       {
         name: 'Search',
-        href: '/appraisal/search',
+        href: '/appraisals/search',
         icon: 'magnifying-glass',
         iconColor: 'text-cyan-500',
         iconStyle: 'solid',
       },
       {
         name: 'My Appraisals',
-        href: '/appraisal/my-appraisals',
+        href: '/appraisals/my-appraisals',
         icon: 'folder-user',
         iconColor: 'text-cyan-500',
         iconStyle: 'solid',
@@ -150,7 +150,7 @@ export const navigationConfig: NavItem[] = [
       },
       {
         name: 'Pending Review',
-        href: '/appraisal/pending-review',
+        href: '/appraisals/pending-review',
         icon: 'clipboard-check',
         iconColor: 'text-amber-500',
         iconStyle: 'solid',

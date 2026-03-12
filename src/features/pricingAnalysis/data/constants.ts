@@ -12,7 +12,7 @@ export const COLLATERAL_TYPE = [
     label: 'Land and Building',
   },
   {
-    value: 'C',
+    value: 'U',
     label: 'Condo',
   },
 ];

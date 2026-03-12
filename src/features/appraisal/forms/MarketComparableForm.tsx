@@ -182,17 +182,31 @@ const MarketComparableForm = () => {
       type: 'number-input',
       name: 'offerPrice',
       label: '',
-      wrapperClassName: 'col-span-12',
+      wrapperClassName: 'col-span-8',
       maxIntegerDigits: 15,
       decimalPlaces: 2,
+    },
+    {
+      type: 'dropdown',
+      name: 'offerPriceUnit',
+      label: '',
+      group: 'MeasurementUnits',
+      wrapperClassName: 'col-span-4',
     },
     {
       type: 'number-input',
       name: 'salePrice',
       label: '',
-      wrapperClassName: 'col-span-12',
+      wrapperClassName: 'col-span-8',
       maxIntegerDigits: 15,
       decimalPlaces: 2,
+    },
+    {
+      type: 'dropdown',
+      name: 'salePriceUnit',
+      label: '',
+      group: 'MeasurementUnits',
+      wrapperClassName: 'col-span-4',
     },
     {
       type: 'date-input',
@@ -231,12 +245,12 @@ const MarketComparableForm = () => {
     {
       label: 'Offer Price',
       icon: 'money-bill',
-      fields: staticFields.filter(f => f.name === 'offerPrice'),
+      fields: staticFields.filter(f => f.name === 'offerPrice' || f.name === 'offerPriceUnit'),
     },
     {
       label: 'Sale Price',
       icon: 'money-bill',
-      fields: staticFields.filter(f => f.name === 'salePrice'),
+      fields: staticFields.filter(f => f.name === 'salePrice' || f.name === 'salePriceUnit'),
     },
     {
       label: 'Sale Date',

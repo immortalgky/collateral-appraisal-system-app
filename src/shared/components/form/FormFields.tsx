@@ -1,5 +1,5 @@
 import { type Control, type FieldValues, useController, useFormContext, useWatch, } from 'react-hook-form';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -178,17 +178,19 @@ export function FormFields({
 
   return (
     <>
-      {fields.filter(f => !f.hide).map(field => (
-        <FieldRenderer
-          key={field.key ?? field.name}
-          control={control}
-          field={field}
-          namePrefix={namePrefix}
-          index={index}
-          schema={schema as z.ZodObject<any> | undefined}
-          globalShowCharCount={showCharCount}
-        />
-      ))}
+      {fields
+        .filter(f => !f.hide)
+        .map(field => (
+          <FieldRenderer
+            key={field.key ?? field.name}
+            control={control}
+            field={field}
+            namePrefix={namePrefix}
+            index={index}
+            schema={schema as z.ZodObject<any> | undefined}
+            globalShowCharCount={showCharCount}
+          />
+        ))}
     </>
   );
 }
@@ -231,6 +233,30 @@ function FieldRenderer({
     }
   }, [isDisabled, name, field.disabledValue, getValues, setValue]);
 
+  // Clear field value when hidden by showWhen/hideWhen (clearOnHide defaults to true)
+  const prevVisibleRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    const wasVisible = prevVisibleRef.current;
+    prevVisibleRef.current = isVisible;
+
+    // Only clear on a genuine visible → hidden transition.
+    // Skip if: initial mount (null), still hidden (false→false), or became visible.
+    // This prevents clearing during form init and reset() propagation delays.
+    if (!isVisible && wasVisible === true) {
+      if (field.clearOnHide === false) return;
+
+      const clearValue = field.hiddenValue ?? null;
+      const currentValue = getValues(name);
+      if (currentValue !== clearValue) {
+        setValue(name, clearValue, {
+          shouldDirty: false,
+          shouldValidate: false,
+        });
+      }
+    }
+  }, [isVisible, name, field.clearOnHide, field.hiddenValue, getValues, setValue]);
+
   const {
     field: fieldProps,
     fieldState: { error },
@@ -259,6 +285,8 @@ function FieldRenderer({
     disabled: _d,
     required: _r,
     disabledValue: _dv,
+    clearOnHide: _coh,
+    hiddenValue: _hv,
     formatPattern: _fp,
     formatPatternMessage: _fpm,
     inputMask,
@@ -395,6 +423,7 @@ function FieldRenderer({
           wrap: cgWrap,
           size: cgSize,
           orientation: _cgOri,
+          variant: cgVariant,
           ...cgGroupOrOptions
         } = passedField;
         return (
@@ -405,6 +434,7 @@ function FieldRenderer({
             className={cgClass}
             wrap={cgWrap}
             size={cgSize}
+            variant={cgVariant}
             {...cgGroupOrOptions}
           />
         );
@@ -419,6 +449,7 @@ function FieldRenderer({
           className: rgClass,
           size: rgSize,
           orientation: rgOri,
+          variant: rgVariant,
           ...rgGroupOrOptions
         } = passedField;
         return (
@@ -429,6 +460,7 @@ function FieldRenderer({
             className={rgClass}
             size={rgSize}
             orientation={rgOri}
+            variant={rgVariant}
             {...rgGroupOrOptions}
           />
         );
@@ -495,6 +527,7 @@ function FieldRenderer({
             provinceNameField={prefixFieldPath(passedField.provinceNameField)}
             postcodeField={prefixFieldPath(passedField.postcodeField) ?? ''}
             subDistrictNameField={prefixFieldPath(passedField.subDistrictNameField)}
+            addressSource={passedField.addressSource}
             error={error?.message}
             className={passedField.className}
             {...locationProps}

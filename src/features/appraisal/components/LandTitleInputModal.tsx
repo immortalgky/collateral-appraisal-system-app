@@ -1,111 +1,64 @@
 import Button from '@/shared/components/Button';
-import { FormFields, type FormField } from '@/shared/components/form';
+import { buildFormSchema, type FormField, FormFields } from '@/shared/components/form';
 import { useEffect } from 'react';
-import { FormProvider, type UseFormReturn } from 'react-hook-form';
-import type { ListBoxItem } from '@/shared/components/inputs/Dropdown';
-import type { RadioOption } from '@/shared/components/inputs/RadioGroup';
+import { FormProvider, useForm } from 'react-hook-form';
 
-interface HeaderField {
-  name: string;
-  label: string;
-  type?: 'text-input' | 'number-input' | 'dropdown' | 'radio-group' | 'date-input';
-  colSpan?: number;
-  disabled?: boolean;
-  options?: ListBoxItem[] | RadioOption[];
-  required?: boolean;
-  orientation?: 'horizontal' | 'vertical';
-  group?: string;
-}
+import { landtitlesFields } from '@features/appraisal/configs/fields.ts';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface LandTitleModalProps {
-  headers: HeaderField[];
-  popupForm: UseFormReturn<any>;
-  isEdit: boolean;
+  fields: FormField[];
+  defaultValues?: Record<string, any>;
   onCancel: () => void;
-  onConfirm: () => void;
+  onSave: (data: Record<string, any>) => void;
 }
 
-const LandTitleModal = ({
-  headers,
-  popupForm,
-  isEdit,
-  onCancel,
-  onConfirm,
-}: LandTitleModalProps) => {
-  const { watch, setValue } = popupForm;
+const createLandTitleForm = buildFormSchema(landtitlesFields);
+
+const LandTitleModal = ({ fields, defaultValues, onCancel, onSave }: LandTitleModalProps) => {
+  const form = useForm({
+    resolver: zodResolver(createLandTitleForm),
+    defaultValues: defaultValues ?? {},
+  });
+
+  useEffect(() => {
+    form.reset(defaultValues ?? {});
+  }, [defaultValues, form]);
+
+  const { watch, setValue } = form;
   const pricePerSqWa = watch('governmentPricePerSqWa');
+  const rai = watch('rai');
+  const ngan = watch('ngan');
   const squareWa = watch('squareWa');
 
   useEffect(() => {
     const price = Number(pricePerSqWa) || 0;
-    const sqwa = Number(squareWa) || 0;
-    setValue('governmentPrice', price * sqwa);
-  }, [pricePerSqWa, squareWa, setValue]);
+    const totalWa = (Number(rai) || 0) * 400 + (Number(ngan) || 0) * 100 + (Number(squareWa) || 0);
+    setValue('governmentPrice', price * totalWa);
+  }, [pricePerSqWa, rai, ngan, squareWa, setValue]);
 
-  const fields: FormField[] = headers.map(h => {
-    const baseProps = {
-      name: h.name,
-      label: h.label,
-      wrapperClassName: `col-span-${h.colSpan ?? 4}`,
-      disabled: isEdit && h.disabled === true,
-    };
-
-    if (h.type === 'dropdown') {
-      return {
-        ...baseProps,
-        type: 'dropdown' as const,
-        options: (h.options ?? []) as ListBoxItem[],
-        required: h.required,
-      };
-    }
-
-    if (h.type === 'radio-group') {
-      return {
-        ...baseProps,
-        type: 'radio-group' as const,
-        options: (h.options ?? []) as RadioOption[],
-        orientation: h.orientation,
-      };
-    }
-
-    if (h.type === 'number-input') {
-      return {
-        ...baseProps,
-        type: 'number-input' as const,
-      };
-    }
-
-    if (h.type === 'date-input') {
-      return {
-        ...baseProps,
-        type: 'date-input' as const,
-      };
-    }
-
-    return {
-      ...baseProps,
-      type: 'text-input' as const,
-    };
-  });
+  const handleSave = form.handleSubmit(onSave);
 
   return (
-    <FormProvider {...popupForm}>
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow-xl w-3/5 flex flex-col">
-          <h2 className="text-lg font-semibold mb-2 shrink-0">Land Detail</h2>
-          <div className="h-[0.1px] bg-gray-300 my-2 col-span-5"></div>
+    <FormProvider {...form}>
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-8">
+        <div className="bg-white rounded-2xl shadow-2xl w-3/5 max-h-full flex flex-col">
+          <div className="px-8 pt-8 pb-4 shrink-0">
+            <h2 className="text-lg font-semibold">Land Detail</h2>
+            <div className="h-px bg-gray-200 mt-4"></div>
+          </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-8 py-2">
             <div className="grid grid-cols-12 gap-4">
               <FormFields fields={fields} />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-2 shrink-0">
+          <div className="px-8 pb-8 pt-4 flex justify-end gap-3 shrink-0 border-t border-gray-100">
             <Button variant="ghost" type="button" onClick={onCancel}>
               Cancel
             </Button>
-            <Button variant="primary" type="button" onClick={onConfirm}>
+            <Button variant="primary" type="button" onClick={handleSave}>
               Save
             </Button>
           </div>

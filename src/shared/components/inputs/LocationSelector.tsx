@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { useFormReadOnly } from '../form/context';
 import AddressAutocomplete from './AddressAutocomplete';
 import { type ThaiAddress, findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
+import type { AddressSource } from '@/shared/types';
 
 interface LocationSelectorProps {
   /** Form path for sub-district code (display field) */
@@ -25,6 +26,8 @@ interface LocationSelectorProps {
   required?: boolean;
   error?: string;
   className?: string;
+  /** Which address dataset to search: 'title' | 'dopa'. Defaults to searching both. */
+  addressSource?: AddressSource;
 }
 
 const LocationSelector = ({
@@ -41,6 +44,7 @@ const LocationSelector = ({
   required = false,
   error,
   className,
+  addressSource,
 }: LocationSelectorProps) => {
   const { setValue, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
@@ -59,17 +63,22 @@ const LocationSelector = ({
   const displayAddress = useMemo(() => {
     if (selectedAddress) return selectedAddress;
     if (subDistrictCode) {
-      return findAddressBySubDistrictCode(subDistrictCode) || null;
+      return findAddressBySubDistrictCode(subDistrictCode, addressSource) || null;
     }
     return null;
-  }, [selectedAddress, subDistrictCode]);
+  }, [selectedAddress, subDistrictCode, addressSource]);
 
   // Sync selectedAddress when form is reset with API data
   useEffect(() => {
     if (subDistrictCode) {
-      const found = findAddressBySubDistrictCode(subDistrictCode);
+      const found = findAddressBySubDistrictCode(subDistrictCode, addressSource);
       if (found) {
         setSelectedAddress(found);
+
+        // Populate code fields (self-heal if DB has nulls)
+        setValueRef.current(districtField, found.districtCode);
+        setValueRef.current(provinceField, found.provinceCode);
+        setValueRef.current(postcodeField, found.postcode);
 
         // Populate name fields for display when loading from API
         if (subDistrictNameField) {
@@ -85,7 +94,7 @@ const LocationSelector = ({
     } else {
       setSelectedAddress(null);
     }
-  }, [subDistrictCode, subDistrictNameField, districtNameField, provinceNameField]);
+  }, [subDistrictCode, subDistrictNameField, districtNameField, provinceNameField, addressSource]);
 
   const handleAddressSelect = (address: ThaiAddress | null) => {
     setSelectedAddress(address);
@@ -135,6 +144,7 @@ const LocationSelector = ({
         disabled={isDisabled}
         required={required}
         error={error}
+        addressSource={addressSource}
       />
     </div>
   );

@@ -13,8 +13,10 @@ import PlotLocationForm from '../forms/PlotLocationForm';
 import LandCharacteristicsForm from '../forms/LandCharacteristicsForm';
 import LandBoundaryForm from '../forms/LandBoundaryForm';
 import Dropdown from '@shared/components/inputs/Dropdown';
+import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 export default function LandDetailPage() {
+  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const navigate = useNavigate();
   const methods = useForm<LandDetailFormType>({
     defaultValues: landDetailFormDefaults,
@@ -142,14 +144,16 @@ export default function LandDetailPage() {
             <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>
               Cancel
             </button>
-            <div className="flex gap-4">
-              <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
-                Save draft
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Save
-              </button>
-            </div>
+            {!isReadOnly && (
+              <div className="flex gap-4">
+                <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
+                  Save draft
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save
+                </button>
+              </div>
+            )}
           </div>
         </form>
       </FormProvider>

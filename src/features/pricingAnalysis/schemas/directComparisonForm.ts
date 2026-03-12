@@ -89,6 +89,7 @@ const DirectComparisonAdjustmentFactor = z
 
 const DirectComparisonAppraisalPrice = z
   .object({
+    includeLandArea: z.boolean(),
     landArea: z.number().nullable().optional(),
     usableArea: z.number().nullable().optional(),
     appraisalPrice: z.number(),

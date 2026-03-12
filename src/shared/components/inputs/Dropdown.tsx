@@ -133,7 +133,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
               )}
             </div>
           </HeadlessListboxButton>
-          <HeadlessListboxOptions className="absolute left-0 mt-1 w-full bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 max-h-80 overflow-y-auto">
+          <HeadlessListboxOptions anchor="bottom" className="w-(--button-width) mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 max-h-80 overflow-y-auto">
             {children}
           </HeadlessListboxOptions>
         </div>

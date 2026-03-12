@@ -65,7 +65,7 @@ export function ComparativeFactorTable({
     'after:absolute after:right-0 after:top-0 after:h-full after:w-3 after:bg-gradient-to-r after:from-black/[0.04] after:to-transparent after:translate-x-full';
   const factorColumnStyle = clsx('z-20', stickyGradient);
   const collateralColumnStyle = clsx(
-    'text-left font-medium px-3 py-1.5 w-[200px] min-w-[200px] max-w-[200px] whitespace-nowrap sticky left-[250px] z-20',
+    'text-left font-medium px-3 py-1.5 w-[200px] min-w-[200px] max-w-[200px] whitespace-nowrap sticky left-[250px] z-20 overflow-hidden bg-white',
     stickyGradient,
   );
 
@@ -84,12 +84,12 @@ export function ComparativeFactorTable({
   return (
     <div className="bg-white border border-gray-200 flex-1 min-h-0 min-w-0 rounded-xl flex flex-col overflow-hidden">
       <ScrollableTableContainer className="flex-1 min-h-0">
-        <table className="table table-xs w-full">
+        <table className="table table-xs min-w-max">
           <thead className="sticky top-0 z-30">
             <tr className="border-b border-gray-200">
               <th
                 className={clsx(
-                  'bg-gray-50/95 backdrop-blur-sm sticky left-0 h-[36px] w-[250px] px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider',
+                  'bg-gray-50/95 backdrop-blur-sm sticky left-0 h-[36px] w-[250px] min-w-[250px] max-w-[250px] px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider',
                   factorColumnStyle,
                 )}
               >
@@ -106,7 +106,7 @@ export function ComparativeFactorTable({
               {comparativeMarketSurveys.map((survey: MarketComparableDataType) => (
                 <th
                   key={survey.id}
-                  className="bg-gray-50/95 backdrop-blur-sm text-left text-xs font-semibold text-gray-500 px-3 py-1.5 select-none whitespace-nowrap"
+                  className="bg-gray-50/95 backdrop-blur-sm text-left text-xs font-semibold text-gray-500 px-3 py-1.5 select-none whitespace-nowrap min-w-[200px]"
                 >
                   {survey.surveyName}
                 </th>
@@ -136,8 +136,8 @@ export function ComparativeFactorTable({
                   <td
                     className={clsx(
                       'font-medium sticky left-0 h-[36px] px-3 py-1 border-b border-gray-100',
-                      rowIndex % 2 === 1 ? 'bg-gray-50/50' : 'bg-white',
-                      'group-hover:bg-blue-50/40',
+                      rowIndex % 2 === 1 ? 'bg-gray-50' : 'bg-white',
+                      'group-hover:bg-blue-50',
                       factorColumnStyle,
                     )}
                   >
@@ -204,8 +204,8 @@ export function ComparativeFactorTable({
                   <td
                     className={clsx(
                       'border-b border-gray-100 text-gray-700',
-                      rowIndex % 2 === 1 ? 'bg-gray-50/50' : 'bg-white',
-                      'group-hover:bg-blue-50/40',
+                      rowIndex % 2 === 1 ? 'bg-gray-50' : 'bg-white',
+                      'group-hover:bg-blue-50',
                       collateralColumnStyle,
                     )}
                   >
@@ -229,7 +229,7 @@ export function ComparativeFactorTable({
                   </td>
                   {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
                     return (
-                      <td key={survey.id} className="px-3 py-1 border-b border-gray-100 text-gray-700">
+                      <td key={survey.id} className="px-3 py-1 border-b border-gray-100 text-gray-700 min-w-[200px]">
                         {
                           <RHFInputCell
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}

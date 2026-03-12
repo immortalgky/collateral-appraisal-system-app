@@ -92,7 +92,7 @@ function PricingAnalysisPage() {
             queryKey: propertyGroupKeys.detail(appraisalId, groupId),
           });
         }
-        navigate(`/appraisal/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`, {
+        navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`, {
           replace: true,
         });
       })
