@@ -1,5 +1,9 @@
 import { useParams } from 'react-router-dom';
-import { condoPMAForm, condoPMAFormDefault, type condoPMAFormType } from '../schemas/form';
+import {
+  createCondoPMAForm,
+  createCondoPMAFormDefault,
+  type createCondoPMAFormType,
+} from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
@@ -20,11 +24,16 @@ const CondoPMAPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
 
-  const methods = useForm<condoPMAFormType>({
-    defaultValues: condoPMAFormDefault,
-    resolver: zodResolver(condoPMAForm),
+  const methods = useForm<createCondoPMAFormType>({
+    defaultValues: createCondoPMAFormDefault,
+    resolver: zodResolver(createCondoPMAForm),
   });
-  const { handleSubmit, getValues, reset, formState: { isDirty } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { isDirty },
+  } = methods;
 
   const { blocker } = useUnsavedChangesWarning(isDirty);
 
@@ -38,7 +47,7 @@ const CondoPMAPage = () => {
   const isLoading = false;
   const isPending = false;
 
-  const onSubmit: SubmitHandler<condoPMAFormType> = data => {
+  const onSubmit: SubmitHandler<createCondoPMAFormType> = data => {
     setSaveAction('submit');
 
     //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
@@ -80,7 +89,7 @@ const CondoPMAPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={condoPMAForm} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={createCondoPMAForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -95,7 +104,11 @@ const CondoPMAPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  <Section id="pma-section" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
+                  <Section
+                    id="pma-section"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
                     <CondoPMAForm />
                   </Section>
                 </div>

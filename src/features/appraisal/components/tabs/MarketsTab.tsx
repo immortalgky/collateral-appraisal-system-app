@@ -5,11 +5,12 @@ import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../../context/AppraisalContext';
-import { useGetAppraisalComparables, useUnlinkAppraisalComparable, } from '@features/appraisal/api';
+import { useGetAppraisalComparables, useUnlinkAppraisalComparable } from '@features/appraisal/api';
 import FormCard from '@shared/components/sections/FormCard';
 import { PROPERTY_TYPES, PropertyTypeDropdown } from '../PropertyTypeDropdown';
 
 import type { AppraisalComparableDtoType } from '@/shared/schemas/v1';
+import { ParameterDisplay } from '@/shared/components';
 
 /** Look up icon name for a property type code */
 const getPropertyIcon = (code: string | null | undefined): string | null => {
@@ -187,7 +188,14 @@ export const MarketsTab = ({ readOnly }: { readOnly?: boolean }) => {
                       dot={false}
                     >
                       {propIcon && <Icon name={propIcon} style="solid" className="text-[10px]" />}
-                      {comparable.comparablePropertyType || '-'}
+                      {comparable.comparablePropertyType ? (
+                        <ParameterDisplay
+                          group="PropertyType"
+                          code={comparable.comparablePropertyType}
+                        />
+                      ) : (
+                        '-'
+                      )}
                     </Badge>
                   </div>
                   <div className="col-span-2 flex items-center">

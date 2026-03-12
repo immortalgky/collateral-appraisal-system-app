@@ -1,5 +1,6 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
+import { pmaField, condoPMAFields } from '../configs/fields';
 
 const CondoPMAForm = () => {
   return (
@@ -28,110 +29,11 @@ const CondoPMAForm = () => {
         </div>
         <div className="h-px bg-gray-200 mb-4" />
         <div className="grid grid-cols-9 gap-4">
-          <FormFields fields={propertyField} />
+          <FormFields fields={condoPMAFields} />
         </div>
       </div>
     </div>
   );
 };
-
-const pmaField: FormField[] = [
-  {
-    type: 'number-input',
-    label: 'Selling Price',
-    name: 'sellingPrice',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-  {
-    type: 'number-input',
-    label: 'Force Selling Price',
-    name: 'forcedSalePrice',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-  {
-    type: 'number-input',
-    label: 'Building Insurance',
-    name: 'buildingInsurancePrice',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-];
-
-const propertyField: FormField[] = [
-  {
-    type: 'text-input',
-    label: 'Construction on Title Deed No.',
-    name: 'builtOnTitleNumber',
-    wrapperClassName: 'col-span-6',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Condominium Registration No.',
-    name: 'condoRegistrationNumber',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Condominium Name.',
-    name: 'condoName',
-    wrapperClassName: 'col-span-6',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Room No.',
-    name: 'roomNumber',
-    wrapperClassName: 'col-span-1',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Floor No.',
-    name: 'floorNumber',
-    wrapperClassName: 'col-span-1',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'Building No.',
-    name: 'buildingNumber',
-    wrapperClassName: 'col-span-1',
-    required: true,
-  },
-  {
-    type: 'location-selector',
-    label: 'Sub District',
-    name: 'subDistrict',
-    districtField: 'district',
-    districtNameField: 'districtName',
-    provinceField: 'province',
-    provinceNameField: 'provinceName',
-    postcodeField: 'postcode',
-    subDistrictNameField: 'subDistrictName',
-    addressSource: 'title',
-    wrapperClassName: 'col-span-3',
-    required: true,
-  },
-  {
-    type: 'text-input',
-    label: 'District',
-    name: 'districtName',
-    disabled: true,
-    required: true,
-    wrapperClassName: 'col-span-3',
-  },
-  {
-    type: 'text-input',
-    label: 'Province',
-    name: 'provinceName',
-    disabled: true,
-    required: true,
-    wrapperClassName: 'col-span-3',
-  },
-];
 
 export default CondoPMAForm;
