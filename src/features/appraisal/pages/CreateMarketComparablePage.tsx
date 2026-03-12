@@ -71,21 +71,8 @@ const CreateMarketComparablePage = () => {
 
   const isPending = isCreating || isUpdating;
 
-  const methods = useForm<createMarketComparableFormType>({
-    defaultValues: createMarketComparableFormDefault,
-    resolver: zodResolver(createMarketComparableForm),
-  });
-
-  const {
-    handleSubmit,
-    formState: { isDirty },
-  } = methods;
-
-  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
-
-  // Populate form for edit
-  useEffect(() => {
-    if (!isEditMode || !marketComparable || !template) return;
+  const mapComparableToForm = useMemo(() => {
+    if (!isEditMode || !marketComparable || !template) return null;
 
     const factorDataValue = template.template.factors
       .map((factor: any) => {
@@ -188,9 +175,7 @@ const CreateMarketComparablePage = () => {
               queryKey: ['appraisals', appraisalId, 'comparables'],
             });
           }
-          skipWarning();
           toast.success('Market comparable updated successfully');
-          navigate(`/appraisals/${appraisalId}/property?tab=markets`);
         },
         onError: (error: any) => {
           toast.error(
@@ -353,12 +338,14 @@ const CreateMarketComparablePage = () => {
                   </>
                 )}
               </ActionBar.Left>
-              <ActionBar.Right>
-                <Button type="submit" isLoading={isPending} disabled={isPending}>
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
+              {!isReadOnly && (
+                <ActionBar.Right>
+                  <Button type="submit" isLoading={isPending} disabled={isPending}>
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                </ActionBar.Right>
+              )}
             </ActionBar>
 
             <UnsavedChangesDialog blocker={blocker} />
