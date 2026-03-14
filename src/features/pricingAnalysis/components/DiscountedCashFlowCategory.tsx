@@ -1,23 +1,33 @@
 import { useState } from 'react';
-import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
 import type { DCFCategoryFormType } from '../schemas/dcfForm';
 import type { SectionColor } from './DiscountedCashFlowScoringSection';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useFormContext } from 'react-hook-form';
+import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
 
 interface DiscountedCashFlowCategoryProps {
   category: DCFCategoryFormType;
+  totalNumberOfYears: number;
   color: SectionColor;
   onEditAssumption: () => void;
 }
 
 export function DiscountedCashFlowCategory({
   category,
+  totalNumberOfYears,
   color,
   onEditAssumption,
 }: DiscountedCashFlowCategoryProps) {
   const [expanded, setExpanded] = useState(true);
+
+  const [editing, setEditing] = useState<string | null>(null);
+  const handleOnCancelEditMode = () => {
+    setEditing(null);
+  };
+  const handleOnOpenEditMode = (assumptionType: string) => {
+    console.log(assumptionType);
+    setEditing(assumptionType);
+  };
 
   return (
     <>
@@ -25,11 +35,11 @@ export function DiscountedCashFlowCategory({
       <tr style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setExpanded(!expanded)}>
         <td
           className={clsx(
-            'flex flex-row items-center just px-1 py-1.5 pl-10 gap-1.5',
+            'flex flex-row items-center just px-1 py-1.5 pl-8 gap-1.5',
             'text-[13px]',
             color.text,
             'text-right',
-            'bg-gray-50',
+            'bg-white',
             'border-b border-gray-300',
           )}
         >
@@ -57,9 +67,9 @@ export function DiscountedCashFlowCategory({
           <td
             key={i}
             className={clsx(
-              'px-1 py-1.5 text-right border-b border-gray-300 text-sm',
+              'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
               color.badge,
-              'bg-gray-50',
+              'bg-white',
             )}
           >
             {v.value}
@@ -70,14 +80,17 @@ export function DiscountedCashFlowCategory({
       {/* Assumption rows */}
       {expanded &&
         (category?.assumptions ?? []).map((assumption, idx) => (
-          // <DiscountedCashFlowAssumption
-          //   key={assumption.id}
-          //   assumption={assumption}
-          //   // color={color}
-          //   // isLast={idx === category.assumptions.length - 1}
-          //   // onEdit={() => onEditAssumption(assumption)}
-          // />
-          <></>
+          <DiscountedCashFlowAssumption
+            key={assumption.id}
+            assumption={assumption}
+            totalNumberOfYears={totalNumberOfYears}
+            editing={editing}
+            onOpenEditMode={handleOnOpenEditMode}
+            onCancelEditMode={handleOnCancelEditMode}
+            // color={color}
+            // isLast={idx === category.assumptions.length - 1}
+            // onEdit={() => onEditAssumption(assumption)}
+          />
         ))}
     </>
   );

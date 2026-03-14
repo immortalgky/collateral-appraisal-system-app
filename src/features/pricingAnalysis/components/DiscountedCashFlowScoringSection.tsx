@@ -154,7 +154,7 @@ function SectionTotalRow({ section, label, color }: SectionTotalRowProps) {
         <td
           key={i}
           className={clsx(
-            'border-b border-gray-300 font-medium text-right text-sm px-1 py-1.5',
+            'border-b border-gray-300 font-medium text-right text-sm px-1.5 py-1.5',
             color.bg,
             color.textAccent,
           )}
@@ -227,6 +227,7 @@ function DynamicSection({
       {(section?.categories ?? []).map(category => {
         return (
           <DiscountedCashFlowCategory
+            totalNumberOfYears={totalNumberOfYears}
             key={category.id}
             category={category}
             color={color}
@@ -279,9 +280,98 @@ export function DiscountedCashFlowScoringSection({
               />
             );
           })}
+
+          {/* last section */}
+          <tr className="bg-white">
+            <td>Contract Rental Fee</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Net Operating Income (EBITDA) : NOI/ Gross Revenue</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Terminal Revenue (Capitalization Rate)</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Total Net Cashflow</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Discount Rate</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Present Vaue of Cashflows</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Final Value</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
+          <tr className="bg-white">
+            <td>Final Value (Rounded)</td>
+            {Array.from({ length: totalNumberOfYears }, (_, i) => (
+              <td
+                key={i}
+                className={clsx('text-right px-1.5 py-1.5 text-sm whitespace-nowrap text-[14px]')}
+              >
+                xxxxxx
+              </td>
+            ))}
+          </tr>
         </tbody>
       </table>
-      {/* pop-up modal */}
     </div>
   );
 }

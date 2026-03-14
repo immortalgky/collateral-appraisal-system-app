@@ -132,7 +132,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
           targetPath: calculationUsableAreaDiffPath({ column: columnIndex }),
           deps: [],
           compute: () => {
-            const propertyUsableArea = getPropertyValueByFactorCode('12', property, allFactors) ?? 0;
+            const propertyUsableArea =
+              getPropertyValueByFactorCode('12', property, allFactors) ?? 0;
             const findSurveyUsableArea = survey.factorData?.find(f => f.factorCode === '12');
             const surveyUsableArea = findSurveyUsableArea
               ? readFactorValue({

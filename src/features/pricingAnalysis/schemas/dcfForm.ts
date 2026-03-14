@@ -5,11 +5,17 @@ const YearlyValue = z.object({
   value: z.number(),
 });
 
+const DCFMethod = z.object({
+  id: z.string(),
+  methodType: z.string(),
+});
+
 const DCFAssumption = z.object({
   id: z.string(),
   assumptionType: z.string(),
   assumptionName: z.string(),
   totalAssumptionValues: z.array(YearlyValue),
+  method: DCFMethod,
   // assumption detail fields
 });
 
@@ -43,6 +49,7 @@ export const DCF = z.object({
 });
 
 export type YearlyValueFormType = z.infer<typeof YearlyValue>;
+export type DCFMethodFormType = z.infer<typeof DCFMethod>;
 export type DCFAssumptionFormType = z.infer<typeof DCFAssumption>;
 export type DCFCategoryFormType = z.infer<typeof DCFCategory>;
 export type DCFSectionFormType = z.infer<typeof DCFSection>;

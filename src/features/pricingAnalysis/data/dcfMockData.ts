@@ -41,7 +41,7 @@ export const dcfMockData: DCFFormType = {
           assumptions: [
             {
               id: 'a1',
-              assumptionType: '',
+              assumptionType: 'a1',
               assumptionName: 'Product Sales',
               // hasModal: true,
               // modalRows: 2,
@@ -54,10 +54,14 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 2514196 },
               ],
               // growthRate: 15,
+              method: {
+                id: 'm1',
+                methodType: 'proportion',
+              },
             },
             {
               id: 'a2',
-              assumptionType: '',
+              assumptionType: 'a2',
               assumptionName: 'Service Revenue',
               // hasModal: true,
               // modalRows: 1,
@@ -70,10 +74,14 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 773045 },
               ],
               // growthRate: 10,
+              method: {
+                id: 'm2',
+                methodType: 'm2',
+              },
             },
             {
               id: 'a3',
-              assumptionType: '',
+              assumptionType: 'a3',
               assumptionName: 'Subscription Income',
               // hasModal: true,
               // modalRows: 1,
@@ -86,12 +94,16 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 911250 },
               ],
               // growthRate: 50,
+              method: {
+                id: 'm3',
+                methodType: 'm3',
+              },
             },
           ],
         },
         {
           id: 'c2',
-          categoryType: '',
+          categoryType: 'a4',
           categoryName: 'Other Income',
           totalCategoryValues: [
             { year: 1, value: 0 },
@@ -104,7 +116,7 @@ export const dcfMockData: DCFFormType = {
           assumptions: [
             {
               id: 'a4',
-              assumptionType: '',
+              assumptionType: 'a4',
               assumptionName: 'Interest Income',
               // hasModal: true,
               // modalRows: 2,
@@ -117,10 +129,14 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 37325 },
               ],
               // growthRate: 15,
+              method: {
+                id: 'm5',
+                methodType: 'm5',
+              },
             },
             {
               id: 'a5',
-              assumptionType: '',
+              assumptionType: 'a5',
               assumptionName: 'Rental Income',
               // hasModal: true,
               // modalRows: 1,
@@ -133,6 +149,10 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 76577 },
               ],
               // growthRate: 10,
+              method: {
+                id: 'm5',
+                methodType: 'm5',
+              },
             },
           ],
         },
@@ -161,12 +181,12 @@ export const dcfMockData: DCFFormType = {
             { year: 5, value: 0 },
             { year: 6, value: 0 },
           ],
-          categoryType: '',
+          categoryType: 'c3',
           categoryName: 'Operating Costs',
           assumptions: [
             {
               id: 'a6',
-              assumptionType: '',
+              assumptionType: 'a6',
               assumptionName: 'Raw Materials',
               // hasModal: true,
               // modalRows: 2,
@@ -179,10 +199,14 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 754259 },
               ],
               // growthRate: 15,
+              method: {
+                id: 'm6',
+                methodType: 'm6',
+              },
             },
             {
               id: 'a7',
-              assumptionType: '',
+              assumptionType: 'a7',
               assumptionName: 'Direct Labor',
               // hasModal: true,
               // modalRows: 1,
@@ -195,10 +219,14 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 386522 },
               ],
               // growthRate: 10,
+              method: {
+                id: 'm2',
+                methodType: 'm2',
+              },
             },
             {
               id: 'a8',
-              assumptionType: '',
+              assumptionType: 'a8',
               assumptionName: 'Manufacturing Overhead',
               // hasModal: true,
               // modalRows: 1,
@@ -211,6 +239,10 @@ export const dcfMockData: DCFFormType = {
                 { year: 6, value: 122523 },
               ],
               // growthRate: 5,
+              method: {
+                id: 'm3',
+                methodType: 'm3',
+              },
             },
           ],
         },

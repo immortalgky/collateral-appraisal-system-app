@@ -1,10 +1,98 @@
+import { Icon } from '@/shared/components';
+import clsx from 'clsx';
+import { useState } from 'react';
+import type { DCFAssumptionFormType } from '../schemas/dcfForm';
+import Modal from '@/shared/components/Modal';
+import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
+
 interface DiscountedCashFlowAssumptionProps {
-  assumption: { type: string };
+  totalNumberOfYears: number;
+  assumption: DCFAssumptionFormType;
+  editing: string | null;
+  onCancelEditMode: () => void;
+  onOpenEditMode: (assumptionType: string) => void;
 }
 
-export function DiscountedCashFlowAssumption({ assumption }: DiscountedCashFlowAssumptionProps) {
-  switch (assumption.type) {
-    case '':
-      return <></>;
-  }
+export function DiscountedCashFlowAssumption({
+  totalNumberOfYears,
+  assumption,
+  editing,
+  onCancelEditMode,
+  onOpenEditMode,
+}: DiscountedCashFlowAssumptionProps) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <>
+      <tr>
+        <td
+          className={clsx(
+            'flex flex-row items-center justify-between px-1 py-1.5 pl-15 gap-1.5',
+            'text-sm',
+            'text-right',
+            'bg-gray-50',
+            'border-b border-gray-300',
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="flex flex-row gap-1.5 cursor-pointer"
+          >
+            <Icon
+              name="chevron-down"
+              style="solid"
+              className={clsx(
+                'size-2 transition-transform duration-300 ease-in-out shrink-0',
+                expanded ? '' : 'rotate-180',
+              )}
+            />
+            {assumption.assumptionName ?? ''}
+          </button>
+          <div className="flex flex-row gap-1.5 items-center justify-center">
+            <span className={'text-sm'}>{assumption.method.methodType}</span>
+            <button
+              type="button"
+              className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
+              onClick={() => {
+                console.log(assumption.assumptionType);
+                onOpenEditMode(assumption.assumptionType);
+              }}
+            >
+              <Icon name="pencil" style="regular" className="size-4" />
+            </button>
+            <button
+              type="button"
+              className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
+              onClick={() => null}
+            >
+              <Icon name="trash" style="regular" className="size-4" />
+            </button>
+          </div>
+        </td>
+        {(assumption.totalAssumptionValues ?? []).map((v, i) => (
+          <td
+            key={i}
+            className={clsx(
+              'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
+              // color.badge,
+              'bg-gray-50',
+            )}
+          >
+            {v.value}
+          </td>
+        ))}
+      </tr>
+      {expanded && (
+        <DiscountedCashFlowMethodRenderer
+          editing={editing}
+          assumptionId={assumption.id}
+          assumptionName={assumption.assumptionName}
+          method={assumption.method}
+          totalNumberOfYear={totalNumberOfYears}
+          onCancelEditMode={onCancelEditMode}
+        />
+      )}
+    </>
+  );
 }
