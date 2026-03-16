@@ -1,9 +1,10 @@
-import { forwardRef, useEffect, useId, useRef, useState } from 'react';
+import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { format, formatISO, isValid, parse } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
+import { buildDisabledMatcher, validateDateConstraints } from './dateConstraints';
 
 interface DatePickerInputProps {
   label?: string;
@@ -21,6 +22,12 @@ interface DatePickerInputProps {
   /** onBlur handler */
   onBlur?: () => void;
   name?: string;
+  /** Disable dates before today */
+  disablePastDates?: boolean;
+  /** Disable dates after today */
+  disableFutureDates?: boolean;
+  /** Disable today specifically */
+  disableToday?: boolean;
 }
 
 const DATE_FORMAT = 'dd/MM/yyyy';
@@ -40,6 +47,9 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       onChange,
       onBlur,
       name,
+      disablePastDates,
+      disableFutureDates,
+      disableToday,
     },
     ref,
   ) => {
@@ -53,6 +63,12 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
+    const [constraintError, setConstraintError] = useState<string | null>(null);
+
+    const disabledMatcher = useMemo(
+      () => buildDisabledMatcher({ disablePastDates, disableFutureDates, disableToday }),
+      [disablePastDates, disableFutureDates, disableToday],
+    );
 
     // Combine refs
     const setRefs = (element: HTMLInputElement | null) => {
@@ -150,15 +166,27 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       if (maskedValue.length === 10) {
         const parsed = parse(maskedValue, DATE_FORMAT, new Date());
         if (isValid(parsed)) {
+          const violation = validateDateConstraints(parsed, {
+            disablePastDates,
+            disableFutureDates,
+            disableToday,
+          });
+          if (violation) {
+            setConstraintError(violation);
+            return;
+          }
+          setConstraintError(null);
           setMonth(parsed);
           onChange?.(formatISO(parsed));
         }
       } else if (maskedValue === '') {
+        setConstraintError(null);
         onChange?.(null);
       }
     };
 
     const handleDaySelect = (date: Date | undefined) => {
+      setConstraintError(null);
       if (date) {
         setInputValue(format(date, DATE_FORMAT));
         onChange?.(formatISO(date));
@@ -265,16 +293,26 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
               showOutsideDays
               reverseYears
               endMonth={new Date(new Date().getFullYear() + 100, 12, 0)}
+              disabled={disabledMatcher}
             />
           </div>
         )}
 
-        {(helperText || error) && (
+        {(helperText || error || constraintError) && (
           <p
-            className={clsx('mt-1 text-xs', error ? 'text-danger' : 'text-gray-500')}
-            id={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+            className={clsx(
+              'mt-1 text-xs',
+              constraintError || error ? 'text-danger' : 'text-gray-500',
+            )}
+            id={
+              constraintError || error
+                ? `${inputId}-error`
+                : helperText
+                  ? `${inputId}-helper`
+                  : undefined
+            }
           >
-            {error || helperText}
+            {constraintError || error || helperText}
           </p>
         )}
       </div>
