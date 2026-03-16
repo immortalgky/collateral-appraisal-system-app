@@ -27,24 +27,32 @@ const WQSSurveyScore = z
   .object({
     id: z.string().nullable().optional(),
     marketId: z.string(),
-    surveyScore: z.number(requireMsg('Survey score')),
+    surveyScore: z.number().nullable(),
     weightedSurveyScore: z.number(),
   })
   .passthrough();
 
-const WQSScore = z
-  .object({
-    factorId: z.string(),
-    factorCode: z.string(),
-    weight: z.number(requireMsg('Weight')),
-    intensity: z.number(requireMsg('Intensity')),
-    weightedIntensity: z.number(),
-    surveys: z.array(WQSSurveyScore),
-    collateral: z.number(requireMsg('Collateral score')),
-    collateralWeightedScore: z.number(),
-    collateralScoreId: z.string().nullable(),
-  })
-  .partial();
+const WQSScore = z.object({
+  factorId: z.string(),
+  factorCode: z.string(),
+  weight: z.number(requireMsg('Weight')),
+  intensity: z.number(requireMsg('Intensity')),
+  weightedIntensity: z.number(),
+  surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
+    for (const [i, item] of items.entries()) {
+      if (item.surveyScore == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Survey ${i + 1}'s score is required`, // 1-based index
+          path: [i, 'surveyScore'], // target the correct field
+        });
+      }
+    }
+  }),
+  collateral: z.number(requireMsg('Collateral score')),
+  collateralWeightedScore: z.number(),
+  collateralScoreId: z.string().nullable(),
+});
 
 /** WQS calculation section */
 const WQSCalculation = z

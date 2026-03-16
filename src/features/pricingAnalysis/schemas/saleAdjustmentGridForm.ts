@@ -86,14 +86,12 @@ const SaleAdjustmentGridAdjustmentPct = z
   })
   .passthrough();
 
-const SaleAdjustmentGridAdjustmentFactor = z
-  .object({
-    factorId: z.string(),
-    factorCode: z.string(),
-    surveys: z.array(SaleAdjustmentGridAdjustmentPct),
-    remark: z.string().nullable().optional(),
-  })
-  .passthrough();
+const SaleAdjustmentGridAdjustmentFactor = z.object({
+  factorId: z.string(),
+  factorCode: z.string(),
+  surveys: z.array(SaleAdjustmentGridAdjustmentPct),
+  remark: z.string().nullable().optional(),
+});
 
 const SaleAdjustmentGridAppraisalPrice = z
   .object({
