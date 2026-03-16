@@ -29,7 +29,7 @@ import { format } from 'date-fns';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { MarketComparableDetailModal } from './MarketComparableDetailModal';
-import { isScoreReasonable } from '@features/pricingAnalysis/domain/checkReasonableScore.ts';
+import { isScoreReasonable } from '@/features/pricingAnalysis/domain/checkWQSReasonableScore';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];

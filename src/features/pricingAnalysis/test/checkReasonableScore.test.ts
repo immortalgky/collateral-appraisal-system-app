@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isScoreReasonable } from '@features/pricingAnalysis/domain/checkReasonableScore.ts';
+import { isScoreReasonable } from '@/features/pricingAnalysis/domain/checkWQSReasonableScore';
 
 interface ComparableScore {
   score: number;
