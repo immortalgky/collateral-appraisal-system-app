@@ -179,11 +179,23 @@ export interface NumberInputField extends BaseFormField {
 export interface DateInputField extends BaseFormField {
   type: 'date-input';
   label: string;
+  /** Disable dates before today */
+  disablePastDates?: boolean;
+  /** Disable dates after today */
+  disableFutureDates?: boolean;
+  /** Disable today specifically */
+  disableToday?: boolean;
 }
 
 export interface DateTimeInputField extends BaseFormField {
   type: 'datetime-input';
   label: string;
+  /** Disable dates before today */
+  disablePastDates?: boolean;
+  /** Disable dates after today */
+  disableFutureDates?: boolean;
+  /** Disable today specifically */
+  disableToday?: boolean;
 }
 
 // =============================================================================

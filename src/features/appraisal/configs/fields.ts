@@ -2007,6 +2007,7 @@ export const machineInfoFields: FormField[] = [
     label: 'Purchase Date',
     name: 'purchaseDate',
     wrapperClassName: 'col-span-6',
+    disableFutureDates: true,
   },
   {
     type: 'number-input',
