@@ -3,10 +3,14 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from './Icon';
 import clsx from 'clsx';
 
+import flagEn from '@assets/flags/en.svg';
+import flagTh from '@assets/flags/th.svg';
+import flagZh from '@assets/flags/zh.svg';
+
 const languages = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'th', label: 'ไทย', flag: '🇹🇭' },
-  { code: 'zh', label: '中文', flag: '🇨🇳' },
+  { code: 'en', label: 'English', flag: flagEn },
+  { code: 'th', label: 'ไทย', flag: flagTh },
+  { code: 'zh', label: '中文', flag: flagZh },
 ] as const;
 
 export default function LanguageSwitcher(): React.ReactNode {
@@ -17,7 +21,11 @@ export default function LanguageSwitcher(): React.ReactNode {
   return (
     <Menu as="div" className="relative">
       <MenuButton className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200/60 text-xs font-semibold text-gray-700 transition-all cursor-pointer">
-        <span className="text-sm leading-none">{current.flag}</span>
+        <img
+          src={current.flag}
+          alt={current.code}
+          className="w-5 h-3.5 rounded-[2px] object-cover"
+        />
         <span>{current.code.toUpperCase()}</span>
         <Icon name="chevron-down" style="solid" className="size-2.5 text-gray-400" />
       </MenuButton>
@@ -38,7 +46,11 @@ export default function LanguageSwitcher(): React.ReactNode {
                   : 'text-gray-600 data-[focus]:bg-gray-50 data-[focus]:text-gray-900',
               )}
             >
-              <span className="text-base leading-none">{lang.flag}</span>
+              <img
+                src={lang.flag}
+                alt={lang.code}
+                className="w-5 h-3.5 rounded-[2px] object-cover"
+              />
               <span className="flex-1 text-left">{lang.label}</span>
               {current.code === lang.code && (
                 <Icon name="check" style="solid" className="size-3.5 text-primary-600" />
