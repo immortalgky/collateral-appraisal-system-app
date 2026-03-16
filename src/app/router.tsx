@@ -31,6 +31,7 @@ import MarketComparableTemplateDetailPage from '@features/templateManagement/pag
 import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
+import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -254,6 +255,14 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/:propertyId/pma',
             element: <LandBuildingPMAPage />,
+          },
+          {
+            path: 'machinery/new',
+            element: <CreateMachineryPage />,
+          },
+          {
+            path: 'machinery/:propertyId',
+            element: <CreateMachineryPage />,
           },
           {
             path: 'law-and-regulation/new',
