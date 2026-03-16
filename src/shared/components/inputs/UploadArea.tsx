@@ -21,7 +21,12 @@ const UploadArea = ({
   disabled,
 }: UploadAreaProps) => {
   return (
-    <FileInput onChange={onChange} accept={accept} multiple={multiple} disabled={disabled || isLoading}>
+    <FileInput
+      onChange={onChange}
+      accept={accept}
+      multiple={multiple}
+      disabled={disabled || isLoading}
+    >
       {(isDragging: boolean) => (
         <div
           className={clsx(

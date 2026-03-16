@@ -11,6 +11,7 @@ import type { UserDtoType } from '../schemas/form';
 import { useAddComment, useUpdateComment, useDeleteComment, useGetComments } from '../api';
 import { SidebarLabel, InfoRow, StatCard, PersonRow } from '@/shared/components/rightmenu';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import Avatar from '@/shared/components/Avatar';
 
 // Local comment type for create mode (before request is saved)
 export interface LocalComment {
@@ -106,17 +107,6 @@ const RequestRightMenu = ({
       (sum, title) => sum + (title.documents?.filter(doc => doc.fileName)?.length || 0),
       0,
     );
-
-  // Helper to get initials from name
-  const getInitials = (name: string): string => {
-    if (!name) return '?';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   // Helper to format date
   const formatDate = (dateString: string | undefined | null): string => {
@@ -487,10 +477,8 @@ const RequestRightMenu = ({
                         ) : (
                           // Others' comment - left-aligned, gray bubble with avatar
                           <div className="flex items-start gap-2 max-w-[80%]">
-                            <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0 mt-4">
-                              <span className="text-[10px] font-medium text-primary-700">
-                                {getInitials(comment.commentedByName)}
-                              </span>
+                            <div className="mt-4">
+                              <Avatar name={comment.commentedByName} size="xs" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">

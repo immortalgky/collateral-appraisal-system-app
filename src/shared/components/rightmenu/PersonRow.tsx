@@ -1,4 +1,5 @@
 import Icon from '../Icon';
+import Avatar from '../Avatar';
 
 interface PersonRowProps {
   label: string;
@@ -10,26 +11,9 @@ interface PersonRowProps {
 }
 
 const PersonRow = ({ label, name, avatar, isMe, onClick, editable }: PersonRowProps) => {
-  const getInitials = (n: string) => {
-    return n
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const content = (
     <>
-      {avatar ? (
-        <img src={avatar} alt={name} className="w-7 h-7 rounded-full object-cover" />
-      ) : (
-        <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center">
-          <span className="text-xs font-medium text-primary-700">
-            {name !== 'Not set' ? getInitials(name) : '?'}
-          </span>
-        </div>
-      )}
+      <Avatar src={avatar} name={name !== 'Not set' ? name : '?'} size="sm" />
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-gray-900 truncate">
           {name}

@@ -22,18 +22,18 @@ export const PropertyTable = ({
 }: PropertyTableProps) => {
   return (
     <table className="w-full text-sm">
-      <thead>
-        <tr className="bg-gray-50 border-b border-gray-200">
+      <thead className="sticky top-0 z-10">
+        <tr className="bg-gray-50 border-b border-gray-200 shadow-sm">
           <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Image
           </th>
-          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th className="w-1/3 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Address
           </th>
-          <th className="w-32 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Type
           </th>
-          <th className="w-28 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Area
           </th>
           <th className="w-12 px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">

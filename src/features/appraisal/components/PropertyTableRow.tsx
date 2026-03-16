@@ -2,6 +2,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
+import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 
@@ -58,7 +59,7 @@ export const PropertyTableRow = ({
   };
 
   return (
-    <tr className="bg-white hover:bg-gray-50 transition-colors group">
+    <tr className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
       {/* Thumbnail */}
       <td className="px-2 py-2" onClick={handleClick}>
         <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden cursor-pointer">
@@ -88,8 +89,9 @@ export const PropertyTableRow = ({
 
       {/* Type Badge */}
       <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
-        <ParameterDisplay group="PropertyType" code={property.type}
-          className="inline-block px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium whitespace-nowrap" />
+        <Badge type="property" value={property.type} size="xs" dot={false}>
+          <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
+        </Badge>
       </td>
 
       {/* Area */}

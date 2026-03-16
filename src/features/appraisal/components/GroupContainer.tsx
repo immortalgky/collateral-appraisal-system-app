@@ -1,11 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import type { PropertyGroup, PropertyItem } from '../types';
 import { PropertyCard } from './PropertyCard';
 import { PropertyTable } from './PropertyTable';
 import Icon from '@shared/components/Icon';
-import PropertyTypeDropdown from '@features/appraisal/components/PropertyTypeDropdown.tsx';
+import Badge from '@shared/components/Badge';
+import ParameterDisplay from '@shared/components/ParameterDisplay';
+import PropertyTypeDropdown, { PROPERTY_TYPES } from '@features/appraisal/components/PropertyTypeDropdown.tsx';
+
+/** Look up the icon name for a given property type */
+const getPropertyTypeIcon = (type: string): string => {
+  return PROPERTY_TYPES.find(pt => pt.type === type)?.icon ?? 'cube';
+};
 
 type ViewMode = 'grid' | 'list';
 
@@ -99,112 +107,373 @@ export const GroupContainer = React.memo(
       onGoToPricingAnalysis(group.id);
     }, [onGoToPricingAnalysis, group.id]);
 
+    // Card stacking: collapse same-type cards when >= 2 of same type
+    const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
+
+    /** Per-item stacking metadata for grid view */
+    const stackInfo = useMemo(() => {
+      if (viewMode !== 'grid') return null;
+      const typeCounts: Record<string, number> = {};
+      const typeFirstIndex: Record<string, number> = {};
+      const typeItems: Record<string, PropertyItem[]> = {};
+      group.items.forEach((item, index) => {
+        typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
+        if (typeFirstIndex[item.type] === undefined) typeFirstIndex[item.type] = index;
+        (typeItems[item.type] ??= []).push(item);
+      });
+      const stackableTypes = new Set(
+        Object.entries(typeCounts)
+          .filter(([, c]) => c >= 3)
+          .map(([t]) => t),
+      );
+      return group.items.map((item, index) => ({
+        isStackable: stackableTypes.has(item.type),
+        isFirst: typeFirstIndex[item.type] === index,
+        count: typeCounts[item.type],
+        typeItems: typeItems[item.type],
+      }));
+    }, [group.items, viewMode]);
+
+    const toggleTypeExpansion = useCallback((type: string) => {
+      setExpandedTypes(prev => {
+        const next = new Set(prev);
+        next.has(type) ? next.delete(type) : next.add(type);
+        return next;
+      });
+    }, []);
+
+    // Compute property type breakdown for summary stats
+    const typeBreakdown = useMemo(() => {
+      const counts: Record<string, number> = {};
+      for (const item of group.items) {
+        counts[item.type] = (counts[item.type] || 0) + 1;
+      }
+      return Object.entries(counts).map(([type, count]) => ({ type, count }));
+    }, [group.items]);
+
     return (
-      <div className="border border-gray-200 rounded-lg bg-white p-4">
-        {/* Group Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {isEditing && !readOnly ? (
-              <input
-                ref={inputRef}
-                value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                onBlur={commitRename}
-                onKeyDown={handleKeyDown}
-                className="text-sm font-semibold text-gray-900 bg-white border border-primary rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary min-w-0 w-48"
-              />
-            ) : (
-              <h2
-                className={`text-sm font-semibold text-gray-900 ${readOnly ? '' : 'cursor-pointer hover:text-primary'} transition-colors`}
-                onClick={readOnly ? undefined : () => setIsEditing(true)}
-                title={readOnly ? undefined : 'Click to rename'}
-              >
-                {group.name}
-              </h2>
-            )}
-            <span className="text-xs text-gray-500">
-              ({group.items.length} item{group.items.length !== 1 ? 's' : ''})
-            </span>
-            {!readOnly && (
-              <button
-                onClick={() => onDeleteGroup(group.id)}
-                disabled={isDeletingGroup}
-                className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Delete group"
-              >
-                {isDeletingGroup ? (
-                  <Icon name="spinner" className="text-xs animate-spin" />
-                ) : (
-                  <Icon name="trash" className="text-xs" />
-                )}
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 cursor-pointer rounded-md transition-colors"
-              onClick={() => handleOnClickPricingButton()}
-              title="Pricing Analysis"
-            >
-              <Icon name="badge-dollar" className="text-lg" />
-            </button>
-          </div>
-        </div>
-
-        {/* Property Items */}
-        {viewMode === 'grid' ? (
-          // Grid view with drag & drop
-          <div
-            ref={setNodeRef}
-            className={`min-h-[100px] rounded-lg border-2 border-dashed p-2 transition-colors ${
-              isOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50/50'
-            }`}
-          >
-            <SortableContext items={sortableItemIds} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {group.items.map(property => (
-                  <PropertyCard
-                    key={property.id}
-                    property={property}
-                    groupId={group.id}
-                    onContextMenu={onContextMenu}
-                  />
-                ))}
+      <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
+        <Disclosure defaultOpen>
+          {({ open }) => (
+            <>
+              {/* Group Header */}
+              <div className="flex items-center justify-between p-4 border-l-4 border-primary rounded-tl-xl rounded-tr-xl">
+                <div className="flex items-center gap-2 min-w-0">
+                  <DisclosureButton className="p-0.5 text-gray-400 hover:text-gray-600 transition-colors">
+                    <Icon
+                      name="chevron-down"
+                      className={`text-xs transition-transform duration-200 ${open ? '' : '-rotate-90'}`}
+                      style="solid"
+                    />
+                  </DisclosureButton>
+                  {isEditing && !readOnly ? (
+                    <input
+                      ref={inputRef}
+                      value={editValue}
+                      onChange={e => setEditValue(e.target.value)}
+                      onBlur={commitRename}
+                      onKeyDown={handleKeyDown}
+                      className="text-sm font-semibold text-gray-900 bg-white border border-primary rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary min-w-0 w-48"
+                    />
+                  ) : (
+                    <h2
+                      className={`text-sm font-semibold text-gray-900 ${readOnly ? '' : 'cursor-pointer hover:text-primary'} transition-colors`}
+                      onClick={readOnly ? undefined : () => setIsEditing(true)}
+                      title={readOnly ? undefined : 'Click to rename'}
+                    >
+                      {group.name}
+                    </h2>
+                  )}
+                  <span className="text-xs text-gray-500">
+                    ({group.items.length} item{group.items.length !== 1 ? 's' : ''})
+                  </span>
+                  {!readOnly && (
+                    <button
+                      onClick={() => onDeleteGroup(group.id)}
+                      disabled={isDeletingGroup}
+                      className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Delete group"
+                    >
+                      {isDeletingGroup ? (
+                        <Icon name="spinner" className="text-xs animate-spin" />
+                      ) : (
+                        <Icon name="trash" className="text-xs" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="relative p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 cursor-pointer rounded-md transition-colors"
+                    onClick={() => handleOnClickPricingButton()}
+                    title="Pricing Analysis"
+                  >
+                    <Icon name="badge-dollar" className="text-lg" />
+                    <span
+                      className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${
+                        group.pricingAnalysisId ? 'bg-emerald-500' : 'bg-gray-300'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
-            </SortableContext>
 
-            {/* Empty State */}
-            {group.items.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-6 text-gray-400">
-                <Icon name="folder-open" className="text-2xl mb-2" />
-                <p className="text-xs">No properties in this group</p>
-              </div>
-            )}
-          </div>
-        ) : // List view - simple table without wrapper
-        group.items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-            <Icon name="folder-open" className="text-2xl mb-2" />
-            <p className="text-xs">No properties in this group</p>
-          </div>
-        ) : (
-          <PropertyTable
-            group={group}
-            onEdit={onEdit}
-            onMoveTo={onMoveTo}
-            onCopy={onCopy}
-            onPaste={onPaste}
-            onDelete={onDelete}
-            hasClipboard={hasClipboard}
-          />
-        )}
+              {/* Summary stats row */}
+              {typeBreakdown.length > 0 && (
+                <div className="flex items-center gap-1.5 px-4 pb-2 flex-wrap">
+                  {typeBreakdown.map(({ type, count }) => (
+                    <Badge key={type} type="property" value={type} size="xs" dot={false}>
+                      {count} <ParameterDisplay group="PropertyType" code={type} fallback={type} />
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
-        {/* Add Property Button */}
-        {!readOnly && (
-          <div className="mt-2 flex justify-center">
-            <PropertyTypeDropdown groupId={group.id} />
-          </div>
-        )}
+              {/* Collapsible content */}
+              <DisclosurePanel>
+                <div className="px-4 pb-4">
+                  {/* Property Items */}
+                  {viewMode === 'grid' ? (
+                    // Grid view with drag & drop
+                    <div
+                      ref={setNodeRef}
+                      className={`min-h-[80px] rounded-lg p-2 transition-all duration-200 ${
+                        isOver
+                          ? 'border-2 border-primary bg-primary/5'
+                          : 'bg-gray-50/50'
+                      }`}
+                    >
+                      <SortableContext items={sortableItemIds} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-2">
+                          {group.items.map((property, index) => {
+                            const info = stackInfo?.[index];
+                            const isExpanded = expandedTypes.has(property.type);
+
+                            // Not stackable or no stack info → render normally
+                            if (!info?.isStackable) {
+                              return (
+                                <PropertyCard
+                                  key={property.id}
+                                  property={property}
+                                  groupId={group.id}
+                                  onContextMenu={onContextMenu}
+                                />
+                              );
+                            }
+
+                            // Expanded + first → render collapse header + ALL cards of this type grouped together
+                            if (isExpanded && info.isFirst) {
+                              return (
+                                <div key={property.id} className="rounded-xl border border-dashed border-gray-300 bg-gray-50/50 p-2.5 space-y-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleTypeExpansion(property.type)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-left shadow-sm"
+                                  >
+                                    <Icon
+                                      name={getPropertyTypeIcon(property.type)}
+                                      className="text-sm text-gray-500"
+                                      style="solid"
+                                    />
+                                    <span className="text-xs font-semibold text-gray-700 flex-1">
+                                      <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
+                                      {' '}List ( {info.count} )
+                                    </span>
+                                    <span className="text-[10px] text-gray-400">Collapse</span>
+                                    <Icon name="chevron-up" className="text-xs text-gray-400" style="solid" />
+                                  </button>
+                                  {info.typeItems.map(p => (
+                                    <PropertyCard
+                                      key={p.id}
+                                      property={p}
+                                      groupId={group.id}
+                                      onContextMenu={onContextMenu}
+                                    />
+                                  ))}
+                                </div>
+                              );
+                            }
+
+                            // Expanded + non-first → hidden (already rendered above by the first item)
+                            if (isExpanded) {
+                              return (
+                                <div key={property.id} className="h-0 overflow-hidden">
+                                  <div className="opacity-0 pointer-events-none">
+                                    <PropertyCard
+                                      property={property}
+                                      groupId={group.id}
+                                      onContextMenu={onContextMenu}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // Collapsed: first item renders the placeholder card, others are hidden
+                            if (info.isFirst) {
+                              const items = info.typeItems;
+                              // Collect unique addresses (truncated)
+                              const addresses = items
+                                .map(p => p.address)
+                                .filter(Boolean)
+                                .slice(0, 3);
+                              // Sum up areas
+                              const areas = items
+                                .map(p => p.area)
+                                .filter(Boolean);
+                              return (
+                                <div key={property.id}>
+                                  {/* Stack placeholder card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleTypeExpansion(property.type)}
+                                    className="w-full bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 flex items-center overflow-hidden text-left group"
+                                  >
+                                    {/* Thumbnail area — show property images or fallback icon */}
+                                    <div className="w-44 h-28 bg-gray-50 flex-shrink-0 border-r border-gray-100 overflow-hidden">
+                                      {items.some(p => p.image) ? (
+                                        <div className={`w-full h-full grid ${
+                                          items.filter(p => p.image).length === 1
+                                            ? 'grid-cols-1'
+                                            : items.filter(p => p.image).length <= 4
+                                              ? 'grid-cols-2 grid-rows-2'
+                                              : 'grid-cols-3 grid-rows-2'
+                                        }`}>
+                                          {items
+                                            .filter(p => p.image)
+                                            .slice(0, 6)
+                                            .map(p => (
+                                              <img
+                                                key={p.id}
+                                                src={p.image}
+                                                alt={p.address}
+                                                loading="lazy"
+                                                decoding="async"
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ))}
+                                        </div>
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-gray-200 transition-colors flex items-center justify-center">
+                                            <Icon
+                                              name={getPropertyTypeIcon(property.type)}
+                                              className="text-2xl text-gray-400"
+                                              style="solid"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 px-4 py-3 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <h3 className="text-sm font-semibold text-gray-900">
+                                          <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
+                                          {' '}List
+                                        </h3>
+                                        <span className="text-sm font-semibold text-gray-500">
+                                          ( {info.count} )
+                                        </span>
+                                      </div>
+
+                                      {/* Detail chips */}
+                                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                        {addresses.length > 0 && (
+                                          <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5 truncate max-w-[260px]">
+                                            <Icon name="location-dot" className="text-[9px] text-gray-400" style="solid" />
+                                            {addresses[0]}
+                                            {addresses.length > 1 && ` +${addresses.length - 1}`}
+                                          </span>
+                                        )}
+                                        {areas.length > 0 && (
+                                          <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5">
+                                            <Icon name="ruler-combined" className="text-[9px] text-gray-400" style="solid" />
+                                            {areas.join(', ')}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Chevron */}
+                                    <div className="pr-4 flex flex-col items-center gap-1">
+                                      <Icon name="chevron-down" className="text-sm text-gray-400 group-hover:text-gray-600 transition-colors" style="solid" />
+                                    </div>
+                                  </button>
+
+                                  {/* Hidden PropertyCard for dnd-kit (first item) */}
+                                  <div className="h-0 overflow-hidden">
+                                    <div className="opacity-0 pointer-events-none">
+                                      <PropertyCard
+                                        property={property}
+                                        groupId={group.id}
+                                        onContextMenu={onContextMenu}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // Non-first card, collapsed → hidden but kept in DOM for dnd-kit
+                            return (
+                              <div
+                                key={property.id}
+                                className="h-0 overflow-hidden"
+                              >
+                                <div className="opacity-0 pointer-events-none">
+                                  <PropertyCard
+                                    property={property}
+                                    groupId={group.id}
+                                    onContextMenu={onContextMenu}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </SortableContext>
+
+                      {/* Empty State */}
+                      {group.items.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                          <Icon name="folder-open" className="text-2xl mb-2" />
+                          <p className="text-xs mb-3">Drop properties here or add below</p>
+                          {!readOnly && <PropertyTypeDropdown groupId={group.id} />}
+                        </div>
+                      )}
+                    </div>
+                  ) : // List view - simple table without wrapper
+                  group.items.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-400 bg-gray-50/50 rounded-lg">
+                      <Icon name="folder-open" className="text-2xl mb-2" />
+                      <p className="text-xs mb-3">Drop properties here or add below</p>
+                      {!readOnly && <PropertyTypeDropdown groupId={group.id} />}
+                    </div>
+                  ) : (
+                    <PropertyTable
+                      group={group}
+                      onEdit={onEdit}
+                      onMoveTo={onMoveTo}
+                      onCopy={onCopy}
+                      onPaste={onPaste}
+                      onDelete={onDelete}
+                      hasClipboard={hasClipboard}
+                    />
+                  )}
+
+                  {/* Add Property Button (only when items exist) */}
+                  {!readOnly && group.items.length > 0 && (
+                    <div className="mt-2 flex justify-center">
+                      <PropertyTypeDropdown groupId={group.id} />
+                    </div>
+                  )}
+                </div>
+              </DisclosurePanel>
+            </>
+          )}
+        </Disclosure>
       </div>
     );
   },

@@ -1,5 +1,6 @@
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
+import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 
 type CardSize = 'xs' | 'sm' | 'md';
@@ -58,23 +59,41 @@ export function PropertyCardContent({
       className={`flex flex-1 ${onClick ? 'cursor-pointer hover:bg-gray-50/50' : ''} transition-colors`}
     >
       {/* Property Image */}
-      <div className={`relative ${cfg.image} bg-gray-100 flex-shrink-0 ${size === 'xs' ? 'rounded' : ''}`}>
+      <div className={`relative ${cfg.image} bg-gray-100 flex-shrink-0 ${size === 'md' ? 'rounded-lg m-2.5 mr-0 overflow-hidden' : size === 'xs' ? 'rounded' : ''}`}>
         {property.image ? (
-          <img
-            src={property.image}
-            alt={property.address}
-            loading="lazy"
-            decoding="async"
-            className={`w-full h-full object-cover ${size === 'xs' ? 'rounded' : ''}`}
-          />
+          <>
+            <img
+              src={property.image}
+              alt={property.address}
+              loading="lazy"
+              decoding="async"
+              className={`w-full h-full object-cover ${size === 'md' ? 'rounded-lg' : size === 'xs' ? 'rounded' : ''}`}
+            />
+            {size !== 'xs' && (
+              <div className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent ${size === 'md' ? 'rounded-lg' : ''}`} />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Icon name="image" className={`text-gray-400 ${size === 'xs' ? 'text-sm' : 'text-2xl'}`} />
           </div>
         )}
         {size !== 'xs' && (
-          <div className="absolute top-2 left-2 bg-white rounded-full p-1 shadow-sm">
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="absolute top-2 left-2 bg-white rounded-full p-1 shadow-sm hover:shadow-md hover:scale-110 transition-all"
+            title="Open in Google Maps"
+          >
             <Icon name="location-dot" className="text-green-500 text-[10px]" style="solid" />
+          </a>
+        )}
+        {size !== 'xs' && property.photos && property.photos.length > 0 && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 text-white rounded-full px-1.5 py-0.5 text-[10px]">
+            <Icon name="camera" className="text-[9px]" style="solid" />
+            <span>{property.photos.length}</span>
           </div>
         )}
       </div>
@@ -86,12 +105,9 @@ export function PropertyCardContent({
             <h3 className={`font-medium text-gray-900 ${cfg.title}`} title={property.address}>
               {property.address}
             </h3>
-            <ParameterDisplay
-              group="PropertyType"
-              code={property.type}
-              fallback={property.type}
-              className={`${cfg.text} text-gray-500 shrink-0`}
-            />
+            <Badge type="property" value={property.type} size="xs" dot={false} className="shrink-0">
+              <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
+            </Badge>
             <div className={`flex items-center gap-1 ${cfg.text} text-gray-500 shrink-0`}>
               <Icon name="ruler-combined" className={`text-gray-400 ${cfg.iconSize}`} style="solid" />
               <span>{property.area}</span>
@@ -106,26 +122,38 @@ export function PropertyCardContent({
               {property.address}
             </h3>
 
-            <ParameterDisplay
-              group="PropertyType"
-              code={property.type}
-              fallback={property.type}
-              className={`${cfg.text} text-gray-500`}
-            />
+            <Badge type="property" value={property.type} size="xs" dot={false} className="mt-0.5">
+              <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
+            </Badge>
 
-            <div className={`flex items-center ${cfg.gap} ${cfg.text} text-gray-500 mt-1`}>
-              <div className="flex items-center gap-1">
-                <Icon name="ruler-combined" className={`text-gray-400 ${cfg.iconSize}`} style="solid" />
-                <span>{property.area}</span>
+            {size === 'md' ? (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                  <Icon name="ruler-combined" className="text-[9px] text-gray-400" style="solid" />
+                  {property.area}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5 truncate max-w-[200px]">
+                  <Icon name="location-dot" className="text-[9px] text-gray-400" style="solid" />
+                  {property.location}
+                </span>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className={`flex items-center ${cfg.gap} ${cfg.text} text-gray-500 mt-1`}>
+                  <div className="flex items-center gap-1">
+                    <Icon name="ruler-combined" className={`text-gray-400 ${cfg.iconSize}`} style="solid" />
+                    <span>{property.area}</span>
+                  </div>
+                </div>
 
-            <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
-              <Icon name="location-dot" className={cfg.iconSize} style="solid" />
-              <span className="truncate" title={property.location}>
-                {property.location}
-              </span>
-            </div>
+                <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
+                  <Icon name="location-dot" className={cfg.iconSize} style="solid" />
+                  <span className="truncate" title={property.location}>
+                    {property.location}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
