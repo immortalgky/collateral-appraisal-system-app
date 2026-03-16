@@ -664,7 +664,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     } else if (document.documentId) {
       // Download from server
       downloadDocument(document.documentId, {
-        onSuccess: blob => {
+        onSuccess: ({ blob }) => {
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
         },
