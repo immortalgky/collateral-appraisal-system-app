@@ -1,4 +1,8 @@
 import { z } from 'zod';
+const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
+  required_error: `${fieldName} ${msg}`,
+  invalid_type_error: `${fieldName} ${msg}`,
+});
 
 const ComparativeFactors = z
   .object({
@@ -19,7 +23,7 @@ const ComparativeSurveys = z
 const DirectComparisonQualitativeSurvey = z
   .object({
     marketId: z.string(),
-    qualitativeLevel: z.string(),
+    qualitativeLevel: z.string(requireMsg('Qualitative level')),
   })
   .passthrough();
 
@@ -66,14 +70,14 @@ const DirectComparisonCalculation = z
 const DirectComparisonFinalValue = z
   .object({
     finalValue: z.number(),
-    finalValueRounded: z.number(),
+    finalValueRounded: z.number(requireMsg('Final value (rounded)')),
   })
   .passthrough();
 
 const DirectComparisonAdjustmentPct = z
   .object({
     marketId: z.string(),
-    adjustPercent: z.number(),
+    adjustPercent: z.number(requireMsg('Adjusted score pct')),
     adjustAmount: z.number(),
   })
   .passthrough();
@@ -93,7 +97,7 @@ const DirectComparisonAppraisalPrice = z
     landArea: z.number().nullable().optional(),
     usableArea: z.number().nullable().optional(),
     appraisalPrice: z.number(),
-    appraisalPriceRounded: z.number(),
+    appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
   })
   .passthrough();
 
