@@ -168,6 +168,11 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       const maskedValue = applyDateTimeMask(rawValue);
       setInputValue(maskedValue);
 
+      // Clear stale constraint error while user is editing
+      if (maskedValue.length < 16 && maskedValue !== '') {
+        setConstraintError(null);
+      }
+
       // Try to parse the input when complete (16 chars: dd/mm/yyyy hh:mm)
       if (maskedValue.length === 16) {
         const parsed = parse(maskedValue, DATETIME_FORMAT, new Date());
@@ -267,9 +272,13 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
               fullWidth && 'w-full',
               className,
             )}
-            aria-invalid={error ? 'true' : 'false'}
+            aria-invalid={constraintError || error ? 'true' : 'false'}
             aria-describedby={
-              error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
+              constraintError || error
+                ? `${inputId}-error`
+                : helperText
+                  ? `${inputId}-helper`
+                  : undefined
             }
             disabled={isDisabled}
             placeholder={placeholder}
