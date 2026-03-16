@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- North -->
+  <polygon points="16,2 18.5,13 16,11 13.5,13" fill="#333"/>
+  <!-- South -->
+  <polygon points="16,30 18.5,19 16,21 13.5,19" fill="#999"/>
+  <!-- East -->
+  <polygon points="30,16 19,13.5 21,16 19,18.5" fill="#999"/>
+  <!-- West -->
+  <polygon points="2,16 13,13.5 11,16 13,18.5" fill="#999"/>
+  <!-- North dark -->
+  <polygon points="16,2 13.5,13 16,11" fill="#222"/>
+  <!-- Center -->
+  <circle cx="16" cy="16" r="2" fill="#333"/>
+  <!-- Labels -->
+  <text x="16" y="7" text-anchor="middle" font-family="Arial, sans-serif" font-size="5" font-weight="bold" fill="#E53935">N</text>
+</svg>

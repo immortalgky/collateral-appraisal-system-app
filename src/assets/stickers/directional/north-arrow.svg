@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <polygon points="16,2 22,18 16,14 10,18" fill="#333" stroke="#111" stroke-width="0.5"/>
+  <polygon points="16,14 22,18 16,30 10,18" fill="#999" stroke="#111" stroke-width="0.5"/>
+  <text x="16" y="12" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white">N</text>
+</svg>

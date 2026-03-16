@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
@@ -16,9 +16,24 @@ import {
   useRemoveAppendixDocument,
   useUpdateAppendixLayout,
 } from '@features/appraisal/api';
-import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
+import {
+  createUploadSession,
+  useDownloadDocument,
+  useUploadDocument,
+} from '@features/request/api/documents';
 import { useGetGalleryPhotos } from '../../api/gallery';
-import type { AppendixDocumentDto, AppraisalAppendixDto, DocumentItemDto, } from '../../types/documentChecklist';
+import type {
+  AppendixDocumentDto,
+  AppraisalAppendixDto,
+  DocumentItemDto,
+} from '../../types/documentChecklist';
+import type { AnnotationResult } from '@shared/components/ImageAnnotationEditor';
+
+const ImageAnnotationEditor = lazy(
+  () => import('@shared/components/ImageAnnotationEditor/ImageAnnotationEditor'),
+);
+
+const isImageFile = (file: File) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -80,10 +95,12 @@ const ProgressBar = ({ uploaded, total }: { uploaded: number; total: number }) =
 // Action Dropdown Component
 const ActionDropdown = ({
   onView,
+  onEdit,
   onDelete,
   isEditable = false,
 }: {
   onView?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   isEditable?: boolean;
 }) => {
@@ -114,6 +131,19 @@ const ActionDropdown = ({
               >
                 <Icon name="eye" className="text-gray-400" />
                 View
+              </button>
+            )}
+            {isEditable && onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onEdit();
+                  setIsOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <Icon name="pen-to-square" className="text-gray-400" />
+                Edit
               </button>
             )}
             {isEditable && onDelete && (
@@ -188,6 +218,36 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
   const updateAppendixLayout = useUpdateAppendixLayout();
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
+  const { mutateAsync: downloadDocument } = useDownloadDocument();
+
+  // Annotation editor state — use refs alongside state to avoid stale closures in async callbacks
+  const [showAnnotationEditor, setShowAnnotationEditor] = useState(false);
+  const [pendingEditFiles, _setPendingEditFiles] = useState<File[]>([]);
+  const pendingEditFilesRef = useRef<File[]>([]);
+  const setPendingEditFiles = (files: File[]) => {
+    pendingEditFilesRef.current = files;
+    _setPendingEditFiles(files);
+  };
+  const [editingFileIndex, _setEditingFileIndex] = useState(0);
+  const editingFileIndexRef = useRef(0);
+  const setEditingFileIndex = (idx: number) => {
+    editingFileIndexRef.current = idx;
+    _setEditingFileIndex(idx);
+  };
+  const [editingDocument, _setEditingDocument] = useState<AppendixDocumentDto | null>(null);
+  const editingDocumentRef = useRef<AppendixDocumentDto | null>(null);
+  const setEditingDocument = (doc: AppendixDocumentDto | null) => {
+    editingDocumentRef.current = doc;
+    _setEditingDocument(doc);
+  };
+  const [_editingAppendixId, _setEditingAppendixId] = useState<string | null>(null);
+  const editingAppendixIdRef = useRef<string | null>(null);
+  const setEditingAppendixId = (id: string | null) => {
+    editingAppendixIdRef.current = id;
+    _setEditingAppendixId(id);
+  };
+  const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
+  const [editingFileName, setEditingFileName] = useState<string | null>(null);
 
   // Local UI state
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
@@ -274,62 +334,187 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
     return sessionPromiseRef.current;
   }, []);
 
-  // Upload flow: getOrCreateSession → uploadDocument → addAppendixDocument
-  const processFiles = useCallback(
-    async (files: FileList, appendixId: string) => {
+  // Upload a single file through the 3-step flow
+  const uploadSingleFile = useCallback(
+    async (file: File, appendixId: string, displaySequence?: number) => {
       if (!appraisalId) return;
 
-      // Clone files immediately — the FileList is emptied when the input resets
-      const fileArray = Array.from(files);
-      if (fileArray.length === 0) return;
+      const sessionId = await getOrCreateSession();
 
+      const uploadResult = await uploadDocument({
+        uploadSessionId: sessionId,
+        file,
+        documentType: 'APPENDIX',
+        documentCategory: 'appendix',
+      });
+
+      const galleryPhoto = await addGalleryPhoto({
+        appraisalId,
+        documentId: uploadResult.documentId,
+        photoType: 'general',
+        uploadedBy: 'current-user',
+        photoCategory: null,
+        caption: null,
+        latitude: null,
+        longitude: null,
+        capturedAt: null,
+        photoTopicIds: null,
+        fileName: file.name,
+        filePath: null,
+        fileExtension: file.name.split('.').pop() ?? null,
+        mimeType: file.type || null,
+        fileSizeBytes: file.size,
+        uploadedByName: null,
+      });
+
+      const appendix = appendices.find(a => a.id === appendixId);
+      const nextSequence = displaySequence ?? (appendix?.documents.length ?? 0) + 1;
+
+      await addAppendixDocument.mutateAsync({
+        appraisalId,
+        appendixId,
+        body: {
+          galleryPhotoId: galleryPhoto.id,
+          displaySequence: nextSequence,
+        },
+      });
+    },
+    [
+      appraisalId,
+      appendices,
+      getOrCreateSession,
+      uploadDocument,
+      addGalleryPhoto,
+      addAppendixDocument,
+    ],
+  );
+
+  // Upload File[] (non-FileList variant)
+  const processFilesFromArray = useCallback(
+    async (files: File[], appendixId: string) => {
+      if (!appraisalId || files.length === 0) return;
       try {
-        const sessionId = await getOrCreateSession();
-
-        for (const file of fileArray) {
-          // Step 1: Upload document to get documentId
-          const uploadResult = await uploadDocument({
-            uploadSessionId: sessionId,
-            file,
-            documentType: 'APPENDIX',
-            documentCategory: 'appendix',
-          });
-
-          // Step 2: Register as gallery photo to get galleryPhotoId
-          const galleryPhoto = await addGalleryPhoto({
-            appraisalId,
-            documentId: uploadResult.documentId,
-            photoType: 'general',
-            uploadedBy: 'current-user',
-            photoCategory: null,
-            caption: null,
-            latitude: null,
-            longitude: null,
-            capturedAt: null,
-            photoTopicIds: null,
-          });
-
-          // Step 3: Attach to appendix using galleryPhotoId
-          const appendix = appendices.find(a => a.id === appendixId);
-          const nextSequence = (appendix?.documents.length ?? 0) + 1;
-
-          await addAppendixDocument.mutateAsync({
-            appraisalId,
-            appendixId,
-            body: {
-              galleryPhotoId: galleryPhoto.id,
-              displaySequence: nextSequence,
-            },
-          });
+        for (const file of files) {
+          await uploadSingleFile(file, appendixId);
         }
-
         toast.success('Files uploaded successfully');
       } catch (error) {
         console.error('Upload failed:', error);
         toast.error('Failed to upload files');
       }
     },
-    [appraisalId, appendices, getOrCreateSession, uploadDocument, addGalleryPhoto, addAppendixDocument],
+    [appraisalId, uploadSingleFile],
+  );
+
+  // Annotation editor handlers
+  const handleAnnotationSave = useCallback(
+    async (result: AnnotationResult) => {
+      const file = new File([result.imageBlob], result.fileName, { type: 'image/png' });
+      // Read from refs to avoid stale closures
+      const curEditingDoc = editingDocumentRef.current;
+      const curAppendixId = editingAppendixIdRef.current;
+      const curFileIndex = editingFileIndexRef.current;
+      const curPendingFiles = pendingEditFilesRef.current;
+
+      try {
+        if (curEditingDoc && curAppendixId) {
+          // Edit-after-upload: upload new annotated image, then remove old one
+          await uploadSingleFile(file, curAppendixId, curEditingDoc.displaySequence);
+          if (appraisalId) {
+            await removeAppendixDocument.mutateAsync({
+              appraisalId,
+              appendixId: curAppendixId,
+              documentId: curEditingDoc.id,
+            });
+          }
+          setEditingDocument(null);
+          setEditingAppendixId(null);
+          toast.success('Document updated');
+        } else {
+          // Edit-before-upload: upload annotated image
+          if (curAppendixId) {
+            await uploadSingleFile(file, curAppendixId);
+          }
+
+          // Advance to next pending file
+          const nextIndex = curFileIndex + 1;
+          if (nextIndex < curPendingFiles.length) {
+            setEditingFileIndex(nextIndex);
+            return; // Keep editor open
+          }
+
+          // All done
+          setPendingEditFiles([]);
+          setEditingFileIndex(0);
+          setActiveAppendixId(null);
+          toast.success('Files uploaded successfully');
+        }
+      } catch (error) {
+        console.error('Annotation save failed:', error);
+        toast.error('Failed to save annotated image');
+      }
+    },
+    [appraisalId, uploadSingleFile, removeAppendixDocument],
+  );
+
+  const handleAnnotationSkip = useCallback(() => {
+    // Read from refs to avoid stale closures
+    const curPendingFiles = pendingEditFilesRef.current;
+    const curFileIndex = editingFileIndexRef.current;
+    const curAppendixId = editingAppendixIdRef.current;
+
+    // Upload the current file without annotation
+    const currentFile = curPendingFiles[curFileIndex];
+
+    if (currentFile && curAppendixId) {
+      void uploadSingleFile(currentFile, curAppendixId).catch(() => {
+        toast.error('Failed to upload file');
+      });
+    }
+
+    // Advance to next file
+    const nextIndex = curFileIndex + 1;
+    if (nextIndex < curPendingFiles.length) {
+      setEditingFileIndex(nextIndex);
+    } else {
+      setShowAnnotationEditor(false);
+      setPendingEditFiles([]);
+      setEditingFileIndex(0);
+      setEditingAppendixId(null);
+    }
+  }, [uploadSingleFile]);
+
+  const handleAnnotationClose = useCallback(() => {
+    setShowAnnotationEditor(false);
+    setPendingEditFiles([]);
+    setEditingFileIndex(0);
+    setEditingDocument(null);
+    setEditingAppendixId(null);
+    setEditingFileName(null);
+    if (editingImageUrl) {
+      URL.revokeObjectURL(editingImageUrl);
+      setEditingImageUrl(null);
+    }
+    // Don't clear activeAppendixId if there are pending non-image files
+  }, [editingImageUrl]);
+
+  // Edit an existing appendix document
+  const handleEditDocument = useCallback(
+    async (appendixId: string, doc: AppendixDocumentDto) => {
+      try {
+        const { blob, fileName } = await downloadDocument(doc.documentId);
+        const url = URL.createObjectURL(blob);
+        setEditingDocument(doc);
+        setEditingAppendixId(appendixId);
+        setEditingImageUrl(url);
+        setEditingFileName(fileName);
+        setShowAnnotationEditor(true);
+      } catch (error) {
+        console.error('Failed to download document for editing:', error);
+        toast.error('Failed to load document for editing');
+      }
+    },
+    [downloadDocument],
   );
 
   const handleAddFiles = (appendixId: string) => {
@@ -340,8 +525,26 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
   const handleUploadFromDevice = (files: FileList) => {
     const appendixId = activeAppendixIdRef.current;
     if (!appendixId) return;
-    void processFiles(files, appendixId);
-    setActiveAppendixId(null);
+
+    const fileArray = Array.from(files);
+    const imageFiles = fileArray.filter(isImageFile);
+    const nonImageFiles = fileArray.filter(f => !isImageFile(f));
+
+    // Upload non-image files directly
+    if (nonImageFiles.length > 0) {
+      void processFilesFromArray(nonImageFiles, appendixId);
+    }
+
+    // Open editor for image files — save appendixId into editor state
+    // because activeAppendixIdRef will be cleared when PhotoSourceModal closes
+    if (imageFiles.length > 0) {
+      setEditingAppendixId(appendixId);
+      setPendingEditFiles(imageFiles);
+      setEditingFileIndex(0);
+      setShowAnnotationEditor(true);
+    } else {
+      setActiveAppendixId(null);
+    }
   };
 
   const transitionToGalleryRef = useRef(false);
@@ -417,8 +620,21 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
     e.preventDefault();
     setDragOverSection(null);
     const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      void processFiles(files, appendixId);
+    if (files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    const imageFiles = fileArray.filter(isImageFile);
+    const nonImageFiles = fileArray.filter(f => !isImageFile(f));
+
+    if (nonImageFiles.length > 0) {
+      void processFilesFromArray(nonImageFiles, appendixId);
+    }
+
+    if (imageFiles.length > 0) {
+      setEditingAppendixId(appendixId);
+      setPendingEditFiles(imageFiles);
+      setEditingFileIndex(0);
+      setShowAnnotationEditor(true);
     }
   };
 
@@ -710,6 +926,7 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
                               <div className="flex justify-end">
                                 <ActionDropdown
                                   onView={() => handleViewDocument(doc)}
+                                  onEdit={() => void handleEditDocument(appendix.id, doc)}
                                   onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
                                   isEditable={!readOnly}
                                 />
@@ -781,6 +998,31 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
         images={galleryImages}
         multiSelect
       />
+
+      {/* Image Annotation Editor */}
+      {showAnnotationEditor && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          }
+        >
+          <ImageAnnotationEditor
+            isOpen={showAnnotationEditor}
+            onClose={handleAnnotationClose}
+            imageFile={editingDocument ? undefined : pendingEditFiles[editingFileIndex]}
+            imageUrl={editingImageUrl ?? undefined}
+            onSave={handleAnnotationSave}
+            onSkip={editingDocument ? undefined : handleAnnotationSkip}
+            fileName={
+              editingDocument
+                ? (editingFileName ?? `document-${editingDocument.documentId}.png`)
+                : pendingEditFiles[editingFileIndex]?.name
+            }
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
