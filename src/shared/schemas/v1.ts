@@ -2459,7 +2459,7 @@ const GetMachineryPropertyResponse = z
     height: z.number().nullable(),
     energyUse: z.string().nullable(),
     energyUseRemark: z.string().nullable(),
-    owner: z.string(),
+    ownerName: z.string().nullable(),
     verifiableOwner: z.boolean(),
     canUse: z.boolean(),
     location: z.string().nullable(),
@@ -4726,6 +4726,7 @@ export type UpdateLandAndBuildingPropertyRequestType = z.infer<
   typeof UpdateLandAndBuildingPropertyRequest
 >;
 export type UpdateLandPropertyRequestType = z.infer<typeof UpdateLandPropertyRequest>;
+export type UpdateMachineryPropertyRequestType = z.infer<typeof UpdateMachineryPropertyRequest>;
 
 // Property Create types
 export type CreateLandPropertyRequestType = z.infer<typeof CreateLandPropertyRequest>;
@@ -4734,6 +4735,8 @@ export type CreateBuildingPropertyRequestType = z.infer<typeof CreateBuildingPro
 export type CreateBuildingPropertyResponseType = z.infer<typeof CreateBuildingPropertyResponse>;
 export type CreateCondoPropertyRequestType = z.infer<typeof CreateCondoPropertyRequest>;
 export type CreateCondoPropertyResponseType = z.infer<typeof CreateCondoPropertyResponse>;
+export type CreateMachineryPropertyRequestType = z.infer<typeof CreateMachineryPropertyRequest>;
+export type CreateMachineryPropertyResponseType = z.infer<typeof CreateMachineryPropertyResponse>;
 
 // Property Get types
 export type GetLandPropertyResponseType = z.infer<typeof GetLandPropertyResponse>;
@@ -4742,6 +4745,7 @@ export type GetCondoPropertyResponseType = z.infer<typeof GetCondoPropertyRespon
 export type GetLandAndBuildingPropertyResponseType = z.infer<
   typeof GetLandAndBuildingPropertyResponse
 >;
+export type GetMachineryPropertyResponseType = z.infer<typeof GetMachineryPropertyResponse>;
 
 // Property Update response types
 // export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;

@@ -14,6 +14,7 @@ const getRouteSegment = (type: string): string => {
     Condominium: 'condo',
     'Land and building': 'land-building',
     Lands: 'land',
+    Machinery: 'machinery',
     'Lease Agreement Building': 'building',
     'Lease Agreement Land and building': 'land-building',
     'Lease Agreement Lands': 'land',
@@ -21,6 +22,7 @@ const getRouteSegment = (type: string): string => {
     B: 'building',
     LB: 'land-building',
     U: 'condo',
+    MAC: 'machinery',
   };
   return typeMap[type] || 'land';
 };

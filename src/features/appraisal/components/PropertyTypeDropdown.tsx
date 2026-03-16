@@ -56,9 +56,9 @@ export const PROPERTY_TYPES = [
   },
   {
     type: 'Machine',
-    code: 'M',
+    code: 'MAC',
     icon: 'gears',
-    route: null,
+    route: 'machinery',
     description: 'Machinery and equipment',
   },
   {

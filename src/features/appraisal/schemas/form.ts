@@ -7,8 +7,8 @@ import {
   allLandAndBuildingPMAFields,
   allLandBuildingFields,
   allLandFields,
+  allMachineryFields,
 } from '../configs/fields';
-import type { c } from 'node_modules/vite/dist/node/moduleRunnerTransport.d-DJ_mE5sf';
 
 const landTitleItem = z.object({
   titleNumber: z.string(),
@@ -147,6 +147,7 @@ export const createLandAndBuildingPMAForm = buildFormSchema(
   createLandAndBuildingPMAFormBase,
 );
 export const createCondoPMAForm = buildFormSchema(allCondoPMAFields, createCondoPMAFormBase);
+export const createMachineryForm = buildFormSchema(allMachineryFields);
 
 export const factorDataDto = z
   .object({
@@ -188,6 +189,7 @@ export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;
 export type createLandFormType = z.infer<typeof createLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
+export type createMachineryFormType = z.infer<typeof createMachineryForm>;
 export type createLandAndBuildingPMAFormType = z.infer<typeof createLandAndBuildingPMAForm>;
 export type createCondoPMAFormType = z.infer<typeof createCondoPMAForm>;
 export type createMarketComparableFormType = z.infer<typeof createMarketComparableForm>;
@@ -533,6 +535,36 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   remark: '',
   surfaces: [],
   depreciationDetails: [],
+};
+
+export const createMachineryFormDefault: createMachineryFormType = {
+  propertyName: null,
+  isOwnerVerified: true,
+  ownerName: null,
+  canUse: true,
+  machineName: null,
+  brand: null,
+  model: null,
+  yearOfManufacture: null,
+  countryOfManufacture: null,
+  purchaseDate: null,
+  purchasePrice: null,
+  capacity: null,
+  width: null,
+  length: null,
+  height: null,
+  energyUse: null,
+  location: null,
+  conditionUse: null,
+  machineCondition: null,
+  machineAge: null,
+  machineEfficiency: null,
+  machineTechnology: null,
+  usePurpose: null,
+  machinePart: null,
+  other: null,
+  remark: null,
+  appraiserOpinion: null,
 };
 
 export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormType = {
