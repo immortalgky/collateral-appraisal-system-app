@@ -1993,6 +1993,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     decimalPlaces: 0,
     maxIntegerDigits: 4,
+    thousandSeparator: false,
   },
   {
     type: 'dropdown',
