@@ -21,6 +21,7 @@ import { useGetAppointments } from '../api/appointment';
 import { useGetAppraisalFees } from '../api/fee';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
+import Avatar from '@/shared/components/Avatar';
 
 interface AppraisalRightMenuProps {
   onClose?: () => void;
@@ -75,17 +76,6 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
   const addCommentMutation = useAddComment();
   const updateCommentMutation = useUpdateComment();
   const deleteCommentMutation = useDeleteComment();
-
-  // Helper to get initials from name
-  const getInitials = (name: string): string => {
-    if (!name) return '?';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const handleAddComment = () => {
     if (!newComment.trim() || !requestId || !currentUser) return;
@@ -581,10 +571,8 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                         ) : (
                           // Others' comment - left-aligned, gray bubble with avatar
                           <div className="flex items-start gap-2 max-w-[80%]">
-                            <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center shrink-0 mt-4">
-                              <span className="text-[10px] font-medium text-primary-700">
-                                {getInitials(comment.commentedByName)}
-                              </span>
+                            <div className="mt-4">
+                              <Avatar name={comment.commentedByName} size="xs" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">

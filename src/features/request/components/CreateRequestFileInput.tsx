@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -308,6 +308,8 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     <>
       <UploadArea
         onChange={handleChange}
+        accept={ALLOWED_EXTENSIONS.join(', ')}
+        multiple={true}
         supportedText="PDF, PNG, JPG (Max 10MB each)"
         isLoading={isPending}
       />
@@ -373,9 +375,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
                 {progress.status === 'pending' && (
                   <Icon name="clock" style="regular" className="w-4 h-4 text-gray-400" />
                 )}
-                {progress.status === 'uploading' && (
-                  <LoadingSpinner size="sm" variant="default" />
-                )}
+                {progress.status === 'uploading' && <LoadingSpinner size="sm" variant="default" />}
                 {progress.status === 'success' && (
                   <Icon name="circle-check" style="solid" className="w-4 h-4 text-green-600" />
                 )}

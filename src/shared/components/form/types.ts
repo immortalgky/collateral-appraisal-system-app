@@ -169,6 +169,7 @@ export interface NumberInputField extends BaseFormField {
   max?: number;
   /** Max digits before the decimal point, excluding commas (e.g., 15 for DECIMAL(17,2)) */
   maxIntegerDigits?: number;
+  /** Show thousand separators (default: true) */
   thousandSeparator?: boolean;
 }
 

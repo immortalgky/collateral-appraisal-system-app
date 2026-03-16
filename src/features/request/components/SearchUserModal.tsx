@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Avatar from '@/shared/components/Avatar';
 import type { UserDtoType } from '../schemas/form';
 
 interface SearchUserModalProps {
@@ -41,15 +42,6 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
     setSearchQuery('');
     setSelectedUser(null);
     onClose();
-  };
-
-  const getInitials = (username: string) => {
-    return username
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -92,11 +84,7 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
                     }`}
                   >
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary-700">
-                        {getInitials(user.username)}
-                      </span>
-                    </div>
+                    <Avatar name={user.username} size="lg" />
 
                     {/* User Info */}
                     <div className="flex-1 min-w-0">

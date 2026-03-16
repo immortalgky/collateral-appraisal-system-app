@@ -14,7 +14,7 @@ import {
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
-import ParameterDisplay from '@shared/components/ParameterDisplay';
+import { PropertyCardContent } from '../PropertyCardContent';
 import { usePropertyClipboardStore } from '../../store';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import {
@@ -597,57 +597,16 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
         {/* Drag Overlay (for grid view) */}
         <DragOverlay dropAnimation={null}>
           {activeProperty ? (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg cursor-grabbing flex opacity-90">
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-xl ring-2 ring-primary scale-[1.02] cursor-grabbing flex opacity-95">
               {/* Drag Handle */}
               <div className="flex items-center justify-center w-10 bg-gray-50 border-r border-gray-200 flex-shrink-0">
                 <Icon name="grip-vertical" className="text-gray-400" />
               </div>
-
-              {/* Property Image */}
-              <div className="relative w-44 h-28 bg-gray-100 flex-shrink-0">
-                {activeProperty.image ? (
-                  <img
-                    src={activeProperty.image}
-                    alt={activeProperty.address}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Icon name="image" className="text-gray-400 text-2xl" />
-                  </div>
-                )}
-                <div className="absolute top-2 left-2 bg-white rounded-full p-1 shadow-sm">
-                  <Icon name="location-dot" className="text-green-500 text-[10px]" style="solid" />
-                </div>
-              </div>
-
-              {/* Property Details */}
-              <div className="flex-1 p-2.5 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900 text-sm mb-1.5 line-clamp-1">
-                    {activeProperty.address}
-                  </h3>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Icon
-                        name="ruler-combined"
-                        className="text-gray-400 text-[10px]"
-                        style="solid"
-                      />
-                      <span>{activeProperty.area}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                    <Icon name="location-dot" className="text-[10px]" style="solid" />
-                    <span className="truncate">{activeProperty.location}</span>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <ParameterDisplay group="PropertyType" code={activeProperty.type}
-                    fallback="Unknown type"
-                    className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium" />
-                </div>
-              </div>
+              <PropertyCardContent
+                property={activeProperty}
+                showArrow={false}
+                size="md"
+              />
             </div>
           ) : null}
         </DragOverlay>
