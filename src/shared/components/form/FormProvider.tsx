@@ -57,7 +57,8 @@ export function FormProvider<TFieldValues extends FieldValues>({
 }: FormProviderProps<TFieldValues>) {
   const { errors, isSubmitted, submitCount } = methods.formState;
   const [isDismissed, setIsDismissed] = useState(false);
-  const errorMessages = showErrorAlert && isSubmitted && !isDismissed ? flattenFormErrors(errors) : [];
+  const errorMessages =
+    showErrorAlert && isSubmitted && !isDismissed ? flattenFormErrors(errors) : [];
 
   // Reset dismissed state when user submits again
   useEffect(() => {

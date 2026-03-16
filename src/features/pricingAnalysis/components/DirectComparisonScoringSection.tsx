@@ -242,10 +242,17 @@ export const DirectComparisonScoringSection = ({
                       <button
                         type="button"
                         className="text-gray-500 hover:text-primary-600 transition-colors"
-                        onClick={() => { setSelectedSurveyId(survey.id ?? null); onModalOpen(); }}
+                        onClick={() => {
+                          setSelectedSurveyId(survey.id ?? null);
+                          onModalOpen();
+                        }}
                         title="View market comparable detail"
                       >
-                        <Icon name="arrow-up-right-from-square" style="solid" className="size-3.5" />
+                        <Icon
+                          name="arrow-up-right-from-square"
+                          style="solid"
+                          className="size-3.5"
+                        />
                       </button>
                     </div>
                   </th>
@@ -506,6 +513,12 @@ export const DirectComparisonScoringSection = ({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustAmt}
                       />
                     )}
@@ -534,6 +547,12 @@ export const DirectComparisonScoringSection = ({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 15,
+                          maxValue: 999_999_999_999_999.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustPct}
                       />
                     )}
@@ -620,6 +639,12 @@ export const DirectComparisonScoringSection = ({
                       <RHFInputCell
                         fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasOfferPrice}
                       />
                     )}
@@ -741,14 +766,23 @@ export const DirectComparisonScoringSection = ({
                                   column: columnIndex,
                                 })}
                                 inputType="number"
+                                number={{ decimalPlaces: 2, maxIntegerDigits: 3, maxValue: 100.0 }}
                                 onUserChange={v => {
                                   if (v == null) return null;
                                   const level =
                                     getValues(
                                       qualitativeLevelPath({ row: rowIndex, column: columnIndex }),
                                     ) ?? '';
-                                  if (level === 'B') return -Math.abs(v);
-                                  if (level === 'I') return Math.abs(v);
+                                  if (level === 'B') {
+                                    const value = -Math.abs(v);
+                                    if (value === 0) return null;
+                                    return value;
+                                  }
+                                  if (level === 'I') {
+                                    const value = Math.abs(v);
+                                    if (value === 0) return null;
+                                    return value;
+                                  }
                                   if (level === 'E') return 0;
                                   return v;
                                 }}
@@ -789,6 +823,7 @@ export const DirectComparisonScoringSection = ({
                       <RHFInputCell
                         fieldName={adjustmentFactorsRemarkPath({ row: rowIndex })}
                         inputType="text"
+                        text={{ maxLength: 200 }}
                       />
                     </div>
                   </td>
@@ -888,7 +923,16 @@ export const DirectComparisonScoringSection = ({
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-100', collateralColumnBody)}>
-                <RHFInputCell fieldName={finalValueRoundedPath()} inputType="number" />
+                <RHFInputCell
+                  fieldName={finalValueRoundedPath()}
+                  inputType="number"
+                  number={{
+                    decimalPlaces: 2,
+                    maxIntegerDigits: 15,
+                    maxValue: 999_999_999_999_999.0,
+                    allowNegative: false,
+                  }}
+                />
               </td>
             </tr>
           </tbody>

@@ -349,6 +349,7 @@ export function WQSScoringSection({
                       <RHFInputCell
                         fieldName={scoringFactorWeightPath({ row: rowIndex })}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 1, allowNegative: false }}
                       />
                     </td>
                     <td
@@ -359,6 +360,7 @@ export function WQSScoringSection({
                       <RHFInputCell
                         fieldName={scoringFactorIntensityPath({ row: rowIndex })}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 2, allowNegative: false }}
                       />
                     </td>
                     {/* weight * intensity */}
@@ -387,14 +389,13 @@ export function WQSScoringSection({
                                     column: columnIndex,
                                   })}
                                   inputType="number"
-                                  onUserChange={v => {
-                                    if (v == null) return null;
-                                    const intensity = getValues(
+                                  number={{
+                                    decimalPlaces: 0,
+                                    maxIntegerDigits: 2,
+                                    maxValue: getValues(
                                       scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                                    );
-                                    if (v > intensity) return intensity;
-                                    if (v < 0) return 0;
-                                    return v;
+                                    ),
+                                    allowNegative: false,
                                   }}
                                 />
                               </div>
@@ -422,14 +423,13 @@ export function WQSScoringSection({
                               row: rowIndex,
                             })}
                             inputType="number"
-                            onUserChange={v => {
-                              if (v == null) return null;
-                              const intensity = getValues(
+                            number={{
+                              decimalPlaces: 0,
+                              maxIntegerDigits: 2,
+                              maxValue: getValues(
                                 scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                              );
-                              if (v > intensity) return intensity;
-                              if (v < 0) return 0;
-                              return v;
+                              ),
+                              allowNegative: false,
                             }}
                           />
                         </div>
@@ -667,6 +667,12 @@ export function WQSScoringSection({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustAmt}
                       />
                     )}
@@ -705,6 +711,12 @@ export function WQSScoringSection({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 15,
+                          maxValue: 999_999_999_999_999.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustPct}
                       />
                     )}
@@ -827,6 +839,12 @@ export function WQSScoringSection({
                         fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
                         inputType="number"
                         disabled={hasOfferPrice}
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100,
+                          allowNegative: false,
+                        }}
                       />
                     )}
                   </td>
@@ -837,8 +855,7 @@ export function WQSScoringSection({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-left items-center'}>
-                  <span>Cumulative Adjusted Period</span>
-                  <span>(%)</span>
+                  <span>Cumulative Adjusted Period (%)</span>
                 </div>
               </td>
               <td
@@ -978,7 +995,16 @@ export function WQSScoringSection({
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
               <td className={clsx('bg-gray-100 border-b border-gray-300 px-1 py-1')}>
-                <RHFInputCell fieldName={finalValueFinalValueRoundedPath()} inputType="number" />
+                <RHFInputCell
+                  fieldName={finalValueFinalValueRoundedPath()}
+                  inputType="number"
+                  number={{
+                    decimalPlaces: 2,
+                    maxIntegerDigits: 15,
+                    allowNegative: false,
+                    maxValue: 999_999_999_999_999.0,
+                  }}
+                />
               </td>
             </tr>
           </tbody>

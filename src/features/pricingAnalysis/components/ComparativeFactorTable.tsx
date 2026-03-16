@@ -89,7 +89,7 @@ export function ComparativeFactorTable({
             <tr className="border-b border-gray-200">
               <th
                 className={clsx(
-                  'bg-gray-50/95 backdrop-blur-sm sticky left-0 h-[36px] w-[250px] min-w-[250px] max-w-[250px] px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider',
+                  'bg-gray-100/95 backdrop-blur-sm sticky left-0 h-[36px] w-[250px] min-w-[250px] max-w-[250px] px-3 py-1.5 text-xm font-semibold text-gray-500 uppercase tracking-wider',
                   factorColumnStyle,
                 )}
               >
@@ -97,7 +97,7 @@ export function ComparativeFactorTable({
               </th>
               <th
                 className={clsx(
-                  'bg-gray-50/95 backdrop-blur-sm text-xs font-semibold text-gray-500 uppercase tracking-wider',
+                  'bg-gray-100/95 backdrop-blur-sm text-xm font-semibold text-gray-500 uppercase tracking-wider',
                   collateralColumnStyle,
                 )}
               >
@@ -106,7 +106,7 @@ export function ComparativeFactorTable({
               {comparativeMarketSurveys.map((survey: MarketComparableDataType) => (
                 <th
                   key={survey.id}
-                  className="bg-gray-50/95 backdrop-blur-sm text-left text-xs font-semibold text-gray-500 px-3 py-1.5 select-none whitespace-nowrap min-w-[200px]"
+                  className="bg-gray-100/95 backdrop-blur-sm text-left text-xm font-semibold text-gray-500 px-3 py-1.5 select-none whitespace-nowrap min-w-[200px]"
                 >
                   {survey.surveyName}
                 </th>
@@ -143,11 +143,9 @@ export function ComparativeFactorTable({
                   >
                     <div className="flex items-center gap-1">
                       <div className="flex-1 min-w-0">
-                        {template?.comparativeFactors?.find(
-                          (t: TemplateComparativeFactorType) => {
-                            return t.factorCode === compFact.factorCode;
-                          },
-                        ) ? (
+                        {template?.comparativeFactors?.find((t: TemplateComparativeFactorType) => {
+                          return t.factorCode === compFact.factorCode;
+                        }) ? (
                           <RHFInputCell
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
                             inputType="display"
@@ -229,7 +227,10 @@ export function ComparativeFactorTable({
                   </td>
                   {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
                     return (
-                      <td key={survey.id} className="px-3 py-1 border-b border-gray-100 text-gray-700 min-w-[200px]">
+                      <td
+                        key={survey.id}
+                        className="px-3 py-1 border-b border-gray-100 text-gray-700 min-w-[200px]"
+                      >
                         {
                           <RHFInputCell
                             fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
@@ -259,9 +260,7 @@ export function ComparativeFactorTable({
               );
             })}
             <tr>
-              <td
-                className={clsx('bg-white sticky left-0 px-3 py-2', 'z-15', stickyGradient)}
-              >
+              <td className={clsx('bg-white sticky left-0 px-3 py-2', 'z-15', stickyGradient)}>
                 <button
                   type="button"
                   onClick={() =>

@@ -4,6 +4,11 @@ export function round2(n: unknown): number {
   return Math.round(x * 100) / 100;
 }
 
+export function floorToThousands(n: unknown) {
+  const x = Number(n) || 0;
+  return Math.floor(x / 1000) * 1000;
+}
+
 export function floorToTenThousands(n: unknown) {
   const x = Number(n) || 0;
   return Math.floor(x / 10000) * 10000;

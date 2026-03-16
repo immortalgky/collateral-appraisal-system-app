@@ -1,4 +1,4 @@
-import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
+import { useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
 import { useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ import { DirectComparisonForm } from '@features/pricingAnalysis/components/Direc
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
+import { FormProvider } from '@/shared/components/form/FormProvider';
 
 interface DirectComparisonPanelProps {
   activeMethod?: {
@@ -46,7 +47,11 @@ interface DirectComparisonPanelProps {
   savedCalculations?: CalculationType[];
   savedComparativeAnalysisTemplateId?: string | null;
   savedMethodValue?: number | null;
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -98,7 +103,9 @@ export function DirectComparisonPanel({
   const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
-  const selectedTemplateId = (templateList ?? []).find(t => t.templateCode === selectedTemplateCode)?.id;
+  const selectedTemplateId = (templateList ?? []).find(
+    t => t.templateCode === selectedTemplateCode,
+  )?.id;
   const templateDetailQuery = useGetComparativeAnalysisTemplateById(selectedTemplateId);
 
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
@@ -201,24 +208,6 @@ export function DirectComparisonPanel({
     }
   };
 
-  const onInvalid: SubmitErrorHandler<DirectComparisonType> = errs => {
-    const messages = flattenRHFErrors(errs);
-
-    toast.error(
-      <div>
-        <div className="font-semibold">Please fix these fields</div>
-        <ul className="mt-1 list-disc pl-5">
-          {messages.slice(0, 6).map(m => (
-            <li key={m} className={'text-wrap'}>
-              {m}
-            </li>
-          ))}
-        </ul>
-      </div>,
-      { id: 'direct-comparison-form-errors' },
-    );
-  };
-
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
@@ -240,11 +229,15 @@ export function DirectComparisonPanel({
       // Set appraisal price from saved method value AFTER reset, with shouldDirty
       // so derived rules won't overwrite it with the calculated final value
       if (savedMethodValue != null && savedMethodValue !== 0) {
-        setValue('directComparisonAppraisalPrice.appraisalPriceRounded' as any, savedMethodValue, { shouldDirty: true });
+        setValue('directComparisonAppraisalPrice.appraisalPriceRounded' as any, savedMethodValue, {
+          shouldDirty: true,
+        });
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
-        const savedTemplate = (templateList ?? []).find(t => t.id === savedComparativeAnalysisTemplateId);
+        const savedTemplate = (templateList ?? []).find(
+          t => t.id === savedComparativeAnalysisTemplateId,
+        );
         if (savedTemplate) {
           if (savedTemplate.propertyType) setCollateralType(savedTemplate.propertyType);
           if (savedTemplate.templateCode) setSelectedTemplateCode(savedTemplate.templateCode);
@@ -265,7 +258,15 @@ export function DirectComparisonPanel({
       reset,
     });
     setIsGenerated(true);
-  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors]);
+  }, [
+    comparativeSurveys,
+    isGenerated,
+    methodId,
+    methodType,
+    property,
+    reset,
+    savedComparativeFactors,
+  ]);
 
   // Restore pricingTemplate when template detail query resolves (e.g. after restore from saved data)
   useEffect(() => {
@@ -282,8 +283,14 @@ export function DirectComparisonPanel({
     if (!methodId || !methodType || !property) return;
 
     // Only re-init when the set of surveys actually changed
-    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
-    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    const formSurveyIds = (getValues('comparativeSurveys') ?? [])
+      .map(s => s.marketId)
+      .sort()
+      .join(',');
+    const currentSurveyIds = comparativeSurveys
+      .map(s => s.id)
+      .sort()
+      .join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
     syncDirectComparisonFormSurveys({
@@ -316,9 +323,12 @@ export function DirectComparisonPanel({
   }, [isDirty, onCalculationMethodDirty]);
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider methods={methods} schema={DirectComparisonDto}>
       <form
-        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
+        onSubmit={e => {
+          e.preventDefault();
+          handleSubmit(handleOnSubmit)(e);
+        }}
         className="flex flex-col h-full gap-4"
       >
         <PricingAnalysisTemplateSelector
@@ -333,13 +343,12 @@ export function DirectComparisonPanel({
           template={{
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
-            options:
-              (templateList ?? [])
-                .filter(t => t.propertyType === collateralType)
-                .map(t => ({
-                  value: t.templateCode,
-                  label: t.templateName,
-                })),
+            options: (templateList ?? [])
+              .filter(t => t.propertyType === collateralType)
+              .map(t => ({
+                value: t.templateCode,
+                label: t.templateName,
+              })),
           }}
         />
         {isGenerated && (

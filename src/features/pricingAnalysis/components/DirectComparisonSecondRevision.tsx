@@ -41,7 +41,6 @@ export function DirectComparisonSecondRevision({
           return <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>;
         })}
         <td className={clsx('bg-gray-100', collateralColumnBody)}></td>
-
       </tr>
       {collateralType === 'LB' && (
         <>
@@ -68,7 +67,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -76,7 +74,16 @@ export function DirectComparisonSecondRevision({
                 <span>Land Price</span>
                 <div className="flex flex-row justify items-center gap-1">
                   <div className="w-24">
-                    <RHFInputCell fieldName={calculationLandPricePath()} inputType="number" />
+                    <RHFInputCell
+                      fieldName={calculationLandPricePath()}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 2,
+                        maxIntegerDigits: 15,
+                        maxValue: 999_999_999_999_999.0,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                   <span>Baht/ Sq. Wa</span>
                 </div>
@@ -96,7 +103,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -119,7 +125,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
         </>
       )}
@@ -146,7 +151,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -154,7 +158,16 @@ export function DirectComparisonSecondRevision({
                 <span>Usable area price</span>
                 <div className="flex flex-row justify items-center gap-1">
                   <div className="w-24">
-                    <RHFInputCell fieldName={calculationUsableAreaPricePath()} inputType="number" />
+                    <RHFInputCell
+                      fieldName={calculationUsableAreaPricePath()}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 2,
+                        maxIntegerDigits: 15,
+                        maxValue: 999_999_999_999_999.0,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                   <span>Baht/ Sq. Meter</span>
                 </div>
@@ -172,7 +185,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -197,7 +209,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -217,7 +228,6 @@ export function DirectComparisonSecondRevision({
               );
             })}
             <td className={clsx('bg-white', collateralColumnBody)}></td>
-
           </tr>
         </>
       )}

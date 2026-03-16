@@ -8,6 +8,10 @@ export function floorToTenThousands(num) {
   return Math.floor(num / 10000) * 10000;
 }
 
+export function floorToThousands(num) {
+  return Math.floor(num / 1000) * 1000;
+}
+
 export const toFiniteNumber = (v: unknown, fallback = 0): number => {
   if (typeof v === 'number') return Number.isFinite(v) ? v : fallback;
 
@@ -122,5 +126,5 @@ export function calcWeightedAdjustValue(totalAdjustValue: unknown, weight: unkno
 
 export function calcFinalValueRoundedValue(finalValue: unknown): number {
   const v = Number(finalValue) || 0;
-  return floorToTenThousands(v);
+  return floorToThousands(v);
 }

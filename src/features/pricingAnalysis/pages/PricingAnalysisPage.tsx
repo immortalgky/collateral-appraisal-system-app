@@ -91,12 +91,11 @@ function PricingAnalysisPage() {
             queryKey: propertyGroupKeys.detail(appraisalId, groupId),
           });
         }
-        navigate(
-          `/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`,
-          { replace: true },
-        );
+        navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`, {
+          replace: true,
+        });
       })
-      .catch((err) => {
+      .catch(err => {
         creatingRef.current = false;
         setCreateState('error');
         setCreateError(err?.message ?? 'An unexpected error occurred.');
@@ -253,7 +252,15 @@ function PricingAnalysisContent({
   // (8b) Manual mode — set final value on blur
   const setFinalValueMutation = useSetFinalValue();
   const handleManualValueChange = useCallback(
-    ({ approachType, methodType, value }: { approachType: string; methodType: string; value: number }) => {
+    ({
+      approachType,
+      methodType,
+      value,
+    }: {
+      approachType: string;
+      methodType: string;
+      value: number;
+    }) => {
       // Find the method's server ID from summarySelected
       const approach = state.summarySelected?.find(a => a.approachType === approachType);
       const method = approach?.methods.find(m => m.methodType === methodType);
@@ -297,7 +304,7 @@ function PricingAnalysisContent({
               <DispatchCtx.Provider value={dispatch}>
                 {!isLoading && (
                   <div className="flex-1 min-w-0 min-h-0 flex-col">
-                    <div>
+                    <div className="flex flex-col gap-2">
                       <PricingAnalysisAccordion
                         state={state}
                         appraisalId={appraisalId}

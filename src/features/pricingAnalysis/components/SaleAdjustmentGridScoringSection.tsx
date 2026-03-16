@@ -240,10 +240,17 @@ export const SaleAdjustmentGridScoringSection = ({
                       <button
                         type="button"
                         className="text-gray-500 hover:text-primary-600 transition-colors"
-                        onClick={() => { setSelectedSurveyId(survey.id ?? null); onModalOpen(); }}
+                        onClick={() => {
+                          setSelectedSurveyId(survey.id ?? null);
+                          onModalOpen();
+                        }}
                         title="View market comparable detail"
                       >
-                        <Icon name="arrow-up-right-from-square" style="solid" className="size-3.5" />
+                        <Icon
+                          name="arrow-up-right-from-square"
+                          style="solid"
+                          className="size-3.5"
+                        />
                       </button>
                     </div>
                   </th>
@@ -498,15 +505,23 @@ export const SaleAdjustmentGridScoringSection = ({
                 const hasAdjustAmt = !!(
                   getValues(calculationOfferingPriceAdjustmentAmtPath({ column: columnIndex })) > 0
                 );
-                if (!hasOfferPrice)
-                  return <td key={survey.id} className={'border-b border-r border-gray-300'}></td>;
                 return (
                   <td key={survey.id} className={'border-b border-r border-gray-300'}>
-                    <RHFInputCell
-                      fieldName={calculationOfferingPriceAdjustmentPctPath({ column: columnIndex })}
-                      inputType="number"
-                      disabled={hasAdjustAmt}
-                    />
+                    {hasOfferPrice && (
+                      <RHFInputCell
+                        fieldName={calculationOfferingPriceAdjustmentPctPath({
+                          column: columnIndex,
+                        })}
+                        inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100.0,
+                          allowNegative: false,
+                        }}
+                        disabled={hasAdjustAmt}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -532,6 +547,12 @@ export const SaleAdjustmentGridScoringSection = ({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 15,
+                          maxValue: 999_999_999_999_999.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustPct}
                       />
                     )}
@@ -615,15 +636,21 @@ export const SaleAdjustmentGridScoringSection = ({
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasSalePrice = !!survey.salePrice;
                 const hasOfferPrice = !!survey.offerPrice;
-                if (!hasSalePrice)
-                  return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
                 return (
                   <td key={survey.id} className={clsx(surveyColumnBody)}>
-                    <RHFInputCell
-                      fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
-                      inputType="number"
-                      disabled={hasOfferPrice}
-                    />
+                    {hasSalePrice && (
+                      <RHFInputCell
+                        fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
+                        inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100.0,
+                          allowNegative: false,
+                        }}
+                        disabled={hasOfferPrice}
+                      />
+                    )}
                   </td>
                 );
               })}
@@ -742,6 +769,7 @@ export const SaleAdjustmentGridScoringSection = ({
                                   column: columnIndex,
                                 })}
                                 inputType="number"
+                                number={{ decimalPlaces: 2, maxIntegerDigits: 3, maxValue: 100.0 }}
                                 onUserChange={v => {
                                   if (v == null) return null;
                                   const level =
@@ -790,6 +818,7 @@ export const SaleAdjustmentGridScoringSection = ({
                       <RHFInputCell
                         fieldName={adjustmentFactorsRemarkPath({ row: rowIndex })}
                         inputType="text"
+                        text={{ maxLength: 200 }}
                       />
                     </div>
                   </td>
@@ -876,6 +905,12 @@ export const SaleAdjustmentGridScoringSection = ({
                       <RHFInputCell
                         fieldName={calculationWeightPath({ column: columnIndex })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 1,
+                          maxValue: 1.0,
+                          allowNegative: false,
+                        }}
                       />
                     </div>
                   </td>
@@ -943,7 +978,16 @@ export const SaleAdjustmentGridScoringSection = ({
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
               <td className={clsx('bg-gray-100', collateralColumnBody)}>
-                <RHFInputCell fieldName={finalValueRoundedPath()} inputType="number" />
+                <RHFInputCell
+                  fieldName={finalValueRoundedPath()}
+                  inputType="number"
+                  number={{
+                    decimalPlaces: 2,
+                    maxIntegerDigits: 15,
+                    maxValue: 999_999_999_999_999.0,
+                    allowNegative: false,
+                  }}
+                />
               </td>
             </tr>
           </tbody>

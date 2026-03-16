@@ -5,6 +5,7 @@ import {
   calcSum,
   calcWeightedScore,
   floorToTenThousands,
+  floorToThousands,
   round2,
   toFiniteNumber,
   toNumberArray,
@@ -308,6 +309,7 @@ export function buildWQSFinalValueDerivedRules(args: {
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
     finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
+    finalValueAppraisalPrice: finalValueAppraisalPricePath,
     finalValuePriceDifferentiate: finalValuePriceDifferentiatePath,
   } = wqsFieldPath;
 
@@ -351,7 +353,7 @@ export function buildWQSFinalValueDerivedRules(args: {
       },
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValueFinalValuePath()) ?? 0;
-        return floorToTenThousands(finalValue);
+        return floorToThousands(finalValue);
       },
     },
     {
@@ -461,7 +463,7 @@ export function buildWQSFinalValueDerivedRules(args: {
       deps: [finalValueAppraisalPriceRoundedPath(), finalValueFinalValueRoundedPath()],
       compute: ({ getValues }) => {
         const appraisalPriceRounded = getValues(finalValueAppraisalPriceRoundedPath()) ?? 0;
-        const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
+        const finalValueRounded = getValues(finalValueAppraisalPricePath()) ?? 0;
         return appraisalPriceRounded - finalValueRounded;
       },
     },

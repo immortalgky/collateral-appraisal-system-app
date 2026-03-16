@@ -3,7 +3,11 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
-import { round2, toFiniteNumber } from '@features/pricingAnalysis/domain/calculateWQS.ts';
+import {
+  floorToThousands,
+  round2,
+  toFiniteNumber,
+} from '@features/pricingAnalysis/domain/calculateWQS.ts';
 import {
   type DerivedFieldRule,
   useDerivedFields,
@@ -42,12 +46,12 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
         const isIncludeLandArea = getValues(includeLandAreaPath());
         const landArea = getValues(landAreaPath());
         if (isIncludeLandArea && !!landArea) {
-          return round2(finalValueRounded * (landArea ?? 0));
+          return floorToThousands(finalValueRounded * (landArea ?? 0));
         }
 
         const usableArea = getValues(usableAreaPath());
         if (isIncludeLandArea && !!usableArea) {
-          return round2(finalValueRounded * (usableArea ?? 0));
+          return floorToThousands(finalValueRounded * (usableArea ?? 0));
         }
 
         return finalValueRounded;
@@ -89,7 +93,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     <div className="flex flex-col gap-3 text-sm">
       {/* Coefficient of decision */}
       <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Coefficient of decision</span>
+        <span className="w-48 text-gray-500">Coefficient of decision</span>
         <RHFInputCell
           fieldName={coeffPath()}
           inputType="display"
@@ -110,7 +114,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       {/* Include Area toggle */}
       {(isLand || isUsable) && (
         <div className="flex items-center gap-4">
-          <span className="w-44 text-gray-500">Include Area</span>
+          <span className="w-48 text-gray-500">Include Area</span>
           <RHFInputCell
             fieldName={includeLandAreaPath()}
             inputType="toggle"
@@ -122,7 +126,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       {/* Area (shown when include area is on) */}
       {includeLandArea && (isLand || isUsable) && (
         <div className="flex items-center gap-4">
-          <span className="w-44 text-gray-500">Area</span>
+          <span className="w-48 text-gray-500">Area</span>
           <span className="font-medium text-gray-800">
             <RHFInputCell
               fieldName={areaFieldPath}
@@ -136,10 +140,12 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
 
       {/* Final Value (Rounded) */}
       <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Final Value (Rounded)</span>
+        <span className="w-48 text-gray-500">
+          Final Value (Rounded) {includeLandArea ? 'x Area' : ''}
+        </span>
         <span className="font-medium text-gray-800">
           <RHFInputCell
-            fieldName={finalValueRoundedPath()}
+            fieldName={finalValueAppraisalPricePath()}
             inputType="display"
             accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
           />
@@ -149,9 +155,18 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
 
       {/* Appraisal Price */}
       <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
-        <span className="w-44 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
+        <span className="w-48 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
         <div className="w-40">
-          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType="number" />
+          <RHFInputCell
+            fieldName={appraisalPriceRoundedPath()}
+            inputType="number"
+            number={{
+              decimalPlaces: 2,
+              maxIntegerDigits: 15,
+              maxValue: 999_999_999_999_999.0,
+              allowNegative: false,
+            }}
+          />
         </div>
         <span className="text-gray-500">Baht</span>
         <div className="flex items-center">
@@ -160,7 +175,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
             inputType="display"
             accessor={({ value }) => {
               const num = Number(value) || 0;
-              if (num === 0) return <span className="text-gray-400">-</span>;
+              if (num === 0) return <span className="text-gray-400"></span>;
               const color = num > 0 ? 'text-green-600' : 'text-red-600';
               const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
               const icon = num > 0 ? 'arrow-up' : 'arrow-down';
@@ -179,7 +194,7 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
 
       {/* Include building cost toggle */}
       {/* <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Include building cost</span>
+        <span className="w-48 text-gray-500">Include building cost</span>
         <RHFInputCell
           fieldName={hasBuildingCostPath()}
           inputType="toggle"
