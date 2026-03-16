@@ -2,7 +2,10 @@ import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { useGetMarketComparableTemplate, useGetMarketComparableTemplateById, } from '../api/marketComparable';
+import {
+  useGetMarketComparableTemplate,
+  useGetMarketComparableTemplateById,
+} from '../api/marketComparable';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import { getTranslatedFactorName } from '@shared/utils/translationUtils';
@@ -167,6 +170,7 @@ const MarketComparableForm = () => {
       name: 'infoDateTime',
       label: '',
       wrapperClassName: 'col-span-12',
+      disableFutureDates: true,
     },
     {
       type: 'text-input',
@@ -220,6 +224,7 @@ const MarketComparableForm = () => {
       wrapperClassName: 'col-span-12',
       disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
       disabledValue: null,
+      disableFutureDates: true,
     },
   ];
 
