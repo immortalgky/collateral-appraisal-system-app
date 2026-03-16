@@ -20,12 +20,20 @@ interface RHFInputCellProps {
   fieldName: string;
   inputType?: 'number' | 'select' | 'text' | 'display' | 'toggle';
   disabled?: boolean;
+  number?: {
+    decimalPlaces?: number;
+    maxIntegerDigits?: number;
+    allowNegative?: boolean;
+    maxValue?: number;
+    minValue?: number;
+  };
   toggle?: {
     checked: unknown;
     options: [string, string];
   };
   text?: {
-    label: string;
+    label?: string;
+    maxLength?: number;
   };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
@@ -41,6 +49,7 @@ export const RHFInputCell = ({
   fieldName,
   inputType,
   disabled,
+  number,
   toggle,
   text,
   options,
@@ -60,12 +69,16 @@ export const RHFInputCell = ({
       <NumberInput
         {...field}
         value={field.value ?? ''}
+        decimalPlaces={number?.decimalPlaces}
+        maxIntegerDigits={number?.maxIntegerDigits}
         onChange={e => {
           const parsed = toNumber(e.target.value);
           const next = onUserChange ? onUserChange(parsed as any) : parsed;
           field.onChange(next);
         }}
-        allowNegative={true}
+        max={number?.maxValue}
+        min={number?.minValue}
+        allowNegative={number?.allowNegative ?? true}
         disabled={disabled}
         error={error?.message}
         inputMode="numeric"
@@ -119,6 +132,7 @@ export const RHFInputCell = ({
         }}
         label={text?.label ?? ''}
         error={error?.message}
+        maxLength={text?.maxLength}
       />
     );
   }

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm, type SubmitErrorHandler } from 'react-hook-form';
+import { useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelector';
 import { MethodFooterActions } from './MethodFooterActions';
 import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
@@ -27,6 +27,7 @@ import { restoreWQSFromSavedData } from '@features/pricingAnalysis/adapters/rest
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
+import { FormProvider } from '@/shared/components/form/FormProvider';
 
 interface WQSPanelProps {
   activeMethod?: {
@@ -46,7 +47,11 @@ interface WQSPanelProps {
   savedCalculations?: CalculationType[];
   savedComparativeAnalysisTemplateId?: string | null;
   savedMethodValue?: number | null;
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -99,7 +104,9 @@ export function WQSPanel({
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
   // Look up template id from the list by code, then fetch detail
-  const selectedTemplateId = (templateList ?? []).find(t => t.templateCode === selectedTemplateCode)?.id;
+  const selectedTemplateId = (templateList ?? []).find(
+    t => t.templateCode === selectedTemplateCode,
+  )?.id;
   const templateDetailQuery = useGetComparativeAnalysisTemplateById(selectedTemplateId);
 
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
@@ -203,22 +210,6 @@ export function WQSPanel({
     }
   };
 
-  const onInvalid: SubmitErrorHandler<WQSFormType> = errs => {
-    const messages = flattenRHFErrors(errs);
-
-    toast.error(
-      <div>
-        <div className="font-semibold">Please fix these fields</div>
-        <ul className="mt-1 list-disc pl-5">
-          {messages.slice(0, 6).map(m => (
-            <li key={m}>{m}</li>
-          ))}
-        </ul>
-      </div>,
-      { id: 'wqs-form-errors' },
-    );
-  };
-
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
@@ -240,11 +231,15 @@ export function WQSPanel({
       // Set appraisal price from saved method value AFTER reset, with shouldDirty
       // so derived rules won't overwrite it with the calculated final value
       if (savedMethodValue != null && savedMethodValue !== 0) {
-        setValue('WQSFinalValue.appraisalPriceRounded' as any, savedMethodValue, { shouldDirty: true });
+        setValue('WQSFinalValue.appraisalPriceRounded' as any, savedMethodValue, {
+          shouldDirty: true,
+        });
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
-        const savedTemplate = (templateList ?? []).find(t => t.id === savedComparativeAnalysisTemplateId);
+        const savedTemplate = (templateList ?? []).find(
+          t => t.id === savedComparativeAnalysisTemplateId,
+        );
         if (savedTemplate) {
           if (savedTemplate.propertyType) setCollateralType(savedTemplate.propertyType);
           if (savedTemplate.templateCode) setSelectedTemplateCode(savedTemplate.templateCode);
@@ -265,7 +260,16 @@ export function WQSPanel({
       reset,
     });
     setIsGenerated(true);
-  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors, savedFactorScores]);
+  }, [
+    comparativeSurveys,
+    isGenerated,
+    methodId,
+    methodType,
+    property,
+    reset,
+    savedComparativeFactors,
+    savedFactorScores,
+  ]);
 
   // Restore pricingTemplate when template detail query resolves (e.g. after restore from saved data)
   useEffect(() => {
@@ -282,8 +286,14 @@ export function WQSPanel({
     if (!methodId || !methodType || !property) return;
 
     // Only re-init when the set of surveys actually changed
-    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
-    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    const formSurveyIds = (getValues('comparativeSurveys') ?? [])
+      .map(s => s.marketId)
+      .sort()
+      .join(',');
+    const currentSurveyIds = comparativeSurveys
+      .map(s => s.id)
+      .sort()
+      .join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
     syncWQSFormSurveys({
@@ -323,9 +333,12 @@ export function WQSPanel({
   }, [isDirty, onCalculationMethodDirty]);
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider methods={methods} schema={WQSDto}>
       <form
-        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
+        onSubmit={e => {
+          e.preventDefault();
+          handleSubmit(handleOnSubmit)(e);
+        }}
         className="flex flex-col h-full gap-4"
       >
         <PricingAnalysisTemplateSelector
@@ -340,13 +353,12 @@ export function WQSPanel({
           template={{
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
-            options:
-              (templateList ?? [])
-                .filter(t => t.propertyType === collateralType)
-                .map(t => ({
-                  value: t.templateCode,
-                  label: t.templateName,
-                })),
+            options: (templateList ?? [])
+              .filter(t => t.propertyType === collateralType)
+              .map(t => ({
+                value: t.templateCode,
+                label: t.templateName,
+              })),
           }}
         />
         {!isLoading && (

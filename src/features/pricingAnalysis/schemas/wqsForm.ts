@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
+  required_error: `${fieldName} ${msg}`,
+  invalid_type_error: `${fieldName} ${msg}`,
+});
+
 /** select surveys section */
 const ComparativeFactor = z
   .object({
@@ -22,24 +27,32 @@ const WQSSurveyScore = z
   .object({
     id: z.string().nullable().optional(),
     marketId: z.string(),
-    surveyScore: z.number(),
+    surveyScore: z.number().nullable(),
     weightedSurveyScore: z.number(),
   })
   .passthrough();
 
-const WQSScore = z
-  .object({
-    factorId: z.string(),
-    factorCode: z.string(),
-    weight: z.number(),
-    intensity: z.number(),
-    weightedIntensity: z.number(),
-    surveys: z.array(WQSSurveyScore),
-    collateral: z.number(),
-    collateralWeightedScore: z.number(),
-    collateralScoreId: z.string().nullable(),
-  })
-  .partial();
+const WQSScore = z.object({
+  factorId: z.string(),
+  factorCode: z.string(),
+  weight: z.number(requireMsg('Weight')),
+  intensity: z.number(requireMsg('Intensity')),
+  weightedIntensity: z.number(),
+  surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
+    for (const [i, item] of items.entries()) {
+      if (item.surveyScore == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Survey ${i + 1}'s score is required`, // 1-based index
+          path: [i, 'surveyScore'], // target the correct field
+        });
+      }
+    }
+  }),
+  collateral: z.number(requireMsg('Collateral score')),
+  collateralWeightedScore: z.number(),
+  collateralScoreId: z.string().nullable(),
+});
 
 /** WQS calculation section */
 const WQSCalculation = z
@@ -63,7 +76,7 @@ const WQSCalculation = z
 const WQSFinalValue = z
   .object({
     finalValue: z.number(),
-    finalValueRounded: z.number(),
+    finalValueRounded: z.number(requireMsg('Final value (rounded)')),
     coefficientOfDecision: z.number(),
     standardError: z.number(),
     intersectionPoint: z.number(),
@@ -75,7 +88,7 @@ const WQSFinalValue = z
     landArea: z.number().optional(),
     usableArea: z.number().optional(),
     appraisalPrice: z.number(),
-    appraisalPriceRounded: z.number(),
+    appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
   })
   .passthrough();
 

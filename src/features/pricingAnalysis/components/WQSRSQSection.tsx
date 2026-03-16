@@ -46,11 +46,13 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
   const calculations = useWatch({ control, name: 'WQSCalculations' });
 
   // Build scatter data: one point per survey
-  const scatterData = comparativeSurveys.map((_survey, idx) => {
-    const weightedScore = totalScores?.surveys?.[idx]?.totalWeightedScore ?? 0;
-    const adjustedValue = calculations?.[idx]?.adjustedValue ?? 0;
-    return { x: Number(weightedScore), y: Number(adjustedValue) };
-  }).filter(p => p.x !== 0 || p.y !== 0);
+  const scatterData = comparativeSurveys
+    .map((_survey, idx) => {
+      const weightedScore = totalScores?.surveys?.[idx]?.totalWeightedScore ?? 0;
+      const adjustedValue = calculations?.[idx]?.adjustedValue ?? 0;
+      return { x: Number(weightedScore), y: Number(adjustedValue) };
+    })
+    .filter(p => p.x !== 0 || p.y !== 0);
 
   // Regression line endpoints
   const xValues = scatterData.map(p => p.x);
@@ -80,7 +82,7 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
         onClick={() => setIsOpen(prev => !prev)}
         className="flex w-full items-center justify-between px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-50 transition-colors"
       >
-        <span>RSQ</span>
+        <span>Regression</span>
         <Icon
           style="solid"
           name="chevron-down"
@@ -104,7 +106,9 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
                       <td className="py-1 pr-2 text-gray-600 truncate">{row.label}</td>
                       <td className="py-1 text-right font-medium truncate">
                         {typeof row.value === 'number'
-                          ? row.value.toLocaleString(undefined, { maximumFractionDigits: row.decimals ?? 2 })
+                          ? row.value.toLocaleString(undefined, {
+                              maximumFractionDigits: row.decimals ?? 2,
+                            })
                           : row.value}
                       </td>
                     </tr>
@@ -124,7 +128,12 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
                       dataKey="x"
                       name="Weighted Score"
                       tick={{ fontSize: 11 }}
-                      label={{ value: 'Weighted Score', position: 'bottom', offset: 0, fontSize: 11 }}
+                      label={{
+                        value: 'Weighted Score',
+                        position: 'bottom',
+                        offset: 0,
+                        fontSize: 11,
+                      }}
                     />
                     <YAxis
                       type="number"
@@ -134,9 +143,7 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
                       width={70}
                       tickFormatter={v => v.toLocaleString()}
                     />
-                    <Tooltip
-                      formatter={(value: any) => value?.toLocaleString?.() ?? value}
-                    />
+                    <Tooltip formatter={(value: any) => value?.toLocaleString?.() ?? value} />
                     {/* Shaded band: lowest to highest estimate */}
                     {Number(lowestEstimate) > 0 && Number(highestEstimate) > 0 && (
                       <ReferenceArea

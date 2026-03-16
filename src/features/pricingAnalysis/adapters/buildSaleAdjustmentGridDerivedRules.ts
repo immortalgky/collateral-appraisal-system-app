@@ -10,6 +10,8 @@ import {
   calcTotalAdjustValue,
   calcTotalSecondRevision,
   calcWeightedAdjustValue,
+  round2,
+  toFiniteNumber,
 } from '@features/pricingAnalysis/domain/calculateSaleAdjustmentGrid.ts';
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
@@ -353,9 +355,7 @@ export function buildSaleGridFinalValueRules(arg: {
           },
           0,
         );
-        return Number.isFinite(totalWeightedAdjustValue)
-          ? parseFloat(totalWeightedAdjustValue.toFixed(2))
-          : 0;
+        return round2(toFiniteNumber(totalWeightedAdjustValue));
       },
     },
     {
