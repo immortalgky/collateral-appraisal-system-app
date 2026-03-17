@@ -320,7 +320,11 @@ function buildConditionalRefinement(fields: FormField[]) {
       if (isRequired) {
         const value = getNestedValue(data, field.name);
         const isNumberField = field.type === 'number-input';
-        if (value == null || value === '' || (isNumberField && value === 0)) {
+        if (
+          value == null ||
+          value === '' ||
+          (isNumberField && value === 0 && field.min == null)
+        ) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: field.name.split('.'),
