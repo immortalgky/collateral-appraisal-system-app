@@ -23,6 +23,7 @@ const DCFCategory = z.object({
   id: z.string(),
   categoryType: z.string(),
   categoryName: z.string(),
+  identifier: z.string(),
   totalCategoryValues: z.array(YearlyValue),
   assumptions: z.array(DCFAssumption),
 });
@@ -31,6 +32,7 @@ const DCFSection = z.object({
   id: z.string(),
   sectionType: z.string(),
   sectionName: z.string(),
+  identifier: z.string(),
   totalSectionValues: z.array(YearlyValue),
   categories: z.array(DCFCategory),
 });
