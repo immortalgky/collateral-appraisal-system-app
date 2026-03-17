@@ -17,7 +17,11 @@ export function ProtectedRoute({ component }: { component: JSX.Element }) {
   if (!isAuthenticated && isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
+          role="status"
+          aria-label="Authenticating"
+        />
       </div>
     );
   }
