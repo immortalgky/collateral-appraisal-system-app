@@ -51,7 +51,7 @@ const WQSScore = z.object({
   }),
   collateral: z.number(requireMsg('Collateral score')),
   collateralWeightedScore: z.number(),
-  collateralScoreId: z.string().nullable(),
+  collateralScoreId: z.string().nullable().optional(),
 });
 
 /** WQS calculation section */
