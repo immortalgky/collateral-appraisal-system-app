@@ -7,6 +7,7 @@ type AuthStore = {
   isLoading: boolean;
   error: string | null;
   setUser: (user: User | null) => void;
+  setToken: (token: string) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   login: (user: User, token: string) => void;
@@ -19,7 +20,10 @@ export const useAuthStore = create<AuthStore>(set => ({
   isLoading: false,
   error: null,
 
-  setUser: user => set({ user }),
+  setUser: user => set({ user, isAuthenticated: !!user }),
+  setToken: token => {
+    localStorage.setItem('auth_token', token);
+  },
   setLoading: isLoading => set({ isLoading }),
   setError: error => set({ error }),
 

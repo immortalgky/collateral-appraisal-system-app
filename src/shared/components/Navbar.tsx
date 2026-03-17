@@ -4,6 +4,7 @@ import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
+import { queryClient } from '@app/queryClient';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
 import Avatar from '@shared/components/Avatar';
@@ -27,7 +28,12 @@ const filterColorStyles: Record<string, { bg: string; text: string; activeBg: st
 };
 
 function handleLogout(href: string) {
-  useAuthStore.getState().logout();
+  // Navigate FIRST — clearing Zustand state would trigger ProtectedRoute
+  // to redirect to /login, which cancels the server logout navigation.
+  // Clear storage directly without triggering React re-renders.
+  localStorage.removeItem('auth_token');
+  queryClient.clear();
+  sessionStorage.clear();
   window.location.replace(href);
 }
 

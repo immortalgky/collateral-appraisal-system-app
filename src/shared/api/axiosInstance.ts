@@ -1,4 +1,5 @@
 import axios, { type AxiosError } from 'axios';
+import { queryClient } from '@app/queryClient';
 import { extractApiError } from '../utils/errorUtils';
 import type { ProblemDetails } from '../types/api';
 
@@ -46,6 +47,7 @@ axiosInstance.interceptors.response.use(
     // Handle authentication errors
     if (response && response.status === 401) {
       localStorage.removeItem('auth_token');
+      queryClient.clear();
       window.location.href = '/login';
       return Promise.reject(error);
     }
