@@ -62,6 +62,8 @@ export const requestFields: FormField[] = [
     name: 'detail.prevAppraisalDate',
     disabled: true,
     wrapperClassName: 'col-span-1',
+    disableFutureDates: true,
+    disableToday: true,
   },
   {
     type: 'dropdown',
@@ -256,6 +258,8 @@ export const appointmentAndFeeFields: FormField[] = [
     name: 'detail.appointment.appointmentDateTime',
     wrapperClassName: 'col-span-2',
     required: true,
+    disablePastDates: true,
+    disableToday: true,
   },
   {
     type: 'textarea',
@@ -703,6 +707,7 @@ export const titleAddressFields: FormField[] = [
     addressSource: 'title',
     wrapperClassName: 'col-span-2',
     required: true,
+    disablePastDates: true,
   },
   {
     type: 'text-input',

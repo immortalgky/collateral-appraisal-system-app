@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Avatar from '@/shared/components/Avatar';
 import { useSearchStaff } from '../api/administration';
 import type { InternalStaff } from '../types/administration';
 
@@ -29,15 +30,6 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect }: SearchStaffModalProps) 
     setSearchQuery('');
     setSelectedStaff(null);
     onClose();
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -85,19 +77,7 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect }: SearchStaffModalProps) 
                     }`}
                   >
                     {/* Avatar */}
-                    {staff.avatar ? (
-                      <img
-                        src={staff.avatar}
-                        alt={staff.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                        <span className="text-sm font-medium text-primary-700">
-                          {getInitials(staff.name)}
-                        </span>
-                      </div>
-                    )}
+                    <Avatar src={staff.avatar} name={staff.name} size="lg" />
 
                     {/* Staff Info */}
                     <div className="flex-1 min-w-0">

@@ -1374,7 +1374,7 @@ export const condoFields: FormField[] = [
   },
   {
     type: 'radio-group',
-    label: 'Condominium Conditions',
+    label: 'Condominium Condition',
     name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
     group: 'CondoCondition',
@@ -1718,6 +1718,7 @@ export const condoFacilityFields: FormField[] = [
     name: 'facilityTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilityType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'facilityType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -1920,6 +1921,211 @@ export const bathroomFloorFields: FormField[] = [
 ];
 
 // =============================================================================
+// Machine fields (from MachineDetailForm.tsx)
+// =============================================================================
+
+export const machineInfoFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Property Name',
+    name: 'propertyName',
+    wrapperClassName: 'col-span-12',
+    maxLength: 150,
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Check Owner',
+    name: 'isOwnerVerified',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Owner',
+    name: 'ownerName',
+    wrapperClassName: 'col-span-4',
+    disableWhen: { field: 'isOwnerVerified', is: false },
+    requiredWhen: { field: 'isOwnerVerified', is: true },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
+  },
+  {
+    type: 'radio-group',
+    label: 'Condition Use ',
+    name: 'conditionUse',
+    wrapperClassName: 'col-span-12',
+    group: 'ConditionUse',
+    orientation: 'horizontal',
+    variant: 'button',
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Can Use',
+    name: 'canUse',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Name',
+    name: 'machineName',
+    wrapperClassName: 'col-span-9',
+    maxLength: 300,
+  },
+  {
+    type: 'text-input',
+    label: 'Brand',
+    name: 'brand',
+    wrapperClassName: 'col-span-3',
+    maxLength: 150,
+  },
+  {
+    type: 'text-input',
+    label: 'Model',
+    name: 'model',
+    wrapperClassName: 'col-span-3',
+    maxLength: 100,
+  },
+  {
+    type: 'number-input',
+    label: 'Year',
+    name: 'yearOfManufacture',
+    wrapperClassName: 'col-span-2',
+    decimalPlaces: 0,
+    maxIntegerDigits: 4,
+    thousandSeparator: false,
+  },
+  {
+    type: 'dropdown',
+    label: 'Country of Manufacture',
+    name: 'countryOfManufacture',
+    wrapperClassName: 'col-span-4',
+    group: 'Country',
+  },
+  {
+    type: 'date-input',
+    label: 'Purchase Date',
+    name: 'purchaseDate',
+    wrapperClassName: 'col-span-6',
+    disableFutureDates: true,
+  },
+  {
+    type: 'number-input',
+    label: 'Purchase Price',
+    name: 'purchasePrice',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 15,
+    decimalPlaces: 2,
+  },
+  {
+    type: 'text-input',
+    label: 'Location ',
+    name: 'location',
+    wrapperClassName: 'col-span-12',
+    maxLength: 100,
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Condition ',
+    name: 'machineCondition',
+    wrapperClassName: 'col-span-9',
+    maxLength: 50,
+  },
+  {
+    type: 'number-input',
+    label: 'Machinery Age ',
+    name: 'machineAge',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 1,
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'text-input',
+    label: 'Useage Purpoes ',
+    name: 'usePurpose',
+    wrapperClassName: 'col-span-6',
+    maxLength: 300,
+  },
+  {
+    type: 'text-input',
+    label: 'Capacity',
+    name: 'capacity',
+    wrapperClassName: 'col-span-6',
+    maxLength: 300,
+  },
+  {
+    type: 'number-input',
+    label: 'Width',
+    name: 'width',
+    wrapperClassName: 'col-span-2',
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'number-input',
+    label: 'Length',
+    name: 'length',
+    wrapperClassName: 'col-span-2',
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'number-input',
+    label: 'Height',
+    name: 'height',
+    wrapperClassName: 'col-span-2',
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'text-input',
+    label: 'Energy Use',
+    name: 'energyUse',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Efficiency ',
+    name: 'machineEfficiency',
+    wrapperClassName: 'col-span-6',
+    maxLength: 50,
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Technology ',
+    name: 'machineTechnology',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
+    type: 'textarea',
+    label: 'Machinery Part ',
+    name: 'machinePart',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'other',
+    wrapperClassName: 'col-span-12',
+    maxLength: 100,
+  },
+  {
+    type: 'textarea',
+    label: 'Remark ',
+    name: 'remark',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+  {
+    type: 'textarea',
+    label: 'Appraiser Opinion ',
+    name: 'appraiserOpinion',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+];
+
+// =============================================================================
 
 export const allLandFields: FormField[] = [
   ...landInfoField,
@@ -1983,6 +2189,8 @@ export const allCondoFields: FormField[] = [
   ...inForestBoundaryFormFields,
   ...remarkFormFields,
 ];
+
+export const allMachineryFields: FormField[] = [...machineInfoFields];
 
 export const allAppraisalFields: FormField[] = [
   ...allLandFields,

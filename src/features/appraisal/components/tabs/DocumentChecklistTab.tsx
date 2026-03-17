@@ -965,6 +965,9 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
         type="file"
         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
         multiple
+        onClick={e => {
+          (e.target as HTMLInputElement).value = '';
+        }}
         onChange={e => e.target.files && handleUploadFromDevice(e.target.files)}
         className="hidden"
       />

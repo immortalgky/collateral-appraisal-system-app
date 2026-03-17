@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
+import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
 import SearchPreviewModal from '@shared/components/search/SearchPreviewModal';
@@ -223,10 +224,11 @@ export default function Navbar({
             <Menu as="div" className="relative">
               <MenuButton className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 transition-all">
                 <span className="sr-only">Open user menu</span>
-                <img
-                  alt=""
-                  src={currentUser?.avatarUrl || '/default-avatar.png'}
-                  className="size-9 rounded-xl object-cover ring-2 ring-gray-100"
+                <Avatar
+                  src={currentUser?.avatarUrl}
+                  name={`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'User'}
+                  size="md"
+                  className="rounded-xl ring-2 ring-gray-100"
                 />
                 <span className="hidden lg:flex lg:flex-col lg:items-start">
                   <span className="text-sm font-semibold text-gray-900">

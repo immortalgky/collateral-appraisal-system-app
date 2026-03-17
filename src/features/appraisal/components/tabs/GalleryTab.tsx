@@ -650,18 +650,22 @@ export const GalleryTab = ({ readOnly }: { readOnly?: boolean }) => {
   }, [appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto]);
 
   // Keep the ref in sync so the native drop handler can call uploadSingleFile
-  onDropFilesRef.current = (files: File[]) => {
+  onDropFilesRef.current = async (files: File[]) => {
     toast.success(`Uploading ${files.length} file(s)...`);
-    files.forEach(file => uploadSingleFile(file));
+    for (const file of files) {
+      await uploadSingleFile(file);
+    }
   };
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const fileArray = Array.from(files);
     toast.success(`Uploading ${fileArray.length} file(s)...`);
-    fileArray.forEach(file => uploadSingleFile(file));
+    for (const file of fileArray) {
+      await uploadSingleFile(file);
+    }
 
     // Reset input
     e.target.value = '';

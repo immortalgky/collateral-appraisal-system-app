@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { useAuthStore } from '@features/auth/store';
 import type { GetTasksParams, Task, TaskListResponse } from './types';
 
 /**
@@ -7,6 +8,7 @@ import type { GetTasksParams, Task, TaskListResponse } from './types';
  * GET /tasks
  */
 export const useGetTasks = (params: GetTasksParams = {}) => {
+  const user = useAuthStore(state => state.user);
   const {
     pageNumber = 0,
     pageSize = 10,
@@ -22,6 +24,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
   const queryKey = [
     'tasks',
     {
+      assigneeUserId: user?.username,
       pageNumber,
       pageSize,
       ...(search && { search }),
@@ -39,6 +42,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     queryFn: async (): Promise<TaskListResponse> => {
       const { data } = await axios.get('/tasks', {
         params: {
+          AssigneeUserId: user?.username,
           PageNumber: pageNumber,
           PageSize: pageSize,
           ...(search && { Search: search }),
@@ -65,11 +69,13 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
 export const useGetTasksForKanban = (
   params: Omit<GetTasksParams, 'pageNumber' | 'pageSize'> = {},
 ) => {
+  const user = useAuthStore(state => state.user);
   const { search, status, taskType, propertyType, purpose } = params;
 
   const queryKey = [
     'tasks-kanban',
     {
+      assigneeUserId: user?.username,
       ...(search && { search }),
       ...(status && { status }),
       ...(taskType && { taskType }),
@@ -83,6 +89,7 @@ export const useGetTasksForKanban = (
     queryFn: async (): Promise<Task[]> => {
       const { data } = await axios.get('/tasks', {
         params: {
+          AssigneeUserId: user?.username,
           PageNumber: 0,
           PageSize: 200,
           ...(search && { Search: search }),

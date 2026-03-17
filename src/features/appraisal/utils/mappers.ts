@@ -5,12 +5,14 @@ import type {
   createLandAndBuildingFormType,
   createLandFormType,
   createLandAndBuildingPMAFormType,
+  createMachineryFormType,
 } from '@/features/appraisal/schemas/form';
 import type {
   GetLandPropertyResponseType,
   GetBuildingPropertyResponseType,
   GetCondoPropertyResponseType,
   GetLandAndBuildingPropertyResponseType,
+  GetMachineryPropertyResponseType,
 } from '@shared/schemas/v1';
 import type { GetCondoPMAPropertyByIdResultType } from '@/shared/forms/typeCondo';
 import type { GetLandAndBuildingPMAPropertyByIdResultType } from '@/shared/forms/typeLandBuilding';
@@ -396,6 +398,40 @@ export const mapLandAndBuildingPropertyResponseToForm = (
       depreciationMethod: item.depreciationMethod ?? 'Gross',
       depreciationPeriods: item.depreciationPeriods ?? [],
     })),
+  };
+};
+
+export const mapMachineryPropertyResponseToForm = (
+  response: GetMachineryPropertyResponseType,
+): createMachineryFormType => {
+  return {
+    propertyName: response.propertyName ?? null,
+    isOwnerVerified: response.isOwnerVerified ?? true,
+    ownerName: response.ownerName ?? null,
+    canUse: response.canUse ?? true,
+    machineName: response.machineName ?? null,
+    brand: response.brand ?? null,
+    model: response.model ?? null,
+    yearOfManufacture: response.yearOfManufacture ?? null,
+    countryOfManufacture: response.countryOfManufacture ?? null,
+    purchaseDate: response.purchaseDate ?? null,
+    purchasePrice: response.purchasePrice ?? null,
+    capacity: response.capacity ?? null,
+    width: response.width ?? null,
+    length: response.length ?? null,
+    height: response.height ?? null,
+    energyUse: response.energyUse ?? null,
+    location: response.location ?? null,
+    conditionUse: response.conditionUse ?? null,
+    machineCondition: response.machineCondition ?? null,
+    machineAge: response.machineAge ?? null,
+    machineEfficiency: response.machineEfficiency ?? null,
+    machineTechnology: response.machineTechnology ?? null,
+    usePurpose: response.usePurpose ?? null,
+    machinePart: response.machinePart ?? null,
+    other: response.other ?? null,
+    remark: response.remark ?? null,
+    appraiserOpinion: response.appraiserOpinion ?? null,
   };
 };
 
