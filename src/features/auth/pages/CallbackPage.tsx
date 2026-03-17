@@ -25,7 +25,7 @@ function CallbackPage() {
 
     if (state !== storedState || !code || !codeVerifier) {
       console.error('Invalid state or missing code');
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
 
@@ -46,11 +46,11 @@ function CallbackPage() {
       })
       .then(tokens => {
         setToken(tokens.accessToken);
-        navigate('/');
+        navigate('/', { replace: true });
       })
       .catch(error => {
         console.error('Token exchange error:', error);
-        navigate('/login');
+        navigate('/login', { replace: true });
       });
   }, [setToken, navigate]);
 
