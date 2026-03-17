@@ -283,7 +283,7 @@ export const roadField: FormField[] = [
     label: 'Right of Way',
     name: 'rightOfWay',
     wrapperClassName: 'col-span-6',
-    maxIntegerDigits: 5,
+    maxIntegerDigits: 2,
     decimalPlaces: 0,
   },
   {
@@ -1245,13 +1245,12 @@ export const condoFields: FormField[] = [
     maxLength: 10,
   },
   {
-    type: 'number-input',
+    type: 'text-input',
     label: 'Floor No',
     name: 'floorNumber',
     wrapperClassName: 'col-span-2',
     required: true,
-    decimalPlaces: 0,
-    maxIntegerDigits: 3,
+    maxLength: 10,
   },
   {
     type: 'text-input',
@@ -1435,21 +1434,21 @@ export const condoLocationFields: FormField[] = [
     type: 'number-input',
     label: 'Distance',
     name: 'distanceFromMainRoad',
-    wrapperClassName: 'col-span-3',
-    maxIntegerDigits: 8,
+    wrapperClassName: 'col-span-4',
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
     label: 'Road Width',
     name: 'accessRoadWidth',
-    wrapperClassName: 'col-span-3',
-    maxIntegerDigits: 8,
+    wrapperClassName: 'col-span-4',
+    maxIntegerDigits: 3,
   },
   {
     type: 'number-input',
     label: 'Right of Way',
     name: 'rightOfWay',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
   },
   {
@@ -1961,7 +1960,7 @@ export const machineInfoFields: FormField[] = [
   {
     type: 'boolean-toggle',
     label: 'Can Use',
-    name: 'canUse',
+    name: 'isOperational',
     options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-3',
   },
@@ -2202,6 +2201,7 @@ export const allAppraisalFields: FormField[] = [
 // =============================================================================
 // Land titles fields
 // =============================================================================
+
 export const landtitlesFields: FormField[] = [
   {
     name: 'titleType',
@@ -2225,6 +2225,15 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    requiredWhen: {
+      conditions: [
+        { field: 'titleType', is: 'DEED' },
+        { field: 'titleType', is: 'NS3' },
+        { field: 'titleType', is: 'NS3K' },
+        { field: 'titleType', is: 'NS3KO' },
+      ],
+      match: 'any',
+    },
   },
   {
     name: 'pageNumber',
@@ -2232,6 +2241,15 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    requiredWhen: {
+      conditions: [
+        { field: 'titleType', is: 'DEED' },
+        { field: 'titleType', is: 'NS3' },
+        { field: 'titleType', is: 'NS3K' },
+        { field: 'titleType', is: 'NS3KO' },
+      ],
+      match: 'any',
+    },
   },
   {
     name: 'rawang',
@@ -2239,6 +2257,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 30,
+    requiredWhen: { field: 'titleType', is: 'DEED' },
   },
   {
     name: 'landParcelNumber',
@@ -2246,6 +2265,13 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    requiredWhen: {
+      conditions: [
+        { field: 'titleType', is: 'DEED' },
+        { field: 'titleType', is: 'NS3K' },
+      ],
+      match: 'any',
+    },
   },
   {
     name: 'surveyNumber',
@@ -2253,24 +2279,31 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    requiredWhen: { field: 'titleType', is: 'DEED' },
   },
   {
     name: 'mapSheetNumber',
     label: 'Sheet Number',
     type: 'text-input',
     wrapperClassName: 'col-span-3',
+    maxLength: 10,
+    requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
     name: 'aerialMapName',
     label: 'Aerial Photo Name',
     type: 'text-input',
     wrapperClassName: 'col-span-3',
+    maxLength: 100,
+    requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
     name: 'aerialMapNumber',
     label: 'Aerial Photo Number',
     type: 'text-input',
     wrapperClassName: 'col-span-3',
+    maxLength: 30,
+    requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
     name: 'rai',
@@ -2533,13 +2566,12 @@ export const condoPMAFields: FormField[] = [
     maxLength: 10,
   },
   {
-    type: 'number-input',
+    type: 'text-input',
     label: 'Floor No.',
     name: 'floorNumber',
     wrapperClassName: 'col-span-1',
     required: true,
-    maxIntegerDigits: 3,
-    decimalPlaces: 0,
+    maxLength: 10,
   },
   {
     type: 'text-input',

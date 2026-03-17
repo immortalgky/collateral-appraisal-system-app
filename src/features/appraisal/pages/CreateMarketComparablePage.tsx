@@ -175,7 +175,9 @@ const CreateMarketComparablePage = () => {
               queryKey: ['appraisals', appraisalId, 'comparables'],
             });
           }
+          skipWarning();
           toast.success('Market comparable updated successfully');
+          navigate(`/appraisals/${appraisalId}/property?tab=markets`);
         },
         onError: (error: any) => {
           toast.error(
