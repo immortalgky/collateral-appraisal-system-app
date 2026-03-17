@@ -422,7 +422,6 @@ export const transpotationField: FormField[] = [
     name: 'transportationAccessType',
     orientation: 'horizontal',
     group: 'Transportation',
-
     wrapperClassName: 'col-span-12',
   },
   {
@@ -910,7 +909,6 @@ export const encroachmentField: FormField[] = [
     wrapperClassName: 'col-span-6',
     disableWhen: { field: 'isEncroachingOthers', is: false },
     maxIntegerDigits: 8,
-    decimalPlaces: 2,
   },
   {
     type: 'textarea',
@@ -1450,6 +1448,7 @@ export const condoLocationFields: FormField[] = [
     name: 'rightOfWay',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
+    maxIntegerDigits: 2,
   },
   {
     type: 'radio-group',
