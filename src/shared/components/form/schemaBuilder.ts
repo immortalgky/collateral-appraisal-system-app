@@ -319,7 +319,8 @@ function buildConditionalRefinement(fields: FormField[]) {
       // 5. Enforce required — resolve dotted paths
       if (isRequired) {
         const value = getNestedValue(data, field.name);
-        if (value == null || value === '') {
+        const isNumberField = field.type === 'number-input';
+        if (value == null || value === '' || (isNumberField && value === 0)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: field.name.split('.'),
