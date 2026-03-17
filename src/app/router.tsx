@@ -48,34 +48,24 @@ const AppraisalIndexRedirect = () => {
   return null;
 };
 
-// Placeholder component for pages not yet implemented
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="flex flex-col items-center justify-center h-full gap-4">
-    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-      <span className="text-2xl">🚧</span>
-    </div>
-    <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-    <p className="text-gray-500">This page is coming soon</p>
-  </div>
-);
-
 export const router = createBrowserRouter([
+  // Auth routes — outside Layout (no sidebar/navbar)
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/callback',
+    element: <CallbackPage />,
+  },
   {
     path: '/',
-    element: <Layout />,
+    element: <ProtectedRoute component={<Layout />} />,
     errorElement: <ErrorPage />,
     children: [
       {
         index: true,
-        element: <ProtectedRoute component={<HomePage />} />,
-      },
-      {
-        path: 'login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'callback',
-        element: <CallbackPage />,
+        element: <HomePage />,
       },
       // Request Routes
       {
@@ -173,7 +163,7 @@ export const router = createBrowserRouter([
   // Appraisal Application Routes (separate layout with application sidebar)
   {
     path: 'appraisals/:appraisalId',
-    element: <AppraisalLayout />,
+    element: <ProtectedRoute component={<AppraisalLayout />} />,
     errorElement: <ErrorPage />,
     children: [
       {
