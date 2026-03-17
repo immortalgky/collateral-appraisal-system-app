@@ -11,7 +11,6 @@ export const dcfMockData: DCFFormType = {
   discountedRate: 5,
   finalValue: 0,
   finalValueRounded: 0,
-  // turnoverDays: 35,
   sections: [
     {
       id: 's1',
@@ -289,7 +288,6 @@ interface DCFTemplate {
   totalNumberOfDayInYear: number;
   capitalizeRate: number;
   discountedRate: number;
-  sections: 
 }
 
 const dcfTemplate: DCFTemplate = {
@@ -432,4 +430,15 @@ const dcfTemplate: DCFTemplate = {
       ],
     },
   ],
+};
+
+const methodProportion = {
+  proportionPct: 10,
+  assumptionId: 'xxxxxx0',
+};
+
+const methodGrowth = {
+  firstYearAmt: 800_000,
+  increaseRatePct: 10,
+  increaseRateEveryYrs: 3,
 };

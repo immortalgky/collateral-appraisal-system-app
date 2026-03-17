@@ -3,46 +3,8 @@ import type { DCFSectionFormType } from '../schemas/dcfForm';
 import { DiscountedCashFlowCategory } from './DiscountedCashFlowCategory';
 import { Icon } from '@/shared/components';
 import { useFormContext } from 'react-hook-form';
-
-// const colors = {
-//   bg: '#FAFBFC',
-//   surface: '#FFFFFF',
-//   border: '#E8ECF0',
-//   borderLight: '#F0F2F5',
-//   textPrimary: '#1A2332',
-//   textSecondary: '#5A6B7F',
-//   textMuted: '#94A3B8',
-//   income: {
-//     bg: 'bg-[#EFF8FF]',
-//     accent: '#2B7DE9',
-//     text: '#1A5CB0',
-//     light: '#DCEEFB',
-//     badge: 'bg-[#C4DFFA]',
-//   },
-//   expense: {
-//     bg: 'bg-[#FFF5F0]',
-//     accent: '#E8652B',
-//     text: '#B94817',
-//     light: '#FDE8DD',
-//     badge: '#FACEBE',
-//   },
-//   capex: { bg: '#F5F3FF', accent: '#7C5CFC', text: '#5B3FBF', light: '#EBE5FF', badge: '#D4C8FE' },
-//   financing: {
-//     bg: '#F0FDF4',
-//     accent: '#22A85B',
-//     text: '#167A3F',
-//     light: '#DCFAE6',
-//     badge: '#B5F0CB',
-//   },
-//   summary: {
-//     bg: '#FFF8EB',
-//     accent: '#E6A117',
-//     text: '#9A6B00',
-//     gradient: 'linear-gradient(135deg, #FFF8EB 0%, #FFF1D4 100%)',
-//   },
-//   positive: '#16A34A',
-//   negative: '#DC2626',
-// };
+import { RHFInputCell } from './table/RHFInputCell';
+import type { ReactNode } from 'react';
 
 export interface SectionColor {
   bg: string;
@@ -206,6 +168,7 @@ interface DynamicSectionProps {
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;
+  children: ReactNode;
   onEditAssumption: () => void;
 }
 function DynamicSection({
@@ -213,9 +176,9 @@ function DynamicSection({
   totalNumberOfYears,
   icon,
   color,
+  children,
   onEditAssumption,
 }: DynamicSectionProps) {
-  console.log('check pasing section', section);
   return (
     <>
       <SectionHeader
@@ -224,29 +187,19 @@ function DynamicSection({
         icon={icon}
         totalNumberOfYears={totalNumberOfYears}
       />
-      {(section?.categories ?? []).map(category => {
-        return (
-          <DiscountedCashFlowCategory
-            totalNumberOfYears={totalNumberOfYears}
-            key={category.id}
-            category={category}
-            color={color}
-            onEditAssumption={onEditAssumption}
-          />
-        );
-      })}
+      {children}
       <SectionTotalRow section={section} label={'Total'} color={color} variant={'section'} />
     </>
   );
 }
 
-interface DiscountedCashFlowScoringSectionProps {
+interface DiscountedCashFlowTableSectionProps {
   totalNumberOfYears: number;
 }
 
-export function DiscountedCashFlowScoringSection({
+export function DiscountedCashFlowTableSection({
   totalNumberOfYears,
-}: DiscountedCashFlowScoringSectionProps) {
+}: DiscountedCashFlowTableSectionProps) {
   const { getValues } = useFormContext();
   const sections = getValues('sections');
 
@@ -255,11 +208,26 @@ export function DiscountedCashFlowScoringSection({
       <table className="table table-xs min-w-max border-separate border-spacing-0 overflow-clip">
         <thead className="bg-neutral-50">
           <tr className="bg-white">
-            <td></td>
+            <td className="flex-1">
+              <div className="flex flex-col justify-end items-end">
+                <div className="w-16">
+                  <RHFInputCell
+                    fieldName="totalNumberOfDayInYear"
+                    inputType="number"
+                    number={{
+                      decimalPlaces: 0,
+                      maxIntegerDigits: 3,
+                      maxValue: 367,
+                      allowNegative: false,
+                    }}
+                  />
+                </div>
+              </div>
+            </td>
             {Array.from({ length: totalNumberOfYears }, (_, i) => (
               <td
                 key={i}
-                className={clsx('text-right px-3 py-4 font-medium whitespace-nowrap text-[14px]')}
+                className={clsx('text-right text-sm px-3 py-4 font-medium whitespace-nowrap')}
               >
                 Year {i}
               </td>
@@ -277,11 +245,24 @@ export function DiscountedCashFlowScoringSection({
                 totalNumberOfYears={totalNumberOfYears}
                 color={getSectionColor(section.sectionType)}
                 onEditAssumption={() => null}
-              />
+              >
+                {(section?.categories ?? []).map(category => {
+                  return (
+                    <DiscountedCashFlowCategory
+                      totalNumberOfYears={totalNumberOfYears}
+                      key={category.id}
+                      category={category}
+                      color={getSectionColor(section.sectionType)}
+                      onEditAssumption={() => null}
+                    />
+                  );
+                })}
+              </DynamicSection>
             );
           })}
 
           {/* last section */}
+          {}
           <tr className="bg-white">
             <td>Contract Rental Fee</td>
             {Array.from({ length: totalNumberOfYears }, (_, i) => (
@@ -305,7 +286,24 @@ export function DiscountedCashFlowScoringSection({
             ))}
           </tr>
           <tr className="bg-white">
-            <td>Terminal Revenue (Capitalization Rate)</td>
+            <td className="flex-1">
+              <div className="flex flex-row justify-between items-center">
+                <div>Terminal Revenue (Capitalization Rate)</div>
+                <div className="w-16 flex flex-row gap-1 justitfy-end items-center">
+                  <RHFInputCell
+                    fieldName="capitalizeRate"
+                    inputType="number"
+                    number={{
+                      decimalPlaces: 0,
+                      maxIntegerDigits: 3,
+                      maxValue: 367,
+                      allowNegative: false,
+                    }}
+                  />
+                  <span>%</span>
+                </div>
+              </div>
+            </td>
             {Array.from({ length: totalNumberOfYears }, (_, i) => (
               <td
                 key={i}
@@ -327,7 +325,24 @@ export function DiscountedCashFlowScoringSection({
             ))}
           </tr>
           <tr className="bg-white">
-            <td>Discount Rate</td>
+            <td>
+              <div className="flex flex-row justify-between items-center">
+                <div>Discount Rate</div>
+                <div className="w-16 flex flex-row gap-1 justitfy-end items-center">
+                  <RHFInputCell
+                    fieldName="discountedRate"
+                    inputType="number"
+                    number={{
+                      decimalPlaces: 0,
+                      maxIntegerDigits: 3,
+                      maxValue: 367,
+                      allowNegative: false,
+                    }}
+                  />
+                  <span>%</span>
+                </div>
+              </div>
+            </td>
             {Array.from({ length: totalNumberOfYears }, (_, i) => (
               <td
                 key={i}

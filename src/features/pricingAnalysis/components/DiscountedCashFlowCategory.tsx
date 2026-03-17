@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DCFCategoryFormType } from '../schemas/dcfForm';
-import type { SectionColor } from './DiscountedCashFlowScoringSection';
+import type { SectionColor } from './DiscountedCashFlowTableSection';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';

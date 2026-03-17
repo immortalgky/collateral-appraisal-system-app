@@ -1,9 +1,11 @@
-import { dcfMockData } from '../data/dcfMockData';
-import { DiscountedCashFlowScoringSection } from './DiscountedCashFlowScoringSection';
+import type { DCFFormType } from '../schemas/dcfForm';
+import { DiscountedCashFlowTableSection } from './DiscountedCashFlowTableSection';
 
-interface DiscountedCashFlowFormProps {}
+interface DiscountedCashFlowFormProps {
+  data: DCFFormType;
+}
 
-export function DiscountedCashFlowForm({}: DiscountedCashFlowFormProps) {
+export function DiscountedCashFlowForm({ data }: DiscountedCashFlowFormProps) {
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
       <div
@@ -18,9 +20,7 @@ export function DiscountedCashFlowForm({}: DiscountedCashFlowFormProps) {
               </h3>
             </div>
             <div className="px-4">
-              <DiscountedCashFlowScoringSection
-                totalNumberOfYears={dcfMockData.totalNumberOfYears}
-              />
+              <DiscountedCashFlowTableSection totalNumberOfYears={data.totalNumberOfYears} />
             </div>
           </div>
           <div>

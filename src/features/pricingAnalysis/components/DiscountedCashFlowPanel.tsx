@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { DCF, type DCFFormType } from '../schemas/dcfForm';
-import { DiscountedCashFlowForm } from './DiscountedCashFlowForm';
 import { dcfMockData } from '../data/dcfMockData';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { FormProvider } from '@/shared/components/form/FormProvider';
+import { DiscountedCashFlowTableSection } from './DiscountedCashFlowTableSection';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -19,16 +20,23 @@ export function DiscountedCashFlowPanel({ activeMethod }: DiscountedCashFlowPane
 
   const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCF) });
 
-  const { reset } = methods;
+  const { reset, getValues } = methods;
+
+  const data = getValues();
 
   useEffect(() => {
     reset(dcfMockData);
   }, []);
+  // inquiry logic
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider methods={methods} schema={DCF}>
       <form>
-        <DiscountedCashFlowForm />
+        {/* template */}
+
+        <DiscountedCashFlowTableSection totalNumberOfYears={data.totalNumberOfYears} />
+
+        {/* footer save, reset, cancel */}
       </form>
     </FormProvider>
   );

@@ -41,9 +41,13 @@ interface MethodProportionTable {
 function MethodProportionTable({ totalNumberOfYear }: MethodProportionTable) {
   return (
     <tr>
-      <td>xxxxx</td>
+      <td className="pl-20 px-1 py-1.5">xxxxx</td>
       {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-        return <td key={idx}>{idx}</td>;
+        return (
+          <td key={idx} className="text-right">
+            {idx}
+          </td>
+        );
       })}
     </tr>
   );
