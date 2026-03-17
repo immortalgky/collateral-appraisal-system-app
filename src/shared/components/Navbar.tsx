@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
+import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
 import SearchPreviewModal from '@shared/components/search/SearchPreviewModal';
@@ -24,6 +25,11 @@ const filterColorStyles: Record<string, { bg: string; text: string; activeBg: st
   purple: { bg: 'bg-purple-50', text: 'text-purple-500', activeBg: 'bg-purple-100' },
   amber: { bg: 'bg-amber-50', text: 'text-amber-500', activeBg: 'bg-amber-100' },
 };
+
+function handleLogout(href: string) {
+  useAuthStore.getState().logout();
+  window.location.replace(href);
+}
 
 export default function Navbar({
   userNavigation,
@@ -218,10 +224,11 @@ export default function Navbar({
             <Menu as="div" className="relative">
               <MenuButton className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 transition-all">
                 <span className="sr-only">Open user menu</span>
-                <img
-                  alt=""
-                  src={currentUser?.avatarUrl || '/default-avatar.png'}
-                  className="size-9 rounded-xl object-cover ring-2 ring-gray-100"
+                <Avatar
+                  src={currentUser?.avatarUrl}
+                  name={`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'User'}
+                  size="md"
+                  className="rounded-xl ring-2 ring-gray-100"
                 />
                 <span className="hidden lg:flex lg:flex-col lg:items-start">
                   <span className="text-sm font-semibold text-gray-900">
@@ -244,27 +251,44 @@ export default function Navbar({
                   <p className="text-sm font-medium text-gray-900">{`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`}</p>
                   <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
                 </div>
-                {userNavigation.map(item => (
-                  <MenuItem key={item.name}>
-                    <a
-                      href={item.href}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
+                {userNavigation.map(item =>
+                  item.name === 'Sign out' ? (
+                    <MenuItem
+                      key={item.name}
+                      as="button"
+                      type="button"
+                      onClick={() => handleLogout(item.href)}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
                     >
                       <Icon
-                        name={
-                          item.name === 'Your profile'
-                            ? 'user'
-                            : item.name === 'Settings'
-                              ? 'gear'
-                              : 'arrow-right-from-bracket'
-                        }
+                        name="arrow-right-from-bracket"
                         style="regular"
                         className="size-4 text-gray-400"
                       />
                       {item.nameKey ? t(item.nameKey as never) : item.name}
-                    </a>
-                  </MenuItem>
-                ))}
+                    </MenuItem>
+                  ) : (
+                    <MenuItem key={item.name}>
+                      <a
+                        href={item.href}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-50 data-focus:outline-hidden transition-colors"
+                      >
+                        <Icon
+                          name={
+                            item.name === 'Your profile'
+                              ? 'user'
+                              : item.name === 'Settings'
+                                ? 'gear'
+                                : 'arrow-right-from-bracket'
+                          }
+                          style="regular"
+                          className="size-4 text-gray-400"
+                        />
+                        {item.nameKey ? t(item.nameKey as never) : item.name}
+                      </a>
+                    </MenuItem>
+                  ),
+                )}
               </MenuItems>
             </Menu>
           </div>

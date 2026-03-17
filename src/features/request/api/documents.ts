@@ -82,14 +82,30 @@ export const useUploadDocumentLegacy = () => {
  * 3. Remove the mock implementation
  * 4. Ensure your API endpoint matches: GET /api/documents/{documentId}/download
  */
+export interface DownloadDocumentResult {
+  blob: Blob;
+  fileName: string | null;
+}
+
 export const useDownloadDocument = () => {
   return useMutation({
-    mutationFn: async (documentId: string): Promise<Blob> => {
-      const { data } = await axios.get(`/documents/${documentId}/download`, {
+    mutationFn: async (documentId: string): Promise<DownloadDocumentResult> => {
+      const response = await axios.get(`/documents/${documentId}/download`, {
         responseType: 'blob',
         params: { download: false },
       });
-      return data;
+
+      // Extract filename from Content-Disposition header if available
+      const disposition = response.headers?.['content-disposition'] as string | undefined;
+      let fileName: string | null = null;
+      if (disposition) {
+        const match = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
+        if (match) {
+          fileName = decodeURIComponent(match[1].replace(/"/g, ''));
+        }
+      }
+
+      return { blob: response.data, fileName };
     },
   });
 };

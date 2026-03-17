@@ -1,10 +1,8 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
-import GalleryTab from '@features/appraisal/components/tabs/GalleryTab';
-import LawsRegulationTab from '@features/appraisal/components/tabs/LawsRegulationTab';
 import {
   DispatchCtx,
   ServerDataCtx,
@@ -20,9 +18,12 @@ import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectio
 import { useCalculationFlow } from '@features/pricingAnalysis/hooks/useCalculationFlow';
 import { createInitialState } from '@features/pricingAnalysis/store/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import toast from 'react-hot-toast';
+import { useSetFinalValue } from '@features/pricingAnalysis/api';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
 import { MethodSectionRenderer } from '@features/pricingAnalysis/components/MethodSectionRenderer';
 import type { PricingServerData } from '@features/pricingAnalysis/types/selection';
+import type { SetFinalValueRequestType } from '@features/pricingAnalysis/schemas';
 import { propertyGroupKeys } from '@features/appraisal/api/propertyGroup';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -38,8 +39,6 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'properties', label: 'Properties', icon: 'buildings' },
   { id: 'markets', label: 'Markets', icon: 'chart-line' },
-  { id: 'gallery', label: 'Gallery', icon: 'images' },
-  { id: 'laws', label: 'Laws', icon: 'gavel' },
 ];
 
 const initialState: SelectionState = {
@@ -188,7 +187,11 @@ function PricingAnalysisContent({
 
     dispatch({
       type: 'INIT',
-      payload: { pricingAnalysisId, approaches },
+      payload: {
+        pricingAnalysisId,
+        approaches,
+        useSystemCalc: (pricingSelection as any)?.useSystemCalc,
+      },
     });
 
     // If user was in editing mode (e.g. after add/delete mutation), stay in editing mode
@@ -246,6 +249,41 @@ function PricingAnalysisContent({
     setIsDirty(check);
   };
 
+  // (8b) Manual mode — set final value on blur
+  const setFinalValueMutation = useSetFinalValue();
+  const handleManualValueChange = useCallback(
+    ({
+      approachType,
+      methodType,
+      value,
+    }: {
+      approachType: string;
+      methodType: string;
+      value: number;
+    }) => {
+      // Find the method's server ID from summarySelected
+      const approach = state.summarySelected?.find(a => a.approachType === approachType);
+      const method = approach?.methods.find(m => m.methodType === methodType);
+      if (!method?.id) return;
+
+      setFinalValueMutation.mutate(
+        {
+          pricingAnalysisId,
+          methodId: method.id,
+          request: {
+            finalValue: value,
+            finalValueRounded: value,
+          } as SetFinalValueRequestType,
+        },
+        {
+          onSuccess: () => toast.success('Value saved'),
+          onError: () => toast.error('Failed to save value'),
+        },
+      );
+    },
+    [state.summarySelected, pricingAnalysisId, setFinalValueMutation],
+  );
+
   // (9) Assemble server data for context
   const serverData: PricingServerData = {
     groupDetail,
@@ -266,7 +304,7 @@ function PricingAnalysisContent({
               <DispatchCtx.Provider value={dispatch}>
                 {!isLoading && (
                   <div className="flex-1 min-w-0 min-h-0 flex-col">
-                    <div>
+                    <div className="flex flex-col gap-2">
                       <PricingAnalysisAccordion
                         state={state}
                         appraisalId={appraisalId}
@@ -286,7 +324,6 @@ function PricingAnalysisContent({
                         isPricingAnalysisAccordionOpen={isPricingAnalysisAccordionOpen}
                         onSystemCalculationChange={selectionActions.changeSystemCalculation}
                         systemCalculationMode={state.systemCalculationMode}
-                        onCancelPricingAccordion={selectionActions.cancelPricingAccordion}
                         isConfirmDeselectedMethodOpen={selectionActions.confirm.isOpen}
                         onConfirmDeselectMethod={selectionActions.confirm.confirmDeselect}
                         onCancelDeselectMethod={selectionActions.confirm.cancelDeselect}
@@ -298,6 +335,7 @@ function PricingAnalysisContent({
                         onDeleteMethod={selectionActions.requestDeleteMethod}
                         pricingConfiguration={pricingConfiguration}
                         deleteConfirm={selectionActions.deleteConfirm}
+                        onManualValueChange={handleManualValueChange}
                       />
                       {!isCalcLoading && (
                         <MethodSectionRenderer
@@ -319,10 +357,6 @@ function PricingAnalysisContent({
       }
       case 'markets':
         return <MarketsTab />;
-      case 'gallery':
-        return <GalleryTab />;
-      case 'laws':
-        return <LawsRegulationTab />;
       default:
         return null;
     }
@@ -330,8 +364,16 @@ function PricingAnalysisContent({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Tab Navigation - Compact */}
-      <div className="shrink-0 pb-4">
+      {/* Page header — back + tabs */}
+      <div className="shrink-0 pb-4 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => selectionActions.cancelPricingAccordion()}
+          className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+        >
+          <Icon name="arrow-left" style="solid" className="size-3.5" />
+          <span className="font-medium">Back</span>
+        </button>
         <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">
           {TABS.map(tab => {
             const isActive = activeTab === tab.id;

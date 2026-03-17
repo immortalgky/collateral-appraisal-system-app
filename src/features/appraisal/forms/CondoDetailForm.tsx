@@ -128,7 +128,9 @@ function CondoDetailForm() {
       </SectionRow>
 
       <SectionRow title="In Forest Boundary" icon="tree-city">
-        <FormFields fields={inForestBoundaryFormFields} />
+        <Card>
+          <FormFields fields={inForestBoundaryFormFields} />
+        </Card>
       </SectionRow>
 
       <SectionRow title="Remarks" icon="comment" isLast>

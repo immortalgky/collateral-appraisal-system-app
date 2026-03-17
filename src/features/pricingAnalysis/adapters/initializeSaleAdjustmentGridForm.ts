@@ -15,7 +15,6 @@ import {
   toNum,
   yearDiffFromToday,
 } from '@features/pricingAnalysis/domain/readFactorValue';
-import { convertLandTitlesToLandArea } from '../domain/convertLandTitlesToLandArea';
 
 interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;
@@ -104,10 +103,12 @@ export function initializeSaleAdjustmentGridForm({
         },
         saleAdjustmentGridAppraisalPrice: {
           includeLandArea: false,
-          landArea: property.titles
-            ? convertLandTitlesToLandArea({ titles: property.titles })
-            : undefined,
-          usableArea: property.usableArea ?? undefined,
+          landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+          usableArea: property.totalBuildingArea
+            ? Number(property.totalBuildingArea)
+            : property.usableArea
+              ? Number(property.usableArea)
+              : undefined,
           appraisalPrice: 0,
           appraisalPriceRounded: 0,
           priceDifferentiate: 0,
@@ -198,10 +199,12 @@ export function initializeSaleAdjustmentGridForm({
       },
       saleAdjustmentGridAppraisalPrice: {
         includeLandArea: false,
-        landArea: property.titles
-          ? convertLandTitlesToLandArea({ titles: property.titles })
-          : undefined,
-        usableArea: property.usableArea ?? undefined,
+        landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        usableArea: property.totalBuildingArea
+          ? Number(property.totalBuildingArea)
+          : property.usableArea
+            ? Number(property.usableArea)
+            : undefined,
         appraisalPrice: 0,
         appraisalPriceRounded: 0,
         priceDifferentiate: 0,

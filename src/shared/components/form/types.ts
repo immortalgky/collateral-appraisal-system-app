@@ -169,6 +169,8 @@ export interface NumberInputField extends BaseFormField {
   max?: number;
   /** Max digits before the decimal point, excluding commas (e.g., 15 for DECIMAL(17,2)) */
   maxIntegerDigits?: number;
+  /** Show thousand separators (default: true) */
+  thousandSeparator?: boolean;
 }
 
 // =============================================================================
@@ -178,11 +180,23 @@ export interface NumberInputField extends BaseFormField {
 export interface DateInputField extends BaseFormField {
   type: 'date-input';
   label: string;
+  /** Disable dates before today */
+  disablePastDates?: boolean;
+  /** Disable dates after today */
+  disableFutureDates?: boolean;
+  /** Disable today specifically */
+  disableToday?: boolean;
 }
 
 export interface DateTimeInputField extends BaseFormField {
   type: 'datetime-input';
   label: string;
+  /** Disable dates before today */
+  disablePastDates?: boolean;
+  /** Disable dates after today */
+  disableFutureDates?: boolean;
+  /** Disable today specifically */
+  disableToday?: boolean;
 }
 
 // =============================================================================

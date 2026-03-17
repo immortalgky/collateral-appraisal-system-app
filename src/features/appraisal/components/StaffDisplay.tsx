@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
+import Avatar from '@/shared/components/Avatar';
 import type { InternalStaff } from '../types/administration';
 
 interface StaffDisplayProps {
@@ -9,15 +10,6 @@ interface StaffDisplayProps {
 }
 
 const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps) => {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <div
       className={clsx(
@@ -27,31 +19,7 @@ const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps
       )}
     >
       {/* Avatar */}
-      {staff.avatar ? (
-        <img
-          src={staff.avatar}
-          alt={staff.name}
-          className="w-10 h-10 rounded-full object-cover"
-        />
-      ) : (
-        <div
-          className={clsx(
-            'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
-            variant === 'emerald' && 'bg-emerald-200',
-            variant === 'purple' && 'bg-purple-200'
-          )}
-        >
-          <span
-            className={clsx(
-              'text-sm font-medium',
-              variant === 'emerald' && 'text-emerald-700',
-              variant === 'purple' && 'text-purple-700'
-            )}
-          >
-            {getInitials(staff.name)}
-          </span>
-        </div>
-      )}
+      <Avatar src={staff.avatar} name={staff.name} size="lg" />
 
       {/* Staff Info */}
       <div className="flex-1 min-w-0">

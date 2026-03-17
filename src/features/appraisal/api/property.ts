@@ -7,20 +7,23 @@ import type {
   CreateLandBuildingResponseType,
   CreateLandPropertyRequestType,
   CreateLandPropertyResponseType,
+  CreateMachineryPropertyResponseType,
   GetBuildingPropertyResponseType,
   GetCondoPropertyResponseType,
   GetLandAndBuildingPropertyResponseType,
   GetLandPropertyResponseType,
+  GetMachineryPropertyResponseType,
   UpdateBuildingPropertyRequestType,
   UpdateCondoPropertyRequestType,
   UpdateLandAndBuildingPropertyRequestType,
   UpdateLandPropertyRequestType,
+  UpdateMachineryPropertyRequestType,
 } from '@shared/schemas/v1';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { isAxiosError } from 'axios';
 import { propertyGroupKeys } from './propertyGroup';
-import { data } from 'react-router-dom';
+import type { createMachineryFormType } from '../schemas/form';
 
 // ─── Create Hooks ────────────────────────────────────────────────
 
@@ -108,6 +111,27 @@ export const useCreateLandAndBuildingProperty = () => {
   });
 };
 
+export const useCreateMachineryProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: createMachineryFormType;
+    }): Promise<CreateMachineryPropertyResponseType> => {
+      const url = `/appraisals/${params.appraisalId}/machinery-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
+      const { data } = await axios.post(url, params.data);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
 // ─── Get Hooks ───────────────────────────────────────────────────
 
 export const useGetLandPropertyById = (appraisalId: string, propertyId?: string) => {
@@ -169,6 +193,24 @@ export const useGetLandAndBuildingPropertyById = (appraisalId: string, propertyI
       const { data } = await axios.get(
         `/appraisals/${appraisalId}/properties/${propertyId}/land-and-building-detail`,
       );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetMachineryPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'machinery-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetMachineryPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/machinery-detail`,
+      );
+      console.log(data);
       return data;
     },
     retry: (failureCount, error) => {
@@ -299,6 +341,40 @@ export const useUpdateLandAndBuildingProperty = () => {
           'appraisals',
           variables.appraisalId,
           'land-and-building-properties',
+          variables.propertyId,
+        ],
+      });
+    },
+  });
+};
+
+export const useUpdateMachineryProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateMachineryPropertyRequestType;
+    }): Promise<any> => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/machinery-detail`,
+        params.data,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          'appraisals',
+          variables.appraisalId,
+          'machinery-properties',
           variables.propertyId,
         ],
       });

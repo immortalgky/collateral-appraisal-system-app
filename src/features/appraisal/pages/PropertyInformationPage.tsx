@@ -25,7 +25,7 @@ const TABS: Tab[] = [
   { id: 'markets', label: 'Markets', icon: 'chart-line' },
   { id: 'gallery', label: 'Gallery', icon: 'images' },
   { id: 'photos', label: 'Photos', icon: 'camera' },
-  { id: 'laws', label: 'Laws', icon: 'gavel' },
+  { id: 'laws', label: 'Laws & Regulations', icon: 'gavel' },
 ];
 
 const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
@@ -42,7 +42,9 @@ export default function PropertyInformationPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'properties':
-        return <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} readOnly={isReadOnly} />;
+        return (
+          <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} readOnly={isReadOnly} />
+        );
       case 'markets':
         return <MarketsTab readOnly={isReadOnly} />;
       case 'gallery':

@@ -767,6 +767,9 @@ export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
         type="file"
         accept="image/*"
         multiple
+        onClick={e => {
+          (e.target as HTMLInputElement).value = '';
+        }}
         onChange={e => e.target.files && handleFileSelect(e.target.files)}
         className="hidden"
       />

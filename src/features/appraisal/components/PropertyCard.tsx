@@ -14,6 +14,7 @@ const getRouteSegment = (type: string): string => {
     Condominium: 'condo',
     'Land and building': 'land-building',
     Lands: 'land',
+    Machinery: 'machinery',
     'Lease Agreement Building': 'building',
     'Lease Agreement Land and building': 'land-building',
     'Lease Agreement Lands': 'land',
@@ -21,6 +22,7 @@ const getRouteSegment = (type: string): string => {
     B: 'building',
     LB: 'land-building',
     U: 'condo',
+    MAC: 'machinery',
   };
   return typeMap[type] || 'land';
 };
@@ -74,7 +76,7 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
       ref={setNodeRef}
       style={style}
       onContextMenu={e => onContextMenu(e, property, groupId)}
-      className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex"
+      className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:border-gray-300 hover:scale-[1.01] focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200 flex"
     >
       {/* Drag Handle */}
       <div

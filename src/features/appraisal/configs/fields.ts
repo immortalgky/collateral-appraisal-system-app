@@ -1374,7 +1374,7 @@ export const condoFields: FormField[] = [
   },
   {
     type: 'radio-group',
-    label: 'Condominium Conditions',
+    label: 'Condominium Condition',
     name: 'buildingConditionType',
     wrapperClassName: 'col-span-12',
     group: 'CondoCondition',
@@ -1718,6 +1718,7 @@ export const condoFacilityFields: FormField[] = [
     name: 'facilityTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilityType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'facilityType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -1785,11 +1786,7 @@ export const materialAndStyleField: FormField[] = [
   ...constructionStyleField,
 ];
 
-export const roofAndCeilingField: FormField[] = [
-  ...roofFrameField,
-  ...roofField,
-  ...ceilingField,
-];
+export const roofAndCeilingField: FormField[] = [...roofFrameField, ...roofField, ...ceilingField];
 
 export const constructionAndUseField: FormField[] = [
   ...fenceField,
@@ -1924,6 +1921,211 @@ export const bathroomFloorFields: FormField[] = [
 ];
 
 // =============================================================================
+// Machine fields (from MachineDetailForm.tsx)
+// =============================================================================
+
+export const machineInfoFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Property Name',
+    name: 'propertyName',
+    wrapperClassName: 'col-span-12',
+    maxLength: 150,
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Check Owner',
+    name: 'isOwnerVerified',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Owner',
+    name: 'ownerName',
+    wrapperClassName: 'col-span-4',
+    disableWhen: { field: 'isOwnerVerified', is: false },
+    requiredWhen: { field: 'isOwnerVerified', is: true },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
+  },
+  {
+    type: 'radio-group',
+    label: 'Condition Use ',
+    name: 'conditionUse',
+    wrapperClassName: 'col-span-12',
+    group: 'ConditionUse',
+    orientation: 'horizontal',
+    variant: 'button',
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Can Use',
+    name: 'canUse',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Name',
+    name: 'machineName',
+    wrapperClassName: 'col-span-9',
+    maxLength: 300,
+  },
+  {
+    type: 'text-input',
+    label: 'Brand',
+    name: 'brand',
+    wrapperClassName: 'col-span-3',
+    maxLength: 150,
+  },
+  {
+    type: 'text-input',
+    label: 'Model',
+    name: 'model',
+    wrapperClassName: 'col-span-3',
+    maxLength: 100,
+  },
+  {
+    type: 'number-input',
+    label: 'Year',
+    name: 'yearOfManufacture',
+    wrapperClassName: 'col-span-2',
+    decimalPlaces: 0,
+    maxIntegerDigits: 4,
+    thousandSeparator: false,
+  },
+  {
+    type: 'dropdown',
+    label: 'Country of Manufacture',
+    name: 'countryOfManufacture',
+    wrapperClassName: 'col-span-4',
+    group: 'Country',
+  },
+  {
+    type: 'date-input',
+    label: 'Purchase Date',
+    name: 'purchaseDate',
+    wrapperClassName: 'col-span-6',
+    disableFutureDates: true,
+  },
+  {
+    type: 'number-input',
+    label: 'Purchase Price',
+    name: 'purchasePrice',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 15,
+    decimalPlaces: 2,
+  },
+  {
+    type: 'text-input',
+    label: 'Location ',
+    name: 'location',
+    wrapperClassName: 'col-span-12',
+    maxLength: 100,
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Condition ',
+    name: 'machineCondition',
+    wrapperClassName: 'col-span-9',
+    maxLength: 50,
+  },
+  {
+    type: 'number-input',
+    label: 'Machinery Age ',
+    name: 'machineAge',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 1,
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'text-input',
+    label: 'Useage Purpoes ',
+    name: 'usePurpose',
+    wrapperClassName: 'col-span-6',
+    maxLength: 300,
+  },
+  {
+    type: 'text-input',
+    label: 'Capacity',
+    name: 'capacity',
+    wrapperClassName: 'col-span-6',
+    maxLength: 300,
+  },
+  {
+    type: 'number-input',
+    label: 'Width',
+    name: 'width',
+    wrapperClassName: 'col-span-2',
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'number-input',
+    label: 'Length',
+    name: 'length',
+    wrapperClassName: 'col-span-2',
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'number-input',
+    label: 'Height',
+    name: 'height',
+    wrapperClassName: 'col-span-2',
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'text-input',
+    label: 'Energy Use',
+    name: 'energyUse',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Efficiency ',
+    name: 'machineEfficiency',
+    wrapperClassName: 'col-span-6',
+    maxLength: 50,
+  },
+  {
+    type: 'text-input',
+    label: 'Machinery Technology ',
+    name: 'machineTechnology',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
+    type: 'textarea',
+    label: 'Machinery Part ',
+    name: 'machinePart',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'other',
+    wrapperClassName: 'col-span-12',
+    maxLength: 100,
+  },
+  {
+    type: 'textarea',
+    label: 'Remark ',
+    name: 'remark',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+  {
+    type: 'textarea',
+    label: 'Appraiser Opinion ',
+    name: 'appraiserOpinion',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+];
+
+// =============================================================================
 
 export const allLandFields: FormField[] = [
   ...landInfoField,
@@ -1987,6 +2189,8 @@ export const allCondoFields: FormField[] = [
   ...inForestBoundaryFormFields,
   ...remarkFormFields,
 ];
+
+export const allMachineryFields: FormField[] = [...machineInfoFields];
 
 export const allAppraisalFields: FormField[] = [
   ...allLandFields,
@@ -2149,3 +2353,234 @@ export const landtitlesFields: FormField[] = [
     decimalPlaces: 2,
   },
 ];
+
+// =============================================================================
+// PMA fields
+// =============================================================================
+export const pmaField: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Selling Price',
+    name: 'sellingPrice',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxIntegerDigits: 15,
+  },
+  {
+    type: 'number-input',
+    label: 'Force Selling Price',
+    name: 'forcedSalePrice',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxIntegerDigits: 15,
+  },
+  {
+    type: 'number-input',
+    label: 'Building Insurance',
+    name: 'buildingInsurancePrice',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxIntegerDigits: 15,
+  },
+];
+
+// =============================================================================
+// Land and building PMA fields
+// =============================================================================
+
+export const landAndBuildingPMAFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Rawang',
+    name: 'rawang',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 30,
+  },
+  {
+    type: 'text-input',
+    label: 'Land No.',
+    name: 'landNo',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Survey No.',
+    name: 'surveyNo',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Title Deed No.',
+    name: 'titleNo',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 200,
+  },
+  {
+    type: 'text-input',
+    label: 'Book No.',
+    name: 'bookNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Page No.',
+    name: 'pageNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'number-input',
+    label: 'Rai',
+    name: 'areaRai',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    decimalPlaces: 0,
+    maxIntegerDigits: 5,
+  },
+  {
+    type: 'number-input',
+    label: 'Ngan',
+    name: 'areaNgan',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    decimalPlaces: 0,
+    maxIntegerDigits: 1,
+    max: 3,
+  },
+  {
+    type: 'number-input',
+    label: 'Wa',
+    name: 'areaSquareWa',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxIntegerDigits: 3,
+  },
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'districtName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'provinceName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+];
+
+// =============================================================================
+// Condominium PMA fields
+// =============================================================================
+export const condoPMAFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Construction on Title Deed No.',
+    name: 'builtOnTitleNumber',
+    wrapperClassName: 'col-span-6',
+    required: true,
+    maxLength: 200,
+  },
+  {
+    type: 'text-input',
+    label: 'Condominium Registration No.',
+    name: 'condoRegistrationNumber',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Condominium Name.',
+    name: 'condoName',
+    wrapperClassName: 'col-span-6',
+    required: true,
+    maxLength: 100,
+  },
+  {
+    type: 'text-input',
+    label: 'Room No.',
+    name: 'roomNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'number-input',
+    label: 'Floor No.',
+    name: 'floorNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxIntegerDigits: 3,
+    decimalPlaces: 0,
+  },
+  {
+    type: 'text-input',
+    label: 'Building No.',
+    name: 'buildingNumber',
+    wrapperClassName: 'col-span-1',
+    required: true,
+    maxLength: 30,
+  },
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'districtName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'provinceName',
+    disabled: true,
+    required: true,
+    wrapperClassName: 'col-span-3',
+  },
+];
+
+export const allCondoPMAFields: FormField[] = [...pmaField, ...condoPMAFields];
+
+export const allLandAndBuildingPMAFields: FormField[] = [...pmaField, ...landAndBuildingPMAFields];

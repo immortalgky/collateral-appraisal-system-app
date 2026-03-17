@@ -57,7 +57,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       deps: [appraisalPriceRoundedPath(), finalValueRoundedPath()],
       compute: ({ getValues }) => {
         const appraisalPriceRounded = getValues(appraisalPriceRoundedPath()) ?? 0;
-        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
+        const finalValueRounded = getValues(appraisalPricePath()) ?? 0;
         return appraisalPriceRounded - finalValueRounded;
       },
     },
@@ -101,7 +101,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       {/* Include Area toggle */}
       {(isLand || isUsable) && (
         <div className="flex items-center gap-4">
-          <span className="w-44 text-gray-500">Include Area</span>
+          <span className="w-48 text-gray-500">Include Area</span>
           <RHFInputCell
             fieldName={includeLandAreaPath()}
             inputType="toggle"
@@ -111,7 +111,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       )}
       {includeLandArea && (
         <div className="flex items-center gap-4">
-          <span className="w-44 text-gray-500">Area</span>
+          <span className="w-48 text-gray-500">Area</span>
           <span className="font-medium text-gray-800">
             <RHFInputCell
               fieldName={areaFieldPath}
@@ -123,10 +123,12 @@ export function DirectComparisonAdjustAppraisalPriceSection({
         </div>
       )}
       <div className="flex items-center gap-4">
-        <span className="w-44 text-gray-500">Final Value (Rounded)</span>
+        <span className="w-48 text-gray-500">
+          Final Value (Rounded) {includeLandArea ? 'x Area' : ''}
+        </span>
         <span className="font-medium text-gray-800">
           <RHFInputCell
-            fieldName={finalValueRoundedPath()}
+            fieldName={appraisalPricePath()}
             inputType={'display'}
             accessor={({ value }) => {
               return value?.toLocaleString() ?? '0';
@@ -136,9 +138,18 @@ export function DirectComparisonAdjustAppraisalPriceSection({
         <span className="text-gray-500">Baht</span>
       </div>
       <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
-        <span className="w-44 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
+        <span className="w-48 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
         <div className="w-40">
-          <RHFInputCell fieldName={appraisalPriceRoundedPath()} inputType={'number'} />
+          <RHFInputCell
+            fieldName={appraisalPriceRoundedPath()}
+            inputType={'number'}
+            number={{
+              decimalPlaces: 2,
+              maxIntegerDigits: 15,
+              maxValue: 999_999_999_999_999.0,
+              allowNegative: false,
+            }}
+          />
         </div>
         <span className="text-gray-500">Baht</span>
         <div className="flex items-center">
@@ -147,7 +158,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
             inputType={'display'}
             accessor={({ value }) => {
               const num = Number(value) || 0;
-              if (num === 0) return <span className="text-gray-400">-</span>;
+              if (num === 0) return <span className="text-gray-400"></span>;
               const color = num > 0 ? 'text-green-600' : 'text-red-600';
               const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
               const icon = num > 0 ? 'arrow-up' : 'arrow-down';

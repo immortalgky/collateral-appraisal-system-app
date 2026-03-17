@@ -17,6 +17,8 @@ interface NumberInputProps
   allowNegative?: boolean;
   /** Max digits before the decimal point, excluding commas (e.g., 15 for DECIMAL(17,2)) */
   maxIntegerDigits?: number;
+  /** Show thousand separators (default: true) */
+  thousandSeparator?: boolean;
   /** Value from react-hook-form or controlled component */
   value?: number | string | null;
   /** onChange handler - receives number value */
@@ -43,9 +45,12 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       decimalPlaces = 2,
       allowNegative = false,
       maxIntegerDigits,
+      thousandSeparator = true,
+      max,
       value,
       onChange,
       onBlur,
+      onKeyDown,
       placeholder,
       ...props
     },
@@ -58,6 +63,9 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const [displayValue, setDisplayValue] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
     const cursorPosRef = useRef<number | null>(null);
+
+    const maxValue =
+      typeof max === 'number' ? max : max != null ? parseFloat(String(max)) : undefined;
 
     // Combine refs
     const setRefs = (element: HTMLInputElement | null) => {
@@ -97,6 +105,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     // Format number with fixed decimal places (for blur)
     const formatNumber = (num: number | null | undefined): string => {
       if (num === null || num === undefined || isNaN(num)) return '';
+      if (!thousandSeparator) return num.toFixed(decimalPlaces);
       return num.toLocaleString('en-US', {
         minimumFractionDigits: decimalPlaces,
         maximumFractionDigits: decimalPlaces,
@@ -166,6 +175,11 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           }
         }
 
+        // Clamp to max limit
+        if (maxValue != null && newValue > maxValue) {
+          newValue = maxValue;
+        }
+
         const formatted = formatNumber(newValue);
         setDisplayValue(formatted);
 
@@ -176,6 +190,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           },
         });
       }
+
+      onKeyDown?.(e);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,11 +217,19 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         )
           return;
 
+        // Enforce max value
+        if (maxValue != null) {
+          const candidateNum = parseFloat(cleaned);
+          if (!isNaN(candidateNum) && candidateNum > maxValue) return;
+        }
+
         // Count commas before cursor in old value
         const oldCommasBefore = (displayValue.slice(0, cursorPos).match(/,/g) || []).length;
 
-        // Format with commas
-        const formatted = formatWithCommas(inputValue);
+        // Format with commas (or without if thousandSeparator is false)
+        const formatted = thousandSeparator
+          ? formatWithCommas(inputValue)
+          : inputValue.replace(/,/g, '');
 
         // Count commas before cursor in new value
         const newCommasBefore = (formatted.slice(0, cursorPos).match(/,/g) || []).length;

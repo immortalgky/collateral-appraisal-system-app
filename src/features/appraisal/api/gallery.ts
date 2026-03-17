@@ -50,6 +50,9 @@ export const useAddGalleryPhoto = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'gallery'],
       });
+      queryClient.invalidateQueries({
+        queryKey: photoTopicKeys.all(variables.appraisalId),
+      });
     },
   });
 };

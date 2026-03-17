@@ -3,8 +3,11 @@ import { z } from 'zod';
 import {
   allBuildingFields,
   allCondoFields,
+  allCondoPMAFields,
+  allLandAndBuildingPMAFields,
   allLandBuildingFields,
   allLandFields,
+  allMachineryFields,
 } from '../configs/fields';
 
 const landTitleItem = z.object({
@@ -100,7 +103,7 @@ export const createLandAndBuildingForm = buildFormSchema(
   createLandAndBuildingFormBase,
 );
 
-export const landAndBuildingPMAForm = z.object({
+export const createLandAndBuildingPMAFormBase = z.object({
   buildingInsurancePrice: z.coerce.number().nullable(),
   sellingPrice: z.coerce.number().nullable(),
   forcedSalePrice: z.coerce.number().nullable(),
@@ -121,7 +124,7 @@ export const landAndBuildingPMAForm = z.object({
   provinceName: z.string().nullable(),
 });
 
-export const condoPMAForm = z.object({
+export const createCondoPMAFormBase = z.object({
   buildingInsurancePrice: z.coerce.number().nullable(),
   sellingPrice: z.coerce.number().nullable(),
   forcedSalePrice: z.coerce.number().nullable(),
@@ -138,6 +141,13 @@ export const condoPMAForm = z.object({
   province: z.string().min(1, 'Province is required.'),
   provinceName: z.string().nullable(),
 });
+
+export const createLandAndBuildingPMAForm = buildFormSchema(
+  allLandAndBuildingPMAFields,
+  createLandAndBuildingPMAFormBase,
+);
+export const createCondoPMAForm = buildFormSchema(allCondoPMAFields, createCondoPMAFormBase);
+export const createMachineryForm = buildFormSchema(allMachineryFields);
 
 export const factorDataDto = z
   .object({
@@ -179,8 +189,9 @@ export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;
 export type createLandFormType = z.infer<typeof createLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
-export type landAndBuildingPMAFormType = z.infer<typeof landAndBuildingPMAForm>;
-export type condoPMAFormType = z.infer<typeof condoPMAForm>;
+export type createMachineryFormType = z.infer<typeof createMachineryForm>;
+export type createLandAndBuildingPMAFormType = z.infer<typeof createLandAndBuildingPMAForm>;
+export type createCondoPMAFormType = z.infer<typeof createCondoPMAForm>;
 export type createMarketComparableFormType = z.infer<typeof createMarketComparableForm>;
 
 //===============================================================
@@ -526,7 +537,37 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   depreciationDetails: [],
 };
 
-export const landAndBuildingPMAFormDefault: landAndBuildingPMAFormType = {
+export const createMachineryFormDefault: createMachineryFormType = {
+  propertyName: null,
+  isOwnerVerified: true,
+  ownerName: null,
+  canUse: true,
+  machineName: null,
+  brand: null,
+  model: null,
+  yearOfManufacture: null,
+  countryOfManufacture: null,
+  purchaseDate: null,
+  purchasePrice: null,
+  capacity: null,
+  width: null,
+  length: null,
+  height: null,
+  energyUse: null,
+  location: null,
+  conditionUse: null,
+  machineCondition: null,
+  machineAge: null,
+  machineEfficiency: null,
+  machineTechnology: null,
+  usePurpose: null,
+  machinePart: null,
+  other: null,
+  remark: null,
+  appraiserOpinion: null,
+};
+
+export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormType = {
   buildingInsurancePrice: 0,
   sellingPrice: 0,
   forcedSalePrice: 0,
@@ -547,7 +588,7 @@ export const landAndBuildingPMAFormDefault: landAndBuildingPMAFormType = {
   provinceName: '',
 };
 
-export const condoPMAFormDefault: condoPMAFormType = {
+export const createCondoPMAFormDefault: createCondoPMAFormType = {
   buildingInsurancePrice: 0,
   sellingPrice: 0,
   forcedSalePrice: 0,
@@ -571,7 +612,7 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   templateId: '',
   templateCode: '',
   notes: '',
-  infoDateTime: '',
+  infoDateTime: null,
   sourceInfo: '',
   propertyType: '',
   comparableNumber: '',

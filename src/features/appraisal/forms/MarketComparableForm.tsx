@@ -59,7 +59,7 @@ const FactorsSkeleton = () => (
 );
 
 const MarketComparableForm = () => {
-  const language = useLocaleStore((s) => s.language);
+  const language = useLocaleStore(s => s.language);
   const { getValues, setValue, reset } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
   const isInitialSetup = useRef(true);
@@ -170,6 +170,7 @@ const MarketComparableForm = () => {
       name: 'infoDateTime',
       label: '',
       wrapperClassName: 'col-span-12',
+      disableFutureDates: true,
     },
     {
       type: 'text-input',
@@ -185,6 +186,8 @@ const MarketComparableForm = () => {
       wrapperClassName: 'col-span-8',
       maxIntegerDigits: 15,
       decimalPlaces: 2,
+      disableWhen: { field: 'salePrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'dropdown',
@@ -192,6 +195,8 @@ const MarketComparableForm = () => {
       label: '',
       group: 'MeasurementUnits',
       wrapperClassName: 'col-span-4',
+      disableWhen: { field: 'salePrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'number-input',
@@ -200,6 +205,8 @@ const MarketComparableForm = () => {
       wrapperClassName: 'col-span-8',
       maxIntegerDigits: 15,
       decimalPlaces: 2,
+      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'dropdown',
@@ -207,12 +214,17 @@ const MarketComparableForm = () => {
       label: '',
       group: 'MeasurementUnits',
       wrapperClassName: 'col-span-4',
+      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
+      disabledValue: null,
     },
     {
       type: 'date-input',
       name: 'saleDate',
       label: '',
       wrapperClassName: 'col-span-12',
+      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
+      disabledValue: null,
+      disableFutureDates: true,
     },
   ];
 
@@ -284,7 +296,11 @@ const MarketComparableForm = () => {
               {factors.map((fac: any, index: number) => {
                 const fields: FormField[] = [buildFormField(fac, index)];
                 return (
-                  <SectionRow key={fac.factorCode} title={getTranslatedFactorName(fac.translations, language)} icon="sliders">
+                  <SectionRow
+                    key={fac.factorCode}
+                    title={getTranslatedFactorName(fac.translations, language)}
+                    icon="sliders"
+                  >
                     <FormFields fields={fields} />
                   </SectionRow>
                 );

@@ -1,5 +1,12 @@
 import clsx from 'clsx';
-import { type DragEvent, type InputHTMLAttributes, type ReactNode, useCallback, useRef, useState } from 'react';
+import {
+  type DragEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import { useFormReadOnly } from '../form/context';
 
 interface FileInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> {
@@ -7,7 +14,14 @@ interface FileInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'ch
   fullWidth?: boolean;
 }
 
-const FileInput = ({ children, fullWidth = true, disabled, onChange, accept, ...props }: FileInputProps) => {
+const FileInput = ({
+  children,
+  fullWidth = true,
+  disabled,
+  onChange,
+  accept,
+  ...props
+}: FileInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
@@ -76,7 +90,10 @@ const FileInput = ({ children, fullWidth = true, disabled, onChange, accept, ...
     const input = fileInputRef.current;
     if (input) {
       input.files = dt.files;
-      const syntheticEvent = { target: input, currentTarget: input } as React.ChangeEvent<HTMLInputElement>;
+      const syntheticEvent = {
+        target: input,
+        currentTarget: input,
+      } as React.ChangeEvent<HTMLInputElement>;
       onChange(syntheticEvent);
       input.value = '';
     }
@@ -90,8 +107,25 @@ const FileInput = ({ children, fullWidth = true, disabled, onChange, accept, ...
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <input type="file" ref={fileInputRef} multiple className="hidden" disabled={isDisabled} accept={accept} onChange={onChange} {...props} />
-      <button type="button" onClick={handleClick} disabled={isDisabled} className={clsx('w-full', isDisabled && 'opacity-50 cursor-not-allowed')}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        multiple
+        className="hidden"
+        disabled={isDisabled}
+        accept={accept}
+        onClick={e => {
+          (e.target as HTMLInputElement).value = '';
+        }}
+        onChange={onChange}
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isDisabled}
+        className={clsx('w-full', isDisabled && 'opacity-50 cursor-not-allowed')}
+      >
         {typeof children === 'function' ? children(isDragging) : children}
       </button>
     </div>

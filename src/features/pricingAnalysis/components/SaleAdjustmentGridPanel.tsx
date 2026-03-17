@@ -1,5 +1,5 @@
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants';
-import { FormProvider, type SubmitErrorHandler, useForm } from 'react-hook-form';
+import { type SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   SaleAdjustmentGridDto,
@@ -30,6 +30,7 @@ import { initializeSaleAdjustmentGridForm } from '@features/pricingAnalysis/adap
 import { syncSaleAdjustmentGridFormSurveys } from '@features/pricingAnalysis/adapters/syncSaleAdjustmentGridFormSurveys.ts';
 import { restoreSaleAdjustmentGridFromSavedData } from '@features/pricingAnalysis/adapters/restoreSaleAdjustmentGridFromSavedData.ts';
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
+import { FormProvider } from '@/shared/components/form/FormProvider';
 
 interface SaleAdjustmentGridPanelProps {
   activeMethod?: {
@@ -49,7 +50,11 @@ interface SaleAdjustmentGridPanelProps {
   savedCalculations?: CalculationType[];
   savedComparativeAnalysisTemplateId?: string | null;
   savedMethodValue?: number | null;
-  onCalculationSave: (payload: { approachType: string; methodType: string; appraisalValue: number }) => void;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
 }
@@ -82,7 +87,7 @@ export function SaleAdjustmentGridPanel({
     getValues,
     reset,
     setValue,
-    formState: { isDirty },
+    formState: { isDirty, errors },
   } = methods;
 
   // Linked comparables — syncs with server on select/deselect
@@ -101,11 +106,11 @@ export function SaleAdjustmentGridPanel({
   const [pricingTemplate, setPricingTemplate] = useState<TemplateDetailType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
 
-  const selectedTemplateId = (templateList ?? []).find(t => t.templateCode === selectedTemplateCode)?.id;
+  const selectedTemplateId = (templateList ?? []).find(
+    t => t.templateCode === selectedTemplateCode,
+  )?.id;
   const templateDetailQuery = useGetComparativeAnalysisTemplateById(selectedTemplateId);
 
-  /** cancel calculation dialog state */
-  const [isShowCanceledDialog, setisShowCanceledDialog] = useState<boolean>(false);
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
 
   const saveMutation = useSaveComparativeAnalysis();
@@ -188,20 +193,6 @@ export function SaleAdjustmentGridPanel({
     setSelectedTemplateCode(templateCode);
   };
 
-  /** cancel calculation handler */
-  const handleOnCancelCalculationMethod = () => {
-    setisShowCanceledDialog(true);
-  };
-
-  const handleOnConfirmCancelCalculationMethod = () => {
-    onCancelCalculationMethod();
-    setisShowCanceledDialog(false);
-  };
-
-  const handleOnDenyCancelCalculationMethod = () => {
-    setisShowCanceledDialog(false);
-  };
-
   /** reset handler */
   const handleOnReset = () => setIsShowResetDialog(true);
   const handleOnConfirmReset = async () => {
@@ -219,24 +210,6 @@ export function SaleAdjustmentGridPanel({
     } catch {
       toast.error('Failed to reset method');
     }
-  };
-
-  const onInvalid: SubmitErrorHandler<SaleAdjustmentGridType> = errs => {
-    const messages = flattenRHFErrors(errs);
-
-    toast.error(
-      <div>
-        <div className="font-semibold">Please fix these fields</div>
-        <ul className="mt-1 list-disc pl-5">
-          {messages.slice(0, 6).map(m => (
-            <li key={m} className={'text-wrap'}>
-              {m}
-            </li>
-          ))}
-        </ul>
-      </div>,
-      { id: 'sale-grid-form-errors' },
-    );
   };
 
   // Auto-show table when linked comparables already exist from the API
@@ -260,11 +233,17 @@ export function SaleAdjustmentGridPanel({
       // Set appraisal price from saved method value AFTER reset, with shouldDirty
       // so derived rules won't overwrite it with the calculated final value
       if (savedMethodValue != null && savedMethodValue !== 0) {
-        setValue('saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any, savedMethodValue, { shouldDirty: true });
+        setValue(
+          'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any,
+          savedMethodValue,
+          { shouldDirty: true },
+        );
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
-        const savedTemplate = (templateList ?? []).find(t => t.id === savedComparativeAnalysisTemplateId);
+        const savedTemplate = (templateList ?? []).find(
+          t => t.id === savedComparativeAnalysisTemplateId,
+        );
         if (savedTemplate) {
           if (savedTemplate.propertyType) setCollateralType(savedTemplate.propertyType);
           if (savedTemplate.templateCode) setSelectedTemplateCode(savedTemplate.templateCode);
@@ -285,7 +264,15 @@ export function SaleAdjustmentGridPanel({
       reset,
     });
     setIsGenerated(true);
-  }, [comparativeSurveys, isGenerated, methodId, methodType, property, reset, savedComparativeFactors]);
+  }, [
+    comparativeSurveys,
+    isGenerated,
+    methodId,
+    methodType,
+    property,
+    reset,
+    savedComparativeFactors,
+  ]);
 
   // Restore pricingTemplate when template detail query resolves (e.g. after restore from saved data)
   useEffect(() => {
@@ -302,8 +289,14 @@ export function SaleAdjustmentGridPanel({
     if (!methodId || !methodType || !property) return;
 
     // Only re-init when the set of surveys actually changed
-    const formSurveyIds = (getValues('comparativeSurveys') ?? []).map(s => s.marketId).sort().join(',');
-    const currentSurveyIds = comparativeSurveys.map(s => s.id).sort().join(',');
+    const formSurveyIds = (getValues('comparativeSurveys') ?? [])
+      .map(s => s.marketId)
+      .sort()
+      .join(',');
+    const currentSurveyIds = comparativeSurveys
+      .map(s => s.id)
+      .sort()
+      .join(',');
     if (formSurveyIds === currentSurveyIds) return;
 
     syncSaleAdjustmentGridFormSurveys({
@@ -328,9 +321,12 @@ export function SaleAdjustmentGridPanel({
   }, [isDirty, onCalculationMethodDirty]);
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider methods={methods} schema={SaleAdjustmentGridDto}>
       <form
-        onSubmit={(e) => { e.preventDefault(); handleOnSubmit(); }}
+        onSubmit={e => {
+          e.preventDefault();
+          handleSubmit(handleOnSubmit)(e);
+        }}
         className="flex flex-col h-full gap-4"
       >
         <PricingAnalysisTemplateSelector
@@ -345,13 +341,12 @@ export function SaleAdjustmentGridPanel({
           template={{
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
-            options:
-              (templateList ?? [])
-                .filter(t => t.propertyType === collateralType)
-                .map(t => ({
-                  value: t.templateCode,
-                  label: t.templateName,
-                })),
+            options: (templateList ?? [])
+              .filter(t => t.propertyType === collateralType)
+              .map(t => ({
+                value: t.templateCode,
+                label: t.templateName,
+              })),
           }}
         />
         {isGenerated && (
@@ -368,19 +363,13 @@ export function SaleAdjustmentGridPanel({
               />
             </div>
             <MethodFooterActions
-              onCancel={handleOnCancelCalculationMethod}
+              onCancel={onCancelCalculationMethod}
               onReset={handleOnReset}
               showReset={!!savedComparativeFactors && savedComparativeFactors.length > 0}
               isSubmitting={saveMutation.isPending}
             />
           </>
         )}
-        <ConfirmDialog
-          isOpen={isShowCanceledDialog}
-          onClose={handleOnDenyCancelCalculationMethod}
-          onConfirm={handleOnConfirmCancelCalculationMethod}
-          message={`Are you sure? If you confirm the calculation value of this method will be removed.`}
-        />
         <ConfirmDialog
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}

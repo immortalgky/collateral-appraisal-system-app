@@ -1,5 +1,5 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
@@ -27,6 +27,9 @@ import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorD
 import { useLocaleStore } from '@shared/store';
 import { format } from 'date-fns';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { MarketComparableDetailModal } from './MarketComparableDetailModal';
+import { isScoreReasonable } from '@/features/pricingAnalysis/domain/checkWQSReasonableScore';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -80,6 +83,9 @@ export function WQSScoringSection({
     finalValueFinalValue: finalValueFinalValuePath,
     finalValueFinalValueRounded: finalValueFinalValueRoundedPath,
   } = wqsFieldPath;
+
+  const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
+  const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
 
   const serverData = useContext(ServerDataCtx);
   const language = useLocaleStore(s => s.language);
@@ -240,7 +246,24 @@ export function WQSScoringSection({
                     }
                   >
                     <div className="flex flex-col">
-                      <div className="p-1">{survey.surveyName}</div>
+                      <div className="p-1 flex items-center justify-center gap-1.5">
+                        <span>{survey.surveyName}</span>
+                        <button
+                          type="button"
+                          className="text-gray-500 hover:text-primary-600 transition-colors"
+                          onClick={() => {
+                            setSelectedSurveyId(survey.id ?? null);
+                            onModalOpen();
+                          }}
+                          title="View market comparable detail"
+                        >
+                          <Icon
+                            name="arrow-up-right-from-square"
+                            style="solid"
+                            className="size-3.5"
+                          />
+                        </button>
+                      </div>
                       <div className="flex flex-row justify-between items-center">
                         <span>Score</span>
                         <span>Weighted Score</span>
@@ -326,6 +349,7 @@ export function WQSScoringSection({
                       <RHFInputCell
                         fieldName={scoringFactorWeightPath({ row: rowIndex })}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 1, allowNegative: false }}
                       />
                     </td>
                     <td
@@ -336,6 +360,7 @@ export function WQSScoringSection({
                       <RHFInputCell
                         fieldName={scoringFactorIntensityPath({ row: rowIndex })}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 2, allowNegative: false }}
                       />
                     </td>
                     {/* weight * intensity */}
@@ -364,14 +389,13 @@ export function WQSScoringSection({
                                     column: columnIndex,
                                   })}
                                   inputType="number"
-                                  onUserChange={v => {
-                                    if (v == null) return null;
-                                    const intensity = getValues(
+                                  number={{
+                                    decimalPlaces: 0,
+                                    maxIntegerDigits: 2,
+                                    maxValue: getValues(
                                       scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                                    );
-                                    if (v > intensity) return intensity;
-                                    if (v < 0) return 0;
-                                    return v;
+                                    ),
+                                    allowNegative: false,
                                   }}
                                 />
                               </div>
@@ -399,14 +423,13 @@ export function WQSScoringSection({
                               row: rowIndex,
                             })}
                             inputType="number"
-                            onUserChange={v => {
-                              if (v == null) return null;
-                              const intensity = getValues(
+                            number={{
+                              decimalPlaces: 0,
+                              maxIntegerDigits: 2,
+                              maxValue: getValues(
                                 scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                              );
-                              if (v > intensity) return intensity;
-                              if (v < 0) return 0;
-                              return v;
+                              ),
+                              allowNegative: false,
                             }}
                           />
                         </div>
@@ -601,7 +624,9 @@ export function WQSScoringSection({
                       inputType="display"
                       accessor={({ value }) => {
                         if (!value) return '';
-                        const unit = survey.offerPriceUnit ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit) : '';
+                        const unit = survey.offerPriceUnit
+                          ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
+                          : '';
                         return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
@@ -642,6 +667,12 @@ export function WQSScoringSection({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustAmt}
                       />
                     )}
@@ -680,6 +711,12 @@ export function WQSScoringSection({
                           column: columnIndex,
                         })}
                         inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 15,
+                          maxValue: 999_999_999_999_999.0,
+                          allowNegative: false,
+                        }}
                         disabled={hasAdjustPct}
                       />
                     )}
@@ -718,7 +755,9 @@ export function WQSScoringSection({
                       inputType="display"
                       accessor={({ value }) => {
                         if (!value) return '';
-                        const unit = survey.salePriceUnit ? getParameterDescription('MeasurementUnits', survey.salePriceUnit) : '';
+                        const unit = survey.salePriceUnit
+                          ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
+                          : '';
                         return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
                       }}
                     />
@@ -800,6 +839,12 @@ export function WQSScoringSection({
                         fieldName={calculationAdjustmentYearPath({ column: columnIndex })}
                         inputType="number"
                         disabled={hasOfferPrice}
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100,
+                          allowNegative: false,
+                        }}
                       />
                     )}
                   </td>
@@ -810,8 +855,7 @@ export function WQSScoringSection({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-left items-center'}>
-                  <span>Cumulative Adjusted Period</span>
-                  <span>(%)</span>
+                  <span>Cumulative Adjusted Period (%)</span>
                 </div>
               </td>
               <td
@@ -863,12 +907,32 @@ export function WQSScoringSection({
               ></td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
                 return (
-                  <td key={survey.id} className={'border-b border-r border-gray-300'}>
+                  <td key={survey.id} className={'border-b border-r border-gray-300 text-right'}>
                     <RHFInputCell
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => {
-                        return value ? value.toLocaleString() : '';
+                      accessor={({ value, getValues }) => {
+                        const currentSurvey = {
+                          score: getValues(totalWeightedSurveyScorePath({ column: columnIndex })),
+                          price: getValues(calculationAdjustedValuePath({ column: columnIndex })),
+                        };
+
+                        const otherSurveys = (comparativeSurveys ?? [])
+                          .filter((_, compIndex) => compIndex !== columnIndex)
+                          .map((_, compIndex) => ({
+                            score: getValues(totalWeightedSurveyScorePath({ column: compIndex })),
+                            price: getValues(calculationAdjustedValuePath({ column: compIndex })),
+                          }));
+
+                        return (
+                          <span
+                            className={
+                              isScoreReasonable(currentSurvey, otherSurveys) ? '' : 'text-danger'
+                            }
+                          >
+                            {value ? value.toLocaleString() : ''}
+                          </span>
+                        );
                       }}
                     />
                   </td>
@@ -931,12 +995,26 @@ export function WQSScoringSection({
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
               <td className={clsx('bg-gray-100 border-b border-gray-300 px-1 py-1')}>
-                <RHFInputCell fieldName={finalValueFinalValueRoundedPath()} inputType="number" />
+                <RHFInputCell
+                  fieldName={finalValueFinalValueRoundedPath()}
+                  inputType="number"
+                  number={{
+                    decimalPlaces: 2,
+                    maxIntegerDigits: 15,
+                    allowNegative: false,
+                    maxValue: 999_999_999_999_999.0,
+                  }}
+                />
               </td>
             </tr>
           </tbody>
         </table>
       </ScrollableTableContainer>
+      <MarketComparableDetailModal
+        isOpen={isModalOpen}
+        onClose={onModalClose}
+        marketComparableId={selectedSurveyId}
+      />
     </div>
   );
 }

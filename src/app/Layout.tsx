@@ -24,7 +24,7 @@ const userNavigation = [
   {
     name: 'Sign out',
     nameKey: 'userMenu.signOut',
-    href: 'https://localhost:7111/connect/logout?client_id=spa&post_logout_redirect_uri=https://localhost:3000/',
+    href: `${import.meta.env.VITE_API_URL}/connect/logout?client_id=spa&post_logout_redirect_uri=${import.meta.env.VITE_APP_URL}/`,
   },
 ];
 

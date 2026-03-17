@@ -6,6 +6,7 @@ import type { PricingServerData } from '../types/selection';
 import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { DiscountedCashFlowPanel } from './DiscountedCashFlowPanel';
+import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -31,10 +32,16 @@ export function MethodSectionRenderer({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: MethodSectionRendererProps) {
+  const groupCollateralType = deriveGroupCollateralType(serverData.groupDetail?.properties ?? []);
+
+  const filteredMarketSurveys = groupCollateralType
+    ? serverData.marketSurveyDetails.filter(s => s.propertyType === groupCollateralType)
+    : serverData.marketSurveyDetails;
+
   const panelProps = {
     activeMethod: state.activeMethod,
     property: serverData.properties,
-    marketSurveys: serverData.marketSurveyDetails,
+    marketSurveys: filteredMarketSurveys,
     allFactors: serverData.allFactors,
     templateList: calculationMethodData.templateList,
     linkedComparables: calculationMethodData.comparativeFactors?.linkedComparables,

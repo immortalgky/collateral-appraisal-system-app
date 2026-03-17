@@ -379,8 +379,8 @@ function RequestListingPage() {
                 requests.map(request => (
                   <tr
                     key={request.id}
-                    onClick={() => request.id && handleRowClick(request.id)}
-                    className="hover:bg-gray-50 even:bg-gray-50/50 cursor-pointer transition-colors"
+                    onDoubleClick={() => request.id && handleRowClick(request.id)}
+                    className="hover:bg-gray-50 even:bg-gray-50/50 transition-colors"
                   >
                     <td className="px-4 py-2.5">
                       <span

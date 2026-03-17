@@ -261,12 +261,11 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
 
     // PhotoSourceModal: "Upload from Device" handler
     const handleUploadFromDevice = useCallback(
-      (files: FileList) => {
-        Array.from(files).forEach(file => {
-          if (file.type.startsWith('image/')) {
-            handleUpload(file);
-          }
-        });
+      async (files: FileList) => {
+        const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+        for (const file of imageFiles) {
+          await handleUpload(file);
+        }
       },
       [handleUpload],
     );
