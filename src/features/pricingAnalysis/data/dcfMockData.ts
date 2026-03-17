@@ -1,4 +1,5 @@
 import type { DCFFormType } from '../schemas/dcfForm';
+import type { DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
 
 // ─── Mock Data ───
 export const dcfMockData: DCFFormType = {
@@ -280,50 +281,47 @@ export const dcfMockData: DCFFormType = {
   ],
 };
 
-// Template
-interface DCFTemplate {
-  collateralType: string;
-  templateName: string;
-  totalNumberOfYears: number;
-  totalNumberOfDayInYear: number;
-  capitalizeRate: number;
-  discountedRate: number;
-}
-
-const dcfTemplate: DCFTemplate = {
-  id: 'cf-001',
-  collateralType: '',
-  templateName: '',
+export const dcfHotelTemplate: DCFTemplateType = {
+  id: 'dcf-001',
+  templateCode: 'dcf-hotel',
+  templateName: 'dcf-hotel',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
   capitalizeRate: 3,
   discountedRate: 5,
   sections: [
     {
-      id: 's1',
       sectionType: 'income',
       sectionName: 'Income',
+      identifier: 'positive',
       categories: [
         {
-          id: 'c1',
           categoryType: '',
+          categoryName: 'Operating Income',
+          identifier: 'positive',
           assumptions: [
             {
-              id: 'a1',
               assumptionType: 'a1',
-              assumptionName: 'Product Sales',
+              assumptionName: 'Room Income',
+              identifier: 'positive',
               method: {
-                id: 'm1',
+                methodType: 'specifyRoomIncomePerDay',
+              },
+            },
+            {
+              assumptionType: 'a2',
+              assumptionName: 'Food and Beverage Income',
+              identifier: 'positive',
+              method: {
                 methodType: 'proportion',
               },
             },
             {
-              id: 'a2',
-              assumptionType: 'a2',
-              assumptionName: 'Service Revenue',
+              assumptionType: 'a3',
+              assumptionName: 'Other Income',
+              identifier: 'positive',
               method: {
-                id: 'm2',
-                methodType: 'm2',
+                methodType: 'proportion',
               },
             },
           ],
@@ -442,3 +440,5 @@ const methodGrowth = {
   increaseRatePct: 10,
   increaseRateEveryYrs: 3,
 };
+
+export const dcfTemplateList = [{ templateCode: 'dcf-hotel', id: 'dcf-001' }];

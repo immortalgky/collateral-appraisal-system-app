@@ -1,10 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { DCF, type DCFFormType } from '../schemas/dcfForm';
-import { dcfMockData } from '../data/dcfMockData';
+import { dcfHotelTemplate, dcfMockData, dcfTemplateList } from '../data/dcfMockData';
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { DiscountedCashFlowTableSection } from './DiscountedCashFlowTableSection';
+import { DiscountedCashFlowTable } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
+import type { DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
+import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
+import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
+import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
+import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -14,8 +19,21 @@ interface DiscountedCashFlowPanelProps {
     methodId?: string;
     methodType?: string;
   };
+  templateList: unknown;
+  onCalculationSave: (payload: {
+    approachType: string;
+    methodType: string;
+    appraisalValue: number;
+  }) => void;
+  onCalculationMethodDirty: (check: boolean) => void;
+  onCancelCalculationMethod: () => void;
 }
-export function DiscountedCashFlowPanel({ activeMethod }: DiscountedCashFlowPanelProps) {
+export function DiscountedCashFlowPanel({
+  activeMethod,
+  onCalculationSave,
+  onCalculationMethodDirty,
+  onCancelCalculationMethod,
+}: DiscountedCashFlowPanelProps) {
   // const { methodId, methodType } = activeMethod ?? {};
 
   const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCF) });
@@ -24,19 +42,83 @@ export function DiscountedCashFlowPanel({ activeMethod }: DiscountedCashFlowPane
 
   const data = getValues();
 
-  useEffect(() => {
-    reset(dcfMockData);
-  }, []);
-  // inquiry logic
+  const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
+  const [pricingTemplate, setPricingTemplate] = useState<DCFTemplateType | undefined>();
+  const [isGenerated, setIsGenerated] = useState<boolean>(false);
+
+  const templateList = dcfTemplateList; // mock data
+  const selectedTemplateId = (templateList ?? []).find(
+    t => t.templateCode === selectedTemplateCode,
+  )?.id;
+  const templateDetailQuery = dcfHotelTemplate; // replace by query template detail by template id function.
+
+  const handleOnGenerate = async () => {
+    setIsGenerated(false);
+
+    // initialize
+    reset(dcfHotelTemplate);
+
+    setIsGenerated(true);
+  };
+
+  const handleOnSelectTemplate = (templateCode: string) => {
+    setSelectedTemplateCode(templateCode);
+  };
+
+  // restore
+  useEffect(() => {}, []);
+
+  const isLoading = !isGenerated;
+
+  // reset handler
+  const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
+  const handleOnReset = () => setIsShowResetDialog(true);
+  const handleOnConfirmReset = async () => {
+    setIsShowResetDialog(false);
+    // ...
+    setIsGenerated(false);
+  };
 
   return (
     <FormProvider methods={methods} schema={DCF}>
       <form>
         {/* template */}
+        <PricingAnalysisTemplateSelector
+          icon={''}
+          methodName={'Income'}
+          onGenerate={handleOnGenerate}
+          collateralType={{
+            onSelectCollateralType: () => null,
+            value: '',
+            options: COLLATERAL_TYPE,
+          }}
+          template={{
+            onSelectTemplate: handleOnSelectTemplate,
+            value: selectedTemplateCode,
+            options: [{ value: 'dcf-hotel', label: 'DCF-HOTEL' }],
+          }}
+        />
 
-        <DiscountedCashFlowTableSection totalNumberOfYears={data.totalNumberOfYears} />
+        {!isLoading && (
+          <div className="flex flex-col gap-1">
+            <DiscountedCashFlowTable totalNumberOfYears={data.totalNumberOfYears} />
 
-        {/* footer save, reset, cancel */}
+            {/* footer save, reset, cancel */}
+            <MethodFooterActions
+              onCancel={onCancelCalculationMethod}
+              onReset={handleOnReset}
+              showReset={isShowResetDialog}
+              isSubmitting={false}
+            />
+          </div>
+        )}
+
+        <ConfirmDialog
+          isOpen={isShowResetDialog}
+          onClose={() => setIsShowResetDialog(false)}
+          onConfirm={handleOnConfirmReset}
+          message="Are you sure you want to reset this method? All calculation data will be cleared."
+        />
       </form>
     </FormProvider>
   );

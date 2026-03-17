@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { DCFCategoryFormType } from '../schemas/dcfForm';
-import type { SectionColor } from './DiscountedCashFlowTableSection';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
+import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
 
 interface DiscountedCashFlowCategoryProps {
   category: DCFCategoryFormType;
@@ -35,7 +35,7 @@ export function DiscountedCashFlowCategory({
       <tr style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setExpanded(!expanded)}>
         <td
           className={clsx(
-            'flex flex-row items-center just px-1 py-1.5 pl-8 gap-1.5',
+            'flex flex-row items-center justify-between px-1 py-1.5 pl-8 gap-1.5',
             'text-[13px]',
             color.text,
             'text-right',
@@ -43,38 +43,42 @@ export function DiscountedCashFlowCategory({
             'border-b border-gray-300',
           )}
         >
-          <Icon
-            name="chevron-down"
-            style="solid"
-            className={clsx(
-              'size-2 transition-transform duration-300 ease-in-out shrink-0',
-              expanded ? '' : 'rotate-180',
-            )}
-          />
-          {category?.categoryName ?? ''}
-          <span
-            className={clsx(
-              'flex items-center justify-center text-sm',
-              color.textAccent,
-              color.bg,
-              'rounded-full w-6 h-6',
-            )}
-          >
-            {category?.assumptions?.length ?? 0}
-          </span>
+          <div className="flex flex-row items-center gap-1.5">
+            <Icon
+              name="chevron-down"
+              style="solid"
+              className={clsx(
+                'size-2 transition-transform duration-300 ease-in-out shrink-0',
+                expanded ? '' : 'rotate-180',
+              )}
+            />
+            {category?.categoryName ?? ''}
+            <span
+              className={clsx(
+                'flex items-center justify-center text-sm',
+                color.textAccent,
+                color.bg,
+                'rounded-full w-6 h-6',
+              )}
+            >
+              {category?.assumptions?.length ?? 0}
+            </span>
+          </div>
         </td>
-        {(category?.totalCategoryValues ?? []).map((v, i) => (
-          <td
-            key={i}
-            className={clsx(
-              'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
-              color.badge,
-              'bg-white',
-            )}
-          >
-            {v.value}
-          </td>
-        ))}
+        {Array.from({ length: totalNumberOfYears }, (_, index) => {
+          return (
+            <td
+              key={index}
+              className={clsx(
+                'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
+                // color.badge,
+                'bg-white',
+              )}
+            >
+              {category.totalCategoryValues?.[index].value ?? 0}
+            </td>
+          );
+        })}
       </tr>
 
       {/* Assumption rows */}

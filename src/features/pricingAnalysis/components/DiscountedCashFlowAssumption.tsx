@@ -70,18 +70,20 @@ export function DiscountedCashFlowAssumption({
             </button>
           </div>
         </td>
-        {(assumption.totalAssumptionValues ?? []).map((v, i) => (
-          <td
-            key={i}
-            className={clsx(
-              'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
-              // color.badge,
-              'bg-gray-50',
-            )}
-          >
-            {v.value}
-          </td>
-        ))}
+        {Array.from({ length: totalNumberOfYears }, (_, index) => {
+          return (
+            <td
+              key={index}
+              className={clsx(
+                'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
+                // color.badge,
+                'bg-gray-50',
+              )}
+            >
+              {assumption.totalAssumptionValues?.[index].value ?? 0}
+            </td>
+          );
+        })}
       </tr>
       {expanded && (
         <DiscountedCashFlowMethodRenderer
