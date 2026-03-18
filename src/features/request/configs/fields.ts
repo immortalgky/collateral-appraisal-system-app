@@ -638,7 +638,13 @@ export const titleMachineFields: FormField[] = [
     label: 'Registration No',
     name: 'registrationNo',
     wrapperClassName: 'col-span-3',
-    requiredWhen: { field: 'installationStatus', is: '1' },
+    requiredWhen: {
+      conditions: [
+        { field: 'installationStatus', is: '1' },
+        { field: 'registrationStatus', is: true },
+      ],
+      match: 'all',
+    },
     maxLength: 50,
   },
   {
