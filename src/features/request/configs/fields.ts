@@ -707,7 +707,6 @@ export const titleAddressFields: FormField[] = [
     addressSource: 'title',
     wrapperClassName: 'col-span-2',
     required: true,
-    disablePastDates: true,
   },
   {
     type: 'text-input',
