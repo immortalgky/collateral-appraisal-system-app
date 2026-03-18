@@ -13,13 +13,15 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
 
 const condoAreaColumns = [
   { rowNumberColumn: true as const, label: '#' },
-  { name: 'areaDescription', label: 'Area Detail', width: '70%' },
+  { name: 'areaDescription', label: 'Area Detail', width: '70%', maxLength: 200 },
   {
     name: 'areaSize',
     label: 'Area (Sq. M.)',
     inputType: 'number' as const,
     width: '20%',
     align: 'right' as const,
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
   },
 ];
 

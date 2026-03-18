@@ -7,6 +7,8 @@ interface NumberInputCellProps {
   fieldName: string;
   control: Control<FieldValues>;
   isEditing: boolean;
+  decimalPlaces?: number;
+  maxIntegerDigits?: number;
   render?: (value: string | number | boolean) => React.ReactNode;
   modifier?: (value: number | string | boolean) => string | number | boolean;
   isReadonly?: boolean;
@@ -18,6 +20,8 @@ const NumberInputCell = ({
   fieldName,
   control,
   isEditing,
+  decimalPlaces,
+  maxIntegerDigits,
   render,
   modifier,
   isReadonly = false,
@@ -48,7 +52,7 @@ const NumberInputCell = ({
   if (isEditing) {
     return (
       <div>
-        <NumberInput {...field} />
+        <NumberInput {...field} maxIntegerDigits={maxIntegerDigits} decimalPlaces={decimalPlaces} />
         {error ? <div className="mt-1 text-sm text-danger">{error.message}</div> : null}
       </div>
     );

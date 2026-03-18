@@ -104,12 +104,14 @@ const SurfaceInputModal = ({
                     value={fromFloorNumber ?? undefined}
                     onChange={e => setValue('fromFloorNumber', e.target.value)}
                     decimalPlaces={0}
+                    maxIntegerDigits={3}
                   />
                   <NumberInput
                     label="To Floor"
                     value={toFloorNumber ?? undefined}
                     onChange={e => setValue('toFloorNumber', e.target.value)}
                     decimalPlaces={0}
+                    maxIntegerDigits={3}
                   />
                 </div>
               </div>
@@ -131,7 +133,7 @@ const SurfaceInputModal = ({
                   Floor Structure
                 </label>
                 <Dropdown
-                  group="FloorStructureType"
+                  group="FloorStructure"
                   value={floorStructureType}
                   onChange={value => setValue('floorStructureType', value)}
                   placeholder="Select floor structure"
@@ -144,7 +146,7 @@ const SurfaceInputModal = ({
                   Floor Surface
                 </label>
                 <Dropdown
-                  group="FloorSurfaceType"
+                  group="FloorSurface"
                   value={floorSurfaceType}
                   onChange={value => setValue('floorSurfaceType', value)}
                   placeholder="Select floor surface"

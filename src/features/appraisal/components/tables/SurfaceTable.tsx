@@ -47,9 +47,12 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
     setIsModalOpen(true);
   }, []);
 
-  const handleRowDoubleClick = useCallback((index: number) => {
-    handleEditClick(index);
-  }, [handleEditClick]);
+  const handleRowDoubleClick = useCallback(
+    (index: number) => {
+      handleEditClick(index);
+    },
+    [handleEditClick],
+  );
 
   const handleDeleteClick = useCallback(
     (index: number) => {
@@ -100,18 +103,12 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
               <th className="text-white text-sm font-medium py-3 px-4 text-left rounded-tl-lg w-12">
                 #
               </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Range
-              </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Type
-              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Range</th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Type</th>
               <th className="text-white text-sm font-medium py-3 px-4 text-left">
                 Floor Structure
               </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Surface
-              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Surface</th>
               <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">
                 Actions
               </th>
@@ -156,10 +153,10 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                     <ParameterDisplay group="FloorType" code={row.floorType} />
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    <ParameterDisplay group="FloorStructureType" code={row.floorStructureType} />
+                    <ParameterDisplay group="FloorStructure" code={row.floorStructureType} />
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    <ParameterDisplay group="FloorSurfaceType" code={row.floorSurfaceType} />
+                    <ParameterDisplay group="FloorSurface" code={row.floorSurfaceType} />
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-1 justify-end">
