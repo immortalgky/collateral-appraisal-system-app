@@ -35,6 +35,9 @@ interface RHFInputCellProps {
     label?: string;
     maxLength?: number;
   };
+  dropdown?: {
+    label?: string;
+  };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
   onSelectChange?: (value: string) => void;
@@ -52,6 +55,7 @@ export const RHFInputCell = ({
   number,
   toggle,
   text,
+  dropdown,
   options,
   onUserChange,
   onSelectChange,
@@ -99,11 +103,11 @@ export const RHFInputCell = ({
           field.onChange(value);
           onSelectChange?.(value);
         }}
+        label={dropdown?.label}
         options={options ?? []}
         error={error?.message}
       />
-    ); // TODO error message on validation
-    return <Dropdown {...field} options={options ?? []} error={error?.message} />;
+    );
   }
 
   if (inputType === 'toggle') {

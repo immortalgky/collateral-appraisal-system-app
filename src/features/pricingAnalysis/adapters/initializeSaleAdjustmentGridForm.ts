@@ -189,7 +189,10 @@ export function initializeSaleAdjustmentGridForm({
           return {
             factorId: factorIdMap.get(calcFact.factorCode) ?? '',
             factorCode: calcFact.factorCode,
-            surveys: [],
+            surveys: (comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => ({
+              marketId: survey.id,
+              adjustPercent: 0,
+            })),
           };
         },
       ),

@@ -85,6 +85,7 @@ export function DirectComparisonPanel({
     reset,
     setValue,
     formState: { isDirty },
+    trigger,
   } = methods;
 
   /** Linked comparables — syncs with server on select/deselect */
@@ -151,6 +152,12 @@ export function DirectComparisonPanel({
   };
 
   const handleOnGenerate = async () => {
+    if (!selectedTemplateId || !collateralType) {
+      trigger('pricingTemplateCode');
+      trigger('collateralType');
+      return;
+    }
+
     setIsGenerated(false);
 
     let template: TemplateDetailType | undefined;
@@ -183,6 +190,8 @@ export function DirectComparisonPanel({
 
   const handleOnSelectCollateralType = (collateralType: string) => {
     setCollateralType(collateralType);
+    setSelectedTemplateCode('');
+    setValue('pricingTemplateCode', null, { shouldDirty: true });
   };
 
   const handleOnSelectTemplate = (templateCode: string) => {
@@ -239,8 +248,14 @@ export function DirectComparisonPanel({
           t => t.id === savedComparativeAnalysisTemplateId,
         );
         if (savedTemplate) {
-          if (savedTemplate.propertyType) setCollateralType(savedTemplate.propertyType);
-          if (savedTemplate.templateCode) setSelectedTemplateCode(savedTemplate.templateCode);
+          if (savedTemplate.propertyType) {
+            setCollateralType(savedTemplate.propertyType);
+            setValue('collateralType', savedTemplate.propertyType);
+          }
+          if (savedTemplate.templateCode) {
+            setSelectedTemplateCode(savedTemplate.templateCode);
+            setValue('pricingTemplateCode', savedTemplate.templateCode);
+          }
         }
       }
       setIsGenerated(true);
@@ -327,6 +342,7 @@ export function DirectComparisonPanel({
       <form
         onSubmit={e => {
           e.preventDefault();
+          console.log(getValues());
           handleSubmit(handleOnSubmit)(e);
         }}
         className="flex flex-col h-full gap-4"
@@ -336,11 +352,13 @@ export function DirectComparisonPanel({
           methodName="Direct Comparison"
           onGenerate={handleOnGenerate}
           collateralType={{
+            fieldName: 'collateralType',
             onSelectCollateralType: handleOnSelectCollateralType,
             value: collateralType,
             options: COLLATERAL_TYPE,
           }}
           template={{
+            fieldName: 'pricingTemplateCode',
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
             options: (templateList ?? [])

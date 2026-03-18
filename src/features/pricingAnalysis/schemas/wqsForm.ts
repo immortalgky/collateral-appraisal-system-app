@@ -8,36 +8,21 @@ const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
 /** select surveys section */
 const ComparativeFactor = z
   .object({
-    id: z.string().nullable().optional(),
-    factorId: z.string(),
-    factorCode: z.string(),
-  })
-  .passthrough();
-
-const ComparativeSurveys = z
-  .object({
-    linkId: z.string().nullable().optional(),
-    marketId: z.string(),
-    displaySeq: z.number(),
+    factorCode: z.string(requireMsg('Factor code')),
   })
   .passthrough();
 
 /** WQS scoring section */
 const WQSSurveyScore = z
   .object({
-    id: z.string().nullable().optional(),
-    marketId: z.string(),
     surveyScore: z.number().nullable(),
-    weightedSurveyScore: z.number(),
   })
   .passthrough();
 
 const WQSScore = z.object({
-  factorId: z.string(),
-  factorCode: z.string(),
+  factorCode: z.string(requireMsg('Factor code')),
   weight: z.number(requireMsg('Weight')),
   intensity: z.number(requireMsg('Intensity')),
-  weightedIntensity: z.number(),
   surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
     for (const [i, item] of items.entries()) {
       if (item.surveyScore == null) {
@@ -50,73 +35,27 @@ const WQSScore = z.object({
     }
   }),
   collateral: z.number(requireMsg('Collateral score')),
-  collateralWeightedScore: z.number(),
-  collateralScoreId: z.string().nullable(),
 });
 
 /** WQS calculation section */
-const WQSCalculation = z
-  .object({
-    marketId: z.string(),
-    offeringPrice: z.number().nullable(),
-    offeringPriceMeasurementUnit: z.string().nullable(),
-    offeringPriceAdjustmentPct: z.number().nullable(),
-    offeringPriceAdjustmentAmt: z.number().nullable(),
-    sellingPrice: z.number().nullable(),
-    sellingPriceMeasurementUnit: z.string().nullable(),
-    // sellingDate: z.date(), TODO
-    sellingPriceAdjustmentYear: z.number().nullable(),
-    totalAdjustedSellingPrice: z.number().nullable(),
-    numberOfYears: z.number().nullable(),
-    adjustedValue: z.number(),
-  })
-  .passthrough();
+const WQSCalculation = z.object({}).passthrough();
 
 /** Adjust final price section */
 const WQSFinalValue = z
   .object({
-    finalValue: z.number(),
     finalValueRounded: z.number(requireMsg('Final value (rounded)')),
-    coefficientOfDecision: z.number(),
-    standardError: z.number(),
-    intersectionPoint: z.number(),
-    slope: z.number(),
-    lowestEstimate: z.number(),
-    highestEstimate: z.number(),
-    hasBuildingCost: z.boolean().optional(),
-    includeLandArea: z.boolean().optional(),
-    landArea: z.number().optional(),
-    usableArea: z.number().optional(),
-    appraisalPrice: z.number(),
     appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
   })
   .passthrough();
 
-export const TotalSurveyScore = z
-  .object({
-    marketId: z.string(),
-    totalScore: z.number(),
-    totalWeightedScore: z.number(),
-  })
-  .passthrough();
+export const TotalSurveyScore = z.object({}).passthrough();
 
-export const WQSTotalScore = z
-  .object({
-    totalWeight: z.number(),
-    totalIntensity: z.number(),
-    totalWeightedIntensity: z.number(),
-    surveys: z.array(TotalSurveyScore),
-    totalCollateralScore: z.number(),
-    totalWeightedCollateralScore: z.number(),
-  })
-  .passthrough();
+export const WQSTotalScore = z.object({}).passthrough();
 
 export const WQSDto = z
   .object({
-    methodId: z.string().nullable().optional(), // remove if select template is mandatory
-    collateralType: z.string().nullable().optional(), // remove if select template is mandatory
-    pricingTemplateCode: z.string().nullable().optional(), // remove if select template is mandatory
-    comparativeSurveys: z.array(ComparativeSurveys),
+    collateralType: z.string(requireMsg('Collateral type')),
+    pricingTemplateCode: z.string(requireMsg('Template')),
     comparativeFactors: z.array(ComparativeFactor),
     WQSScores: z.array(WQSScore),
     WQSTotalScores: WQSTotalScore,

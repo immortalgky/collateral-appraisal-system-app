@@ -29,8 +29,6 @@ import type {
 import type {
   FactorDataType,
   MarketComparableDetailType,
-  TemplateCalculationFactorType,
-  TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
 import { FactorValueDisplay } from './FactorValueDisplay';
@@ -126,8 +124,6 @@ export const DirectComparisonScoringSection = ({
 
   const handleAddRow = () => {
     appendQualitativeFactor({
-      factorId: '',
-      factorCode: '',
       qualitatives: comparativeSurveys.map(survey => ({
         marketId: survey.id,
         qualitativeLevel: 'E',
@@ -135,8 +131,6 @@ export const DirectComparisonScoringSection = ({
     });
 
     appendAdjustmentFactor({
-      factorId: '',
-      factorCode: '',
       surveys: comparativeSurveys.map(survey => ({
         marketId: survey.id,
         adjustPercent: 0,

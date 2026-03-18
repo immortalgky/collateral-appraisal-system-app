@@ -266,7 +266,7 @@ export function ComparativeFactorTable({
                   onClick={() =>
                     appendComparativeSurveyFactors({
                       factorId: '',
-                      factorCode: '',
+                      factorCode: null,
                     })
                   }
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 hover:border-primary/60 transition-colors"

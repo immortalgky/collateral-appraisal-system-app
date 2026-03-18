@@ -6,107 +6,51 @@ const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
 
 const ComparativeFactors = z
   .object({
-    id: z.string().nullable().optional(),
-    factorId: z.string(),
-    factorCode: z.string(),
-  })
-  .passthrough();
-
-const ComparativeSurveys = z
-  .object({
-    linkId: z.string().optional().nullable(),
-    marketId: z.string(),
-    displaySeq: z.number(),
+    factorCode: z.string(requireMsg('Factor code')),
   })
   .passthrough();
 
 const DirectComparisonQualitativeSurvey = z
   .object({
-    marketId: z.string(),
     qualitativeLevel: z.string(requireMsg('Qualitative level')),
   })
   .passthrough();
 
 const DirectComparisonQualitative = z.object({
-  factorId: z.string(),
-  factorCode: z.string(),
+  factorCode: z.string(requireMsg('Factor code')),
   qualitatives: z.array(DirectComparisonQualitativeSurvey),
 });
 
-const DirectComparisonCalculation = z
-  .object({
-    marketId: z.string(),
-    offeringPrice: z.number().nullable(),
-    offeringPriceMeasurementUnit: z.string().nullable(),
-    offeringPriceAdjustmentPct: z.number().nullable(),
-    offeringPriceAdjustmentAmt: z.number().nullable(),
-    sellingPrice: z.number().nullable(),
-    sellingPriceMeasurementUnit: z.string().nullable(),
-    // sellingDate: z.date(), TODO
-    sellingPriceAdjustmentYear: z.number().nullable(),
-    numberOfYears: z.number().nullable(),
-    adjustedValue: z.number(),
-
-    // 2nd revision
-    landAreaOfDeficient: z.number().nullable().optional(),
-    landAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
-    landPrice: z.number().nullable().optional(),
-    landPriceMeasureUnit: z.number().nullable().optional(),
-    landValueIncreaseDecrease: z.number().nullable().optional(),
-    usableAreaOfDeficient: z.number().nullable().optional(),
-    usableAreaOfDeficientMeasureUnit: z.number().nullable().optional(),
-    usableAreaPrice: z.number().nullable().optional(),
-    usableAreaPriceMeasureUnit: z.number().nullable().optional(),
-    buildingValueIncreaseDecrease: z.number().nullable().optional(),
-    totalSecondRevision: z.number().nullable().optional(),
-
-    // adjusted value
-    factorDiffPct: z.number(),
-    factorDiffAmt: z.number(),
-    totalAdjustValue: z.number(),
-  })
-  .passthrough();
+const DirectComparisonCalculation = z.object({}).passthrough();
 
 const DirectComparisonFinalValue = z
   .object({
-    finalValue: z.number(),
     finalValueRounded: z.number(requireMsg('Final value (rounded)')),
   })
   .passthrough();
 
 const DirectComparisonAdjustmentPct = z
   .object({
-    marketId: z.string(),
     adjustPercent: z.number(requireMsg('Adjusted score pct')),
-    adjustAmount: z.number(),
   })
   .passthrough();
 
 const DirectComparisonAdjustmentFactor = z
   .object({
-    factorId: z.string(),
-    factorCode: z.string(),
     surveys: z.array(DirectComparisonAdjustmentPct),
-    remark: z.string().nullable().optional(),
   })
   .passthrough();
 
 const DirectComparisonAppraisalPrice = z
   .object({
-    includeLandArea: z.boolean().nullable().optional(),
-    landArea: z.number().nullable().optional(),
-    usableArea: z.number().nullable().optional(),
-    appraisalPrice: z.number(),
     appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
   })
   .passthrough();
 
 export const DirectComparisonDto = z
   .object({
-    methodId: z.string(),
-    collateralType: z.string().nullable().optional(), // remove nullable and optional if this field is required.
-    pricingTemplateCode: z.string().nullable().optional(), // remove nullable and optional if this field is required.
-    comparativeSurveys: z.array(ComparativeSurveys),
+    collateralType: z.string(requireMsg('Collateral type')),
+    pricingTemplateCode: z.string(requireMsg('Template')),
     comparativeFactors: z.array(ComparativeFactors),
     /** Qualitative section */
     directComparisonQualitatives: z.array(DirectComparisonQualitative),
