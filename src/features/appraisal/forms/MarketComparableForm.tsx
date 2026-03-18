@@ -364,6 +364,8 @@ const buildFormField = (fac: any, index: number): FormField => {
         name: `factorData.[${index}].value`,
         label: '',
         wrapperClassName: 'col-span-12',
+        ...(fac.fieldLength ? { maxIntegerDigits: fac.fieldLength } : {}),
+        ...(fac.fieldDecimal ? { decimalPlaces: fac.fieldDecimal } : {}),
       };
 
     default:

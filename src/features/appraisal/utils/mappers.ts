@@ -408,7 +408,7 @@ export const mapMachineryPropertyResponseToForm = (
     propertyName: response.propertyName ?? null,
     isOwnerVerified: response.isOwnerVerified ?? true,
     ownerName: response.ownerName ?? null,
-    canUse: response.canUse ?? true,
+    isOperational: response.isOperational ?? true,
     machineName: response.machineName ?? null,
     brand: response.brand ?? null,
     model: response.model ?? null,
