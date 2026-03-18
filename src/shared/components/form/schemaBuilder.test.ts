@@ -155,6 +155,105 @@ describe('buildFormSchema — field types', () => {
 });
 
 // =============================================================================
+// buildFormSchema — required + allowZero
+// =============================================================================
+
+describe('buildFormSchema — required number-input + allowZero', () => {
+  it('required number-input with min (no allowZero) rejects 0', () => {
+    const fields: FormField[] = [
+      { type: 'number-input', name: 'score', label: 'Score', required: true, min: -10, max: 10 },
+    ];
+    const schema = buildFormSchema(fields);
+
+    expect(parse(schema, { score: 5 }).success).toBe(true);
+    expect(parse(schema, { score: 0 }).success).toBe(false);
+  });
+
+  it('required number-input with allowZero accepts 0 but rejects null/empty', () => {
+    const fields: FormField[] = [
+      { type: 'number-input', name: 'lat', label: 'Latitude', required: true, min: -90, max: 90, allowZero: true },
+    ];
+    const schema = buildFormSchema(fields);
+
+    expect(parse(schema, { lat: 0 }).success).toBe(true);
+    expect(parse(schema, { lat: 45 }).success).toBe(true);
+    // Empty input sends null from NumberInput component — must be rejected
+    expect(parse(schema, { lat: null }).success).toBe(false);
+    expect(parse(schema, { lat: undefined }).success).toBe(false);
+    expect(parse(schema, { lat: '' }).success).toBe(false);
+  });
+
+  it('required number-input with allowZero shows required message (not NaN)', () => {
+    const fields: FormField[] = [
+      { type: 'number-input', name: 'lat', label: 'Latitude', required: true, min: -90, max: 90, allowZero: true },
+    ];
+    const schema = buildFormSchema(fields);
+
+    const result = parse(schema, { lat: null });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe('Latitude is required');
+  });
+
+  it('required number-input without min still rejects 0 (backward compat)', () => {
+    const fields: FormField[] = [
+      { type: 'number-input', name: 'qty', label: 'Quantity', required: true },
+    ];
+    const schema = buildFormSchema(fields);
+
+    expect(parse(schema, { qty: 0 }).success).toBe(false);
+    expect(parse(schema, { qty: 1 }).success).toBe(true);
+  });
+
+  it('required text-input with minLength still rejects empty string', () => {
+    const fields: FormField[] = [
+      { type: 'text-input', name: 'code', label: 'Code', required: true, minLength: 3 },
+    ];
+    const schema = buildFormSchema(fields);
+
+    expect(parse(schema, { code: '' }).success).toBe(false);
+    expect(parse(schema, { code: 'AB' }).success).toBe(false); // too short
+    expect(parse(schema, { code: 'ABC' }).success).toBe(true);
+  });
+});
+
+describe('buildFormSchema — conditional required + allowZero', () => {
+  it('conditional required with allowZero accepts 0', () => {
+    const fields: FormField[] = [
+      { type: 'select-input', name: 'type', label: 'Type', required: true, options: [] },
+      {
+        type: 'number-input',
+        name: 'value',
+        label: 'Value',
+        required: true,
+        allowZero: true,
+        requiredWhen: { field: 'type', is: 'numeric' },
+      },
+    ];
+    const schema = buildFormSchema(fields);
+
+    // condition met + value is 0 → should pass (allowZero)
+    expect(parse(schema, { type: 'numeric', value: 0 }).success).toBe(true);
+  });
+
+  it('conditional required without allowZero rejects 0', () => {
+    const fields: FormField[] = [
+      { type: 'select-input', name: 'type', label: 'Type', required: true, options: [] },
+      {
+        type: 'number-input',
+        name: 'value',
+        label: 'Value',
+        required: true,
+        requiredWhen: { field: 'type', is: 'numeric' },
+      },
+    ];
+    const schema = buildFormSchema(fields);
+
+    // condition met + value is 0 → should fail (no allowZero)
+    expect(parse(schema, { type: 'numeric', value: 0 }).success).toBe(false);
+  });
+});
+
+// =============================================================================
 // buildFormSchema — dotted field names (nested objects)
 // =============================================================================
 
