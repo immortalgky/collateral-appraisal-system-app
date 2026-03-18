@@ -171,6 +171,8 @@ export interface NumberInputField extends BaseFormField {
   maxIntegerDigits?: number;
   /** Show thousand separators (default: true) */
   thousandSeparator?: boolean;
+  /** When true, 0 is treated as a valid value instead of "empty" (default: false) */
+  allowZero?: boolean;
 }
 
 // =============================================================================
