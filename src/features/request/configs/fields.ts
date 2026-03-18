@@ -594,12 +594,14 @@ export const titleVehicleFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     requiredWhen: { field: 'collateralType', is: 'VEH' },
+    maxLength: 50,
   },
   {
     type: 'textarea',
     label: 'Appointment Location',
     name: 'vehicleAppointmentLocation',
     wrapperClassName: 'col-span-6',
+    maxLength: 200,
   },
 ];
 
@@ -637,6 +639,7 @@ export const titleMachineFields: FormField[] = [
     name: 'registrationNo',
     wrapperClassName: 'col-span-3',
     requiredWhen: { field: 'installationStatus', is: '1' },
+    maxLength: 50,
   },
   {
     type: 'text-input',
@@ -645,6 +648,7 @@ export const titleMachineFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     requiredWhen: { field: 'installationStatus', is: '2' },
+    maxLength: 20,
   },
   {
     type: 'number-input',
@@ -654,6 +658,7 @@ export const titleMachineFields: FormField[] = [
     required: true,
     requiredWhen: { field: 'collateralType', is: 'MAC' },
     decimalPlaces: 0,
+    maxIntegerDigits: 5,
   },
 ];
 
