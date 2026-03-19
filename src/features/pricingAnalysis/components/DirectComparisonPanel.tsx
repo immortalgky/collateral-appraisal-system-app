@@ -342,7 +342,6 @@ export function DirectComparisonPanel({
       <form
         onSubmit={e => {
           e.preventDefault();
-          console.log(getValues());
           handleSubmit(handleOnSubmit)(e);
         }}
         className="flex flex-col h-full gap-4"

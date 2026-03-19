@@ -228,6 +228,7 @@ export function SaleAdjustmentGridPanel({
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
+      console.log('restore!');
       restoreSaleAdjustmentGridFromSavedData({
         methodId,
         property,

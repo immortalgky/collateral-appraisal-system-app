@@ -35,7 +35,6 @@ export const DirectComparisonForm = ({
   onSelectComparativeMarketSurvey,
 }: DirectComparisonProps) => {
   const fieldPath = directComparisonPath;
-  console.log('comparative form:', comparativeMarketSurveys);
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4">
