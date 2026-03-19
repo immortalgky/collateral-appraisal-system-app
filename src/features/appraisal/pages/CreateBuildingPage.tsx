@@ -25,7 +25,10 @@ import {
   createBuildingFormDefault,
   type createBuildingFormType,
 } from '../schemas/form';
-import { mapBuildingPropertyResponseToForm, mapBuildingFormDataToApiPayload } from '../utils/mappers';
+import {
+  mapBuildingPropertyResponseToForm,
+  mapBuildingFormDataToApiPayload,
+} from '../utils/mappers';
 import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
@@ -57,7 +60,12 @@ const CreateBuildingPage = () => {
     defaultValues: formDefaults,
     resolver: zodResolver(createBuildingForm),
   });
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
 
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);

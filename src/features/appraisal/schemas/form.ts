@@ -44,7 +44,9 @@ const surfaceFormItem = z.object({
   toFloorNumber: z.coerce.number().nullable().optional(),
   floorType: z.string().nullable().optional(),
   floorStructureType: z.string().nullable().optional(),
+  floorStructureTypeOther: z.string().nullable().optional(),
   floorSurfaceType: z.string().nullable().optional(),
+  floorSurfaceTypeOther: z.string().nullable().optional(),
 });
 
 const depreciationPeriodFormItem = z.object({
