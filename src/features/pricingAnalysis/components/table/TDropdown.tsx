@@ -120,7 +120,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
           <HeadlessListboxButton
             ref={ref}
             className={clsx(
-              'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
+              'relative w-full rounded-lg border text-left text-xs transition-colors duration-200 pr-9',
               'focus:outline-none focus:ring-2',
               disabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
@@ -160,7 +160,7 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
     <HeadlessListboxOption
       value={value}
       className={clsx(
-        'group flex gap-2 px-3 py-2 text-sm cursor-pointer transition-colors',
+        'group flex gap-2 px-3 py-2 text-xs cursor-pointer transition-colors',
         'data-focus:bg-gray-100 data-focus:text-gray-900',
         'data-selected:bg-gray-100 data-selected:text-gray-900 data-selected:font-medium',
       )}
