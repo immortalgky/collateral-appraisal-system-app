@@ -7,8 +7,6 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import clsx from 'clsx';
 import { getParameterDescription } from '@shared/utils/parameterUtils';
 import { saleGridFieldPath } from '@features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
-import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
-import type { ComparativeFactorsFormType } from '@features/pricingAnalysis/schemas/directComparisonForm.ts';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import {
   buildSaleGridAdjustmentFactorAmountRules,
@@ -32,6 +30,10 @@ import { useLocaleStore } from '@shared/store';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { MarketComparableDetailModal } from './MarketComparableDetailModal';
+import type {
+  ComparativeFactors,
+  SaleAdjustmentGridQualitative,
+} from '../types/saleAdjustmentGrid';
 
 interface SaleAdjustmentGridScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -106,8 +108,7 @@ export const SaleAdjustmentGridScoringSection = ({
   });
 
   const watchedQualitatives =
-    (useWatch({ control, name: qualitativesPath() }) as SaleAdjustmentGridQualitativeFormType[]) ??
-    [];
+    (useWatch({ control, name: qualitativesPath() }) as SaleAdjustmentGridQualitative[]) ?? [];
 
   const usedFactorCodes = useMemo(
     () => watchedQualitatives.map(r => r?.factorCode).filter(Boolean),
@@ -115,7 +116,7 @@ export const SaleAdjustmentGridScoringSection = ({
   );
 
   const watchComparativeFactors =
-    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactors[]) ?? [];
 
   const comparativeFactors = useMemo(() => {
     return getValues(comparativeFactorsPath());
@@ -124,7 +125,7 @@ export const SaleAdjustmentGridScoringSection = ({
   const handleAddRow = () => {
     appendQualitativeFactor({
       factorId: '',
-      factorCode: '',
+      factorCode: null,
       qualitatives: comparativeSurveys.map(survey => ({
         marketId: survey.id,
         qualitativeLevel: 'E',

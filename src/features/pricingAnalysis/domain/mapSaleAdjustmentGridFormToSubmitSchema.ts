@@ -1,8 +1,8 @@
-import type { SaleAdjustmentGridType } from '../schemas/saleAdjustmentGridForm';
 import type { SaveComparativeAnalysisRequestType } from '../schemas';
+import type { SaleAdjustmentGrid } from '../types/saleAdjustmentGrid';
 
 interface MapSaleAdjustmentGridFormToSubmitSchemaProps {
-  SaleAdjustmentGridForm: SaleAdjustmentGridType;
+  SaleAdjustmentGridForm: SaleAdjustmentGrid;
   comparativeAnalysisTemplateId?: string | null;
 }
 
@@ -34,36 +34,38 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
       // landPrice / usableAreaPrice are stored as top-level form fields (shared across all surveys)
       const formAny = SaleAdjustmentGridForm as any;
       return {
-      marketComparableId: calc.marketId,
-      offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
-      offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
-      adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
-      adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
-      sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
-      sellingPriceUnit: calc.sellingPriceMeasurementUnit ?? null,
-      buySellYear: !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
-      buySellMonth: null,
-      adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
-      cumulativeAdjPeriod: calc.adjustedValue ?? null,
-      landAreaDeficient: calc.landAreaOfDeficient ?? null,
-      landAreaDeficientUnit: null,
-      landPrice: formAny.landPrice ?? null,
-      landValueAdjustment: calc.landValueIncreaseDecrease ?? null,
-      usableAreaDeficient: calc.usableAreaOfDeficient ?? null,
-      usableAreaDeficientUnit: null,
-      usableAreaPrice: formAny.usableAreaPrice ?? null,
-      buildingValueAdjustment: calc.buildingValueIncreaseDecrease ?? null,
-      totalFactorDiffPct: calc.factorDiffPct ?? null,
-      totalFactorDiffAmt: calc.factorDiffAmt ?? null,
-      totalAdjustedValue: calc.totalAdjustValue ?? null,
-      weight: calc.weight ?? null,
-      weightedAdjustedValue: calc.weightedAdjustValue ?? null,
-    }}),
+        marketComparableId: calc.marketId,
+        offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
+        offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
+        adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
+        adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
+        sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
+        sellingPriceUnit: calc.sellingPriceMeasurementUnit ?? null,
+        buySellYear:
+          !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
+        buySellMonth: null,
+        adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
+        cumulativeAdjPeriod: calc.adjustedValue ?? null,
+        landAreaDeficient: calc.landAreaOfDeficient ?? null,
+        landAreaDeficientUnit: null,
+        landPrice: formAny.landPrice ?? null,
+        landValueAdjustment: calc.landValueIncreaseDecrease ?? null,
+        usableAreaDeficient: calc.usableAreaOfDeficient ?? null,
+        usableAreaDeficientUnit: null,
+        usableAreaPrice: formAny.usableAreaPrice ?? null,
+        buildingValueAdjustment: calc.buildingValueIncreaseDecrease ?? null,
+        totalFactorDiffPct: calc.factorDiffPct ?? null,
+        totalFactorDiffAmt: calc.factorDiffAmt ?? null,
+        totalAdjustedValue: calc.totalAdjustValue ?? null,
+        weight: calc.weight ?? null,
+        weightedAdjustedValue: calc.weightedAdjustValue ?? null,
+      };
+    }),
   };
 }
 
 function buildFactorScores(
-  form: SaleAdjustmentGridType,
+  form: SaleAdjustmentGrid,
 ): SaveComparativeAnalysisRequestType['factorScores'] {
   const qualitatives = form.saleAdjustmentGridQualitatives ?? [];
   const adjustmentFactors = form.saleAdjustmentGridAdjustmentFactors ?? [];

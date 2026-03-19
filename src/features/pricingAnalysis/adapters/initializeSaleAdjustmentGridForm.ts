@@ -1,8 +1,5 @@
 import type { UseFormReset } from 'react-hook-form';
-import type {
-  SaleAdjustmentGridCalculationFormType,
-  SaleAdjustmentGridType,
-} from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
+import type { SaleAdjustmentGridType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
 import type {
   FactorDataType,
   MarketComparableDetailType,
@@ -15,6 +12,7 @@ import {
   toNum,
   yearDiffFromToday,
 } from '@features/pricingAnalysis/domain/readFactorValue';
+import type { SaleAdjustmentGridCalculation } from '../types/saleAdjustmentGrid';
 
 interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;
@@ -94,7 +92,7 @@ export function initializeSaleAdjustmentGridForm({
               weight: 0,
               weightedAdjustValue: 0,
             };
-          }) as SaleAdjustmentGridCalculationFormType[]),
+          }) as SaleAdjustmentGridCalculation[]),
         ],
         saleAdjustmentGridAdjustmentFactors: [],
         saleAdjustmentGridFinalValue: {
@@ -183,7 +181,7 @@ export function initializeSaleAdjustmentGridForm({
             weightedAdjustValue: 0,
           };
         }),
-      ] as SaleAdjustmentGridCalculationFormType[],
+      ] as SaleAdjustmentGridCalculation[],
       saleAdjustmentGridAdjustmentFactors: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => {
           return {

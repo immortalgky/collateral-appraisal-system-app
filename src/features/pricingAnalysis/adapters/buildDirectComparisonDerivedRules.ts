@@ -15,10 +15,8 @@ import type { FactorDataType, MarketComparableDetailType } from '@features/prici
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath.ts';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
-import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode.ts';
-import type { DirectComparisonQualitativeFormType } from '@features/pricingAnalysis/schemas/directComparisonForm.ts';
 import { qualitativeDefaultPercent } from '@features/pricingAnalysis/domain/qualitativeDefault.ts';
-import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
+import type { DirectComparisonQualitative } from '../types/directComparison';
 
 export function buildDirectComparisonCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
@@ -228,7 +226,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
 
 export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
   surveys: MarketComparableDetailType[];
-  qualitativeRows: DirectComparisonQualitativeFormType[];
+  qualitativeRows: DirectComparisonQualitative[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows = [] } = args;
 
@@ -262,7 +260,7 @@ export function buildDirectComparisonAdjustmentFactorDefaultPercentRules(args: {
 
 export function buildDirectComparisonAdjustmentFactorAmountRules(args: {
   surveys: MarketComparableDetailType[];
-  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
+  qualitativeRows: DirectComparisonQualitative[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows = [] } = args;
 

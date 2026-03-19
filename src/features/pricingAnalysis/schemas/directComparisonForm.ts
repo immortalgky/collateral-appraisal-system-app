@@ -21,8 +21,6 @@ const DirectComparisonQualitative = z.object({
   qualitatives: z.array(DirectComparisonQualitativeSurvey),
 });
 
-const DirectComparisonCalculation = z.object({}).passthrough();
-
 const DirectComparisonFinalValue = z
   .object({
     finalValueRounded: z.number(requireMsg('Final value (rounded)')),
@@ -54,8 +52,6 @@ export const DirectComparisonDto = z
     comparativeFactors: z.array(ComparativeFactors),
     /** Qualitative section */
     directComparisonQualitatives: z.array(DirectComparisonQualitative),
-    /** Calculation section */
-    directComparisonCalculations: z.array(DirectComparisonCalculation),
     /** Adjustment Factors (adjust percentage) section */
     directComparisonAdjustmentFactors: z.array(DirectComparisonAdjustmentFactor),
     /** Final value section */
@@ -65,7 +61,6 @@ export const DirectComparisonDto = z
   })
   .passthrough();
 
-export type DirectComparisonCalculationFormType = z.infer<typeof DirectComparisonCalculation>;
 export type DirectComparisonQualitativeSurveyFormType = z.infer<
   typeof DirectComparisonQualitativeSurvey
 >;

@@ -37,9 +37,6 @@ const WQSScore = z.object({
   collateral: z.number(requireMsg('Collateral score')),
 });
 
-/** WQS calculation section */
-const WQSCalculation = z.object({}).passthrough();
-
 /** Adjust final price section */
 const WQSFinalValue = z
   .object({
@@ -48,18 +45,12 @@ const WQSFinalValue = z
   })
   .passthrough();
 
-export const TotalSurveyScore = z.object({}).passthrough();
-
-export const WQSTotalScore = z.object({}).passthrough();
-
 export const WQSDto = z
   .object({
     collateralType: z.string(requireMsg('Collateral type')),
     pricingTemplateCode: z.string(requireMsg('Template')),
     comparativeFactors: z.array(ComparativeFactor),
     WQSScores: z.array(WQSScore),
-    WQSTotalScores: WQSTotalScore,
-    WQSCalculations: z.array(WQSCalculation),
     WQSFinalValue: WQSFinalValue,
 
     generateAt: z.string(),
@@ -68,11 +59,7 @@ export const WQSDto = z
 
 export type WQSSurveyScoreFormType = z.infer<typeof WQSSurveyScore>;
 export type WQSScoreFormType = z.infer<typeof WQSScore>;
-export type WQSCalculationFormType = z.infer<typeof WQSCalculation>;
 export type WQSFinalValueFormType = z.infer<typeof WQSFinalValue>;
-export type TotalSurveyScoreFormType = z.infer<typeof TotalSurveyScore>;
-export type WQSTotalScoreFormType = z.infer<typeof WQSTotalScore>;
 
 export type ComparativeFactorFormType = z.infer<typeof ComparativeFactor>;
-export type WQSCalculationType = z.infer<typeof WQSCalculation>;
 export type WQSFormType = z.infer<typeof WQSDto>;

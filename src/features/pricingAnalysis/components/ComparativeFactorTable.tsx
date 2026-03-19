@@ -14,8 +14,8 @@ import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorD
 import { FactorValueDisplay } from './FactorValueDisplay';
 import { useMemo, useState } from 'react';
 import { useLocaleStore } from '@shared/store';
-import type { ComparativeFactorsFormType } from '../schemas/saleAdjustmentGridForm';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
+import type { ComparativeFactors } from '../types/saleAdjustmentGrid';
 
 interface ComparativeFactorTableProps {
   comparativeMarketSurveys: MarketComparableDataType[];
@@ -48,7 +48,7 @@ export function ComparativeFactorTable({
   });
 
   const watchComparativeFactors =
-    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactors[]) ?? [];
 
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
@@ -56,10 +56,6 @@ export function ComparativeFactorTable({
     () => watchComparativeFactors.map(r => r?.factorCode).filter(Boolean),
     [watchComparativeFactors],
   );
-
-  const comparativeFactors = useMemo(() => {
-    return getValues(comparativeFactorsPath());
-  }, [comparativeSurveyFactors]);
 
   const stickyGradient =
     'after:absolute after:right-0 after:top-0 after:h-full after:w-3 after:bg-gradient-to-r after:from-black/[0.04] after:to-transparent after:translate-x-full';

@@ -1,8 +1,5 @@
 import type { UseFormReset } from 'react-hook-form';
-import type {
-  DirectComparisonCalculationFormType,
-  DirectComparisonType,
-} from '../schemas/directComparisonForm';
+import type { DirectComparisonType } from '../schemas/directComparisonForm';
 import type {
   CalculationType,
   ComparativeFactorType,
@@ -12,6 +9,7 @@ import type {
   MarketComparableDetailType,
 } from '../schemas';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
+import type { DirectComparisonCalculation } from '../types/directComparison';
 
 interface RestoreDirectComparisonFromSavedDataProps {
   methodId: string;
@@ -154,7 +152,7 @@ export function restoreDirectComparisonFromSavedData({
       factorDiffAmt: saved?.totalFactorDiffAmt ?? 0,
       totalAdjustValue: 0,
     };
-  }) as DirectComparisonCalculationFormType[];
+  }) as DirectComparisonCalculation[];
 
   // Extract top-level landPrice / usableAreaPrice from the first saved calculation that has them
   const firstSavedCalc = [...(savedCalculations ?? [])].find(sc => sc.marketComparableId);

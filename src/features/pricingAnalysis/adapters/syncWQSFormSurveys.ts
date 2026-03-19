@@ -1,11 +1,16 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
-import type { WQSCalculationType, WQSFormType } from '../schemas/wqsForm';
+import type { WQSFormType } from '../schemas/wqsForm';
 import type {
   FactorDataType,
   MarketComparableDetailType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import type { WQSCalculation } from '../types/wqs';
 
 interface WQSInitialValueOnSelectSurveyProps {
   collateralType: string;
@@ -59,7 +64,7 @@ export function syncWQSFormSurveys({
         })),
       },
       WQSCalculations: (() => {
-        const prevCalcMap = new Map<string, WQSCalculationType>();
+        const prevCalcMap = new Map<string, WQSCalculation>();
         for (const c of currentFormValue.WQSCalculations ?? []) {
           prevCalcMap.set(c.marketId, c);
         }
@@ -70,7 +75,11 @@ export function syncWQSFormSurveys({
           const surveyMap = new Map(
             survey.factorData?.map((s: FactorDataType) => [
               s.factorCode,
-              readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
+              readFactorValue({
+                dataType: s.dataType,
+                value: s.value,
+                fieldDecimal: s.fieldDecimal,
+              }),
             ]),
           );
           return {
@@ -84,7 +93,7 @@ export function syncWQSFormSurveys({
             sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
             numberOfYears: yearDiffFromToday(survey.saleDate),
           };
-        }) as WQSCalculationType[];
+        }) as WQSCalculation[];
       })(),
     },
     { isDirty: true },

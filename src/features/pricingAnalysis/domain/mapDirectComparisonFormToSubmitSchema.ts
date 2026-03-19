@@ -1,8 +1,8 @@
-import type { DirectComparisonType } from '../schemas/directComparisonForm';
 import type { SaveComparativeAnalysisRequestType } from '../schemas';
+import type { DirectComparison } from '../types/directComparison';
 
 interface MapDirectComparisonFormToSubmitSchemaProps {
-  DirectComparisonForm: DirectComparisonType;
+  DirectComparisonForm: DirectComparison;
   comparativeAnalysisTemplateId?: string | null;
 }
 
@@ -12,9 +12,7 @@ export function mapDirectComparisonFormToSubmitSchema({
 }: MapDirectComparisonFormToSubmitSchemaProps): SaveComparativeAnalysisRequestType {
   // Build set of factorIds used for scoring (qualitatives)
   const scoringFactorIds = new Set(
-    (DirectComparisonForm.directComparisonQualitatives ?? [])
-      .map(q => q.factorId)
-      .filter(Boolean),
+    (DirectComparisonForm.directComparisonQualitatives ?? []).map(q => q.factorId).filter(Boolean),
   );
 
   return {
@@ -34,34 +32,36 @@ export function mapDirectComparisonFormToSubmitSchema({
       // landPrice / usableAreaPrice are stored as top-level form fields (shared across all surveys)
       const formAny = DirectComparisonForm as any;
       return {
-      marketComparableId: calc.marketId,
-      offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
-      offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
-      adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
-      adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
-      sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
-      buySellYear: !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
-      buySellMonth: null,
-      adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
-      cumulativeAdjPeriod: null,
-      landAreaDeficient: calc.landAreaOfDeficient ?? null,
-      landAreaDeficientUnit: null,
-      landPrice: formAny.landPrice ?? null,
-      landValueAdjustment: calc.landValueIncreaseDecrease ?? null,
-      usableAreaDeficient: calc.usableAreaOfDeficient ?? null,
-      usableAreaDeficientUnit: null,
-      usableAreaPrice: formAny.usableAreaPrice ?? null,
-      buildingValueAdjustment: calc.buildingValueIncreaseDecrease ?? null,
-      totalAdjustedValue: calc.adjustedValue ?? null,
-      totalFactorDiffPct: calc.factorDiffPct ?? null,
-      totalFactorDiffAmt: calc.factorDiffAmt ?? null,
-      weight: null,
-    }}),
+        marketComparableId: calc.marketId,
+        offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
+        offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
+        adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
+        adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
+        sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
+        buySellYear:
+          !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
+        buySellMonth: null,
+        adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
+        cumulativeAdjPeriod: null,
+        landAreaDeficient: calc.landAreaOfDeficient ?? null,
+        landAreaDeficientUnit: null,
+        landPrice: formAny.landPrice ?? null,
+        landValueAdjustment: calc.landValueIncreaseDecrease ?? null,
+        usableAreaDeficient: calc.usableAreaOfDeficient ?? null,
+        usableAreaDeficientUnit: null,
+        usableAreaPrice: formAny.usableAreaPrice ?? null,
+        buildingValueAdjustment: calc.buildingValueIncreaseDecrease ?? null,
+        totalAdjustedValue: calc.adjustedValue ?? null,
+        totalFactorDiffPct: calc.factorDiffPct ?? null,
+        totalFactorDiffAmt: calc.factorDiffAmt ?? null,
+        weight: null,
+      };
+    }),
   };
 }
 
 function buildFactorScores(
-  form: DirectComparisonType,
+  form: DirectComparison,
 ): SaveComparativeAnalysisRequestType['factorScores'] {
   const qualitatives = form.directComparisonQualitatives ?? [];
   const adjustmentFactors = form.directComparisonAdjustmentFactors ?? [];
