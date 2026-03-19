@@ -1,5 +1,5 @@
 import type { DCFFormType } from '../schemas/dcfForm';
-import { DiscountedCashFlowTableSection } from './DiscountedCashFlowTableSection';
+import { DiscountedCashFlowTable } from './DiscountedCashFlowTable';
 
 interface DiscountedCashFlowFormProps {
   data: DCFFormType;
@@ -20,7 +20,7 @@ export function DiscountedCashFlowForm({ data }: DiscountedCashFlowFormProps) {
               </h3>
             </div>
             <div className="px-4">
-              <DiscountedCashFlowTableSection totalNumberOfYears={data.totalNumberOfYears} />
+              <DiscountedCashFlowTable totalNumberOfYears={data.totalNumberOfYears} />
             </div>
           </div>
           <div>

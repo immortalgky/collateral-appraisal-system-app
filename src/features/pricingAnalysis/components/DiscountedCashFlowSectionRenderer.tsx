@@ -2,6 +2,7 @@ import { DynamicSection } from '@features/pricingAnalysis/components/dcfSections
 import type { DCFSectionFormType } from '@features/pricingAnalysis/schemas/dcfForm.ts';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
 import { DiscountedCashFlowCategory } from '@features/pricingAnalysis/components/DiscountedCashFlowCategory.tsx';
+import { SummarySection } from './dcfSections/SummarySection';
 
 interface DiscountedCashFlowSectionRendererProps {
   section: DCFSectionFormType;
@@ -40,12 +41,12 @@ export function DiscountedCashFlowSectionRenderer({
         </DynamicSection>
       );
     }
-    case 'expense': {
+    case 'expenses': {
       return (
         <DynamicSection
           sectionName={section.sectionName}
           totalNumberOfYears={totalNumberOfYears}
-          totalSectionValues={section.totalSectionValues.map(v => v.value)}
+          totalSectionValues={(section?.totalSectionValues ?? []).map(v => v.value)}
           color={color}
           onEditAssumption={() => null}
           icon={icon}
@@ -65,7 +66,7 @@ export function DiscountedCashFlowSectionRenderer({
       );
     }
     case 'summary': {
-      return <></>;
+      return <SummarySection totalNumberOfYears={totalNumberOfYears} />;
     }
   }
 }

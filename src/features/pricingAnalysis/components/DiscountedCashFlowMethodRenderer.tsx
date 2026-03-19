@@ -1,5 +1,6 @@
 import type { DCFMethodFormType } from '../schemas/dcfForm';
 import { MethodProportion } from './dcfMethods/MethodProportion';
+import { MethodSpecifyRoomIncomePerDay } from './dcfMethods/MethodSpecifyRoomIncomePerDay';
 
 interface DiscountedCashFlowMethodRendererProps {
   editing: string | null;
@@ -18,6 +19,17 @@ export function DiscountedCashFlowMethodRenderer({
   onCancelEditMode,
 }: DiscountedCashFlowMethodRendererProps) {
   switch (method.methodType) {
+    case 'specifyRoomIncomePerDay':
+      return (
+        <MethodSpecifyRoomIncomePerDay
+          totalNumberOfYears={totalNumberOfYear}
+          editing={editing}
+          method={method}
+          assumptionId={assumptionId}
+          assumptionName={assumptionName}
+          onCancelEditMode={onCancelEditMode}
+        />
+      );
     case 'proportion':
       return (
         <MethodProportion

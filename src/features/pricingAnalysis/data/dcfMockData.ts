@@ -294,59 +294,42 @@ export const dcfHotelTemplate: DCFTemplateType = {
       sectionType: 'income',
       sectionName: 'Income',
       identifier: 'positive',
+      displaySeq: 0,
       categories: [
         {
           categoryType: '',
           categoryName: 'Operating Income',
           identifier: 'positive',
+          displaySeq: 0,
           assumptions: [
             {
               assumptionType: 'a1',
               assumptionName: 'Room Income',
               identifier: 'positive',
+              displaySeq: 0,
               method: {
                 methodType: 'specifyRoomIncomePerDay',
+                detail: { increaseRatePct: 10, increaseEveryYrs: 3 },
               },
             },
             {
               assumptionType: 'a2',
               assumptionName: 'Food and Beverage Income',
               identifier: 'positive',
+              displaySeq: 1,
               method: {
                 methodType: 'proportion',
+                detail: { proportionPct: 10, assumptionType: 'a1' },
               },
             },
             {
               assumptionType: 'a3',
               assumptionName: 'Other Income',
               identifier: 'positive',
+              displaySeq: 2,
               method: {
                 methodType: 'proportion',
-              },
-            },
-          ],
-        },
-        {
-          id: 'c2',
-          categoryType: 'a4',
-          categoryName: 'Other Income',
-          assumptions: [
-            {
-              id: 'a4',
-              assumptionType: 'a4',
-              assumptionName: 'Interest Income',
-              method: {
-                id: 'm5',
-                methodType: 'm5',
-              },
-            },
-            {
-              id: 'a5',
-              assumptionType: 'a5',
-              assumptionName: 'Rental Income',
-              method: {
-                id: 'm5',
-                methodType: 'm5',
+                detail: { proportionPct: 10, assumptionType: 'a1' },
               },
             },
           ],
@@ -357,88 +340,65 @@ export const dcfHotelTemplate: DCFTemplateType = {
       id: 's2',
       sectionType: 'expenses',
       sectionName: 'Expenses / Costs',
+      displaySeq: 1,
       categories: [
         {
           id: 'c3',
           categoryType: 'c3',
-          categoryName: 'Operating Costs',
+          categoryName: 'Direct Operating ',
+          identifier: 'negative',
+          displaySeq: 0,
           assumptions: [
             {
-              id: 'a6',
               assumptionType: 'a6',
-              assumptionName: 'Raw Materials',
-              // hasModal: true,
-              // modalRows: 2,
-              totalAssumptionValues: [
-                { year: 1, value: 375000 },
-                { year: 2, value: 431250 },
-                { year: 3, value: 495937 },
-                { year: 4, value: 570328 },
-                { year: 5, value: 655877 },
-                { year: 6, value: 754259 },
-              ],
-              // growthRate: 15,
+              assumptionName: 'Room Costs',
+              identifier: 'negative',
+              displaySeq: 0,
               method: {
-                id: 'm6',
-                methodType: 'm6',
+                methodType: 'proportion',
+                detail: {
+                  proportionPct: 15,
+                  assumptionType: 'a1',
+                },
               },
             },
             {
-              id: 'a7',
               assumptionType: 'a7',
-              assumptionName: 'Direct Labor',
-              // hasModal: true,
-              // modalRows: 1,
-              totalAssumptionValues: [
-                { year: 1, value: 240000 },
-                { year: 2, value: 264000 },
-                { year: 3, value: 290400 },
-                { year: 4, value: 319440 },
-                { year: 5, value: 351384 },
-                { year: 6, value: 386522 },
-              ],
-              // growthRate: 10,
+              assumptionName: 'Food and beverage expenses',
+              identifier: 'negative',
+              displaySeq: 1,
               method: {
-                id: 'm2',
-                methodType: 'm2',
+                methodType: 'proportion',
+                detail: {
+                  proportionPct: 10,
+                  assumptionType: 'a1',
+                },
               },
             },
             {
-              id: 'a8',
               assumptionType: 'a8',
-              assumptionName: 'Manufacturing Overhead',
-              // hasModal: true,
-              // modalRows: 1,
-              totalAssumptionValues: [
-                { year: 1, value: 96000 },
-                { year: 2, value: 100800 },
-                { year: 3, value: 105840 },
-                { year: 4, value: 111132 },
-                { year: 5, value: 116689 },
-                { year: 6, value: 122523 },
-              ],
-              // growthRate: 5,
+              assumptionName: 'Other Expenses',
+              identifier: 'negative',
+              displaySeq: 1,
               method: {
-                id: 'm3',
-                methodType: 'm3',
+                methodType: 'proportion',
+                detail: {
+                  proportionPct: 10,
+                  assumptionType: 'a1',
+                },
               },
             },
           ],
         },
       ],
     },
+    {
+      sectionType: 'summary',
+      sectionName: 'Summary',
+      identifier: 'empty',
+      displaySeq: 2,
+    },
   ],
-};
-
-const methodProportion = {
-  proportionPct: 10,
-  assumptionId: 'xxxxxx0',
-};
-
-const methodGrowth = {
-  firstYearAmt: 800_000,
-  increaseRatePct: 10,
-  increaseRateEveryYrs: 3,
 };
 
 export const dcfTemplateList = [{ templateCode: 'dcf-hotel', id: 'dcf-001' }];

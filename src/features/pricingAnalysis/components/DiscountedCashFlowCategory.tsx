@@ -18,7 +18,7 @@ export function DiscountedCashFlowCategory({
   color,
   onEditAssumption,
 }: DiscountedCashFlowCategoryProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const [editing, setEditing] = useState<string | null>(null);
   const handleOnCancelEditMode = () => {
@@ -49,7 +49,7 @@ export function DiscountedCashFlowCategory({
               style="solid"
               className={clsx(
                 'size-2 transition-transform duration-300 ease-in-out shrink-0',
-                expanded ? '' : 'rotate-180',
+                expanded ? 'rotate-180' : '',
               )}
             />
             {category?.categoryName ?? ''}

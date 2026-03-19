@@ -20,7 +20,7 @@ export function DiscountedCashFlowAssumption({
   onCancelEditMode,
   onOpenEditMode,
 }: DiscountedCashFlowAssumptionProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <>
@@ -44,7 +44,7 @@ export function DiscountedCashFlowAssumption({
               style="solid"
               className={clsx(
                 'size-2 transition-transform duration-300 ease-in-out shrink-0',
-                expanded ? '' : 'rotate-180',
+                expanded ? 'rotate-180' : '',
               )}
             />
             {assumption.assumptionName ?? ''}
@@ -55,8 +55,7 @@ export function DiscountedCashFlowAssumption({
               type="button"
               className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
               onClick={() => {
-                console.log(assumption.assumptionType);
-                onOpenEditMode(assumption.assumptionType);
+                onOpenEditMode(assumption.method.methodType);
               }}
             >
               <Icon name="pencil" style="regular" className="size-4" />
