@@ -1,8 +1,5 @@
 import type { UseFormReset } from 'react-hook-form';
-import type {
-  SaleAdjustmentGridCalculationFormType,
-  SaleAdjustmentGridType,
-} from '../schemas/saleAdjustmentGridForm';
+import type { SaleAdjustmentGridType } from '../schemas/saleAdjustmentGridForm';
 import type {
   CalculationType,
   ComparativeFactorType,
@@ -12,6 +9,7 @@ import type {
   MarketComparableDetailType,
 } from '../schemas';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
+import type { SaleAdjustmentGridCalculation } from '../types/saleAdjustmentGrid';
 
 interface RestoreSaleAdjustmentGridFromSavedDataProps {
   methodId: string;
@@ -157,7 +155,7 @@ export function restoreSaleAdjustmentGridFromSavedData({
       weight: saved?.weight ?? 0,
       weightedAdjustValue: saved?.weightedAdjustedValue ?? 0,
     };
-  }) as SaleAdjustmentGridCalculationFormType[];
+  }) as SaleAdjustmentGridCalculation[];
 
   // Extract top-level landPrice / usableAreaPrice from the first saved calculation that has them
   const firstSavedCalc = [...(savedCalculations ?? [])].find(sc => sc.marketComparableId);

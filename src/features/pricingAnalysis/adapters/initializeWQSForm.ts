@@ -1,7 +1,8 @@
 import type { UseFormReset } from 'react-hook-form';
-import type { WQSCalculationType, WQSFormType } from '../schemas/wqsForm';
+import type { WQSFormType } from '../schemas/wqsForm';
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
+import type { WQSCalculation } from '../types/wqs';
 
 interface setWQSInitialValueProps {
   collateralType: string;
@@ -22,7 +23,7 @@ function buildSurveyEntries(comparativeSurveys: MarketComparableDetailType[]) {
   }));
 }
 
-function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQSCalculationType[] {
+function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQSCalculation[] {
   return comparativeSurveys.map(survey => {
     const surveyMap = new Map(
       (survey.factorData ?? []).map((s: FactorDataType) => [
@@ -41,7 +42,7 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
       sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
       numberOfYears: yearDiffFromToday(survey.saleDate),
       adjustedValue: 0,
-    } as WQSCalculationType;
+    } as WQSCalculation;
   });
 }
 

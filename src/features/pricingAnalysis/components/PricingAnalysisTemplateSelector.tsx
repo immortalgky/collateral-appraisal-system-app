@@ -1,4 +1,5 @@
-import { Dropdown, Icon, type ListBoxItem } from '@/shared/components';
+import { Icon, type ListBoxItem } from '@/shared/components';
+import { RHFInputCell } from './table/RHFInputCell';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface PricingAnalysisTemplateSelectorProps {
@@ -6,11 +7,13 @@ interface PricingAnalysisTemplateSelectorProps {
   methodName: string;
   onGenerate: () => void;
   collateralType: {
+    fieldName?: string;
     onSelectCollateralType: (value: string) => void;
     value: any;
     options: ListBoxItem[];
   };
   template: {
+    fieldName?: string;
     onSelectTemplate: (value: string) => void;
     value: any;
     options: ListBoxItem[];
@@ -38,22 +41,34 @@ export function PricingAnalysisTemplateSelector({
           Pricing Analysis Template
         </div>
         <div className="flex-1 min-w-0">
-          <Dropdown
+          {/* <Dropdown
             label="Collateral Type"
             options={collateralType.options}
             value={collateralType.value}
             onChange={value => {
               collateralType.onSelectCollateralType(value);
             }}
-            disabled={isReadOnly}
-          />
+          /> */}
+          <div className="flex-1 min-w-0">
+            <RHFInputCell
+              dropdown={{ label: 'Collateral Type' }}
+              fieldName={collateralType.fieldName ?? 'collateralType'}
+              inputType="select"
+              options={collateralType.options}
+              onSelectChange={value => {
+                collateralType.onSelectCollateralType(value);
+              }}
+              disabled={isReadOnly}
+            />
+          </div>
         </div>
         <div className="flex-1 min-w-0">
-          <Dropdown
-            label="Template"
+          <RHFInputCell
+            dropdown={{ label: 'Template' }}
+            fieldName={template.fieldName ?? 'pricingTemplateCode'}
+            inputType="select"
             options={template.options}
-            value={template.value}
-            onChange={value => {
+            onSelectChange={value => {
               template.onSelectTemplate(value);
             }}
             disabled={isReadOnly}

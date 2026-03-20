@@ -24,20 +24,15 @@ import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription';
 import { useLocaleStore } from '@shared/store';
 import type {
-  ComparativeFactorsFormType,
-  DirectComparisonQualitativeFormType,
-} from '@features/pricingAnalysis/schemas/directComparisonForm.ts';
-import type {
   FactorDataType,
   MarketComparableDetailType,
-  TemplateCalculationFactorType,
-  TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
 import { FactorValueDisplay } from './FactorValueDisplay';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { MarketComparableDetailModal } from './MarketComparableDetailModal';
+import type { ComparativeFactors, DirectComparisonQualitative } from '../types/directComparison';
 
 interface DirectComparisonScoringSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -111,8 +106,7 @@ export const DirectComparisonScoringSection = ({
   });
 
   const watchedQualitatives =
-    (useWatch({ control, name: qualitativesPath() }) as DirectComparisonQualitativeFormType[]) ??
-    [];
+    (useWatch({ control, name: qualitativesPath() }) as DirectComparisonQualitative[]) ?? [];
 
   const usedFactorCodes = useMemo(
     () => watchedQualitatives.map(r => r?.factorCode).filter(Boolean),
@@ -120,7 +114,7 @@ export const DirectComparisonScoringSection = ({
   );
 
   const watchComparativeFactors =
-    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorsFormType[]) ?? [];
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactors[]) ?? [];
 
   const comparativeFactors = useMemo(() => {
     return getValues(comparativeFactorsPath());
@@ -128,8 +122,6 @@ export const DirectComparisonScoringSection = ({
 
   const handleAddRow = () => {
     appendQualitativeFactor({
-      factorId: '',
-      factorCode: '',
       qualitatives: comparativeSurveys.map(survey => ({
         marketId: survey.id,
         qualitativeLevel: 'E',
@@ -137,8 +129,6 @@ export const DirectComparisonScoringSection = ({
     });
 
     appendAdjustmentFactor({
-      factorId: '',
-      factorCode: '',
       surveys: comparativeSurveys.map(survey => ({
         marketId: survey.id,
         adjustPercent: 0,

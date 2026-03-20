@@ -16,10 +16,9 @@ import {
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { saleGridFieldPath } from '@/features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
-import { getPropertyValueByFactorCode } from '@features/pricingAnalysis/domain/getPropertyValueByFactorCode';
 import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
-import type { SaleAdjustmentGridQualitativeFormType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue';
+import type { SaleAdjustmentGridQualitative } from '../types/saleAdjustmentGrid';
 
 export function buildSaleGridCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
@@ -261,7 +260,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
 
 export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
   surveys: MarketComparableDetailType[];
-  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
+  qualitativeRows: SaleAdjustmentGridQualitative[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows = [] } = args;
 
@@ -295,7 +294,7 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
 
 export function buildSaleGridAdjustmentFactorAmountRules(args: {
   surveys: MarketComparableDetailType[];
-  qualitativeRows: SaleAdjustmentGridQualitativeFormType[];
+  qualitativeRows: SaleAdjustmentGridQualitative[];
 }): DerivedFieldRule[] {
   const { surveys = [], qualitativeRows = [] } = args;
 

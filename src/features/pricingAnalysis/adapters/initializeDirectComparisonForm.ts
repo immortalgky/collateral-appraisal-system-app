@@ -6,15 +6,13 @@ import type {
   TemplateComparativeFactorType,
   TemplateDetailType,
 } from '@features/pricingAnalysis/schemas';
-import type {
-  DirectComparisonCalculationFormType,
-  DirectComparisonType,
-} from '@features/pricingAnalysis/schemas/directComparisonForm';
+import type { DirectComparisonType } from '@features/pricingAnalysis/schemas/directComparisonForm';
 import {
   readFactorValue,
   toNum,
   yearDiffFromToday,
 } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import type { DirectComparisonCalculation } from '../types/directComparison';
 
 interface SetDirectComparisonInitialValueProps {
   collateralType: string;
@@ -91,7 +89,7 @@ export function initializeDirectComparisonForm({
               factorDiffAmt: 0,
               totalAdjustValue: 0,
             };
-          }) as DirectComparisonCalculationFormType[]),
+          }) as DirectComparisonCalculation[]),
         ],
         directComparisonAdjustmentFactors: [],
         directComparisonFinalValue: {
@@ -177,13 +175,16 @@ export function initializeDirectComparisonForm({
             totalAdjustValue: 0,
           };
         }),
-      ] as DirectComparisonCalculationFormType[],
+      ] as DirectComparisonCalculation[],
       directComparisonAdjustmentFactors: (template.calculationFactors ?? []).map(
         (calcFact: TemplateCalculationFactorType) => {
           return {
             factorId: factorIdMap.get(calcFact.factorCode) ?? '',
             factorCode: calcFact.factorCode,
-            surveys: [],
+            surveys: (comparativeSurveys ?? []).map((survey: MarketComparableDetailType) => ({
+              marketId: survey.id,
+              adjustPercent: 0,
+            })),
           };
         },
       ),

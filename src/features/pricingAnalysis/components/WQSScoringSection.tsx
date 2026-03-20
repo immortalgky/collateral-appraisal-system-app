@@ -19,7 +19,6 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas';
-import type { ComparativeFactorFormType, WQSScoreFormType } from '../schemas/wqsForm';
 import {
   type DerivedFieldRule,
   useDerivedFields,
@@ -31,6 +30,7 @@ import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { MarketComparableDetailModal } from './MarketComparableDetailModal';
 import { isScoreReasonable } from '@/features/pricingAnalysis/domain/checkWQSReasonableScore';
+import type { ComparativeFactor, WQSScore } from '../types/wqs';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -105,7 +105,7 @@ export function WQSScoringSection({
     (useWatch({
       control,
       name: scoringFactorsPath(),
-    }) as WQSScoreFormType[]) ?? [];
+    }) as WQSScore[]) ?? [];
 
   const usedFactorCodes = useMemo(
     () => watchedScoringFactors.map(r => r?.factorCode).filter(Boolean),
@@ -113,12 +113,12 @@ export function WQSScoringSection({
   );
 
   const comparativeFactors =
-    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorFormType[]) ?? [];
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactor[]) ?? [];
 
   const handleAddRow = () => {
     appendScoringFactor({
       factorId: '',
-      factorCode: '',
+      factorCode: null,
       weight: 0,
       intensity: 0,
       weightedIntensity: 0,

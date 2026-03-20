@@ -1,5 +1,5 @@
 import type { UseFormReset } from 'react-hook-form';
-import type { WQSCalculationType, WQSFormType } from '../schemas/wqsForm';
+import type { WQSFormType } from '../schemas/wqsForm';
 import type {
   CalculationType,
   ComparativeFactorType,
@@ -9,6 +9,7 @@ import type {
   MarketComparableDetailType,
 } from '../schemas';
 import { readFactorValue, toNum, yearDiffFromToday } from '../domain/readFactorValue';
+import type { WQSCalculation } from '../types/wqs';
 
 interface RestoreWQSFromSavedDataProps {
   methodId: string;
@@ -99,7 +100,7 @@ export function restoreWQSFromSavedData({
   }
 
   // Build calculations from survey data, overlaying saved values when available
-  const WQSCalculations: WQSCalculationType[] = comparativeSurveys.map(survey => {
+  const WQSCalculations: WQSCalculation[] = comparativeSurveys.map(survey => {
     const surveyMap = new Map<string, unknown>();
     for (const s of survey.factorData ?? []) {
       if (s.factorCode) {
@@ -131,7 +132,7 @@ export function restoreWQSFromSavedData({
       numberOfYears: saved?.buySellYear ?? yearDiffFromToday(survey.saleDate),
       totalAdjustedSellingPrice: saved?.cumulativeAdjPeriod ?? 0,
       adjustedValue: saved?.totalAdjustedValue ?? 0,
-    } as WQSCalculationType;
+    } as WQSCalculation;
   });
 
   const totalScoreSurveys = comparativeSurveys.map(s => ({

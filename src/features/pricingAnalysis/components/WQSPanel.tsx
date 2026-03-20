@@ -85,6 +85,7 @@ export function WQSPanel({
     reset,
     setValue,
     formState: { isDirty },
+    trigger,
   } = methods;
 
   /** Linked comparables — syncs with server on select/deselect */
@@ -153,6 +154,12 @@ export function WQSPanel({
 
   /** template selection handler */
   const handleOnGenerate = async () => {
+    if (!selectedTemplateId || !collateralType) {
+      trigger('pricingTemplateCode');
+      trigger('collateralType');
+      return;
+    }
+
     setIsGenerated(false);
 
     let template: TemplateDetailType | undefined;
@@ -185,6 +192,8 @@ export function WQSPanel({
 
   const handleOnSelectCollateralType = (collateralType: string) => {
     setCollateralType(collateralType);
+    setSelectedTemplateCode('');
+    setValue('pricingTemplateCode', null, { shouldDirty: true });
   };
 
   const handleOnSelectTemplate = (templateCode: string) => {
@@ -241,8 +250,14 @@ export function WQSPanel({
           t => t.id === savedComparativeAnalysisTemplateId,
         );
         if (savedTemplate) {
-          if (savedTemplate.propertyType) setCollateralType(savedTemplate.propertyType);
-          if (savedTemplate.templateCode) setSelectedTemplateCode(savedTemplate.templateCode);
+          if (savedTemplate.propertyType) {
+            setCollateralType(savedTemplate.propertyType);
+            setValue('collateralType', savedTemplate.propertyType);
+          }
+          if (savedTemplate.templateCode) {
+            setSelectedTemplateCode(savedTemplate.templateCode);
+            setValue('pricingTemplateCode', savedTemplate.templateCode);
+          }
         }
       }
       setIsGenerated(true);
