@@ -1,4 +1,4 @@
-import { Dropdown, Icon, type ListBoxItem } from '@/shared/components';
+import { Icon, type ListBoxItem } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 
 interface PricingAnalysisTemplateSelectorProps {

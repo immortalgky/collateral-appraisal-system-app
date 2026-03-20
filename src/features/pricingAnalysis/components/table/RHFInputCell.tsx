@@ -103,7 +103,7 @@ export const RHFInputCell = ({
           field.onChange(value);
           onSelectChange?.(value);
         }}
-        label={dropdown?.label}
+        label={dropdown?.label ?? ''}
         options={options ?? []}
         error={error?.message}
       />

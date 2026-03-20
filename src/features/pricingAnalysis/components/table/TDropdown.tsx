@@ -3,7 +3,6 @@ import {
   ListboxButton as HeadlessListboxButton,
   ListboxOption as HeadlessListboxOption,
   ListboxOptions as HeadlessListboxOptions,
-  ListboxSelectedOption as HeadlessListboxSelectedOption,
 } from '@headlessui/react';
 import { forwardRef, type ReactNode, type SelectHTMLAttributes } from 'react';
 import clsx from 'clsx';

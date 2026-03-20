@@ -35,8 +35,8 @@ export interface WQSSurveyScore {
 }
 
 export interface WQSScore {
-  factorId: string;
-  factorCode: string;
+  factorId?: string;
+  factorCode?: string;
   weight: number;
   intensity: number;
   weightedIntensity: number;
