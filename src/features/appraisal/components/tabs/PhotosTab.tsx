@@ -22,6 +22,7 @@ import {
 } from '../../api/photo';
 import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const LAYOUT_OPTIONS = [
   { value: 1 as const, label: '1', icon: 'square' },
@@ -220,7 +221,8 @@ const UploadPlaceholder = ({
   </div>
 );
 
-export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
+export const PhotosTab = () => {
+  const readOnly = usePageReadOnly();
   // Get appraisalId from URL params
   const { appraisalId } = useParams<{ appraisalId: string }>();
 
@@ -427,9 +429,9 @@ export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
         return;
       }
 
-      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      const imageFiles = Array.from(files).filter(file => /\.(jpg|jpeg|png)$/i.test(file.name));
       if (imageFiles.length === 0) {
-        toast.error('Please select image files only');
+        toast.error('Please select supported image files only (JPG, JPEG, PNG)');
         return;
       }
 
@@ -765,7 +767,7 @@ export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png"
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';

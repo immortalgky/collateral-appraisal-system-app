@@ -11,6 +11,7 @@ import { PROPERTY_TYPES, PropertyTypeDropdown } from '../PropertyTypeDropdown';
 
 import type { AppraisalComparableDtoType } from '@/shared/schemas/v1';
 import { ParameterDisplay } from '@/shared/components';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 /** Look up icon name for a property type code */
 const getPropertyIcon = (code: string | null | undefined): string | null => {
@@ -19,7 +20,8 @@ const getPropertyIcon = (code: string | null | undefined): string | null => {
   return match?.icon ?? null;
 };
 
-export const MarketsTab = ({ readOnly }: { readOnly?: boolean }) => {
+export const MarketsTab = () => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;

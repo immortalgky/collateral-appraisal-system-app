@@ -35,10 +35,10 @@ import {
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateLandBuildingPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -227,7 +227,7 @@ const CreateLandBuildingPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandAndBuildingForm} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={createLandAndBuildingForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -256,7 +256,6 @@ const CreateLandBuildingPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
-                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>

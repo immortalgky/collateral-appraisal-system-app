@@ -13,6 +13,7 @@ import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistP
 import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
+import NotificationPage from '@/features/notification/pages/NotificationPage';
 import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
 import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
 import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
@@ -32,6 +33,9 @@ import ComparativeTemplateListPage from '@features/templateManagement/pages/Comp
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
 import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
+import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
+import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
+import { ReadOnlyPageWrapper, AppraisalReadOnlyWrapper } from '@shared/contexts/PageReadOnlyContext';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -67,6 +71,11 @@ export const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
+      // Appraisal Search
+      {
+        path: 'appraisals/search',
+        element: <AppraisalSearchPage />,
+      },
       // Request Routes
       {
         path: 'requests',
@@ -89,6 +98,11 @@ export const router = createBrowserRouter([
       {
         path: 'tasks',
         element: <TaskListingPage />,
+      },
+      // Notification Routes
+      {
+        path: 'notifications',
+        element: <NotificationPage />,
       },
       // Market Comparable Routes
       {
@@ -172,30 +186,30 @@ export const router = createBrowserRouter([
       },
       {
         path: 'request/:requestId',
-        element: <RequestPage readOnly />,
+        element: <ReadOnlyPageWrapper><RequestPage /></ReadOnlyPageWrapper>,
       },
       {
         path: 'administration',
-        element: <AdministrationPage />,
+        element: <AppraisalReadOnlyWrapper pageName="Administration"><AdministrationPage /></AppraisalReadOnlyWrapper>,
       },
       {
         path: 'appointment',
-        element: <AppointmentAndFeePage />,
+        element: <AppraisalReadOnlyWrapper pageName="Appointment & Fee"><AppointmentAndFeePage /></AppraisalReadOnlyWrapper>,
       },
       {
         path: 'property-pma',
         children: [
           {
             index: true,
-            element: <PropertyInformationPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><PropertyInformationPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'condo/:propertyId',
-            element: <CondoPMAPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CondoPMAPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'land-building/:propertyId',
-            element: <LandBuildingPMAPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><LandBuildingPMAPage /></AppraisalReadOnlyWrapper>,
           },
         ],
       },
@@ -204,89 +218,93 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <PropertyInformationPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><PropertyInformationPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'land/new',
-            element: <CreateLandPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLandPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'land/:propertyId',
-            element: <CreateLandPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLandPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'building/new',
-            element: <CreateBuildingPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateBuildingPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'building/:propertyId',
-            element: <CreateBuildingPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateBuildingPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'condo/new',
-            element: <CreateCondoPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateCondoPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'condo/:propertyId',
-            element: <CreateCondoPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateCondoPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'condo/:propertyId/pma',
-            element: <CondoPMAPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CondoPMAPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'land-building/new',
-            element: <CreateLandBuildingPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLandBuildingPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'land-building/:propertyId',
-            element: <CreateLandBuildingPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLandBuildingPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'land-building/:propertyId/pma',
-            element: <LandBuildingPMAPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><LandBuildingPMAPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'machinery/new',
-            element: <CreateMachineryPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'machinery/:propertyId',
-            element: <CreateMachineryPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'law-and-regulation/new',
-            element: <CreateLawAndRegulationPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'law-and-regulation/:itemId',
-            element: <CreateLawAndRegulationPage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'market-comparable/new',
-            element: <CreateMarketComparablePage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper>,
           },
           {
             path: 'market-comparable/:marketComparableId',
-            element: <CreateMarketComparablePage />,
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper>,
           },
         ],
       },
       {
         path: 'documents',
-        element: <DocumentChecklistPage />,
+        element: <AppraisalReadOnlyWrapper pageName="Document Checklist"><DocumentChecklistPage /></AppraisalReadOnlyWrapper>,
       },
       {
         path: 'summary',
-        element: <DecisionSummaryPage />,
+        element: <AppraisalReadOnlyWrapper pageName="Summary & Decision"><DecisionSummaryPage /></AppraisalReadOnlyWrapper>,
       },
       {
         path: 'groups/:groupId/pricing-analysis',
-        element: <PricingAnalysisPage />,
+        element: <AppraisalReadOnlyWrapper pageName="Property Information"><PricingAnalysisPage /></AppraisalReadOnlyWrapper>,
       },
       {
         path: 'groups/:groupId/pricing-analysis/:pricingAnalysisId',
-        element: <PricingAnalysisPage />,
+        element: <AppraisalReadOnlyWrapper pageName="Property Information"><PricingAnalysisPage /></AppraisalReadOnlyWrapper>,
+      },
+      {
+        path: '360',
+        element: <Appraisal360Page />,
       },
     ],
   },

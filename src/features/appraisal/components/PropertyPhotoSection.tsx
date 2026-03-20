@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import PhotoGallery, { type Photo } from './PhotoGallery';
 import PhotoPreviewModal, { type PreviewablePhoto } from './PhotoPreviewModal';
@@ -28,7 +29,6 @@ export interface PropertyPhotoSectionRef {
 interface PropertyPhotoSectionProps {
   appraisalId: string;
   propertyId?: string;
-  readOnly?: boolean;
 }
 
 interface DeleteTarget {
@@ -37,7 +37,8 @@ interface DeleteTarget {
 }
 
 const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSectionProps>(
-  ({ appraisalId, propertyId, readOnly }, ref) => {
+  ({ appraisalId, propertyId }, ref) => {
+    const readOnly = usePageReadOnly();
     const isCreateMode = !propertyId;
 
     // Pending photo IDs for create mode (linked after property creation)

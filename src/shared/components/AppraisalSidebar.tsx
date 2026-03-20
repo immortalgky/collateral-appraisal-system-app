@@ -16,6 +16,7 @@ import { useAppraisalRequestId, useAppraisalIsPma, useAppraisalStatus } from '@f
 type AppraisalSidebarProps = {
   appraisalId: string;
   logo: string;
+  hideGeneralNav?: boolean;
 };
 
 // Get background color class based on icon color
@@ -38,6 +39,7 @@ const getIconBgClass = (iconColor: string | undefined) => {
 
 function CompactMenuItem({ item, collapsed = false }: { item: NavItem & { canEdit?: boolean }; collapsed?: boolean }) {
   const location = useLocation();
+  const to = item.href;
   const isActive = location.pathname === item.href;
   const isReadOnly = item.canEdit === false;
   const iconStyle = (item.iconStyle || 'solid') as
@@ -72,7 +74,7 @@ function CompactMenuItem({ item, collapsed = false }: { item: NavItem & { canEdi
   if (collapsed) {
     return (
       <Link
-        to={item.href}
+        to={to}
         title={item.name}
         className={clsx(
           'group flex items-center justify-center py-2 px-2.5 rounded-lg transition-all duration-200',
@@ -86,7 +88,7 @@ function CompactMenuItem({ item, collapsed = false }: { item: NavItem & { canEdi
 
   return (
     <Link
-      to={item.href}
+      to={to}
       className={clsx(
         'group flex items-center gap-2.5 py-2 px-2.5 rounded-lg transition-all duration-200',
         isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
@@ -284,6 +286,7 @@ export function MobileAppraisalSidebar({
 export default function AppraisalSidebar({
   appraisalId,
   logo,
+  hideGeneralNav = false,
 }: AppraisalSidebarProps): React.ReactNode {
   const requestId = useAppraisalRequestId();
   const isPma = useAppraisalIsPma();
@@ -343,10 +346,12 @@ export default function AppraisalSidebar({
         {/* Navigation */}
         <nav className={clsx('flex flex-1 flex-col py-2 transition-all duration-300', sidebarCollapsed ? 'px-1' : 'px-3')}>
           {/* GENERAL Section */}
-          <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} collapsed={sidebarCollapsed} />
+          {!hideGeneralNav && (
+            <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} collapsed={sidebarCollapsed} />
+          )}
 
           {/* APPLICATION Section */}
-          <div className={clsx('pt-3', !sidebarCollapsed && 'border-t border-gray-100')}>
+          <div className={clsx('pt-3', !sidebarCollapsed && !hideGeneralNav && 'border-t border-gray-100')}>
             {!sidebarCollapsed && (
               <div className="px-2.5 mb-1">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -365,13 +370,15 @@ export default function AppraisalSidebar({
 
           {/* Footer */}
           <div className={clsx('mt-auto pt-3', !sidebarCollapsed && 'border-t border-gray-100')}>
-            <ul className="flex flex-col gap-0.5">
-              {footerItems.map(item => (
-                <li key={item.href}>
-                  <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
-                </li>
-              ))}
-            </ul>
+            {!hideGeneralNav && (
+              <ul className="flex flex-col gap-0.5">
+                {footerItems.map(item => (
+                  <li key={item.href}>
+                    <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {/* Toggle Button */}
             <button

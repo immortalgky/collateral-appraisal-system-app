@@ -10,15 +10,20 @@ import type {
 } from '@shared/schemas/v1';
 
 /**
- * Get appointments for an appraisal
+ * Get the active appointment for an appraisal
  * GET /appraisals/{appraisalId}/appointments
  */
-export const useGetAppointments = (appraisalId: string) => {
+export const useGetAppointment = (appraisalId: string) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'appointments'],
-    queryFn: async (): Promise<AppointmentDto2Type[]> => {
-      const { data } = await axios.get(`/appraisals/${appraisalId}/appointments`);
-      return data.appointments ?? [];
+    queryFn: async (): Promise<AppointmentDto2Type | null> => {
+      try {
+        const { data } = await axios.get(`/appraisals/${appraisalId}/appointments`);
+        return data.appointment ?? null;
+      } catch (error: any) {
+        if (error.response?.status === 404) return null;
+        throw error;
+      }
     },
     enabled: !!appraisalId,
   });

@@ -1,6 +1,7 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
 import { getParameterDescription } from '@shared/utils/parameterUtils';
@@ -44,6 +45,7 @@ export function WQSScoringSection({
   template,
   isLoading = true,
 }: WQSScoringSectionProps) {
+  const isReadOnly = usePageReadOnly();
   const {
     comparativeFactors: comparativeFactorsPath,
 
@@ -452,13 +454,15 @@ export function WQSScoringSection({
             {/* add new row */}
             <tr>
               <td className={clsx('bg-white border-r z-19', leftColumnBody)}>
-                <button
-                  type="button"
-                  onClick={() => handleAddRow()}
-                  className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                >
-                  + Add More Factors
-                </button>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() => handleAddRow()}
+                    className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                  >
+                    + Add More Factors
+                  </button>
+                )}
               </td>
               <td
                 className={clsx(

@@ -9,10 +9,10 @@ import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
 import toast from 'react-hot-toast';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const MarketComparableListingPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market comparable data (general pool, no appraisalId needed)
   const { data: marketComparables, isLoading } = useGetMarketComparables();

@@ -9,6 +9,7 @@ type BreadcrumbProps = {
 };
 
 function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode {
+
   if (items.length === 0) return null;
 
   return (

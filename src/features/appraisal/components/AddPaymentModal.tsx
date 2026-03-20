@@ -60,7 +60,7 @@ export default function AddPaymentModal({
   };
 
   const handleFormSubmit = (data: AddPaymentFormData) => {
-    if (maxAmount == 0 || (maxAmount && data.amount > maxAmount)) {
+    if (maxAmount !== undefined && data.amount > maxAmount) {
       setError('amount', { type: 'manual', message: `Amount cannot exceed ${maxAmount}` });
       return;
     }

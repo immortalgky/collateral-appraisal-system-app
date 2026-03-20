@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
+import ConfirmDialog from '@shared/components/ConfirmDialog';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import PhotoSourceModal from '../PhotoSourceModal';
@@ -28,12 +29,13 @@ import type {
   DocumentItemDto,
 } from '../../types/documentChecklist';
 import type { AnnotationResult } from '@shared/components/ImageAnnotationEditor';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const ImageAnnotationEditor = lazy(
   () => import('@shared/components/ImageAnnotationEditor/ImageAnnotationEditor'),
 );
 
-const isImageFile = (file: File) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
+const isImageFile = (file: File) => /\.(jpg|jpeg|png)$/i.test(file.name);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -56,6 +58,13 @@ const getFileIcon = (fileName: string | null): { name: string; color: string } =
     return { name: 'file-excel', color: 'text-green-600' };
   }
   return { name: 'file', color: 'text-gray-500' };
+};
+
+const formatFileSize = (bytes: number | null | undefined): string => {
+  if (bytes == null || bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 // Status Badge Component
@@ -201,7 +210,8 @@ const EmptyUploadState = ({
   </div>
 );
 
-export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
+export const DocumentChecklistTab = () => {
+  const readOnly = usePageReadOnly();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
@@ -219,6 +229,9 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
   const { mutateAsync: downloadDocument } = useDownloadDocument();
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ appendixId: string; documentId: string } | null>(null);
 
   // Annotation editor state — use refs alongside state to avoid stale closures in async callbacks
   const [showAnnotationEditor, setShowAnnotationEditor] = useState(false);
@@ -390,28 +403,16 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
   );
 
   // Upload File[] (non-FileList variant)
-  const processFilesFromArray = useCallback(
-    async (files: File[], appendixId: string) => {
-      if (!appraisalId || files.length === 0) return;
-      try {
-        for (const file of files) {
-          await uploadSingleFile(file, appendixId);
-        }
-        toast.success('Files uploaded successfully');
-      } catch (error) {
-        console.error('Upload failed:', error);
-        toast.error('Failed to upload files');
-      }
-    },
-    [appraisalId, uploadSingleFile],
-  );
-
   // Annotation editor handlers
   const handleAnnotationSave = useCallback(
     async (result: AnnotationResult) => {
-      const file = new File([result.imageBlob], result.fileName, { type: 'image/png' });
       // Read from refs to avoid stale closures
       const curEditingDoc = editingDocumentRef.current;
+
+      // Preserve original filename/extension when editing an existing document
+      const fileName = curEditingDoc?.fileName ?? result.fileName;
+      const mimeType = curEditingDoc?.mimeType ?? 'image/png';
+      const file = new File([result.imageBlob], fileName, { type: mimeType });
       const curAppendixId = editingAppendixIdRef.current;
       const curFileIndex = editingFileIndexRef.current;
       const curPendingFiles = pendingEditFilesRef.current;
@@ -530,9 +531,8 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
     const imageFiles = fileArray.filter(isImageFile);
     const nonImageFiles = fileArray.filter(f => !isImageFile(f));
 
-    // Upload non-image files directly
     if (nonImageFiles.length > 0) {
-      void processFilesFromArray(nonImageFiles, appendixId);
+      toast.error('Only image files are allowed');
     }
 
     // Open editor for image files — save appendixId into editor state
@@ -583,11 +583,18 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
 
   // Delete appendix document
   const handleDeleteDocument = (appendixId: string, documentId: string) => {
-    if (!appraisalId) return;
+    setDeleteConfirm({ appendixId, documentId });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!appraisalId || !deleteConfirm) return;
     removeAppendixDocument.mutate(
-      { appraisalId, appendixId, documentId },
+      { appraisalId, appendixId: deleteConfirm.appendixId, documentId: deleteConfirm.documentId },
       {
-        onSuccess: () => toast.success('Document removed'),
+        onSuccess: () => {
+          toast.success('Document removed');
+          setDeleteConfirm(null);
+        },
         onError: () => toast.error('Failed to remove document'),
       },
     );
@@ -627,7 +634,7 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
     const nonImageFiles = fileArray.filter(f => !isImageFile(f));
 
     if (nonImageFiles.length > 0) {
-      void processFilesFromArray(nonImageFiles, appendixId);
+      toast.error('Only image files are allowed');
     }
 
     if (imageFiles.length > 0) {
@@ -913,12 +920,40 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-50">
                                   <img
                                     src={thumbnailUrl}
-                                    alt="Document"
+                                    alt={doc.fileName || 'Document'}
                                     className="w-10 h-10 rounded-lg object-cover"
+                                    onError={e => {
+                                      const target = e.currentTarget;
+                                      target.style.display = 'none';
+                                      const icon = getFileIcon(doc.fileName ?? null);
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `<span class="${icon.color} text-lg"><i class="fa-solid fa-${icon.name}"></i></span>`;
+                                      }
+                                    }}
                                   />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-sm text-gray-900 truncate">Document</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleViewDocument(doc)}
+                                    className="text-sm text-primary hover:text-primary-700 hover:underline truncate block max-w-full text-left"
+                                    title={doc.fileName || 'Untitled document'}
+                                  >
+                                    {doc.fileName || 'Untitled document'}
+                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    {doc.fileExtension && (
+                                      <span className="text-xs text-gray-400 uppercase">
+                                        {doc.fileExtension.replace(/^\./, '')}
+                                      </span>
+                                    )}
+                                    {doc.fileSizeBytes != null && doc.fileSizeBytes > 0 && (
+                                      <span className="text-xs text-gray-400">
+                                        {formatFileSize(doc.fileSizeBytes)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
 
@@ -963,7 +998,7 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+        accept=".jpg,.jpeg,.png"
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';
@@ -987,7 +1022,7 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
         onUploadFromDevice={handleUploadFromDevice}
         onChooseFromGallery={handleChooseFromGallery}
         title={activeAppendix ? `Add ${activeAppendix.appendixTypeName}` : 'Add Files'}
-        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+        accept=".jpg,.jpeg,.png"
       />
 
       {/* Gallery Selection Modal */}
@@ -1000,6 +1035,18 @@ export const DocumentChecklistTab = ({ readOnly }: { readOnly?: boolean }) => {
         onSelect={handleGallerySelect}
         images={galleryImages}
         multiSelect
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Document"
+        message="Are you sure you want to delete this document? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        isLoading={removeAppendixDocument.isPending}
       />
 
       {/* Image Annotation Editor */}

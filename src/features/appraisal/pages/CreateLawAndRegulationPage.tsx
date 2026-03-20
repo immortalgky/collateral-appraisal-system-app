@@ -31,8 +31,7 @@ import {
   createLawAndRegulationFormDefault,
   type CreateLawAndRegulationFormType,
 } from '../schemas/lawAndRegulation';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
-import { FormReadOnlyContext } from '@/shared/components/form/context';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const LAW_HEADER_GROUP = 'Header';
 
@@ -63,7 +62,7 @@ const formFields: FormField[] = [
 ];
 
 const CreateLawAndRegulationPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const { appraisalId, itemId } = useParams<{ appraisalId: string; itemId?: string }>();
   const isEditMode = Boolean(itemId);
@@ -474,7 +473,6 @@ const CreateLawAndRegulationPage = () => {
 
   return (
     <FormProvider {...methods}>
-      <FormReadOnlyContext.Provider value={isReadOnly}>
       <div className="flex flex-col h-full min-h-0">
         {/* Scrollable Form Content */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth">
@@ -654,7 +652,6 @@ const CreateLawAndRegulationPage = () => {
           />
         )}
       </div>
-      </FormReadOnlyContext.Provider>
     </FormProvider>
   );
 };

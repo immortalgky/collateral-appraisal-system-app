@@ -38,7 +38,6 @@ export interface PropertyGroup {
   items: PropertyItem[];
   description?: string | null;
   groupNumber?: number;
-  useSystemCalc?: boolean;
   pricingAnalysisId?: string | null;
 }
 

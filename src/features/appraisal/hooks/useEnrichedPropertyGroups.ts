@@ -128,7 +128,6 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
           items,
           description: apiGroup.description,
           groupNumber: apiGroup.groupNumber,
-          useSystemCalc: apiGroup.useSystemCalc,
           pricingAnalysisId: groupDetail?.pricingAnalysisId ?? null,
         };
       }),

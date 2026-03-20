@@ -1,5 +1,6 @@
 import { Icon, type ListBoxItem } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface PricingAnalysisTemplateSelectorProps {
   icon: string;
@@ -25,6 +26,8 @@ export function PricingAnalysisTemplateSelector({
   collateralType,
   template,
 }: PricingAnalysisTemplateSelectorProps) {
+  const isReadOnly = usePageReadOnly();
+
   return (
     <div className="flex flex-col gap-4 mt-4">
       <div className="flex items-center gap-2.5">
@@ -55,6 +58,7 @@ export function PricingAnalysisTemplateSelector({
               onSelectChange={value => {
                 collateralType.onSelectCollateralType(value);
               }}
+              disabled={isReadOnly}
             />
           </div>
         </div>
@@ -67,15 +71,18 @@ export function PricingAnalysisTemplateSelector({
             onSelectChange={value => {
               template.onSelectTemplate(value);
             }}
+            disabled={isReadOnly}
           />
         </div>
-        <button
-          type="button"
-          onClick={() => onGenerate()}
-          className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-primary/90 transition-colors shrink-0"
-        >
-          Generate
-        </button>
+        {!isReadOnly && (
+          <button
+            type="button"
+            onClick={() => onGenerate()}
+            className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-primary/90 transition-colors shrink-0"
+          >
+            Generate
+          </button>
+        )}
       </div>
     </div>
   );

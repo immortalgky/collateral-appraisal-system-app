@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useGetTasks, useGetTasksForKanban } from '../api';
 import type { GroupByField, Task, TaskListResponse } from '../types';
 import Icon from '@/shared/components/Icon';
-import Button from '@/shared/components/Button';
 import Badge from '@/shared/components/Badge';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
@@ -94,21 +93,22 @@ function TaskListingPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Reset to first page when sorting changes
+  // Reset to first page when sorting or search changes
   useEffect(() => {
     setPageNumber(0);
-  }, [sortField, sortDirection]);
+  }, [sortField, sortDirection, searchTerm]);
 
   // Build request params for list view
   const listRequestParams = {
     pageNumber,
     pageSize,
-    sortBy: sortField ?? undefined,
-    sortDirection: sortField ? sortDirection : undefined,
+    taskName: searchTerm || undefined,
   };
 
   // Build request params for Kanban view (no pagination)
-  const kanbanRequestParams = {};
+  const kanbanRequestParams = {
+    taskName: searchTerm || undefined,
+  };
 
   // Fetch tasks for list view
   const {
@@ -145,16 +145,7 @@ function TaskListingPage() {
 
   // Extract paginated result for the list view
   const paginatedResult: TaskListResponse | undefined = listData;
-  const allListTasks = (paginatedResult?.items ?? []) as Task[];
-  const listTasks = searchTerm
-    ? allListTasks.filter(t => {
-        const term = searchTerm.toLowerCase();
-        return (
-          t.appraisalNumber?.toLowerCase().includes(term) ||
-          t.customerName?.toLowerCase().includes(term)
-        );
-      })
-    : allListTasks;
+  const listTasks = (paginatedResult?.items ?? []) as Task[];
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -233,6 +224,17 @@ function TaskListingPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+      {/* Page Title */}
+      <div className="shrink-0">
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-semibold text-gray-900">Tasks</h3>
+          <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            {totalCount}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 mt-0.5">View and manage your assigned tasks</p>
+      </div>
+
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -280,10 +282,6 @@ function TaskListingPage() {
             </div>
           )}
         </div>
-        <Button size="sm" onClick={() => navigate('/dev/request')}>
-          <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
-          New request
-        </Button>
       </div>
 
       {/* Filters Bar */}
@@ -563,21 +561,7 @@ function TaskListingPage() {
       ) : (
         // Grid View - Kanban Board
         <div className="flex-1 min-h-0">
-          <TaskKanbanBoard
-            tasks={
-              searchTerm
-                ? (kanbanTasks || []).filter(t => {
-                    const term = searchTerm.toLowerCase();
-                    return (
-                      t.appraisalNumber?.toLowerCase().includes(term) ||
-                      t.customerName?.toLowerCase().includes(term)
-                    );
-                  })
-                : kanbanTasks || []
-            }
-            groupBy={groupBy}
-            isLoading={isLoading}
-          />
+          <TaskKanbanBoard tasks={kanbanTasks || []} groupBy={groupBy} isLoading={isLoading} />
         </div>
       )}
 

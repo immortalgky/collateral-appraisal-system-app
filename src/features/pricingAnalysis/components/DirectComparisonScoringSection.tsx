@@ -2,6 +2,7 @@ import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useContext, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { Icon } from '@/shared/components';
 import {
   type DerivedFieldRule,
@@ -43,6 +44,7 @@ export const DirectComparisonScoringSection = ({
   property,
   template,
 }: DirectComparisonScoringSectionProps) => {
+  const isReadOnly = usePageReadOnly();
   /** field paths */
   const {
     comparativeFactors: comparativeFactorsPath,
@@ -430,13 +432,15 @@ export const DirectComparisonScoringSection = ({
             })}
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                <button
-                  type="button"
-                  onClick={() => handleAddRow()}
-                  className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                >
-                  + Add More Factors
-                </button>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() => handleAddRow()}
+                    className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                  >
+                    + Add More Factors
+                  </button>
+                )}
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx(surveyColumnBody)}></td>;
