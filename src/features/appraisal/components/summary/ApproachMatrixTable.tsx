@@ -4,6 +4,7 @@ import type { ApproachMatrixGroup } from '../../api/decisionSummary';
 
 interface ApproachMatrixTableProps {
   groups: ApproachMatrixGroup[];
+  onGroupClick?: (groupId: string) => void;
 }
 
 const APPROACH_COLUMNS = [
@@ -17,7 +18,7 @@ const APPROACH_COLUMNS = [
  * Read-only table displaying the decision approach matrix.
  * Each group contains nested approaches with approachType, approachValue, and isSelected.
  */
-const ApproachMatrixTable = ({ groups }: ApproachMatrixTableProps) => {
+const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps) => {
   const sortedGroups = [...groups].sort((a, b) => a.groupNumber - b.groupNumber);
 
   // Derive which approaches have at least one selected group
@@ -54,12 +55,19 @@ const ApproachMatrixTable = ({ groups }: ApproachMatrixTableProps) => {
                 </div>
               </th>
             ))}
-            <th className="px-4 py-3 text-right font-medium rounded-tr-lg">Summary</th>
+            <th className="px-4 py-3 text-right font-medium">Summary</th>
+            {onGroupClick && (
+              <th className="px-4 py-3 text-center font-medium rounded-tr-lg w-10" />
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {sortedGroups.map(group => (
-            <tr key={group.groupNumber} className="hover:bg-gray-50">
+            <tr
+              key={group.groupNumber}
+              className={onGroupClick ? 'group hover:bg-teal-50/50 cursor-pointer transition-colors' : 'hover:bg-gray-50'}
+              onClick={() => onGroupClick?.(group.propertyGroupId)}
+            >
               <td className="px-4 py-3 font-medium text-gray-900">
                 {group.groupNumber}
               </td>
@@ -81,6 +89,11 @@ const ApproachMatrixTable = ({ groups }: ApproachMatrixTableProps) => {
               <td className="px-4 py-3 text-right font-medium text-gray-900">
                 {group.groupSummaryValue != null ? formatNumber(group.groupSummaryValue, 2) : '-'}
               </td>
+              {onGroupClick && (
+                <td className="px-4 py-3 text-center">
+                  <Icon name="chevron-right" style="solid" className="w-3.5 h-3.5 text-gray-400 group-hover:text-teal-600 transition-colors" />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -89,7 +102,7 @@ const ApproachMatrixTable = ({ groups }: ApproachMatrixTableProps) => {
             <td className="px-4 py-3 text-gray-900 rounded-bl-lg" colSpan={APPROACH_COLUMNS.length + 1}>
               Total
             </td>
-            <td className="px-4 py-3 text-right text-teal-700 rounded-br-lg">
+            <td className="px-4 py-3 text-right text-teal-700 rounded-br-lg" colSpan={onGroupClick ? 2 : 1}>
               {formatNumber(totalSummary, 2)}
             </td>
           </tr>

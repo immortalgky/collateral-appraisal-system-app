@@ -1,12 +1,12 @@
 import { format, parseISO } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import type { AppointmentDto2Type } from '@shared/schemas/v1';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface AppointmentInfoCardProps {
   appointment: AppointmentDto2Type | null;
   onReschedule: () => void;
   onCancel?: () => void;
-  readOnly?: boolean;
 }
 
 /**
@@ -17,8 +17,8 @@ export default function AppointmentInfoCard({
   appointment,
   onReschedule,
   onCancel,
-  readOnly,
 }: AppointmentInfoCardProps) {
+  const readOnly = usePageReadOnly();
   const hasAppointment = Boolean(appointment);
 
   // Format date/time display

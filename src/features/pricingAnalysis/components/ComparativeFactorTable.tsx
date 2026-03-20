@@ -13,6 +13,7 @@ import type {
 import { getFactorDesciption } from '@features/pricingAnalysis/domain/getFactorDescription.ts';
 import { FactorValueDisplay } from './FactorValueDisplay';
 import { useMemo, useState } from 'react';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useLocaleStore } from '@shared/store';
 import type { ComparativeFactorsFormType } from '../schemas/saleAdjustmentGridForm';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
@@ -31,6 +32,7 @@ export function ComparativeFactorTable({
   template,
   fieldPath,
 }: ComparativeFactorTableProps) {
+  const isReadOnly = usePageReadOnly();
   const language = useLocaleStore(s => s.language);
   const {
     comparativeFactors: comparativeFactorsPath,
@@ -261,19 +263,21 @@ export function ComparativeFactorTable({
             })}
             <tr>
               <td className={clsx('bg-white sticky left-0 px-3 py-2', 'z-15', stickyGradient)}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    appendComparativeSurveyFactors({
-                      factorId: '',
-                      factorCode: '',
-                    })
-                  }
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 hover:border-primary/60 transition-colors"
-                >
-                  <Icon name="plus" className="size-3" />
-                  Add Factor
-                </button>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      appendComparativeSurveyFactors({
+                        factorId: '',
+                        factorCode: '',
+                      })
+                    }
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 hover:border-primary/60 transition-colors"
+                  >
+                    <Icon name="plus" className="size-3" />
+                    Add Factor
+                  </button>
+                )}
               </td>
               <td className={clsx('bg-white', collateralColumnStyle)} />
               {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => (

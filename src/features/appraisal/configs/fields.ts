@@ -1989,6 +1989,13 @@ export const machineInfoFields: FormField[] = [
     maxLength: 100,
   },
   {
+    type: 'text-input',
+    label: 'Series',
+    name: 'series',
+    wrapperClassName: 'col-span-3',
+    maxLength: 100,
+  },
+  {
     type: 'number-input',
     label: 'Year',
     name: 'yearOfManufacture',
@@ -2020,6 +2027,14 @@ export const machineInfoFields: FormField[] = [
     decimalPlaces: 2,
   },
   {
+    type: 'number-input',
+    label: 'Quantity',
+    name: 'quantity',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
     type: 'text-input',
     label: 'Location ',
     name: 'location',
@@ -2043,8 +2058,8 @@ export const machineInfoFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Useage Purpoes ',
-    name: 'usePurpose',
+    label: 'Usage Purpose',
+    name: 'usagePurpose',
     wrapperClassName: 'col-span-6',
     maxLength: 300,
   },
@@ -2078,6 +2093,13 @@ export const machineInfoFields: FormField[] = [
   },
   {
     type: 'text-input',
+    label: 'Machine Dimensions',
+    name: 'machineDimensions',
+    wrapperClassName: 'col-span-6',
+    maxLength: 300,
+  },
+  {
+    type: 'text-input',
     label: 'Energy Use',
     name: 'energyUse',
     wrapperClassName: 'col-span-6',
@@ -2099,10 +2121,26 @@ export const machineInfoFields: FormField[] = [
   },
   {
     type: 'textarea',
-    label: 'Machinery Part ',
-    name: 'machinePart',
+    label: 'Machinery Parts',
+    name: 'machineParts',
     wrapperClassName: 'col-span-12',
     maxLength: 4000,
+  },
+  {
+    type: 'number-input',
+    label: 'Replacement Value',
+    name: 'replacementValue',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 15,
+    decimalPlaces: 2,
+  },
+  {
+    type: 'number-input',
+    label: 'Condition Value',
+    name: 'conditionValue',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 15,
+    decimalPlaces: 2,
   },
   {
     type: 'textarea',
@@ -2204,7 +2242,6 @@ export const allAppraisalFields: FormField[] = [
 // =============================================================================
 // Land titles fields
 // =============================================================================
-
 export const landtitlesFields: FormField[] = [
   {
     name: 'titleType',

@@ -8,6 +8,7 @@ import { useParameterDescription } from '@shared/utils/parameterUtils';
 import { useGetLawAndRegulations, useSaveLawAndRegulations } from '@features/appraisal/api';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import type { LawAndRegulationDtoType } from '@shared/schemas/v1';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const LAW_HEADER_GROUP = 'LAW_HEADER';
 
@@ -65,7 +66,8 @@ const ItemRow = ({ item, onClick, onDelete, readOnly }: ItemRowProps) => {
   );
 };
 
-export const LawsRegulationTab = ({ readOnly }: { readOnly?: boolean }) => {
+export const LawsRegulationTab = () => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const { appraisalId } = useParams<{ appraisalId: string }>();
 

@@ -16,7 +16,7 @@ export const PhotoSourceModal = ({
   onUploadFromDevice,
   onChooseFromGallery,
   title = 'Add Photos',
-  accept = 'image/*',
+  accept = '.jpg,.jpeg,.png',
 }: PhotoSourceModalProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -120,7 +120,7 @@ export const PhotoSourceModal = ({
         {/* Footer Note */}
         <div className="px-4 pb-4">
           <p className="text-xs text-gray-400 text-center">
-            Supports: JPG, PNG, GIF (Max 10MB per file)
+            Supports: JPG, JPEG, PNG (Max 10MB per file)
           </p>
         </div>
       </div>

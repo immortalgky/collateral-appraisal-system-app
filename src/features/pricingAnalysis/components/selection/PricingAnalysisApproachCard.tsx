@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import type { Approach } from '../../types/selection';
 import type { ViewMode } from '@features/pricingAnalysis/store/selectionReducer';
 import type { ViewLayout } from './PricingAnalysisMethodCard';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface PricingAnalysisApproachCardProps {
   viewMode: ViewMode;
@@ -23,6 +24,7 @@ export const PricingAnalysisApproachCard = ({
   onSelectCandidateApproach,
   onViewLayoutChange,
 }: PricingAnalysisApproachCardProps) => {
+  const isReadOnly = usePageReadOnly();
   const hasSelectedMethods = approach.methods.some(m => m.isIncluded);
 
   if (viewMode === 'editing') {
@@ -69,24 +71,39 @@ export const PricingAnalysisApproachCard = ({
             : 'border border-transparent border-l-gray-300',
         )}
       >
-        <button
-          type="button"
-          onClick={() => onSelectCandidateApproach(approach.approachType)}
-          className="cursor-pointer shrink-0"
-        >
+        {isReadOnly ? (
           <div
             className={clsx(
-              'size-5 rounded border-2 flex items-center justify-center transition-all',
+              'size-5 rounded border-2 flex items-center justify-center shrink-0',
               approach.isSelected
                 ? 'bg-primary border-primary'
-                : 'border-gray-300 hover:border-gray-400',
+                : 'border-gray-300',
             )}
           >
             {approach.isSelected && (
               <Icon name="check" style="solid" className="size-3 text-white" />
             )}
           </div>
-        </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSelectCandidateApproach(approach.approachType)}
+            className="cursor-pointer shrink-0"
+          >
+            <div
+              className={clsx(
+                'size-5 rounded border-2 flex items-center justify-center transition-all',
+                approach.isSelected
+                  ? 'bg-primary border-primary'
+                  : 'border-gray-300 hover:border-gray-400',
+              )}
+            >
+              {approach.isSelected && (
+                <Icon name="check" style="solid" className="size-3 text-white" />
+              )}
+            </div>
+          </button>
+        )}
         <Icon
           name={approach.icon}
           style="solid"

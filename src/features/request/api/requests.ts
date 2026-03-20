@@ -65,13 +65,13 @@ export const useCreateRequest = () => {
 };
 
 /**
- * Hook for fetching paginated list of requests
- * GET /requests
+ * Hook for fetching paginated list of requests for the current user
+ * GET /requests/me
  */
 export const useGetRequests = (params: GetRequestsParams = {}) => {
   // Build a clean query key without undefined values for proper cache invalidation
   const queryKey = [
-    'requests',
+    'my-requests',
     {
       pageNumber: params.pageNumber ?? 0,
       pageSize: params.pageSize ?? 10,
@@ -86,7 +86,7 @@ export const useGetRequests = (params: GetRequestsParams = {}) => {
   return useQuery({
     queryKey,
     queryFn: async (): Promise<GetRequestResultType> => {
-      const { data } = await axios.get('/requests', {
+      const { data } = await axios.get('/requests/me', {
         params: {
           PageNumber: params.pageNumber ?? 0,
           PageSize: params.pageSize ?? 10,

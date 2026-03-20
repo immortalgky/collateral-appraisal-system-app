@@ -4,6 +4,7 @@ import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
 import { useRef, useState } from 'react';
 import type { Method } from '../../types/selection';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export type ViewLayout = 'grid' | 'list';
 
@@ -38,6 +39,7 @@ export const PricingAnalysisMethodCard = ({
   isManualMode,
   onManualValueChange,
 }: PricingAnalysisMethodCardProps) => {
+  const isReadOnly = usePageReadOnly();
   const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue || null);
   const isEscapingRef = useRef(false);
 
@@ -123,27 +125,42 @@ export const PricingAnalysisMethodCard = ({
           <span className={clsx('flex-1 text-sm font-medium', method.isSelected ? 'text-primary' : 'text-gray-700')}>
             {method.label}
           </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectCandidateMethod({ approachType, methodType: method.methodType });
-            }}
-            className="cursor-pointer shrink-0"
-          >
+          {isReadOnly ? (
             <div
               className={clsx(
-                'size-4 rounded border-2 flex items-center justify-center transition-all',
+                'size-4 rounded border-2 flex items-center justify-center shrink-0',
                 method.isSelected
                   ? 'bg-primary border-primary'
-                  : 'border-gray-300 hover:border-gray-400',
+                  : 'border-gray-300',
               )}
             >
               {method.isSelected && (
                 <Icon name="check" style="solid" className="size-2.5 text-white" />
               )}
             </div>
-          </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectCandidateMethod({ approachType, methodType: method.methodType });
+              }}
+              className="cursor-pointer shrink-0"
+            >
+              <div
+                className={clsx(
+                  'size-4 rounded border-2 flex items-center justify-center transition-all',
+                  method.isSelected
+                    ? 'bg-primary border-primary'
+                    : 'border-gray-300 hover:border-gray-400',
+                )}
+              >
+                {method.isSelected && (
+                  <Icon name="check" style="solid" className="size-2.5 text-white" />
+                )}
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Hero value or manual input */}
@@ -199,27 +216,42 @@ export const PricingAnalysisMethodCard = ({
       )}
     >
       {/* Candidate checkbox */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelectCandidateMethod({ approachType, methodType: method.methodType });
-        }}
-        className="cursor-pointer shrink-0"
-      >
+      {isReadOnly ? (
         <div
           className={clsx(
-            'size-4 rounded border-2 flex items-center justify-center transition-all',
+            'size-4 rounded border-2 flex items-center justify-center shrink-0',
             method.isSelected
               ? 'bg-primary border-primary'
-              : 'border-gray-300 hover:border-gray-400',
+              : 'border-gray-300',
           )}
         >
           {method.isSelected && (
             <Icon name="check" style="solid" className="size-2.5 text-white" />
           )}
         </div>
-      </button>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectCandidateMethod({ approachType, methodType: method.methodType });
+          }}
+          className="cursor-pointer shrink-0"
+        >
+          <div
+            className={clsx(
+              'size-4 rounded border-2 flex items-center justify-center transition-all',
+              method.isSelected
+                ? 'bg-primary border-primary'
+                : 'border-gray-300 hover:border-gray-400',
+            )}
+          >
+            {method.isSelected && (
+              <Icon name="check" style="solid" className="size-2.5 text-white" />
+            )}
+          </div>
+        </button>
+      )}
       <Icon name={method.icon} style="solid" className={clsx('size-4 shrink-0', method.isSelected ? 'text-primary' : 'text-gray-400')} />
       <span className={clsx('flex-1 text-sm text-left', method.isSelected ? 'font-medium text-primary' : 'text-gray-700')}>
         {method.label}

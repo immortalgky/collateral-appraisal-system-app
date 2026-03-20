@@ -1,4 +1,5 @@
 import { ActionBar, Button, Icon } from '@/shared/components';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export function MethodFooterActions({
   onCancel,
@@ -11,6 +12,9 @@ export function MethodFooterActions({
   isSubmitting?: boolean;
   showReset?: boolean;
 }) {
+  const isReadOnly = usePageReadOnly();
+  if (isReadOnly) return null;
+
   return (
     <ActionBar>
       <ActionBar.Left>

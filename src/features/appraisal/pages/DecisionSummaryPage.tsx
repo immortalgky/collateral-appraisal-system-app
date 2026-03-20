@@ -12,7 +12,7 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
 
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
 import {
   decisionSummaryFormDefaults,
@@ -141,7 +141,7 @@ const additionalAssumptionsFields: FormField[] = [
 
 const DecisionSummaryPage = () => {
   const { appraisalId } = useParams<{ appraisalId: string }>();
-  const { isReadOnly } = useAppraisalReadOnly('Summary & Decision');
+  const isReadOnly = usePageReadOnly();
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
@@ -232,7 +232,7 @@ const DecisionSummaryPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <FormProvider methods={methods} schema={decisionSummaryFormSchema} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={decisionSummaryFormSchema}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">

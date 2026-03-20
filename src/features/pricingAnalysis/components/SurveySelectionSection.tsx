@@ -1,5 +1,6 @@
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { useState } from 'react';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { ComparativeFactorTable } from './ComparativeFactorTable';
 import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
 
@@ -21,6 +22,7 @@ export function SurveySelectionSection({
   fieldPath,
   onSelectComparativeMarketSurvey,
 }: SurveySelectionSectionProps) {
+  const isReadOnly = usePageReadOnly();
   const [isShowMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
   const handleOnClickAddComparativeSurvey = (check: boolean) => {
     setShowMarketSurveySelection(check);
@@ -33,13 +35,15 @@ export function SurveySelectionSection({
       </div>
       <div className="px-4">
         <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => handleOnClickAddComparativeSurvey(true)}
-            className="w-[250px] border border-dashed border-primary text-primary font-medium hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
-          >
-            Add Comparative Data
-          </button>
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={() => handleOnClickAddComparativeSurvey(true)}
+              className="w-[250px] border border-dashed border-primary text-primary font-medium hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
+            >
+              Add Comparative Data
+            </button>
+          )}
           <ComparativeFactorTable
             comparativeMarketSurveys={comparativeMarketSurveys}
             property={property}

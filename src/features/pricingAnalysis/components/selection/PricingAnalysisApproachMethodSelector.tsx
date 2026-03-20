@@ -6,6 +6,7 @@ import type { ViewLayout } from './PricingAnalysisMethodCard';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PricingAnalysisConfigType } from '../../schemas';
 import { useState, useCallback, useRef } from 'react';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const VIEW_LAYOUT_KEY = 'pricing-analysis-view-layout';
 
@@ -64,6 +65,7 @@ export const PricingAnalysisApproachMethodSelector = ({
   deleteConfirm,
   onManualValueChange,
 }: PricingAnalysisApproachMethodSelectorProps) => {
+  const isReadOnly = usePageReadOnly();
   const [viewLayout, setViewLayout] = useState<ViewLayout>(getStoredLayout);
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [remark, setRemark] = useState('');
@@ -100,12 +102,14 @@ export const PricingAnalysisApproachMethodSelector = ({
             </p>
           </div>
         </div>
-        <Toggle
-          size="sm"
-          options={['Manual', 'System']}
-          checked={isSystemCalculation === 'System'}
-          onChange={onSystemCalculationChange}
-        />
+        {!isReadOnly && (
+          <Toggle
+            size="sm"
+            options={['Manual', 'System']}
+            checked={isSystemCalculation === 'System'}
+            onChange={onSystemCalculationChange}
+          />
+        )}
       </div>
 
       {/* Section header with Edit button — shared by both modes */}
@@ -113,28 +117,30 @@ export const PricingAnalysisApproachMethodSelector = ({
         <span className="text-sm font-medium text-gray-600">
           {isEditing ? 'Editing Approaches & Methods' : 'Approaches & Methods'}
         </span>
-        <button
-          type="button"
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer ${
-            isEditing
-              ? 'bg-primary text-white hover:bg-primary/90'
-              : 'text-primary border border-primary/30 hover:bg-primary/5'
-          }`}
-          onClick={() => {
-            if (isEditing) {
-              onCancelEditMode();
-            } else {
-              onEnterEdit();
-            }
-          }}
-        >
-          <Icon
-            name={isEditing ? 'check' : 'pen-to-square'}
-            style={isEditing ? 'solid' : 'regular'}
-            className="size-3.5"
-          />
-          {isEditing ? 'Done' : 'Edit Approaches'}
-        </button>
+        {!isReadOnly && (
+          <button
+            type="button"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer ${
+              isEditing
+                ? 'bg-primary text-white hover:bg-primary/90'
+                : 'text-primary border border-primary/30 hover:bg-primary/5'
+            }`}
+            onClick={() => {
+              if (isEditing) {
+                onCancelEditMode();
+              } else {
+                onEnterEdit();
+              }
+            }}
+          >
+            <Icon
+              name={isEditing ? 'check' : 'pen-to-square'}
+              style={isEditing ? 'solid' : 'regular'}
+              className="size-3.5"
+            />
+            {isEditing ? 'Done' : 'Edit Approaches'}
+          </button>
+        )}
       </div>
 
       {/* Inline edit view — shared by both modes */}
@@ -200,7 +206,7 @@ export const PricingAnalysisApproachMethodSelector = ({
           </div>
 
           {/* Manual mode: PDF uploader & Remark */}
-          {isManualMode && (
+          {isManualMode && !isReadOnly && (
             <div className="flex flex-col gap-4">
               {/* PDF File Uploader */}
               <div className="flex flex-col gap-2">

@@ -23,12 +23,7 @@ export type NavContext = {
 };
 
 /** Configurable list of statuses that make all menus read-only. Add/remove as needed. */
-export const TERMINAL_STATUSES: string[] = [
-  'completed',
-  'approved',
-  'rejected',
-  'cancelled',
-];
+export const TERMINAL_STATUSES: string[] = ['completed', 'approved', 'rejected', 'cancelled'];
 
 export function isTerminalStatus(status: string | undefined): boolean {
   if (!status) return false;
@@ -78,21 +73,6 @@ export const navigationConfig: NavItem[] = [
     // All roles can access dashboard
   },
   {
-    name: 'Task',
-    href: '/tasks',
-    icon: 'list-check',
-    iconColor: 'text-purple-500',
-    iconStyle: 'solid',
-    allowedRoles: [
-      'admin',
-      'task_assigner',
-      'external_appraiser',
-      'internal_appraiser',
-      'appraisal_checker',
-      'appraisal_approver',
-    ],
-  },
-  {
     name: 'Request',
     href: '/requests',
     icon: 'folder-open',
@@ -115,6 +95,21 @@ export const navigationConfig: NavItem[] = [
         iconStyle: 'solid',
         allowedRoles: ['admin', 'request_creator'],
       },
+    ],
+  },
+  {
+    name: 'Task',
+    href: '/tasks',
+    icon: 'list-check',
+    iconColor: 'text-purple-500',
+    iconStyle: 'solid',
+    allowedRoles: [
+      'admin',
+      'task_assigner',
+      'external_appraiser',
+      'internal_appraiser',
+      'appraisal_checker',
+      'appraisal_approver',
     ],
   },
   {
@@ -185,7 +180,7 @@ export const navigationConfig: NavItem[] = [
   },
   {
     name: 'Notification',
-    href: '/notification',
+    href: '/notifications',
     icon: 'bell',
     iconColor: 'text-amber-500',
     iconStyle: 'solid',
@@ -258,79 +253,6 @@ export const navigationConfig: NavItem[] = [
         href: '/comparative-templates',
         icon: 'chart-mixed',
         iconColor: 'text-teal-500',
-        iconStyle: 'solid',
-      },
-    ],
-  },
-  {
-    name: 'Development',
-    href: '/dev',
-    icon: 'code',
-    iconColor: 'text-orange-500',
-    iconStyle: 'solid',
-    allowedRoles: ['admin'], // Only admin can see development menu
-    children: [
-      {
-        name: 'Property Information',
-        href: '/dev/property-information',
-        icon: 'file-circle-plus',
-        iconColor: 'text-emerald-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Land Detail',
-        href: '/dev/land-detail',
-        icon: 'file-circle-plus',
-        iconColor: 'text-emerald-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Market Comparable',
-        href: '/market-comparables',
-        icon: 'magnifying-glass-location',
-        iconColor: 'text-orange-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Land Detail',
-        href: '/land-detail',
-        icon: 'earth-asia',
-        iconColor: 'text-orange-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Building Detail',
-        href: '/building-detail',
-        icon: 'house',
-        iconColor: 'text-orange-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Condo Detail',
-        href: '/condo-detail',
-        icon: 'house',
-        iconColor: 'text-orange-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Land and Building Detail',
-        href: '/land-building-detail',
-        icon: 'house',
-        iconColor: 'text-orange-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Land and Building PMA',
-        href: '/land-building-pma',
-        icon: 'house',
-        iconColor: 'text-orange-500',
-        iconStyle: 'solid',
-      },
-      {
-        name: 'Condominium PMA',
-        href: '/condo-pma',
-        icon: 'house',
-        iconColor: 'text-orange-500',
         iconStyle: 'solid',
       },
     ],

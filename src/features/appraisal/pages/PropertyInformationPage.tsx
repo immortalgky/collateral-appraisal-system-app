@@ -9,7 +9,6 @@ import {
   PhotosTab,
   PropertiesTab,
 } from '../components/tabs';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws';
 type ViewMode = 'grid' | 'list';
@@ -31,7 +30,6 @@ const TABS: Tab[] = [
 const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
 
 export default function PropertyInformationPage() {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
   const initialTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'properties';
@@ -43,16 +41,16 @@ export default function PropertyInformationPage() {
     switch (activeTab) {
       case 'properties':
         return (
-          <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} readOnly={isReadOnly} />
+          <PropertiesTab viewMode={viewMode} onViewModeChange={setViewMode} />
         );
       case 'markets':
-        return <MarketsTab readOnly={isReadOnly} />;
+        return <MarketsTab />;
       case 'gallery':
-        return <GalleryTab readOnly={isReadOnly} />;
+        return <GalleryTab />;
       case 'photos':
-        return <PhotosTab readOnly={isReadOnly} />;
+        return <PhotosTab />;
       case 'laws':
-        return <LawsRegulationTab readOnly={isReadOnly} />;
+        return <LawsRegulationTab />;
       default:
         return null;
     }

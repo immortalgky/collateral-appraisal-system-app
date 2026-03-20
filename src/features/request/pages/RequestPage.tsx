@@ -52,6 +52,7 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import SearchUserModal from '../components/SearchUserModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 /**
  * Component that initializes request-level required documents.
@@ -62,17 +63,13 @@ const RequiredDocumentsInitializer = () => {
   return null;
 };
 
-interface RequestPageProps {
-  /** When true, displays the page in view-only mode without edit capabilities */
-  readOnly?: boolean;
-}
-
 /**
  * Unified Request Page component that handles both create and edit modes.
  * - Create mode: When no `requestId` is present in URL params
  * - Edit mode: When `requestId` is present in URL params
  */
-function RequestPage({ readOnly = false }: RequestPageProps) {
+function RequestPage() {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useAuthStore(state => state.user);
@@ -505,7 +502,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
       </div>
 
       {/* Main Content Area with Sidebar */}
-      <FormProvider methods={methods} schema={createRequestForm} readOnly={readOnly}>
+      <FormProvider methods={methods} schema={createRequestForm}>
         <RequiredDocumentsInitializer />
         <form
           onSubmit={e => {

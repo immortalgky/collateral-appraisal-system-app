@@ -113,14 +113,12 @@ export const useUpdatePropertyGroup = () => {
       groupId: string;
       groupName: string;
       description?: string | null;
-      useSystemCalc: boolean;
     }) => {
       const { data } = await axios.put(
         `/appraisals/${params.appraisalId}/property-groups/${params.groupId}`,
         {
           groupName: params.groupName,
           description: params.description ?? null,
-          useSystemCalc: params.useSystemCalc,
         },
       );
       return data;
@@ -188,6 +186,36 @@ export const useAddPropertyToGroup = () => {
       });
       queryClient.invalidateQueries({
         queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.groupId),
+      });
+    },
+  });
+};
+
+/**
+ * Deep-copy a property into a target group
+ * POST /appraisals/{appraisalId}/properties/{propertyId}/copy
+ */
+export const useCopyPropertyToGroup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      targetGroupId: string;
+    }) => {
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/copy`,
+        { targetGroupId: params.targetGroupId },
+      );
+      return data as { id: string };
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.targetGroupId),
       });
     },
   });
