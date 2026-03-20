@@ -17,7 +17,7 @@ export interface DirectComparisonQualitativeSurvey {
 export interface DirectComparisonQualitative {
   factorId: string;
   factorCode: string;
-  qualitatives: SaleAdjustmentGridQualitativeSurvey[];
+  qualitatives: DirectComparisonQualitativeSurvey[];
 }
 
 export interface DirectComparisonCalculation {
@@ -66,7 +66,7 @@ export interface DirectComparisonAdjustmentPct {
 export interface DirectComparisonAdjustmentFactor {
   factorId: string;
   factorCode: string;
-  surveys: SaleAdjustmentGridAdjustmentPct[];
+  surveys: DirectComparisonAdjustmentPct[];
   remark?: string;
 }
 
