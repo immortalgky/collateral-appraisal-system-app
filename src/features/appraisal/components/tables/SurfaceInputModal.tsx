@@ -5,13 +5,16 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import NumberInput from '@/shared/components/inputs/NumberInput';
+import { Textarea } from '@/shared/components';
 
 export interface SurfaceData {
   fromFloorNumber: number | null;
   toFloorNumber: number | null;
   floorType: string;
   floorStructureType: string;
+  floorStructureTypeOther: string;
   floorSurfaceType: string;
+  floorSurfaceTypeOther: string;
 }
 
 interface SurfaceInputModalProps {
@@ -27,7 +30,9 @@ const defaultSurfaceData: SurfaceData = {
   toFloorNumber: null,
   floorType: '',
   floorStructureType: '',
+  floorStructureTypeOther: '',
   floorSurfaceType: '',
+  floorSurfaceTypeOther: '',
 };
 
 const SurfaceInputModal = ({
@@ -61,12 +66,14 @@ const SurfaceInputModal = ({
   const toFloorNumber = watch('toFloorNumber');
   const floorType = watch('floorType');
   const floorStructureType = watch('floorStructureType');
+  const floorStructureTypeOther = watch('floorStructureTypeOther');
   const floorSurfaceType = watch('floorSurfaceType');
+  const floorSurfaceTypeOther = watch('floorSurfaceTypeOther');
 
   // Use portal to render modal outside parent form to avoid nested form issues
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-3">
@@ -93,8 +100,9 @@ const SurfaceInputModal = ({
               e.stopPropagation();
               handleSubmit(onSubmit)(e);
             }}
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="px-6 py-5 space-y-5">
+            <div className="px-6 py-5 space-y-5 flex-1 min-h-0 overflow-y-auto scroll-smooth">
               {/* Floor Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">Floor Range</label>
@@ -104,12 +112,14 @@ const SurfaceInputModal = ({
                     value={fromFloorNumber ?? undefined}
                     onChange={e => setValue('fromFloorNumber', e.target.value)}
                     decimalPlaces={0}
+                    maxIntegerDigits={3}
                   />
                   <NumberInput
                     label="To Floor"
                     value={toFloorNumber ?? undefined}
                     onChange={e => setValue('toFloorNumber', e.target.value)}
                     decimalPlaces={0}
+                    maxIntegerDigits={3}
                   />
                 </div>
               </div>
@@ -131,10 +141,22 @@ const SurfaceInputModal = ({
                   Floor Structure
                 </label>
                 <Dropdown
-                  group="FloorStructureType"
+                  group="FloorStructure"
                   value={floorStructureType}
                   onChange={value => setValue('floorStructureType', value)}
                   placeholder="Select floor structure"
+                />
+              </div>
+
+              {/* Floor Structure Other */}
+              <div className={floorStructureType === '99' ? '' : 'hidden'}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Floor Structure Other
+                </label>
+                <Textarea
+                  value={floorStructureTypeOther}
+                  onChange={e => setValue('floorStructureTypeOther', e.target.value)}
+                  maxLength={100}
                 />
               </div>
 
@@ -144,16 +166,28 @@ const SurfaceInputModal = ({
                   Floor Surface
                 </label>
                 <Dropdown
-                  group="FloorSurfaceType"
+                  group="FloorSurface"
                   value={floorSurfaceType}
                   onChange={value => setValue('floorSurfaceType', value)}
                   placeholder="Select floor surface"
                 />
               </div>
+
+              {/* Floor Surface Other */}
+              <div className={floorSurfaceType === '99' ? '' : 'hidden'}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Floor Surface
+                </label>
+                <Textarea
+                  value={floorSurfaceTypeOther}
+                  onChange={e => setValue('floorSurfaceTypeOther', e.target.value)}
+                  maxLength={100}
+                />
+              </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 ">
               <Button variant="ghost" type="button" onClick={onClose}>
                 Cancel
               </Button>

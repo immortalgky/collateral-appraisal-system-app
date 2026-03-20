@@ -111,6 +111,8 @@ interface FormTableRowTextInputHeader extends BaseHeader {
 interface FormTableRowNumberInputHeader extends BaseHeader {
   type: 'input-number';
   name: string;
+  maxIntegerDigits?: number;
+  decimalPlaces?: number;
 
   render?: (value: number) => React.ReactNode;
 
@@ -236,7 +238,11 @@ const BuildingDetailTable = ({
 
   const visibleColCount = headers.filter(h => h.type !== 'group').length + 1;
 
-  const renderDataRow = (originalIndex: number, rowClassName?: string, displayRowNumber?: number) => (
+  const renderDataRow = (
+    originalIndex: number,
+    rowClassName?: string,
+    displayRowNumber?: number,
+  ) => (
     <tr
       key={originalIndex}
       className={clsx(
@@ -266,6 +272,8 @@ const BuildingDetailTable = ({
           isComputed: h.isComputed,
           isReadonly: readonlyFields.includes(h.name),
           displayRowNumber,
+          maxIntegerDigits: h.maxIntegerDigits,
+          decimalPlaces: h.decimalPlaces,
         });
       })}
       <td className="py-1 px-1.5 sticky right-0 z-21 bg-white border-neutral-3 border-l border-b">
@@ -367,7 +375,12 @@ const BuildingDetailTable = ({
     <>
       <div className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip">
         <div className="w-full h-full overflow-auto">
-          <table className={clsx('table-fixed w-full h-full border-separate border-spacing-0', tableClassName)}>
+          <table
+            className={clsx(
+              'table-fixed w-full h-full border-separate border-spacing-0',
+              tableClassName,
+            )}
+          >
             <thead>
               <tr className="bg-primary-700">
                 {headers.map((header, index) => {
@@ -403,7 +416,7 @@ const BuildingDetailTable = ({
             <tbody className="divide-y divide-neutral-3">
               {!isEmpty &&
                 (rowGrouping
-                  ? rowGrouping.groups.map((group) => {
+                  ? rowGrouping.groups.map(group => {
                       const groupIndices: number[] = [];
                       values.forEach((_row: any, i: number) => {
                         if (_row[rowGrouping.field] === group.value) groupIndices.push(i);
@@ -585,6 +598,8 @@ interface TableBodyProps {
   isComputed?: boolean;
   isReadonly?: boolean;
   displayRowNumber?: number;
+  decimalPlaces?: number;
+  maxIntegerDigits?: number;
 }
 
 const TableBody = ({
@@ -603,6 +618,8 @@ const TableBody = ({
   render,
   modifier,
   isReadonly = false,
+  decimalPlaces,
+  maxIntegerDigits,
   displayRowNumber,
 }: TableBodyProps) => {
   switch (type) {
@@ -686,6 +703,8 @@ const TableBody = ({
             render={render}
             modifier={modifier}
             isReadonly={isReadonly}
+            decimalPlaces={decimalPlaces}
+            maxIntegerDigits={maxIntegerDigits}
           />
         </td>
       );
