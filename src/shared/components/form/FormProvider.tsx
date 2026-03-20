@@ -8,6 +8,7 @@ import type { z } from 'zod';
 import { FormSchemaContext, FormReadOnlyContext } from './context';
 import { flattenFormErrors } from './utils';
 import Alert from '../Alert';
+import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext';
 
 interface FormProviderProps<TFieldValues extends FieldValues> {
   /** Form methods from useForm() */
@@ -17,8 +18,6 @@ interface FormProviderProps<TFieldValues extends FieldValues> {
   children: ReactNode;
   /** Show error alert when validation fails (default: true) */
   showErrorAlert?: boolean;
-  /** When true, all form inputs will be disabled (default: false) */
-  readOnly?: boolean;
 }
 
 /**
@@ -53,8 +52,8 @@ export function FormProvider<TFieldValues extends FieldValues>({
   schema,
   children,
   showErrorAlert = true,
-  readOnly = false,
 }: FormProviderProps<TFieldValues>) {
+  const readOnly = usePageReadOnly();
   const { errors, isSubmitted, submitCount } = methods.formState;
   const [isDismissed, setIsDismissed] = useState(false);
   const errorMessages =

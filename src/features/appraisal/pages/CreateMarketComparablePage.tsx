@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { FormProvider } from 'react-hook-form';
+import { FormProvider } from '@/shared/components/form/FormProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -37,11 +37,10 @@ import {
   createMarketComparableFormDefault,
   type createMarketComparableFormType,
 } from '../schemas/form';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
-import { FormReadOnlyContext } from '@/shared/components/form/context';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateMarketComparablePage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -268,8 +267,7 @@ const CreateMarketComparablePage = () => {
         />
       </div>
 
-      <FormProvider {...methods}>
-        <FormReadOnlyContext.Provider value={isReadOnly}>
+      <FormProvider methods={methods} schema={createMarketComparableForm}>
           <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
             {/* Scrollable Form Content */}
             <div
@@ -352,7 +350,6 @@ const CreateMarketComparablePage = () => {
 
             <UnsavedChangesDialog blocker={blocker} />
           </form>
-        </FormReadOnlyContext.Provider>
       </FormProvider>
     </div>
   );

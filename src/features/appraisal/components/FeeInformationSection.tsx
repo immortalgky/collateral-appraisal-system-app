@@ -7,6 +7,7 @@ import type { FeeItem } from '../types/appointmentAndFee';
 import { FEE_ITEM_TYPE_OPTIONS, VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import type { AppraisalFeeItemDtoType } from '@shared/schemas/v1';
 import AddFeeModal from './AddFeeModal';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface FeeInformationSectionProps {
   items: AppraisalFeeItemDtoType[];
@@ -27,7 +28,6 @@ interface FeeInformationSectionProps {
   onApproveFeeItem?: (feeId: string, itemId: string) => void;
   onRejectFeeItem?: (feeId: string, itemId: string, reason: string) => void;
   isFeePaymentTypeUpdating?: boolean;
-  readOnly?: boolean;
 }
 
 /**
@@ -44,8 +44,8 @@ export default function FeeInformationSection({
   onApproveFeeItem,
   onRejectFeeItem,
   isFeePaymentTypeUpdating,
-  readOnly,
 }: FeeInformationSectionProps) {
+  const readOnly = usePageReadOnly();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
   const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);

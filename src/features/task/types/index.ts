@@ -85,7 +85,7 @@ export const Movement = {
 
 export type MovementType = (typeof Movement)[keyof typeof Movement];
 
-// Main Task interface - matches API TaskItemType from v1.ts
+// Main Task interface - matches API TaskItemType (TaskDto) from v1.ts
 export interface Task {
   id: string;
   appraisalNumber: string | null;
@@ -120,11 +120,7 @@ export interface TaskListResponse {
 export interface GetTasksParams {
   pageNumber?: number;
   pageSize?: number;
-  search?: string;
+  taskName?: string;
   status?: string;
-  taskType?: string;
-  propertyType?: string;
-  purpose?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
+  priority?: string;
 }

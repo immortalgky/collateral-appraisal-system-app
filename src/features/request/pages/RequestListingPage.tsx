@@ -171,11 +171,14 @@ function RequestListingPage() {
     <div className="flex flex-col h-full min-h-0 gap-3">
       {/* Compact Header */}
       <div className="shrink-0 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">Requests</h1>
-          <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-            {totalCount}
-          </span>
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">Requests</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {totalCount}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">Manage and track appraisal requests</p>
         </div>
         <Button size="sm" onClick={() => navigate('/requests/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />

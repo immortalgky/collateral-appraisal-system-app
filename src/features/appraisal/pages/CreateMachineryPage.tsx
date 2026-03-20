@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -31,7 +31,7 @@ import { mapMachineryPropertyResponseToForm } from '../utils/mappers';
 import MachineryDetailForm from '../forms/MachineryDetailForm';
 
 const CreateMachineryPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -196,7 +196,7 @@ const CreateMachineryPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createMachineryForm} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={createMachineryForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -225,7 +225,6 @@ const CreateMachineryPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
-                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>

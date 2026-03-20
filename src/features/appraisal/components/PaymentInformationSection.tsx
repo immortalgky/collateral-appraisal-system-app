@@ -5,6 +5,7 @@ import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import type { AppraisalFeeDtoType, AppraisalFeeItemDtoType } from '@shared/schemas/v1';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import AddPaymentModal from './AddPaymentModal';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface PaymentInformationSectionProps {
   items: AppraisalFeeItemDtoType[];
@@ -22,7 +23,6 @@ interface PaymentInformationSectionProps {
   ) => void;
   onRemovePayment?: (paymentId: string) => void;
   isPaymentPending?: boolean;
-  readOnly?: boolean;
 }
 
 /**
@@ -35,8 +35,8 @@ export default function PaymentInformationSection({
   onUpdatePayment,
   onRemovePayment,
   isPaymentPending,
-  readOnly,
 }: PaymentInformationSectionProps) {
+  const readOnly = usePageReadOnly();
   const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(true);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
@@ -379,7 +379,7 @@ export default function PaymentInformationSection({
             : null
         }
         isEditing={editingPaymentId !== null}
-        maxAmount={remaining}
+        maxAmount={editingPayment ? remaining + editingPayment.paymentAmount : remaining}
       />
 
       {/* Delete Confirmation Dialog */}

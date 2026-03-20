@@ -25,10 +25,10 @@ import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateCondoPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
@@ -192,7 +192,7 @@ const CreateCondoPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createCondoForm} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={createCondoForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -221,7 +221,6 @@ const CreateCondoPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
-                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>

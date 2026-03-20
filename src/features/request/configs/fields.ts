@@ -330,7 +330,7 @@ export const propertiesFieldConfig: FieldArrayField = {
 
 // Collateral type groups for conditional validation
 const LAND_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS'];
-const TITLE_NUMBER_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS'];
+const TITLE_NUMBER_TYPES = ['L', 'LB', 'LSL', 'LS'];
 const OWNER_NAME_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS', 'U'];
 const BUILDING_REQUIRED_TYPES = ['B', 'LB', 'LSB', 'LS'];
 

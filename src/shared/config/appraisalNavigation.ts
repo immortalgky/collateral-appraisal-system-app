@@ -14,6 +14,15 @@ import { isTerminalStatus } from './navigation';
  */
 export const applicationNavigation: NavItem[] = [
   {
+    name: '360 Summary',
+    href: '/appraisals/:appraisalId/360',
+    icon: 'compass',
+    iconColor: 'text-teal-500',
+    iconStyle: 'solid',
+    // All roles can view, always read-only
+    editableRoles: [],
+  },
+  {
     name: 'Request Information',
     href: '/appraisals/:appraisalId/request/:requestId',
     icon: 'square-info',
@@ -78,7 +87,7 @@ export const applicationNavigation: NavItem[] = [
       'appraisal_approver',
     ],
     editableRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
-    showWhen: (ctx) => ctx.isPma === true,
+    showWhen: ctx => ctx.isPma === true,
   },
   {
     name: 'Document Checklist',
@@ -231,7 +240,11 @@ function canRoleEdit(item: NavItem, role: WorkflowActivity, context?: NavContext
 /**
  * Filter navigation items based on user's role and optional context conditions
  */
-function filterNavItemsByRole(items: NavItem[], role: WorkflowActivity, context?: NavContext): NavItem[] {
+function filterNavItemsByRole(
+  items: NavItem[],
+  role: WorkflowActivity,
+  context?: NavContext,
+): NavItem[] {
   return items.filter(item => {
     if (item.showWhen && (!context || !item.showWhen(context))) return false;
     return canRoleView(item, role);
@@ -241,7 +254,11 @@ function filterNavItemsByRole(items: NavItem[], role: WorkflowActivity, context?
 /**
  * Get navigation items with resolved access levels for a role
  */
-function getNavItemsWithAccess(items: NavItem[], role: WorkflowActivity, context?: NavContext): NavItemWithAccess[] {
+function getNavItemsWithAccess(
+  items: NavItem[],
+  role: WorkflowActivity,
+  context?: NavContext,
+): NavItemWithAccess[] {
   return items
     .filter(item => {
       if (item.showWhen && (!context || !item.showWhen(context))) return false;
@@ -318,7 +335,11 @@ export const getAppraisalNavigationWithAccess = (
  * @param pageName - The page name (e.g., 'Administration', 'Appointment & Fee')
  * @param role - User's workflow activity role
  */
-export const canEditAppraisalPage = (pageName: string, role: WorkflowActivity, context?: NavContext): boolean => {
+export const canEditAppraisalPage = (
+  pageName: string,
+  role: WorkflowActivity,
+  context?: NavContext,
+): boolean => {
   const item = applicationNavigation.find(nav => nav.name === pageName);
   if (!item) return false;
   return canRoleEdit(item, role, context);
@@ -356,6 +377,7 @@ export const getPageAccessByPath = (
     property: 'Property Information',
     documents: 'Document Checklist',
     summary: 'Summary & Decision',
+    '360': '360 View',
   };
 
   const pageName = pathToNavMap[pageSegment];

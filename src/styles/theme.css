@@ -100,4 +100,18 @@
     /* Effects */
     --depth: 1;
     --noise: 0;
+
+    /* Animations */
+    --animate-flash-highlight: flash-highlight 1.5s ease-out;
+}
+
+@keyframes flash-highlight {
+    0% {
+        box-shadow: 0 0 0 3px var(--color-primary-400);
+        background-color: var(--color-primary-50);
+    }
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+        background-color: transparent;
+    }
 }

@@ -12,15 +12,15 @@ export type GetRequestDocumentsByRequestIdResponse = z.infer<
 >;
 
 // Appendix Documents
-export type AppendixDocumentDto = z.infer<typeof schemas.AppendixDocumentDto>;
-export type AppraisalAppendixDto = z.infer<typeof schemas.AppraisalAppendixDto>;
+export type AppendixDocumentDto = z.infer<typeof schemas.AppendixDocumentResponse>;
+export type AppraisalAppendixDto = z.infer<typeof schemas.AppraisalAppendixResponse>;
 export type GetAppraisalAppendicesResponse = z.infer<typeof schemas.GetAppraisalAppendicesResponse>;
 
 // Appendix Mutations
 export type AddAppendixDocumentRequest = z.infer<typeof schemas.AddAppendixDocumentRequest>;
-export type AddAppendixDocumentResult = z.infer<typeof schemas.AddAppendixDocumentResult>;
-export type RemoveAppendixDocumentResult = z.infer<typeof schemas.RemoveAppendixDocumentResult>;
-export type UpdateAppendixLayoutResult = z.infer<typeof schemas.UpdateAppendixLayoutResult>;
+export type AddAppendixDocumentResult = z.infer<typeof schemas.AddAppendixDocumentResponse>;
+export type RemoveAppendixDocumentResult = z.infer<typeof schemas.RemoveAppendixDocumentResponse>;
+export type UpdateAppendixLayoutResult = z.infer<typeof schemas.UpdateAppendixLayoutResponse>;
 
 // ==================== UI Constants ====================
 
