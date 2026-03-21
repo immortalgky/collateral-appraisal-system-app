@@ -84,16 +84,15 @@ export function DiscountedCashFlowAssumption({
           );
         })}
       </tr>
-      {expanded && (
-        <DiscountedCashFlowMethodRenderer
-          editing={editing}
-          assumptionId={assumption.id}
-          assumptionName={assumption.assumptionName}
-          method={assumption.method}
-          totalNumberOfYear={totalNumberOfYears}
-          onCancelEditMode={onCancelEditMode}
-        />
-      )}
+      <DiscountedCashFlowMethodRenderer
+        editing={editing}
+        expanded={expanded}
+        assumptionId={assumption.id}
+        assumptionName={assumption.assumptionName}
+        method={assumption.method}
+        totalNumberOfYear={totalNumberOfYears}
+        onCancelEditMode={onCancelEditMode}
+      />
     </>
   );
 }

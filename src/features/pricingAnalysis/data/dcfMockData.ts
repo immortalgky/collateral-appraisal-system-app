@@ -17,7 +17,7 @@ export const dcfMockData: DCFFormType = {
       id: 's1',
       sectionType: 'income',
       sectionName: 'Income',
-      identifier: '',
+      identifier: 'positive',
       totalSectionValues: [
         { year: 1, value: 0 },
         { year: 2, value: 0 },
@@ -156,7 +156,7 @@ export const dcfMockData: DCFFormType = {
       id: 's2',
       sectionType: 'expenses',
       sectionName: 'Expenses / Costs',
-      identifier: '',
+      identifier: 'negative',
       totalSectionValues: [
         { year: 1, value: 0 },
         { year: 2, value: 0 },
@@ -340,6 +340,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
       id: 's2',
       sectionType: 'expenses',
       sectionName: 'Expenses / Costs',
+      identifier: 'negative',
       displaySeq: 1,
       categories: [
         {

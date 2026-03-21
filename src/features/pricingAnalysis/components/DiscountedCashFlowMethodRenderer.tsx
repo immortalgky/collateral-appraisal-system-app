@@ -4,6 +4,7 @@ import { MethodSpecifyRoomIncomePerDay } from './dcfMethods/MethodSpecifyRoomInc
 
 interface DiscountedCashFlowMethodRendererProps {
   editing: string | null;
+  expanded: boolean;
   assumptionId: string;
   assumptionName: string;
   method: DCFMethodFormType;
@@ -12,34 +13,26 @@ interface DiscountedCashFlowMethodRendererProps {
 }
 export function DiscountedCashFlowMethodRenderer({
   editing,
+  expanded,
   assumptionId,
   assumptionName,
   method,
   totalNumberOfYear,
   onCancelEditMode,
 }: DiscountedCashFlowMethodRendererProps) {
+  const props = {
+    editing: editing,
+    expanded: expanded,
+    totalNumberOfYears: totalNumberOfYear,
+    method: method,
+    assumptionId: assumptionId,
+    assumptionName: assumptionName,
+    onCancelEditMode: onCancelEditMode,
+  };
   switch (method.methodType) {
     case 'specifyRoomIncomePerDay':
-      return (
-        <MethodSpecifyRoomIncomePerDay
-          totalNumberOfYears={totalNumberOfYear}
-          editing={editing}
-          method={method}
-          assumptionId={assumptionId}
-          assumptionName={assumptionName}
-          onCancelEditMode={onCancelEditMode}
-        />
-      );
+      return <MethodSpecifyRoomIncomePerDay {...props} />;
     case 'proportion':
-      return (
-        <MethodProportion
-          totalNumberOfYears={totalNumberOfYear}
-          editing={editing}
-          method={method}
-          assumptionId={assumptionId}
-          assumptionName={assumptionName}
-          onCancelEditMode={onCancelEditMode}
-        />
-      );
+      return <MethodProportion {...props} />;
   }
 }

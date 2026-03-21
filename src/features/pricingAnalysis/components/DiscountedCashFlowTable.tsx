@@ -62,6 +62,21 @@ const getSectionColor = (sectionType: string): SectionColor => {
   }
 };
 
+const getIconSection = (identifier: string) => {
+  console.log(identifier);
+  switch (identifier) {
+    case 'positive': {
+      return 'circle-dollar';
+    }
+    case 'negative': {
+      return 'cart-shopping';
+    }
+    default: {
+      return 'badge-dollar';
+    }
+  }
+};
+
 // function AddAssumptionButton({ color }) {
 //   return (
 //     <tr>
@@ -145,7 +160,7 @@ export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFl
                 section={section}
                 color={getSectionColor(section.sectionType)}
                 totalNumberOfYears={totalNumberOfYears}
-                icon={''}
+                icon={getIconSection(section.identifier)}
               />
             );
           })}

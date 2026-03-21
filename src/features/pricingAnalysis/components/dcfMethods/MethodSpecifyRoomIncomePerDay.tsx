@@ -6,6 +6,7 @@ import { DiscountedCashFlowMethodModal } from '../DiscountedCashFlowMethodModal'
 
 interface MethodSpecifyRoomIncomePerDayProps {
   editing: string | null;
+  expanded: boolean;
   assumptionId: string;
   assumptionName: string;
   method: DCFMethodFormType;
@@ -14,6 +15,7 @@ interface MethodSpecifyRoomIncomePerDayProps {
 }
 export function MethodSpecifyRoomIncomePerDay({
   editing,
+  expanded,
   assumptionId,
   assumptionName,
   method,
@@ -21,18 +23,20 @@ export function MethodSpecifyRoomIncomePerDay({
   onCancelEditMode,
 }: MethodSpecifyRoomIncomePerDayProps) {
   const { control } = useFormContext();
-  const { fields } = useFieldArray({ control, name: '' });
+  const { fields } = useFieldArray({ control, name: 'methods.' });
 
   return (
     <>
-      <MethodSpecifyRoomIncomePerDayTable totalNumberOfYear={totalNumberOfYears} />
-      <DiscountedCashFlowMethodModal
-        editing={editing}
-        onCancelEditMode={onCancelEditMode}
-        assumptionName={assumptionName}
-      >
-        <MethodSpecifyRoomIncomePerDayModal />
-      </DiscountedCashFlowMethodModal>
+      {expanded && <MethodSpecifyRoomIncomePerDayTable totalNumberOfYear={totalNumberOfYears} />}
+      {!!editing && (
+        <DiscountedCashFlowMethodModal
+          editing={editing}
+          onCancelEditMode={onCancelEditMode}
+          assumptionName={assumptionName}
+        >
+          <MethodSpecifyRoomIncomePerDayModal />
+        </DiscountedCashFlowMethodModal>
+      )}
     </>
   );
 }
@@ -97,7 +101,7 @@ function MethodSpecifyRoomIncomePerDayTable({
         })}
       </tr>
       <tr>
-        <td className={clsx(rowHeaderStyle)}>Total</td>
+        <td className={clsx(rowHeaderStyle)}>Total Room Income</td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
             <td key={idx} className="text-right text-sm px-1.5 py-1.5">

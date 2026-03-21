@@ -4,6 +4,7 @@ import type { DCFMethodFormType } from '../../schemas/dcfForm';
 
 interface MethodProportionProps {
   editing: string | null;
+  expanded: boolean;
   assumptionId: string;
   assumptionName: string;
   method: DCFMethodFormType;
@@ -12,6 +13,7 @@ interface MethodProportionProps {
 }
 export function MethodProportion({
   editing,
+  expanded,
   assumptionId,
   assumptionName,
   method,
@@ -23,7 +25,7 @@ export function MethodProportion({
 
   return (
     <>
-      <MethodProportionTable totalNumberOfYear={totalNumberOfYears} />
+      {expanded && <MethodProportionTable totalNumberOfYear={totalNumberOfYears} />}
       {!!editing && (
         <MethodProportionModal
           editing={editing}
@@ -41,7 +43,7 @@ interface MethodProportionTable {
 function MethodProportionTable({ totalNumberOfYear }: MethodProportionTable) {
   return (
     <tr>
-      <td className="pl-20 px-1 py-1.5">xxxxx</td>
+      <td className="pl-20 px-1 py-1.5">Total</td>
       {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
         return (
           <td key={idx} className="text-right">

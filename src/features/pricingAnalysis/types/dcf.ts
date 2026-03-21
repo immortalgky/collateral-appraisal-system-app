@@ -31,13 +31,12 @@ export interface DCFTemplateType {
     identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
     displaySeq: number;
     categories?: {
-      categoryType: string; // maybe don't need
+      categoryType: string;
       categoryName: string;
       identifier: Identifier;
       displaySeq: number;
       assumptions: {
-        assumptionType: string; // maybe don't need
-        assumptionName: string;
+        assumptionType: string;
         identifier: Identifier;
         displaySeq: number;
         method: {
@@ -48,6 +47,33 @@ export interface DCFTemplateType {
       }[];
     }[];
   }[];
+}
+
+export interface DCF
+
+export interface DCFSection {
+  id?: string;
+  sectionType: string; // render section e.g income, expenses
+  sectionName: string;
+  identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
+  displaySeq: number;
+  categories?: {
+    categoryType: string; // maybe don't need
+    categoryName: string;
+    identifier: Identifier;
+    displaySeq: number;
+    assumptions: {
+      assumptionType: string; // maybe don't need
+      assumptionName: string;
+      identifier: Identifier;
+      displaySeq: number;
+      method: {
+        methodType: string;
+        detail: MethodProportion | MethodSpecifyValueWithGrowth;
+        // default value
+      };
+    }[];
+  };
 }
 
 export interface DCF {

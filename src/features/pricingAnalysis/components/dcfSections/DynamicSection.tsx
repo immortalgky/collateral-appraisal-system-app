@@ -11,7 +11,6 @@ interface SectionHeaderProps {
   totalNumberOfYears: number;
 }
 function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeaderProps) {
-  console.log(totalNumberOfYears);
   return (
     <tr>
       <td colSpan={totalNumberOfYears + 1} className={clsx('border-b border-gray-300', color.bg)}>
@@ -23,11 +22,7 @@ function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeader
               color.bgAccent,
             )}
           >
-            <Icon
-              name={icon ?? 'x'}
-              style="solid"
-              className={clsx('size-4 shrink-0', color.textLight)}
-            />
+            <Icon name={icon} style="solid" className={clsx('size-4 shrink-0', color.textLight)} />
           </div>
           <span className={clsx('text-sm font-bold tracking-wide uppercase', color.textAccent)}>
             {title}
