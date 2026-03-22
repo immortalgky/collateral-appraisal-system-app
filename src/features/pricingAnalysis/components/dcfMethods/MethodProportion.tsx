@@ -1,6 +1,7 @@
 import Modal from '@/shared/components/Modal';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import type { DCFMethodFormType } from '../../schemas/dcfForm';
+import { DiscountedCashFlowMethodModal } from '../DiscountedCashFlowMethodModal';
 
 interface MethodProportionProps {
   editing: string | null;
@@ -26,12 +27,18 @@ export function MethodProportion({
   return (
     <>
       {expanded && <MethodProportionTable totalNumberOfYear={totalNumberOfYears} />}
-      {!!editing && (
-        <MethodProportionModal
+      {editing == method.methodType && (
+        <DiscountedCashFlowMethodModal
           editing={editing}
           onCancelEditMode={onCancelEditMode}
           assumptionName={assumptionName}
-        />
+        >
+          <MethodProportionModal
+            editing={editing}
+            onCancelEditMode={onCancelEditMode}
+            assumptionName={assumptionName}
+          />
+        </DiscountedCashFlowMethodModal>
       )}
     </>
   );
@@ -64,14 +71,5 @@ function MethodProportionModal({
   onCancelEditMode: () => void;
   assumptionName: string;
 }) {
-  return (
-    <Modal
-      isOpen={!!editing}
-      onClose={() => onCancelEditMode()}
-      title={`Edit Assumption: ${assumptionName}`}
-      size="lg"
-    >
-      <div>Coming soon!</div>
-    </Modal>
-  );
+  return <div>Coming soon!</div>;
 }

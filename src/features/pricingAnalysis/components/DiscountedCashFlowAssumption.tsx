@@ -2,7 +2,6 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useState } from 'react';
 import type { DCFAssumptionFormType } from '../schemas/dcfForm';
-import Modal from '@/shared/components/Modal';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
 
 interface DiscountedCashFlowAssumptionProps {

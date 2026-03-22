@@ -29,6 +29,7 @@ export function DiscountedCashFlowMethodRenderer({
     assumptionName: assumptionName,
     onCancelEditMode: onCancelEditMode,
   };
+
   switch (method.methodType) {
     case 'specifyRoomIncomePerDay':
       return <MethodSpecifyRoomIncomePerDay {...props} />;

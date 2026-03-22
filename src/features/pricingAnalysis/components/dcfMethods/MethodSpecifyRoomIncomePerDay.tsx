@@ -28,7 +28,7 @@ export function MethodSpecifyRoomIncomePerDay({
   return (
     <>
       {expanded && <MethodSpecifyRoomIncomePerDayTable totalNumberOfYear={totalNumberOfYears} />}
-      {!!editing && (
+      {editing == method.methodType && (
         <DiscountedCashFlowMethodModal
           editing={editing}
           onCancelEditMode={onCancelEditMode}

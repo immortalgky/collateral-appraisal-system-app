@@ -63,7 +63,6 @@ const getSectionColor = (sectionType: string): SectionColor => {
 };
 
 const getIconSection = (identifier: string) => {
-  console.log(identifier);
   switch (identifier) {
     case 'positive': {
       return 'circle-dollar';

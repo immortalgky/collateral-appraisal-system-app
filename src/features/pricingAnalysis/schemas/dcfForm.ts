@@ -6,12 +6,12 @@ const YearlyValue = z.object({
 });
 
 const DCFMethod = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   methodType: z.string(),
 });
 
 const DCFAssumption = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   assumptionType: z.string(),
   assumptionName: z.string(),
   displaySeq: z.number(),
@@ -21,7 +21,7 @@ const DCFAssumption = z.object({
 });
 
 const DCFCategory = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   categoryType: z.string(),
   categoryName: z.string(),
   displaySeq: z.number(),
@@ -31,7 +31,7 @@ const DCFCategory = z.object({
 });
 
 const DCFSection = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   sectionType: z.string(), // income, expense, dcf_final, direct_final
   sectionName: z.string(),
   displaySeq: z.number(),
@@ -41,7 +41,7 @@ const DCFSection = z.object({
 });
 
 export const DCF = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   templateCode: z.string(),
   totalNumberOfYears: z.number(),
   totalNumberOfDayInYear: z.number(),

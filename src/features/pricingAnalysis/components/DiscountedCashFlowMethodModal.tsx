@@ -1,6 +1,8 @@
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import type { ReactNode } from 'react';
+import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
+import { useFormContext } from 'react-hook-form';
 
 interface DiscountedCashFlowMethodModalProps {
   editing: string | null;
@@ -14,6 +16,10 @@ export function DiscountedCashFlowMethodModal({
   assumptionName,
   children,
 }: DiscountedCashFlowMethodModalProps) {
+  const { getValues } = useFormContext();
+
+  // const category = (getValues('sections') ?? []).map(s => s.category);
+
   return (
     <Modal
       isOpen={!!editing}
@@ -21,12 +27,23 @@ export function DiscountedCashFlowMethodModal({
       title={`Edit Assumption: ${assumptionName}`}
       size="lg"
     >
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-44'}>Category</span>
+          <RHFInputCell fieldName={''} inputType={'select'} />
+        </div>
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-44'}>Assumption</span>
+          <RHFInputCell fieldName={''} inputType={'select'} />
+        </div>
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-44'}>Method</span>
+          <RHFInputCell fieldName={''} inputType={'select'} />
+        </div>
+      </div>
       {children}
 
       <div className="flex items-center justify-between mt-4">
-        <span className="text-sm text-gray-500">
-          {/* {selectedCount > 0 ? `${selectedCount} factor(s) selected` : 'Select factors to add'} */}
-        </span>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={onCancelEditMode}>
             Cancel

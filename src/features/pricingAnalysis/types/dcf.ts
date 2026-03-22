@@ -37,6 +37,7 @@ export interface DCFTemplateType {
       displaySeq: number;
       assumptions: {
         assumptionType: string;
+        assumptionName: string;
         identifier: Identifier;
         displaySeq: number;
         method: {
@@ -49,7 +50,27 @@ export interface DCFTemplateType {
   }[];
 }
 
-export interface DCF
+export interface DCFMethod {
+  id?: string;
+  methodType: string;
+  detail: MethodProportion | MethodSpecifyValueWithGrowth;
+}
+
+export interface DCFAssumption {
+  assumptionType: string; // maybe don't need
+  assumptionName: string;
+  identifier: Identifier;
+  displaySeq: number;
+  method: DCFMethod;
+}
+
+export interface DCFCategory {
+  categoryType: string; // maybe don't need
+  categoryName: string;
+  identifier: Identifier;
+  displaySeq: number;
+  assumptions: DCFAssumption[];
+}
 
 export interface DCFSection {
   id?: string;
@@ -57,55 +78,16 @@ export interface DCFSection {
   sectionName: string;
   identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
   displaySeq: number;
-  categories?: {
-    categoryType: string; // maybe don't need
-    categoryName: string;
-    identifier: Identifier;
-    displaySeq: number;
-    assumptions: {
-      assumptionType: string; // maybe don't need
-      assumptionName: string;
-      identifier: Identifier;
-      displaySeq: number;
-      method: {
-        methodType: string;
-        detail: MethodProportion | MethodSpecifyValueWithGrowth;
-        // default value
-      };
-    }[];
-  };
+  categories?: DCFCategory;
 }
 
 export interface DCF {
-  id: string;
+  id?: string;
   templateCode: string;
   templateName: string;
   totalNumberOfYears: number;
   totalNumberOfDayInYear: number;
   capitalizeRate: number;
   discountedRate: number;
-  sections: {
-    id?: string;
-    sectionType: string; // render section e.g income, expenses
-    sectionName: string;
-    identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
-    displaySeq: number;
-    categories?: {
-      categoryType: string; // maybe don't need
-      categoryName: string;
-      identifier: Identifier;
-      displaySeq: number;
-      assumptions: {
-        assumptionType: string; // maybe don't need
-        assumptionName: string;
-        identifier: Identifier;
-        displaySeq: number;
-        method: {
-          methodType: string;
-          detail: MethodProportion | MethodSpecifyValueWithGrowth;
-          // default value
-        };
-      }[];
-    }[];
-  }[];
+  sections: DCFSection[];
 }

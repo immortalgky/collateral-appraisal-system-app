@@ -5,7 +5,7 @@ import { dcfHotelTemplate, dcfMockData, dcfTemplateList } from '../data/dcfMockD
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
-import type { DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
+import type { DCFMethod, DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
 import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
@@ -56,7 +56,45 @@ export function DiscountedCashFlowPanel({
     setIsGenerated(false);
 
     // initialize
-    reset(dcfHotelTemplate);
+    reset({
+      templateCode: templateDetailQuery.templateCode,
+      templateName: templateDetailQuery.templateName,
+      totalNumberOfYears: templateDetailQuery.totalNumberOfYears,
+      totalNumberOfDayInYear: templateDetailQuery.totalNumberOfDayInYear,
+      capitalizeRate: templateDetailQuery.capitalizeRate,
+      discountedRate: templateDetailQuery.discountedRate,
+      sections: templateDetailQuery.sections.map(t => {
+        return {
+          sectionType: t.sectionType,
+          sectionName: t.sectionName,
+          identifier: t.identifier,
+          displaySeq: t.displaySeq,
+          categories:
+            t.categories?.map(c => {
+              return {
+                categoryType: c.categoryType,
+                categoryName: c.categoryName,
+                identifier: c.identifier,
+                displaySeq: c.displaySeq,
+                assumptions: c.assumptions.map(a => {
+                  return {
+                    assumptionType: a.assumptionType,
+                    assumptionName: a.assumptionName,
+                    identifier: a.identifier,
+                    displaySeq: a.displaySeq,
+                    method: {
+                      methodType: a.method.methodType,
+                      detail: a.method.detail,
+                    },
+                  };
+                }),
+              };
+            }) ?? null,
+        };
+      }),
+      finalValue: 0,
+      finalValueRounded: 0,
+    });
 
     setIsGenerated(true);
   };

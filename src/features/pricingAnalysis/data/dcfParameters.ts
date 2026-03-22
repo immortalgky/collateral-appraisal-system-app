@@ -1,18 +1,18 @@
 export const methodParams = [
-  { code: '01', description: 'Parameter based on tier of property value' },
-  { code: '02', description: 'Position-Based Salary Calculation' },
-  { code: '03', description: 'Proportion of the new replacement cost' },
-  { code: '04', description: 'Proportional' },
-  { code: '05', description: 'Rental Income per Square Meter' },
-  { code: '06', description: 'Room Costs based on expenses per room per day' },
-  { code: '07', description: 'Seasonal Rates' },
-  { code: '08', description: 'Specified Energy Cost Index' },
-  { code: '09', description: 'Specified food and beverage expenses per room per day' },
-  { code: '10', description: 'Specified Monthly Rental Income' },
-  { code: '11', description: 'Specified Room Income with Growth' },
-  { code: '12', description: 'Specified Room Income with Growth by Occupancy Rate' },
-  { code: '13', description: 'Specified Value With Growth' },
-  { code: '14', description: 'Specify Room Income Per Pay' },
+  { code: '01', description: 'Specified Room Income with Growth' },
+  { code: '02', description: 'Specified Room Income with Growth by Occupancy Rate' },
+  { code: '03', description: 'Specify Room Income Per Pay' },
+  { code: '04', description: 'Parameter based on tier of property value' },
+  { code: '05', description: 'Seasonal Rates' },
+  { code: '06', description: 'Rental Income per Square Meter' },
+  { code: '07', description: 'Position-Based Salary Calculation' },
+  { code: '08', description: 'Proportion of the new replacement cost' },
+  { code: '09', description: 'Proportional' },
+  { code: '10', description: 'Room Costs based on expenses per room per day' },
+  { code: '11', description: 'Specified Energy Cost Index' },
+  { code: '12', description: 'Specified food and beverage expenses per room per day' },
+  { code: '12', description: 'Specified Monthly Rental Income' },
+  { code: '14', description: 'Specified Value With Growth' },
 ];
 
 export const categoryParams = [
@@ -52,4 +52,11 @@ export const assumptionParams = [
   { code: '26', description: 'Sales and Marketing Expenses' },
   { code: '27', description: 'Utility Expenses' },
   { code: '28', description: 'Utility Income' },
+];
+
+export const mappingAssumptionMethodParams = [
+  {
+    assumptionCode: '23',
+    methods: [{ code: '01' }, { code: '02' }, { code: '03' }, { code: '04' }],
+  },
 ];
