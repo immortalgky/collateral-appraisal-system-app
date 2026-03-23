@@ -200,7 +200,8 @@ function HomePage() {
           </div>
           <div>
             <h1 className="text-2xl font-semibold text-gray-800">
-              Welcome back{user?.name ? `, ${user.name}` : ''}
+              Welcome back
+              {user?.name ? `, ${user.username.toLowerCase() == 'p5229' ? '💙️' : user?.name}` : ''}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">{formattedDate}</p>
           </div>

@@ -73,12 +73,58 @@ const depreciationFormItem = z.object({
   depreciationPeriods: z.array(depreciationPeriodFormItem).nullable().optional(),
 });
 
+const constructionSubItemFormItem = z.object({
+  id: z.string().nullable().optional(),
+  constructionWorkGroupId: z.string(),
+  constructionWorkItemId: z.string().nullable().optional(),
+  workItemName: z.string(),
+  displayOrder: z.coerce.number().nullable().optional(),
+  proportionPct: z.coerce.number().nullable().optional(),
+  previousProgressPct: z.coerce.number().nullable().optional(),
+  currentProgressPct: z.coerce.number().nullable().optional(),
+});
+
+const constructionSummaryFormItem = z.object({
+  summaryDetail: z.string().nullable().optional(),
+  summaryPreviousProgressPct: z.coerce.number().nullable().optional(),
+  summaryPreviousValue: z.coerce.number().nullable().optional(),
+  summaryCurrentProgressPct: z.coerce.number().nullable().optional(),
+  summaryCurrentValue: z.coerce.number().nullable().optional(),
+  documentId: z.string().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  filePath: z.string().nullable().optional(),
+  fileExtension: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  fileSizeBytes: z.coerce.number().nullable().optional(),
+});
+
 export const createBuildingFormBase = z.object({
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
+  constructionEnterDetail: z.boolean().nullable().optional(),
+  constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
+  constructionSummary: constructionSummaryFormItem.nullable().optional(),
+  constructionRemark: z.string().nullable().optional(),
 });
 
-export const createBuildingForm = buildFormSchema(allBuildingFields, createBuildingFormBase);
+const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
+  if (data.constructionEnterDetail) {
+    const total = (data.constructionSubItems ?? []).reduce(
+      (sum: number, item: any) => sum + (Number(item.proportionPct) || 0),
+      0,
+    );
+    if (total > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Total proportion is ${total.toFixed(2)}% — cannot exceed 100%`,
+        path: ['constructionSubItems'],
+      });
+    }
+  }
+};
+
+export const createBuildingForm = buildFormSchema(allBuildingFields, createBuildingFormBase)
+  .superRefine(constructionProportionRefinement);
 
 const AreaDetailDto = z
   .object({
@@ -98,12 +144,16 @@ export const createLandAndBuildingFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
+  constructionEnterDetail: z.boolean().nullable().optional(),
+  constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
+  constructionSummary: constructionSummaryFormItem.nullable().optional(),
+  constructionRemark: z.string().nullable().optional(),
 });
 
 export const createLandAndBuildingForm = buildFormSchema(
   allLandBuildingFields,
   createLandAndBuildingFormBase,
-);
+).superRefine(constructionProportionRefinement);
 
 export const createLandAndBuildingPMAFormBase = z.object({
   buildingInsurancePrice: z.coerce.number().nullable(),
@@ -338,6 +388,22 @@ export const createBuildingFormDefault: createBuildingFormType = {
   remark: '',
   surfaces: [],
   depreciationDetails: [],
+  constructionEnterDetail: true,
+  constructionSubItems: [],
+  constructionSummary: {
+    summaryDetail: '',
+    summaryPreviousProgressPct: 0,
+    summaryPreviousValue: 0,
+    summaryCurrentProgressPct: 0,
+    summaryCurrentValue: 0,
+    documentId: null,
+    fileName: null,
+    filePath: null,
+    fileExtension: null,
+    mimeType: null,
+    fileSizeBytes: null,
+  },
+  constructionRemark: '',
 };
 
 export const createCondoFormDefault: createCondoFormType = {
@@ -537,6 +603,22 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   remark: '',
   surfaces: [],
   depreciationDetails: [],
+  constructionEnterDetail: true,
+  constructionSubItems: [],
+  constructionSummary: {
+    summaryDetail: '',
+    summaryPreviousProgressPct: 0,
+    summaryPreviousValue: 0,
+    summaryCurrentProgressPct: 0,
+    summaryCurrentValue: 0,
+    documentId: null,
+    fileName: null,
+    filePath: null,
+    fileExtension: null,
+    mimeType: null,
+    fileSizeBytes: null,
+  },
+  constructionRemark: '',
 };
 
 export const createMachineryFormDefault: createMachineryFormType = {

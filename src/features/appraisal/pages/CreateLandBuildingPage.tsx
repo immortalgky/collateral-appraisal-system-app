@@ -36,6 +36,7 @@ import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 
 const CreateLandBuildingPage = () => {
   const isReadOnly = usePageReadOnly();
@@ -192,8 +193,18 @@ const CreateLandBuildingPage = () => {
     }
   };
 
-  // Tab selection state (Land or Building)
-  const [activeTab, setActiveTab] = useState<'land' | 'building'>('land');
+  // Tab selection state (Land, Building, or Construction)
+  const isUnderConstruction = methods.watch('isUnderConstruction');
+  const tabParam = searchParams.get('tab');
+  const initialTab = tabParam === 'construction' ? 'construction' : 'land';
+  const [activeTab, setActiveTab] = useState<'land' | 'building' | 'construction'>(initialTab);
+
+  // Reset to default tab if construction tab is active but property is not under construction
+  useEffect(() => {
+    if (activeTab === 'construction' && !isUnderConstruction) {
+      setActiveTab('land');
+    }
+  }, [isUnderConstruction, activeTab]);
 
   if (isLoading || (isEditMode && !propertyData)) {
     return (
@@ -223,6 +234,16 @@ const CreateLandBuildingPage = () => {
               icon: 'building',
               onClick: () => setActiveTab('building'),
             },
+            ...(isUnderConstruction
+              ? [
+                  {
+                    label: 'Construction Inspection',
+                    id: 'construction-section',
+                    icon: 'helmet-safety',
+                    onClick: () => setActiveTab('construction'),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -310,6 +331,25 @@ const CreateLandBuildingPage = () => {
                       <BuildingDetailForm />
                     </Section>
                   </div>
+
+                  {/* Construction Inspection Tab Content */}
+                  {isUnderConstruction && (
+                    <div
+                      id="construction-section"
+                      className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Icon name="helmet-safety" style="solid" className="w-5 h-5 text-teal-600" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Construction Inspection</h2>
+                      </div>
+                      <div className="h-px bg-gray-200" />
+                      <Section id="construction-info" anchor className="flex flex-col gap-6">
+                        <ConstructionInspectionTab readOnly={isReadOnly} />
+                      </Section>
+                    </div>
+                  )}
                 </div>
               </ResizableSidebar.Main>
             </ResizableSidebar>

@@ -744,6 +744,25 @@ const GetDocumentChecklistResponse = z
     propertyTypeGroups: z.array(PropertyTypeDocumentGroupDto),
   })
   .passthrough();
+const ConstructionWorkItemDto = z
+  .object({
+    id: z.string().uuid(),
+    code: z.string(),
+    nameTh: z.string(),
+    nameEn: z.string(),
+    displayOrder: z.number().int(),
+  })
+  .passthrough();
+const ConstructionWorkGroupDto = z
+  .object({
+    id: z.string().uuid(),
+    code: z.string(),
+    nameTh: z.string(),
+    nameEn: z.string(),
+    displayOrder: z.number().int(),
+    items: z.array(ConstructionWorkItemDto),
+  })
+  .passthrough();
 const AddressDto3 = z
   .object({
     provinceCode: z.string(),
@@ -2808,6 +2827,34 @@ const SurfaceItemData = z
     floorSurfaceTypeOther: z.string().nullish().default(null),
   })
   .passthrough();
+const ConstructionWorkDetailData = z
+  .object({
+    id: z.string().uuid().nullable(),
+    constructionWorkGroupId: z.string().uuid(),
+    constructionWorkItemId: z.string().uuid().nullable(),
+    workItemName: z.string(),
+    displayOrder: z.number().int(),
+    proportionPct: z.number(),
+    previousProgressPct: z.number(),
+    currentProgressPct: z.number(),
+  })
+  .passthrough();
+const ConstructionInspectionData = z
+  .object({
+    isFullDetail: z.boolean(),
+    totalValue: z.number(),
+    summaryDetail: z.string().nullish().default(null),
+    summaryPreviousProgressPct: z.number().nullish().default(null),
+    summaryPreviousValue: z.number().nullish().default(null),
+    summaryCurrentProgressPct: z.number().nullish().default(null),
+    summaryCurrentValue: z.number().nullish().default(null),
+    remark: z.string().nullish().default(null),
+    documentId: z.string().uuid().nullish().default(null),
+    documentFileName: z.string().nullish().default(null),
+    documentFilePath: z.string().nullish().default(null),
+    workDetails: z.array(ConstructionWorkDetailData).nullish().default(null),
+  })
+  .passthrough();
 const UpdateLandAndBuildingPropertyRequest = z
   .object({
     propertyName: z.string().nullable().default(null),
@@ -2941,6 +2988,7 @@ const UpdateLandAndBuildingPropertyRequest = z
     buildingRemark: z.string().nullable().default(null),
     depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
     surfaces: z.array(SurfaceItemData).nullable().default(null),
+    constructionInspection: ConstructionInspectionData.nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -2982,6 +3030,40 @@ const BuildingAppraisalSurfaceDto = z
     floorStructureTypeOther: z.string().nullable(),
     floorSurfaceType: z.string().nullable(),
     floorSurfaceTypeOther: z.string().nullable(),
+  })
+  .passthrough();
+const ConstructionWorkDetailDto = z
+  .object({
+    id: z.string().uuid(),
+    constructionWorkGroupId: z.string().uuid(),
+    constructionWorkItemId: z.string().uuid().nullable(),
+    workItemName: z.string(),
+    displayOrder: z.number().int(),
+    constructionValue: z.number(),
+    previousProgressPct: z.number(),
+    currentProgressPct: z.number(),
+    proportionPct: z.number(),
+    currentProportionPct: z.number(),
+    previousPropertyValue: z.number(),
+    currentPropertyValue: z.number(),
+  })
+  .passthrough();
+const ConstructionInspectionDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalPropertyId: z.string().uuid(),
+    isFullDetail: z.boolean(),
+    totalValue: z.number(),
+    summaryDetail: z.string().nullable(),
+    summaryPreviousProgressPct: z.number().nullable(),
+    summaryPreviousValue: z.number().nullable(),
+    summaryCurrentProgressPct: z.number().nullable(),
+    summaryCurrentValue: z.number().nullable(),
+    remark: z.string().nullable(),
+    documentId: z.string().uuid().nullable(),
+    documentFileName: z.string().nullable(),
+    documentFilePath: z.string().nullable(),
+    workDetails: z.array(ConstructionWorkDetailDto).nullable(),
   })
   .passthrough();
 const GetLandAndBuildingPropertyResponse = z
@@ -3122,6 +3204,7 @@ const GetLandAndBuildingPropertyResponse = z
     buildingRemark: z.string().nullable(),
     depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
     surfaces: z.array(BuildingAppraisalSurfaceDto),
+    constructionInspection: ConstructionInspectionDto.nullable(),
   })
   .passthrough();
 const UpdateGalleryPhotoRequest = z
@@ -3346,6 +3429,7 @@ const UpdateBuildingPropertyRequest = z
     remark: z.string().nullable().default(null),
     depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
     surfaces: z.array(SurfaceItemData).nullable().default(null),
+    constructionInspection: ConstructionInspectionData.nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -3412,6 +3496,7 @@ const GetBuildingPropertyResponse = z
     remark: z.string().nullable(),
     depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
     surfaces: z.array(BuildingAppraisalSurfaceDto),
+    constructionInspection: ConstructionInspectionDto.nullable(),
   })
   .passthrough();
 const UpdateAppendixLayoutRequest = z.object({ layoutColumns: z.number().int() }).passthrough();
@@ -4154,6 +4239,7 @@ const CreateLandAndBuildingPropertyRequest = z
     titles: z.array(LandTitleItemRequest).nullable().default(null),
     depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
     surfaces: z.array(SurfaceItemData).nullable().default(null),
+    constructionInspection: ConstructionInspectionData.nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -4294,6 +4380,7 @@ const CreateBuildingPropertyRequest = z
     remark: z.string().nullable().default(null),
     depreciationDetails: z.array(DepreciationItemData).nullable().default(null),
     surfaces: z.array(SurfaceItemData).nullable().default(null),
+    constructionInspection: ConstructionInspectionData.nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -4348,7 +4435,6 @@ const AppointmentDto2 = z
 const GetAppointmentResponse = z.object({ appointment: AppointmentDto2 }).passthrough();
 const CreateAppointmentRequest = z
   .object({
-    assignmentId: z.string().uuid(),
     appointmentDateTime: z.string().datetime({ offset: true }),
     appointedBy: z.string(),
     locationDetail: z.string().nullish().default(null),
@@ -4576,6 +4662,8 @@ export const schemas = {
   DocumentChecklistItemDto,
   PropertyTypeDocumentGroupDto,
   GetDocumentChecklistResponse,
+  ConstructionWorkItemDto,
+  ConstructionWorkGroupDto,
   AddressDto3,
   DocumentLink,
   Input,
@@ -4779,10 +4867,14 @@ export const schemas = {
   DepreciationPeriodItemData,
   DepreciationItemData,
   SurfaceItemData,
+  ConstructionWorkDetailData,
+  ConstructionInspectionData,
   UpdateLandAndBuildingPropertyRequest,
   BuildingAppraisalDepreciationPeriodDto,
   BuildingAppraisalDepreciationDetailDto,
   BuildingAppraisalSurfaceDto,
+  ConstructionWorkDetailDto,
+  ConstructionInspectionDto,
   GetLandAndBuildingPropertyResponse,
   UpdateGalleryPhotoRequest,
   UpdateGalleryPhotoResponse,
