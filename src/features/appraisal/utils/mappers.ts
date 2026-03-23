@@ -53,6 +53,7 @@ export const mapLandPropertyResponseToForm = (
     landShapeType: response.landShapeType ?? '',
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
+    landZoneTypeOther: response.landZoneTypeOther ?? '',
     plotLocationType: response.plotLocationType ?? [],
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
@@ -77,6 +78,7 @@ export const mapLandPropertyResponseToForm = (
     transportationAccessType: response.transportationAccessType ?? [],
     transportationAccessTypeOther: response.transportationAccessTypeOther ?? '',
     propertyAnticipationType: response.propertyAnticipationType ?? '',
+    propertyAnticipationTypeOther: response.propertyAnticipationTypeOther ?? '',
     isExpropriated: response.isExpropriated ?? false,
     expropriationRemark: response.expropriationRemark ?? '',
     isInExpropriationLine: response.isInExpropriationLine ?? false,
@@ -151,6 +153,7 @@ export const mapBuildingPropertyResponseToForm = (
     isOwnerVerified: response.isOwnerVerified ?? false,
     houseNumber: response.houseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
+    buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
     constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
@@ -231,6 +234,7 @@ export const mapCondoPropertyResponseToForm = (
 
     isOwnerVerified: response.isOwnerVerified ?? false,
     buildingConditionType: response.buildingConditionType ?? '',
+    buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     hasObligation: response.hasObligation ?? false,
     obligationDetails: response.obligationDetails ?? '',
     documentValidationResultType: response.documentValidationResultType ?? '',
@@ -321,6 +325,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     landShapeType: response.landShapeType ?? '',
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
+    landZoneTypeOther: response.landZoneTypeOther ?? '',
     plotLocationType: response.plotLocationType ?? [],
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
@@ -345,6 +350,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     transportationAccessType: response.transportationAccessType ?? [],
     transportationAccessTypeOther: response.transportationAccessTypeOther ?? '',
     propertyAnticipationType: response.propertyAnticipationType ?? '',
+    propertyAnticipationTypeOther: response.propertyAnticipationTypeOther ?? '',
     isExpropriated: response.isExpropriated ?? false,
     expropriationRemark: response.expropriationRemark ?? '',
     isInExpropriationLine: response.isInExpropriationLine ?? false,
@@ -373,12 +379,15 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     westBoundaryLength: response.westBoundaryLength ?? 0,
     pondArea: response.pondArea ?? 0,
     pondDepth: response.pondDepth ?? 0,
+    hasBuilding: response.hasBuilding ?? false,
+    hasBuildingOther: response.hasBuildingOther ?? '',
 
     buildingNumber: response.buildingNumber ?? '',
     modelName: response.modelName ?? '',
     builtOnTitleNumber: response.builtOnTitleNumber ?? '',
     houseNumber: response.houseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
+    buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
     constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
@@ -438,6 +447,7 @@ export const mapMachineryPropertyResponseToForm = (
     propertyName: response.propertyName ?? null,
     isOwnerVerified: response.isOwnerVerified ?? true,
     ownerName: response.ownerName ?? null,
+    registrationNo: response.registrationNo ?? null,
     isOperational: response.isOperational ?? true,
     machineName: response.machineName ?? null,
     brand: response.brand ?? null,
@@ -596,8 +606,12 @@ const mapConstructionInspectionFormToApi = (data: any) => {
 
 export const mapBuildingFormDataToApiPayload = (data: createBuildingFormType): any => {
   const {
-    surfaces, depreciationDetails, constructionSubItems,
-    constructionSummary, constructionRemark, constructionEnterDetail,
+    surfaces,
+    depreciationDetails,
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
     ...rest
   } = data;
   return {
@@ -608,10 +622,16 @@ export const mapBuildingFormDataToApiPayload = (data: createBuildingFormType): a
   };
 };
 
-export const mapLandAndBuildingFormDataToApiPayload = (data: createLandAndBuildingFormType): any => {
+export const mapLandAndBuildingFormDataToApiPayload = (
+  data: createLandAndBuildingFormType,
+): any => {
   const {
-    surfaces, depreciationDetails, constructionSubItems,
-    constructionSummary, constructionRemark, constructionEnterDetail,
+    surfaces,
+    depreciationDetails,
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
     ...rest
   } = data;
   return {

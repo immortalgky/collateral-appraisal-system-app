@@ -123,8 +123,10 @@ const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
   }
 };
 
-export const createBuildingForm = buildFormSchema(allBuildingFields, createBuildingFormBase)
-  .superRefine(constructionProportionRefinement);
+export const createBuildingForm = buildFormSchema(
+  allBuildingFields,
+  createBuildingFormBase,
+).superRefine(constructionProportionRefinement);
 
 const AreaDetailDto = z
   .object({
@@ -625,6 +627,7 @@ export const createMachineryFormDefault: createMachineryFormType = {
   propertyName: null,
   isOwnerVerified: true,
   ownerName: null,
+  registrationNo: null,
   isOperational: true,
   machineName: null,
   brand: null,
