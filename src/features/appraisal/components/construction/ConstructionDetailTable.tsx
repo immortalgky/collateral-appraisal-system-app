@@ -66,6 +66,7 @@ function AddSubItemDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const availableItems = group.items.filter(
     item => !existingItemIds.includes(item.id),
@@ -73,7 +74,6 @@ function AddSubItemDropdown({
 
   if (availableItems.length === 0) return null;
 
-  const menuRef = useRef<HTMLDivElement>(null);
   const rect = btnRef.current?.getBoundingClientRect();
 
   // Check if dropdown would overflow below the viewport
