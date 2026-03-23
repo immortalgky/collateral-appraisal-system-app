@@ -4,9 +4,11 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
 import Toggle from '@shared/components/inputs/Toggle';
 import { formatNumber } from '@shared/utils/formatUtils';
+import axios from '@shared/api/axiosInstance';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { useConstructionWorkGroups } from '../../api/constructionWorkGroups';
+import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
 import type { PropertyItem } from '../../types';
@@ -19,6 +21,15 @@ const BUILDING_TYPES = new Set([
   'B',
   'LB',
 ]);
+
+const typeToDetailEndpoint: Record<string, string> = {
+  Building: 'building-detail',
+  'Lease Agreement Building': 'building-detail',
+  'Land and building': 'land-and-building-detail',
+  'Lease Agreement Land and building': 'land-and-building-detail',
+  B: 'building-detail',
+  LB: 'land-and-building-detail',
+};
 
 const getRouteSegment = (type: string): string => {
   const typeMap: Record<string, string> = {
@@ -158,6 +169,56 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
     return summary?.summaryCurrentProgressPct ?? 0;
   }, [enterDetail, totalValue, grandTotal.totalCurrentPropertyValue, summary?.summaryCurrentProgressPct]);
 
+  // Copy from another property
+  const [isCopyOpen, setIsCopyOpen] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const copyBtnRef = useRef<HTMLButtonElement>(null);
+
+  const otherBuildingProperties = useMemo(
+    () => buildingProperties.filter(p => p.id !== propertyId),
+    [buildingProperties, propertyId],
+  );
+
+  const handleCopyFrom = async (source: PropertyItem) => {
+    setIsCopyOpen(false);
+    setIsCopying(true);
+    try {
+      const endpoint = typeToDetailEndpoint[source.type] ?? 'building-detail';
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${source.id}/${endpoint}`,
+      );
+      const ci = data?.constructionInspection;
+      if (!ci) {
+        setIsCopying(false);
+        return;
+      }
+      const mapped = mapConstructionInspectionResponseToForm(ci);
+      // Set sub-items with id: null (new copies)
+      const copiedSubItems = (mapped.constructionSubItems ?? []).map((item: any) => ({
+        ...item,
+        id: null,
+      }));
+      // Clear document fields (source-specific)
+      const copiedSummary = {
+        ...mapped.constructionSummary,
+        documentId: null,
+        fileName: null,
+        filePath: null,
+        fileExtension: null,
+        mimeType: null,
+        fileSizeBytes: null,
+      };
+      setValue('constructionEnterDetail', mapped.constructionEnterDetail, { shouldDirty: true });
+      setValue('constructionSubItems', copiedSubItems, { shouldDirty: true });
+      setValue('constructionSummary', copiedSummary, { shouldDirty: true });
+      setValue('constructionRemark', mapped.constructionRemark, { shouldDirty: true });
+    } catch {
+      // Fetch failed
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
   // Handlers
   const handleAddSubItem = (constructionWorkGroupId: string, constructionWorkItemId: string, workItemName: string) => {
     // Calculate displayOrder based on existing items in this group
@@ -195,6 +256,48 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
             </div>
             <h2 className="text-sm font-semibold text-gray-900">Construction Inspection</h2>
           </div>
+
+          <div className="flex items-center gap-2">
+            {/* Copy From Dropdown */}
+            {!readOnly && otherBuildingProperties.length > 0 && (
+              <div className="relative">
+                <button
+                  ref={copyBtnRef}
+                  type="button"
+                  onClick={() => setIsCopyOpen(!isCopyOpen)}
+                  disabled={isCopying}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 transition-all"
+                >
+                  {isCopying ? (
+                    <Icon name="spinner" style="solid" className="size-3 animate-spin" />
+                  ) : (
+                    <Icon name="copy" style="regular" className="size-3" />
+                  )}
+                  Copy from
+                </button>
+                {isCopyOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsCopyOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[260px] max-h-60 overflow-y-auto">
+                      <div className="px-3 pb-1.5 mb-1 border-b border-gray-100">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Copy construction data from</span>
+                      </div>
+                      {otherBuildingProperties.map(prop => (
+                        <button
+                          key={prop.id}
+                          type="button"
+                          onClick={() => handleCopyFrom(prop)}
+                          className="flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-all"
+                        >
+                          <Icon name="building" style="solid" className="size-3 text-gray-400 flex-shrink-0" />
+                          <span className="truncate font-medium text-xs">{prop.address}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
           {/* Property Selector Dropdown */}
           <div className="relative" ref={dropdownRef}>
@@ -244,6 +347,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
 

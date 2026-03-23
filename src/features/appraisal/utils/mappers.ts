@@ -111,7 +111,7 @@ export const mapLandPropertyResponseToForm = (
   };
 };
 
-const mapConstructionInspectionResponseToForm = (ci: any) => ({
+export const mapConstructionInspectionResponseToForm = (ci: any) => ({
   constructionEnterDetail: ci?.isFullDetail ?? true,
   constructionSubItems: (ci?.workDetails ?? []).map((wd: any) => ({
     id: wd.id,
