@@ -2317,6 +2317,29 @@
         }
       }
     },
+    "/construction-work-groups": {
+      "get": {
+        "tags": ["Parameter"],
+        "summary": "Get construction work groups",
+        "description": "Retrieve all construction work groups with their predefined work items.",
+        "operationId": "GetConstructionWorkGroups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConstructionWorkGroupDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/parameters/addresses/title": {
       "get": {
         "tags": ["Parameter"],
@@ -13837,6 +13860,331 @@
           }
         }
       },
+      "ConstructionInspectionData": {
+        "required": ["isFullDetail", "totalValue"],
+        "type": "object",
+        "properties": {
+          "isFullDetail": {
+            "type": "boolean"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "summaryDetail": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "summaryPreviousProgressPct": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "summaryPreviousValue": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "summaryCurrentProgressPct": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "summaryCurrentValue": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "default": null,
+            "nullable": true
+          },
+          "documentFileName": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "documentFilePath": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "workDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConstructionWorkDetailData"
+            },
+            "default": null,
+            "nullable": true
+          }
+        },
+        "default": null,
+        "nullable": true
+      },
+      "ConstructionInspectionDto": {
+        "required": [
+          "id",
+          "appraisalPropertyId",
+          "isFullDetail",
+          "totalValue",
+          "summaryDetail",
+          "summaryPreviousProgressPct",
+          "summaryPreviousValue",
+          "summaryCurrentProgressPct",
+          "summaryCurrentValue",
+          "remark",
+          "documentId",
+          "documentFileName",
+          "documentFilePath",
+          "workDetails"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalPropertyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isFullDetail": {
+            "type": "boolean"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "summaryDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "summaryPreviousProgressPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "summaryPreviousValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "summaryCurrentProgressPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "summaryCurrentValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "documentFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentFilePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "workDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConstructionWorkDetailDto"
+            },
+            "nullable": true
+          }
+        },
+        "nullable": true
+      },
+      "ConstructionWorkDetailData": {
+        "required": [
+          "id",
+          "constructionWorkGroupId",
+          "constructionWorkItemId",
+          "workItemName",
+          "displayOrder",
+          "proportionPct",
+          "previousProgressPct",
+          "currentProgressPct"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "constructionWorkGroupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "constructionWorkItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "workItemName": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "proportionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousProgressPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentProgressPct": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ConstructionWorkDetailDto": {
+        "required": [
+          "id",
+          "constructionWorkGroupId",
+          "constructionWorkItemId",
+          "workItemName",
+          "displayOrder",
+          "constructionValue",
+          "previousProgressPct",
+          "currentProgressPct",
+          "proportionPct",
+          "currentProportionPct",
+          "previousPropertyValue",
+          "currentPropertyValue"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "constructionWorkGroupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "constructionWorkItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "workItemName": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "constructionValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousProgressPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentProgressPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "proportionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentProportionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousPropertyValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentPropertyValue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ConstructionWorkGroupDto": {
+        "required": ["id", "code", "nameTh", "nameEn", "displayOrder", "items"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameTh": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConstructionWorkItemDto"
+            }
+          }
+        }
+      },
+      "ConstructionWorkItemDto": {
+        "required": ["id", "code", "nameTh", "nameEn", "displayOrder"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameTh": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ContactDto": {
         "required": ["contactPersonName", "contactPersonPhone", "dealerCode"],
         "type": "object",
@@ -13891,13 +14239,9 @@
         }
       },
       "CreateAppointmentRequest": {
-        "required": ["assignmentId", "appointmentDateTime", "appointedBy"],
+        "required": ["appointmentDateTime", "appointedBy"],
         "type": "object",
         "properties": {
-          "assignmentId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "appointmentDateTime": {
             "type": "string",
             "format": "date-time"
@@ -14278,6 +14622,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -15798,6 +16145,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -18644,7 +18994,8 @@
           "forcedSalePrice",
           "remark",
           "depreciationDetails",
-          "surfaces"
+          "surfaces",
+          "constructionInspection"
         ],
         "type": "object",
         "properties": {
@@ -18921,6 +19272,9 @@
             "items": {
               "$ref": "#/components/schemas/BuildingAppraisalSurfaceDto"
             }
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionDto"
           }
         }
       },
@@ -19910,7 +20264,8 @@
           "landRemark",
           "buildingRemark",
           "depreciationDetails",
-          "surfaces"
+          "surfaces",
+          "constructionInspection"
         ],
         "type": "object",
         "properties": {
@@ -20532,6 +20887,9 @@
             "items": {
               "$ref": "#/components/schemas/BuildingAppraisalSurfaceDto"
             }
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionDto"
           }
         }
       },
@@ -26635,6 +26993,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -28514,6 +28875,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },

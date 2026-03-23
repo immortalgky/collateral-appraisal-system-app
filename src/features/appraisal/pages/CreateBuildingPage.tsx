@@ -34,6 +34,7 @@ import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 
 const CreateBuildingPage = () => {
   const isReadOnly = usePageReadOnly();
@@ -182,6 +183,18 @@ const CreateBuildingPage = () => {
     }
   };
 
+  const isUnderConstruction = methods.watch('isUnderConstruction');
+  const tabParam = searchParams.get('tab');
+  const initialBuildingTab = tabParam === 'construction' ? 'construction' : 'building';
+  const [activeTab, setActiveTab] = useState<'building' | 'construction'>(initialBuildingTab);
+
+  // Reset to default tab if construction tab is active but property is not under construction
+  useEffect(() => {
+    if (activeTab === 'construction' && !isUnderConstruction) {
+      setActiveTab('building');
+    }
+  }, [isUnderConstruction, activeTab]);
+
   if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -198,7 +211,22 @@ const CreateBuildingPage = () => {
           containerId="form-scroll-container"
           anchors={[
             { label: 'Photos', id: 'photos', icon: 'images' },
-            { label: 'Building', id: 'properties-section', icon: 'building' },
+            {
+              label: 'Building',
+              id: 'properties-section',
+              icon: 'building',
+              onClick: () => setActiveTab('building'),
+            },
+            ...(isUnderConstruction
+              ? [
+                  {
+                    label: 'Construction Inspection',
+                    id: 'construction-section',
+                    icon: 'helmet-safety',
+                    onClick: () => setActiveTab('construction'),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -236,25 +264,45 @@ const CreateBuildingPage = () => {
                     )}
                   </Section>
 
-                  {/* Building Information Header */}
-                  <Section id="properties-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
+                  {/* Building Tab Content */}
+                  <div
+                    id="properties-section"
+                    className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
+                  >
+                    <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
                         <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
                       </div>
                       <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
                     </div>
                     <div className="h-px bg-gray-200" />
-                  </Section>
+                    <Section
+                      id="building-info"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <BuildingDetailForm />
+                    </Section>
+                  </div>
 
-                  {/* Building Form */}
-                  <Section
-                    id="building-info"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <BuildingDetailForm />
-                  </Section>
+                  {/* Construction Inspection Tab Content */}
+                  {isUnderConstruction && (
+                    <div
+                      id="construction-section"
+                      className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Icon name="helmet-safety" style="solid" className="w-5 h-5 text-teal-600" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Construction Inspection</h2>
+                      </div>
+                      <div className="h-px bg-gray-200" />
+                      <Section id="construction-info" anchor className="flex flex-col gap-6">
+                        <ConstructionInspectionTab readOnly={isReadOnly} />
+                      </Section>
+                    </div>
+                  )}
                 </div>
               </ResizableSidebar.Main>
             </ResizableSidebar>
