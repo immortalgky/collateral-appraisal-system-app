@@ -2,8 +2,12 @@ import Modal from '@/shared/components/Modal';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import type { DCFMethodFormType } from '../../schemas/dcfForm';
 import { DiscountedCashFlowMethodModal } from '../DiscountedCashFlowMethodModal';
+import type { DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
+import { useMemo } from 'react';
+import { RHFInputCell } from '../table/RHFInputCell';
 
 interface MethodProportionProps {
+  name: string;
   editing: string | null;
   expanded: boolean;
   assumptionId: string;
@@ -13,6 +17,7 @@ interface MethodProportionProps {
   onCancelEditMode: () => void;
 }
 export function MethodProportion({
+  name = '',
   editing,
   expanded,
   assumptionId,
@@ -22,7 +27,21 @@ export function MethodProportion({
   onCancelEditMode,
 }: MethodProportionProps) {
   const { control } = useFormContext();
-  const { fields } = useFieldArray({ control, name: '' });
+  const { fields } = useFieldArray({ control, name: name });
+
+  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
+    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+      return [
+        {
+          targetPath: 'total',
+          deps: [],
+          compute: ({ value, getValues }) => {
+            return 0;
+          },
+        },
+      ];
+    });
+  }, [fields]);
 
   return (
     <>
@@ -33,11 +52,7 @@ export function MethodProportion({
           onCancelEditMode={onCancelEditMode}
           assumptionName={assumptionName}
         >
-          <MethodProportionModal
-            editing={editing}
-            onCancelEditMode={onCancelEditMode}
-            assumptionName={assumptionName}
-          />
+          <MethodProportionModal name={`${name}.detail`} />
         </DiscountedCashFlowMethodModal>
       )}
     </>
@@ -45,31 +60,40 @@ export function MethodProportion({
 }
 
 interface MethodProportionTable {
+  name: string;
   totalNumberOfYear: number;
 }
-function MethodProportionTable({ totalNumberOfYear }: MethodProportionTable) {
+function MethodProportionTable({ name, totalNumberOfYear }: MethodProportionTable) {
   return (
-    <tr>
-      <td className="pl-20 px-1 py-1.5">Total</td>
-      {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-        return (
-          <td key={idx} className="text-right">
-            {idx}
-          </td>
-        );
-      })}
-    </tr>
+    <>
+      <tr>
+        <td className="pl-20 px-1 py-1.5">Total</td>
+        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
+          return (
+            <td key={idx} className="text-right">
+              <div className="flex flex-row justify-between items-center">
+                <RHFInputCell fieldName={`${name}.totalMethodValues.${idx}`} inputType="display" />
+                <RHFInputCell fieldName="" inputType="display" />
+              </div>
+            </td>
+          );
+        })}
+      </tr>
+    </>
   );
 }
 
-function MethodProportionModal({
-  editing,
-  onCancelEditMode,
-  assumptionName,
-}: {
-  editing: string | null;
-  onCancelEditMode: () => void;
-  assumptionName: string;
-}) {
-  return <div>Coming soon!</div>;
+function MethodProportionModal({ name = '' }: { name: string }) {
+  return (
+    <div className="flex flex-col gap-2 mb-4">
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-44'}>Proportions</span>
+        <RHFInputCell fieldName={`${name}.proportionPct`} inputType={'number'} />
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-44'}>% of</span>
+        <RHFInputCell fieldName={`${name}.assumptionType`} inputType={'select'} />
+      </div>
+    </div>
+  );
 }

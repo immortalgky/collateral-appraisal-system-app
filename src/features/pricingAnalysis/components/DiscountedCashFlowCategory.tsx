@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { DCFCategoryFormType } from '../schemas/dcfForm';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
+import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { RHFInputCell } from './table/RHFInputCell';
 
 interface DiscountedCashFlowCategoryProps {
+  name: string;
   category: DCFCategoryFormType;
   totalNumberOfYears: number;
   color: SectionColor;
@@ -13,6 +17,7 @@ interface DiscountedCashFlowCategoryProps {
 }
 
 export function DiscountedCashFlowCategory({
+  name,
   category,
   totalNumberOfYears,
   color,
@@ -28,6 +33,28 @@ export function DiscountedCashFlowCategory({
     console.log(assumptionType);
     setEditing(assumptionType);
   };
+
+  const { control } = useFormContext();
+  const watchAssumptions = useWatch({ name: `${name}.assumptions`, control });
+  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
+    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+      return [
+        {
+          targetPath: `${name}.totalCategoryValues.${idx}`,
+          deps: [`${name}.totalMethoValue.${idx}`],
+          compute: ({ getValues }) => {
+            const assumptions = getValues(`${name}.assumptions`) ?? [];
+            const totalCategoryValue = assumptions.reduce((prev, curr) => {
+              console.log(`${idx}`, curr.totalAssumptionValues?.[idx]);
+              return prev + Number(curr.totalAssumptionValues?.[idx] ?? 0);
+            }, 0);
+            return Number(totalCategoryValue);
+          },
+        },
+      ];
+    });
+  }, [watchAssumptions]);
+  useDerivedFields({ rules });
 
   return (
     <>
@@ -75,7 +102,10 @@ export function DiscountedCashFlowCategory({
                 'bg-white',
               )}
             >
-              {category.totalCategoryValues?.[index].value ?? 0}
+              <RHFInputCell
+                fieldName={`${name}.totalCategoryValues.${index}`}
+                inputType="display"
+              />
             </td>
           );
         })}
@@ -86,6 +116,7 @@ export function DiscountedCashFlowCategory({
         (category?.assumptions ?? []).map((assumption, idx) => (
           <DiscountedCashFlowAssumption
             key={assumption.id}
+            name={`${name}.assumptions.${idx}`}
             assumption={assumption}
             totalNumberOfYears={totalNumberOfYears}
             editing={editing}

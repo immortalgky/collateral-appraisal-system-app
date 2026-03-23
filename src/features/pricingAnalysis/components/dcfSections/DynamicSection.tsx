@@ -1,8 +1,10 @@
 import type { DCFSectionFormType } from '@features/pricingAnalysis/schemas/dcfForm.ts';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@shared/components';
+import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
+import { useFormContext, useWatch } from 'react-hook-form';
 
 interface SectionHeaderProps {
   title: string;
@@ -75,6 +77,7 @@ function SectionTotalRow({
 }
 
 interface DynamicSectionProps {
+  name: string;
   sectionName: string;
   totalNumberOfYears: number;
   icon: string;
@@ -84,6 +87,7 @@ interface DynamicSectionProps {
   onEditAssumption: () => void;
 }
 export function DynamicSection({
+  name,
   sectionName,
   totalNumberOfYears,
   icon,
@@ -92,6 +96,28 @@ export function DynamicSection({
   totalSectionValues,
   // onEditAssumption,
 }: DynamicSectionProps) {
+  // const { control } = useFormContext();
+  // const watchCategories = useWatch({ name: `sections`, control });
+  // const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
+  //   return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+  //     return [
+  //       {
+  //         targetPath: `${name}.totalSectionValues.${idx}`,
+  //         deps: [`${name}.`],
+  //         compute: ({ getValues }) => {
+  //           const assumptions = getValues(`${name}.assumptions`) ?? [];
+  //           const totalCategoryValue = assumptions.reduce((prev, curr) => {
+  //             console.log(`${idx}`, curr.totalAssumptionValues?.[idx]);
+  //             return prev + Number(curr.totalAssumptionValues?.[idx] ?? 0);
+  //           }, 0);
+  //           return Number(totalCategoryValue);
+  //         },
+  //       },
+  //     ];
+  //   });
+  // }, [watchCategories]);
+  // useDerivedFields({ rules });
+
   return (
     <>
       <SectionHeader

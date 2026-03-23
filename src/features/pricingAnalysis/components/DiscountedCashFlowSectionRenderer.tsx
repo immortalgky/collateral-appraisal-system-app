@@ -5,12 +5,14 @@ import { DiscountedCashFlowCategory } from '@features/pricingAnalysis/components
 import { SummarySection } from './dcfSections/SummarySection';
 
 interface DiscountedCashFlowSectionRendererProps {
+  name: string;
   section: DCFSectionFormType;
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;
 }
 export function DiscountedCashFlowSectionRenderer({
+  name,
   section,
   totalNumberOfYears,
   icon,
@@ -30,6 +32,7 @@ export function DiscountedCashFlowSectionRenderer({
           {(section?.categories ?? []).map((category, index) => {
             return (
               <DiscountedCashFlowCategory
+                name={`${name}.categories.${index}`}
                 totalNumberOfYears={totalNumberOfYears}
                 key={category.id ?? index}
                 category={category}
@@ -54,6 +57,7 @@ export function DiscountedCashFlowSectionRenderer({
           {(section?.categories ?? []).map((category, index) => {
             return (
               <DiscountedCashFlowCategory
+                name={`${name}.categories.${index}`}
                 totalNumberOfYears={totalNumberOfYears}
                 key={category.id ?? index}
                 category={category}
@@ -66,7 +70,7 @@ export function DiscountedCashFlowSectionRenderer({
       );
     }
     case 'summary': {
-      return <SummarySection totalNumberOfYears={totalNumberOfYears} />;
+      return <SummarySection name={name} totalNumberOfYears={totalNumberOfYears} />;
     }
   }
 }

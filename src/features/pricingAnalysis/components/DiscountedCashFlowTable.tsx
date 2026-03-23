@@ -2,10 +2,11 @@ import clsx from 'clsx';
 import type { DCFSectionFormType } from '../schemas/dcfForm';
 import { DiscountedCashFlowCategory } from './DiscountedCashFlowCategory';
 import { Icon } from '@/shared/components';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { DiscountedCashFlowSectionRenderer } from '@features/pricingAnalysis/components/DiscountedCashFlowSectionRenderer.tsx';
+import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 
 export interface SectionColor {
   bg: string;
@@ -156,6 +157,7 @@ export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFl
             return (
               <DiscountedCashFlowSectionRenderer
                 key={section.id ?? index}
+                name={`sections.${index}`}
                 section={section}
                 color={getSectionColor(section.sectionType)}
                 totalNumberOfYears={totalNumberOfYears}

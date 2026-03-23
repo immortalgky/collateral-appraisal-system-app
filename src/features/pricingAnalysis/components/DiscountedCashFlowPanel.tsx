@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { DCF, type DCFFormType } from '../schemas/dcfForm';
-import { dcfHotelTemplate, dcfMockData, dcfTemplateList } from '../data/dcfMockData';
+import { dcfHotelTemplate, dcfTemplateList } from '../data/dcfMockData';
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
-import type { DCFMethod, DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
+import type { DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
 import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
@@ -38,7 +38,7 @@ export function DiscountedCashFlowPanel({
 
   const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCF) });
 
-  const { reset, getValues } = methods;
+  const { handleSubmit, reset, getValues } = methods;
 
   const data = getValues();
 
@@ -117,9 +117,19 @@ export function DiscountedCashFlowPanel({
     setIsGenerated(false);
   };
 
+  const handleOnSubmit = () => {
+    console.log(getValues());
+  };
+
   return (
     <FormProvider methods={methods} schema={DCF}>
-      <form>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          // handleSubmit(handleOnSubmit)(e); // use this one to validate by zod!
+          handleOnSubmit();
+        }}
+      >
         {/* template */}
         <PricingAnalysisTemplateSelector
           icon={''}

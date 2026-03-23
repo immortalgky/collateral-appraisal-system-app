@@ -8,12 +8,14 @@ interface DiscountedCashFlowMethodModalProps {
   editing: string | null;
   onCancelEditMode: () => void;
   assumptionName: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   children: ReactNode;
 }
 export function DiscountedCashFlowMethodModal({
   editing,
   onCancelEditMode,
   assumptionName,
+  size,
   children,
 }: DiscountedCashFlowMethodModalProps) {
   const { getValues } = useFormContext();
@@ -25,7 +27,7 @@ export function DiscountedCashFlowMethodModal({
       isOpen={!!editing}
       onClose={onCancelEditMode}
       title={`Edit Assumption: ${assumptionName}`}
-      size="lg"
+      size={size ?? 'lg'}
     >
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5">

@@ -1,10 +1,14 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { DCFAssumptionFormType } from '../schemas/dcfForm';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
+import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { RHFInputCell } from './table/RHFInputCell';
 
 interface DiscountedCashFlowAssumptionProps {
+  name: string;
   totalNumberOfYears: number;
   assumption: DCFAssumptionFormType;
   editing: string | null;
@@ -13,6 +17,7 @@ interface DiscountedCashFlowAssumptionProps {
 }
 
 export function DiscountedCashFlowAssumption({
+  name,
   totalNumberOfYears,
   assumption,
   editing,
@@ -20,6 +25,25 @@ export function DiscountedCashFlowAssumption({
   onOpenEditMode,
 }: DiscountedCashFlowAssumptionProps) {
   const [expanded, setExpanded] = useState(false);
+
+  const { control } = useFormContext();
+  const watchMethods = useWatch({ name: `${name}.method`, control });
+
+  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
+    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+      return [
+        {
+          targetPath: `${name}.totalAssumptionValues.${idx}`,
+          deps: [`${name}.method.totalMethodValue.${idx}`],
+          compute: ({ getValues }) => {
+            const totalMethodValue = getValues(`${name}.method.totalMethodValue.${idx}`) ?? 0;
+            return Number(totalMethodValue);
+          },
+        },
+      ];
+    });
+  }, [watchMethods]);
+  useDerivedFields({ rules });
 
   return (
     <>
@@ -78,12 +102,16 @@ export function DiscountedCashFlowAssumption({
                 'bg-gray-50',
               )}
             >
-              {assumption.totalAssumptionValues?.[index].value ?? 0}
+              <RHFInputCell
+                fieldName={`${name}.totalAssumptionValues.${index}`}
+                inputType="display"
+              />
             </td>
           );
         })}
       </tr>
       <DiscountedCashFlowMethodRenderer
+        name={`${name}.method`}
         editing={editing}
         expanded={expanded}
         assumptionId={assumption.id}

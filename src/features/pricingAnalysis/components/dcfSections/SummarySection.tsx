@@ -2,9 +2,10 @@ import clsx from 'clsx';
 import { RHFInputCell } from '../table/RHFInputCell';
 
 interface SummarySectionProps {
+  name: string;
   totalNumberOfYears: number;
 }
-export function SummarySection({ totalNumberOfYears }: SummarySectionProps) {
+export function SummarySection({ name, totalNumberOfYears }: SummarySectionProps) {
   return (
     <>
       {/* last section */}
