@@ -50,7 +50,7 @@ const RequestDetailDto = z.object({
   }),
 });
 const RequestCustomerDto = z.object({
-  name: z.string().max(200).min(1, 'Customer name is required.'),
+  name: z.string().max(260).min(1, 'Customer name is required.'),
   contactNumber: z.string().max(20).min(1, 'Contact number is required.'),
 });
 const RequestPropertyDto = z.object({
