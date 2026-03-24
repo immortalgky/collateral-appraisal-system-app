@@ -205,7 +205,13 @@ export default function PaymentInformationSection({
           <div className="flex justify-between items-center border-b border-gray-200 pb-3">
             <span className="text-xs font-medium text-gray-500">Payment date</span>
             <span className="text-sm text-gray-800">
-              {payments.length > 0 ? formatDate(payments[0].paymentDate) : '-'}
+              {payments.length > 0
+                ? formatDate(
+                    [...payments].sort((a, b) =>
+                      (b.paymentDate ?? '').localeCompare(a.paymentDate ?? ''),
+                    )[0].paymentDate ?? '',
+                  )
+                : '-'}
             </span>
           </div>
 
