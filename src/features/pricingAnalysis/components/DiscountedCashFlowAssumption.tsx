@@ -4,8 +4,9 @@ import { useMemo, useState } from 'react';
 import type { DCFAssumptionFormType } from '../schemas/dcfForm';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
+import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 
 interface DiscountedCashFlowAssumptionProps {
   name: string;
@@ -14,6 +15,7 @@ interface DiscountedCashFlowAssumptionProps {
   editing: string | null;
   onCancelEditMode: () => void;
   onOpenEditMode: (assumptionType: string) => void;
+  onRemoveAssumption: () => void;
 }
 
 export function DiscountedCashFlowAssumption({
@@ -23,26 +25,25 @@ export function DiscountedCashFlowAssumption({
   editing,
   onCancelEditMode,
   onOpenEditMode,
+  onRemoveAssumption,
 }: DiscountedCashFlowAssumptionProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const { control } = useFormContext();
-  const watchMethods = useWatch({ name: `${name}.method`, control });
-
+  const { fields } = useFieldArray({ name: `${name}.method` });
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
       return [
         {
           targetPath: `${name}.totalAssumptionValues.${idx}`,
-          deps: [`${name}.method.totalMethodValue.${idx}`],
+          deps: [`${name}.method.totalMethodValues.${idx}`],
           compute: ({ getValues }) => {
-            const totalMethodValue = getValues(`${name}.method.totalMethodValue.${idx}`) ?? 0;
+            const totalMethodValue = getValues(`${name}.method.totalMethodValues.${idx}`) ?? 0;
             return Number(totalMethodValue);
           },
         },
       ];
     });
-  }, [watchMethods]);
+  }, [fields]);
   useDerivedFields({ rules });
 
   return (
@@ -53,7 +54,7 @@ export function DiscountedCashFlowAssumption({
             'flex flex-row items-center justify-between px-1 py-1.5 pl-15 gap-1.5',
             'text-sm',
             'text-right',
-            'bg-gray-50',
+            'bg-white',
             'border-b border-gray-300',
           )}
         >
@@ -73,12 +74,12 @@ export function DiscountedCashFlowAssumption({
             {assumption.assumptionName ?? ''}
           </button>
           <div className="flex flex-row gap-1.5 items-center justify-center">
-            <span className={'text-sm'}>{assumption.method.methodType}</span>
+            <span className={'text-sm'}>{assumption.method?.methodType ?? ''}</span>
             <button
               type="button"
               className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
               onClick={() => {
-                onOpenEditMode(assumption.method.methodType);
+                onOpenEditMode(`${name}.method`);
               }}
             >
               <Icon name="pencil" style="regular" className="size-4" />
@@ -86,7 +87,7 @@ export function DiscountedCashFlowAssumption({
             <button
               type="button"
               className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
-              onClick={() => null}
+              onClick={onRemoveAssumption}
             >
               <Icon name="trash" style="regular" className="size-4" />
             </button>
@@ -99,18 +100,31 @@ export function DiscountedCashFlowAssumption({
               className={clsx(
                 'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
                 // color.badge,
-                'bg-gray-50',
+                'bg-white',
               )}
             >
               <RHFInputCell
                 fieldName={`${name}.totalAssumptionValues.${index}`}
                 inputType="display"
+                accessor={({ value }) => (
+                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                )}
               />
             </td>
           );
         })}
       </tr>
       <DiscountedCashFlowMethodRenderer
+        name={`${name}.method`}
+        editing={editing}
+        expanded={expanded}
+        assumptionId={assumption.id}
+        assumptionName={assumption.assumptionName}
+        method={assumption.method}
+        totalNumberOfYear={totalNumberOfYears}
+        onCancelEditMode={onCancelEditMode}
+      />
+      <DiscountedCashFlowModalRenderer
         name={`${name}.method`}
         editing={editing}
         expanded={expanded}

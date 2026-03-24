@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { Icon } from '@shared/components';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { useFormContext, useWatch } from 'react-hook-form';
+import { RHFInputCell } from '../table/RHFInputCell';
 
 interface SectionHeaderProps {
   title: string;
@@ -36,18 +37,13 @@ function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeader
 }
 
 interface SectionTotalRowProps {
+  name: string;
   totalNumberOfYears: number;
-  totalSectionValues?: number[];
   label: string;
   color: SectionColor;
   variant?: 'section' | 'final';
 }
-function SectionTotalRow({
-  totalNumberOfYears,
-  totalSectionValues,
-  label,
-  color,
-}: SectionTotalRowProps) {
+function SectionTotalRow({ name, totalNumberOfYears, label, color }: SectionTotalRowProps) {
   return (
     <tr className={color.bg}>
       <td className={clsx('border-b border-gray-300', color.bg)}>
@@ -68,7 +64,13 @@ function SectionTotalRow({
               color.textAccent,
             )}
           >
-            {totalSectionValues?.[index] ?? 0}
+            <RHFInputCell
+              fieldName={`${name}.totalSectionValues.${index}`}
+              inputType="display"
+              accessor={({ value }) => (
+                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+              )}
+            />
           </td>
         );
       })}
@@ -84,7 +86,6 @@ interface DynamicSectionProps {
   color: SectionColor;
   children: ReactNode;
   totalSectionValues?: number[];
-  onEditAssumption: () => void;
 }
 export function DynamicSection({
   name,
@@ -94,30 +95,7 @@ export function DynamicSection({
   color,
   children,
   totalSectionValues,
-  // onEditAssumption,
 }: DynamicSectionProps) {
-  // const { control } = useFormContext();
-  // const watchCategories = useWatch({ name: `sections`, control });
-  // const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-  //   return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-  //     return [
-  //       {
-  //         targetPath: `${name}.totalSectionValues.${idx}`,
-  //         deps: [`${name}.`],
-  //         compute: ({ getValues }) => {
-  //           const assumptions = getValues(`${name}.assumptions`) ?? [];
-  //           const totalCategoryValue = assumptions.reduce((prev, curr) => {
-  //             console.log(`${idx}`, curr.totalAssumptionValues?.[idx]);
-  //             return prev + Number(curr.totalAssumptionValues?.[idx] ?? 0);
-  //           }, 0);
-  //           return Number(totalCategoryValue);
-  //         },
-  //       },
-  //     ];
-  //   });
-  // }, [watchCategories]);
-  // useDerivedFields({ rules });
-
   return (
     <>
       <SectionHeader
@@ -128,8 +106,8 @@ export function DynamicSection({
       />
       {children}
       <SectionTotalRow
+        name={name}
         totalNumberOfYears={totalNumberOfYears}
-        totalSectionValues={totalSectionValues}
         label={'Total'}
         color={color}
         variant={'section'}

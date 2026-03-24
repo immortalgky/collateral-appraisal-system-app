@@ -303,13 +303,13 @@ export const dcfHotelTemplate: DCFTemplateType = {
           displaySeq: 0,
           assumptions: [
             {
-              assumptionType: 'a1',
+              assumptionType: '23',
               assumptionName: 'Room Income',
               identifier: 'positive',
               displaySeq: 0,
               method: {
-                methodType: 'specifyRoomIncomePerDay',
-                detail: { increaseRatePct: 10, increaseEveryYrs: 3 },
+                methodType: '03',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
               },
             },
             {
@@ -318,7 +318,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 1,
               method: {
-                methodType: 'proportion',
+                methodType: '09',
                 detail: { proportionPct: 10, assumptionType: 'a1' },
               },
             },
@@ -328,7 +328,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 2,
               method: {
-                methodType: 'proportion',
+                methodType: '09',
                 detail: { proportionPct: 10, assumptionType: 'a1' },
               },
             },
@@ -356,7 +356,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 0,
               method: {
-                methodType: 'proportion',
+                methodType: '09',
                 detail: {
                   proportionPct: 15,
                   assumptionType: 'a1',
@@ -369,7 +369,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 1,
               method: {
-                methodType: 'proportion',
+                methodType: '09',
                 detail: {
                   proportionPct: 10,
                   assumptionType: 'a1',
@@ -382,7 +382,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 1,
               method: {
-                methodType: 'proportion',
+                methodType: '09',
                 detail: {
                   proportionPct: 10,
                   assumptionType: 'a1',

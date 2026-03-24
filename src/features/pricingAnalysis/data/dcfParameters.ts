@@ -11,7 +11,7 @@ export const methodParams = [
   { code: '10', description: 'Room Costs based on expenses per room per day' },
   { code: '11', description: 'Specified Energy Cost Index' },
   { code: '12', description: 'Specified food and beverage expenses per room per day' },
-  { code: '12', description: 'Specified Monthly Rental Income' },
+  { code: '13', description: 'Specified Monthly Rental Income' },
   { code: '14', description: 'Specified Value With Growth' },
 ];
 
@@ -59,4 +59,21 @@ export const mappingAssumptionMethodParams = [
     assumptionCode: '23',
     methods: [{ code: '01' }, { code: '02' }, { code: '03' }, { code: '04' }],
   },
+];
+
+export const mapMethodCodeToValue = [
+  { code: '01', value: 'Specified Room Income with Growth' },
+  { code: '02', value: 'Specified Room Income with Growth by Occupancy Rate' },
+  { code: '03', value: 'specifyRoomIncomePerDay' },
+  { code: '04', value: 'Parameter based on tier of property value' },
+  { code: '05', value: 'Seasonal Rates' },
+  { code: '06', value: 'Rental Income per Square Meter' },
+  { code: '07', value: 'Position-Based Salary Calculation' },
+  { code: '08', value: 'Proportion of the new replacement cost' },
+  { code: '09', value: 'proportion' },
+  { code: '10', value: 'Room Costs based on expenses per room per day' },
+  { code: '11', value: 'Specified Energy Cost Index' },
+  { code: '12', value: 'Specified food and beverage expenses per room per day' },
+  { code: '13', value: 'Specified Monthly Rental Income' },
+  { code: '14', value: 'Specified Value With Growth' },
 ];

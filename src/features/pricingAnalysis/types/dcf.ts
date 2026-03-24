@@ -1,4 +1,6 @@
 type Identifier = 'positive' | 'negative' | 'empty';
+type MethodType = 'proportion' | 'specifyValueWithGrowth' | 'specifyRoomIncomePerDay';
+type SectionType = 'income' | 'expenses' | 'summary';
 
 interface MethodProportion {
   proportionPct: number;
@@ -13,8 +15,13 @@ interface MethodSpecifyValueWithGrowth {
 }
 
 interface MethodSpecifyRoomIncomePerDay {
+  roomDetails: { roomType?: string; roomIncome: number; saleableArea: number }[];
+  sumRoomIncome: number;
+  sumSaleableArea: number;
+  sumTotalRoomIncome: number;
+  avgRoomRate: number;
   increaseRatePct: number;
-  increaseEveryYrs: number;
+  increaseRateYrs: number;
 }
 
 export interface DCFTemplateType {
@@ -50,17 +57,30 @@ export interface DCFTemplateType {
   }[];
 }
 
-export interface DCFMethod {
+interface MethodProportionWrapper {
   id?: string;
-  methodType: string;
-  detail: MethodProportion | MethodSpecifyValueWithGrowth;
+  methodType: 'proportion';
+  detail: MethodProportion;
 }
+interface MethodSpecifyValueWrapper {
+  id?: string;
+  methodType: 'specifyValueWithGrowth';
+  detail: MethodSpecifyValueWithGrowth;
+}
+interface MethodRoomIncomeWrapper {
+  id?: string;
+  methodType: 'specifyRoomIncomePerDay';
+  detail: MethodSpecifyRoomIncomePerDay;
+}
+
+type DCFMethod = MethodProportionWrapper | MethodSpecifyValueWrapper | MethodRoomIncomeWrapper;
 
 export interface DCFAssumption {
   assumptionType: string; // maybe don't need
   assumptionName: string;
   identifier: Identifier;
   displaySeq: number;
+  totalAssumptionValues: number[];
   method: DCFMethod;
 }
 
@@ -69,6 +89,7 @@ export interface DCFCategory {
   categoryName: string;
   identifier: Identifier;
   displaySeq: number;
+  totalCategoryValues: number[];
   assumptions: DCFAssumption[];
 }
 
@@ -78,7 +99,23 @@ export interface DCFSection {
   sectionName: string;
   identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
   displaySeq: number;
-  categories?: DCFCategory;
+  totalSectionValues: number[];
+  categories?: DCFCategory[];
+}
+
+export interface DCFSummarySection {
+  id?: string;
+  sectionType: string; // render section e.g income, expenses
+  sectionName: string;
+  identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
+  displaySeq: number;
+  contractRentalFee: number[];
+  grossRevenue: number[];
+  grossRevenueProportional: number[];
+  terminalRevenue: number[];
+  totalNet: number[];
+  discount: number[];
+  presentValue: number[];
 }
 
 export interface DCF {
@@ -89,5 +126,7 @@ export interface DCF {
   totalNumberOfDayInYear: number;
   capitalizeRate: number;
   discountedRate: number;
-  sections: DCFSection[];
+  finalValue: number;
+  finalValueRounded: number;
+  sections: (DCFSection | DCFSummarySection)[];
 }

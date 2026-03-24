@@ -3,8 +3,10 @@ import Modal from '@/shared/components/Modal';
 import type { ReactNode } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { useFormContext } from 'react-hook-form';
+import { assumptionParams, categoryParams, methodParams } from '../data/dcfParameters';
 
 interface DiscountedCashFlowMethodModalProps {
+  name: string;
   editing: string | null;
   onCancelEditMode: () => void;
   assumptionName: string;
@@ -12,6 +14,7 @@ interface DiscountedCashFlowMethodModalProps {
   children: ReactNode;
 }
 export function DiscountedCashFlowMethodModal({
+  name,
   editing,
   onCancelEditMode,
   assumptionName,
@@ -32,15 +35,30 @@ export function DiscountedCashFlowMethodModal({
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5">
           <span className={'w-44'}>Category</span>
-          <RHFInputCell fieldName={''} inputType={'select'} />
+          <RHFInputCell
+            fieldName={''}
+            inputType={'select'}
+            options={categoryParams.map(c => ({
+              value: c.code,
+              label: c.description,
+            }))}
+          />
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-44'}>Assumption</span>
-          <RHFInputCell fieldName={''} inputType={'select'} />
+          <RHFInputCell
+            fieldName={`${name}.assumptionType`}
+            inputType={'select'}
+            options={assumptionParams.map(a => ({ value: a.code, label: a.description }))}
+          />
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-44'}>Method</span>
-          <RHFInputCell fieldName={''} inputType={'select'} />
+          <RHFInputCell
+            fieldName={`${name}.methodType`}
+            inputType={'select'}
+            options={methodParams.map(m => ({ value: m.code, label: m.description }))}
+          />
         </div>
       </div>
       {children}
