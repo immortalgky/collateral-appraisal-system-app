@@ -818,6 +818,8 @@ export const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'buildingConditionType', is: '99' },
     requiredWhen: { field: 'buildingConditionType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'boolean-toggle',
@@ -1414,6 +1416,8 @@ export const condoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'buildingConditionType', is: '99' },
     requiredWhen: { field: 'buildingConditionType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'boolean-toggle',
