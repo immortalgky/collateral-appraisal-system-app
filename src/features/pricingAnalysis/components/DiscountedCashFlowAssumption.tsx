@@ -1,6 +1,6 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { DCFAssumptionFormType } from '../schemas/dcfForm';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
@@ -29,7 +29,6 @@ export function DiscountedCashFlowAssumption({
 }: DiscountedCashFlowAssumptionProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const { fields } = useFieldArray({ name: `${name}.method` });
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
       return [
@@ -43,7 +42,7 @@ export function DiscountedCashFlowAssumption({
         },
       ];
     });
-  }, [fields]);
+  }, [name, totalNumberOfYears]);
   useDerivedFields({ rules });
 
   return (
@@ -71,10 +70,10 @@ export function DiscountedCashFlowAssumption({
                 expanded ? 'rotate-180' : '',
               )}
             />
-            {assumption.assumptionName ?? ''}
+            <RHFInputCell fieldName={`${name}.assumptionType`} inputType="display" />
           </button>
           <div className="flex flex-row gap-1.5 items-center justify-center">
-            <span className={'text-sm'}>{assumption.method?.methodType ?? ''}</span>
+            <RHFInputCell fieldName={`${name}.method.methodType`} inputType="display" />
             <button
               type="button"
               className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
@@ -115,16 +114,6 @@ export function DiscountedCashFlowAssumption({
         })}
       </tr>
       <DiscountedCashFlowMethodRenderer
-        name={`${name}.method`}
-        editing={editing}
-        expanded={expanded}
-        assumptionId={assumption.id}
-        assumptionName={assumption.assumptionName}
-        method={assumption.method}
-        totalNumberOfYear={totalNumberOfYears}
-        onCancelEditMode={onCancelEditMode}
-      />
-      <DiscountedCashFlowModalRenderer
         name={`${name}.method`}
         editing={editing}
         expanded={expanded}

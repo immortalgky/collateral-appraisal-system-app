@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import type { DCFCategoryFormType } from '../schemas/dcfForm';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
@@ -7,10 +7,14 @@ import type { SectionColor } from '@features/pricingAnalysis/components/Discount
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
+import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
+import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
+import { getNewId } from '../domain/getNewId';
+import type { DCFCategory } from '../types/dcf';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
-  category: DCFCategoryFormType;
+  category: DCFCategory;
   totalNumberOfYears: number;
   color: SectionColor;
   onEditAssumption: () => void;
@@ -36,7 +40,7 @@ export function DiscountedCashFlowCategory({
   };
 
   const handleOnAddAssumption = () => {
-    append({ assumptionType: null, method: { methodType: null } });
+    append({ id: getNewId(), assumptionType: null, method: { id: getNewId(), methodType: null } });
   };
 
   const handleOnRemoveAssumption = (index: number) => {
@@ -63,18 +67,18 @@ export function DiscountedCashFlowCategory({
   }, [fields]);
   useDerivedFields({ rules });
 
+  const rowHeaderStyle = 'pl-8 px-1 py-1.5 h-12 text-sm border-b border-gray-300';
+  const rowBodyStyle = 'pl-8 px-1.5 py-1.5 h-12 text-sm text-right border-b border-gray-300';
+  const rowStyle = 'cursor-pointer bg-white';
+
   return (
     <>
       {/* Category header */}
-      <tr style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setExpanded(!expanded)}>
+      <tr className={clsx(rowStyle)} onClick={() => setExpanded(!expanded)}>
         <td
           className={clsx(
-            'flex flex-row items-center justify-between px-1 py-1.5 pl-8 gap-1.5',
-            'text-[13px]',
-            color.text,
-            'text-right',
-            'bg-white',
-            'border-b border-gray-300',
+            rowHeaderStyle,
+            expanded ? 'bg-gray-50 transition-colors duration-300' : '',
           )}
         >
           <div className="flex flex-row items-center gap-1.5">
@@ -104,9 +108,8 @@ export function DiscountedCashFlowCategory({
             <td
               key={index}
               className={clsx(
-                'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
-                // color.badge,
-                'bg-white',
+                rowBodyStyle,
+                expanded ? 'bg-gray-50 transition-colors duration-300' : '',
               )}
             >
               <RHFInputCell
@@ -125,31 +128,28 @@ export function DiscountedCashFlowCategory({
       {expanded && (
         <>
           {(category?.assumptions ?? []).map((assumption, idx) => (
-            <DiscountedCashFlowAssumption
-              key={assumption.id}
-              name={`${name}.assumptions.${idx}`}
-              assumption={assumption}
-              totalNumberOfYears={totalNumberOfYears}
-              editing={editing}
-              onOpenEditMode={handleOnOpenEditMode}
-              onCancelEditMode={handleOnCancelEditMode}
-              onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
-              // color={color}
-              // isLast={idx === category.assumptions.length - 1}
-              // onEdit={() => onEditAssumption(assumption)}
-            />
+            <Fragment key={assumption.clientId ?? `${name}.assumptions.${idx}`}>
+              <DiscountedCashFlowAssumption
+                name={`${name}.assumptions.${idx}`}
+                assumption={assumption}
+                totalNumberOfYears={totalNumberOfYears}
+                editing={editing}
+                onOpenEditMode={handleOnOpenEditMode}
+                onCancelEditMode={handleOnCancelEditMode}
+                onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
+              />
+              <DiscountedCashFlowModalRenderer
+                name={`${name}.assumptions.${idx}.method`}
+                assumptionName={assumption.assumptionName}
+                method={assumption.method}
+                totalNumberOfYear={totalNumberOfYears}
+                editing={editing}
+                onCancelEditMode={handleOnCancelEditMode}
+              />
+            </Fragment>
           ))}
           <tr>
-            <td
-              className={clsx(
-                'flex flex-row items-center justify-between px-1 py-1.5 pl-8 gap-1.5',
-                'text-[13px]',
-                color.text,
-                'text-right',
-                'bg-white',
-                'border-b border-gray-300',
-              )}
-            >
+            <td className={clsx(rowHeaderStyle)}>
               <div className="flex flex-row items-center gap-1.5">
                 <button
                   type="button"
@@ -161,16 +161,7 @@ export function DiscountedCashFlowCategory({
               </div>
             </td>
             {Array.from({ length: totalNumberOfYears }, (_, index) => {
-              return (
-                <td
-                  key={index}
-                  className={clsx(
-                    'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
-                    // color.badge,
-                    'bg-white',
-                  )}
-                ></td>
-              );
+              return <td key={index} className={clsx(rowBodyStyle)}></td>;
             })}
           </tr>
         </>

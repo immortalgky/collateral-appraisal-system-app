@@ -1,10 +1,7 @@
-import type { DCFSectionFormType } from '@features/pricingAnalysis/schemas/dcfForm.ts';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
-import { useMemo, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@shared/components';
-import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from '../table/RHFInputCell';
 
 interface SectionHeaderProps {

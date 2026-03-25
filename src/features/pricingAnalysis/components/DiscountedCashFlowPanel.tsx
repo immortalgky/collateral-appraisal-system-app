@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { DCF, type DCFFormType } from '../schemas/dcfForm';
+import { DCFForm, type DCFFormType } from '../schemas/dcfForm';
 import { dcfHotelTemplate, dcfTemplateList } from '../data/dcfMockData';
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
@@ -10,6 +10,7 @@ import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/compo
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
+import { getNewId } from '../domain/getNewId';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -36,7 +37,7 @@ export function DiscountedCashFlowPanel({
 }: DiscountedCashFlowPanelProps) {
   // const { methodId, methodType } = activeMethod ?? {};
 
-  const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCF) });
+  const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCFForm) });
 
   const { handleSubmit, reset, getValues } = methods;
 
@@ -57,6 +58,7 @@ export function DiscountedCashFlowPanel({
 
     // initialize
     reset({
+      clientId: getNewId(),
       templateCode: templateDetailQuery.templateCode,
       templateName: templateDetailQuery.templateName,
       totalNumberOfYears: templateDetailQuery.totalNumberOfYears,
@@ -65,6 +67,7 @@ export function DiscountedCashFlowPanel({
       discountedRate: templateDetailQuery.discountedRate,
       sections: templateDetailQuery.sections.map(t => {
         return {
+          clientId: getNewId(),
           sectionType: t.sectionType,
           sectionName: t.sectionName,
           identifier: t.identifier,
@@ -72,17 +75,20 @@ export function DiscountedCashFlowPanel({
           categories:
             t.categories?.map(c => {
               return {
+                clientId: getNewId(),
                 categoryType: c.categoryType,
                 categoryName: c.categoryName,
                 identifier: c.identifier,
                 displaySeq: c.displaySeq,
                 assumptions: c.assumptions.map(a => {
                   return {
+                    clientId: getNewId(),
                     assumptionType: a.assumptionType,
                     assumptionName: a.assumptionName,
                     identifier: a.identifier,
                     displaySeq: a.displaySeq,
                     method: {
+                      clientId: getNewId(),
                       methodType: a.method.methodType,
                       detail: a.method.detail,
                     },
@@ -122,7 +128,7 @@ export function DiscountedCashFlowPanel({
   };
 
   return (
-    <FormProvider methods={methods} schema={DCF}>
+    <FormProvider methods={methods} schema={DCFForm}>
       <form
         onSubmit={e => {
           e.preventDefault();

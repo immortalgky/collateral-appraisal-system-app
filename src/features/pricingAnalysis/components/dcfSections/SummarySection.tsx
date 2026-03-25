@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { RHFInputCell } from '../table/RHFInputCell';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import type { DCFSection } from '../../types/dcf';
+import type { DCFSection, DCFSummarySection } from '../../types/dcf';
 
 interface SummarySectionProps {
   name: string;
@@ -18,7 +18,7 @@ export function SummarySection({ name, totalNumberOfYears }: SummarySectionProps
         {
           targetPath: `${name}.grossRevenue.${idx}`,
           deps: ['sections'],
-          compute: ({ ctx }) => {
+          compute: ({ getValues, ctx }) => {
             const grossRevenue = ctx.sections.reduce((prev, curr) => {
               const identifer = curr.identifier ?? '';
               if (identifer === 'positive')
@@ -27,7 +27,10 @@ export function SummarySection({ name, totalNumberOfYears }: SummarySectionProps
                 return prev - Number(curr.totalSectionValues?.[idx] ?? 0);
               return prev;
             }, 0);
-            return grossRevenue;
+
+            // minus contract fee from lease agreement
+            const contractRentalFee = getValues(`${name}.contractRentalFee.${idx}`) ?? 0;
+            return grossRevenue - contractRentalFee;
           },
         },
         {
@@ -84,7 +87,6 @@ export function SummarySection({ name, totalNumberOfYears }: SummarySectionProps
           deps: [],
           compute: ({ getValues }) => {
             const dicountedRate = getValues('discountedRate');
-            console.log(1 / Math.pow(1 + dicountedRate / 100, idx + 1));
             return 1 / Math.pow(1 + dicountedRate / 100, idx + 1);
           },
         },
@@ -102,8 +104,10 @@ export function SummarySection({ name, totalNumberOfYears }: SummarySectionProps
     {
       targetPath: `finalValue`,
       deps: ['sections'],
-      compute: ({ ctx }) => {
-        const summarySection = ctx.sections.filter(s => s.sectionType === 'summary');
+      compute: ({ getValues }) => {
+        const summarySection = (getValues('sections') ?? []).find(
+          (s: DCFSection) => s.sectionType === 'summary',
+        ) as DCFSummarySection;
         const finalValue = (summarySection?.presentValue ?? []).reduce((prev, curr) => {
           return prev + Number(curr ?? 0);
         }, 0);
@@ -113,7 +117,7 @@ export function SummarySection({ name, totalNumberOfYears }: SummarySectionProps
     {
       targetPath: `finalValueRounded`,
       deps: [],
-      when: ({ getValues, getFieldState, formState }) => {
+      when: ({ getFieldState, formState }) => {
         const { isDirty } = getFieldState('finalValueRounded', formState);
         return !isDirty;
       },
@@ -134,65 +138,55 @@ interface SummarySectionTableProps {
   totalNumberOfYears: number;
 }
 function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTableProps) {
+  const rowHeaderStyle = 'px-1.5 h-12 text-sm text-gray-700 border-b border-gray-300';
+  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-700 border-b border-gray-300';
+  const rowStyle = 'bg-white hover:bg-secondary/10';
+
   return (
     <>
       {/* last section */}
-      {}
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">Contract Rental Fee</td>
-        {Array.from({ length: totalNumberOfYears }, (_, i) => (
-          <td
-            key={i}
-            className={clsx(
-              'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-            )}
-          >
-            xxxxxx
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>Contract Rental Fee</td>
+        {Array.from({ length: totalNumberOfYears }, (_, idx) => (
+          <td key={idx} className={clsx(rowBodyStyle)}>
+            <RHFInputCell
+              fieldName={`${name}.contractRentalFee.${idx}`}
+              inputType="display"
+              accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
+            />
           </td>
         ))}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">
-          Net Operating Income (EBITDA) : NOI/ Gross Revenue
-        </td>
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>Net Operating Income (EBITDA) : NOI/ Gross Revenue</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td
-            key={idx}
-            className={clsx(
-              'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-            )}
-          >
+          <td key={idx} className={clsx(rowBodyStyle)}>
             <div className="text-right text-sm">
               <RHFInputCell
                 fieldName={`${name}.grossRevenue.${idx}`}
                 inputType="display"
-                accessor={({ value }) => <span>{value ? value.toLocaleString() : 0}</span>}
+                accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
               />
             </div>
           </td>
         ))}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">NOI/ Gross Revenue</td>
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>NOI/ Gross Revenue</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td
-            key={idx}
-            className={clsx(
-              'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-            )}
-          >
+          <td key={idx} className={clsx(rowBodyStyle)}>
             <div className="text-right text-sm">
               <RHFInputCell
                 fieldName={`${name}.grossRevenueProportional.${idx}`}
                 inputType="display"
-                accessor={({ value }) => <span>{value ? value.toLocaleString() : 0}</span>}
+                accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
               />
             </div>
           </td>
         ))}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>
           <div className="flex flex-row justify-between items-center">
             <div>Terminal Revenue (Capitalization Rate)</div>
             <div className="w-16 text-sm flex flex-row gap-1 justitfy-end items-center">
@@ -212,40 +206,30 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
         </td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => {
           return (
-            <td
-              key={idx}
-              className={clsx(
-                'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-              )}
-            >
+            <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
                 fieldName={`${name}.terminalRevenue.${idx}`}
                 inputType="display"
-                accessor={({ value }) => <span>{value ? value.toLocaleString() : ''}</span>}
+                accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
               />
             </td>
           );
         })}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">Total Net Cashflow</td>
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>Total Net Cashflow</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td
-            key={idx}
-            className={clsx(
-              'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-            )}
-          >
+          <td key={idx} className={clsx(rowBodyStyle)}>
             <RHFInputCell
               fieldName={`${name}.totalNet.${idx}`}
               inputType="display"
-              accessor={({ value }) => <span>{value ? value.toLocaleString() : ''}</span>}
+              accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
             />
           </td>
         ))}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>
           <div className="flex flex-row justify-between items-center">
             <div>Discount Rate</div>
             <div className="w-16 flex flex-row gap-1 justitfy-end items-center">
@@ -264,12 +248,7 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
           </div>
         </td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td
-            key={idx}
-            className={clsx(
-              'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-            )}
-          >
+          <td key={idx} className={clsx(rowBodyStyle)}>
             <RHFInputCell
               fieldName={`${name}.discount.${idx}`}
               inputType="display"
@@ -278,79 +257,52 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
           </td>
         ))}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">Present Vaue of Cashflows</td>
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>Present Vaue of Cashflows</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td
-            key={idx}
-            className={clsx(
-              'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-            )}
-          >
+          <td key={idx} className={clsx(rowBodyStyle)}>
             <RHFInputCell
               fieldName={`${name}.presentValue.${idx}`}
               inputType="display"
-              accessor={({ value }) => <span>{value ? value.toLocaleString() : ''}</span>}
+              accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
             />
           </td>
         ))}
       </tr>
-      <tr className="bg-white">
-        <td className="border-b border-gray-300">Final Value</td>
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>Final Value</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => {
           if (idx === 0) {
             return (
-              <td
-                key={idx}
-                className={clsx(
-                  'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-                )}
-              >
+              <td key={idx} className={clsx(rowBodyStyle)}>
                 <RHFInputCell
                   fieldName={'finalValue'}
                   inputType="display"
-                  accessor={({ value }) => <span>{value ? value.toLocaleString() : ''}</span>}
+                  accessor={({ value }) => (
+                    <span>{value ? Number(value).toLocaleString() : ''}</span>
+                  )}
                 />
               </td>
             );
           }
-          return (
-            <td
-              key={idx}
-              className={clsx(
-                'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-              )}
-            ></td>
-          );
+          return <td key={idx} className={clsx(rowBodyStyle)}></td>;
         })}
       </tr>
-      <tr className="bg-white">
-        <td>Final Value (Rounded)</td>
+      <tr className={clsx(rowStyle)}>
+        <td className={clsx(rowHeaderStyle)}>Final Value (Rounded)</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => {
           if (idx === 0) {
             return (
-              <td
-                key={idx}
-                className={clsx(
-                  'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-                )}
-              >
+              <td key={idx} className={clsx(rowBodyStyle)}>
                 <div className="flex flex-row justify-end items-center">
-                  <div className="w-16">
+                  <div className="w-28">
                     <RHFInputCell fieldName={'finalValueRounded'} inputType="number" />
                   </div>
                 </div>
               </td>
             );
           }
-          return (
-            <td
-              key={idx}
-              className={clsx(
-                'text-right px-1.5 py-1.5 text-sm whitespace-nowrap border-b border-gray-300',
-              )}
-            ></td>
-          );
+          return <td key={idx} className={clsx(rowBodyStyle)}></td>;
         })}
       </tr>
     </>

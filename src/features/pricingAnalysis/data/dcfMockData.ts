@@ -308,7 +308,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 0,
               method: {
-                methodType: '03',
+                methodType: '01',
                 detail: { increaseRatePct: 10, increaseRateYrs: 3 },
               },
             },
@@ -318,7 +318,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 1,
               method: {
-                methodType: '09',
+                methodType: '13',
                 detail: { proportionPct: 10, assumptionType: 'a1' },
               },
             },
@@ -328,7 +328,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 2,
               method: {
-                methodType: '09',
+                methodType: '14',
                 detail: { proportionPct: 10, assumptionType: 'a1' },
               },
             },
@@ -337,16 +337,14 @@ export const dcfHotelTemplate: DCFTemplateType = {
       ],
     },
     {
-      id: 's2',
       sectionType: 'expenses',
       sectionName: 'Expenses / Costs',
       identifier: 'negative',
       displaySeq: 1,
       categories: [
         {
-          id: 'c3',
           categoryType: 'c3',
-          categoryName: 'Direct Operating ',
+          categoryName: 'Direct Operating Expenses',
           identifier: 'negative',
           displaySeq: 0,
           assumptions: [
@@ -356,7 +354,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 0,
               method: {
-                methodType: '09',
+                methodType: '13',
                 detail: {
                   proportionPct: 15,
                   assumptionType: 'a1',
@@ -369,7 +367,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 1,
               method: {
-                methodType: '09',
+                methodType: '08',
                 detail: {
                   proportionPct: 10,
                   assumptionType: 'a1',
@@ -382,11 +380,115 @@ export const dcfHotelTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 1,
               method: {
-                methodType: '09',
+                methodType: '13',
                 detail: {
                   proportionPct: 10,
                   assumptionType: 'a1',
                 },
+              },
+            },
+          ],
+        },
+        {
+          categoryType: 'c4',
+          categoryName: 'Administrative and Management Expenses',
+          identifier: 'negative',
+          displaySeq: 0,
+          assumptions: [
+            {
+              assumptionType: 'a1',
+              assumptionName: 'Operating and Administrative Expenses',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '13',
+                detail: {
+                  proportionPct: 12,
+                  assumptionType: 'a1',
+                },
+              },
+            },
+            {
+              assumptionType: 'a2',
+              assumptionName: 'Sales and Marketing Expenses',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '13',
+                detail: {
+                  proportionPct: 3,
+                  assumptionType: 'a1',
+                },
+              },
+            },
+            {
+              assumptionType: 'a3',
+              assumptionName: 'Repair and Maintenance Expenses',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '13',
+                detail: {
+                  proportionPct: 2,
+                  assumptionType: 'a1',
+                },
+              },
+            },
+            {
+              assumptionType: 'a4',
+              assumptionName: 'Contingency Expenses',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '13',
+                detail: {
+                  proportionPct: 10,
+                  assumptionType: 'a1',
+                },
+              },
+            },
+            {
+              assumptionType: 'a5',
+              assumptionName: 'Reserve Funds for Building Improvement',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '13',
+                detail: {
+                  proportionPct: 2,
+                  assumptionType: 'a1',
+                },
+              },
+            },
+            {
+              assumptionType: 'a6',
+              assumptionName: 'Utility Expenses',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '13',
+                detail: {
+                  proportionPct: 2,
+                  assumptionType: 'a1',
+                },
+              },
+            },
+          ],
+        },
+        {
+          categoryType: 'c4',
+          categoryName: 'Gross Operating Profit (GOP)',
+          identifier: 'negative',
+          displaySeq: 0,
+          assumptions: [
+            {
+              assumptionType: 'a1',
+              assumptionName: 'Gross Operating Profit (GOP)',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '15',
+                detail: {},
               },
             },
           ],

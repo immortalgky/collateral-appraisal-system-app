@@ -1,48 +1,52 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
-import type { DCFMethodFormType } from '../../schemas/dcfForm';
-import { DiscountedCashFlowMethodModal } from '../DiscountedCashFlowMethodModal';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { RHFInputCell } from '../table/RHFInputCell';
-import { assumptionParams } from '../../data/dcfParameters';
 import clsx from 'clsx';
 import { formatFixed2 } from '../../domain/calculation';
+import type { DCFAssumption, DCFCategory, DcfRefTargetId, DCFSection } from '../../types/dcf';
+
+function resolveRefTarget(sections: DCFSection[], refTargetId: DcfRefTargetId | null | undefined) {
+  console.log(sections, refTargetId);
+  if (!refTargetId) return null;
+
+  const [kind, id] = refTargetId.split(':');
+
+  if (kind === 'section') {
+    const section = sections.find(s => s.clientId === id);
+    return section ? section.totalSectionValues : null;
+  }
+
+  if (kind === 'category') {
+    const category = sections.flatMap(s => s.categories ?? []).find(c => c.clientId === id);
+    return category ? category.totalCategoryValues : null;
+  }
+
+  const assumption = sections
+    .flatMap(s => s.categories ?? [])
+    .flatMap(c => c.assumptions ?? [])
+    .find(a => a.clientId === id);
+
+  return assumption ? assumption.totalAssumptionValues : null;
+}
 
 interface MethodProportionProps {
   name: string;
-  editing: string | null;
   expanded: boolean;
-  assumptionId: string;
-  assumptionName: string;
-  method: DCFMethodFormType;
   totalNumberOfYears: number;
-  onCancelEditMode: () => void;
 }
 export function MethodProportion({
   name = '',
-  editing,
   expanded,
-  assumptionId,
-  assumptionName,
-  method,
   totalNumberOfYears,
-  onCancelEditMode,
 }: MethodProportionProps) {
-  const { getValues, control } = useFormContext();
-  const { fields } = useFieldArray({ control, name: name });
+  const { getValues } = useFormContext();
 
-  const mapAssumptions = new Map(
-    (getValues('sections') ?? []).flatMap(s => {
-      return (s.categories ?? []).flatMap(c => {
-        return (c.assumptions ?? []).map(a => {
-          return [a.assumptionType, a];
-        });
-      });
-    }),
-  );
+  const refTargetId = useWatch({ name: `${name}.detail.refTargetId` });
 
-  const refAssumptionType = getValues(`${name}.detail.refAssumptionType`);
-  const assumption = mapAssumptions.get(refAssumptionType);
+  const refTarget = useMemo(() => {
+    return resolveRefTarget(getValues('sections'), refTargetId);
+  }, [getValues, refTargetId]);
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
@@ -51,15 +55,17 @@ export function MethodProportion({
           targetPath: `${name}.totalMethodValues.${idx}`,
           deps: [`${name}.detail.proportionPct`, `${name}.detail.refAssumption`],
           compute: ({ getValues, ctx }) => {
+            console.log(ctx.refTarget);
             const proportionPct = getValues(`${name}.detail.proportionPct`);
-            const totalAssumptionValue = ctx.assumption?.totalAssumptionValues?.[idx] ?? 0;
+            const totalAssumptionValue = ctx.refTarget?.[idx] ?? 0;
             return formatFixed2((Number(proportionPct) / 100) * Number(totalAssumptionValue));
           },
         },
       ];
     });
-  }, [fields]);
-  useDerivedFields({ rules, ctx: { assumption } });
+  }, [totalNumberOfYears, name]);
+
+  useDerivedFields({ rules, ctx: { refTarget } });
 
   return (
     <>
@@ -75,7 +81,7 @@ interface MethodProportionTable {
   totalNumberOfYear: number;
 }
 function MethodProportionTable({ name, totalNumberOfYear }: MethodProportionTable) {
-  const rowHeaderStyle = 'pl-20 px-1.5 h-12 text-sm text-gray-400';
+  const rowHeaderStyle = 'pl-20 px-1.5 h-12 text-sm text-gray-500';
   const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-500';
 
   return (
@@ -89,7 +95,7 @@ function MethodProportionTable({ name, totalNumberOfYear }: MethodProportionTabl
                 fieldName={`${name}.totalMethodValues.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                  <span className="text-right">{value ? Number(value).toLocaleString() : 0}</span>
                 )}
               />
             </td>

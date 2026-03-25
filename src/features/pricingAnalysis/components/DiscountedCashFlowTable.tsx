@@ -121,7 +121,7 @@ export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFl
   const sections = getValues('sections');
 
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl">
+    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
       <table className="table table-xs min-w-max border-separate border-spacing-0 overflow-clip">
         <thead className="bg-neutral-50">
           <tr className="bg-white">

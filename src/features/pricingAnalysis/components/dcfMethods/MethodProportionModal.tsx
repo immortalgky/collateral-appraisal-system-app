@@ -1,7 +1,39 @@
-import { assumptionParams } from '../../data/dcfParameters';
+import { useFormContext } from 'react-hook-form';
 import { RHFInputCell } from '../table/RHFInputCell';
+import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
+import type { DCFAssumption, DCFCategory, DCFSection } from '../../types/dcf';
 
 export function MethodProportionModal({ name }: { name: string }) {
+  const { getValues } = useFormContext();
+  const sections = (getValues('sections') ?? []).filter(
+    (s: DCFSection) => s.identifier !== 'empty',
+  );
+
+  const categories = (sections ?? [])
+    .filter((s: DCFSection) => s.categories)
+    .flatMap((s: DCFSection) => s.categories);
+
+  const currAssumptionType = getValues(name.split('.method'))?.[0];
+  const assumptions = getDCFFilteredAssumptions(
+    getValues,
+    a => currAssumptionType !== a.assumptionName,
+  );
+
+  const options = [
+    ...sections.map(s => ({
+      value: `section:${s.clientId}`,
+      label: `Total - ${s.sectionName}`,
+    })),
+    ...categories.map(c => ({
+      value: `category:${c.clientId}`,
+      label: `Total - ${c.categoryName}`,
+    })),
+    ...assumptions.map(a => ({
+      value: `assumption:${a.assumption.clientId}`,
+      label: `${a.section.sectionName} - ${a.assumption.assumptionName}`,
+    })),
+  ];
+
   return (
     <div className="flex flex-row gap-1.5 items-center">
       <span className={'w-44'}>Proportions</span>
@@ -10,15 +42,8 @@ export function MethodProportionModal({ name }: { name: string }) {
       </div>
       <div className="flex flex-row gap-1.5">
         <span className={''}>% of</span>
-        <div className="w-44">
-          <RHFInputCell
-            fieldName={`${name}.refAssumptionType`}
-            inputType={'select'}
-            options={assumptionParams.map(param => ({
-              value: param.code,
-              label: param.description,
-            }))}
-          />
+        <div className="w-64">
+          <RHFInputCell fieldName={`${name}.refTargetId`} inputType={'select'} options={options} />
         </div>
       </div>
     </div>

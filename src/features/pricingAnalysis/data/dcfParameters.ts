@@ -1,20 +1,3 @@
-export const methodParams = [
-  { code: '01', description: 'Specified Room Income with Growth' },
-  { code: '02', description: 'Specified Room Income with Growth by Occupancy Rate' },
-  { code: '03', description: 'Specify Room Income Per Pay' },
-  { code: '04', description: 'Parameter based on tier of property value' },
-  { code: '05', description: 'Seasonal Rates' },
-  { code: '06', description: 'Rental Income per Square Meter' },
-  { code: '07', description: 'Position-Based Salary Calculation' },
-  { code: '08', description: 'Proportion of the new replacement cost' },
-  { code: '09', description: 'Proportional' },
-  { code: '10', description: 'Room Costs based on expenses per room per day' },
-  { code: '11', description: 'Specified Energy Cost Index' },
-  { code: '12', description: 'Specified food and beverage expenses per room per day' },
-  { code: '13', description: 'Specified Monthly Rental Income' },
-  { code: '14', description: 'Specified Value With Growth' },
-];
-
 export const categoryParams = [
   { code: '01', description: 'Operating Income' },
   { code: '02', description: 'Gross Income' },
@@ -24,34 +7,40 @@ export const categoryParams = [
 ];
 
 export const assumptionParams = [
-  { code: '01', description: 'Administration Fee' },
-  { code: '02', description: 'Advertising and Promotion Costs' },
-  { code: '03', description: 'Average Rental Rate' },
-  { code: '04', description: 'Common Utility Fees' },
-  { code: '05', description: 'Contingency Expenses' },
-  { code: '06', description: 'Cost of Income from Utilities' },
-  { code: '07', description: 'Energy Cost' },
-  { code: '08', description: 'Energy Income' },
-  { code: '09', description: 'Fire Insurance Premium' },
-  { code: '10', description: 'Food and beverage expenses' },
-  { code: '11', description: 'Food and Beverage Income' },
-  { code: '12', description: 'Marketing and Promotion Costs' },
-  { code: '13', description: 'Miscellaneous' },
-  { code: '14', description: 'Operational and Administrative expenses' },
-  { code: '15', description: 'Other Costs' },
-  { code: '16', description: 'Other Expenses' },
-  { code: '17', description: 'Other Income' },
-  { code: '18', description: 'Project Management Compensation' },
-  { code: '19', description: 'Property Tax' },
-  { code: '20', description: 'Repair and Maintenance Costs' },
-  { code: '21', description: 'Reserve Funds for Building Improvements' },
-  { code: '22', description: 'Room Cost' },
-  { code: '23', description: 'Room Income' },
-  { code: '24', description: 'Room Rental Income' },
-  { code: '25', description: 'Salary and Benefits' },
-  { code: '26', description: 'Sales and Marketing Expenses' },
-  { code: '27', description: 'Utility Expenses' },
-  { code: '28', description: 'Utility Income' },
+  // income
+  { code: 'I00', description: 'Room Income' },
+  { code: 'I01', description: 'Room Rental Income' },
+  { code: 'I02', description: 'Energy Income' },
+  { code: 'I03', description: 'Utility Income' },
+  { code: 'I04', description: 'Food and Beverage Income' },
+  { code: 'I05', description: 'Other Income' },
+
+  // expenses
+  { code: 'E01', description: 'Administration Fee' },
+  { code: 'E02', description: 'Average Rental Rate' },
+  { code: 'E03', description: 'Advertising and Promotion Costs' },
+  { code: 'E04', description: 'Common Utility Fees' },
+  { code: 'E05', description: 'Contingency Expenses' },
+  { code: 'E06', description: 'Cost of Income from Utilities' },
+  { code: 'E07', description: 'Energy Cost' },
+  { code: 'E08', description: 'Fire Insurance Premium' },
+  { code: 'E09', description: 'Food and beverage expenses' },
+  { code: 'E10', description: 'Marketing and Promotion Costs' },
+  { code: 'E11', description: 'Operational and Administrative expenses' },
+  { code: 'E12', description: 'Other Expenses' },
+  { code: 'E13', description: 'Project Management Compensation' },
+  { code: 'E14', description: 'Property Tax' },
+  { code: 'E15', description: 'Repair and Maintenance Costs' },
+  { code: 'E16', description: 'Reserve Funds for Building Improvements' },
+  { code: 'E17', description: 'Room Cost' },
+  { code: 'E18', description: 'Salary and Benefits' },
+  { code: 'E19', description: 'Sales and Marketing Expenses' },
+  { code: 'E20', description: 'Utility Expenses' },
+  { code: 'E21', description: 'Other Costs' },
+  { code: 'E22', description: 'Gross Operating Profit (GOP)' },
+
+  // others
+  { code: 'M00', description: 'Miscellaneous' },
 ];
 
 export const mappingAssumptionMethodParams = [
@@ -61,19 +50,46 @@ export const mappingAssumptionMethodParams = [
   },
 ];
 
+export const methodParams = [
+  // income
+  { code: '01', description: 'Specified Room Income Per Pay' },
+  { code: '02', description: 'Specified Room Income By Seasonal Rates' },
+  { code: '03', description: 'Specified Room Income with Growth' },
+  { code: '04', description: 'Specified Room Income with Growth by Occupancy Rate' },
+  { code: '05', description: 'Specified Rental Income per Month' },
+  { code: '06', description: 'Specified Rental Income per Square Meter' },
+  // cost
+  { code: '07', description: 'Room Costs based on Expenses per Room per Day' },
+  { code: '08', description: 'Specified Food and Beverage Expenses per Room per Day' },
+  { code: '09', description: 'Position-Based Salary Calculation' },
+  { code: '10', description: 'Parameter based on Tier of Property Value' },
+  { code: '11', description: 'Specified Energy Cost Index' },
+  { code: '12', description: 'Proportion of the New Replacement Cost' },
+  // general
+  { code: '13', description: 'Proportional' },
+  { code: '14', description: 'Specified Value with Growth' },
+  // GOP
+  { code: '15', description: 'Gross Operating Profit (GOP)' },
+];
+
 export const mapMethodCodeToValue = [
-  { code: '01', value: 'Specified Room Income with Growth' },
-  { code: '02', value: 'Specified Room Income with Growth by Occupancy Rate' },
-  { code: '03', value: 'specifyRoomIncomePerDay' },
-  { code: '04', value: 'Parameter based on tier of property value' },
-  { code: '05', value: 'Seasonal Rates' },
-  { code: '06', value: 'Rental Income per Square Meter' },
-  { code: '07', value: 'Position-Based Salary Calculation' },
-  { code: '08', value: 'Proportion of the new replacement cost' },
-  { code: '09', value: 'proportion' },
-  { code: '10', value: 'Room Costs based on expenses per room per day' },
-  { code: '11', value: 'Specified Energy Cost Index' },
-  { code: '12', value: 'Specified food and beverage expenses per room per day' },
-  { code: '13', value: 'Specified Monthly Rental Income' },
-  { code: '14', value: 'Specified Value With Growth' },
+  // income
+  { code: '01', value: 'specifiedRoomIncomePerDay' },
+  { code: '02', value: 'specifiedRoomIncomeBySeasonalRates' },
+  { code: '03', value: 'specifiedRoomIncomewithGrowth' },
+  { code: '04', value: 'specifiedRoomIncomewithGrowthbyOccupancyRate' },
+  { code: '05', value: 'specifiedRentalIncomePerMonth' },
+  { code: '06', value: 'specifiedRentalIncomePerSquareMeter' },
+  // cost
+  { code: '07', value: 'roomCostBasedOnExpensesPerRoomPerDay' },
+  { code: '08', value: 'specifiedFoodAndBeverageExpensesPerRoomPerDay' },
+  { code: '09', value: 'positionBasedSalaryCalculation' },
+  { code: '10', value: 'parameterBasedOnTierOfPropertyValue' },
+  { code: '11', value: 'specifiedEnergyCostIndex' },
+  { code: '12', value: 'proportionOfTheNewReplacementCost' },
+  // general
+  { code: '13', value: 'proportion' },
+  { code: '14', value: 'specifiedValueWithGrowth' },
+  // GOP
+  { code: '15', value: 'grossOperatingProfit' },
 ];

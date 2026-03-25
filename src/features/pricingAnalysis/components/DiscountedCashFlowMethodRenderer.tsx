@@ -2,8 +2,9 @@ import { useWatch } from 'react-hook-form';
 import type { DCFMethodFormType } from '../schemas/dcfForm';
 import type { DCFMethod } from '../types/dcf';
 import { MethodProportion } from './dcfMethods/MethodProportion';
-import { MethodSpecifyRoomIncomePerDay } from './dcfMethods/MethodSpecifyRoomIncomePerDay';
+import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoomIncomePerDay';
 import { mapDCFMethodCodeToSystemType } from '../domain/mapDCFMethodCodeToSystemType';
+import { MethodSpecifiedValueWithGrowth } from './dcfMethods/MethodSpecifiedValueWithGrowth';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
@@ -40,12 +41,36 @@ export function DiscountedCashFlowMethodRenderer({
   const methodType = mapDCFMethodCodeToSystemType(watchMethodType);
 
   switch (methodType) {
-    case 'specifyRoomIncomePerDay':
-      return <MethodSpecifyRoomIncomePerDay {...props} />;
-    case 'specifyRoomInComeWithGrowthByOccupancyRate':
+    case 'specifiedRoomIncomePerDay':
+      return <MethodSpecifiedRoomIncomePerDay {...props} />;
+    case 'specifiedRoomIncomeBySeasonalRates':
+      return <></>;
+    case 'specifiedRoomIncomewithGrowth':
+      return <></>;
+    case 'specifiedRoomIncomewithGrowthbyOccupancyRate':
+      return <></>;
+    case 'specifiedRentalIncomePerMonth':
+      return <></>;
+    case 'specifiedRentalIncomePerSquareMeter':
+      return <></>;
+    case 'roomCostBasedOnExpensesPerRoomPerDay':
+      return <></>;
+    case 'specifiedFoodAndBeverageExpensesPerRoomPerDay':
+      return <></>;
+    case 'positionBasedSalaryCalculation':
+      return <></>;
+    case 'parameterBasedOnTierOfPropertyValue':
+      return <></>;
+    case 'specifiedEnergyCostIndex':
+      return <></>;
+    case 'proportionOfTheNewReplacementCost':
       return <></>;
     case 'proportion':
       return <MethodProportion {...props} />;
+    case 'specifiedValueWithGrowth':
+      return <MethodSpecifiedValueWithGrowth {...props} />;
+    case 'grossOperatingProfit':
+      return <></>;
     default:
       return <></>;
   }

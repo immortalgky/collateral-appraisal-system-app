@@ -8,7 +8,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDeriv
 import { useMemo } from 'react';
 import { formatFixed2 } from '../../domain/calculation';
 
-interface MethodSpecifyRoomIncomePerDayProps {
+interface MethodSpecifiedRoomIncomePerDayProps {
   name: string;
   editing: string | null;
   expanded: boolean;
@@ -18,7 +18,7 @@ interface MethodSpecifyRoomIncomePerDayProps {
   totalNumberOfYears: number;
   onCancelEditMode: () => void;
 }
-export function MethodSpecifyRoomIncomePerDay({
+export function MethodSpecifiedRoomIncomePerDay({
   name = '',
   editing,
   expanded,
@@ -27,7 +27,7 @@ export function MethodSpecifyRoomIncomePerDay({
   method,
   totalNumberOfYears,
   onCancelEditMode,
-}: MethodSpecifyRoomIncomePerDayProps) {
+}: MethodSpecifiedRoomIncomePerDayProps) {
   const { control } = useFormContext();
   const { fields } = useFieldArray({ control, name: name });
 

@@ -23,8 +23,6 @@ export function DiscountedCashFlowMethodModal({
 }: DiscountedCashFlowMethodModalProps) {
   const { getValues } = useFormContext();
 
-  // const category = (getValues('sections') ?? []).map(s => s.category);
-
   return (
     <Modal
       isOpen={!!editing}
@@ -36,7 +34,7 @@ export function DiscountedCashFlowMethodModal({
         <div className="flex flex-row gap-1.5">
           <span className={'w-44'}>Category</span>
           <RHFInputCell
-            fieldName={''}
+            fieldName={`${name.split('.assumptions')?.[0]}.categoryType`}
             inputType={'select'}
             options={categoryParams.map(c => ({
               value: c.code,
@@ -47,7 +45,7 @@ export function DiscountedCashFlowMethodModal({
         <div className="flex flex-row gap-1.5">
           <span className={'w-44'}>Assumption</span>
           <RHFInputCell
-            fieldName={`${name}.assumptionType`}
+            fieldName={`${name.split('.method')?.[0]}.assumptionType`}
             inputType={'select'}
             options={assumptionParams.map(a => ({ value: a.code, label: a.description }))}
           />
