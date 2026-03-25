@@ -28,7 +28,7 @@ const propertiesColumns = [
     inputType: 'dropdown',
     group: 'BuildingType',
   },
-  { name: 'sellingPrice', label: 'Selling Price', inputType: 'number' },
+  { name: 'sellingPrice', label: 'Selling Price', inputType: 'number', maxIntegerDigits: 15 },
 ];
 
 export default PropertiesForm;
