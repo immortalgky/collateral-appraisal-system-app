@@ -284,7 +284,7 @@ export const customersFieldConfig: FieldArrayField = {
   required: true,
   minItems: 1,
   fields: [
-    { type: 'text-input', name: 'name', label: 'Customer Name', required: true, maxLength: 200 },
+    { type: 'text-input', name: 'name', label: 'Customer Name', required: true, maxLength: 260 },
     {
       type: 'text-input',
       name: 'contactNumber',
@@ -487,7 +487,7 @@ export const titleBuildingFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
-    maxIntegerDigits: 3,
+    maxIntegerDigits: 5,
   },
 ];
 
