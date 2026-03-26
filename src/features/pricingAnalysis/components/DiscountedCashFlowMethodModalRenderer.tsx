@@ -1,72 +1,29 @@
-import { useFormContext, useWatch } from 'react-hook-form';
 import { MethodProportionModal } from './dcfMethods/MethodProportionModal';
 import { MethodSpecifyRoomIncomePerDayModal } from './dcfMethods/MethodSpecifiedRoomIncomePerDayModal';
-import { DiscountedCashFlowMethodModal } from './DiscountedCashFlowMethodModal';
-import type { DCFMethod } from '../types/dcf';
-import { methodParams } from '../data/dcfParameters';
-import { mapDCFMethodCodeToSystemType } from '../domain/mapDCFMethodCodeToSystemType';
-import { useEffect, useMemo, useRef } from 'react';
+import { MethodSpecifiedRoomIncomeWithGrowthModal } from './dcfMethods/MethodSpecifiedRoomIncomewithGrowthModal';
 import { MethodSpecifiedValueWithGrowthModal } from './dcfMethods/MethodSpecifiedValueWithGrowthModal';
 
 interface DiscountedCashFlowModalRendererProps {
   name: string;
-  assumptionName: string;
-  method: DCFMethod;
-  editing: string | null;
-  onCancelEditMode: () => void;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  methodType: string;
+  getOuterFormValues: (name: string) => object;
+  getInnerFormValues: (name: string) => object;
 }
 export function DiscountedCashFlowModalRenderer({
   name,
-  assumptionName,
-  method,
-  editing,
-  onCancelEditMode,
-  size = '2xl',
+  methodType,
+  getOuterFormValues,
 }: DiscountedCashFlowModalRendererProps) {
-  const { resetField } = useFormContext();
-  const watchMethodType = useWatch({ name: `${name}.methodType` });
-  const methodType = mapDCFMethodCodeToSystemType(watchMethodType);
+  const props = { name, getOuterFormValues };
 
-  const prevMethodTypeRef = useRef<string | undefined>(undefined);
-
-  useEffect(() => {
-    // Skip the initial mount
-    if (prevMethodTypeRef.current === undefined) {
-      prevMethodTypeRef.current = watchMethodType;
-      return;
-    }
-
-    // Only reset if methodType actually changed
-    if (prevMethodTypeRef.current !== watchMethodType) {
-      prevMethodTypeRef.current = watchMethodType;
-      resetField(`${name}`, { defaultValue: { methodType: watchMethodType } });
-    }
-  }, [watchMethodType, name, resetField]);
-  if (editing !== name) return;
-
-  return (
-    <DiscountedCashFlowMethodModal
-      name={name}
-      editing={editing}
-      onCancelEditMode={onCancelEditMode}
-      assumptionName={assumptionName}
-      size={size}
-    >
-      {!!methodType && getMethodModal(methodType, name)}
-    </DiscountedCashFlowMethodModal>
-  );
-}
-
-function getMethodModal(methodType: string, name: string) {
   switch (methodType) {
     case 'specifiedRoomIncomePerDay': {
-      return <MethodSpecifyRoomIncomePerDayModal name={`${name}.detail`} />;
+      return <MethodSpecifyRoomIncomePerDayModal {...props} />;
     }
     case 'specifiedRoomIncomeBySeasonalRates':
       return <></>;
     case 'specifiedRoomIncomewithGrowth':
-      return <></>;
+      return <MethodSpecifiedRoomIncomeWithGrowthModal {...props} />;
     case 'specifiedRoomIncomewithGrowthbyOccupancyRate':
       return <></>;
     case 'specifiedRentalIncomePerMonth':
@@ -86,10 +43,10 @@ function getMethodModal(methodType: string, name: string) {
     case 'proportionOfTheNewReplacementCost':
       return <></>;
     case 'proportion': {
-      return <MethodProportionModal name={`${name}.detail`} />;
+      return <MethodProportionModal {...props} />;
     }
     case 'specifiedValueWithGrowth':
-      return <MethodSpecifiedValueWithGrowthModal name={`${name}.detail`} />;
+      return <MethodSpecifiedValueWithGrowthModal {...props} />;
     case 'grossOperatingProfit':
       return <></>;
     default: {

@@ -65,28 +65,28 @@ export function DiscountedCashFlowPanel({
       totalNumberOfDayInYear: templateDetailQuery.totalNumberOfDayInYear,
       capitalizeRate: templateDetailQuery.capitalizeRate,
       discountedRate: templateDetailQuery.discountedRate,
-      sections: templateDetailQuery.sections.map(t => {
+      sections: templateDetailQuery.sections.map((s, s_idx) => {
         return {
           clientId: getNewId(),
-          sectionType: t.sectionType,
-          sectionName: t.sectionName,
-          identifier: t.identifier,
-          displaySeq: t.displaySeq,
+          sectionType: s.sectionType,
+          sectionName: s.sectionName,
+          identifier: s.identifier,
+          displaySeq: s_idx,
           categories:
-            t.categories?.map(c => {
+            s.categories?.map((c, c_idx) => {
               return {
                 clientId: getNewId(),
                 categoryType: c.categoryType,
                 categoryName: c.categoryName,
                 identifier: c.identifier,
-                displaySeq: c.displaySeq,
-                assumptions: c.assumptions.map(a => {
+                displaySeq: c_idx,
+                assumptions: c.assumptions.map((a, a_idx) => {
                   return {
                     clientId: getNewId(),
                     assumptionType: a.assumptionType,
                     assumptionName: a.assumptionName,
                     identifier: a.identifier,
-                    displaySeq: a.displaySeq,
+                    displaySeq: a_idx,
                     method: {
                       clientId: getNewId(),
                       methodType: a.method.methodType,

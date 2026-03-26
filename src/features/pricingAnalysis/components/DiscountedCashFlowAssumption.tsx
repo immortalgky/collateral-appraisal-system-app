@@ -1,17 +1,16 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useMemo, useState, type ReactNode } from 'react';
-import type { DCFAssumptionFormType } from '../schemas/dcfForm';
+import { useMemo, useState } from 'react';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
-import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
+import type { DCFAssumption } from '../types/dcf';
+import { assumptionParams, methodParams } from '../data/dcfParameters';
 
 interface DiscountedCashFlowAssumptionProps {
   name: string;
   totalNumberOfYears: number;
-  assumption: DCFAssumptionFormType;
+  assumption: DCFAssumption;
   editing: string | null;
   onCancelEditMode: () => void;
   onOpenEditMode: (assumptionType: string) => void;
@@ -70,22 +69,44 @@ export function DiscountedCashFlowAssumption({
                 expanded ? 'rotate-180' : '',
               )}
             />
-            <RHFInputCell fieldName={`${name}.assumptionType`} inputType="display" />
+            <RHFInputCell
+              fieldName={`${name}.assumptionType`}
+              inputType="display"
+              accessor={({ value }) => (
+                <span
+                  className="truncate"
+                  title={assumptionParams.find(p => p.code === value)?.description ?? ''}
+                >
+                  {assumptionParams.find(p => p.code === value)?.description ?? ''}
+                </span>
+              )}
+            />
           </button>
-          <div className="flex flex-row gap-1.5 items-center justify-center">
-            <RHFInputCell fieldName={`${name}.method.methodType`} inputType="display" />
+          <div className="flex flex-row w-full gap-1.5 items-center justify-end">
+            <RHFInputCell
+              fieldName={`${name}.method.methodType`}
+              inputType="display"
+              accessor={({ value }) => (
+                <span
+                  className="truncate"
+                  title={methodParams.find(p => p.code === value)?.description ?? ''}
+                >
+                  {methodParams.find(p => p.code === value)?.description ?? ''}
+                </span>
+              )}
+            />
             <button
               type="button"
-              className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
+              className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
               onClick={() => {
-                onOpenEditMode(`${name}.method`);
+                onOpenEditMode(assumption.clientId);
               }}
             >
               <Icon name="pencil" style="regular" className="size-4" />
             </button>
             <button
               type="button"
-              className="flex justify-center items-center gap-2 w-full p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
+              className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
               onClick={onRemoveAssumption}
             >
               <Icon name="trash" style="regular" className="size-4" />
@@ -117,7 +138,7 @@ export function DiscountedCashFlowAssumption({
         name={`${name}.method`}
         editing={editing}
         expanded={expanded}
-        assumptionId={assumption.id}
+        assumptionId={assumption.clientId}
         assumptionName={assumption.assumptionName}
         method={assumption.method}
         totalNumberOfYear={totalNumberOfYears}

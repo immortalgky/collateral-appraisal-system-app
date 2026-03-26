@@ -1,11 +1,10 @@
 type Identifier = 'positive' | 'negative' | 'empty';
 type MethodType = 'proportion' | 'specifyValueWithGrowth' | 'specifyRoomIncomePerDay';
 type SectionType = 'income' | 'expenses' | 'summary';
-export type DcfRefTargetId = `section:${string}` | `category:${string}` | `assumption:${string}`;
 
 interface MethodProportion {
   proportionPct: number;
-  refTargetId: DcfRefTargetId | null;
+  refTargetId: string | null;
 }
 
 interface MethodSpecifiedValueWithGrowth {
@@ -63,20 +62,23 @@ export interface DCFTemplateType {
 interface MethodProportionWrapper {
   id?: string;
   methodType: 'proportion';
-  detail: MethodProportion;
+  detail?: MethodProportion;
 }
 interface MethodSpecifyValueWrapper {
   id?: string;
   methodType: 'specifyValueWithGrowth';
-  detail: MethodSpecifiedValueWithGrowth;
+  detail?: MethodSpecifiedValueWithGrowth;
 }
 interface MethodRoomIncomeWrapper {
   id?: string;
   methodType: 'specifyRoomIncomePerDay';
-  detail: MethodSpecifiedRoomIncomePerDay;
+  detail?: MethodSpecifiedRoomIncomePerDay;
 }
 
-type DCFMethod = MethodProportionWrapper | MethodSpecifyValueWrapper | MethodRoomIncomeWrapper;
+export type DCFMethod =
+  | MethodProportionWrapper
+  | MethodSpecifyValueWrapper
+  | MethodRoomIncomeWrapper;
 
 interface Base {
   clientId: string;

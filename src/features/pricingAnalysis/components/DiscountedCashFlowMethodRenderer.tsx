@@ -1,10 +1,10 @@
 import { useWatch } from 'react-hook-form';
-import type { DCFMethodFormType } from '../schemas/dcfForm';
 import type { DCFMethod } from '../types/dcf';
 import { MethodProportion } from './dcfMethods/MethodProportion';
 import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoomIncomePerDay';
 import { mapDCFMethodCodeToSystemType } from '../domain/mapDCFMethodCodeToSystemType';
 import { MethodSpecifiedValueWithGrowth } from './dcfMethods/MethodSpecifiedValueWithGrowth';
+import { MethodSpecifiedRoomIncomeWithGrowth } from './dcfMethods/MethodSpecifiedRoomIncomewithGrowth';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
@@ -46,7 +46,7 @@ export function DiscountedCashFlowMethodRenderer({
     case 'specifiedRoomIncomeBySeasonalRates':
       return <></>;
     case 'specifiedRoomIncomewithGrowth':
-      return <></>;
+      return <MethodSpecifiedRoomIncomeWithGrowth {...props} />;
     case 'specifiedRoomIncomewithGrowthbyOccupancyRate':
       return <></>;
     case 'specifiedRentalIncomePerMonth':

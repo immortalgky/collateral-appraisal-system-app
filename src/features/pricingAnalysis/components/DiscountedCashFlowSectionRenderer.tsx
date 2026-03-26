@@ -6,10 +6,11 @@ import { SummarySection } from './dcfSections/SummarySection';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useMemo } from 'react';
+import type { DCFSection } from '../types/dcf';
 
 interface DiscountedCashFlowSectionRendererProps {
   name: string;
-  section: DCFSectionFormType;
+  section: DCFSection;
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;
@@ -54,12 +55,12 @@ export function DiscountedCashFlowSectionRenderer({
           {(section?.categories ?? []).map((category, index) => {
             return (
               <DiscountedCashFlowCategory
+                key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
-                totalNumberOfYears={totalNumberOfYears}
-                key={category.id ?? index}
+                section={section}
                 category={category}
+                totalNumberOfYears={totalNumberOfYears}
                 color={color}
-                onEditAssumption={() => null}
               />
             );
           })}
@@ -78,12 +79,12 @@ export function DiscountedCashFlowSectionRenderer({
           {(section?.categories ?? []).map((category, index) => {
             return (
               <DiscountedCashFlowCategory
+                key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
                 totalNumberOfYears={totalNumberOfYears}
-                key={category.id ?? index}
+                section={section}
                 category={category}
                 color={color}
-                onEditAssumption={() => null}
               />
             );
           })}

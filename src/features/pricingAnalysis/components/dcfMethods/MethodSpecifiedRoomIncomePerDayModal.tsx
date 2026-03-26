@@ -7,7 +7,6 @@ import { ScrollableTableContainer } from '../ScrollableTableContainer';
 import { formatFixed2 } from '../../domain/calculation';
 
 export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string }) {
-  const { control } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -15,7 +14,6 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
   };
 
   const handleOnRemove = (index: number) => {
-    console.log(index);
     remove(index);
   };
 
@@ -91,22 +89,22 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="border border-gray-300 rounded-xl p-1 overflow-auto">
+      <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer className="flex-1 min-h-0 max-h-[274px]">
-          <table className={'table-auto'}>
+          <table className={'table table-sm'}>
             <thead>
               <tr>
-                <th className="px-1.5 py-1.5">Room Type</th>
-                <th className="px-1.5 py-1.5">Room Income</th>
-                <th className="px-1.5 py-1.5">Saleable Area</th>
-                <th className="px-1.5 py-1.5">Total Room Income</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">Room Type</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">Room Income</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">Saleable Area</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">Total Room Income</th>
               </tr>
             </thead>
             <tbody>
               {fields.map((r, index) => {
                 return (
                   <tr key={index}>
-                    <td className="px-1.5 py-1.5">
+                    <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <div className="flex flex-row gap-1.5">
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${index}.roomType`}
@@ -122,26 +120,28 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                         </button>
                       </div>
                     </td>
-                    <td className="px-1.5 py-1.5">
+                    <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
                         fieldName={`${name}.roomDetails.${index}.roomIncome`}
                         inputType="number"
                       />
                     </td>
-                    <td className="px-1.5 py-1.5">
+                    <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
                         fieldName={`${name}.roomDetails.${index}.saleableArea`}
                         inputType="number"
                       />
                     </td>
-                    <td className="px-1.5 py-1.5">
-                      <RHFInputCell
-                        fieldName={`${name}.roomDetails.${index}.totalRoomIncome`}
-                        inputType="display"
-                        accessor={({ value }) => (
-                          <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                        )}
-                      />
+                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                      <div className="flex justify-end items-center text-right">
+                        <RHFInputCell
+                          fieldName={`${name}.roomDetails.${index}.totalRoomIncome`}
+                          inputType="display"
+                          accessor={({ value }) => (
+                            <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                          )}
+                        />
+                      </div>
                     </td>
                   </tr>
                 );
@@ -161,8 +161,8 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                 <td></td>
               </tr>
               <tr>
-                <td></td>
-                <td>
+                <td className="sticky bottom-0 px-1.5 bg-white"></td>
+                <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumRoomIncome`}
@@ -173,7 +173,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                     />
                   </div>
                 </td>
-                <td>
+                <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumSaleableArea`}
@@ -184,7 +184,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                     />
                   </div>
                 </td>
-                <td>
+                <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumTotalRoomIncome`}
@@ -201,34 +201,51 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
         </ScrollableTableContainer>
       </div>
       <div className="flex flex-col gap-2 mb-4">
-        <div className="flex flex-row gap-1.5">
+        <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Average Room Rate</span>
-          <div className={'w-44 text-right'}>
-            <RHFInputCell
-              fieldName={`${name}.avgRoomRate`}
-              inputType={'display'}
-              accessor={({ value }) => (
-                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-              )}
-            />
+          <div className={'grid-cols-12'}>
+            <div className={'col-span-2'}>
+              <RHFInputCell
+                fieldName={`${name}.avgRoomRate`}
+                inputType={'display'}
+                accessor={({ value }) => (
+                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                )}
+              />
+            </div>
           </div>
         </div>
-        <div className="flex flex-row gap-1.5">
+        <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Total Number of Saleable Area</span>
-          <div className={'w-44'}>
+          <div className={'w-24'}>
             <RHFInputCell fieldName={`${name}.totalSaleableArea`} inputType={'number'} />
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
-          <div className={'w-44'}>
+          <div className={'w-24'}>
             <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
           </div>
           <span className={''}>every</span>
-          <div className={'w-44'}>
+          <div className={'w-24'}>
             <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
           </div>
           <span className={'w-44'}>year(s)</span>
+        </div>
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-56'}>Occupancy Rate - First Year</span>
+          <div className={'w-24'}>
+            <RHFInputCell fieldName={`${name}.occupancyRateFirstYearPct`} inputType={'number'} />
+          </div>
+          <span className={''}>% with growth</span>
+          <div className={'w-24'}>
+            <RHFInputCell fieldName={`${name}.occupancyRatePct`} inputType={'number'} />
+          </div>
+          <span className={''}>% every</span>
+          <div className={'w-24'}>
+            <RHFInputCell fieldName={`${name}.occupancyRateYrs`} inputType={'number'} />
+          </div>
+          <span className={''}>year(s)</span>
         </div>
       </div>
     </div>

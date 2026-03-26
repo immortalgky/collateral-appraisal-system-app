@@ -7,6 +7,7 @@ import { RHFInputCell } from './table/RHFInputCell';
 import { useMemo, type ReactNode } from 'react';
 import { DiscountedCashFlowSectionRenderer } from '@features/pricingAnalysis/components/DiscountedCashFlowSectionRenderer.tsx';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
+import type { DCFSection } from '../types/dcf';
 
 export interface SectionColor {
   bg: string;
@@ -118,7 +119,9 @@ interface DiscountedCashFlowTableProps {
 
 export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFlowTableProps) {
   const { getValues } = useFormContext();
-  const sections = getValues('sections');
+  // const sections = getValues('sections');
+
+  const sections = useWatch({ name: 'sections' });
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
@@ -153,10 +156,10 @@ export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFl
         </thead>
         <tbody>
           {/* style? data? */}
-          {(sections ?? []).map((section: DCFSectionFormType, index) => {
+          {(sections ?? []).map((section: DCFSection, index) => {
             return (
               <DiscountedCashFlowSectionRenderer
-                key={section.id ?? index}
+                key={section.clientId ?? `section.${index}`}
                 name={`sections.${index}`}
                 section={section}
                 color={getSectionColor(section.sectionType)}

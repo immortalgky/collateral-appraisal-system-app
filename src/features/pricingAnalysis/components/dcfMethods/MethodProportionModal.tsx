@@ -3,9 +3,14 @@ import { RHFInputCell } from '../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 import type { DCFAssumption, DCFCategory, DCFSection } from '../../types/dcf';
 
-export function MethodProportionModal({ name }: { name: string }) {
-  const { getValues } = useFormContext();
-  const sections = (getValues('sections') ?? []).filter(
+export function MethodProportionModal({
+  name,
+  getOuterFormValues,
+}: {
+  name: string;
+  getOuterFormValues: (name: string) => object;
+}) {
+  const sections = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
   );
 
@@ -13,9 +18,9 @@ export function MethodProportionModal({ name }: { name: string }) {
     .filter((s: DCFSection) => s.categories)
     .flatMap((s: DCFSection) => s.categories);
 
-  const currAssumptionType = getValues(name.split('.method'))?.[0];
+  const currAssumptionType = getOuterFormValues(name.split('.method'))?.[0];
   const assumptions = getDCFFilteredAssumptions(
-    getValues,
+    getOuterFormValues,
     a => currAssumptionType !== a.assumptionName,
   );
 

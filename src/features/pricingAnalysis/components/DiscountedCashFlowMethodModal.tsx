@@ -1,82 +1,189 @@
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import { useFormContext } from 'react-hook-form';
 import { assumptionParams, categoryParams, methodParams } from '../data/dcfParameters';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
+import type { DCFMethod, DCFSection } from '../types/dcf';
+import { buildDiscountedCashFlowCategoryOptions } from '../adapters/buildDiscountedCashFlowCategoryOptions';
+import { mapDCFMethodCodeToSystemType } from '../domain/mapDCFMethodCodeToSystemType';
+
+export interface AssumptionEditDraft {
+  targetSectionClientId: string | null;
+  targetCategoryClientId: string | null;
+  targetAssumptionClientId: string | null;
+  assumptionType: string | null;
+  assumptionName: string | null;
+  displayName: string | null;
+  method: DCFMethod;
+}
 
 interface DiscountedCashFlowMethodModalProps {
-  name: string;
   editing: string | null;
+  initialData: AssumptionEditDraft;
+  getOuterFormValues: (name: string) => object[];
   onCancelEditMode: () => void;
-  assumptionName: string;
+  onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  children: ReactNode;
 }
 export function DiscountedCashFlowMethodModal({
-  name,
   editing,
+  initialData,
+  getOuterFormValues,
   onCancelEditMode,
-  assumptionName,
+  onSaveEditMode,
   size,
-  children,
 }: DiscountedCashFlowMethodModalProps) {
-  const { getValues } = useFormContext();
+  const methods = useForm<AssumptionEditDraft>({
+    defaultValues: initialData,
+  });
+
+  const { handleSubmit, reset, getValues, control } = methods;
+
+  const methodType = useWatch({
+    control,
+    name: 'method.methodType',
+  });
+
+  const prevMethodTypeRef = useRef<string | undefined>(undefined);
+  const skipNextMethodResetRef = useRef(false);
+
+  useEffect(() => {
+    if (!editing) return;
+
+    skipNextMethodResetRef.current = true;
+    reset(initialData);
+    prevMethodTypeRef.current = initialData.method?.methodType;
+  }, [editing, initialData, reset]);
+
+  useEffect(() => {
+    if (skipNextMethodResetRef.current) {
+      skipNextMethodResetRef.current = false;
+      return;
+    }
+
+    if (prevMethodTypeRef.current === undefined) {
+      prevMethodTypeRef.current = methodType;
+      return;
+    }
+
+    if (prevMethodTypeRef.current !== methodType) {
+      prevMethodTypeRef.current = methodType;
+
+      reset({
+        ...getValues(),
+        method: {
+          methodType: methodType ?? null,
+          detail: undefined,
+        },
+      });
+    }
+  }, [methodType, reset, getValues]);
+
+  const systemMethodType = useMemo(() => {
+    return mapDCFMethodCodeToSystemType(methodType);
+  }, [methodType]);
+
+  const onSubmit = useCallback(
+    (data: AssumptionEditDraft) => {
+      console.log(data);
+      onSaveEditMode(data);
+      onCancelEditMode();
+    },
+    [onSaveEditMode, onCancelEditMode],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit(onSubmit)();
+      }
+    },
+    [handleSubmit, onSubmit],
+  );
+
+  const sections = (getOuterFormValues('sections') as DCFSection[]) ?? [];
+  const currentSection = sections.find(
+    section => section.clientId === initialData.targetSectionClientId,
+  );
+
+  const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
 
   return (
     <Modal
       isOpen={!!editing}
       onClose={onCancelEditMode}
-      title={`Edit Assumption: ${assumptionName}`}
+      title={`Edit Assumption: ${initialData.displayName}`}
       size={size ?? 'lg'}
     >
-      <div className="flex flex-col gap-2 mb-4">
-        <div className="flex flex-row gap-1.5">
-          <span className={'w-44'}>Category</span>
-          <RHFInputCell
-            fieldName={`${name.split('.assumptions')?.[0]}.categoryType`}
-            inputType={'select'}
-            options={categoryParams.map(c => ({
-              value: c.code,
-              label: c.description,
-            }))}
-          />
-        </div>
-        <div className="flex flex-row gap-1.5">
-          <span className={'w-44'}>Assumption</span>
-          <RHFInputCell
-            fieldName={`${name.split('.method')?.[0]}.assumptionType`}
-            inputType={'select'}
-            options={assumptionParams.map(a => ({ value: a.code, label: a.description }))}
-          />
-        </div>
-        <div className="flex flex-row gap-1.5">
-          <span className={'w-44'}>Method</span>
-          <RHFInputCell
-            fieldName={`${name}.methodType`}
-            inputType={'select'}
-            options={methodParams.map(m => ({ value: m.code, label: m.description }))}
-          />
-        </div>
-      </div>
-      {children}
+      <FormProvider {...methods}>
+        <form
+          onSubmit={e => {
+            e.stopPropagation();
+            handleSubmit(onSubmit)(e);
+          }}
+          onKeyDown={handleKeyDown}
+        >
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="flex flex-row gap-1.5">
+              <span className="w-44">Category</span>
+              <RHFInputCell
+                fieldName="targetCategoryClientId"
+                inputType="select"
+                options={categoryOptions}
+              />
+            </div>
 
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onCancelEditMode}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            disabled={false} // disable if mandatory is not key in
-            isLoading={false}
-            onClick={onCancelEditMode}
-          >
-            Save
-          </Button>
-        </div>
-      </div>
+            <div className="flex flex-row gap-1.5">
+              <span className="w-44">Assumption</span>
+              <RHFInputCell
+                fieldName="assumptionType"
+                inputType="select"
+                options={assumptionParams.map(a => ({
+                  value: a.code,
+                  label: a.description,
+                }))}
+              />
+            </div>
+
+            <div className="flex flex-row gap-1.5">
+              <span className="w-44">Method</span>
+              <RHFInputCell
+                fieldName="method.methodType"
+                inputType="select"
+                options={methodParams.map(m => ({
+                  value: m.code,
+                  label: m.description,
+                }))}
+              />
+            </div>
+          </div>
+
+          <DiscountedCashFlowModalRenderer
+            name="method.detail"
+            methodType={systemMethodType}
+            getOuterFormValues={getOuterFormValues}
+            getInnerFormValues={getValues}
+          />
+
+          <div className="flex items-center justify-between mt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                onCancelEditMode();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" size="sm">
+              Save
+            </Button>
+          </div>
+        </form>
+      </FormProvider>
     </Modal>
   );
 }

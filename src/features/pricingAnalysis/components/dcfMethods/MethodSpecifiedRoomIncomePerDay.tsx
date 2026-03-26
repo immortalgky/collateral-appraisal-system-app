@@ -1,32 +1,19 @@
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import type { DCFMethodFormType } from '../../schemas/dcfForm';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { DiscountedCashFlowMethodModal } from '../DiscountedCashFlowMethodModal';
 import { RHFInputCell } from '../table/RHFInputCell';
-import { Icon } from '@/shared/components';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
 import { formatFixed2 } from '../../domain/calculation';
 
 interface MethodSpecifiedRoomIncomePerDayProps {
   name: string;
-  editing: string | null;
   expanded: boolean;
-  assumptionId: string;
-  assumptionName: string;
-  method: DCFMethodFormType;
   totalNumberOfYears: number;
-  onCancelEditMode: () => void;
 }
 export function MethodSpecifiedRoomIncomePerDay({
   name = '',
-  editing,
   expanded,
-  assumptionId,
-  assumptionName,
-  method,
   totalNumberOfYears,
-  onCancelEditMode,
 }: MethodSpecifiedRoomIncomePerDayProps) {
   const { control } = useFormContext();
   const { fields } = useFieldArray({ control, name: name });
@@ -41,6 +28,32 @@ export function MethodSpecifiedRoomIncomePerDay({
             const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
             const totalSaleableArea = getValues(`${name}.detail.totalSaleableArea`) ?? 0;
             return Number(totalSaleableArea) * Number(totalNumberOfDayInYear);
+          },
+        },
+        {
+          targetPath: `${name}.occupancyRate.${idx}`,
+          deps: [
+            `${name}.detail.occupancyRateFirstYearPct`,
+            `${name}.detail.occupancyRatePct`,
+            `${name}.detail.occupancyRateYrs`,
+          ],
+          when: ({ getFieldState, formState }) => {
+            const { isDirty } = getFieldState(`${name}.occupancyRate.${idx}`, formState);
+            return !isDirty;
+          },
+          compute: ({ value, getValues }) => {
+            const occupancyRateFirstYearPct =
+              getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
+            const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
+            const occupancyRateYrs = getValues(`${name}.detail.occupancyRateYrs`) ?? 0;
+
+            if (idx === 0) return occupancyRateFirstYearPct;
+
+            const prevOccupancyRate = getValues(`${name}.occupancyRate.${idx - 1}`) ?? 0;
+
+            if (idx % occupancyRateYrs === 0) return prevOccupancyRate + occupancyRatePct;
+
+            return prevOccupancyRate;
           },
         },
         {
@@ -114,8 +127,8 @@ function MethodSpecifyRoomIncomePerDayTable({
   name,
   totalNumberOfYear,
 }: MethodSpecifyRoomIncomePerDayTableProps) {
-  const rowHeaderStyle = 'pl-20 px-1.5 h-12 text-sm text-gray-400';
-  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-500';
+  const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300';
+  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300';
   return (
     <>
       <tr>

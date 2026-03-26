@@ -7,7 +7,6 @@ import { formatFixed2 } from '../../domain/calculation';
 import type { DCFAssumption, DCFCategory, DcfRefTargetId, DCFSection } from '../../types/dcf';
 
 function resolveRefTarget(sections: DCFSection[], refTargetId: DcfRefTargetId | null | undefined) {
-  console.log(sections, refTargetId);
   if (!refTargetId) return null;
 
   const [kind, id] = refTargetId.split(':');
@@ -43,10 +42,11 @@ export function MethodProportion({
   const { getValues } = useFormContext();
 
   const refTargetId = useWatch({ name: `${name}.detail.refTargetId` });
+  const watchSecions = useWatch({ name: 'sections' });
 
   const refTarget = useMemo(() => {
     return resolveRefTarget(getValues('sections'), refTargetId);
-  }, [getValues, refTargetId]);
+  }, [getValues, refTargetId, watchSecions]);
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
@@ -55,7 +55,6 @@ export function MethodProportion({
           targetPath: `${name}.totalMethodValues.${idx}`,
           deps: [`${name}.detail.proportionPct`, `${name}.detail.refAssumption`],
           compute: ({ getValues, ctx }) => {
-            console.log(ctx.refTarget);
             const proportionPct = getValues(`${name}.detail.proportionPct`);
             const totalAssumptionValue = ctx.refTarget?.[idx] ?? 0;
             return formatFixed2((Number(proportionPct) / 100) * Number(totalAssumptionValue));

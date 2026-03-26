@@ -1,5 +1,4 @@
 import { Fragment, useMemo, useState } from 'react';
-import type { DCFCategoryFormType } from '../schemas/dcfForm';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
@@ -7,40 +6,65 @@ import type { SectionColor } from '@features/pricingAnalysis/components/Discount
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
-import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
-import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import { getNewId } from '../domain/getNewId';
-import type { DCFCategory } from '../types/dcf';
+import { type DCFAssumption, type DCFCategory, type DCFSection } from '../types/dcf';
+import {
+  DiscountedCashFlowMethodModal,
+  type AssumptionEditDraft,
+} from './DiscountedCashFlowMethodModal';
+import { editAssumption } from '../domain/dcf/editAssumption';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
+  section: DCFSection;
   category: DCFCategory;
   totalNumberOfYears: number;
   color: SectionColor;
-  onEditAssumption: () => void;
 }
 
 export function DiscountedCashFlowCategory({
   name,
+  section,
   category,
   totalNumberOfYears,
   color,
-  onEditAssumption,
 }: DiscountedCashFlowCategoryProps) {
+  const { getValues, setValue, control } = useFormContext();
   const { append, remove } = useFieldArray({ name: `${name}.assumptions` });
 
-  const [expanded, setExpanded] = useState(false);
+  const watchedAssumptions =
+    useWatch({
+      control,
+      name: `${name}.assumptions`,
+    }) ?? [];
+  const [expanded, setExpanded] = useState(true);
 
   const [editing, setEditing] = useState<string | null>(null);
   const handleOnCancelEditMode = () => {
     setEditing(null);
   };
-  const handleOnOpenEditMode = (assumptionType: string) => {
-    setEditing(assumptionType);
+  const handleOnOpenEditMode = (assumptionId: string) => {
+    setEditing(assumptionId);
+  };
+
+  const handleOnSaveEditMode = (draft: AssumptionEditDraft) => {
+    const nextSections = editAssumption(getValues('sections'), draft);
+    setValue('sections', nextSections, {
+      shouldDirty: false,
+      shouldValidate: true,
+    });
   };
 
   const handleOnAddAssumption = () => {
-    append({ id: getNewId(), assumptionType: null, method: { id: getNewId(), methodType: null } });
+    const assumptionLength = getValues(`${name}.assumptions`).length ?? null;
+    const newAssumptionId = getNewId();
+    append({
+      clientId: newAssumptionId,
+      assumptionType: null,
+      displaySeq: assumptionLength,
+      method: { id: getNewId(), methodType: null },
+    });
+    setEditing(newAssumptionId);
   };
 
   const handleOnRemoveAssumption = (index: number) => {
@@ -127,27 +151,44 @@ export function DiscountedCashFlowCategory({
       {/* Assumption rows */}
       {expanded && (
         <>
-          {(category?.assumptions ?? []).map((assumption, idx) => (
-            <Fragment key={assumption.clientId ?? `${name}.assumptions.${idx}`}>
-              <DiscountedCashFlowAssumption
-                name={`${name}.assumptions.${idx}`}
-                assumption={assumption}
-                totalNumberOfYears={totalNumberOfYears}
-                editing={editing}
-                onOpenEditMode={handleOnOpenEditMode}
-                onCancelEditMode={handleOnCancelEditMode}
-                onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
-              />
-              <DiscountedCashFlowModalRenderer
-                name={`${name}.assumptions.${idx}.method`}
-                assumptionName={assumption.assumptionName}
-                method={assumption.method}
-                totalNumberOfYear={totalNumberOfYears}
-                editing={editing}
-                onCancelEditMode={handleOnCancelEditMode}
-              />
-            </Fragment>
-          ))}
+          {fields.map((field, idx) => {
+            const assumption = watchedAssumptions[idx];
+
+            return (
+              <Fragment key={field.id}>
+                <DiscountedCashFlowAssumption
+                  name={`${name}.assumptions.${idx}`}
+                  assumption={assumption}
+                  totalNumberOfYears={totalNumberOfYears}
+                  editing={editing}
+                  onOpenEditMode={handleOnOpenEditMode}
+                  onCancelEditMode={handleOnCancelEditMode}
+                  onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
+                />
+
+                {editing === assumption?.clientId && (
+                  <DiscountedCashFlowMethodModal
+                    name={`${name}.assumptions.${idx}.method`}
+                    assumptionName={assumption?.assumptionName}
+                    initialData={{
+                      targetSectionClientId: section.clientId,
+                      targetCategoryClientId: category.clientId,
+                      targetAssumptionClientId: assumption?.clientId,
+                      assumptionType: assumption?.assumptionType ?? null,
+                      assumptionName: assumption?.assumptionName ?? null,
+                      displayName: assumption?.assumptionName ?? null,
+                      method: assumption?.method ?? null,
+                    }}
+                    getOuterFormValues={getValues}
+                    editing={editing}
+                    onCancelEditMode={handleOnCancelEditMode}
+                    onSaveEditMode={handleOnSaveEditMode}
+                    size="xl"
+                  />
+                )}
+              </Fragment>
+            );
+          })}
           <tr>
             <td className={clsx(rowHeaderStyle)}>
               <div className="flex flex-row items-center gap-1.5">

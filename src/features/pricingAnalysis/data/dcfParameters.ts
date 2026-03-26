@@ -37,6 +37,8 @@ export const assumptionParams = [
   { code: 'E19', description: 'Sales and Marketing Expenses' },
   { code: 'E20', description: 'Utility Expenses' },
   { code: 'E21', description: 'Other Costs' },
+
+  // GOP
   { code: 'E22', description: 'Gross Operating Profit (GOP)' },
 
   // others
