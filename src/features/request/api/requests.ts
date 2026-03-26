@@ -56,7 +56,7 @@ export const useCreateRequest = () => {
     },
     onSuccess: data => {
       console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -149,7 +149,7 @@ export const useUpdateRequest = () => {
     },
     onSuccess: (data, variables) => {
       console.log('Request updated successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
     onError: (error: any) => {
@@ -171,7 +171,7 @@ export const useDeleteRequest = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
     },
   });
 };
@@ -189,7 +189,7 @@ export const useCreateDraftRequest = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
     },
   });
 };
@@ -213,7 +213,7 @@ export const useUpdateDraftRequest = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
   });
@@ -232,7 +232,7 @@ export const useSubmitRequest = () => {
       return data;
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', id] });
     },
   });
