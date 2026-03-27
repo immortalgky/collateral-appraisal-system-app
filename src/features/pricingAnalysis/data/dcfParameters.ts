@@ -73,25 +73,3 @@ export const methodParams = [
   // GOP
   { code: '15', description: 'Gross Operating Profit (GOP)' },
 ];
-
-export const mapMethodCodeToValue = [
-  // income
-  { code: '01', value: 'specifiedRoomIncomePerDay' },
-  { code: '02', value: 'specifiedRoomIncomeBySeasonalRates' },
-  { code: '03', value: 'specifiedRoomIncomewithGrowth' },
-  { code: '04', value: 'specifiedRoomIncomewithGrowthbyOccupancyRate' },
-  { code: '05', value: 'specifiedRentalIncomePerMonth' },
-  { code: '06', value: 'specifiedRentalIncomePerSquareMeter' },
-  // cost
-  { code: '07', value: 'roomCostBasedOnExpensesPerRoomPerDay' },
-  { code: '08', value: 'specifiedFoodAndBeverageExpensesPerRoomPerDay' },
-  { code: '09', value: 'positionBasedSalaryCalculation' },
-  { code: '10', value: 'parameterBasedOnTierOfPropertyValue' },
-  { code: '11', value: 'specifiedEnergyCostIndex' },
-  { code: '12', value: 'proportionOfTheNewReplacementCost' },
-  // general
-  { code: '13', value: 'proportion' },
-  { code: '14', value: 'specifiedValueWithGrowth' },
-  // GOP
-  { code: '15', value: 'grossOperatingProfit' },
-];

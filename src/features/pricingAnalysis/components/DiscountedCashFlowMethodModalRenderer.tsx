@@ -1,5 +1,8 @@
 import { MethodProportionModal } from './dcfMethods/MethodProportionModal';
+import { MethodSpecifiedRentalIncomePerMonthModal } from './dcfMethods/MethodSpecifiedRentalIncomePerMonthModal';
+import { MethodSpecifiedRentalIncomePerSquareMeterModal } from './dcfMethods/MethodSpecifiedRentalIncomePerSquareMeterModal';
 import { MethodSpecifyRoomIncomePerDayModal } from './dcfMethods/MethodSpecifiedRoomIncomePerDayModal';
+import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal';
 import { MethodSpecifiedRoomIncomeWithGrowthModal } from './dcfMethods/MethodSpecifiedRoomIncomewithGrowthModal';
 import { MethodSpecifiedValueWithGrowthModal } from './dcfMethods/MethodSpecifiedValueWithGrowthModal';
 
@@ -22,14 +25,14 @@ export function DiscountedCashFlowModalRenderer({
     }
     case 'specifiedRoomIncomeBySeasonalRates':
       return <></>;
-    case 'specifiedRoomIncomewithGrowth':
+    case 'specifiedRoomIncomeWithGrowth':
       return <MethodSpecifiedRoomIncomeWithGrowthModal {...props} />;
-    case 'specifiedRoomIncomewithGrowthbyOccupancyRate':
-      return <></>;
+    case 'specifiedRoomIncomeWithGrowthByOccupancyRate':
+      return <MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal {...props} />;
     case 'specifiedRentalIncomePerMonth':
-      return <></>;
+      return <MethodSpecifiedRentalIncomePerMonthModal {...props} />;
     case 'specifiedRentalIncomePerSquareMeter':
-      return <></>;
+      return <MethodSpecifiedRentalIncomePerSquareMeterModal {...props} />;
     case 'roomCostBasedOnExpensesPerRoomPerDay':
       return <></>;
     case 'specifiedFoodAndBeverageExpensesPerRoomPerDay':

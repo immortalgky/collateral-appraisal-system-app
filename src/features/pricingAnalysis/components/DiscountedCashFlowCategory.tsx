@@ -30,22 +30,18 @@ export function DiscountedCashFlowCategory({
   color,
 }: DiscountedCashFlowCategoryProps) {
   const { getValues, setValue, control } = useFormContext();
-  const { append, remove } = useFieldArray({ name: `${name}.assumptions` });
 
-  const watchedAssumptions =
-    useWatch({
-      control,
-      name: `${name}.assumptions`,
-    }) ?? [];
+  const { append, remove, fields } = useFieldArray({ name: `${name}.assumptions` });
+
+  const watchedAssumptions: DCFAssumption[] =
+    useWatch({ control, name: `${name}.assumptions` }) ?? [];
+
   const [expanded, setExpanded] = useState(true);
-
   const [editing, setEditing] = useState<string | null>(null);
-  const handleOnCancelEditMode = () => {
-    setEditing(null);
-  };
-  const handleOnOpenEditMode = (assumptionId: string) => {
-    setEditing(assumptionId);
-  };
+
+  const handleOnCancelEditMode = () => setEditing(null);
+
+  const handleOnOpenEditMode = (assumptionId: string) => setEditing(assumptionId);
 
   const handleOnSaveEditMode = (draft: AssumptionEditDraft) => {
     const nextSections = editAssumption(getValues('sections'), draft);
@@ -56,12 +52,11 @@ export function DiscountedCashFlowCategory({
   };
 
   const handleOnAddAssumption = () => {
-    const assumptionLength = getValues(`${name}.assumptions`).length ?? null;
     const newAssumptionId = getNewId();
     append({
       clientId: newAssumptionId,
       assumptionType: null,
-      displaySeq: assumptionLength,
+      displaySeq: fields.length,
       method: { id: getNewId(), methodType: null },
     });
     setEditing(newAssumptionId);
@@ -71,24 +66,19 @@ export function DiscountedCashFlowCategory({
     remove(index);
   };
 
-  const { fields } = useFieldArray({ name: `${name}.assumptions` });
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-      return [
-        {
-          targetPath: `${name}.totalCategoryValues.${idx}`,
-          deps: [`${name}.assumptions`],
-          compute: ({ getValues }) => {
-            const assumptions = getValues(`${name}.assumptions`) ?? [];
-            const totalCategoryValue = assumptions.reduce((prev, curr) => {
-              return prev + Number(curr.totalAssumptionValues?.[idx] ?? 0);
-            }, 0);
-            return Number(totalCategoryValue);
-          },
-        },
-      ];
-    });
-  }, [fields]);
+    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => ({
+      targetPath: `${name}.totalCategoryValues.${idx}`,
+      deps: [`${name}.assumptions`],
+      compute: ({ getValues }) => {
+        const assumptions = getValues(`${name}.assumptions`) ?? [];
+        return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+          return prev + Number(curr.totalAssumptionValues?.[idx] ?? 0);
+        }, 0);
+      },
+    }));
+  }, [totalNumberOfYears, name, fields.length]);
+
   useDerivedFields({ rules });
 
   const rowHeaderStyle = 'pl-8 px-1 py-1.5 h-12 text-sm border-b border-gray-300';
@@ -97,7 +87,6 @@ export function DiscountedCashFlowCategory({
 
   return (
     <>
-      {/* Category header */}
       <tr className={clsx(rowStyle)} onClick={() => setExpanded(!expanded)}>
         <td
           className={clsx(
@@ -123,36 +112,35 @@ export function DiscountedCashFlowCategory({
                 'rounded-full w-6 h-6',
               )}
             >
-              {category?.assumptions?.length ?? 0}
+              {fields.length}
             </span>
           </div>
         </td>
-        {Array.from({ length: totalNumberOfYears }, (_, index) => {
-          return (
-            <td
-              key={index}
-              className={clsx(
-                rowBodyStyle,
-                expanded ? 'bg-gray-50 transition-colors duration-300' : '',
+        {Array.from({ length: totalNumberOfYears }, (_, index) => (
+          <td
+            key={index}
+            className={clsx(
+              rowBodyStyle,
+              expanded ? 'bg-gray-50 transition-colors duration-300' : '',
+            )}
+          >
+            <RHFInputCell
+              fieldName={`${name}.totalCategoryValues.${index}`}
+              inputType="display"
+              accessor={({ value }) => (
+                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
               )}
-            >
-              <RHFInputCell
-                fieldName={`${name}.totalCategoryValues.${index}`}
-                inputType="display"
-                accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                )}
-              />
-            </td>
-          );
-        })}
+            />
+          </td>
+        ))}
       </tr>
 
-      {/* Assumption rows */}
       {expanded && (
         <>
           {fields.map((field, idx) => {
             const assumption = watchedAssumptions[idx];
+
+            if (!assumption) return null;
 
             return (
               <Fragment key={field.id}>
@@ -168,8 +156,6 @@ export function DiscountedCashFlowCategory({
 
                 {editing === assumption?.clientId && (
                   <DiscountedCashFlowMethodModal
-                    name={`${name}.assumptions.${idx}.method`}
-                    assumptionName={assumption?.assumptionName}
                     initialData={{
                       targetSectionClientId: section.clientId,
                       targetCategoryClientId: category.clientId,
@@ -189,21 +175,22 @@ export function DiscountedCashFlowCategory({
               </Fragment>
             );
           })}
+
           <tr>
             <td className={clsx(rowHeaderStyle)}>
               <div className="flex flex-row items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => handleOnAddAssumption()}
+                  onClick={handleOnAddAssumption}
                   className="px-1.5 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                 >
                   + Add Assumption
                 </button>
               </div>
             </td>
-            {Array.from({ length: totalNumberOfYears }, (_, index) => {
-              return <td key={index} className={clsx(rowBodyStyle)}></td>;
-            })}
+            {Array.from({ length: totalNumberOfYears }, (_, index) => (
+              <td key={index} className={clsx(rowBodyStyle)} />
+            ))}
           </tr>
         </>
       )}

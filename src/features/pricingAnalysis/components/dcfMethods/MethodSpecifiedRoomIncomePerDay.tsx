@@ -1,9 +1,8 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { formatFixed2 } from '../../domain/calculation';
 
 interface MethodSpecifiedRoomIncomePerDayProps {
   name: string;
@@ -11,7 +10,7 @@ interface MethodSpecifiedRoomIncomePerDayProps {
   totalNumberOfYears: number;
 }
 export function MethodSpecifiedRoomIncomePerDay({
-  name = '',
+  name,
   expanded,
   totalNumberOfYears,
 }: MethodSpecifiedRoomIncomePerDayProps) {
@@ -22,23 +21,23 @@ export function MethodSpecifiedRoomIncomePerDay({
     return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
       return [
         {
-          targetPath: `${name}.saleableArea.${idx}`,
-          deps: ['totalNumberOfDayInYear', `${name}.detail.totalSaleableArea`],
+          targetPath: `${name}.detail.saleableArea.${idx}`,
+          deps: ['totalNumberOfDayInYear', `${name}.detail.sumSaleableArea`],
           compute: ({ value, getValues }) => {
             const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
-            const totalSaleableArea = getValues(`${name}.detail.totalSaleableArea`) ?? 0;
-            return Number(totalSaleableArea) * Number(totalNumberOfDayInYear);
+            const sumSaleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
+            return toNumber(sumSaleableArea * totalNumberOfDayInYear);
           },
         },
         {
-          targetPath: `${name}.occupancyRate.${idx}`,
+          targetPath: `${name}.detail.occupancyRate.${idx}`,
           deps: [
             `${name}.detail.occupancyRateFirstYearPct`,
             `${name}.detail.occupancyRatePct`,
             `${name}.detail.occupancyRateYrs`,
           ],
           when: ({ getFieldState, formState }) => {
-            const { isDirty } = getFieldState(`${name}.occupancyRate.${idx}`, formState);
+            const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
             return !isDirty;
           },
           compute: ({ value, getValues }) => {
@@ -47,62 +46,68 @@ export function MethodSpecifiedRoomIncomePerDay({
             const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
             const occupancyRateYrs = getValues(`${name}.detail.occupancyRateYrs`) ?? 0;
 
-            if (idx === 0) return occupancyRateFirstYearPct;
+            if (idx === 0) return toNumber(occupancyRateFirstYearPct);
 
-            const prevOccupancyRate = getValues(`${name}.occupancyRate.${idx - 1}`) ?? 0;
+            const prevOccupancyRate = getValues(`${name}.detail.occupancyRate.${idx - 1}`) ?? 0;
 
-            if (idx % occupancyRateYrs === 0) return prevOccupancyRate + occupancyRatePct;
+            if (prevOccupancyRate >= 100) return 100;
 
-            return prevOccupancyRate;
+            if (idx % occupancyRateYrs === 0) return toNumber(prevOccupancyRate + occupancyRatePct);
+
+            return toNumber(prevOccupancyRate);
           },
         },
         {
-          targetPath: `${name}.totalSaleableArea.${idx}`,
-          deps: [`${name}.saleableArea.${idx}`, `${name}.occupancyRate.${idx}`],
+          targetPath: `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+          deps: [`${name}.detail.saleableArea.${idx}`, `${name}.detail.occupancyRate.${idx}`],
           compute: ({ getValues }) => {
-            const saleableArea = getValues(`${name}.saleableArea.${idx}`) ?? 0;
-            const occupancyRate = getValues(`${name}.occupancyRate.${idx}`) ?? 0;
-            return Number(saleableArea) * (Number(occupancyRate) / 100);
+            const saleableArea = getValues(`${name}.detail.saleableArea.${idx}`) ?? 0;
+            const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
+            return toNumber(saleableArea * (occupancyRate / 100));
           },
         },
         {
-          targetPath: `${name}.roomRateIncrease.${idx}`,
+          targetPath: `${name}.detail.roomRateIncrease.${idx}`,
           deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
           compute: ({ getValues }) => {
             const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
             const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
             if (idx === 0) return 0;
-            if (idx % increateRateYrs === 0) return increaseRatePct;
+            if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
             return 0;
           },
         },
         {
-          targetPath: `${name}.avgDailyRate.${idx}`,
-          deps: [`${name}.roomRateIncrease.${idx}`, `${name}.detail.avgRoomRate`],
+          targetPath: `${name}.detail.avgDailyRate.${idx}`,
+          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.avgRoomRate`],
           compute: ({ getValues }) => {
             const avgRoomRate = getValues(`${name}.detail.avgRoomRate`);
-            const prevAvgDailyRate = getValues(`${name}.avgDailyRate.${idx - 1}`);
-            const roomRateIncrease = getValues(`${name}.roomRateIncrease.${idx}`);
+            const prevAvgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx - 1}`);
+            const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`);
             if (idx === 0) return avgRoomRate;
-            return Number(prevAvgDailyRate) * (1 + Number(roomRateIncrease) / 100);
+            return toNumber(prevAvgDailyRate * (1 + roomRateIncrease / 100));
           },
         },
         {
-          targetPath: `${name}.roomIncome.${idx}`,
-          deps: [`${name}.totalSaleableArea.${idx}`, `${name}.avgDailyRate.${idx}`],
+          targetPath: `${name}.detail.roomIncome.${idx}`,
+          deps: [
+            `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+            `${name}.detail.avgDailyRate.${idx}`,
+          ],
           compute: ({ getValues }) => {
-            const totalSaleableArea = getValues(`${name}.totalSaleableArea.${idx}`);
-            const avgDailyRate = getValues(`${name}.avgDailyRate.${idx}`);
-            return totalSaleableArea * avgDailyRate;
+            const totalSaleableAreaDeductByOccRate = getValues(
+              `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+            );
+            const avgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx}`);
+            return toNumber(totalSaleableAreaDeductByOccRate * avgDailyRate);
           },
         },
         {
           targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.totalSaleableArea.${idx}`, `${name}.avgDailyRate.${idx}`],
+          deps: [`${name}.detail.roomIncome.${idx}`],
           compute: ({ getValues }) => {
-            const totalSaleableArea = getValues(`${name}.totalSaleableArea.${idx}`);
-            const avgDailyRate = getValues(`${name}.avgDailyRate.${idx}`);
-            return formatFixed2(totalSaleableArea * avgDailyRate);
+            const roomIncome = getValues(`${name}.detail.roomIncome.${idx}`);
+            return toNumber(roomIncome);
           },
         },
       ];
@@ -132,12 +137,19 @@ function MethodSpecifyRoomIncomePerDayTable({
   return (
     <>
       <tr>
-        <td className={clsx(rowHeaderStyle)}>Saleable Area (65 Rooms)</td>
+        <td className={clsx(rowHeaderStyle)}>
+          <span>Saleable Area</span>
+          <RHFInputCell
+            fieldName={`${name}.detail.sumSaleableArea`}
+            inputType="display"
+            accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
+          />
+        </td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.saleableArea.${idx}`}
+                fieldName={`${name}.detail.saleableArea.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -155,7 +167,7 @@ function MethodSpecifyRoomIncomePerDayTable({
               <div className="flex flex-row justify-end items-center">
                 <div className="w-16">
                   <RHFInputCell
-                    fieldName={`${name}.occupancyRate.${idx}`}
+                    fieldName={`${name}.detail.occupancyRate.${idx}`}
                     inputType="number"
                     number={{
                       decimalPlaces: 2,
@@ -176,7 +188,7 @@ function MethodSpecifyRoomIncomePerDayTable({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.totalSaleableArea.${idx}`}
+                fieldName={`${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -192,7 +204,7 @@ function MethodSpecifyRoomIncomePerDayTable({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.roomRateIncrease.${idx}`}
+                fieldName={`${name}.detail.roomRateIncrease.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -208,7 +220,7 @@ function MethodSpecifyRoomIncomePerDayTable({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.avgDailyRate.${idx}`}
+                fieldName={`${name}.detail.avgDailyRate.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -219,12 +231,14 @@ function MethodSpecifyRoomIncomePerDayTable({
         })}
       </tr>
       <tr>
-        <td className={clsx(rowHeaderStyle)}>Total Room Income</td>
+        <td className={clsx(rowHeaderStyle)}>
+          <span>Total Room Income</span>
+        </td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.roomIncome.${idx}`}
+                fieldName={`${name}.detail.roomIncome.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>

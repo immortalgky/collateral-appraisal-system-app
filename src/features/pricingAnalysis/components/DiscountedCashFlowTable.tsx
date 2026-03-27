@@ -8,6 +8,7 @@ import { useMemo, type ReactNode } from 'react';
 import { DiscountedCashFlowSectionRenderer } from '@features/pricingAnalysis/components/DiscountedCashFlowSectionRenderer.tsx';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import type { DCFSection } from '../types/dcf';
+import { ScrollableTableContainer } from './ScrollableTableContainer';
 
 export interface SectionColor {
   bg: string;
@@ -125,51 +126,53 @@ export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFl
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
-      <table className="table table-xs min-w-max border-separate border-spacing-0 overflow-clip">
-        <thead className="bg-neutral-50">
-          <tr className="bg-white">
-            <td className="flex-1">
-              <div className="flex flex-col justify-end items-end">
-                <div className="w-16">
-                  <RHFInputCell
-                    fieldName="totalNumberOfDayInYear"
-                    inputType="number"
-                    number={{
-                      decimalPlaces: 0,
-                      maxIntegerDigits: 3,
-                      maxValue: 367,
-                      allowNegative: false,
-                    }}
-                  />
+      <ScrollableTableContainer className="flex-1 min-h-0">
+        <table className="table table-xs min-w-max border-separate border-spacing-0">
+          <thead className="bg-neutral-50">
+            <tr className="bg-white">
+              <td className="flex-1">
+                <div className="flex flex-col justify-end items-end">
+                  <div className="w-16">
+                    <RHFInputCell
+                      fieldName="totalNumberOfDayInYear"
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 0,
+                        maxIntegerDigits: 3,
+                        maxValue: 367,
+                        allowNegative: false,
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </td>
-            {Array.from({ length: totalNumberOfYears }, (_, i) => (
-              <td
-                key={i}
-                className={clsx('text-right text-sm px-3 py-4 font-medium whitespace-nowrap')}
-              >
-                Year {i}
               </td>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {/* style? data? */}
-          {(sections ?? []).map((section: DCFSection, index) => {
-            return (
-              <DiscountedCashFlowSectionRenderer
-                key={section.clientId ?? `section.${index}`}
-                name={`sections.${index}`}
-                section={section}
-                color={getSectionColor(section.sectionType)}
-                totalNumberOfYears={totalNumberOfYears}
-                icon={getIconSection(section.identifier)}
-              />
-            );
-          })}
-        </tbody>
-      </table>
+              {Array.from({ length: totalNumberOfYears }, (_, i) => (
+                <td
+                  key={i}
+                  className={clsx('text-right text-sm px-3 py-4 font-medium whitespace-nowrap')}
+                >
+                  Year {i}
+                </td>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {/* style? data? */}
+            {(sections ?? []).map((section: DCFSection, index) => {
+              return (
+                <DiscountedCashFlowSectionRenderer
+                  key={section.clientId ?? `section.${index}`}
+                  name={`sections.${index}`}
+                  section={section}
+                  color={getSectionColor(section.sectionType)}
+                  totalNumberOfYears={totalNumberOfYears}
+                  icon={getIconSection(section.identifier)}
+                />
+              );
+            })}
+          </tbody>
+        </table>
+      </ScrollableTableContainer>
     </div>
   );
 }

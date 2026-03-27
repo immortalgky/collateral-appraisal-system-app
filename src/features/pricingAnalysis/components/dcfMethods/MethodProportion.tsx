@@ -1,10 +1,9 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { useEffect, useMemo, useRef } from 'react';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { useMemo } from 'react';
+import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import clsx from 'clsx';
-import { formatFixed2 } from '../../domain/calculation';
-import type { DCFAssumption, DCFCategory, DcfRefTargetId, DCFSection } from '../../types/dcf';
+import type { DcfRefTargetId, DCFSection } from '../../types/dcf';
 
 function resolveRefTarget(sections: DCFSection[], refTargetId: DcfRefTargetId | null | undefined) {
   if (!refTargetId) return null;
@@ -57,7 +56,7 @@ export function MethodProportion({
           compute: ({ getValues, ctx }) => {
             const proportionPct = getValues(`${name}.detail.proportionPct`);
             const totalAssumptionValue = ctx.refTarget?.[idx] ?? 0;
-            return formatFixed2((Number(proportionPct) / 100) * Number(totalAssumptionValue));
+            return toNumber((Number(proportionPct) / 100) * Number(totalAssumptionValue));
           },
         },
       ];

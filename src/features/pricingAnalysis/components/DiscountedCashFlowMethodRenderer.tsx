@@ -5,6 +5,9 @@ import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoo
 import { mapDCFMethodCodeToSystemType } from '../domain/mapDCFMethodCodeToSystemType';
 import { MethodSpecifiedValueWithGrowth } from './dcfMethods/MethodSpecifiedValueWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowth } from './dcfMethods/MethodSpecifiedRoomIncomewithGrowth';
+import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate';
+import { MethodSpecifiedRentalIncomePerMonth } from './dcfMethods/MethodSpecifiedRentalIncomePerMonth';
+import { MethodSpecifiedRentalIncomePerSquareMeter } from './dcfMethods/MethodSpecifiedRentalIncomePerSquareMeter';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
@@ -37,22 +40,21 @@ export function DiscountedCashFlowMethodRenderer({
     onCancelEditMode: onCancelEditMode,
   };
 
-  const watchMethodType = useWatch({ name: `${name}.methodType` });
-  const methodType = mapDCFMethodCodeToSystemType(watchMethodType);
+  const methodType = mapDCFMethodCodeToSystemType(method.methodType);
 
   switch (methodType) {
     case 'specifiedRoomIncomePerDay':
       return <MethodSpecifiedRoomIncomePerDay {...props} />;
     case 'specifiedRoomIncomeBySeasonalRates':
       return <></>;
-    case 'specifiedRoomIncomewithGrowth':
+    case 'specifiedRoomIncomeWithGrowth':
       return <MethodSpecifiedRoomIncomeWithGrowth {...props} />;
-    case 'specifiedRoomIncomewithGrowthbyOccupancyRate':
-      return <></>;
+    case 'specifiedRoomIncomeWithGrowthByOccupancyRate':
+      return <MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {...props} />;
     case 'specifiedRentalIncomePerMonth':
-      return <></>;
+      return <MethodSpecifiedRentalIncomePerMonth {...props} />;
     case 'specifiedRentalIncomePerSquareMeter':
-      return <></>;
+      return <MethodSpecifiedRentalIncomePerSquareMeter {...props} />;
     case 'roomCostBasedOnExpensesPerRoomPerDay':
       return <></>;
     case 'specifiedFoodAndBeverageExpensesPerRoomPerDay':

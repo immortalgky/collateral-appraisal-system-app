@@ -46,6 +46,10 @@ export function DiscountedCashFlowMethodModal({
     name: 'method.methodType',
   });
 
+  const [systemMethodType, setSystemMethodType] = useState<string | null>(
+    mapDCFMethodCodeToSystemType(methodType),
+  );
+
   const prevMethodTypeRef = useRef<string | undefined>(undefined);
   const skipNextMethodResetRef = useRef(false);
 
@@ -71,6 +75,8 @@ export function DiscountedCashFlowMethodModal({
     if (prevMethodTypeRef.current !== methodType) {
       prevMethodTypeRef.current = methodType;
 
+      console.log('method change!');
+
       reset({
         ...getValues(),
         method: {
@@ -78,12 +84,10 @@ export function DiscountedCashFlowMethodModal({
           detail: undefined,
         },
       });
+
+      setSystemMethodType(mapDCFMethodCodeToSystemType(methodType));
     }
   }, [methodType, reset, getValues]);
-
-  const systemMethodType = useMemo(() => {
-    return mapDCFMethodCodeToSystemType(methodType);
-  }, [methodType]);
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {

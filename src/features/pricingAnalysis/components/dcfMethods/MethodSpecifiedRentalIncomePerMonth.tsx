@@ -1,19 +1,17 @@
 import clsx from 'clsx';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { useMemo } from 'react';
-import { formatFixed2 } from '../../domain/calculation';
 
-interface MethodSpecifiedRoomIncomeWithGrowthProps {
+interface MethodSpecifiedRentalIncomePerMonthProps {
   name: string;
   expanded: boolean;
   totalNumberOfYears: number;
 }
-export function MethodSpecifiedRoomIncomeWithGrowth({
+export function MethodSpecifiedRentalIncomePerMonth({
   name = '',
   expanded,
   totalNumberOfYears,
-}: MethodSpecifiedRoomIncomeWithGrowthProps) {
+}: MethodSpecifiedRentalIncomePerMonthProps) {
   const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
     (_, idx) => {
       return [
@@ -30,16 +28,16 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
         },
         {
           targetPath: `${name}.detail.roomIncome.${idx}`,
-          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.firstYearAmt`],
+          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.sumRoomIncomePerYear`],
           compute: ({ getValues }) => {
-            const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+            const totalRoomIncomePerYear = getValues(`${name}.detail.sumRoomIncomePerYear`) ?? 0;
+            const increaseRate = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
-            if (idx === 0) return firstYearAmt;
+            if (idx === 0) return totalRoomIncomePerYear;
 
-            const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`);
-            const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
+            const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`) ?? 0;
 
-            return formatFixed2(prevRoomIncome * (1 + roomRateIncrease / 100));
+            return toNumber(prevRoomIncome * (1 + increaseRate / 100));
           },
         },
         {
@@ -57,7 +55,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   return (
     <>
       {expanded && (
-        <MethodSpecifiedRoomIncomeWithGrowthTabe
+        <MethodSpecifiedRentalIncomePerMonthTable
           name={name}
           totalNumberOfYear={totalNumberOfYears}
         />
@@ -66,16 +64,18 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   );
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthTabeProps {
+interface MethodSpecifiedRentalIncomePerMonthTableProps {
   name: string;
   totalNumberOfYear: number;
 }
-function MethodSpecifiedRoomIncomeWithGrowthTabe({
+function MethodSpecifiedRentalIncomePerMonthTable({
   name,
   totalNumberOfYear,
-}: MethodSpecifiedRoomIncomeWithGrowthTabeProps) {
-  const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300';
-  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300';
+}: MethodSpecifiedRentalIncomePerMonthTableProps) {
+  const rowHeaderStyle =
+    'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300 bg-white';
+  const rowBodyStyle =
+    'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300 bg-white';
 
   return (
     <>
@@ -99,7 +99,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
         <td className={clsx(rowHeaderStyle)}>
           <span>Room Income</span>
           <RHFInputCell
-            fieldName={`${name}.detail.saleableArea`}
+            fieldName={`${name}.detail.sumSaleableArea`}
             inputType="display"
             accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
           />
@@ -108,15 +108,13 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <div className="flex flex-row justify-end items-center">
-                <div className="w-16">
-                  <RHFInputCell
-                    fieldName={`${name}.detail.roomIncome.${idx}`}
-                    inputType="display"
-                    accessor={({ value }) => (
-                      <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                    )}
-                  />
-                </div>
+                <RHFInputCell
+                  fieldName={`${name}.detail.roomIncome.${idx}`}
+                  inputType="display"
+                  accessor={({ value }) => (
+                    <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                  )}
+                />
               </div>
             </td>
           );
