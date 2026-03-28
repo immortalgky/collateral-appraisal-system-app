@@ -145,11 +145,10 @@ const METHOD_LABELS: Record<string, string> = {
   IncomeCapitalization: 'Income Capitalization',
   DCF: 'Discounted Cash Flow',
   ResidualMethod: 'Residual Method',
+  MC_COST: 'Cost Machine',
 };
 
-const PricingBreakdownSlideOver = ({
-  pricingAnalysisId,
-}: PricingBreakdownSlideOverProps) => {
+const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideOverProps) => {
   const [expandedMethodId, setExpandedMethodId] = useState<string | null>(null);
 
   // Step 1: Fetch pricing analysis overview
@@ -227,7 +226,9 @@ const PricingBreakdownSlideOver = ({
           <MetaItem
             label="Date"
             value={new Date(data.valuationDate).toLocaleDateString('en-GB', {
-              day: '2-digit', month: 'short', year: 'numeric',
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
             })}
           />
         )}
@@ -258,9 +259,7 @@ const PricingBreakdownSlideOver = ({
       {/* Other Approaches */}
       {otherApproaches.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">
-            Other Approaches
-          </h4>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Other Approaches</h4>
           <div className="space-y-3">
             {otherApproaches.map(approach => (
               <ApproachCard
@@ -288,13 +287,28 @@ const PricingBreakdownSlideOver = ({
 
 // ==================== Sub-Components ====================
 
-const ValueCard = ({ label, value, highlight }: { label: string; value: number | null; highlight?: boolean }) => (
-  <div className={highlight
-    ? 'p-3 rounded-xl bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200'
-    : 'p-3 rounded-xl bg-gray-50 border border-gray-200'
-  }>
+const ValueCard = ({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: number | null;
+  highlight?: boolean;
+}) => (
+  <div
+    className={
+      highlight
+        ? 'p-3 rounded-xl bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200'
+        : 'p-3 rounded-xl bg-gray-50 border border-gray-200'
+    }
+  >
     <p className="text-xs text-gray-500 mb-1">{label}</p>
-    <p className={highlight ? 'text-lg font-bold text-teal-800' : 'text-sm font-semibold text-gray-900'}>
+    <p
+      className={
+        highlight ? 'text-lg font-bold text-teal-800' : 'text-sm font-semibold text-gray-900'
+      }
+    >
       {value != null ? formatNumber(value, 2) : '-'}
     </p>
   </div>
@@ -326,10 +340,13 @@ const ApproachCard = ({
   const otherMethods = approach.methods.filter(m => !m.isSelected);
 
   return (
-    <div className={selected
-      ? 'rounded-xl border-2 border-teal-200 bg-teal-50/50 overflow-hidden'
-      : 'rounded-xl border border-gray-200 bg-white overflow-hidden'
-    }>
+    <div
+      className={
+        selected
+          ? 'rounded-xl border-2 border-teal-200 bg-teal-50/50 overflow-hidden'
+          : 'rounded-xl border border-gray-200 bg-white overflow-hidden'
+      }
+    >
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {selected && <Icon name="circle-check" style="solid" className="w-4 h-4 text-teal-500" />}
@@ -400,7 +417,9 @@ const MethodSection = ({
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <span className={selected ? 'text-sm font-semibold text-gray-900' : 'text-sm text-gray-400'}>
+        <span
+          className={selected ? 'text-sm font-semibold text-gray-900' : 'text-sm text-gray-400'}
+        >
           {method.methodValue != null ? formatNumber(method.methodValue, 2) : '-'}
         </span>
         <Icon
@@ -456,9 +475,7 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
       {/* Score Table: factors × (collateral + comparables) */}
       {factors.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-            Score Table
-          </p>
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Score Table</p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
@@ -475,7 +492,10 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
                       key={c.linkId}
                       className="px-2 py-1.5 text-right font-medium text-gray-500 max-w-[80px] truncate"
                     >
-                      {surveyNameMap.get(c.marketComparableId) || c.comparableName || c.comparableCode || '-'}
+                      {surveyNameMap.get(c.marketComparableId) ||
+                        c.comparableName ||
+                        c.comparableCode ||
+                        '-'}
                     </th>
                   ))}
                 </tr>
@@ -546,28 +566,38 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500">R² Final Value</span>
             <span className="text-sm font-semibold text-gray-900">
-              {data.rsqResult.rsqFinalValue != null ? formatNumber(data.rsqResult.rsqFinalValue, 4) : '-'}
+              {data.rsqResult.rsqFinalValue != null
+                ? formatNumber(data.rsqResult.rsqFinalValue, 4)
+                : '-'}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500">Coefficient of Decision (R²)</span>
             <span className="text-xs font-medium text-gray-700">
-              {data.rsqResult.coefficientOfDecision != null ? formatNumber(data.rsqResult.coefficientOfDecision, 4) : '-'}
+              {data.rsqResult.coefficientOfDecision != null
+                ? formatNumber(data.rsqResult.coefficientOfDecision, 4)
+                : '-'}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500">Standard Error</span>
             <span className="text-xs font-medium text-gray-700">
-              {data.rsqResult.standardError != null ? formatNumber(data.rsqResult.standardError, 4) : '-'}
+              {data.rsqResult.standardError != null
+                ? formatNumber(data.rsqResult.standardError, 4)
+                : '-'}
             </span>
           </div>
           {(data.rsqResult.lowestEstimate != null || data.rsqResult.highestEstimate != null) && (
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">Estimate Range</span>
               <span className="text-xs font-medium text-gray-700">
-                {data.rsqResult.lowestEstimate != null ? formatNumber(data.rsqResult.lowestEstimate, 2) : '-'}
+                {data.rsqResult.lowestEstimate != null
+                  ? formatNumber(data.rsqResult.lowestEstimate, 2)
+                  : '-'}
                 {' — '}
-                {data.rsqResult.highestEstimate != null ? formatNumber(data.rsqResult.highestEstimate, 2) : '-'}
+                {data.rsqResult.highestEstimate != null
+                  ? formatNumber(data.rsqResult.highestEstimate, 2)
+                  : '-'}
               </span>
             </div>
           )}
@@ -587,7 +617,7 @@ const ScoreCell = ({ score }: { score: FactorScore | undefined }) => {
   return (
     <div className="inline-flex flex-col items-end gap-0.5">
       <span className="text-gray-700 font-medium">
-        {score.score != null ? score.score : score.value ?? '-'}
+        {score.score != null ? score.score : (score.value ?? '-')}
       </span>
       {score.weightedScore != null && (
         <span className="text-[10px] text-gray-400">w: {formatNumber(score.weightedScore, 2)}</span>
@@ -630,7 +660,10 @@ const CalculationCard = ({ calc }: { calc: Calculation }) => {
     });
   }
   if (calc.adjustOfferPricePct != null) {
-    rows.push({ label: 'Adj. Offer Price %', value: `${formatNumber(calc.adjustOfferPricePct, 2)}%` });
+    rows.push({
+      label: 'Adj. Offer Price %',
+      value: `${formatNumber(calc.adjustOfferPricePct, 2)}%`,
+    });
   }
   if (calc.adjustOfferPriceAmt != null) {
     rows.push({ label: 'Adj. Offer Price Amt', value: formatNumber(calc.adjustOfferPriceAmt, 2) });
@@ -651,16 +684,25 @@ const CalculationCard = ({ calc }: { calc: Calculation }) => {
     rows.push({ label: 'Adj. Period %', value: `${formatNumber(calc.adjustedPeriodPct, 2)}%` });
   }
   if (calc.cumulativeAdjPeriod != null) {
-    rows.push({ label: 'Cumulative Adj. Period', value: `${formatNumber(calc.cumulativeAdjPeriod, 2)}%` });
+    rows.push({
+      label: 'Cumulative Adj. Period',
+      value: `${formatNumber(calc.cumulativeAdjPeriod, 2)}%`,
+    });
   }
   if (calc.landValueAdjustment != null) {
     rows.push({ label: 'Land Value Adj.', value: formatNumber(calc.landValueAdjustment, 2) });
   }
   if (calc.buildingValueAdjustment != null) {
-    rows.push({ label: 'Building Value Adj.', value: formatNumber(calc.buildingValueAdjustment, 2) });
+    rows.push({
+      label: 'Building Value Adj.',
+      value: formatNumber(calc.buildingValueAdjustment, 2),
+    });
   }
   if (calc.totalFactorDiffPct != null) {
-    rows.push({ label: 'Total Factor Diff %', value: `${formatNumber(calc.totalFactorDiffPct, 2)}%` });
+    rows.push({
+      label: 'Total Factor Diff %',
+      value: `${formatNumber(calc.totalFactorDiffPct, 2)}%`,
+    });
   }
   if (calc.totalFactorDiffAmt != null) {
     rows.push({ label: 'Total Factor Diff Amt', value: formatNumber(calc.totalFactorDiffAmt, 2) });
@@ -672,16 +714,17 @@ const CalculationCard = ({ calc }: { calc: Calculation }) => {
     rows.push({ label: 'Weight', value: `${formatNumber(calc.weight, 2)}%` });
   }
   if (calc.weightedAdjustedValue != null) {
-    rows.push({ label: 'Weighted Adjusted Value', value: formatNumber(calc.weightedAdjustedValue, 2) });
+    rows.push({
+      label: 'Weighted Adjusted Value',
+      value: formatNumber(calc.weightedAdjustedValue, 2),
+    });
   }
 
   return (
     <div className="rounded-lg border border-gray-200 overflow-hidden">
       <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
         <Icon name="location-dot" style="solid" className="w-3 h-3 text-orange-400" />
-        <span className="text-xs font-semibold text-gray-700">
-          {calc.comparableName || '-'}
-        </span>
+        <span className="text-xs font-semibold text-gray-700">{calc.comparableName || '-'}</span>
       </div>
       <div className="divide-y divide-gray-50">
         {rows.map(row => (

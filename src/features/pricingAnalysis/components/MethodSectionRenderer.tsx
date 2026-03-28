@@ -6,6 +6,7 @@ import type { PricingServerData } from '../types/selection';
 import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
+import { CostMachinePanel } from './CostMachinePanel';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -31,14 +32,10 @@ export function MethodSectionRenderer({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: MethodSectionRendererProps) {
-  const groupCollateralType = deriveGroupCollateralType(
-    serverData.groupDetail?.properties ?? [],
-  );
+  const groupCollateralType = deriveGroupCollateralType(serverData.groupDetail?.properties ?? []);
 
   const filteredMarketSurveys = groupCollateralType
-    ? serverData.marketSurveyDetails.filter(
-        s => s.propertyType === groupCollateralType,
-      )
+    ? serverData.marketSurveyDetails.filter(s => s.propertyType === groupCollateralType)
     : serverData.marketSurveyDetails;
 
   const panelProps = {
@@ -66,6 +63,8 @@ export function MethodSectionRenderer({
       return <SaleAdjustmentGridPanel {...panelProps} />;
     case 'DC_MARKET':
       return <DirectComparisonPanel {...panelProps} />;
+    case 'MC_COST':
+      return <CostMachinePanel {...panelProps} />;
     default:
       return <></>;
   }

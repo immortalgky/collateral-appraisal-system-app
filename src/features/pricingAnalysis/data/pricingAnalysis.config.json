@@ -145,8 +145,8 @@
           "configurations": []
         },
         {
-          "id": "MC",
-          "methodType": "MC",
+          "id": "MC_COST",
+          "methodType": "MC_COST",
           "icon": "gears",
           "label": "Machinery Cost",
           "appraisalValue": 0,
