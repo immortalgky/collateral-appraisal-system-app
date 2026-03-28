@@ -194,7 +194,7 @@ const typeToDetailEndpoint: Record<string, string> = {
   'Land and building': 'land-and-building-detail',
   'Lease Agreement Land and building': 'land-and-building-detail',
   Condominium: 'condo-detail',
-  Machine: 'machinery-detail',
+  MAC: 'machinery-detail',
   Vehicle: 'vehicle-detail',
   Vessel: 'vessel-detail',
   L: 'land-detail',
