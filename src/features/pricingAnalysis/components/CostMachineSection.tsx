@@ -4,6 +4,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { RHFInputCell } from './table/RHFInputCell';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { ParameterDisplay } from '@/shared/components';
+import { useEffect } from 'react';
 
 export interface MachineryItem {
   quantity: number | null;
@@ -49,6 +50,8 @@ const costMachinePath = {
 const DISABLED_CONDITION_CODE = '03';
 
 function useRowComputedValues(rowIndex: number) {
+  const { control } = useFormContext();
+
   const currentYear = new Date().getFullYear() + 543; // พ.ศ.
 
   const conditionUse = useWatch({ name: costMachinePath.conditionUse(rowIndex) }) as string;
@@ -112,6 +115,11 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
     marketDemand,
     isDisabled,
   } = useRowComputedValues(rowIndex);
+
+  const { setValue } = useFormContext();
+  useEffect(() => {
+    setValue(costMachinePath.fmv(rowIndex), fmv, { shouldDirty: false });
+  }, [fmv, rowIndex, setValue]);
 
   const machine: MachineryItem = getValues(`machineryCosts.${rowIndex}.machine`) ?? {};
   const inputDisabled = isDisabled || isReadOnly;
@@ -235,6 +243,12 @@ export function CostMachineSection({
   const isReadOnly = usePageReadOnly();
   const { control } = useFormContext();
   const { fields } = useFieldArray({ control, name: costMachinePath.rows() });
+  const allRows =
+    (useWatch({ control, name: costMachinePath.rows() }) as MachineryRowFormValue[]) ?? [];
+
+  const totalQuantity = allRows.reduce((sum, row) => sum + (row?.machine?.quantity ?? 0), 0);
+  const totalRcn = allRows.reduce((sum, row) => sum + (row?.rcn ?? 0), 0);
+  const totalFmv = allRows.reduce((sum, row) => sum + (row?.fmv ?? 0), 0);
   const th =
     'bg-gray-50 border-b border-r border-gray-300 text-xs font-medium text-gray-700 px-2 py-2 whitespace-nowrap';
   const thCenter = clsx(th, 'text-center');
@@ -342,11 +356,21 @@ export function CostMachineSection({
               </tr>
             )}
             <tr>
-              <td colSpan={1} className={clsx(thCenter, 'sticky left-0 z-30 min-w-32')}>
+              <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
                 Total
               </td>
-              <td colSpan={1} className={clsx(thCenter, 'sticky left-[78px] z-30 min-w-32')}></td>
-              <td colSpan={16} className={clsx(thCenter, 'min-w-32')}></td>
+              <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
+                {totalQuantity.toLocaleString()}
+              </td>
+              <td colSpan={5} className={clsx(thCenter, 'min-w-32')}></td>
+              <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
+                {totalRcn.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </td>
+              <td colSpan={7} className={clsx(thCenter, 'min-w-32')}></td>
+              <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
+                {totalFmv.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </td>
+              <td colSpan={2} className={clsx(thCenter, 'min-w-32')}></td>
             </tr>
           </tbody>
         </table>
