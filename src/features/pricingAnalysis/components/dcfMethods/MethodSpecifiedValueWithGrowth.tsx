@@ -42,7 +42,6 @@ export function MethodSpecifiedValueWithGrowth({
 
             if (idx === 0) return firstYearAmt;
 
-            console.log(idx);
             return formatFixed2(Number(prevYearValue) * (1 + Number(increaseRate) / 100));
           },
         },

@@ -42,7 +42,7 @@ export const assumptionParams = [
   { code: 'E22', description: 'Gross Operating Profit (GOP)' },
 
   // others
-  { code: 'M00', description: 'Miscellaneous' },
+  { code: 'M99', description: 'Miscellaneous' },
 ];
 
 export const mappingAssumptionMethodParams = [

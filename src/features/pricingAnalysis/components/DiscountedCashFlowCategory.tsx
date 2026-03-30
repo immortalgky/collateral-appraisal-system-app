@@ -31,12 +31,9 @@ export function DiscountedCashFlowCategory({
   totalNumberOfYears,
   color,
 }: DiscountedCashFlowCategoryProps) {
-  const { getValues, setValue, control } = useFormContext();
+  const { getValues, setValue } = useFormContext();
 
   const { append, remove, fields } = useFieldArray({ name: `${name}.assumptions` });
-
-  const watchedAssumptions: DCFAssumption[] =
-    useWatch({ control, name: `${name}.assumptions` }) ?? [];
 
   const [isExpanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
@@ -139,13 +136,13 @@ export function DiscountedCashFlowCategory({
 
       {isExpanded && (
         <>
-          {fields.map((field, idx) => {
-            const assumption = watchedAssumptions[idx];
+          {category.assumptions.map((field, idx) => {
+            const assumption = getValues(`${name}.assumptions.${idx}`);
 
             if (!assumption) return null;
 
             return (
-              <Fragment key={field.id}>
+              <Fragment key={field.clientId}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
                   property={property}

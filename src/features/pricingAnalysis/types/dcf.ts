@@ -1,5 +1,4 @@
 type Identifier = 'positive' | 'negative' | 'empty';
-type MethodType = 'proportion' | 'specifyValueWithGrowth' | 'specifyRoomIncomePerDay';
 type SectionType = 'income' | 'expenses' | 'summary';
 
 interface MethodSpecifiedRoomIncomePerDay {
@@ -179,9 +178,15 @@ interface MethodProportionOfTheNewReplacementCost {
   totalMethodValues: number[];
 }
 
+type RefTarget = {
+  kind: 'section' | 'category' | 'assumption';
+  clientId?: string | null;
+  dbId?: number | null;
+};
+
 interface MethodProportion {
   proportionPct: number;
-  refTargetId: string | null;
+  refTarget: RefTarget;
 }
 
 interface MethodSpecifiedValueWithGrowth {
@@ -192,79 +197,101 @@ interface MethodSpecifiedValueWithGrowth {
 
 interface MethodGrossOperatingProfit {}
 
-interface MethodProportionWrapper {
-  id?: string;
-  methodType: 'proportion';
-  totalMethodValues: number[];
-  detail?: MethodProportion;
-}
-interface MethodSpecifiedValueWithGrowthWrapper {
-  id?: string;
-  methodType: 'specifiedValueWithGrowth';
-  totalMethodValues: number[];
-  detail?: MethodSpecifiedValueWithGrowth;
-}
 interface MethodSpecifiedRoomIncomePerDayWrapper {
   id?: string;
-  methodType: 'specifiedRoomIncomePerDay';
+  methodType: '01';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRoomIncomePerDay;
 }
 
 interface MethodSpecifiedRoomIncomeWithGrowthWrapper {
   id?: string;
-  methodType: 'specifiedRoomIncomeWithGrowth';
+  methodType: '03';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRoomIncomeWithGrowth;
 }
 
 interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper {
   id?: string;
-  methodType: 'specifiedRoomIncomeWithGrowthByOccupancyRate';
+  methodType: '04';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate;
 }
 
 interface MethodSpecifiedRentalIncomePerMonthWrapper {
   id?: string;
-  methodType: 'specifiedRentalIncomePerMonth';
+  methodType: '05';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRentalIncomePerMonth;
 }
 
 interface MethodSpecifiedRentalIncomePerSquareMeterWrapper {
   id?: string;
-  methodType: 'specifiedRentalIncomePerSquareMeter';
+  methodType: '06';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRentalIncomePerSquareMeter;
 }
 
 interface MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper {
   id?: string;
-  methodType: 'roomCostBasedOnExpensesPerRoomPerDay';
+  methodType: '07';
   totalMethodValues: number[];
   detail?: MethodRoomCostBasedOnExpensesPerRoomPerDay;
 }
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayWrapper {
   id?: string;
-  methodType: 'specifiedFoodAndBeverageExpensesPerRoomPerDay';
+  methodType: '08';
   totalMethodValues: number[];
   detail?: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay;
 }
 
 interface MethodPositionBasedSalaryCalculationWrapper {
   id?: string;
-  methodType: 'positionBasedSalaryCalculation';
+  methodType: '09';
   totalMethodValues: number[];
   detail?: MethodPositionBasedSalaryCalculation;
 }
 
+interface MethodParameterBasedOnTierOfPropertyValueWrapper {
+  id?: string;
+  methodType: '10';
+  totalMethodValues: number[];
+  detail?: MethodParameterBasedOnTierOfPropertyValue;
+}
+
+interface MethodSpecifiedEnergyCostIndexWrapper {
+  id?: string;
+  methodType: '11';
+  totalMethodValues: number[];
+  detail?: MethodSpecifiedEnergyCostIndex;
+}
+
 interface MethodProportionOfTheNewReplacementCostWrapper {
   id?: string;
-  methodType: 'proportionOfTheNewReplacementCost';
+  methodType: '12';
   totalMethodValues: number[];
   detail?: MethodProportionOfTheNewReplacementCost;
+}
+
+interface MethodProportionWrapper {
+  id?: string;
+  methodType: '13';
+  totalMethodValues: number[];
+  detail?: MethodProportion;
+}
+interface MethodSpecifiedValueWithGrowthWrapper {
+  id?: string;
+  methodType: '14';
+  totalMethodValues: number[];
+  detail?: MethodSpecifiedValueWithGrowth;
+}
+
+interface MethodGrossOperatingProfitWrapper {
+  id?: string;
+  methodType: '15';
+  totalMethodValues: number[];
+  detail?: MethodGrossOperatingProfit;
 }
 
 export type DCFMethod =
@@ -276,17 +303,20 @@ export type DCFMethod =
   | MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper
   | MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayWrapper
   | MethodPositionBasedSalaryCalculationWrapper
+  | MethodParameterBasedOnTierOfPropertyValueWrapper
+  | MethodSpecifiedEnergyCostIndexWrapper
   | MethodProportionOfTheNewReplacementCostWrapper
   | MethodProportionWrapper
-  | MethodSpecifiedValueWithGrowthWrapper;
+  | MethodSpecifiedValueWithGrowthWrapper
+  | MethodGrossOperatingProfitWrapper;
 
 interface Base {
-  clientId: string;
-  dbId?: string | null;
+  clientId: string; // on runtime generated id for client side usage, not saved in DB
+  dbId?: string | null; // id from DB, null when the data is note yet saved in DB. system will mainly use dbId to identify the data and clientId
 }
 
 export interface DCFAssumption extends Base {
-  assumptionType: string; // maybe don't need
+  assumptionType: string; // unique except miscellaneous
   assumptionName: string;
   identifier: Identifier;
   displaySeq: number;
@@ -361,14 +391,7 @@ export interface DCFTemplateType {
         assumptionName: string;
         identifier: Identifier;
         displaySeq: number;
-        method: {
-          methodType: string;
-          detail:
-            | MethodProportion
-            | MethodSpecifiedValueWithGrowth
-            | MethodSpecifiedRoomIncomePerDay;
-          // default value
-        };
+        method: DCFMethod;
       }[];
     }[];
   }[];

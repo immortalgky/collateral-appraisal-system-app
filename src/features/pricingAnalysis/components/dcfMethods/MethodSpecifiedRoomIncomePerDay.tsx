@@ -118,11 +118,7 @@ export function MethodSpecifiedRoomIncomePerDay({
   return (
     <>
       {expanded && (
-        <MethodSpecifyRoomIncomePerDayTable
-          name={name}
-          totalNumberOfYear={totalNumberOfYears}
-          data-total-saleable-area={getValues(`${name}.detail.totalSaleableAreaDeductByOccRate`)}
-        />
+        <MethodSpecifyRoomIncomePerDayTable name={name} totalNumberOfYear={totalNumberOfYears} />
       )}
     </>
   );

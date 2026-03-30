@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { DCFForm, type DCFFormType } from '../schemas/dcfForm';
-import { dcfHotelTemplate, dcfTemplateList } from '../data/dcfMockData';
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
@@ -11,6 +10,7 @@ import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { getNewId } from '../domain/getNewId';
+import { dcfHotelTemplate, dcfTemplateList } from '../data/dcfTemplates';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {

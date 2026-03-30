@@ -46,8 +46,13 @@ export function DiscountedCashFlowMethodModal({
     name: 'method.methodType',
   });
 
+  const assumptionType = useWatch({
+    control,
+    name: 'assumptionType',
+  });
+
   const [systemMethodType, setSystemMethodType] = useState<string | null>(
-    mapDCFMethodCodeToSystemType(methodType),
+    mapDCFMethodCodeToSystemType(initialData.method.methodType),
   );
 
   const prevMethodTypeRef = useRef<string | undefined>(undefined);
@@ -130,35 +135,46 @@ export function DiscountedCashFlowMethodModal({
           <div className="flex flex-col gap-2 mb-4">
             <div className="flex flex-row gap-1.5">
               <span className="w-44">Category</span>
-              <RHFInputCell
-                fieldName="targetCategoryClientId"
-                inputType="select"
-                options={categoryOptions}
-              />
+              <div className="w-56">
+                <RHFInputCell
+                  fieldName="targetCategoryClientId"
+                  inputType="select"
+                  options={categoryOptions}
+                />
+              </div>
             </div>
 
-            <div className="flex flex-row gap-1.5">
+            <div className="flex flex-row items-center gap-1.5">
               <span className="w-44">Assumption</span>
-              <RHFInputCell
-                fieldName="assumptionType"
-                inputType="select"
-                options={assumptionParams.map(a => ({
-                  value: a.code,
-                  label: a.description,
-                }))}
-              />
+              <div className="w-56">
+                <RHFInputCell
+                  fieldName="assumptionType"
+                  inputType="select"
+                  options={assumptionParams.map(a => ({
+                    value: a.code,
+                    label: a.description,
+                  }))}
+                />
+              </div>
+              {assumptionType === 'M99' && (
+                <div className="flex">
+                  <RHFInputCell fieldName="assumptionName" inputType="text" />
+                </div>
+              )}
             </div>
 
             <div className="flex flex-row gap-1.5">
               <span className="w-44">Method</span>
-              <RHFInputCell
-                fieldName="method.methodType"
-                inputType="select"
-                options={methodParams.map(m => ({
-                  value: m.code,
-                  label: m.description,
-                }))}
-              />
+              <div className="w-56">
+                <RHFInputCell
+                  fieldName="method.methodType"
+                  inputType="select"
+                  options={methodParams.map(m => ({
+                    value: m.code,
+                    label: m.description,
+                  }))}
+                />
+              </div>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
+import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps {
   name: string;
@@ -32,7 +33,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
           compute: ({ getValues }) => {
             const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
             const totalNumberOfSaleableArea =
-              document.querySelector('[data-total-saleable-area]') ?? 0;
+              getDCFFilteredAssumptions(getValues)
 
             if (idx === 0) return firstYearAmt * totalNumberOfSaleableArea;
 

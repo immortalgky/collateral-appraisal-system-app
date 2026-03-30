@@ -1,12 +1,7 @@
 import clsx from 'clsx';
-import type { DCFSectionFormType } from '../schemas/dcfForm';
-import { DiscountedCashFlowCategory } from './DiscountedCashFlowCategory';
-import { Icon } from '@/shared/components';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
-import { useMemo, type ReactNode } from 'react';
 import { DiscountedCashFlowSectionRenderer } from '@features/pricingAnalysis/components/DiscountedCashFlowSectionRenderer.tsx';
-import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import type { DCFSection } from '../types/dcf';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 
@@ -96,7 +91,7 @@ export function DiscountedCashFlowTable({
         <table className="table table-xs min-w-max border-separate border-spacing-0">
           <thead className="bg-neutral-50">
             <tr className="bg-white">
-              <td className="flex-1">
+              <td className="flex-1 text-sm px-1.5 py-1.5 font-medium whitespace-nowrap border-b border-gray-300">
                 <div className="flex flex-col justify-end items-end">
                   <div className="w-16">
                     <RHFInputCell
@@ -115,7 +110,9 @@ export function DiscountedCashFlowTable({
               {Array.from({ length: totalNumberOfYears }, (_, i) => (
                 <td
                   key={i}
-                  className={clsx('text-right text-sm px-3 py-4 font-medium whitespace-nowrap')}
+                  className={clsx(
+                    'text-right text-sm px-1.5 py-1.5 font-medium whitespace-nowrap border-b border-gray-300',
+                  )}
                 >
                   Year {i}
                 </td>

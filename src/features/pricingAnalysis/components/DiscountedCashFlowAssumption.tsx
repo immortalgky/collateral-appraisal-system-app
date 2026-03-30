@@ -72,12 +72,18 @@ export function DiscountedCashFlowAssumption({
             <RHFInputCell
               fieldName={`${name}.assumptionType`}
               inputType="display"
-              accessor={({ value }) => (
+              accessor={({ value, getValues }) => (
                 <span
                   className="truncate"
-                  title={assumptionParams.find(p => p.code === value)?.description ?? ''}
+                  title={
+                    getValues(`${name}.assumptionName`)
+                      ? getValues(`${name}.assumptionName`)
+                      : assumptionParams.find(p => p.code === value)?.description
+                  }
                 >
-                  {assumptionParams.find(p => p.code === value)?.description ?? ''}
+                  {getValues(`${name}.assumptionName`)
+                    ? getValues(`${name}.assumptionName`)
+                    : assumptionParams.find(p => p.code === value)?.description}
                 </span>
               )}
             />

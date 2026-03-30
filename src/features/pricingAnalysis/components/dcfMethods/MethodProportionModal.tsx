@@ -1,6 +1,7 @@
 import { RHFInputCell } from '../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../types/dcf';
+import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 
 export function MethodProportionModal({
   name,
@@ -20,7 +21,7 @@ export function MethodProportionModal({
   const currAssumptionType = getOuterFormValues(name.split('.method'))?.[0];
   const assumptions = getDCFFilteredAssumptions(
     getOuterFormValues,
-    a => currAssumptionType !== a.assumptionName,
+    a => currAssumptionType !== a.assumptionType,
   );
 
   const options = [
@@ -34,7 +35,7 @@ export function MethodProportionModal({
     })),
     ...assumptions.map(a => ({
       value: `assumption:${a.assumption.clientId}`,
-      label: `${a.section.sectionName} - ${a.assumption.assumptionName}`,
+      label: `${a.section.sectionName} - ${a.assumption.assumptionName ? a.assumption.assumptionName : mapDCFMethodCodeToSystemType(a.assumption.assumptionType)}`,
     })),
   ];
 
