@@ -6,7 +6,8 @@ import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import { SidebarLabel, InfoRow, PersonRow } from '@/shared/components/rightmenu';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { useAppraisalContext, useAppraisalReadOnly } from '../context/AppraisalContext';
+import { useAppraisalContext } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MapPreview } from './MapPreview';
 import { useAuthStore } from '@/features/auth/store';
 import { useAddressStore } from '@/shared/store';
@@ -17,7 +18,7 @@ import {
   useGetComments,
   useGetRequestById,
 } from '@/features/request/api';
-import { useGetAppointments } from '../api/appointment';
+import { useGetAppointment } from '../api/appointment';
 import { useGetAppraisalFees } from '../api/fee';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
@@ -36,24 +37,15 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
 
   const queryClient = useQueryClient();
   const { appraisal, isLoading } = useAppraisalContext();
-  const { isTerminalStatus: commentsReadOnly } = useAppraisalReadOnly('Request Information');
+  const commentsReadOnly = usePageReadOnly();
   const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
   const currentUser = useAuthStore(state => state.user);
 
   // Fetch related data
   const { data: requestData } = useGetRequestById(requestId);
-  const { data: appointments = [] } = useGetAppointments(appraisalId ?? '');
+  const { data: appointment = null } = useGetAppointment(appraisalId ?? '');
   const { data: fees = [] } = useGetAppraisalFees(appraisalId ?? '');
-
-  // Derive latest appointment (most recent by appointmentDateTime)
-  const latestAppointment = useMemo(() => {
-    if (appointments.length === 0) return null;
-    return [...appointments].sort(
-      (a, b) =>
-        new Date(b.appointmentDateTime).getTime() - new Date(a.appointmentDateTime).getTime(),
-    )[0];
-  }, [appointments]);
 
   // Derive fee summary (first fee record)
   const feeSummary = useMemo(() => {
@@ -377,26 +369,26 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="calendar"
                   label="Date/Time"
-                  value={formatDateTime(latestAppointment?.appointmentDateTime)}
-                  muted={!latestAppointment?.appointmentDateTime}
+                  value={formatDateTime(appointment?.appointmentDateTime)}
+                  muted={!appointment?.appointmentDateTime}
                 />
                 <InfoRow
                   icon="location-dot"
                   label="Location"
-                  value={latestAppointment?.locationDetail || 'Not set'}
-                  muted={!latestAppointment?.locationDetail}
+                  value={appointment?.locationDetail || 'Not set'}
+                  muted={!appointment?.locationDetail}
                 />
                 <InfoRow
                   icon="circle-check"
                   label="Status"
-                  value={latestAppointment?.status || 'Not set'}
-                  muted={!latestAppointment?.status}
+                  value={appointment?.status || 'Not set'}
+                  muted={!appointment?.status}
                 />
                 <InfoRow
                   icon="user"
                   label="Contact"
-                  value={latestAppointment?.contactPerson || 'Not set'}
-                  muted={!latestAppointment?.contactPerson}
+                  value={appointment?.contactPerson || 'Not set'}
+                  muted={!appointment?.contactPerson}
                 />
               </div>
             </div>
@@ -443,9 +435,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
               <SidebarLabel>Property Location</SidebarLabel>
               <div className="mt-2">
                 <MapPreview
-                  latitude={latestAppointment?.latitude ?? null}
-                  longitude={latestAppointment?.longitude ?? null}
-                  address={latestAppointment?.locationDetail ?? null}
+                  latitude={appointment?.latitude ?? null}
+                  longitude={appointment?.longitude ?? null}
+                  address={appointment?.locationDetail ?? null}
                 />
               </div>
             </div>

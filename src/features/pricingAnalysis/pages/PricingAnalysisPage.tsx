@@ -2,6 +2,7 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
 import {
   DispatchCtx,
@@ -18,6 +19,7 @@ import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectio
 import { useCalculationFlow } from '@features/pricingAnalysis/hooks/useCalculationFlow';
 import { createInitialState } from '@features/pricingAnalysis/store/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import { useSetFinalValue } from '@features/pricingAnalysis/api';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
@@ -61,7 +63,9 @@ function PricingAnalysisPage() {
   }>();
 
   const navigate = useNavigate();
+  const basePath = useBasePath();
   const queryClient = useQueryClient();
+  const isReadOnly = usePageReadOnly();
 
   const [createState, setCreateState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [createError, setCreateError] = useState<string>('');
@@ -69,6 +73,7 @@ function PricingAnalysisPage() {
 
   // Auto-create pricing analysis when navigating to "new" route
   useEffect(() => {
+    if (isReadOnly) return;
     if (pricingAnalysisId || !groupId) return;
     // Prevent duplicate call from React 18 Strict Mode double-mount
     if (creatingRef.current) return;
@@ -91,7 +96,7 @@ function PricingAnalysisPage() {
             queryKey: propertyGroupKeys.detail(appraisalId, groupId),
           });
         }
-        navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`, {
+        navigate(`${basePath}/groups/${groupId}/pricing-analysis/${newId}`, {
           replace: true,
         });
       })
@@ -100,7 +105,17 @@ function PricingAnalysisPage() {
         setCreateState('error');
         setCreateError(err?.message ?? 'An unexpected error occurred.');
       });
-  }, [pricingAnalysisId, groupId, appraisalId, navigate, queryClient]);
+  }, [isReadOnly, pricingAnalysisId, groupId, appraisalId, navigate, queryClient]);
+
+  // Readonly mode with no pricing analysis — show empty state
+  if (isReadOnly && !pricingAnalysisId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3">
+        <Icon name="eye" style="solid" className="text-2xl text-gray-400" />
+        <p className="text-sm text-gray-500 font-medium">No pricing analysis available</p>
+      </div>
+    );
+  }
 
   // Show error with retry if auto-create failed
   if (!pricingAnalysisId && createState === 'error') {

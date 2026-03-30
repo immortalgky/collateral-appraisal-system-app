@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import { PropertyCardContent } from './PropertyCardContent';
@@ -35,7 +36,7 @@ interface PropertyCardProps {
 
 export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: PropertyCardProps) => {
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const basePath = usePropertyBasePath();
 
   const sortableData = useMemo(
@@ -75,25 +76,26 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
     <div
       ref={setNodeRef}
       style={style}
+      data-property-id={property.id}
       onContextMenu={e => onContextMenu(e, property, groupId)}
-      className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:border-gray-300 hover:scale-[1.01] focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200 flex"
+      className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-150 flex"
     >
       {/* Drag Handle */}
       <div
         ref={setActivatorNodeRef}
         {...attributes}
         {...listeners}
-        className="flex items-center justify-center w-10 bg-gray-50 hover:bg-gray-100 cursor-grab active:cursor-grabbing border-r border-gray-200 flex-shrink-0"
+        className="flex items-center justify-center w-8 bg-gray-50 hover:bg-gray-100 cursor-grab active:cursor-grabbing border-r border-gray-200 flex-shrink-0"
         style={{ touchAction: 'none' }}
         title="Drag to reorder"
       >
-        <Icon name="grip-vertical" className="text-gray-400" />
+        <Icon name="grip-vertical" className="text-gray-400 text-sm" />
       </div>
 
       <PropertyCardContent
         property={property}
         onClick={handleCardClick}
-        size="md"
+        size="compact"
       />
     </div>
   );

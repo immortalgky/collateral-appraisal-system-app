@@ -4,6 +4,7 @@ import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
@@ -22,6 +23,7 @@ import {
 } from '../../api/photo';
 import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const LAYOUT_OPTIONS = [
   { value: 1 as const, label: '1', icon: 'square' },
@@ -220,9 +222,10 @@ const UploadPlaceholder = ({
   </div>
 );
 
-export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
+export const PhotosTab = () => {
+  const readOnly = usePageReadOnly();
   // Get appraisalId from URL params
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
 
   // API hooks for topics
   const { data: topicsData, isLoading: isLoadingTopics } = useGetPhotoTopics(appraisalId);
@@ -427,9 +430,9 @@ export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
         return;
       }
 
-      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+      const imageFiles = Array.from(files).filter(file => /\.(jpg|jpeg|png)$/i.test(file.name));
       if (imageFiles.length === 0) {
-        toast.error('Please select image files only');
+        toast.error('Please select supported image files only (JPG, JPEG, PNG)');
         return;
       }
 
@@ -765,7 +768,7 @@ export const PhotosTab = ({ readOnly }: { readOnly?: boolean }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png"
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';

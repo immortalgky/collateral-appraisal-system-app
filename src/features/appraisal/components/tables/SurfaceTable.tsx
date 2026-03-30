@@ -47,9 +47,12 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
     setIsModalOpen(true);
   }, []);
 
-  const handleRowDoubleClick = useCallback((index: number) => {
-    handleEditClick(index);
-  }, [handleEditClick]);
+  const handleRowDoubleClick = useCallback(
+    (index: number) => {
+      handleEditClick(index);
+    },
+    [handleEditClick],
+  );
 
   const handleDeleteClick = useCallback(
     (index: number) => {
@@ -91,6 +94,11 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
     return `Floor ${from} - ${to}`;
   };
 
+  const formatFloorOther = (group: string, code: string | null, valueOther: string | null) => {
+    if (code === '99') return `${valueOther}`;
+    return <ParameterDisplay group={group} code={code} />;
+  };
+
   return (
     <div className="col-span-12">
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
@@ -100,18 +108,12 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
               <th className="text-white text-sm font-medium py-3 px-4 text-left rounded-tl-lg w-12">
                 #
               </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Range
-              </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Type
-              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Range</th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Type</th>
               <th className="text-white text-sm font-medium py-3 px-4 text-left">
                 Floor Structure
               </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Surface
-              </th>
+              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Surface</th>
               <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">
                 Actions
               </th>
@@ -156,10 +158,18 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                     <ParameterDisplay group="FloorType" code={row.floorType} />
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    <ParameterDisplay group="FloorStructureType" code={row.floorStructureType} />
+                    {formatFloorOther(
+                      'floorStructure',
+                      row.floorStructureType,
+                      row.floorStructureTypeOther,
+                    )}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900">
-                    <ParameterDisplay group="FloorSurfaceType" code={row.floorSurfaceType} />
+                    {formatFloorOther(
+                      'floorSurface',
+                      row.floorSurfaceType,
+                      row.floorSurfaceTypeOther,
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-1 justify-end">

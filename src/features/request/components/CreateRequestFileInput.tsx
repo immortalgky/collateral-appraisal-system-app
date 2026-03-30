@@ -7,7 +7,7 @@ import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import UploadArea from '@/shared/components/inputs/UploadArea';
 import { type UploadDocumentResponse, useUploadDocument } from '../api';
 import FileAssignmentModal from './FileAssignmentModal';
-import { getDocumentCategory, getDocumentTypeInfo, type UploadedDocument } from '../types/document';
+import { getDocumentCategory, type UploadedDocument } from '../types/document';
 import { useAuthStore } from '@/features/auth/store';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -35,8 +35,9 @@ const mergeDocumentsWithPlaceholders = (
       result[placeholderIndex] = {
         ...result[placeholderIndex],
         ...newDoc,
-        // Preserve isRequired from the placeholder
+        // Preserve isRequired and displayName from the placeholder
         isRequired: result[placeholderIndex].isRequired,
+        displayName: result[placeholderIndex].displayName,
       };
     } else {
       // No placeholder found, append as new document
@@ -216,7 +217,6 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       const titleDocsMap: Record<number, UploadedDocument[]> = {};
 
       uploadResults.forEach(({ assignment, documentId, fileName }) => {
-        const docTypeInfo = getDocumentTypeInfo(assignment.docType);
         const newDoc: UploadedDocument = {
           id: null,
           titleId: null,
@@ -229,7 +229,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
           documentDescription: assignment.comment || null,
           filePath: null,
           createdWorkstation: null,
-          isRequired: docTypeInfo?.isRequired || false,
+          isRequired: false,
           uploadedBy: currentUser?.username || null,
           uploadedByName: currentUser?.name || null,
           file: assignment.file,

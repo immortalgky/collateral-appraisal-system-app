@@ -1,6 +1,7 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import clsx from 'clsx';
 import { getParameterDescription } from '@shared/utils/parameterUtils';
@@ -18,7 +19,6 @@ import type {
   MarketComparableDetailType,
   TemplateDetailType,
 } from '../schemas';
-import type { ComparativeFactorFormType, WQSScoreFormType } from '../schemas/wqsForm';
 import {
   type DerivedFieldRule,
   useDerivedFields,
@@ -30,6 +30,7 @@ import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { MarketComparableDetailModal } from './MarketComparableDetailModal';
 import { isScoreReasonable } from '@/features/pricingAnalysis/domain/checkWQSReasonableScore';
+import type { ComparativeFactor, WQSScore } from '../types/wqs';
 
 interface WQSScoringSectionProps {
   comparativeSurveys: MarketComparableDataType[];
@@ -44,6 +45,7 @@ export function WQSScoringSection({
   template,
   isLoading = true,
 }: WQSScoringSectionProps) {
+  const isReadOnly = usePageReadOnly();
   const {
     comparativeFactors: comparativeFactorsPath,
 
@@ -103,7 +105,7 @@ export function WQSScoringSection({
     (useWatch({
       control,
       name: scoringFactorsPath(),
-    }) as WQSScoreFormType[]) ?? [];
+    }) as WQSScore[]) ?? [];
 
   const usedFactorCodes = useMemo(
     () => watchedScoringFactors.map(r => r?.factorCode).filter(Boolean),
@@ -111,12 +113,12 @@ export function WQSScoringSection({
   );
 
   const comparativeFactors =
-    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactorFormType[]) ?? [];
+    (useWatch({ name: comparativeFactorsPath() }) as ComparativeFactor[]) ?? [];
 
   const handleAddRow = () => {
     appendScoringFactor({
       factorId: '',
-      factorCode: '',
+      factorCode: null,
       weight: 0,
       intensity: 0,
       weightedIntensity: 0,
@@ -452,13 +454,15 @@ export function WQSScoringSection({
             {/* add new row */}
             <tr>
               <td className={clsx('bg-white border-r z-19', leftColumnBody)}>
-                <button
-                  type="button"
-                  onClick={() => handleAddRow()}
-                  className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                >
-                  + Add More Factors
-                </button>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() => handleAddRow()}
+                    className="px-4 py-2 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                  >
+                    + Add More Factors
+                  </button>
+                )}
               </td>
               <td
                 className={clsx(

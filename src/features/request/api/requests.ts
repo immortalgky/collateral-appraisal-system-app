@@ -34,6 +34,35 @@ export type CreateDraftRequestResponseType = z.infer<typeof CreateDraftRequestRe
 export type UpdateDraftRequestRequestType = z.infer<typeof UpdateDraftRequestRequest>;
 export type UpdateDraftRequestResponseType = z.infer<typeof UpdateDraftRequestResponse>;
 
+/**
+ * Strips empty document placeholders (no file attached) from request payloads.
+ * The backend generates the required document checklist dynamically,
+ * so empty placeholders don't need to be persisted.
+ */
+const stripEmptyDocuments = <T extends Record<string, any>>(request: T): T => {
+  const result = { ...request };
+
+  if (Array.isArray(result.documents)) {
+    result.documents = result.documents.filter(
+      (doc: any) => doc.fileName || doc.documentId,
+    );
+  }
+
+  if (Array.isArray(result.titles)) {
+    result.titles = result.titles.map((title: any) => {
+      if (!Array.isArray(title?.documents)) return title;
+      return {
+        ...title,
+        documents: title.documents.filter(
+          (doc: any) => doc.fileName || doc.documentId,
+        ),
+      };
+    });
+  }
+
+  return result;
+};
+
 // Query params for request listing
 export interface GetRequestsParams {
   pageNumber?: number;
@@ -50,13 +79,12 @@ export const useCreateRequest = () => {
 
   return useMutation({
     mutationFn: async (request: CreateRequestRequestType): Promise<CreateRequestResponseType> => {
-      console.log(request);
-      const { data } = await axios.post('/requests', request);
+      const { data } = await axios.post('/requests', stripEmptyDocuments(request));
       return data;
     },
     onSuccess: data => {
       console.log(data);
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
     },
     onError: (error: any) => {
       console.log(error);
@@ -65,13 +93,13 @@ export const useCreateRequest = () => {
 };
 
 /**
- * Hook for fetching paginated list of requests
- * GET /requests
+ * Hook for fetching paginated list of requests for the current user
+ * GET /requests/me
  */
 export const useGetRequests = (params: GetRequestsParams = {}) => {
   // Build a clean query key without undefined values for proper cache invalidation
   const queryKey = [
-    'requests',
+    'my-requests',
     {
       pageNumber: params.pageNumber ?? 0,
       pageSize: params.pageSize ?? 10,
@@ -86,7 +114,7 @@ export const useGetRequests = (params: GetRequestsParams = {}) => {
   return useQuery({
     queryKey,
     queryFn: async (): Promise<GetRequestResultType> => {
-      const { data } = await axios.get('/requests', {
+      const { data } = await axios.get('/requests/me', {
         params: {
           PageNumber: params.pageNumber ?? 0,
           PageSize: params.pageSize ?? 10,
@@ -144,12 +172,12 @@ export const useUpdateRequest = () => {
       id: string;
       request: UpdateRequestRequestType;
     }): Promise<UpdateRequestResponseType> => {
-      const { data } = await axios.put(`/requests/${id}`, request);
+      const { data } = await axios.put(`/requests/${id}`, stripEmptyDocuments(request));
       return data;
     },
     onSuccess: (data, variables) => {
-      console.log('Request updated successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
     onError: (error: any) => {
@@ -171,7 +199,7 @@ export const useDeleteRequest = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
     },
   });
 };
@@ -185,11 +213,11 @@ export const useCreateDraftRequest = () => {
 
   return useMutation({
     mutationFn: async (request: CreateDraftRequestRequestType): Promise<CreateDraftRequestResponseType> => {
-      const { data } = await axios.post('/requests/draft', request);
+      const { data } = await axios.post('/requests/draft', stripEmptyDocuments(request));
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
     },
   });
 };
@@ -209,11 +237,11 @@ export const useUpdateDraftRequest = () => {
       id: string;
       request: UpdateDraftRequestRequestType;
     }): Promise<UpdateDraftRequestResponseType> => {
-      const { data } = await axios.put(`/requests/${id}/draft`, request);
+      const { data } = await axios.put(`/requests/${id}/draft`, stripEmptyDocuments(request));
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
   });
@@ -232,7 +260,7 @@ export const useSubmitRequest = () => {
       return data;
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', id] });
     },
   });

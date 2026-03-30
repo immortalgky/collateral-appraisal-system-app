@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
+import { useRequestStatusSummary } from '../api';
 
 type ProgressItem = {
   label: string;
@@ -8,18 +10,39 @@ type ProgressItem = {
   percentage: string;
 };
 
-const MOCK_DATA: ProgressItem[] = [
-  { label: 'Approved during work', value: 815, color: '#3b82f6', percentage: '65.17%' },
-  { label: 'Limit', value: 175, color: '#06b6d4', percentage: '13.99%' },
-  { label: 'Approved Credit', value: 155, color: '#f97316', percentage: '12.39%' },
-  { label: 'In process', value: 85, color: '#a855f7', percentage: '6.80%' },
-  { label: 'Approve via Approval', value: 20, color: '#ef4444', percentage: '1.60%' },
-  { label: 'Request E-Minding', value: 1, color: '#22c55e', percentage: '0.08%' },
-];
+const STATUS_COLORS: Record<string, string> = {
+  DRAFT: '#3b82f6',
+  NEW: '#06b6d4',
+  SUBMITTED: '#f97316',
+  ASSIGNED: '#a855f7',
+  INPROGRESS: '#ef4444',
+  COMPLETED: '#22c55e',
+  CANCELLED: '#6b7280',
+};
 
 function ProgressSummaryWidget() {
-  const data = MOCK_DATA;
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const { data: apiData } = useRequestStatusSummary();
+
+  const { data, total } = useMemo(() => {
+    if (apiData?.items && apiData.items.length > 0) {
+      const items: ProgressItem[] = apiData.items.map((item) => ({
+        label: item.status,
+        value: item.count,
+        color: STATUS_COLORS[item.status] || '#6b7280',
+        percentage: '0%',
+      }));
+      const sum = items.reduce((s, i) => s + i.value, 0);
+      return {
+        data: items.map((i) => ({
+          ...i,
+          percentage: sum > 0 ? `${((i.value / sum) * 100).toFixed(2)}%` : '0%',
+        })),
+        total: sum,
+      };
+    }
+    // Fallback empty state
+    return { data: [] as ProgressItem[], total: 0 };
+  }, [apiData]);
 
   // Calculate donut chart segments
   const radius = 80;

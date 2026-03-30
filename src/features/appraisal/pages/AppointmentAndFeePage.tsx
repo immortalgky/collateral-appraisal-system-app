@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
-import { useAppraisalContext, useAppraisalReadOnly } from '../context/AppraisalContext';
+import { useAppraisalContext } from '../context/AppraisalContext';
 import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
 import RescheduleModal from '../components/RescheduleModal';
@@ -12,7 +12,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
   useCancelAppointment,
   useCreateAppointment,
-  useGetAppointments,
+  useGetAppointment,
   useRescheduleAppointment,
 } from '../api/appointment';
 import {
@@ -37,12 +37,11 @@ export default function AppointmentAndFeePage() {
   const [isCancelAppointmentModalOpen, setIsCancelAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
-  const { isReadOnly } = useAppraisalReadOnly('Appointment & Fee');
   const appraisalId = appraisal?.appraisalId ?? '';
   const currentUser = useAuthStore(state => state.user);
 
   // API hooks - Appointments
-  const { data: appointments = [] } = useGetAppointments(appraisalId);
+  const { data: appointment = null } = useGetAppointment(appraisalId);
   const createAppointment = useCreateAppointment();
   const rescheduleAppointment = useRescheduleAppointment();
   const cancelAppointment = useCancelAppointment();
@@ -59,9 +58,7 @@ export default function AppointmentAndFeePage() {
   const rejectFeeItem = useRejectFeeItem();
   const updateAppraisalFee = useUpdateAppraisalFee();
 
-  // Get the latest appointment (last in the array)
-  const latestAppointment = appointments.length > 0 ? appointments[appointments.length - 1] : null;
-  const isNewAppointment = !latestAppointment;
+  const isNewAppointment = !appointment;
 
   // Get the first fee record
   const currentFee = fees.length > 0 ? fees[0] : null;
@@ -86,7 +83,7 @@ export default function AppointmentAndFeePage() {
       } else {
         await rescheduleAppointment.mutateAsync({
           appraisalId,
-          appointmentId: latestAppointment!.id,
+          appointmentId: appointment!.id,
           changedBy: currentUser?.id ?? '',
           newDateTime: data.dateTime,
           reason: data.reason || null,
@@ -100,11 +97,11 @@ export default function AppointmentAndFeePage() {
   };
 
   const handleCancelAppointment = async () => {
-    if (!latestAppointment) return;
+    if (!appointment) return;
     try {
       await cancelAppointment.mutateAsync({
         appraisalId,
-        appointmentId: latestAppointment.id,
+        appointmentId: appointment.id,
         changedBy: currentUser?.id ?? '',
         reason: null,
       });
@@ -255,10 +252,9 @@ export default function AppointmentAndFeePage() {
         <div className="flex flex-col gap-6 pb-6 pr-4">
           {/* Appointment Information Section */}
           <AppointmentInfoCard
-            appointment={latestAppointment}
+            appointment={appointment}
             onReschedule={() => setIsRescheduleModalOpen(true)}
             onCancel={() => setIsCancelAppointmentModalOpen(true)}
-            readOnly={isReadOnly}
           />
 
           {/* Divider */}
@@ -278,7 +274,6 @@ export default function AppointmentAndFeePage() {
               onApproveFeeItem={handleApproveFeeItem}
               onRejectFeeItem={handleRejectFeeItem}
               isFeePaymentTypeUpdating={updateAppraisalFee.isPending}
-              readOnly={isReadOnly}
             />
 
             {/* Payment Information (Right Column) */}
@@ -291,7 +286,6 @@ export default function AppointmentAndFeePage() {
               isPaymentPending={
                 recordPayment.isPending || updatePayment.isPending || removePayment.isPending
               }
-              readOnly={isReadOnly}
             />
           </div>
         </div>
@@ -312,8 +306,8 @@ export default function AppointmentAndFeePage() {
         onClose={() => setIsRescheduleModalOpen(false)}
         onSubmit={handleReschedule}
         defaultValues={{
-          dateTime: latestAppointment?.appointmentDateTime ?? null,
-          location: latestAppointment?.locationDetail ?? null,
+          dateTime: appointment?.appointmentDateTime ?? null,
+          location: appointment?.locationDetail ?? null,
         }}
         isNewAppointment={isNewAppointment}
         isLoading={createAppointment.isPending || rescheduleAppointment.isPending}

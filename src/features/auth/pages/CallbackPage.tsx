@@ -3,7 +3,7 @@ import { useAuthStore } from '@features/auth/store.ts';
 import { useNavigate } from 'react-router-dom';
 
 function CallbackPage() {
-  const login = useAuthStore(state => state.login);
+  const setToken = useAuthStore(state => state.setToken);
   const navigate = useNavigate();
   const isProcessing = useRef(false);
 
@@ -25,7 +25,7 @@ function CallbackPage() {
 
     if (state !== storedState || !code || !codeVerifier) {
       console.error('Invalid state or missing code');
-      navigate('/login');
+      navigate('/login', { replace: true });
       return;
     }
 
@@ -45,29 +45,14 @@ function CallbackPage() {
         return res.json();
       })
       .then(tokens => {
-        login(
-          {
-            id: '',
-            name: '',
-            firstName: '',
-            lastName: '',
-            email: '',
-            username: '',
-            avatarUrl: '',
-            position: '',
-            department: '',
-            roles: [],
-            permissions: [],
-          },
-          tokens.accessToken,
-        );
-        navigate('/');
+        setToken(tokens.accessToken);
+        navigate('/', { replace: true });
       })
       .catch(error => {
         console.error('Token exchange error:', error);
-        navigate('/login');
+        navigate('/login', { replace: true });
       });
-  }, [login, navigate]);
+  }, [setToken, navigate]);
 
   return <p>Processing login...</p>;
 }

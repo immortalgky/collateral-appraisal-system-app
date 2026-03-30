@@ -47,7 +47,7 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
     case 'text-input': {
       let s = staticRequired ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }) : z.string();
       const textLabel = getFieldLabel(field);
-      if (staticRequired && field.minLength == null) s = s.min(1, requiredMsg);
+      if (staticRequired) s = s.min(1, requiredMsg);
       if (field.minLength != null)
         s = s.min(field.minLength, `${textLabel} must be at least ${field.minLength} characters`);
       if (field.maxLength != null)
@@ -76,8 +76,16 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
     }
 
     case 'number-input': {
-      let n = z.coerce.number();
       const numLabel = getFieldLabel(field);
+      const needsAllowZeroGuard = staticRequired && field.allowZero;
+
+      // For allowZero required fields, use z.number() (not z.coerce) so that
+      // null/undefined/'' are rejected with the required message instead of
+      // being silently coerced to 0.  Manual coercion happens in preprocess.
+      let n = needsAllowZeroGuard
+        ? z.number({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+        : z.coerce.number();
+
       if (field.min != null) n = n.min(field.min, `${numLabel} must be at least ${field.min}`);
       if (field.max != null) n = n.max(field.max, `${numLabel} must be at most ${field.max}`);
       if (field.allowNegative === false) n = n.nonnegative();
@@ -90,12 +98,21 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
           message: `Must not exceed ${maxInt} digits before decimal point`,
         });
       }
-      // Enforce "required" for number-inputs that don't define their own min:
-      // treat 0 as an empty value while preserving existing min/max semantics.
-      if (staticRequired && field.min == null) {
+      // Enforce "required": treat 0 as empty unless allowZero is set.
+      if (staticRequired && !field.allowZero) {
         n = n.refine(val => val !== 0, { message: requiredMsg });
       }
-      schema = n;
+
+      if (needsAllowZeroGuard) {
+        // Manually coerce valid input to number; leave null/undefined/'' as
+        // undefined so z.number({ required_error }) rejects with the right msg.
+        schema = z.preprocess(
+          val => (val == null || val === '') ? undefined : Number(val),
+          n,
+        );
+      } else {
+        schema = n;
+      }
       break;
     }
 
@@ -319,7 +336,12 @@ function buildConditionalRefinement(fields: FormField[]) {
       // 5. Enforce required — resolve dotted paths
       if (isRequired) {
         const value = getNestedValue(data, field.name);
-        if (value == null || value === '') {
+        const isNumberField = field.type === 'number-input';
+        if (
+          value == null ||
+          value === '' ||
+          (isNumberField && value === 0 && !field.allowZero)
+        ) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: field.name.split('.'),

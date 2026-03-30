@@ -12,14 +12,14 @@ import {
 } from '@features/pricingAnalysis/domain/calculateWQS';
 import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
-import type { WQSScoreFormType } from '../schemas/wqsForm';
 import { wqsFieldPath } from './wqsFieldPath';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
+import type { WQSScore } from '../types/wqs';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
   surveys: MarketComparableDetailType[];
-  scoringRows: WQSScoreFormType[];
+  scoringRows: WQSScore[];
 }): DerivedFieldRule[] {
   const { surveys = [], scoringRows = [] } = args;
 
@@ -161,7 +161,7 @@ export function buildWQSCalculationDerivedRules(args: {
 
 export function buildWQSTotalScoreRules(args: {
   surveys: MarketComparableDetailType[];
-  scoringRows: WQSScoreFormType[];
+  scoringRows: WQSScore[];
 }) {
   const { surveys, scoringRows } = args;
 

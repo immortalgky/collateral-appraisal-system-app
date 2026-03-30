@@ -1,8 +1,8 @@
-import type { WQSFormType } from '../schemas/wqsForm';
 import type { SaveComparativeAnalysisRequestType } from '../schemas';
+import type { WQS } from '../types/wqs';
 
 interface MapWQSFormToSubmitSchemaProps {
-  WQSForm: WQSFormType;
+  WQSForm: WQS;
   comparativeAnalysisTemplateId?: string | null;
 }
 
@@ -11,11 +11,7 @@ export function mapWQSFormToSubmitSchema({
   comparativeAnalysisTemplateId,
 }: MapWQSFormToSubmitSchemaProps): SaveComparativeAnalysisRequestType {
   // Build set of factorIds used for scoring (WQSScores)
-  const scoringFactorIds = new Set(
-    (WQSForm.WQSScores ?? [])
-      .map(s => s.factorId)
-      .filter(Boolean),
-  );
+  const scoringFactorIds = new Set((WQSForm.WQSScores ?? []).map(s => s.factorId).filter(Boolean));
 
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
@@ -61,18 +57,20 @@ export function mapWQSFormToSubmitSchema({
     calculations: (WQSForm.WQSCalculations ?? []).map(calc => {
       const hasOfferingPrice = calc.offeringPrice != null && calc.offeringPrice !== 0;
       return {
-      marketComparableId: calc.marketId,
-      offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
-      offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
-      adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
-      adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
-      sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
-      buySellYear: !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
-      buySellMonth: null,
-      adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
-      cumulativeAdjPeriod: !hasOfferingPrice ? (calc.totalAdjustedSellingPrice ?? null) : null,
-      totalAdjustedValue: calc.adjustedValue ?? null,
-      weight: null,
-    }}),
+        marketComparableId: calc.marketId,
+        offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
+        offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
+        adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
+        adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
+        sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
+        buySellYear:
+          !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
+        buySellMonth: null,
+        adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
+        cumulativeAdjPeriod: !hasOfferingPrice ? (calc.totalAdjustedSellingPrice ?? null) : null,
+        totalAdjustedValue: calc.adjustedValue ?? null,
+        weight: null,
+      };
+    }),
   };
 }

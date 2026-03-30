@@ -3,6 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
@@ -25,14 +26,15 @@ import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateCondoPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
@@ -109,7 +111,7 @@ const CreateCondoPage = () => {
             toast.success('Property condominium created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisals/${appraisalId}/property/condo/${response.propertyId}`);
+            navigate(`${basePath}/property/condo/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -159,7 +161,7 @@ const CreateCondoPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisals/${appraisalId}/property/condo/${response.propertyId}`);
+              navigate(`${basePath}/property/condo/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -192,7 +194,7 @@ const CreateCondoPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createCondoForm} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={createCondoForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -221,7 +223,6 @@ const CreateCondoPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
-                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>

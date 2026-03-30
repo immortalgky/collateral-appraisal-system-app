@@ -53,6 +53,7 @@ export const mapLandPropertyResponseToForm = (
     landShapeType: response.landShapeType ?? '',
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
+    landZoneTypeOther: response.landZoneTypeOther ?? '',
     plotLocationType: response.plotLocationType ?? [],
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
@@ -77,6 +78,7 @@ export const mapLandPropertyResponseToForm = (
     transportationAccessType: response.transportationAccessType ?? [],
     transportationAccessTypeOther: response.transportationAccessTypeOther ?? '',
     propertyAnticipationType: response.propertyAnticipationType ?? '',
+    propertyAnticipationTypeOther: response.propertyAnticipationTypeOther ?? '',
     isExpropriated: response.isExpropriated ?? false,
     expropriationRemark: response.expropriationRemark ?? '',
     isInExpropriationLine: response.isInExpropriationLine ?? false,
@@ -111,6 +113,34 @@ export const mapLandPropertyResponseToForm = (
   };
 };
 
+export const mapConstructionInspectionResponseToForm = (ci: any) => ({
+  constructionEnterDetail: ci?.isFullDetail ?? true,
+  constructionSubItems: (ci?.workDetails ?? []).map((wd: any) => ({
+    id: wd.id,
+    constructionWorkGroupId: wd.constructionWorkGroupId,
+    constructionWorkItemId: wd.constructionWorkItemId,
+    workItemName: wd.workItemName,
+    displayOrder: wd.displayOrder,
+    proportionPct: wd.proportionPct ?? 0,
+    previousProgressPct: wd.previousProgressPct ?? 0,
+    currentProgressPct: wd.currentProgressPct ?? 0,
+  })),
+  constructionSummary: {
+    summaryDetail: ci?.summaryDetail ?? '',
+    summaryPreviousProgressPct: ci?.summaryPreviousProgressPct ?? 0,
+    summaryPreviousValue: ci?.summaryPreviousValue ?? 0,
+    summaryCurrentProgressPct: ci?.summaryCurrentProgressPct ?? 0,
+    summaryCurrentValue: ci?.summaryCurrentValue ?? 0,
+    documentId: ci?.documentId ?? null,
+    fileName: ci?.fileName ?? null,
+    filePath: ci?.filePath ?? null,
+    fileExtension: ci?.fileExtension ?? null,
+    mimeType: ci?.mimeType ?? null,
+    fileSizeBytes: ci?.fileSizeBytes ?? null,
+  },
+  constructionRemark: ci?.remark ?? '',
+});
+
 export const mapBuildingPropertyResponseToForm = (
   response: GetBuildingPropertyResponseType,
 ): createBuildingFormType => {
@@ -123,6 +153,7 @@ export const mapBuildingPropertyResponseToForm = (
     isOwnerVerified: response.isOwnerVerified ?? false,
     houseNumber: response.houseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
+    buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
     constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
@@ -173,6 +204,7 @@ export const mapBuildingPropertyResponseToForm = (
       depreciationMethod: item.depreciationMethod ?? 'Gross',
       depreciationPeriods: item.depreciationPeriods ?? [],
     })),
+    ...mapConstructionInspectionResponseToForm((response as any).constructionInspection),
   };
 };
 
@@ -202,6 +234,7 @@ export const mapCondoPropertyResponseToForm = (
 
     isOwnerVerified: response.isOwnerVerified ?? false,
     buildingConditionType: response.buildingConditionType ?? '',
+    buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     hasObligation: response.hasObligation ?? false,
     obligationDetails: response.obligationDetails ?? '',
     documentValidationResultType: response.documentValidationResultType ?? '',
@@ -292,6 +325,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     landShapeType: response.landShapeType ?? '',
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
+    landZoneTypeOther: response.landZoneTypeOther ?? '',
     plotLocationType: response.plotLocationType ?? [],
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
@@ -316,6 +350,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     transportationAccessType: response.transportationAccessType ?? [],
     transportationAccessTypeOther: response.transportationAccessTypeOther ?? '',
     propertyAnticipationType: response.propertyAnticipationType ?? '',
+    propertyAnticipationTypeOther: response.propertyAnticipationTypeOther ?? '',
     isExpropriated: response.isExpropriated ?? false,
     expropriationRemark: response.expropriationRemark ?? '',
     isInExpropriationLine: response.isInExpropriationLine ?? false,
@@ -344,12 +379,15 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     westBoundaryLength: response.westBoundaryLength ?? 0,
     pondArea: response.pondArea ?? 0,
     pondDepth: response.pondDepth ?? 0,
+    hasBuilding: response.hasBuilding ?? false,
+    hasBuildingOther: response.hasBuildingOther ?? '',
 
     buildingNumber: response.buildingNumber ?? '',
     modelName: response.modelName ?? '',
     builtOnTitleNumber: response.builtOnTitleNumber ?? '',
     houseNumber: response.houseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
+    buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
     constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
@@ -398,6 +436,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
       depreciationMethod: item.depreciationMethod ?? 'Gross',
       depreciationPeriods: item.depreciationPeriods ?? [],
     })),
+    ...mapConstructionInspectionResponseToForm((response as any).constructionInspection),
   };
 };
 
@@ -408,18 +447,22 @@ export const mapMachineryPropertyResponseToForm = (
     propertyName: response.propertyName ?? null,
     isOwnerVerified: response.isOwnerVerified ?? true,
     ownerName: response.ownerName ?? null,
-    canUse: response.canUse ?? true,
+    registrationNo: response.registrationNo ?? null,
+    isOperational: response.isOperational ?? true,
     machineName: response.machineName ?? null,
     brand: response.brand ?? null,
     model: response.model ?? null,
+    series: response.series ?? null,
     yearOfManufacture: response.yearOfManufacture ?? null,
-    countryOfManufacture: response.countryOfManufacture ?? null,
+    manufacturer: response.manufacturer ?? null,
     purchaseDate: response.purchaseDate ?? null,
     purchasePrice: response.purchasePrice ?? null,
+    quantity: response.quantity ?? null,
     capacity: response.capacity ?? null,
     width: response.width ?? null,
     length: response.length ?? null,
     height: response.height ?? null,
+    machineDimensions: response.machineDimensions ?? null,
     energyUse: response.energyUse ?? null,
     location: response.location ?? null,
     conditionUse: response.conditionUse ?? null,
@@ -427,8 +470,10 @@ export const mapMachineryPropertyResponseToForm = (
     machineAge: response.machineAge ?? null,
     machineEfficiency: response.machineEfficiency ?? null,
     machineTechnology: response.machineTechnology ?? null,
-    usePurpose: response.usePurpose ?? null,
-    machinePart: response.machinePart ?? null,
+    usagePurpose: response.usagePurpose ?? null,
+    machineParts: response.machineParts ?? null,
+    replacementValue: response.replacementValue ?? null,
+    conditionValue: response.conditionValue ?? null,
     other: response.other ?? null,
     remark: response.remark ?? null,
     appraiserOpinion: response.appraiserOpinion ?? null,
@@ -507,21 +552,93 @@ const mapSurfacesToApi = (surfaces: any[]) => {
   }));
 };
 
-export const mapBuildingFormDataToApiPayload = (data: createBuildingFormType) => {
-  const { surfaces, depreciationDetails, ...rest } = data;
+const mapConstructionInspectionFormToApi = (data: any) => {
+  const {
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
+    isUnderConstruction,
+    depreciationDetails,
+  } = data;
+
+  if (!isUnderConstruction) return null;
+
+  const totalValue = (depreciationDetails ?? []).reduce(
+    (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
+    0,
+  );
+
+  const isFullDetail = constructionEnterDetail ?? true;
+
   return {
-    ...rest,
-    surfaces: mapSurfacesToApi(surfaces ?? []),
-    depreciationDetails: mapDepreciationDetailsToApi(depreciationDetails ?? []),
+    isFullDetail,
+    totalValue,
+    ...(isFullDetail
+      ? {
+          workDetails: (constructionSubItems ?? []).map((item: any, idx: number) => ({
+            id: item.id ?? null,
+            constructionWorkGroupId: item.constructionWorkGroupId,
+            constructionWorkItemId: item.constructionWorkItemId ?? null,
+            workItemName: item.workItemName,
+            displayOrder: item.displayOrder ?? idx + 1,
+            proportionPct: item.proportionPct ?? 0,
+            previousProgressPct: item.previousProgressPct ?? 0,
+            currentProgressPct: item.currentProgressPct ?? 0,
+          })),
+        }
+      : {
+          summaryDetail: constructionSummary?.summaryDetail ?? null,
+          summaryPreviousProgressPct: constructionSummary?.summaryPreviousProgressPct ?? null,
+          summaryPreviousValue: constructionSummary?.summaryPreviousValue ?? null,
+          summaryCurrentProgressPct: constructionSummary?.summaryCurrentProgressPct ?? null,
+          summaryCurrentValue: constructionSummary?.summaryCurrentValue ?? null,
+          remark: constructionRemark ?? null,
+          documentId: constructionSummary?.documentId ?? null,
+          fileName: constructionSummary?.fileName ?? null,
+          filePath: constructionSummary?.filePath ?? null,
+          fileExtension: constructionSummary?.fileExtension ?? null,
+          mimeType: constructionSummary?.mimeType ?? null,
+          fileSizeBytes: constructionSummary?.fileSizeBytes ?? null,
+        }),
   };
 };
 
-export const mapLandAndBuildingFormDataToApiPayload = (data: createLandAndBuildingFormType) => {
-  const { surfaces, depreciationDetails, ...rest } = data;
+export const mapBuildingFormDataToApiPayload = (data: createBuildingFormType): any => {
+  const {
+    surfaces,
+    depreciationDetails,
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
+    ...rest
+  } = data;
   return {
     ...rest,
     surfaces: mapSurfacesToApi(surfaces ?? []),
     depreciationDetails: mapDepreciationDetailsToApi(depreciationDetails ?? []),
+    constructionInspection: mapConstructionInspectionFormToApi(data),
+  };
+};
+
+export const mapLandAndBuildingFormDataToApiPayload = (
+  data: createLandAndBuildingFormType,
+): any => {
+  const {
+    surfaces,
+    depreciationDetails,
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
+    ...rest
+  } = data;
+  return {
+    ...rest,
+    surfaces: mapSurfacesToApi(surfaces ?? []),
+    depreciationDetails: mapDepreciationDetailsToApi(depreciationDetails ?? []),
+    constructionInspection: mapConstructionInspectionFormToApi(data),
   };
 };
 
@@ -535,6 +652,7 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
     staffId: response.assigneeUserId ?? null,
     companyId: response.assigneeCompanyId ?? null,
     followupStaffId: response.internalAppraiserId ?? null,
+    followupStaffMethod: (response.internalFollowupAssignmentMethod?.toLowerCase() ?? (response.internalAppraiserId ? 'manual' : 'manual')) as 'manual' | 'roundrobin',
     selectedStaff: null as null,
     selectedCompany: null as null,
     selectedFollowupStaff: null as null,

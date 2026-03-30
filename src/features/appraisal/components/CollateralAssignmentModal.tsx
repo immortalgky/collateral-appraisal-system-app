@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
@@ -23,7 +24,7 @@ const CollateralAssignmentModal = ({
   selectedCount,
   isLoading = false,
 }: CollateralAssignmentModalProps) => {
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const { groups } = useEnrichedPropertyGroups(appraisalId);
   const [selectedCollateralId, setSelectedCollateralId] = useState<string | null>(null);
 

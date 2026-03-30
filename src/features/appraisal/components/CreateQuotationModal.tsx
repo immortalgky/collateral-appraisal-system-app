@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
-import { useCreateQuotation, useSearchCompanies } from '../api/administration';
+import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
 import type { ExternalCompany } from '../types/administration';
 
 interface CreateQuotationModalProps {
@@ -25,10 +25,22 @@ const CreateQuotationModal = ({
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
 
-  const { data: companyList = [], isLoading: isLoadingCompanies } = useSearchCompanies(
-    searchQuery,
-    isOpen
+  const { data: allCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
+    undefined,
+    isOpen,
   );
+
+  const companyList = useMemo(() => {
+    if (!allCompanies) return [];
+    if (!searchQuery.trim()) return allCompanies;
+    const query = searchQuery.toLowerCase();
+    return allCompanies.filter(
+      c =>
+        c.companyName.toLowerCase().includes(query) ||
+        c.registrationNo.toLowerCase().includes(query) ||
+        c.contactPerson.toLowerCase().includes(query),
+    );
+  }, [allCompanies, searchQuery]);
   const { mutate: createQuotation, isPending } = useCreateQuotation();
 
   const handleClose = () => {

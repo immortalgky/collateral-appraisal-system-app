@@ -7,6 +7,7 @@ import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { DiscountedCashFlowPanel } from './DiscountedCashFlowPanel';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
+import { CostMachinePanel } from './CostMachinePanel';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -67,6 +68,8 @@ export function MethodSectionRenderer({
       return <DirectComparisonPanel {...panelProps} />;
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
+    case 'MC_COST':
+      return <CostMachinePanel {...panelProps} />;
     default:
       return <></>;
   }

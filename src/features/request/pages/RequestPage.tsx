@@ -52,6 +52,7 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import SearchUserModal from '../components/SearchUserModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 /**
  * Component that initializes request-level required documents.
@@ -62,21 +63,16 @@ const RequiredDocumentsInitializer = () => {
   return null;
 };
 
-interface RequestPageProps {
-  /** When true, displays the page in view-only mode without edit capabilities */
-  readOnly?: boolean;
-}
-
 /**
  * Unified Request Page component that handles both create and edit modes.
  * - Create mode: When no `requestId` is present in URL params
  * - Edit mode: When `requestId` is present in URL params
  */
-function RequestPage({ readOnly = false }: RequestPageProps) {
+function RequestPage() {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useAuthStore(state => state.user);
-
   // Get requestId from URL params - determines create vs edit mode
   const { requestId } = useParams<{ requestId?: string }>();
   const isEditMode = Boolean(requestId);
@@ -121,7 +117,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     getValues,
     setValue,
     reset,
-    formState: { errors, isDirty },
+    formState: { isDirty },
   } = methods;
 
   const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty && !readOnly);
@@ -246,7 +242,6 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
   };
 
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
-    console.log('[onSubmit] Validation passed, submitting data:', data);
     setSaveAction('save');
 
     if (isEditMode && requestId) {
@@ -368,11 +363,28 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     }
   };
 
+  const doSubmit = useCallback(
+    (id: string) => {
+      submitRequest(id, {
+        onSuccess: () => {
+          toast.success('Request submitted successfully');
+          setSaveAction(null);
+          skipWarning();
+          navigate('/requests');
+        },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || 'Failed to submit request. Please try again.');
+          setSaveAction(null);
+        },
+      });
+    },
+    [submitRequest, skipWarning, navigate],
+  );
+
   /**
    * Handle submit request flow:
    * 1. Validate and save the request first
-   * 2. Then call the submit API
-   * 3. Navigate to requests list on success
+   * 2. Submit — backend validates document completeness and returns error if missing
    */
   const handleSubmitRequest = () => {
     setSaveAction('submit');
@@ -380,24 +392,8 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
     // Use handleSubmit to validate the form first
     handleSubmit(
       data => {
-        // Helper function to submit after save
-        const doSubmit = (id: string) => {
-          submitRequest(id, {
-            onSuccess: () => {
-              toast.success('Request submitted successfully');
-              setSaveAction(null);
-              skipWarning();
-              navigate('/requests');
-            },
-            onError: (error: any) => {
-              toast.error(error.apiError?.detail || 'Failed to submit request. Please try again.');
-              setSaveAction(null);
-            },
-          });
-        };
-
         if (isEditMode && requestId) {
-          // Update existing request first, then submit
+          // Update existing request first, then check and submit
           updateRequest(
             {
               id: requestId,
@@ -418,7 +414,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
             },
           );
         } else {
-          // Create new request first, then submit
+          // Create new request first, then check and submit
           const commentsForApi = pendingComments.map(c => ({
             comment: c.comment,
             commentedBy: c.commentedBy,
@@ -450,8 +446,7 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
           );
         }
       },
-      errors => {
-        console.log('[handleSubmitRequest] Validation failed:', errors);
+      () => {
         toast.error('Please fill in all required fields before submitting.');
         setSaveAction(null);
       },
@@ -505,13 +500,11 @@ function RequestPage({ readOnly = false }: RequestPageProps) {
       </div>
 
       {/* Main Content Area with Sidebar */}
-      <FormProvider methods={methods} schema={createRequestForm} readOnly={readOnly}>
+      <FormProvider methods={methods} schema={createRequestForm}>
         <RequiredDocumentsInitializer />
         <form
           onSubmit={e => {
-            handleSubmit(onSubmit, errors =>
-              console.log('[handleSubmit] Validation failed:', errors),
-            )(e);
+            handleSubmit(onSubmit)(e);
           }}
           className="flex-1 min-h-0 flex relative"
         >

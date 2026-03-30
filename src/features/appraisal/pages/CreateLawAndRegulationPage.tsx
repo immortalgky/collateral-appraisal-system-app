@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import ActionBar from '@shared/components/ActionBar';
 import Icon from '@shared/components/Icon';
@@ -31,8 +32,7 @@ import {
   createLawAndRegulationFormDefault,
   type CreateLawAndRegulationFormType,
 } from '../schemas/lawAndRegulation';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
-import { FormReadOnlyContext } from '@/shared/components/form/context';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const LAW_HEADER_GROUP = 'Header';
 
@@ -63,9 +63,11 @@ const formFields: FormField[] = [
 ];
 
 const CreateLawAndRegulationPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
-  const { appraisalId, itemId } = useParams<{ appraisalId: string; itemId?: string }>();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
+  const { itemId } = useParams<{ itemId?: string }>();
   const isEditMode = Boolean(itemId);
 
   // RHF + Zod
@@ -435,7 +437,7 @@ const CreateLawAndRegulationPage = () => {
     ];
   };
 
-  const navigateBack = () => navigate(`/appraisals/${appraisalId}/property?tab=laws`);
+  const navigateBack = () => navigate(`${basePath}/property?tab=laws`);
 
   const handleSave = (action: 'draft' | 'submit') => {
     if (!appraisalId) return;
@@ -474,7 +476,6 @@ const CreateLawAndRegulationPage = () => {
 
   return (
     <FormProvider {...methods}>
-      <FormReadOnlyContext.Provider value={isReadOnly}>
       <div className="flex flex-col h-full min-h-0">
         {/* Scrollable Form Content */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth">
@@ -654,7 +655,6 @@ const CreateLawAndRegulationPage = () => {
           />
         )}
       </div>
-      </FormReadOnlyContext.Provider>
     </FormProvider>
   );
 };

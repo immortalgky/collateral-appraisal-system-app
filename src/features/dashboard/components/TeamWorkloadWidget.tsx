@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
+import { useTeamWorkload } from '../api';
 
 type TeamMember = {
   name: string;
@@ -10,16 +12,21 @@ type TeamMember = {
   completed: number;
 };
 
-const MOCK_DATA: TeamMember[] = [
-  { name: 'Darrell Steward', notStarted: 12, inProgress: 8, overdue: 2, completed: 15 },
-  { name: 'Marvin McKinney', notStarted: 10, inProgress: 12, overdue: 1, completed: 20 },
-  { name: 'Jenny Wilson', notStarted: 8, inProgress: 6, overdue: 3, completed: 18 },
-  { name: 'Devon Lane', notStarted: 15, inProgress: 10, overdue: 0, completed: 12 },
-  { name: 'Guy Hawkins', notStarted: 6, inProgress: 14, overdue: 4, completed: 22 },
-];
-
 function TeamWorkloadWidget() {
-  const data = MOCK_DATA;
+  const { data: apiData } = useTeamWorkload();
+
+  const data: TeamMember[] = useMemo(() => {
+    if (apiData?.items && apiData.items.length > 0) {
+      return apiData.items.map((item) => ({
+        name: item.username,
+        notStarted: item.notStarted,
+        inProgress: item.inProgress,
+        overdue: 0,
+        completed: item.completed,
+      }));
+    }
+    return [];
+  }, [apiData]);
   const maxTotal = Math.max(...data.map((m) => m.notStarted + m.inProgress + m.overdue + m.completed));
 
   return (

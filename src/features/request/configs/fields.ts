@@ -284,7 +284,7 @@ export const customersFieldConfig: FieldArrayField = {
   required: true,
   minItems: 1,
   fields: [
-    { type: 'text-input', name: 'name', label: 'Customer Name', required: true, maxLength: 200 },
+    { type: 'text-input', name: 'name', label: 'Customer Name', required: true, maxLength: 260 },
     {
       type: 'text-input',
       name: 'contactNumber',
@@ -330,8 +330,8 @@ export const propertiesFieldConfig: FieldArrayField = {
 
 // Collateral type groups for conditional validation
 const LAND_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS'];
-const TITLE_NUMBER_TYPES = ['L', 'B', 'LB', 'LSL', 'LSB', 'LS'];
-const OWNER_NAME_TYPES = ['L', 'B', 'LB', 'LSL', 'LSB', 'LS', 'U'];
+const TITLE_NUMBER_TYPES = ['L', 'LB', 'LSL', 'LS'];
+const OWNER_NAME_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS', 'U'];
 const BUILDING_REQUIRED_TYPES = ['B', 'LB', 'LSB', 'LS'];
 
 // --- Rendering configs (used by sub-form components for <FormFields>) ---
@@ -487,7 +487,7 @@ export const titleBuildingFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
-    maxIntegerDigits: 3,
+    maxIntegerDigits: 5,
   },
 ];
 
@@ -594,12 +594,14 @@ export const titleVehicleFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     requiredWhen: { field: 'collateralType', is: 'VEH' },
+    maxLength: 50,
   },
   {
     type: 'textarea',
     label: 'Appointment Location',
     name: 'vehicleAppointmentLocation',
     wrapperClassName: 'col-span-6',
+    maxLength: 200,
   },
 ];
 
@@ -636,7 +638,14 @@ export const titleMachineFields: FormField[] = [
     label: 'Registration No',
     name: 'registrationNo',
     wrapperClassName: 'col-span-3',
-    requiredWhen: { field: 'installationStatus', is: '1' },
+    requiredWhen: {
+      conditions: [
+        { field: 'installationStatus', is: '1' },
+        { field: 'registrationStatus', is: true },
+      ],
+      match: 'all',
+    },
+    maxLength: 50,
   },
   {
     type: 'text-input',
@@ -645,6 +654,7 @@ export const titleMachineFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     requiredWhen: { field: 'installationStatus', is: '2' },
+    maxLength: 20,
   },
   {
     type: 'number-input',
@@ -654,6 +664,7 @@ export const titleMachineFields: FormField[] = [
     required: true,
     requiredWhen: { field: 'collateralType', is: 'MAC' },
     decimalPlaces: 0,
+    maxIntegerDigits: 5,
   },
 ];
 
@@ -707,7 +718,6 @@ export const titleAddressFields: FormField[] = [
     addressSource: 'title',
     wrapperClassName: 'col-span-2',
     required: true,
-    disablePastDates: true,
   },
   {
     type: 'text-input',

@@ -1,57 +1,44 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import { useAuthStore } from '@features/auth/store';
 import type { GetTasksParams, Task, TaskListResponse } from './types';
 
 /**
- * Hook for fetching a paginated list of tasks
- * GET /tasks
+ * Hook for fetching a paginated list of tasks for the current user
+ * GET /tasks/me
  */
 export const useGetTasks = (params: GetTasksParams = {}) => {
-  const user = useAuthStore(state => state.user);
   const {
     pageNumber = 0,
     pageSize = 10,
-    search,
+    taskName,
     status,
-    taskType,
-    propertyType,
-    purpose,
-    sortBy,
-    sortDirection = 'asc',
+    priority,
+    activityId,
   } = params;
 
   const queryKey = [
-    'tasks',
+    'my-tasks',
     {
-      assigneeUserId: user?.username,
       pageNumber,
       pageSize,
-      ...(search && { search }),
+      ...(taskName && { taskName }),
       ...(status && { status }),
-      ...(taskType && { taskType }),
-      ...(propertyType && { propertyType }),
-      ...(purpose && { purpose }),
-      ...(sortBy && { sortBy }),
-      ...(sortDirection && sortBy && { sortDirection }),
+      ...(priority && { priority }),
+      ...(activityId && { activityId }),
     },
   ];
 
   return useQuery({
     queryKey,
     queryFn: async (): Promise<TaskListResponse> => {
-      const { data } = await axios.get('/tasks', {
+      const { data } = await axios.get('/tasks/me', {
         params: {
-          AssigneeUserId: user?.username,
           PageNumber: pageNumber,
           PageSize: pageSize,
-          ...(search && { Search: search }),
+          ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
-          ...(taskType && { TaskType: taskType }),
-          ...(propertyType && { PropertyType: propertyType }),
-          ...(purpose && { Purpose: purpose }),
-          ...(sortBy && { SortBy: sortBy }),
-          ...(sortBy && { SortDirection: sortDirection }),
+          ...(priority && { Priority: priority }),
+          ...(activityId && { ActivityId: activityId }),
         },
       });
 
@@ -64,39 +51,34 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
 
 /**
  * Hook for fetching all tasks for Kanban view (no pagination, large page)
- * GET /tasks
+ * GET /tasks/me
  */
 export const useGetTasksForKanban = (
   params: Omit<GetTasksParams, 'pageNumber' | 'pageSize'> = {},
 ) => {
-  const user = useAuthStore(state => state.user);
-  const { search, status, taskType, propertyType, purpose } = params;
+  const { taskName, status, priority, activityId } = params;
 
   const queryKey = [
-    'tasks-kanban',
+    'my-tasks-kanban',
     {
-      assigneeUserId: user?.username,
-      ...(search && { search }),
+      ...(taskName && { taskName }),
       ...(status && { status }),
-      ...(taskType && { taskType }),
-      ...(propertyType && { propertyType }),
-      ...(purpose && { purpose }),
+      ...(priority && { priority }),
+      ...(activityId && { activityId }),
     },
   ];
 
   return useQuery({
     queryKey,
     queryFn: async (): Promise<Task[]> => {
-      const { data } = await axios.get('/tasks', {
+      const { data } = await axios.get('/tasks/me', {
         params: {
-          AssigneeUserId: user?.username,
           PageNumber: 0,
           PageSize: 200,
-          ...(search && { Search: search }),
+          ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
-          ...(taskType && { TaskType: taskType }),
-          ...(propertyType && { PropertyType: propertyType }),
-          ...(purpose && { Purpose: purpose }),
+          ...(priority && { Priority: priority }),
+          ...(activityId && { ActivityId: activityId }),
         },
       });
 

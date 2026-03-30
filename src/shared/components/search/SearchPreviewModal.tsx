@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Icon from '@shared/components/Icon';
@@ -46,6 +46,7 @@ interface Props {
 export default function SearchPreviewModal({ item, onClose }: Props) {
   const { t } = useTranslation('nav');
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (!item) return null;
 
@@ -53,7 +54,19 @@ export default function SearchPreviewModal({ item, onClose }: Props) {
   const labels = metadataLabels[item.category] ?? {};
 
   const handleOpenFullPage = () => {
-    navigate(item.navigateTo);
+    // If already in search-readonly mode, preserve the original return path
+    let returnPath = location.pathname;
+    try {
+      const stored = sessionStorage.getItem('searchReadOnly');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.returnPath) {
+          returnPath = parsed.returnPath;
+        }
+      }
+    } catch { /* ignore */ }
+
+    navigate(item.navigateTo, { state: { fromSearch: true, returnPath } });
     onClose();
   };
 

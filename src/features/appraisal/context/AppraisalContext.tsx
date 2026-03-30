@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
 import { isTerminalStatus } from '@shared/config/navigation';
 import { canEditAppraisalPage } from '@shared/config/appraisalNavigation';
 import { useUserStore } from '@shared/store';
@@ -18,6 +19,20 @@ export interface AppraisalData {
 
   /** Whether this appraisal is a PMA (Property Market Assessment) */
   isPma?: boolean;
+
+  /** Facility limit from the request's loan detail */
+  facilityLimit?: number;
+
+  /** Whether the request has an appraisal book */
+  hasAppraisalBook?: boolean;
+
+  // Workflow task context (set when opened from task list)
+  workflowInstanceId?: string;
+  activityId?: string;
+  isTaskOwner?: boolean;
+
+  /** Base path for navigation: '/tasks/{taskId}' or '/appraisals/{appraisalId}' */
+  basePath?: string;
 }
 
 interface AppraisalContextValue {
@@ -76,6 +91,22 @@ export function useAppraisalIsPma(): boolean {
 }
 
 /**
+ * Hook to get the facility limit from appraisal context
+ */
+export function useAppraisalFacilityLimit(): number {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.facilityLimit ?? 0;
+}
+
+/**
+ * Hook to get the hasAppraisalBook flag from appraisal context
+ */
+export function useAppraisalHasAppraisalBook(): boolean {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.hasAppraisalBook ?? false;
+}
+
+/**
  * Hook to get the appraisal status
  * Returns undefined if not in appraisal context or still loading
  */
@@ -105,4 +136,47 @@ export function useAppraisalReadOnly(pageName?: string): {
   }
 
   return { isReadOnly, isTerminalStatus: terminal, status };
+}
+
+/**
+ * Hook to get appraisalId from URL params or context.
+ * Works in both /appraisals/:appraisalId and /tasks/:taskId routes.
+ */
+export function useAppraisalId(): string | undefined {
+  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const context = useContext(AppraisalContext);
+  return appraisalId ?? context?.appraisal?.appraisalId;
+}
+
+/**
+ * Hook to get the navigation base path
+ * Returns '/appraisals/{id}' or '/tasks/{id}' depending on entry point
+ */
+export function useBasePath(): string {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.basePath ?? `/appraisals/${context?.appraisal?.appraisalId ?? ''}`;
+}
+
+/**
+ * Hook to get the workflowInstanceId from appraisal context
+ */
+export function useWorkflowInstanceId(): string | undefined {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.workflowInstanceId;
+}
+
+/**
+ * Hook to get the activityId from appraisal context
+ */
+export function useActivityId(): string | undefined {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.activityId;
+}
+
+/**
+ * Hook to get whether the current user is the task owner
+ */
+export function useIsTaskOwner(): boolean {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.isTaskOwner ?? false;
 }

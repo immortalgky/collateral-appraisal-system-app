@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
+import { useAppraisalCounts } from '../api';
 
 type Period = 'total' | 'monthly' | 'weekly';
 
@@ -10,24 +11,48 @@ type DataPoint = {
   lastYear: number;
 };
 
-const MOCK_DATA: DataPoint[] = [
-  { month: 'Jan', thisYear: 2400, lastYear: 1800 },
-  { month: 'Feb', thisYear: 3200, lastYear: 2100 },
-  { month: 'Mar', thisYear: 2800, lastYear: 2400 },
-  { month: 'Apr', thisYear: 4200, lastYear: 3100 },
-  { month: 'May', thisYear: 3800, lastYear: 2900 },
-  { month: 'Jun', thisYear: 5100, lastYear: 3500 },
-  { month: 'Jul', thisYear: 4600, lastYear: 4000 },
-  { month: 'Aug', thisYear: 5800, lastYear: 4200 },
-  { month: 'Sep', thisYear: 6200, lastYear: 4800 },
-  { month: 'Oct', thisYear: 7100, lastYear: 5200 },
-  { month: 'Nov', thisYear: 7800, lastYear: 5800 },
-  { month: 'Dec', thisYear: 9999, lastYear: 6500 },
-];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function TotalAppraisalsWidget() {
   const [period, setPeriod] = useState<Period>('total');
-  const data = MOCK_DATA;
+  const currentYear = new Date().getFullYear();
+
+  // Fetch this year and last year data
+  const { data: thisYearData } = useAppraisalCounts(
+    'monthly',
+    `${currentYear}-01-01`,
+    `${currentYear}-12-31`
+  );
+  const { data: lastYearData } = useAppraisalCounts(
+    'monthly',
+    `${currentYear - 1}-01-01`,
+    `${currentYear - 1}-12-31`
+  );
+
+  const data: DataPoint[] = useMemo(() => {
+    // Build month-indexed maps
+    const thisYearMap = new Map<number, number>();
+    const lastYearMap = new Map<number, number>();
+
+    thisYearData?.items?.forEach((item) => {
+      if (item.period) {
+        const month = parseInt(item.period.split('-')[1], 10);
+        thisYearMap.set(month, (thisYearMap.get(month) || 0) + item.createdCount);
+      }
+    });
+    lastYearData?.items?.forEach((item) => {
+      if (item.period) {
+        const month = parseInt(item.period.split('-')[1], 10);
+        lastYearMap.set(month, (lastYearMap.get(month) || 0) + item.createdCount);
+      }
+    });
+
+    return MONTH_NAMES.map((name, i) => ({
+      month: name,
+      thisYear: thisYearMap.get(i + 1) || 0,
+      lastYear: lastYearMap.get(i + 1) || 0,
+    }));
+  }, [thisYearData, lastYearData]);
 
   const maxValue = Math.max(...data.flatMap((d) => [d.thisYear, d.lastYear]));
   const totalAppraisals = data[data.length - 1].thisYear;

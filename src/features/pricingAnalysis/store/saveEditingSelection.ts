@@ -33,7 +33,7 @@ const CONFIG_TO_SERVER_METHOD: Record<string, string> = {
   BC: 'BuildingCost',
   PR: 'ProfitRent',
   LH: 'Leasehold',
-  MC: 'MachineryCost',
+  MC_COST: 'MachineryCost',
   // Income
   I: 'Income',
   // Residual (config has methodType "I" for Hypothesis — likely a typo, but map it)
@@ -63,7 +63,8 @@ export function useSaveEditingSelection() {
     selections: Array<{ approachType: string; methodTypes: string[] }>;
     existingApproaches: Approach[];
   }) => {
-    if (input.selections.length === 0) return { pricingAnalysisId: input.pricingAnalysisId, entries: [] };
+    if (input.selections.length === 0)
+      return { pricingAnalysisId: input.pricingAnalysisId, entries: [] };
 
     // If "new", create the pricing analysis first to get a real ID
     let pricingAnalysisId = input.pricingAnalysisId;
@@ -77,9 +78,7 @@ export function useSaveEditingSelection() {
     }
 
     // Build lookup from existing state (editDraft has IDs from createInitialState)
-    const existingByType = new Map(
-      input.existingApproaches.map(a => [a.approachType, a]),
-    );
+    const existingByType = new Map(input.existingApproaches.map(a => [a.approachType, a]));
 
     const pricingIdEntries: Array<{ approachId: string; methodIds: Array<{ id: string }> }> = [];
 

@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
@@ -46,7 +47,7 @@ export const PropertyTableRow = ({
   hasClipboard,
 }: PropertyTableRowProps) => {
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const basePath = usePropertyBasePath();
 
   const handleClick = () => {
@@ -59,7 +60,7 @@ export const PropertyTableRow = ({
   };
 
   return (
-    <tr className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
+    <tr data-property-id={property.id} className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
       {/* Thumbnail */}
       <td className="px-2 py-2" onClick={handleClick}>
         <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden cursor-pointer">

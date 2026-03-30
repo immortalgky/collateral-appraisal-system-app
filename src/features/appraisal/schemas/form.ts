@@ -44,7 +44,9 @@ const surfaceFormItem = z.object({
   toFloorNumber: z.coerce.number().nullable().optional(),
   floorType: z.string().nullable().optional(),
   floorStructureType: z.string().nullable().optional(),
+  floorStructureTypeOther: z.string().nullable().optional(),
   floorSurfaceType: z.string().nullable().optional(),
+  floorSurfaceTypeOther: z.string().nullable().optional(),
 });
 
 const depreciationPeriodFormItem = z.object({
@@ -71,12 +73,60 @@ const depreciationFormItem = z.object({
   depreciationPeriods: z.array(depreciationPeriodFormItem).nullable().optional(),
 });
 
+const constructionSubItemFormItem = z.object({
+  id: z.string().nullable().optional(),
+  constructionWorkGroupId: z.string(),
+  constructionWorkItemId: z.string().nullable().optional(),
+  workItemName: z.string(),
+  displayOrder: z.coerce.number().nullable().optional(),
+  proportionPct: z.coerce.number().nullable().optional(),
+  previousProgressPct: z.coerce.number().nullable().optional(),
+  currentProgressPct: z.coerce.number().nullable().optional(),
+});
+
+const constructionSummaryFormItem = z.object({
+  summaryDetail: z.string().nullable().optional(),
+  summaryPreviousProgressPct: z.coerce.number().nullable().optional(),
+  summaryPreviousValue: z.coerce.number().nullable().optional(),
+  summaryCurrentProgressPct: z.coerce.number().nullable().optional(),
+  summaryCurrentValue: z.coerce.number().nullable().optional(),
+  documentId: z.string().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  filePath: z.string().nullable().optional(),
+  fileExtension: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  fileSizeBytes: z.coerce.number().nullable().optional(),
+});
+
 export const createBuildingFormBase = z.object({
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
+  constructionEnterDetail: z.boolean().nullable().optional(),
+  constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
+  constructionSummary: constructionSummaryFormItem.nullable().optional(),
+  constructionRemark: z.string().nullable().optional(),
 });
 
-export const createBuildingForm = buildFormSchema(allBuildingFields, createBuildingFormBase);
+const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
+  if (data.constructionEnterDetail) {
+    const total = (data.constructionSubItems ?? []).reduce(
+      (sum: number, item: any) => sum + (Number(item.proportionPct) || 0),
+      0,
+    );
+    if (total > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Total proportion is ${total.toFixed(2)}% — cannot exceed 100%`,
+        path: ['constructionSubItems'],
+      });
+    }
+  }
+};
+
+export const createBuildingForm = buildFormSchema(
+  allBuildingFields,
+  createBuildingFormBase,
+).superRefine(constructionProportionRefinement);
 
 const AreaDetailDto = z
   .object({
@@ -96,12 +146,16 @@ export const createLandAndBuildingFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
+  constructionEnterDetail: z.boolean().nullable().optional(),
+  constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
+  constructionSummary: constructionSummaryFormItem.nullable().optional(),
+  constructionRemark: z.string().nullable().optional(),
 });
 
 export const createLandAndBuildingForm = buildFormSchema(
   allLandBuildingFields,
   createLandAndBuildingFormBase,
-);
+).superRefine(constructionProportionRefinement);
 
 export const createLandAndBuildingPMAFormBase = z.object({
   buildingInsurancePrice: z.coerce.number().nullable(),
@@ -224,6 +278,7 @@ export const createLandFormDefault: createLandFormType = {
   landShapeType: '',
   urbanPlanningType: '',
   landZoneType: [],
+  landZoneTypeOther: '',
   plotLocationType: [],
   plotLocationTypeOther: '',
   landFillType: '',
@@ -248,6 +303,7 @@ export const createLandFormDefault: createLandFormType = {
   transportationAccessType: [],
   transportationAccessTypeOther: '',
   propertyAnticipationType: '',
+  propertyAnticipationTypeOther: '',
   isExpropriated: false,
   expropriationRemark: '',
   isInExpropriationLine: false,
@@ -290,6 +346,7 @@ export const createBuildingFormDefault: createBuildingFormType = {
   isOwnerVerified: false,
   houseNumber: '',
   buildingConditionType: '',
+  buildingConditionTypeOther: '',
   isUnderConstruction: false,
   constructionCompletionPercent: 100,
   constructionLicenseExpirationDate: null,
@@ -336,6 +393,22 @@ export const createBuildingFormDefault: createBuildingFormType = {
   remark: '',
   surfaces: [],
   depreciationDetails: [],
+  constructionEnterDetail: true,
+  constructionSubItems: [],
+  constructionSummary: {
+    summaryDetail: '',
+    summaryPreviousProgressPct: 0,
+    summaryPreviousValue: 0,
+    summaryCurrentProgressPct: 0,
+    summaryCurrentValue: 0,
+    documentId: null,
+    fileName: null,
+    filePath: null,
+    fileExtension: null,
+    mimeType: null,
+    fileSizeBytes: null,
+  },
+  constructionRemark: '',
 };
 
 export const createCondoFormDefault: createCondoFormType = {
@@ -347,7 +420,7 @@ export const createCondoFormDefault: createCondoFormType = {
   builtOnTitleNumber: '',
   condoRegistrationNumber: '',
   roomNumber: '',
-  floorNumber: 0,
+  floorNumber: '',
   usableArea: 0,
   latitude: 0,
   longitude: 0,
@@ -357,6 +430,7 @@ export const createCondoFormDefault: createCondoFormType = {
   landOffice: '',
   isOwnerVerified: false,
   buildingConditionType: '',
+  buildingConditionTypeOther: '',
   hasObligation: false,
   obligationDetails: '',
   documentValidationResultType: '',
@@ -432,6 +506,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   landShapeType: '',
   urbanPlanningType: '',
   landZoneType: [],
+  landZoneTypeOther: '',
   plotLocationType: [],
   plotLocationTypeOther: '',
   landFillType: '',
@@ -456,6 +531,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   transportationAccessType: [],
   transportationAccessTypeOther: '',
   propertyAnticipationType: '',
+  propertyAnticipationTypeOther: '',
   isExpropriated: false,
   expropriationRemark: '',
   isInExpropriationLine: false,
@@ -491,6 +567,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   builtOnTitleNumber: '',
   houseNumber: '',
   buildingConditionType: '',
+  buildingConditionTypeOther: '',
   isUnderConstruction: false,
   constructionCompletionPercent: 100,
   constructionLicenseExpirationDate: null,
@@ -535,24 +612,44 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   remark: '',
   surfaces: [],
   depreciationDetails: [],
+  constructionEnterDetail: true,
+  constructionSubItems: [],
+  constructionSummary: {
+    summaryDetail: '',
+    summaryPreviousProgressPct: 0,
+    summaryPreviousValue: 0,
+    summaryCurrentProgressPct: 0,
+    summaryCurrentValue: 0,
+    documentId: null,
+    fileName: null,
+    filePath: null,
+    fileExtension: null,
+    mimeType: null,
+    fileSizeBytes: null,
+  },
+  constructionRemark: '',
 };
 
 export const createMachineryFormDefault: createMachineryFormType = {
   propertyName: null,
   isOwnerVerified: true,
   ownerName: null,
-  canUse: true,
+  registrationNo: null,
+  isOperational: true,
   machineName: null,
   brand: null,
   model: null,
+  series: null,
   yearOfManufacture: null,
-  countryOfManufacture: null,
+  manufacturer: null,
   purchaseDate: null,
   purchasePrice: null,
+  quantity: null,
   capacity: null,
   width: null,
   length: null,
   height: null,
+  machineDimensions: null,
   energyUse: null,
   location: null,
   conditionUse: null,
@@ -560,8 +657,10 @@ export const createMachineryFormDefault: createMachineryFormType = {
   machineAge: null,
   machineEfficiency: null,
   machineTechnology: null,
-  usePurpose: null,
-  machinePart: null,
+  usagePurpose: null,
+  machineParts: null,
+  replacementValue: null,
+  conditionValue: null,
   other: null,
   remark: null,
   appraiserOpinion: null,
@@ -595,7 +694,7 @@ export const createCondoPMAFormDefault: createCondoPMAFormType = {
   builtOnTitleNumber: '',
   condoRegistrationNumber: '',
   roomNumber: '',
-  floorNumber: 0,
+  floorNumber: '',
   buildingNumber: '',
   condoName: '',
   subDistrict: '',

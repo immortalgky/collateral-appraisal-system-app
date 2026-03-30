@@ -135,6 +135,7 @@ const typeColorMap: Record<BadgeType, Record<string, ColorKey>> = {
     agree: 'emerald',
     disagree: 'red',
     'route back': 'purple',
+    proceed: 'emerald',
   },
 };
 

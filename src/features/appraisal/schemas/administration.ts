@@ -44,6 +44,7 @@ export const assignmentFormSchema = z
     selectedCompany: externalCompanySchema.nullable(),
     followupStaffId: z.string().nullable(),
     selectedFollowupStaff: internalStaffSchema.nullable(),
+    followupStaffMethod: z.enum(['manual', 'roundrobin']),
     remarks: z.string().max(500, 'Remarks must not exceed 500 characters'),
   })
   .refine(
@@ -66,8 +67,8 @@ export const assignmentFormSchema = z
   )
   .refine(
     data => {
-      // For external assignments, require followup staff
-      if (data.assignmentType === 'external') {
+      // For external assignments, only require followup staff when method is manual
+      if (data.assignmentType === 'external' && data.followupStaffMethod === 'manual') {
         return data.followupStaffId !== null && data.followupStaffId.length > 0;
       }
       return true;
@@ -92,5 +93,6 @@ export const assignmentFormDefaults: AssignmentFormType = {
   selectedCompany: null,
   followupStaffId: null,
   selectedFollowupStaff: null,
+  followupStaffMethod: 'manual',
   remarks: '',
 };

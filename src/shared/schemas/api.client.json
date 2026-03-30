@@ -529,6 +529,91 @@
         }
       }
     },
+    "/requests/me": {
+      "get": {
+        "tags": ["Requests"],
+        "summary": "Get current user's requests",
+        "description": "Retrieves requests created by the authenticated user with pagination support.",
+        "operationId": "GetMyRequests",
+        "parameters": [
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purpose",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRequestsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/requests/draft": {
       "post": {
         "tags": ["Requests"],
@@ -849,6 +934,47 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{id}/document-checklist": {
+      "get": {
+        "tags": ["Requests"],
+        "summary": "Get document checklist for a specific request",
+        "description": "Returns the document checklist with upload status for application-level and per-title documents",
+        "operationId": "GetRequestDocumentChecklist",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRequestDocumentChecklistResponse"
                 }
               }
             }
@@ -1412,6 +1538,210 @@
         }
       }
     },
+    "/companies/{id}": {
+      "put": {
+        "tags": ["Api"],
+        "summary": "Update Company",
+        "description": "Update an existing company",
+        "operationId": "UpdateCompany",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCompanyResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Api"],
+        "summary": "Get Company By Id",
+        "description": "Get a company by its unique identifier",
+        "operationId": "GetCompanyById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCompanyByIdResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Api"],
+        "summary": "Delete Company",
+        "description": "Soft delete a company",
+        "operationId": "DeleteCompany",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCompanyResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies": {
+      "get": {
+        "tags": ["Api"],
+        "summary": "Get Companies",
+        "description": "Get all companies with optional search and active filter",
+        "operationId": "GetCompanies",
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ActiveOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCompaniesResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Api"],
+        "summary": "Create Company",
+        "description": "Create a new company",
+        "operationId": "CreateCompany",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCompanyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications/{notificationId}/read": {
       "patch": {
         "tags": ["MarkNotificationAsReadEndpoint"],
@@ -1665,6 +1995,351 @@
         }
       }
     },
+    "/document-types/{id}": {
+      "put": {
+        "tags": ["Document Types"],
+        "summary": "Update a document type",
+        "operationId": "UpdateDocumentType",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentTypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Document Types"],
+        "summary": "Delete a document type",
+        "operationId": "DeleteDocumentType",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/document-requirements/{id}": {
+      "put": {
+        "tags": ["Document Requirements"],
+        "summary": "Update a document requirement",
+        "operationId": "UpdateDocumentRequirement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Document Requirements"],
+        "summary": "Delete a document requirement",
+        "operationId": "DeleteDocumentRequirement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/document-types": {
+      "get": {
+        "tags": ["Document Types"],
+        "summary": "Get all document types",
+        "operationId": "GetDocumentTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDocumentTypesResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Document Types"],
+        "summary": "Create a new document type",
+        "operationId": "CreateDocumentType",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentTypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDocumentTypeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/document-requirements": {
+      "get": {
+        "tags": ["Document Requirements"],
+        "summary": "Get all document requirements",
+        "operationId": "GetDocumentRequirements",
+        "parameters": [
+          {
+            "name": "propertyTypeCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purposeCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDocumentRequirementsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Document Requirements"],
+        "summary": "Create a document requirement",
+        "operationId": "CreateDocumentRequirement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDocumentRequirementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/document-checklist": {
+      "get": {
+        "tags": ["Document Requirements"],
+        "summary": "Get document checklist for specified property types",
+        "operationId": "GetDocumentChecklist",
+        "parameters": [
+          {
+            "name": "propertyTypeCodes",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purposeCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDocumentChecklistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/construction-work-groups": {
+      "get": {
+        "tags": ["Parameter"],
+        "summary": "Get construction work groups",
+        "description": "Retrieve all construction work groups with their predefined work items.",
+        "operationId": "GetConstructionWorkGroups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConstructionWorkGroupDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/parameters/addresses/title": {
       "get": {
         "tags": ["Parameter"],
@@ -1908,42 +2583,60 @@
         }
       }
     },
-    "/workflow/kickstart": {
-      "post": {
-        "tags": ["Workflow"],
-        "summary": "Kickstart workflow",
-        "description": "Starts a new workflow for a request.",
-        "operationId": "KickstartWorkflow",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KickstartWorkflowRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KickstartWorkflowResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/tasks": {
       "get": {
         "tags": ["Tasks"],
         "summary": "Get all tasks",
-        "description": "Retrieves all workflow tasks with pagination support.",
+        "description": "Retrieves all workflow tasks with pagination and optional filtering by status, assignee, priority, and task name.",
         "operationId": "GetTasks",
+        "parameters": [
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigneeUserId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "taskName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1954,26 +2647,87 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/workflow/complete": {
-      "post": {
-        "tags": ["Api"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CompleteActivityRequest"
+    "/tasks/me": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "Get current user's tasks",
+        "description": "Retrieves workflow tasks assigned to the authenticated user with pagination and optional filtering by status, priority, and task name.",
+        "operationId": "GetMyTasks",
+        "parameters": [
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "taskName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMyTasksResponse"
+                }
               }
             }
           },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -2045,6 +2799,36 @@
         }
       }
     },
+    "/api/workflows/instances/{workflowInstanceId}/activities/{activityId}/eligible-assignees": {
+      "get": {
+        "tags": ["Workflows"],
+        "operationId": "GetEligibleAssignees",
+        "parameters": [
+          {
+            "name": "workflowInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "activityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/workflows/activity-types": {
       "get": {
         "tags": ["Workflows"],
@@ -2104,7 +2888,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CompleteActivityRequest2"
+                "$ref": "#/components/schemas/CompleteActivityRequest"
               }
             }
           },
@@ -5534,337 +6318,6 @@
         }
       }
     },
-    "/document-types/{id}": {
-      "put": {
-        "tags": ["Document Types"],
-        "summary": "Update a document type",
-        "description": "Updates an existing document type",
-        "operationId": "UpdateDocumentType",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDocumentTypeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Document Types"],
-        "summary": "Delete a document type",
-        "description": "Soft deletes (deactivates) a document type",
-        "operationId": "DeleteDocumentType",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/document-requirements/{id}": {
-      "put": {
-        "tags": ["Document Requirements"],
-        "summary": "Update a document requirement",
-        "description": "Updates an existing document requirement's isRequired, isActive, and notes fields",
-        "operationId": "UpdateDocumentRequirement",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDocumentRequirementRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Document Requirements"],
-        "summary": "Delete a document requirement",
-        "description": "Soft deletes (deactivates) a document requirement",
-        "operationId": "DeleteDocumentRequirement",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/document-types": {
-      "get": {
-        "tags": ["Document Types"],
-        "summary": "Get all document types",
-        "description": "Returns all document types for admin configuration",
-        "operationId": "GetDocumentTypes",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetDocumentTypesResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["Document Types"],
-        "summary": "Create a new document type",
-        "description": "Creates a new document type for use in document requirements",
-        "operationId": "CreateDocumentType",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDocumentTypeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateDocumentTypeResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/document-requirements": {
-      "get": {
-        "tags": ["Document Requirements"],
-        "summary": "Get all document requirements",
-        "description": "Returns all document requirements. Use propertyTypeCode=APP for application-level, or L/B/U/VEH/etc. for property-type-specific. Use purposeCode to filter by purpose.",
-        "operationId": "GetDocumentRequirements",
-        "parameters": [
-          {
-            "name": "propertyTypeCode",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "purposeCode",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetDocumentRequirementsResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["Document Requirements"],
-        "summary": "Create a document requirement",
-        "description": "Creates a new document requirement. Use null PropertyTypeCode for application-level, null PurposeCode for purpose-agnostic requirements.",
-        "operationId": "CreateDocumentRequirement",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDocumentRequirementRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateDocumentRequirementResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/document-checklist": {
-      "get": {
-        "tags": ["Document Requirements"],
-        "summary": "Get document checklist for specified property types",
-        "description": "Returns application-level documents and property-type-specific documents grouped by type. Use purposeCode to include purpose-specific requirements.",
-        "operationId": "GetDocumentChecklist",
-        "parameters": [
-          {
-            "name": "propertyTypeCodes",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "purposeCode",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetDocumentChecklistResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/appraisals/{appraisalId}/decision-summary": {
       "post": {
         "tags": ["DecisionSummary"],
@@ -8871,6 +9324,106 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/machinery-summary": {
+      "get": {
+        "tags": ["Appraisal Properties"],
+        "summary": "Get machinery appraisal summary",
+        "description": "Retrieves the machinery appraisal summary (Section 3.1 & 3.3) for an appraisal.",
+        "operationId": "GetMachinerySummary",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMachinerySummaryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Appraisal Properties"],
+        "summary": "Create or update machinery appraisal summary",
+        "description": "Creates or updates the machinery appraisal summary (Section 3.1 & 3.3) for an appraisal.",
+        "operationId": "CreateOrUpdateMachinerySummary",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrUpdateMachinerySummaryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOrUpdateMachinerySummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals/{appraisalId}/gallery": {
       "get": {
         "tags": ["AppraisalGallery"],
@@ -9195,6 +9748,15 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -9251,6 +9813,15 @@
           {
             "name": "appraisalId",
             "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
@@ -9313,6 +9884,14 @@
             "name": "appraisalId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -9639,6 +10218,76 @@
         }
       }
     },
+    "/appraisals/{appraisalId}/properties/{propertyId}/copy": {
+      "post": {
+        "tags": ["Appraisal Properties"],
+        "summary": "Copy a property to a group",
+        "description": "Deep-copies an existing property and adds it to a target group.",
+        "operationId": "CopyPropertyToGroup",
+        "parameters": [
+          {
+            "name": "appraisalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyPropertyToGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopyPropertyToGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/appraisals/{appraisalId}/gallery/{photoId}/assign-topic": {
       "put": {
         "tags": ["PhotoTopic"],
@@ -9905,9 +10554,9 @@
     "/appraisals/{appraisalId}/appointments": {
       "get": {
         "tags": ["Appointment"],
-        "summary": "Get appointments",
-        "description": "Get all appointments for an appraisal.",
-        "operationId": "GetAppointments",
+        "summary": "Get active appointment",
+        "description": "Get the active appointment (Pending or Approved) for an appraisal.",
+        "operationId": "GetAppointment",
         "parameters": [
           {
             "name": "appraisalId",
@@ -9925,7 +10574,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetAppointmentsResponse"
+                  "$ref": "#/components/schemas/GetAppointmentResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -11233,7 +11892,17 @@
         }
       },
       "AppendixDocumentResponse": {
-        "required": ["id", "galleryPhotoId", "documentId", "displaySequence"],
+        "required": [
+          "id",
+          "galleryPhotoId",
+          "documentId",
+          "displaySequence",
+          "fileName",
+          "filePath",
+          "fileExtension",
+          "mimeType",
+          "fileSizeBytes"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -11251,6 +11920,53 @@
           "displaySequence": {
             "type": "integer",
             "format": "int32"
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "filePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileExtension": {
+            "type": "string",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        }
+      },
+      "ApplicationDocumentChecklistItem": {
+        "required": ["code", "name", "category", "isRequired", "isUploaded", "notes"],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "isUploaded": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -12908,6 +13624,61 @@
           }
         }
       },
+      "CompanyDto": {
+        "required": [
+          "id",
+          "name",
+          "taxId",
+          "phone",
+          "email",
+          "street",
+          "city",
+          "province",
+          "postalCode",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "taxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "street": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
       "ComparableAdjustmentDto": {
         "type": "object",
         "properties": {
@@ -13015,22 +13786,6 @@
         }
       },
       "CompleteActivityRequest": {
-        "required": ["correlationId", "activityName", "actionTaken"],
-        "type": "object",
-        "properties": {
-          "correlationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "activityName": {
-            "type": "string"
-          },
-          "actionTaken": {
-            "type": "string"
-          }
-        }
-      },
-      "CompleteActivityRequest2": {
         "type": "object",
         "properties": {
           "completedBy": {
@@ -13105,6 +13860,331 @@
           }
         }
       },
+      "ConstructionInspectionData": {
+        "required": ["isFullDetail", "totalValue"],
+        "type": "object",
+        "properties": {
+          "isFullDetail": {
+            "type": "boolean"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "summaryDetail": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "summaryPreviousProgressPct": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "summaryPreviousValue": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "summaryCurrentProgressPct": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "summaryCurrentValue": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "default": null,
+            "nullable": true
+          },
+          "documentFileName": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "documentFilePath": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "workDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConstructionWorkDetailData"
+            },
+            "default": null,
+            "nullable": true
+          }
+        },
+        "default": null,
+        "nullable": true
+      },
+      "ConstructionInspectionDto": {
+        "required": [
+          "id",
+          "appraisalPropertyId",
+          "isFullDetail",
+          "totalValue",
+          "summaryDetail",
+          "summaryPreviousProgressPct",
+          "summaryPreviousValue",
+          "summaryCurrentProgressPct",
+          "summaryCurrentValue",
+          "remark",
+          "documentId",
+          "documentFileName",
+          "documentFilePath",
+          "workDetails"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalPropertyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isFullDetail": {
+            "type": "boolean"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "summaryDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "summaryPreviousProgressPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "summaryPreviousValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "summaryCurrentProgressPct": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "summaryCurrentValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "documentFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentFilePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "workDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConstructionWorkDetailDto"
+            },
+            "nullable": true
+          }
+        },
+        "nullable": true
+      },
+      "ConstructionWorkDetailData": {
+        "required": [
+          "id",
+          "constructionWorkGroupId",
+          "constructionWorkItemId",
+          "workItemName",
+          "displayOrder",
+          "proportionPct",
+          "previousProgressPct",
+          "currentProgressPct"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "constructionWorkGroupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "constructionWorkItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "workItemName": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "proportionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousProgressPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentProgressPct": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ConstructionWorkDetailDto": {
+        "required": [
+          "id",
+          "constructionWorkGroupId",
+          "constructionWorkItemId",
+          "workItemName",
+          "displayOrder",
+          "constructionValue",
+          "previousProgressPct",
+          "currentProgressPct",
+          "proportionPct",
+          "currentProportionPct",
+          "previousPropertyValue",
+          "currentPropertyValue"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "constructionWorkGroupId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "constructionWorkItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "workItemName": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "constructionValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousProgressPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentProgressPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "proportionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentProportionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousPropertyValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentPropertyValue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ConstructionWorkGroupDto": {
+        "required": ["id", "code", "nameTh", "nameEn", "displayOrder", "items"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameTh": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConstructionWorkItemDto"
+            }
+          }
+        }
+      },
+      "ConstructionWorkItemDto": {
+        "required": ["id", "code", "nameTh", "nameEn", "displayOrder"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "nameTh": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ContactDto": {
         "required": ["contactPersonName", "contactPersonPhone", "dealerCode"],
         "type": "object",
@@ -13138,14 +14218,30 @@
           }
         }
       },
-      "CreateAppointmentRequest": {
-        "required": ["assignmentId", "appointmentDateTime", "appointedBy"],
+      "CopyPropertyToGroupRequest": {
+        "required": ["targetGroupId"],
         "type": "object",
         "properties": {
-          "assignmentId": {
+          "targetGroupId": {
             "type": "string",
             "format": "uuid"
-          },
+          }
+        }
+      },
+      "CopyPropertyToGroupResponse": {
+        "required": ["propertyId"],
+        "type": "object",
+        "properties": {
+          "propertyId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateAppointmentRequest": {
+        "required": ["appointmentDateTime", "appointedBy"],
+        "type": "object",
+        "properties": {
           "appointmentDateTime": {
             "type": "string",
             "format": "date-time"
@@ -13526,6 +14622,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -13629,6 +14728,53 @@
         }
       },
       "CreateCommitteeResponse": {
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateCompanyRequest": {
+        "required": ["name", "taxId", "phone", "email", "street", "city", "province", "postalCode"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "taxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "street": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateCompanyResponse": {
         "required": ["id"],
         "type": "object",
         "properties": {
@@ -14999,6 +16145,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -15522,13 +16671,18 @@
             "default": null,
             "nullable": true
           },
+          "series": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
           "yearOfManufacture": {
             "type": "integer",
             "format": "int32",
             "default": null,
             "nullable": true
           },
-          "countryOfManufacture": {
+          "manufacturer": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -15546,6 +16700,17 @@
             "nullable": true
           },
           "capacity": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "machineDimensions": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -15583,7 +16748,7 @@
             "default": null,
             "nullable": true
           },
-          "canUse": {
+          "isOperational": {
             "type": "boolean",
             "default": null,
             "nullable": true
@@ -15619,13 +16784,25 @@
             "default": null,
             "nullable": true
           },
-          "usePurpose": {
+          "usagePurpose": {
             "type": "string",
             "default": null,
             "nullable": true
           },
-          "machinePart": {
+          "machineParts": {
             "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "replacementValue": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "conditionValue": {
+            "type": "number",
+            "format": "double",
             "default": null,
             "nullable": true
           },
@@ -15821,6 +16998,124 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateOrUpdateMachinerySummaryRequest": {
+        "type": "object",
+        "properties": {
+          "inIndustrial": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "surveyedNumber": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "appraisalNumber": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "installedAndUseCount": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "appraisalScrapCount": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "appraisedByDocumentCount": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "notInstalledCount": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "maintenance": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "exterior": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "performance": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "marketDemandAvailable": {
+            "type": "boolean",
+            "default": null,
+            "nullable": true
+          },
+          "marketDemand": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "proprietor": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "owner": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "machineAddress": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "obligation": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "other": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          }
+        }
+      },
+      "CreateOrUpdateMachinerySummaryResponse": {
+        "required": ["summaryId"],
+        "type": "object",
+        "properties": {
+          "summaryId": {
             "type": "string",
             "format": "uuid"
           }
@@ -16679,6 +17974,15 @@
           }
         }
       },
+      "DeleteCompanyResponse": {
+        "required": ["isSuccess"],
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          }
+        }
+      },
       "DeleteFactorScoreResponse": {
         "required": ["success"],
         "type": "object",
@@ -17458,15 +18762,12 @@
           }
         }
       },
-      "GetAppointmentsResponse": {
-        "required": ["appointments"],
+      "GetAppointmentResponse": {
+        "required": ["appointment"],
         "type": "object",
         "properties": {
-          "appointments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AppointmentDto2"
-            }
+          "appointment": {
+            "$ref": "#/components/schemas/AppointmentDto2"
           }
         }
       },
@@ -17693,7 +18994,8 @@
           "forcedSalePrice",
           "remark",
           "depreciationDetails",
-          "surfaces"
+          "surfaces",
+          "constructionInspection"
         ],
         "type": "object",
         "properties": {
@@ -17970,6 +19272,9 @@
             "items": {
               "$ref": "#/components/schemas/BuildingAppraisalSurfaceDto"
             }
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionDto"
           }
         }
       },
@@ -18049,6 +19354,27 @@
         "properties": {
           "result": {
             "$ref": "#/components/schemas/PaginatedResultOfCommitteeDto"
+          }
+        }
+      },
+      "GetCompaniesResponse": {
+        "required": ["companies"],
+        "type": "object",
+        "properties": {
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyDto"
+            }
+          }
+        }
+      },
+      "GetCompanyByIdResponse": {
+        "required": ["company"],
+        "type": "object",
+        "properties": {
+          "company": {
+            "$ref": "#/components/schemas/CompanyDto"
           }
         }
       },
@@ -18938,7 +20264,8 @@
           "landRemark",
           "buildingRemark",
           "depreciationDetails",
-          "surfaces"
+          "surfaces",
+          "constructionInspection"
         ],
         "type": "object",
         "properties": {
@@ -19560,6 +20887,9 @@
             "items": {
               "$ref": "#/components/schemas/BuildingAppraisalSurfaceDto"
             }
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionDto"
           }
         }
       },
@@ -19978,27 +21308,32 @@
           "registrationNo",
           "brand",
           "model",
+          "series",
           "yearOfManufacture",
-          "countryOfManufacture",
+          "manufacturer",
           "purchaseDate",
           "purchasePrice",
           "capacity",
+          "quantity",
+          "machineDimensions",
           "width",
           "length",
           "height",
           "energyUse",
           "energyUseRemark",
-          "owner",
+          "ownerName",
           "verifiableOwner",
-          "canUse",
+          "isOperational",
           "location",
           "conditionUse",
           "machineCondition",
           "machineAge",
           "machineEfficiency",
           "machineTechnology",
-          "usePurpose",
-          "machinePart",
+          "usagePurpose",
+          "machineParts",
+          "replacementValue",
+          "conditionValue",
           "remark",
           "other",
           "appraiserOpinion"
@@ -20056,12 +21391,16 @@
             "type": "string",
             "nullable": true
           },
+          "series": {
+            "type": "string",
+            "nullable": true
+          },
           "yearOfManufacture": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "countryOfManufacture": {
+          "manufacturer": {
             "type": "string",
             "nullable": true
           },
@@ -20076,6 +21415,15 @@
             "nullable": true
           },
           "capacity": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "machineDimensions": {
             "type": "string",
             "nullable": true
           },
@@ -20102,13 +21450,14 @@
             "type": "string",
             "nullable": true
           },
-          "owner": {
-            "type": "string"
+          "ownerName": {
+            "type": "string",
+            "nullable": true
           },
           "verifiableOwner": {
             "type": "boolean"
           },
-          "canUse": {
+          "isOperational": {
             "type": "boolean"
           },
           "location": {
@@ -20136,12 +21485,22 @@
             "type": "string",
             "nullable": true
           },
-          "usePurpose": {
+          "usagePurpose": {
             "type": "string",
             "nullable": true
           },
-          "machinePart": {
+          "machineParts": {
             "type": "string",
+            "nullable": true
+          },
+          "replacementValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "conditionValue": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           },
           "remark": {
@@ -20153,6 +21512,126 @@
             "nullable": true
           },
           "appraiserOpinion": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "GetMachinerySummaryResponse": {
+        "required": [
+          "summaryId",
+          "appraisalId",
+          "inIndustrial",
+          "surveyedNumber",
+          "appraisalNumber",
+          "installedAndUseCount",
+          "appraisalScrapCount",
+          "appraisedByDocumentCount",
+          "notInstalledCount",
+          "maintenance",
+          "exterior",
+          "performance",
+          "marketDemandAvailable",
+          "marketDemand",
+          "proprietor",
+          "owner",
+          "machineAddress",
+          "latitude",
+          "longitude",
+          "obligation",
+          "other"
+        ],
+        "type": "object",
+        "properties": {
+          "summaryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appraisalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inIndustrial": {
+            "type": "string",
+            "nullable": true
+          },
+          "surveyedNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "appraisalNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "installedAndUseCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "appraisalScrapCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "appraisedByDocumentCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "notInstalledCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maintenance": {
+            "type": "string",
+            "nullable": true
+          },
+          "exterior": {
+            "type": "string",
+            "nullable": true
+          },
+          "performance": {
+            "type": "string",
+            "nullable": true
+          },
+          "marketDemandAvailable": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "marketDemand": {
+            "type": "string",
+            "nullable": true
+          },
+          "proprietor": {
+            "type": "string",
+            "nullable": true
+          },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
+          "machineAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "obligation": {
+            "type": "string",
+            "nullable": true
+          },
+          "other": {
             "type": "string",
             "nullable": true
           }
@@ -20209,6 +21688,15 @@
           }
         }
       },
+      "GetMyTasksResponse": {
+        "required": ["result"],
+        "type": "object",
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/PaginatedResultOfTaskDto"
+          }
+        }
+      },
       "GetPermissionByIdResponse": {
         "required": ["id", "permissionCode", "description"],
         "type": "object",
@@ -20254,7 +21742,8 @@
           "finalMarketValue",
           "finalAppraisedValue",
           "finalForcedSaleValue",
-          "valuationDate"
+          "valuationDate",
+          "useSystemCalc"
         ],
         "type": "object",
         "properties": {
@@ -20291,6 +21780,10 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "useSystemCalc": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -20303,6 +21796,7 @@
           "finalAppraisedValue",
           "finalForcedSaleValue",
           "valuationDate",
+          "useSystemCalc",
           "approaches"
         ],
         "type": "object",
@@ -20338,6 +21832,9 @@
             "format": "date-time",
             "nullable": true
           },
+          "useSystemCalc": {
+            "type": "boolean"
+          },
           "approaches": {
             "type": "array",
             "items": {
@@ -20352,7 +21849,6 @@
           "groupNumber",
           "groupName",
           "description",
-          "useSystemCalc",
           "pricingAnalysisId",
           "properties"
         ],
@@ -20372,9 +21868,6 @@
           "description": {
             "type": "string",
             "nullable": true
-          },
-          "useSystemCalc": {
-            "type": "boolean"
           },
           "pricingAnalysisId": {
             "type": "string",
@@ -20626,6 +22119,36 @@
             "items": {
               "$ref": "#/components/schemas/RequestCommentDto"
             }
+          }
+        }
+      },
+      "GetRequestDocumentChecklistResponse": {
+        "required": [
+          "applicationDocuments",
+          "titleDocuments",
+          "isComplete",
+          "missingRequiredCount"
+        ],
+        "type": "object",
+        "properties": {
+          "applicationDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationDocumentChecklistItem"
+            }
+          },
+          "titleDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TitleDocumentChecklistGroup"
+            }
+          },
+          "isComplete": {
+            "type": "boolean"
+          },
+          "missingRequiredCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -20892,7 +22415,7 @@
         "type": "object",
         "properties": {
           "result": {
-            "$ref": "#/components/schemas/PaginatedResultOfTaskItem"
+            "$ref": "#/components/schemas/PaginatedResultOfTaskDto"
           }
         }
       },
@@ -20933,7 +22456,7 @@
           "height",
           "energyUse",
           "energyUseRemark",
-          "owner",
+          "ownerName",
           "verifiableOwner",
           "canUse",
           "location",
@@ -21047,8 +22570,9 @@
             "type": "string",
             "nullable": true
           },
-          "owner": {
-            "type": "string"
+          "ownerName": {
+            "type": "string",
+            "nullable": true
           },
           "verifiableOwner": {
             "type": "boolean"
@@ -21132,7 +22656,7 @@
           "netTonnage",
           "energyUse",
           "energyUseRemark",
-          "owner",
+          "ownerName",
           "verifiableOwner",
           "canUse",
           "formerName",
@@ -21267,8 +22791,9 @@
             "type": "string",
             "nullable": true
           },
-          "owner": {
-            "type": "string"
+          "ownerName": {
+            "type": "string",
+            "nullable": true
           },
           "verifiableOwner": {
             "type": "boolean"
@@ -21473,26 +22998,6 @@
             "items": {
               "$ref": "#/components/schemas/DocumentLink"
             }
-          }
-        }
-      },
-      "KickstartWorkflowRequest": {
-        "required": ["requestId"],
-        "type": "object",
-        "properties": {
-          "requestId": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "KickstartWorkflowResponse": {
-        "required": ["correlationId"],
-        "type": "object",
-        "properties": {
-          "correlationId": {
-            "type": "string",
-            "format": "uuid"
           }
         }
       },
@@ -22496,6 +24001,7 @@
           "avatarUrl",
           "position",
           "department",
+          "companyId",
           "roles",
           "permissions"
         ],
@@ -22528,6 +24034,11 @@
           },
           "department": {
             "type": "string",
+            "nullable": true
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           },
           "roles": {
@@ -22838,14 +24349,14 @@
           }
         }
       },
-      "PaginatedResultOfTaskItem": {
+      "PaginatedResultOfTaskDto": {
         "required": ["items", "count", "pageNumber", "pageSize"],
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/TaskItem"
+              "$ref": "#/components/schemas/TaskDto"
             }
           },
           "count": {
@@ -23006,14 +24517,7 @@
         }
       },
       "PropertyGroupDto": {
-        "required": [
-          "id",
-          "groupNumber",
-          "groupName",
-          "description",
-          "useSystemCalc",
-          "propertyCount"
-        ],
+        "required": ["id", "groupNumber", "groupName", "description", "propertyCount"],
         "type": "object",
         "properties": {
           "id": {
@@ -23030,9 +24534,6 @@
           "description": {
             "type": "string",
             "nullable": true
-          },
-          "useSystemCalc": {
-            "type": "boolean"
           },
           "propertyCount": {
             "type": "integer",
@@ -23331,6 +24832,7 @@
           "avatarUrl",
           "position",
           "department",
+          "companyId",
           "permissions",
           "roles"
         ],
@@ -23361,6 +24863,11 @@
           },
           "department": {
             "type": "string",
+            "nullable": true
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           },
           "permissions": {
@@ -24742,25 +26249,7 @@
           }
         }
       },
-      "TaskItem": {
-        "required": [
-          "id",
-          "appraisalNumber",
-          "customerName",
-          "taskType",
-          "purpose",
-          "propertyType",
-          "status",
-          "appointmentDateTime",
-          "assigneeUserId",
-          "requestedAt",
-          "receivedDate",
-          "movement",
-          "slaDays",
-          "olaActual",
-          "olaDiff",
-          "priority"
-        ],
+      "TaskDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -24816,15 +26305,18 @@
           },
           "slaDays": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "olaActual": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "olaDiff": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "priority": {
             "type": "string",
@@ -24978,6 +26470,56 @@
           }
         }
       },
+      "TitleDocumentChecklistGroup": {
+        "required": ["titleId", "collateralType", "ownerName", "documents"],
+        "type": "object",
+        "properties": {
+          "titleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "collateralType": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TitleDocumentChecklistItem"
+            }
+          }
+        }
+      },
+      "TitleDocumentChecklistItem": {
+        "required": ["code", "name", "category", "isRequired", "isUploaded", "notes"],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "isUploaded": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "TokenRequest": {
         "required": ["grantType", "clientId", "code", "codeVerifier", "redirectUri"],
         "type": "object",
@@ -25100,7 +26642,14 @@
         }
       },
       "UpdateApproachResponse": {
-        "required": ["id", "approachType", "approachValue", "weight", "status"],
+        "required": [
+          "id",
+          "approachType",
+          "approachValue",
+          "weight",
+          "status",
+          "finalAppraisedValue"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -25122,6 +26671,11 @@
           },
           "status": {
             "type": "string"
+          },
+          "finalAppraisedValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         }
       },
@@ -25439,6 +26993,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -25661,6 +27218,65 @@
         }
       },
       "UpdateCollateralResponse": {
+        "required": ["isSuccess"],
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateCompanyRequest": {
+        "required": [
+          "name",
+          "taxId",
+          "phone",
+          "email",
+          "street",
+          "city",
+          "province",
+          "postalCode",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "taxId": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "street": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateCompanyResponse": {
         "required": ["isSuccess"],
         "type": "object",
         "properties": {
@@ -27259,6 +28875,9 @@
             },
             "default": null,
             "nullable": true
+          },
+          "constructionInspection": {
+            "$ref": "#/components/schemas/ConstructionInspectionData"
           }
         }
       },
@@ -27741,13 +29360,18 @@
             "default": null,
             "nullable": true
           },
+          "series": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
           "yearOfManufacture": {
             "type": "integer",
             "format": "int32",
             "default": null,
             "nullable": true
           },
-          "countryOfManufacture": {
+          "manufacturer": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -27765,6 +29389,17 @@
             "nullable": true
           },
           "capacity": {
+            "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "default": null,
+            "nullable": true
+          },
+          "machineDimensions": {
             "type": "string",
             "default": null,
             "nullable": true
@@ -27807,7 +29442,7 @@
             "default": null,
             "nullable": true
           },
-          "canUse": {
+          "isOperational": {
             "type": "boolean",
             "default": null,
             "nullable": true
@@ -27843,13 +29478,25 @@
             "default": null,
             "nullable": true
           },
-          "usePurpose": {
+          "usagePurpose": {
             "type": "string",
             "default": null,
             "nullable": true
           },
-          "machinePart": {
+          "machineParts": {
             "type": "string",
+            "default": null,
+            "nullable": true
+          },
+          "replacementValue": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
+          "conditionValue": {
+            "type": "number",
+            "format": "double",
             "default": null,
             "nullable": true
           },
@@ -28054,7 +29701,16 @@
         }
       },
       "UpdateMethodResponse": {
-        "required": ["id", "methodType", "methodValue", "valuePerUnit", "unitType", "status"],
+        "required": [
+          "id",
+          "methodType",
+          "methodValue",
+          "valuePerUnit",
+          "unitType",
+          "status",
+          "approachValue",
+          "finalAppraisedValue"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -28080,6 +29736,16 @@
           },
           "status": {
             "type": "string"
+          },
+          "approachValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "finalAppraisedValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         }
       },
@@ -28125,7 +29791,7 @@
         }
       },
       "UpdatePricingAnalysisRequest": {
-        "required": ["marketValue", "appraisedValue", "forcedSaleValue"],
+        "required": ["marketValue", "appraisedValue", "forcedSaleValue", "useSystemCalc"],
         "type": "object",
         "properties": {
           "marketValue": {
@@ -28139,6 +29805,10 @@
           "forcedSaleValue": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          },
+          "useSystemCalc": {
+            "type": "boolean",
             "nullable": true
           }
         }
@@ -28222,7 +29892,7 @@
         }
       },
       "UpdatePropertyGroupRequest": {
-        "required": ["groupName", "description", "useSystemCalc"],
+        "required": ["groupName", "description"],
         "type": "object",
         "properties": {
           "groupName": {
@@ -28231,9 +29901,6 @@
           "description": {
             "type": "string",
             "nullable": true
-          },
-          "useSystemCalc": {
-            "type": "boolean"
           }
         }
       },
@@ -28946,10 +30613,13 @@
       "name": "Parameter"
     },
     {
-      "name": "Documents"
+      "name": "Document Types"
     },
     {
-      "name": "Workflow"
+      "name": "Document Requirements"
+    },
+    {
+      "name": "Documents"
     },
     {
       "name": "Tasks"
@@ -28980,12 +30650,6 @@
     },
     {
       "name": "Fee"
-    },
-    {
-      "name": "Document Types"
-    },
-    {
-      "name": "Document Requirements"
     },
     {
       "name": "DecisionSummary"

@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   closestCenter,
   DndContext,
@@ -18,7 +19,7 @@ import { PropertyCardContent } from '../PropertyCardContent';
 import { usePropertyClipboardStore } from '../../store';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import {
-  useAddPropertyToGroup,
+  useCopyPropertyToGroup,
   useCreatePropertyGroup,
   useDeletePropertyGroup,
   useMovePropertyToGroup,
@@ -32,6 +33,7 @@ import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import { PropertyContextMenu } from '../PropertyContextMenu';
 import type { PropertyItem } from '../../types';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 // Map property type to route segment
 const getRouteSegment = (type: string): string => {
@@ -70,13 +72,14 @@ interface ContextMenuState {
 interface PropertiesTabProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  readOnly?: boolean;
 }
 
-export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: PropertiesTabProps) => {
+export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps) => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
-  const basePath = usePropertyBasePath();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
+  const propertyBasePath = usePropertyBasePath();
 
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
@@ -88,18 +91,19 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
   groupsRef.current = groups;
 
   // Clipboard (UI-only state)
-  const { clipboard, copyProperty, clearClipboard } = usePropertyClipboardStore();
+  const { clipboard, copyProperty } = usePropertyClipboardStore();
 
   // Mutations
   const createGroupMutation = useCreatePropertyGroup();
   const updateGroupMutation = useUpdatePropertyGroup();
   const deleteGroupMutation = useDeletePropertyGroup();
   const removePropertyMutation = useRemovePropertyFromGroup();
-  const addPropertyToGroupMutation = useAddPropertyToGroup();
+  const copyPropertyMutation = useCopyPropertyToGroup();
   const moveMutation = useMovePropertyToGroup();
   const reorderMutation = useReorderPropertiesInGroup();
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [highlightPropertyId, setHighlightPropertyId] = useState<string | null>(null);
 
   const [activeProperty, setActiveProperty] = useState<PropertyItem | null>(null);
 
@@ -132,6 +136,21 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
     }),
   );
 
+  // Scroll to and highlight newly pasted property
+  useEffect(() => {
+    if (!highlightPropertyId) return;
+    const el = document.querySelector(`[data-property-id="${highlightPropertyId}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    el.classList.add('animate-flash-highlight');
+    const handleEnd = () => {
+      el.classList.remove('animate-flash-highlight');
+      el.removeEventListener('animationend', handleEnd);
+    };
+    el.addEventListener('animationend', handleEnd);
+    setHighlightPropertyId(null);
+  }, [highlightPropertyId, groups]);
+
   // ==================== Mutation Handlers ====================
 
   const handleAddGroup = useCallback(() => {
@@ -157,7 +176,6 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
           appraisalId,
           groupId,
           groupName: newName,
-          useSystemCalc: group.useSystemCalc ?? false,
           description: group.description ?? null,
         },
         {
@@ -234,12 +252,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
   const handlePasteProperty = useCallback(
     (groupId: string) => {
       if (!appraisalId || !clipboard) return;
-      // Add the copied property to the target group
-      addPropertyToGroupMutation.mutate(
-        { appraisalId, groupId, propertyId: clipboard.id },
+      copyPropertyMutation.mutate(
+        { appraisalId, propertyId: clipboard.id, targetGroupId: groupId },
         {
-          onSuccess: () => {
-            clearClipboard();
+          onSuccess: (data) => {
+            setHighlightPropertyId(data.id);
           },
           onError: () => {
             toast.error('Failed to paste property');
@@ -247,7 +264,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
         },
       );
     },
-    [appraisalId, clipboard, addPropertyToGroupMutation, clearClipboard],
+    [appraisalId, clipboard, copyPropertyMutation],
   );
 
   // ==================== Drag & Drop ====================
@@ -342,11 +359,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
       if (appraisalId) {
         const routeSegment = getRouteSegment(property.type);
         navigate(
-          `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+          `${basePath}/${propertyBasePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
         );
       }
     },
-    [appraisalId, basePath, navigate],
+    [basePath, propertyBasePath, navigate],
   );
 
   const handleMoveToProperty = useCallback(
@@ -425,9 +442,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
     const group = groups.find(g => g.id === groupId);
     const paId = group?.pricingAnalysisId;
     if (paId) {
-      navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${paId}`);
+      navigate(`${basePath}/groups/${groupId}/pricing-analysis/${paId}`);
     } else {
-      navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis`);
+      navigate(`${basePath}/groups/${groupId}/pricing-analysis`);
     }
   };
 
@@ -562,7 +579,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
         onDragEnd={handleDragEnd}
         measuring={MEASURING_CONFIG}
       >
-        <div className="space-y-4 flex-1 overflow-y-auto">
+        <div className="space-y-2 flex-1 overflow-y-auto">
           {groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
               <Icon name="layer-group" className="text-4xl mb-3" />
@@ -588,7 +605,6 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, readOnly }: Properti
                 onGoToPricingAnalysis={handleGoToPricingAnalysis}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
-                readOnly={readOnly}
               />
             ))
           )}

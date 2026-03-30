@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -8,6 +9,7 @@ import { useParameterDescription } from '@shared/utils/parameterUtils';
 import { useGetLawAndRegulations, useSaveLawAndRegulations } from '@features/appraisal/api';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import type { LawAndRegulationDtoType } from '@shared/schemas/v1';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const LAW_HEADER_GROUP = 'LAW_HEADER';
 
@@ -65,9 +67,11 @@ const ItemRow = ({ item, onClick, onDelete, readOnly }: ItemRowProps) => {
   );
 };
 
-export const LawsRegulationTab = ({ readOnly }: { readOnly?: boolean }) => {
+export const LawsRegulationTab = () => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
 
   const { data, isLoading } = useGetLawAndRegulations(appraisalId);
   const saveMutation = useSaveLawAndRegulations();
@@ -77,11 +81,11 @@ export const LawsRegulationTab = ({ readOnly }: { readOnly?: boolean }) => {
   const [deleteTarget, setDeleteTarget] = useState<LawAndRegulationDtoType | null>(null);
 
   const handleCreate = () => {
-    navigate(`/appraisals/${appraisalId}/property/law-and-regulation/new`);
+    navigate(`${basePath}/property/law-and-regulation/new`);
   };
 
   const handleItemClick = (item: LawAndRegulationDtoType) => {
-    navigate(`/appraisals/${appraisalId}/property/law-and-regulation/${item.id}`);
+    navigate(`${basePath}/property/law-and-regulation/${item.id}`);
   };
 
   const handleDeleteConfirm = () => {

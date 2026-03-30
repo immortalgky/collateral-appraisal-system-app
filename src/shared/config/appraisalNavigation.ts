@@ -14,8 +14,17 @@ import { isTerminalStatus } from './navigation';
  */
 export const applicationNavigation: NavItem[] = [
   {
+    name: '360 Summary',
+    href: ':basePath/360',
+    icon: 'compass',
+    iconColor: 'text-teal-500',
+    iconStyle: 'solid',
+    // All roles can view, always read-only
+    editableRoles: [],
+  },
+  {
     name: 'Request Information',
-    href: '/appraisals/:appraisalId/request/:requestId',
+    href: ':basePath/request/:requestId',
     icon: 'square-info',
     iconColor: 'text-emerald-500',
     iconStyle: 'solid',
@@ -24,7 +33,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Administration',
-    href: '/appraisals/:appraisalId/administration',
+    href: ':basePath/administration',
     icon: 'user-tie',
     iconColor: 'text-indigo-500',
     iconStyle: 'solid',
@@ -33,7 +42,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Appointment & Fee',
-    href: '/appraisals/:appraisalId/appointment',
+    href: ':basePath/appointment',
     icon: 'calendar-check',
     iconColor: 'text-orange-500',
     iconStyle: 'solid',
@@ -49,7 +58,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Property Information',
-    href: '/appraisals/:appraisalId/property',
+    href: ':basePath/property',
     icon: 'buildings',
     iconColor: 'text-purple-500',
     iconStyle: 'solid',
@@ -65,7 +74,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Property Information (PMA)',
-    href: '/appraisals/:appraisalId/property-pma',
+    href: ':basePath/property-pma',
     icon: 'buildings',
     iconColor: 'text-purple-500',
     iconStyle: 'solid',
@@ -78,11 +87,11 @@ export const applicationNavigation: NavItem[] = [
       'appraisal_approver',
     ],
     editableRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
-    showWhen: (ctx) => ctx.isPma === true,
+    showWhen: ctx => ctx.isPma === true,
   },
   {
     name: 'Document Checklist',
-    href: '/appraisals/:appraisalId/documents',
+    href: ':basePath/documents',
     icon: 'file-circle-check',
     iconColor: 'text-teal-500',
     iconStyle: 'solid',
@@ -98,7 +107,7 @@ export const applicationNavigation: NavItem[] = [
   },
   {
     name: 'Summary & Decision',
-    href: '/appraisals/:appraisalId/summary',
+    href: ':basePath/summary',
     icon: 'paper-plane',
     iconColor: 'text-sky-500',
     iconStyle: 'solid',
@@ -192,6 +201,7 @@ export const footerNavigation: NavItem[] = [
 interface AppraisalNavParams {
   appraisalId: string;
   requestId?: string;
+  basePath?: string;
 }
 
 /**
@@ -231,7 +241,11 @@ function canRoleEdit(item: NavItem, role: WorkflowActivity, context?: NavContext
 /**
  * Filter navigation items based on user's role and optional context conditions
  */
-function filterNavItemsByRole(items: NavItem[], role: WorkflowActivity, context?: NavContext): NavItem[] {
+function filterNavItemsByRole(
+  items: NavItem[],
+  role: WorkflowActivity,
+  context?: NavContext,
+): NavItem[] {
   return items.filter(item => {
     if (item.showWhen && (!context || !item.showWhen(context))) return false;
     return canRoleView(item, role);
@@ -241,7 +255,11 @@ function filterNavItemsByRole(items: NavItem[], role: WorkflowActivity, context?
 /**
  * Get navigation items with resolved access levels for a role
  */
-function getNavItemsWithAccess(items: NavItem[], role: WorkflowActivity, context?: NavContext): NavItemWithAccess[] {
+function getNavItemsWithAccess(
+  items: NavItem[],
+  role: WorkflowActivity,
+  context?: NavContext,
+): NavItemWithAccess[] {
   return items
     .filter(item => {
       if (item.showWhen && (!context || !item.showWhen(context))) return false;
@@ -259,10 +277,10 @@ function getNavItemsWithAccess(items: NavItem[], role: WorkflowActivity, context
  * @param params.appraisalId - The appraisal ID from URL
  * @param params.requestId - The request ID from appraisal context (optional)
  */
-export const getAppraisalNavigation = ({ appraisalId, requestId }: AppraisalNavParams): NavItem[] =>
+export const getAppraisalNavigation = ({ appraisalId, requestId, basePath }: AppraisalNavParams): NavItem[] =>
   applicationNavigation.map(item => ({
     ...item,
-    href: item.href.replace(':appraisalId', appraisalId).replace(':requestId', requestId ?? ''),
+    href: item.href.replace(':basePath', basePath ?? `/appraisals/${appraisalId}`).replace(':requestId', requestId ?? ''),
   }));
 
 /**
@@ -272,13 +290,13 @@ export const getAppraisalNavigation = ({ appraisalId, requestId }: AppraisalNavP
  * @param role - User's workflow activity role
  */
 export const getAppraisalNavigationByRole = (
-  { appraisalId, requestId }: AppraisalNavParams,
+  { appraisalId, requestId, basePath }: AppraisalNavParams,
   role: WorkflowActivity,
   context?: NavContext,
 ): NavItem[] =>
   filterNavItemsByRole(applicationNavigation, role, context).map(item => ({
     ...item,
-    href: item.href.replace(':appraisalId', appraisalId).replace(':requestId', requestId ?? ''),
+    href: item.href.replace(':basePath', basePath ?? `/appraisals/${appraisalId}`).replace(':requestId', requestId ?? ''),
   }));
 
 /**
@@ -304,13 +322,13 @@ export const getFooterNavigationByRole = (role: WorkflowActivity): NavItem[] =>
  * Returns items the role can view, with canView and canEdit flags
  */
 export const getAppraisalNavigationWithAccess = (
-  { appraisalId, requestId }: AppraisalNavParams,
+  { appraisalId, requestId, basePath }: AppraisalNavParams,
   role: WorkflowActivity,
   context?: NavContext,
 ): NavItemWithAccess[] =>
   getNavItemsWithAccess(applicationNavigation, role, context).map(item => ({
     ...item,
-    href: item.href.replace(':appraisalId', appraisalId).replace(':requestId', requestId ?? ''),
+    href: item.href.replace(':basePath', basePath ?? `/appraisals/${appraisalId}`).replace(':requestId', requestId ?? ''),
   }));
 
 /**
@@ -318,7 +336,11 @@ export const getAppraisalNavigationWithAccess = (
  * @param pageName - The page name (e.g., 'Administration', 'Appointment & Fee')
  * @param role - User's workflow activity role
  */
-export const canEditAppraisalPage = (pageName: string, role: WorkflowActivity, context?: NavContext): boolean => {
+export const canEditAppraisalPage = (
+  pageName: string,
+  role: WorkflowActivity,
+  context?: NavContext,
+): boolean => {
   const item = applicationNavigation.find(nav => nav.name === pageName);
   if (!item) return false;
   return canRoleEdit(item, role, context);
@@ -344,9 +366,9 @@ export const getPageAccessByPath = (
   role: WorkflowActivity,
   context?: NavContext,
 ): { canView: boolean; canEdit: boolean } => {
-  // Extract the page segment from paths like /appraisals/:id/administration
+  // Extract the page segment from paths like /appraisals/:id/administration or /tasks/:id/administration
   const pathSegments = path.split('/').filter(Boolean);
-  const pageSegment = pathSegments[2]; // 'administration', 'appointment', etc.
+  const pageSegment = pathSegments[2]; // 'administration', 'appointment', etc. (3rd segment for both /appraisals/:id/... and /tasks/:id/...)
 
   // Map path segments to navigation items
   const pathToNavMap: Record<string, string> = {
@@ -356,6 +378,7 @@ export const getPageAccessByPath = (
     property: 'Property Information',
     documents: 'Document Checklist',
     summary: 'Summary & Decision',
+    '360': '360 View',
   };
 
   const pageName = pathToNavMap[pageSegment];

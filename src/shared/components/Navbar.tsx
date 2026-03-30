@@ -4,6 +4,7 @@ import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
+import { queryClient } from '@app/queryClient';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
 import Avatar from '@shared/components/Avatar';
@@ -11,6 +12,7 @@ import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
 import SearchPreviewModal from '@shared/components/search/SearchPreviewModal';
 import type { SearchFilter } from '@shared/types/search';
+import NotificationDropdown from '@features/notification/components/NotificationDropdown';
 
 const searchFilters = [
   { id: 'all' as const, labelKey: 'search.filters.all', icon: 'layer-group', color: 'gray' },
@@ -27,7 +29,12 @@ const filterColorStyles: Record<string, { bg: string; text: string; activeBg: st
 };
 
 function handleLogout(href: string) {
-  useAuthStore.getState().logout();
+  // Navigate FIRST — clearing Zustand state would trigger ProtectedRoute
+  // to redirect to /login, which cancels the server logout navigation.
+  // Clear storage directly without triggering React re-renders.
+  localStorage.removeItem('auth_token');
+  queryClient.clear();
+  sessionStorage.clear();
   window.location.replace(href);
 }
 
@@ -207,15 +214,7 @@ export default function Navbar({
             <LanguageSwitcher />
 
             {/* Notification button */}
-            <button
-              type="button"
-              className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
-            >
-              <span className="sr-only">{t('notifications')}</span>
-              <Icon name="bell" style="regular" className="size-5" />
-              {/* Notification indicator */}
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white" />
-            </button>
+            <NotificationDropdown />
 
             {/* Separator */}
             <div aria-hidden="true" className="hidden lg:block lg:h-8 lg:w-px lg:bg-gray-200" />

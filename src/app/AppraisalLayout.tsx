@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
@@ -11,12 +11,45 @@ import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
 import { useGetAppraisalById } from '@features/appraisal/api/appraisal';
+import { useGetRequestById } from '@features/request/api/requests';
 import { DetailPageSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useUIStore } from '@shared/store';
+import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
+
+const SEARCH_READONLY_KEY = 'searchReadOnly';
+
+function getSearchReadOnly(appraisalId: string, locationState: any) {
+  const fromLocationState = locationState?.fromSearch === true;
+  const returnPath = (locationState?.returnPath as string) ?? '/tasks';
+
+  if (fromLocationState) {
+    // Fresh navigation from search — persist to sessionStorage
+    sessionStorage.setItem(
+      SEARCH_READONLY_KEY,
+      JSON.stringify({ appraisalId, returnPath }),
+    );
+    return { active: true, returnPath };
+  }
+
+  // Check sessionStorage (page refresh case)
+  try {
+    const stored = sessionStorage.getItem(SEARCH_READONLY_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.appraisalId?.toLowerCase() === appraisalId?.toLowerCase()) {
+        return { active: true, returnPath: parsed.returnPath ?? '/tasks' };
+      }
+    }
+  } catch {
+    /* ignore parse errors */
+  }
+
+  return { active: false, returnPath: '/tasks' };
+}
 
 const userNavigation = [
   { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
@@ -70,10 +103,20 @@ function AddressLoader() {
 function AppraisalLayout() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
   });
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
+
+  // Derive search read-only from location state (fresh navigation from search)
+  // or sessionStorage (internal navigation / page refresh within the same appraisal).
+  // Using useMemo ensures it stays consistent across all navigations without
+  // relying on React state that could desync from sessionStorage.
+  const searchReadOnly = useMemo(
+    () => getSearchReadOnly(appraisalId!, location.state),
+    [appraisalId, location.state],
+  );
 
   // Fetch appraisal data to get requestId and other info
   const {
@@ -83,11 +126,15 @@ function AppraisalLayout() {
     error: appraisalError,
   } = useGetAppraisalById(appraisalId);
 
+  const { data: requestData } = useGetRequestById(appraisalData?.requestId);
+
   // Build breadcrumb items based on the current route
   const breadcrumbItems = useMemo(() => {
     const appraisalNo = appraisalData?.appraisalNumber || appraisalData?.id || appraisalId;
     const items = [
-      { label: 'Task', href: '/tasks', icon: 'list-check' },
+      searchReadOnly.active
+        ? { label: 'Appraisal Search', href: searchReadOnly.returnPath, icon: 'magnifying-glass' }
+        : { label: 'Task', href: '/tasks', icon: 'list-check' },
       { label: appraisalNo || '...', href: `/appraisals/${appraisalId}`, icon: 'file-certificate' },
     ];
 
@@ -152,7 +199,7 @@ function AppraisalLayout() {
     }
 
     return items;
-  }, [appraisalData, appraisalId, location.pathname]);
+  }, [appraisalData, appraisalId, location.pathname, searchReadOnly]);
 
   // If no appraisalId, this shouldn't render
   if (!appraisalId) {
@@ -171,13 +218,16 @@ function AppraisalLayout() {
             appraisalType: appraisalData.appraisalType ?? undefined,
             priority: appraisalData.priority ?? undefined,
             isPma: (appraisalData as any).isPma ?? true, // TODO: change default back to false once backend returns isPma
+            facilityLimit: (requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0,
+            hasAppraisalBook: (requestData as any)?.detail?.hasAppraisalBook ?? false,
+            basePath: `/appraisals/${appraisalId}`,
           }
         : null,
       isLoading: isAppraisalLoading,
       isError: isAppraisalError,
       error: appraisalError as Error | null,
     }),
-    [appraisalData, appraisalId, isAppraisalLoading, isAppraisalError, appraisalError],
+    [appraisalData, appraisalId, isAppraisalLoading, isAppraisalError, appraisalError, requestData],
   );
 
   // Show loading skeleton while fetching appraisal data
@@ -233,8 +283,29 @@ function AppraisalLayout() {
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
 
         <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
+          {searchReadOnly.active && (
+            <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0">
+              <div className="flex items-center gap-2">
+                <Icon name="lock" style="solid" className="size-3.5 text-amber-600" />
+                <span className="text-sm font-medium text-amber-700">Read-Only Mode</span>
+                <span className="text-sm text-amber-600">— Opened from search</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.removeItem(SEARCH_READONLY_KEY);
+                  navigate(searchReadOnly.returnPath);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                <Icon name="xmark" style="solid" className="size-3.5" />
+                Exit
+              </button>
+            </div>
+          )}
           <Navbar userNavigation={userNavigation} />
 
+          <PageReadOnlyContext.Provider value={searchReadOnly.active}>
           <div className="flex-1 flex min-h-0">
             {/* Main Content */}
             <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0">
@@ -242,7 +313,7 @@ function AppraisalLayout() {
                 <Breadcrumb items={breadcrumbItems} className="mb-4 shrink-0" />
                 <div className="flex-1 min-h-0 min-w-0">
                   <ErrorBoundary>
-                    <Outlet />
+                      <Outlet />
                   </ErrorBoundary>
                 </div>
               </div>
@@ -269,6 +340,7 @@ function AppraisalLayout() {
               </div>
             )}
           </div>
+          </PageReadOnlyContext.Provider>
         </div>
 
         <LoadingOverlay />

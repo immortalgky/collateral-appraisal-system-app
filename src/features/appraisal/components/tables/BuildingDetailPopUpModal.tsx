@@ -1,8 +1,18 @@
-import { Button, FormBooleanToggle, FormStringToggle, Icon, NumberInput, TextInput, } from '@/shared/components';
+import {
+  Button,
+  FormBooleanToggle,
+  FormStringToggle,
+  Icon,
+  NumberInput,
+  TextInput,
+} from '@/shared/components';
 import { useCallback, useEffect } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { createPortal } from 'react-dom';
-import BuildingDetailTable, { type FormTableHeader, toNumber, } from '../BuildingTable/BuildingDetailTable';
+import BuildingDetailTable, {
+  type FormTableHeader,
+  toNumber,
+} from '../BuildingTable/BuildingDetailTable';
 import type { ComputeCtx } from '../BuildingTable/useDerivedFieldArray';
 
 interface BuildingDetailPopUpModalProps {
@@ -212,6 +222,7 @@ function BuildingDetailPopUpModal({
                       {...register('areaDescription')}
                       label="Detail"
                       placeholder="Enter building description"
+                      maxLength={50}
                     />
                   </div>
                   <div className="col-span-2">
@@ -222,6 +233,8 @@ function BuildingDetailPopUpModal({
                       value={buildingYear}
                       label="Year"
                       rightIcon={<span className="text-xs text-gray-400">yrs</span>}
+                      maxIntegerDigits={3}
+                      decimalPlaces={0}
                     />
                   </div>
                   <div className="col-span-2">
@@ -232,6 +245,7 @@ function BuildingDetailPopUpModal({
                       value={areaValue ?? ''}
                       label="Area"
                       rightIcon={<span className="text-xs text-gray-400">sq.m.</span>}
+                      maxIntegerDigits={6}
                     />
                   </div>
                   <div className="col-span-3">
@@ -258,6 +272,7 @@ function BuildingDetailPopUpModal({
                       value={pricePerSqMValue ?? ''}
                       label="Price per Sq.m"
                       rightIcon={<span className="text-xs text-gray-400">฿/m²</span>}
+                      maxIntegerDigits={15}
                     />
                   </div>
                   <TotalRCNDisplay />
@@ -330,6 +345,8 @@ const propertiesTableHeader: FormTableHeader[] = [
     className: 'w-[80px]',
     align: 'right' as const,
     tooltip: 'Starting year for this depreciation period',
+    maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'input-number' as const,
@@ -338,6 +355,8 @@ const propertiesTableHeader: FormTableHeader[] = [
     className: 'w-[80px]',
     align: 'right' as const,
     tooltip: 'Ending year for this depreciation period',
+    maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'input-number' as const,
@@ -346,6 +365,7 @@ const propertiesTableHeader: FormTableHeader[] = [
     className: 'w-[100px]',
     align: 'right' as const,
     tooltip: 'Depreciation percentage per year',
+    maxIntegerDigits: 3,
     footer: (rows: any[]) => {
       if (!Array.isArray(rows) || rows.length === 0) return null;
 

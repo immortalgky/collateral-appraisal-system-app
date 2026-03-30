@@ -8,7 +8,7 @@ interface ConfirmDialogProps {
   message?: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'danger' | 'warning' | 'info' | 'primary';
   isLoading?: boolean;
 }
 
@@ -43,6 +43,12 @@ const ConfirmDialog = ({
       iconBg: 'bg-blue-50',
       iconColor: 'text-blue-500',
       confirmBtn: 'bg-blue-500 hover:bg-blue-600 text-white',
+    },
+    primary: {
+      icon: 'circle-check',
+      iconBg: 'bg-primary/10',
+      iconColor: 'text-primary',
+      confirmBtn: 'bg-primary hover:bg-primary/80 text-white',
     },
   };
 

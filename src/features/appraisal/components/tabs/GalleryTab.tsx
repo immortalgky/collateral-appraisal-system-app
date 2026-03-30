@@ -4,6 +4,7 @@ import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import ViewModeToggle, { type GalleryViewMode } from '../ViewModeToggle';
 import { PhotoGridView, PhotoListView } from '../gallery';
 import PhotoPreviewModal from '../PhotoPreviewModal';
@@ -23,6 +24,7 @@ import {
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import PhotoEditModal from '../gallery/PhotoEditModal';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 type SortOption = 'newest' | 'oldest' | 'name';
 type FilterStatus = 'all' | 'used' | 'unused';
@@ -263,8 +265,9 @@ const LinkToPropertyModal = ({
   );
 };
 
-export const GalleryTab = ({ readOnly }: { readOnly?: boolean }) => {
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+export const GalleryTab = () => {
+  const readOnly = usePageReadOnly();
+  const appraisalId = useAppraisalId();
   const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
@@ -591,8 +594,8 @@ export const GalleryTab = ({ readOnly }: { readOnly?: boolean }) => {
    * 3. Register in gallery via useAddGalleryPhoto
    */
   const uploadSingleFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error(`${file.name} is not an image file`);
+    if (!/\.(jpg|jpeg|png)$/i.test(file.name)) {
+      toast.error(`${file.name} is not a supported image file (JPG, JPEG, PNG only)`);
       return;
     }
 
@@ -713,7 +716,7 @@ export const GalleryTab = ({ readOnly }: { readOnly?: boolean }) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept=".jpg,.jpeg,.png"
             multiple
             onChange={handleFileSelect}
             className="hidden"

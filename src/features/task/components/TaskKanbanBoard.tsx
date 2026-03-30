@@ -90,7 +90,7 @@ export const TaskKanbanBoard = ({ tasks, groupBy, isLoading = false }: TaskKanba
   }, [tasks, groupBy]);
 
   const handleTaskClick = (task: Task) => {
-    navigate(`/tasks/${task.id}`);
+    navigate(`/tasks/${task.taskId}`);
   };
 
   return (

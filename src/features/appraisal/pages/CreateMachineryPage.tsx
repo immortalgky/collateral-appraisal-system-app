@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useAppraisalReadOnly } from '../context/AppraisalContext';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -31,11 +32,12 @@ import { mapMachineryPropertyResponseToForm } from '../utils/mappers';
 import MachineryDetailForm from '../forms/MachineryDetailForm';
 
 const CreateMachineryPage = () => {
-  const { isReadOnly } = useAppraisalReadOnly('Property Information');
+  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
@@ -113,7 +115,7 @@ const CreateMachineryPage = () => {
             toast.success('Property Machinery created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisals/${appraisalId}/property/machinery/${response.propertyId}`);
+            navigate(`${basePath}/property/machinery/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -163,7 +165,7 @@ const CreateMachineryPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisals/${appraisalId}/property/machinery/${response.propertyId}`);
+              navigate(`${basePath}/property/machinery/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
@@ -196,7 +198,7 @@ const CreateMachineryPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createMachineryForm} readOnly={isReadOnly}>
+      <FormProvider methods={methods} schema={createMachineryForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -225,7 +227,6 @@ const CreateMachineryPage = () => {
                         ref={photoSectionRef}
                         appraisalId={appraisalId}
                         propertyId={propertyId}
-                        readOnly={isReadOnly}
                       />
                     )}
                   </Section>
