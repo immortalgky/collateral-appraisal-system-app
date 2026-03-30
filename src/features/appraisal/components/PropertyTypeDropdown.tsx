@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from '@shared/components/Icon';
 import clsx from 'clsx';
@@ -95,7 +96,7 @@ export const PropertyTypeDropdown = ({
   align = 'left',
 }: PropertyTypeDropdownProps) => {
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const propertyBasePath = usePropertyBasePath();
 
   const handleSelect = (propertyType: (typeof PROPERTY_TYPES)[number]) => {

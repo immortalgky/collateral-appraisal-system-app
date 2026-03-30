@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
@@ -34,7 +35,8 @@ export function useSelectionActions({
   groupId: string;
 }) {
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
   const qc = useQueryClient();
 
   // Deselect confirmation dialog
@@ -112,7 +114,7 @@ export function useSelectionActions({
       const isNew = !pricingAnalysisId;
       if (isNew && result.pricingAnalysisId) {
         navigate(
-          `/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${result.pricingAnalysisId}`,
+          `${basePath}/groups/${groupId}/pricing-analysis/${result.pricingAnalysisId}`,
           { replace: true },
         );
       }
@@ -180,7 +182,7 @@ export function useSelectionActions({
   };
 
   const cancelPricingAccordion = () => {
-    navigate(`/appraisals/${appraisalId}/property`);
+    navigate(`${basePath}/property`);
   };
 
   const changeSystemCalculation = (method: boolean) => {

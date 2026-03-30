@@ -150,7 +150,7 @@ function TaskListingPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const handleDoubleClick = (taskId: string) => {
-    navigate(`/appraisals/${taskId}`);
+    navigate(`/tasks/${taskId}`);
   };
 
   const handleContextMenu = (e: React.MouseEvent, taskId: string) => {
@@ -165,10 +165,10 @@ function TaskListingPage() {
 
   const handleContextMenuAction = (action: 'open' | 'copyReportNo') => {
     if (!contextMenu.taskId) return;
-    const task = listTasks.find(t => t.id === contextMenu.taskId);
+    const task = listTasks.find(t => t.taskId === contextMenu.taskId);
     switch (action) {
       case 'open':
-        navigate(`/appraisals/${contextMenu.taskId}`);
+        navigate(`/tasks/${contextMenu.taskId}`);
         break;
       case 'copyReportNo':
         if (task && task.appraisalNumber) {
@@ -483,8 +483,8 @@ function TaskListingPage() {
                   listTasks.map(task => (
                     <tr
                       key={task.id}
-                      onDoubleClick={() => handleDoubleClick(task.id)}
-                      onContextMenu={e => handleContextMenu(e, task.id)}
+                      onDoubleClick={() => handleDoubleClick(task.taskId)}
+                      onContextMenu={e => handleContextMenu(e, task.taskId)}
                       className="hover:bg-gray-50 cursor-default transition-colors"
                       title="Double-click to open, right-click for more options"
                     >
@@ -493,7 +493,7 @@ function TaskListingPage() {
                           <span
                             onClick={e => {
                               e.stopPropagation();
-                              navigate(`/appraisals/${task.id}`);
+                              navigate(`/tasks/${task.taskId}`);
                             }}
                             className="font-medium text-primary hover:underline cursor-pointer"
                           >
@@ -503,7 +503,7 @@ function TaskListingPage() {
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.customerName}</td>
                       <td className="px-3 py-2.5 text-gray-600">
-                        {<ParameterDisplay group="TaskType" code={task.taskType} />}
+                        {task.taskDescription || task.taskType}
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">
                         {<ParameterDisplay group="AppraisalPurpose" code={task.purpose} />}

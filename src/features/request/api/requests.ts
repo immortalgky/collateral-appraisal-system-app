@@ -34,6 +34,35 @@ export type CreateDraftRequestResponseType = z.infer<typeof CreateDraftRequestRe
 export type UpdateDraftRequestRequestType = z.infer<typeof UpdateDraftRequestRequest>;
 export type UpdateDraftRequestResponseType = z.infer<typeof UpdateDraftRequestResponse>;
 
+/**
+ * Strips empty document placeholders (no file attached) from request payloads.
+ * The backend generates the required document checklist dynamically,
+ * so empty placeholders don't need to be persisted.
+ */
+const stripEmptyDocuments = <T extends Record<string, any>>(request: T): T => {
+  const result = { ...request };
+
+  if (Array.isArray(result.documents)) {
+    result.documents = result.documents.filter(
+      (doc: any) => doc.fileName || doc.documentId,
+    );
+  }
+
+  if (Array.isArray(result.titles)) {
+    result.titles = result.titles.map((title: any) => {
+      if (!Array.isArray(title?.documents)) return title;
+      return {
+        ...title,
+        documents: title.documents.filter(
+          (doc: any) => doc.fileName || doc.documentId,
+        ),
+      };
+    });
+  }
+
+  return result;
+};
+
 // Query params for request listing
 export interface GetRequestsParams {
   pageNumber?: number;
@@ -50,8 +79,7 @@ export const useCreateRequest = () => {
 
   return useMutation({
     mutationFn: async (request: CreateRequestRequestType): Promise<CreateRequestResponseType> => {
-      console.log(request);
-      const { data } = await axios.post('/requests', request);
+      const { data } = await axios.post('/requests', stripEmptyDocuments(request));
       return data;
     },
     onSuccess: data => {
@@ -144,11 +172,10 @@ export const useUpdateRequest = () => {
       id: string;
       request: UpdateRequestRequestType;
     }): Promise<UpdateRequestResponseType> => {
-      const { data } = await axios.put(`/requests/${id}`, request);
+      const { data } = await axios.put(`/requests/${id}`, stripEmptyDocuments(request));
       return data;
     },
     onSuccess: (data, variables) => {
-      console.log('Request updated successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', variables.id] });
     },
@@ -185,7 +212,7 @@ export const useCreateDraftRequest = () => {
 
   return useMutation({
     mutationFn: async (request: CreateDraftRequestRequestType): Promise<CreateDraftRequestResponseType> => {
-      const { data } = await axios.post('/requests/draft', request);
+      const { data } = await axios.post('/requests/draft', stripEmptyDocuments(request));
       return data;
     },
     onSuccess: () => {
@@ -209,7 +236,7 @@ export const useUpdateDraftRequest = () => {
       id: string;
       request: UpdateDraftRequestRequestType;
     }): Promise<UpdateDraftRequestResponseType> => {
-      const { data } = await axios.put(`/requests/${id}/draft`, request);
+      const { data } = await axios.put(`/requests/${id}/draft`, stripEmptyDocuments(request));
       return data;
     },
     onSuccess: (_, variables) => {

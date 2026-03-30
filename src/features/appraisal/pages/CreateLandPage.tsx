@@ -3,6 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -32,9 +33,10 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 const CreateLandPage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
@@ -107,7 +109,7 @@ const CreateLandPage = () => {
             toast.success('Property land created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisals/${appraisalId}/property/land/${response.propertyId}`);
+            navigate(`${basePath}/property/land/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -157,7 +159,7 @@ const CreateLandPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisals/${appraisalId}/property/land/${response.propertyId}`);
+              navigate(`${basePath}/property/land/${response.propertyId}`);
             }
           },
           onError: (error: any) => {

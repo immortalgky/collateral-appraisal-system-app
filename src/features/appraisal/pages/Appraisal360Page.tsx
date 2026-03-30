@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@/shared/components/Icon';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useGetAppraisalById } from '../api/appraisal';
@@ -26,7 +27,7 @@ type SlideOverState =
 // ==================== Page Component ====================
 
 const Appraisal360Page = () => {
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const [slideOver, setSlideOver] = useState<SlideOverState>({ type: 'closed' });
 
   // Data hooks

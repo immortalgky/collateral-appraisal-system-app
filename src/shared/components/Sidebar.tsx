@@ -120,14 +120,16 @@ function MenuItem({
             )}
           />
         </button>
-        <ul
+        <div
           className={clsx(
-            'ml-6 pl-3 border-l-2 border-gray-100 overflow-hidden transition-all duration-300 ease-in-out',
-            isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0',
+            'ml-6 pl-3 border-l-2 border-gray-100 grid transition-all duration-300 ease-in-out',
+            isOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0',
           )}
         >
-          {item.children?.map(child => <MenuItem key={child.href} item={child} isChild />)}
-        </ul>
+          <ul className="overflow-hidden flex flex-col gap-1">
+            {item.children?.map(child => <MenuItem key={child.href} item={child} isChild />)}
+          </ul>
+        </div>
       </li>
     );
   }

@@ -3,7 +3,7 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import type { UploadedDocument } from '../types/document';
-import { getDocumentTypeInfo } from '../types/document';
+import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
 
 interface DocumentEditModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
 }) => {
   const [set, setSet] = useState(document.set ?? 1);
   const [notes, setNotes] = useState(document.documentDescription || '');
+  const { data: documentTypes = [] } = useGetDocumentTypes();
 
   const handleSave = () => {
     onSave({
@@ -88,7 +89,7 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
             <span className="text-gray-600 font-medium">Document Type:</span>
             <span className="col-span-2 text-gray-900">
               {document.documentType
-                ? getDocumentTypeInfo(document.documentType)?.displayName || document.documentType
+                ? getDocumentTypeName(documentTypes, document.documentType)
                 : 'Unknown'}
             </span>
           </div>

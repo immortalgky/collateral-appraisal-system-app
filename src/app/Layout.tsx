@@ -18,6 +18,7 @@ import {
 } from '@shared/contexts/RightMenuPortalContext';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useUIStore } from '@shared/store';
+import { useNotificationHub } from '@features/notification/hooks/useNotificationHub';
 
 const userNavigation = [
   { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
@@ -90,6 +91,7 @@ function AddressLoader() {
 }
 
 function Layout() {
+  useNotificationHub();
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,

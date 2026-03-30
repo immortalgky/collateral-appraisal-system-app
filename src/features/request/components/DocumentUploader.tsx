@@ -9,9 +9,9 @@ import DocumentEditModal from './DocumentEditModal';
 import { useDownloadDocument, useUploadDocument } from '../api';
 import {
   getDocumentCategory,
-  getDocumentTypeInfo,
   type UploadedDocument,
 } from '../types/document';
+import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
 import { useFormReadOnly } from '@/shared/components/form/context';
@@ -28,6 +28,7 @@ interface UploadedDocumentRowProps {
   onView: (document: UploadedDocument) => void;
   onUpload: (document: UploadedDocument) => void;
   readOnly?: boolean;
+  getDocTypeName: (code: string) => string;
 }
 
 const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = ({
@@ -40,6 +41,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   onView,
   onUpload,
   readOnly,
+  getDocTypeName,
 }) => {
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '';
@@ -50,7 +52,8 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   };
 
   const getFileIcon = (fileName?: string | null) => {
@@ -67,11 +70,11 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   };
 
   const isUploading = document?.isUploading || false;
-  const docTypeInfo = getDocumentTypeInfo(document.documentType || '');
-  const displayName = docTypeInfo?.displayName || document.documentType || 'Unknown';
+  const displayName = document.displayName || (document.documentType ? getDocTypeName(document.documentType) : 'Unknown');
   const isRequired = document.isRequired;
   const hasFile = !!document.fileName;
-  const isEmpty = isRequired && !hasFile;
+  const isEmpty = !hasFile;
+  const isRequiredEmpty = isRequired && !hasFile;
 
   return (
     <tr
@@ -79,10 +82,10 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
         'hover:bg-gray-50 transition-colors',
         isUploading && 'opacity-60',
         isSelected && 'bg-primary/5',
-        isEmpty && 'bg-amber-50/50',
+        isRequiredEmpty && 'bg-amber-50/50',
       )}
     >
-      <td className="px-4 py-3 w-12">
+      <td className="px-4 py-3 w-10">
         {!readOnly && (
           <input
             type="checkbox"
@@ -93,7 +96,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
           />
         )}
       </td>
-      <td className="px-4 py-3 w-40">
+      <td className="px-4 py-3 w-[25%]">
         <div className="flex items-center gap-2">
           <span className="text-gray-700 text-sm">{displayName}</span>
           {isRequired && (
@@ -115,17 +118,27 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
           )}
         </div>
       </td>
-      <td className="px-4 py-3 w-52">
+      <td className="px-4 py-3 w-[37%]">
         {isEmpty ? (
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded border-2 border-dashed border-amber-300 bg-amber-50 flex items-center justify-center shrink-0">
-              <Icon name="cloud-arrow-up" style="solid" className="w-4 h-4 text-amber-400" />
+          <button
+            type="button"
+            onClick={() => !readOnly && onUpload(document)}
+            disabled={readOnly}
+            className={clsx('flex items-center gap-2', !readOnly && 'cursor-pointer group')}
+          >
+            <div className={clsx(
+              'w-10 h-10 rounded border-2 border-dashed flex items-center justify-center shrink-0 transition-colors',
+              isRequiredEmpty ? 'border-amber-300 bg-amber-50 group-hover:border-amber-400 group-hover:bg-amber-100' : 'border-gray-300 bg-gray-50 group-hover:border-gray-400 group-hover:bg-gray-100',
+            )}>
+              <Icon name="cloud-arrow-up" style="solid" className={clsx('w-4 h-4', isRequiredEmpty ? 'text-amber-400' : 'text-gray-400')} />
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium text-amber-700">Awaiting upload</span>
-              <span className="text-xs text-amber-500">Click upload to add file</span>
+            <div className="flex flex-col min-w-0 text-left">
+              <span className={clsx('text-sm font-medium', isRequiredEmpty ? 'text-amber-700' : 'text-gray-500')}>
+                {isRequiredEmpty ? 'Awaiting upload' : 'Optional'}
+              </span>
+              <span className={clsx('text-xs', isRequiredEmpty ? 'text-amber-500' : 'text-gray-400')}>Click to upload</span>
             </div>
-          </div>
+          </button>
         ) : (
           <div className="flex items-center gap-2">
             {isUploading ? (
@@ -158,11 +171,10 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
           </div>
         )}
       </td>
-      <td className="px-4 py-3 w-28 text-sm text-gray-700">
+      <td className="px-4 py-3 w-44 text-sm text-gray-700">
         {isEmpty ? '-' : formatDate(document.uploadedAt)}
       </td>
-      <td className="px-4 py-3 w-12 text-sm text-gray-700 text-center">{isEmpty ? '-' : document.set}</td>
-      <td className="px-4 py-3 w-24 text-center">
+      <td className="px-4 py-3 w-20 text-center">
         {isUploading ? (
           <span className="text-xs text-gray-500">Processing...</span>
         ) : readOnly ? (
@@ -175,14 +187,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
             />
           )
         ) : isEmpty ? (
-          <button
-            type="button"
-            onClick={() => onUpload(document)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
-          >
-            <Icon name="cloud-arrow-up" style="solid" className="w-3.5 h-3.5" />
-            Upload
-          </button>
+          <span className="text-sm text-gray-400">-</span>
         ) : (
           <DocumentActionMenu
             document={document}
@@ -206,6 +211,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 }) => {
   const isReadOnly = useFormReadOnly();
   const currentUser = useAuthStore(state => state.user);
+  const { data: documentTypes = [] } = useGetDocumentTypes();
   const { watch, setValue } = useFormContext();
   const titles = watch('titles') || [];
   const headerRef = useRef<HTMLTableSectionElement>(null);
@@ -474,7 +480,6 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     const currentDoc = getDocumentForSlot(entityType, entityIndex, docType);
 
     // Create new document preserving metadata
-    const docTypeInfo = getDocumentTypeInfo(docType);
     const tempDocument: UploadedDocument = {
       id: currentDoc?.id || null,
       titleId: currentDoc?.titleId || null,
@@ -487,11 +492,12 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       documentDescription: currentDoc?.documentDescription || null,
       filePath: currentDoc?.filePath || null,
       createdWorkstation: currentDoc?.createdWorkstation || null,
-      isRequired: docTypeInfo?.isRequired || currentDoc?.isRequired || false,
+      isRequired: currentDoc?.isRequired || false,
       uploadedBy: currentUser?.username || 'anonymous',
       uploadedByName: currentUser?.name || 'Anonymous',
       file,
       isUploading: true,
+      displayName: currentDoc?.displayName,
     };
 
     // Update document with uploading state
@@ -593,6 +599,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       uploadedByName: currentUser?.name || 'Anonymous',
       file,
       isUploading: true,
+      displayName: currentDoc?.displayName,
     };
 
     // Update document with uploading state
@@ -921,10 +928,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         </div>
       ) : (
         <div className="h-96 overflow-auto rounded-lg">
-          <table className="table table-fixed w-full">
+          <table className="table w-full">
             <thead ref={headerRef} className="sticky top-0 z-20 bg-primary-50">
               <tr>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-12">
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-10">
                   {!isReadOnly && (
                     <input
                       type="checkbox"
@@ -940,17 +947,16 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                     />
                   )}
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-40">
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-[25%]">
                   Document type
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-52">
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-[37%]">
                   File name
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-28">
-                  Uploaded
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-44">
+                  Uploaded at
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-12">Set</th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24"></th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-20"></th>
               </tr>
             </thead>
             {sections.map(section => {
@@ -1045,6 +1051,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                               handleUploadToSlot(d, section.entityType, section.entityIndex)
                             }
                             readOnly={isReadOnly}
+                            getDocTypeName={(code) => getDocumentTypeName(documentTypes, code)}
                           />
                         );
                       })

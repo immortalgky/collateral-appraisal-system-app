@@ -1,23 +1,36 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Avatar from '@/shared/components/Avatar';
-import { useSearchStaff } from '../api/administration';
 import type { InternalStaff } from '../types/administration';
 
 interface SearchStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (staff: InternalStaff) => void;
+  /** Pre-loaded list from useGetEligibleStaff. When provided, filtering is client-side. */
+  eligibleStaff?: InternalStaff[];
 }
 
-const SearchStaffModal = ({ isOpen, onClose, onSelect }: SearchStaffModalProps) => {
+const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchStaffModalProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStaff, setSelectedStaff] = useState<InternalStaff | null>(null);
 
-  const { data: staffList = [], isLoading } = useSearchStaff(searchQuery, isOpen);
+  const isLoading = eligibleStaff === undefined;
+
+  const staffList = useMemo(() => {
+    if (!eligibleStaff) return [];
+    if (!searchQuery.trim()) return eligibleStaff;
+    const query = searchQuery.toLowerCase();
+    return eligibleStaff.filter(
+      staff =>
+        staff.name.toLowerCase().includes(query) ||
+        staff.employeeId.toLowerCase().includes(query) ||
+        staff.department.toLowerCase().includes(query),
+    );
+  }, [eligibleStaff, searchQuery]);
 
   const handleSelect = () => {
     if (selectedStaff) {

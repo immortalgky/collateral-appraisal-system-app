@@ -6,7 +6,7 @@ import type { UploadedDocument } from '../types/document';
 /**
  * Creates an empty placeholder document for a required document type
  */
-const createRequiredPlaceholder = (documentType: string): UploadedDocument => ({
+const createPlaceholder = (documentType: string, displayName?: string, isRequired = false): UploadedDocument => ({
   id: null,
   titleId: null,
   documentId: null,
@@ -18,9 +18,10 @@ const createRequiredPlaceholder = (documentType: string): UploadedDocument => ({
   documentDescription: null,
   filePath: null,
   createdWorkstation: null,
-  isRequired: true,
+  isRequired,
   uploadedBy: null,
   uploadedByName: null,
+  displayName: displayName ?? null,
 });
 
 /**
@@ -28,28 +29,40 @@ const createRequiredPlaceholder = (documentType: string): UploadedDocument => ({
  * Automatically initializes and refreshes required document placeholders.
  */
 export const useRequestLevelRequiredDocuments = () => {
-  const { setValue, watch } = useFormContext();
+  const { setValue } = useFormContext();
   const purpose = useWatch({ name: 'purpose' });
+  const documents = useWatch({ name: 'documents' });
   const { data } = useGetRequiredDocuments({ purpose });
   const prevPurposeRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!data?.documents) return;
 
-    const currentDocs: UploadedDocument[] = watch('documents') || [];
-    const requiredTypes = new Set(data.documents.map(d => d.documentType));
+    const currentDocs: UploadedDocument[] = documents || [];
+    const checklistTypes = new Set(data.documents.map(d => d.documentType));
+    const requiredTypes = new Set(data.documents.filter(d => d.isRequired).map(d => d.documentType));
+    const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
+    const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
-    // Keep docs that have files OR are required for the new purpose
+    // Keep docs that have files OR are in the checklist
     const docsToKeep = currentDocs.filter(
-      doc => doc.fileName || requiredTypes.has(doc.documentType || ''),
+      doc => doc.fileName || checklistTypes.has(doc.documentType || ''),
     );
 
-    // Find which required types are not yet in the docs
+    // Find which checklist types are not yet in the docs
     const existingTypes = new Set(docsToKeep.map(d => d.documentType));
     const missingTypes = data.documents.filter(d => !existingTypes.has(d.documentType));
 
-    // Create placeholders for missing required types
-    const newPlaceholders = missingTypes.map(d => createRequiredPlaceholder(d.documentType));
+    // Check if any existing docs need displayName update
+    const needsUpdate = docsToKeep.some(
+      doc => doc.documentType && checklistTypes.has(doc.documentType) && !doc.displayName,
+    );
+
+    // No changes needed — all placeholders exist and metadata is set
+    if (missingTypes.length === 0 && !needsUpdate && prevPurposeRef.current === purpose) return;
+
+    // Create placeholders for all missing checklist types (isRequired from API)
+    const newPlaceholders = missingTypes.map(d => createPlaceholder(d.documentType, d.displayName, d.isRequired));
 
     // Find the minimum set number for each required document type
     const minSetByType: Record<string, number> = {};
@@ -63,16 +76,16 @@ export const useRequestLevelRequiredDocuments = () => {
       }
     });
 
-    // Update isRequired flag: only the doc with the minimum set number is required
+    // Update isRequired flag and displayName from API data
     const updatedDocs = docsToKeep.map(doc => {
       const docType = doc.documentType || '';
       const isRequiredType = requiredTypes.has(docType);
       const docSet = doc.set ?? 1;
-      // Only mark as required if it's the minimum set for this type
       const isMinSet = minSetByType[docType] === docSet;
       return {
         ...doc,
         isRequired: isRequiredType && isMinSet,
+        displayName: doc.displayName || displayNameMap.get(docType) || null,
       };
     });
 
@@ -81,31 +94,16 @@ export const useRequestLevelRequiredDocuments = () => {
 
     // Sort by: 1) isRequired (required first), 2) documentType, 3) set number
     finalDocs.sort((a, b) => {
-      // Required documents first
-      if (a.isRequired !== b.isRequired) {
-        return a.isRequired ? -1 : 1;
-      }
-      // Then by documentType
+      if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
       const typeA = a.documentType || '';
       const typeB = b.documentType || '';
-      if (typeA !== typeB) {
-        return typeA.localeCompare(typeB);
-      }
-      // Then by set number
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
       return (a.set ?? 1) - (b.set ?? 1);
     });
 
-    // Only update if purpose changed or if we need to add/update docs
-    if (
-      prevPurposeRef.current !== purpose ||
-      finalDocs.length !== currentDocs.length ||
-      missingTypes.length > 0
-    ) {
-      setValue('documents', finalDocs, { shouldDirty: false });
-    }
-
+    setValue('documents', finalDocs, { shouldDirty: false });
     prevPurposeRef.current = purpose;
-  }, [data, purpose, setValue, watch]);
+  }, [data, purpose, documents, setValue]);
 };
 
 /**
@@ -113,29 +111,40 @@ export const useRequestLevelRequiredDocuments = () => {
  * Automatically initializes and refreshes required document placeholders for a specific title.
  */
 export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
-  const { setValue, watch } = useFormContext();
+  const { setValue } = useFormContext();
   const collateralType = useWatch({ name: `titles.${titleIndex}.collateralType` });
+  const titleDocuments = useWatch({ name: `titles.${titleIndex}.documents` });
   const { data } = useGetRequiredDocuments({ collateralType });
   const prevCollateralTypeRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!data?.documents) return;
 
-    const currentDocs: UploadedDocument[] =
-      watch(`titles.${titleIndex}.documents`) || [];
-    const requiredTypes = new Set(data.documents.map(d => d.documentType));
+    const currentDocs: UploadedDocument[] = titleDocuments || [];
+    const checklistTypes = new Set(data.documents.map(d => d.documentType));
+    const requiredTypes = new Set(data.documents.filter(d => d.isRequired).map(d => d.documentType));
+    const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
+    const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
-    // Keep docs that have files OR are required for the new collateral type
+    // Keep docs that have files OR are in the checklist
     const docsToKeep = currentDocs.filter(
-      doc => doc.fileName || requiredTypes.has(doc.documentType || ''),
+      doc => doc.fileName || checklistTypes.has(doc.documentType || ''),
     );
 
-    // Find which required types are not yet in the docs
+    // Find which checklist types are not yet in the docs
     const existingTypes = new Set(docsToKeep.map(d => d.documentType));
     const missingTypes = data.documents.filter(d => !existingTypes.has(d.documentType));
 
-    // Create placeholders for missing required types
-    const newPlaceholders = missingTypes.map(d => createRequiredPlaceholder(d.documentType));
+    // Check if any existing docs need displayName update
+    const needsUpdate = docsToKeep.some(
+      doc => doc.documentType && checklistTypes.has(doc.documentType) && !doc.displayName,
+    );
+
+    // No changes needed — all placeholders exist and metadata is set
+    if (missingTypes.length === 0 && !needsUpdate && prevCollateralTypeRef.current === collateralType) return;
+
+    // Create placeholders for all missing checklist types (isRequired from API)
+    const newPlaceholders = missingTypes.map(d => createPlaceholder(d.documentType, d.displayName, d.isRequired));
 
     // Find the minimum set number for each required document type
     const minSetByType: Record<string, number> = {};
@@ -149,16 +158,16 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
       }
     });
 
-    // Update isRequired flag: only the doc with the minimum set number is required
+    // Update isRequired flag and displayName from API data
     const updatedDocs = docsToKeep.map(doc => {
       const docType = doc.documentType || '';
       const isRequiredType = requiredTypes.has(docType);
       const docSet = doc.set ?? 1;
-      // Only mark as required if it's the minimum set for this type
       const isMinSet = minSetByType[docType] === docSet;
       return {
         ...doc,
         isRequired: isRequiredType && isMinSet,
+        displayName: doc.displayName || displayNameMap.get(docType) || null,
       };
     });
 
@@ -167,29 +176,14 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
 
     // Sort by: 1) isRequired (required first), 2) documentType, 3) set number
     finalDocs.sort((a, b) => {
-      // Required documents first
-      if (a.isRequired !== b.isRequired) {
-        return a.isRequired ? -1 : 1;
-      }
-      // Then by documentType
+      if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
       const typeA = a.documentType || '';
       const typeB = b.documentType || '';
-      if (typeA !== typeB) {
-        return typeA.localeCompare(typeB);
-      }
-      // Then by set number
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
       return (a.set ?? 1) - (b.set ?? 1);
     });
 
-    // Only update if collateral type changed or if we need to add/update docs
-    if (
-      prevCollateralTypeRef.current !== collateralType ||
-      finalDocs.length !== currentDocs.length ||
-      missingTypes.length > 0
-    ) {
-      setValue(`titles.${titleIndex}.documents`, finalDocs, { shouldDirty: false });
-    }
-
+    setValue(`titles.${titleIndex}.documents`, finalDocs, { shouldDirty: false });
     prevCollateralTypeRef.current = collateralType;
-  }, [data, collateralType, titleIndex, setValue, watch]);
+  }, [data, collateralType, titleDocuments, titleIndex, setValue]);
 };

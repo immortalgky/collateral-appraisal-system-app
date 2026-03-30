@@ -132,6 +132,7 @@ export type RecentTask = {
   reportNo: string;
   customerName: string;
   taskType: string;
+  taskDescription: string;
   purpose: string;
   status: 'pending' | 'draft' | 'completed';
   requestDate: string;

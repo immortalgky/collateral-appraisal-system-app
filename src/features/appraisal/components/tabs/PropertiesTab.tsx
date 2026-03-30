@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   closestCenter,
   DndContext,
@@ -76,8 +77,9 @@ interface PropertiesTabProps {
 export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps) => {
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
-  const basePath = usePropertyBasePath();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
+  const propertyBasePath = usePropertyBasePath();
 
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
@@ -357,11 +359,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       if (appraisalId) {
         const routeSegment = getRouteSegment(property.type);
         navigate(
-          `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+          `${basePath}/${propertyBasePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
         );
       }
     },
-    [appraisalId, basePath, navigate],
+    [basePath, propertyBasePath, navigate],
   );
 
   const handleMoveToProperty = useCallback(
@@ -440,9 +442,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     const group = groups.find(g => g.id === groupId);
     const paId = group?.pricingAnalysisId;
     if (paId) {
-      navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${paId}`);
+      navigate(`${basePath}/groups/${groupId}/pricing-analysis/${paId}`);
     } else {
-      navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis`);
+      navigate(`${basePath}/groups/${groupId}/pricing-analysis`);
     }
   };
 

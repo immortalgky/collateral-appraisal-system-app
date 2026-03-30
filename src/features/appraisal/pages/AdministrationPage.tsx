@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAppraisalId, useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
+import { useWorkflowInstanceId, useActivityId, useIsTaskOwner } from '@/features/appraisal/context/AppraisalContext';
+import { useGetRequestById } from '@/features/request/api';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RadioGroup as HeadlessRadioGroup } from '@headlessui/react';
@@ -13,7 +16,8 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 
-import { useCreateAssignment, useGetAssignment, useGetCompanyById, useGetUserById, } from '../api/administration';
+import { useCreateAssignment, useGetAssignment, useGetCompanyById, useGetUserById, useGetEligibleStaff, useGetEligibleCompanies } from '../api/administration';
+import { useCompleteActivity } from '../api/workflow';
 import { assignmentFormDefaults, assignmentFormSchema, type AssignmentFormType, } from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
@@ -29,8 +33,15 @@ import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.t
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const AdministrationPage = () => {
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
+  const requestId = useAppraisalRequestId();
   const currentUser = useAuthStore(state => state.user);
+
+  // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
+  const { data: requestData } = useGetRequestById(requestId ?? '');
+  const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as string | undefined;
+  const facilityLimit = ((requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0) as number;
+  const isInternalDisabled = facilityLimit > 50_000_000;
 
   // API hooks
   const { data: assignments, isLoading: isLoadingAssignment } = useGetAssignment(appraisalId ?? '');
@@ -40,6 +51,12 @@ const AdministrationPage = () => {
     !!currentAssignment && currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
   const isReadOnly = pageReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
+
+  const navigate = useNavigate();
+  const workflowInstanceId = useWorkflowInstanceId();
+  const activityId = useActivityId();
+  const isTaskOwner = useIsTaskOwner();
+  const { mutate: completeActivityMutate, isPending: isCompleting } = useCompleteActivity();
 
   // Fetch assigned staff/company by ID for display
   const { data: assignedStaff } = useGetUserById(currentAssignment?.assigneeUserId ?? null);
@@ -61,14 +78,25 @@ const AdministrationPage = () => {
 
   const { blocker } = useUnsavedChangesWarning(isDirty);
 
-  console.log(errors);
-
   // Watch form values for conditional rendering
   const assignmentType = watch('assignmentType');
   const assignmentMethod = watch('assignmentMethod');
   const selectedStaff = watch('selectedStaff');
   const selectedCompany = watch('selectedCompany');
   const selectedFollowupStaff = watch('selectedFollowupStaff');
+  const followupStaffMethod = watch('followupStaffMethod');
+
+  // Get eligible internal staff (used for both internal manual selection and external followup staff)
+  const { data: eligibleStaff } = useGetEligibleStaff(
+    workflowInstanceId ?? undefined,
+    'appraisal-book-verification',
+  );
+
+  // Get eligible companies for external selection, filtered by bankingSegment (loanType)
+  const { data: eligibleCompanies } = useGetEligibleCompanies(
+    bankingSegment,
+    assignmentType === 'external',
+  );
 
   // Modal states
   const {
@@ -118,6 +146,22 @@ const AdministrationPage = () => {
     setValue('selectedFollowupStaff', staff, { shouldDirty: true });
     setValue('followupStaffId', staff.id, { shouldDirty: true });
   };
+
+  // Clear followup staff when method changes
+  const handleFollowupMethodChange = (method: 'manual' | 'roundrobin') => {
+    setValue('followupStaffMethod', method, { shouldDirty: true });
+    setValue('selectedFollowupStaff', null, { shouldDirty: true });
+    setValue('followupStaffId', null, { shouldDirty: true });
+  };
+
+  // Clear internal selection if facilityLimit constraint kicks in
+  useEffect(() => {
+    if (isInternalDisabled && assignmentType === 'internal') {
+      setValue('assignmentType', '' as any);
+      setValue('selectedStaff', null);
+      setValue('staffId', null);
+    }
+  }, [isInternalDisabled, assignmentType, setValue]);
 
   // Clear selections when user manually changes assignment type
   const handleAssignmentTypeChange = (value: string, fieldOnChange: (value: string) => void) => {
@@ -170,11 +214,70 @@ const AdministrationPage = () => {
         assigneeCompanyId: data.assignmentType === 'external' ? data.companyId : null,
         assignmentMethod: data.assignmentMethod,
         internalAppraiserId: data.assignmentType === 'external' ? data.followupStaffId : null,
-        assignedBy: currentUser?.username,
+        internalFollowupAssignmentMethod: data.assignmentType === 'external' ? data.followupStaffMethod : null,
+        assignedBy: currentUser?.username ?? null,
       },
       {
         onSuccess: () => {
           toast.success('Assignment created successfully');
+
+          // If task owner with workflow context, also complete the activity
+          if (isTaskOwner && workflowInstanceId && activityId) {
+            const decisionTaken = data.assignmentType === 'external' ? 'EXT' : 'INT';
+
+            // Build the input payload
+            const input: Record<string, unknown> = {
+              decisionTaken,
+              assignmentMethod: data.assignmentMethod,
+            };
+
+            // For external manual, include company selection data
+            if (data.assignmentType === 'external' && data.assignmentMethod === 'manual' && data.selectedCompany) {
+              input.selectedCompanyId = data.companyId;
+              input.selectedCompanyName = data.selectedCompany.companyName;
+            }
+
+            // For external assignments, include followup staff data
+            if (data.assignmentType === 'external') {
+              input.internalFollowupMethod = data.followupStaffMethod;
+              if (data.followupStaffMethod === 'manual' && data.followupStaffId) {
+                input.internalFollowupStaffId = data.followupStaffId;
+              }
+            }
+
+            // For internal manual, use NextAssignmentOverrides
+            let nextAssignmentOverrides: Record<string, { runtimeAssignee?: string; overrideReason?: string }> | undefined;
+            if (data.assignmentType === 'internal' && data.assignmentMethod === 'manual' && data.staffId) {
+              nextAssignmentOverrides = {
+                'int-appraisal-execution': {
+                  runtimeAssignee: data.staffId,
+                  overrideReason: 'Manual assignment by admin',
+                },
+              };
+            }
+
+            completeActivityMutate(
+              {
+                workflowInstanceId: workflowInstanceId!,
+                activityId: activityId!,
+                input,
+                nextAssignmentOverrides,
+              },
+              {
+                onSuccess: (result) => {
+                  if (result.validationErrors && result.validationErrors.length > 0) {
+                    result.validationErrors.forEach((err: string) => toast.error(err));
+                    return;
+                  }
+                  toast.success('Workflow advanced successfully');
+                  navigate('/tasks');
+                },
+                onError: (error: any) => {
+                  toast.error(error.apiError?.detail || 'Failed to advance workflow');
+                },
+              },
+            );
+          }
         },
         onError: (error: any) => {
           toast.error(error.apiError?.detail || 'Failed to create assignment. Please try again.');
@@ -226,6 +329,7 @@ const AdministrationPage = () => {
                         description: 'Assign to internal appraisal staff',
                         icon: 'user',
                         color: 'emerald',
+                        disabled: isInternalDisabled,
                       },
                       {
                         value: 'external',
@@ -233,15 +337,17 @@ const AdministrationPage = () => {
                         description: 'Assign to external appraisal company',
                         icon: 'building',
                         color: 'purple',
+                        disabled: false,
                       },
                     ].map(option => (
                       <HeadlessRadioGroup.Option
                         key={option.value}
                         value={option.value}
+                        disabled={option.disabled}
                         className={({ checked, disabled }) =>
                           clsx(
                             'flex-1 rounded-xl border-2 p-4 transition-all',
-                            disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
+                            disabled ? 'pointer-events-none opacity-50 cursor-not-allowed' : 'cursor-pointer',
                             checked
                               ? `border-${option.color}-500 bg-${option.color}-50`
                               : 'border-gray-200 hover:border-gray-300 bg-white',
@@ -294,6 +400,14 @@ const AdministrationPage = () => {
               />
               {errors.assignmentType && (
                 <p className="mt-2 text-sm text-danger">{errors.assignmentType.message}</p>
+              )}
+              {isInternalDisabled && (
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                  <Icon name="circle-info" style="solid" className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700">
+                    Internal assignment is not available for facility limits exceeding 50M
+                  </p>
+                </div>
               )}
             </FormCard>
 
@@ -557,42 +671,148 @@ const AdministrationPage = () => {
               {/* Internal Followup Staff - Only for external assignments */}
               {assignmentType === 'external' && (
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Internal Followup Staff <span className="text-danger">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Internal Followup Staff {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
                   </label>
-                  {selectedFollowupStaff ? (
-                    <StaffDisplay
-                      staff={selectedFollowupStaff}
-                      onClear={
-                        isReadOnly
-                          ? undefined
-                          : () => {
-                              setValue('selectedFollowupStaff', null, { shouldDirty: true });
-                              setValue('followupStaffId', null, { shouldDirty: true });
-                            }
-                      }
-                      variant="purple"
-                    />
-                  ) : (
-                    !isReadOnly && (
-                      <button
-                        type="button"
-                        onClick={openFollowupStaffModal}
-                        className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
+
+                  {/* Followup method chooser */}
+                  <Controller
+                    name="followupStaffMethod"
+                    control={control}
+                    render={({ field }) => (
+                      <HeadlessRadioGroup
+                        value={field.value}
+                        onChange={(value: 'manual' | 'roundrobin') => handleFollowupMethodChange(value)}
+                        className="grid grid-cols-2 gap-3 mb-4"
+                        disabled={isReadOnly}
                       >
-                        <span className="text-sm text-gray-500">
-                          Click to search and select internal followup staff...
-                        </span>
+                        {[
+                          {
+                            value: 'manual',
+                            label: 'Manual Select',
+                            description: 'Select specific staff',
+                            icon: 'hand-pointer',
+                          },
+                          {
+                            value: 'roundrobin',
+                            label: 'Round Robin',
+                            description: 'System auto-assigns',
+                            icon: 'rotate',
+                          },
+                        ].map(option => (
+                          <HeadlessRadioGroup.Option
+                            key={option.value}
+                            value={option.value}
+                            className={({ checked, disabled }) =>
+                              clsx(
+                                'rounded-lg border p-3 transition-all',
+                                disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
+                                checked
+                                  ? 'border-purple-500 bg-purple-50'
+                                  : 'border-gray-200 hover:border-gray-300',
+                              )
+                            }
+                          >
+                            {({ checked }) => (
+                              <div className="flex items-center gap-3">
+                                <Icon
+                                  name={option.icon}
+                                  style={checked ? 'solid' : 'regular'}
+                                  className={clsx(
+                                    'w-4 h-4 shrink-0',
+                                    checked ? 'text-purple-600' : 'text-gray-400',
+                                  )}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div
+                                    className={clsx(
+                                      'text-sm font-medium',
+                                      checked ? 'text-gray-900' : 'text-gray-600',
+                                    )}
+                                  >
+                                    {option.label}
+                                  </div>
+                                  <div className="text-xs text-gray-500 truncate">
+                                    {option.description}
+                                  </div>
+                                </div>
+                                <div
+                                  className={clsx(
+                                    'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                                    checked ? 'border-purple-500' : 'border-gray-300',
+                                  )}
+                                >
+                                  {checked && (
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </HeadlessRadioGroup.Option>
+                        ))}
+                      </HeadlessRadioGroup>
+                    )}
+                  />
+
+                  {/* Round-robin info box */}
+                  {followupStaffMethod === 'roundrobin' && (
+                    <div className="rounded-lg p-4 bg-purple-50">
+                      <div className="flex items-start gap-3">
                         <Icon
-                          name="magnifying-glass"
-                          style="regular"
-                          className="w-4 h-4 text-purple-400"
+                          name="circle-info"
+                          style="solid"
+                          className="w-5 h-5 mt-0.5 text-purple-500"
                         />
-                      </button>
-                    )
+                        <div>
+                          <p className="text-sm font-medium text-purple-900">
+                            Round-robin Assignment
+                          </p>
+                          <p className="text-sm mt-1 text-purple-700">
+                            The system will automatically assign a followup staff member based on round-robin distribution.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                  {errors.followupStaffId && (
-                    <p className="mt-2 text-sm text-danger">{errors.followupStaffId.message}</p>
+
+                  {/* Manual staff selection */}
+                  {followupStaffMethod === 'manual' && (
+                    <>
+                      {selectedFollowupStaff ? (
+                        <StaffDisplay
+                          staff={selectedFollowupStaff}
+                          onClear={
+                            isReadOnly
+                              ? undefined
+                              : () => {
+                                  setValue('selectedFollowupStaff', null, { shouldDirty: true });
+                                  setValue('followupStaffId', null, { shouldDirty: true });
+                                }
+                          }
+                          variant="purple"
+                        />
+                      ) : (
+                        !isReadOnly && (
+                          <button
+                            type="button"
+                            onClick={openFollowupStaffModal}
+                            className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
+                          >
+                            <span className="text-sm text-gray-500">
+                              Click to search and select internal followup staff...
+                            </span>
+                            <Icon
+                              name="magnifying-glass"
+                              style="regular"
+                              className="w-4 h-4 text-purple-400"
+                            />
+                          </button>
+                        )
+                      )}
+                      {errors.followupStaffId && (
+                        <p className="mt-2 text-sm text-danger">{errors.followupStaffId.message}</p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -674,11 +894,11 @@ const AdministrationPage = () => {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button type="submit" disabled={isCreating}>
-                  {isCreating ? (
+                <Button type="submit" disabled={isCreating || isCompleting}>
+                  {isCreating || isCompleting ? (
                     <>
                       <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
-                      Assigning...
+                      {isCompleting ? 'Advancing workflow...' : 'Assigning...'}
                     </>
                   ) : (
                     <>
@@ -702,16 +922,19 @@ const AdministrationPage = () => {
             isOpen={isStaffModalOpen}
             onClose={closeStaffModal}
             onSelect={handleStaffSelect}
+            eligibleStaff={eligibleStaff}
           />
           <SearchStaffModal
             isOpen={isFollowupStaffModalOpen}
             onClose={closeFollowupStaffModal}
             onSelect={handleFollowupStaffSelect}
+            eligibleStaff={eligibleStaff}
           />
           <SearchCompanyModal
             isOpen={isCompanyModalOpen}
             onClose={closeCompanyModal}
             onSelect={handleCompanySelect}
+            eligibleCompanies={eligibleCompanies}
           />
           <AddToQuotationModal
             isOpen={isAddToQuotationModalOpen}

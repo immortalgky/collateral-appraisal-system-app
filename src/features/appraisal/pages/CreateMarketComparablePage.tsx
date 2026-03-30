@@ -3,6 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
@@ -42,6 +43,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 const CreateMarketComparablePage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
   const queryClient = useQueryClient();
 
   // Support both appraisal-nested routes (URL params) and standalone routes (search params)
@@ -176,7 +178,7 @@ const CreateMarketComparablePage = () => {
           }
           skipWarning();
           toast.success('Market comparable updated successfully');
-          navigate(`/appraisals/${appraisalId}/property?tab=markets`);
+          navigate(`${basePath}/property?tab=markets`);
         },
         onError: (error: any) => {
           toast.error(
@@ -226,7 +228,7 @@ const CreateMarketComparablePage = () => {
           skipWarning();
           toast.success('Market comparable created successfully');
           if (appraisalId) {
-            navigate(`/appraisals/${appraisalId}/property/market-comparable/${response.id}`);
+            navigate(`${basePath}/property/market-comparable/${response.id}`);
           } else {
             navigate(`/market-comparable/detail?id=${response.id}`);
           }

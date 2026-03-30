@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
@@ -23,6 +24,7 @@ const getPropertyIcon = (code: string | null | undefined): string | null => {
 export const MarketsTab = () => {
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
 
@@ -41,12 +43,12 @@ export const MarketsTab = () => {
 
   const handleCreateSelect = (_type: string, _groupId: string, code: string) => {
     navigate(
-      `/appraisals/${appraisalId}/property/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
+      `${basePath}/property/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
     );
   };
 
   const handleViewComparable = (marketComparableId: string) => {
-    navigate(`/appraisals/${appraisalId}/property/market-comparable/${marketComparableId}`);
+    navigate(`${basePath}/property/market-comparable/${marketComparableId}`);
   };
 
   const handleUnlink = (comparableId: string) => {

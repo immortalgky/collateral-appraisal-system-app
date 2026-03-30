@@ -1,6 +1,7 @@
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
 import type { RecentTask } from '../types';
+import { useRecentTasks } from '../api';
 
 type StatusBadgeProps = {
   status: RecentTask['status'];
@@ -28,14 +29,18 @@ type RecentTaskWidgetProps = {
 };
 
 function RecentTaskWidget({ tasks }: RecentTaskWidgetProps) {
-  // Mock data if not provided
-  const taskData: RecentTask[] = tasks || [
-    { id: '1', reportNo: '67XXXXXX', customerName: 'Adison Ekstrom Bothman', taskType: 'Route Back Follow Up', purpose: 'Request for credit limit', status: 'pending', requestDate: '02/01/2024' },
-    { id: '2', reportNo: '67XXXXXX', customerName: 'Aspen Dias', taskType: 'Route Back Follow Up', purpose: 'Request for credit limit', status: 'pending', requestDate: '03/01/2024' },
-    { id: '3', reportNo: '67XXXXXX', customerName: 'Jordyn George', taskType: '', purpose: 'Request for credit limit', status: 'draft', requestDate: '03/01/2024' },
-    { id: '4', reportNo: '67XXXXXX', customerName: 'Mira Dorwart', taskType: 'Route Back Follow Up', purpose: 'Request for credit limit', status: 'pending', requestDate: '10/02/2024' },
-    { id: '5', reportNo: '67XXXXXX', customerName: 'Giana Torff', taskType: 'Route Back Follow Up', purpose: 'Request for credit limit', status: 'pending', requestDate: '10/02/2024' },
-  ];
+  const { data: apiData } = useRecentTasks(5);
+
+  const taskData: RecentTask[] = tasks || (apiData?.items || []).map((item) => ({
+    id: item.id,
+    reportNo: item.appraisalNumber || '-',
+    customerName: item.customerName || '-',
+    taskType: item.taskType || '',
+    taskDescription: item.taskDescription || '',
+    purpose: item.purpose || '-',
+    status: (item.status?.toLowerCase() === 'completed' ? 'completed' : item.status?.toLowerCase() === 'draft' ? 'draft' : 'pending') as RecentTask['status'],
+    requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '-',
+  }));
 
   return (
     <WidgetWrapper id="recent-task">
@@ -90,7 +95,7 @@ function RecentTaskWidget({ tasks }: RecentTaskWidgetProps) {
                 <tr key={task.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-medium text-gray-800">{task.reportNo}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{task.customerName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{task.taskType || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{task.taskDescription || task.taskType || '-'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{task.purpose}</td>
                   <td className="px-6 py-4">
                     <StatusBadge status={task.status} />

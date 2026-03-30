@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   createCondoPMAForm,
   createCondoPMAFormDefault,
@@ -22,7 +23,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 const CondoPMAPage = () => {
   const isReadOnly = usePageReadOnly();
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
 
   const methods = useForm<createCondoPMAFormType>({
     defaultValues: createCondoPMAFormDefault,

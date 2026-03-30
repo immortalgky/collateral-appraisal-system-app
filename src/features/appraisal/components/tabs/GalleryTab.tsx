@@ -4,6 +4,7 @@ import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import ViewModeToggle, { type GalleryViewMode } from '../ViewModeToggle';
 import { PhotoGridView, PhotoListView } from '../gallery';
 import PhotoPreviewModal from '../PhotoPreviewModal';
@@ -266,7 +267,7 @@ const LinkToPropertyModal = ({
 
 export const GalleryTab = () => {
   const readOnly = usePageReadOnly();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);

@@ -1,4 +1,5 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -33,9 +34,10 @@ import MachineryDetailForm from '../forms/MachineryDetailForm';
 const CreateMachineryPage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
@@ -113,7 +115,7 @@ const CreateMachineryPage = () => {
             toast.success('Property Machinery created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisals/${appraisalId}/property/machinery/${response.propertyId}`);
+            navigate(`${basePath}/property/machinery/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -163,7 +165,7 @@ const CreateMachineryPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisals/${appraisalId}/property/machinery/${response.propertyId}`);
+              navigate(`${basePath}/property/machinery/${response.propertyId}`);
             }
           },
           onError: (error: any) => {

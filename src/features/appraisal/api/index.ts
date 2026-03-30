@@ -10,3 +10,4 @@ export * from './photo';
 export * from './gallery';
 export * from './lawAndRegulation';
 export * from './decisionSummary';
+export * from './workflow';

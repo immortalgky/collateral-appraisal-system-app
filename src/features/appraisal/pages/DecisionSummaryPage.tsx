@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppraisalId, useWorkflowInstanceId, useActivityId, useIsTaskOwner, useAppraisalIsPma, useAppraisalFacilityLimit, useAppraisalHasAppraisalBook, useAppraisalContext } from '@/features/appraisal/context/AppraisalContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -9,11 +10,13 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
+import { useCompleteActivity } from '../api/workflow';
 import {
   decisionSummaryFormDefaults,
   decisionSummaryFormSchema,
@@ -22,6 +25,7 @@ import {
 import ApproachMatrixTable from '../components/summary/ApproachMatrixTable';
 import GovernmentPriceTable from '../components/summary/GovernmentPriceTable';
 import ApprovalListSection from '../components/summary/ApprovalListSection';
+import DecisionSection from '../components/summary/DecisionSection';
 
 // ==================== Field Definitions ====================
 
@@ -140,12 +144,28 @@ const additionalAssumptionsFields: FormField[] = [
 // ==================== Page Component ====================
 
 const DecisionSummaryPage = () => {
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const navigate = useNavigate();
+  const appraisalId = useAppraisalId();
   const isReadOnly = usePageReadOnly();
+  const workflowInstanceId = useWorkflowInstanceId();
+  const activityId = useActivityId();
+  const isTaskOwner = useIsTaskOwner();
+
+  // Decision state (lifted from DecisionSection)
+  const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
+  const [comments, setComments] = useState('');
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  // Routing variables from context (for appraisal-initiation refresh)
+  const isPma = useAppraisalIsPma();
+  const facilityLimit = useAppraisalFacilityLimit();
+  const hasAppraisalBook = useAppraisalHasAppraisalBook();
+  const { appraisal } = useAppraisalContext();
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
   const { mutate: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
+  const completeActivity = useCompleteActivity();
 
   // Form setup
   const mapDataToForm = useMemo(() => {
@@ -187,13 +207,53 @@ const DecisionSummaryPage = () => {
   const onSubmit = (formData: DecisionSummaryFormType) => {
     if (!appraisalId) return;
 
+    const canComplete = isTaskOwner && workflowInstanceId && activityId && selectedDecision;
+
     saveSummary(
       { appraisalId, body: formData },
       {
         onSuccess: () => {
-          toast.success('Decision summary saved successfully');
+          if (canComplete) {
+            completeActivity.mutate(
+              {
+                workflowInstanceId: workflowInstanceId!,
+                activityId: activityId!,
+                input: {
+                  decisionTaken: selectedDecision!,
+                  comments,
+                  // For appraisal-initiation: refresh routing variables after maker edits
+                  ...(activityId === 'appraisal-initiation' && {
+                    isPma,
+                    facilityLimit,
+                    priority: appraisal?.priority ?? 'normal',
+                    hasAppraisalBook,
+                  }),
+                },
+              },
+              {
+                onSuccess: (result) => {
+                  setIsConfirmOpen(false);
+                  if (result.validationErrors && result.validationErrors.length > 0) {
+                    result.validationErrors.forEach(err => toast.error(err));
+                    return;
+                  }
+                  toast.success('Decision submitted successfully');
+                  navigate('/tasks');
+                },
+                onError: (error: any) => {
+                  setIsConfirmOpen(false);
+                  const message = error?.response?.data?.detail || error?.message || 'Failed to submit decision';
+                  toast.error(message);
+                },
+              },
+            );
+          } else {
+            setIsConfirmOpen(false);
+            toast.success('Decision summary saved successfully');
+          }
         },
         onError: (error: any) => {
+          setIsConfirmOpen(false);
           toast.error(
             error.apiError?.detail || 'Failed to save decision summary. Please try again.',
           );
@@ -332,14 +392,12 @@ const DecisionSummaryPage = () => {
               <ApprovalListSection appraisalId={appraisalId!} />
 
               {/* 13. Decision */}
-              <FormCard title="Decision" icon="gavel" iconColor="rose">
-                <div className="flex flex-col items-center justify-center py-8 gap-2">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Icon name="gavel" style="regular" className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-500">Coming Soon</p>
-                </div>
-              </FormCard>
+              <DecisionSection
+                selectedDecision={selectedDecision}
+                onDecisionChange={setSelectedDecision}
+                comments={comments}
+                onCommentsChange={setComments}
+              />
             </div>
           </div>
 
@@ -364,18 +422,13 @@ const DecisionSummaryPage = () => {
                     <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
                     Save
                   </Button>
-                  <Button type="submit" disabled={isSaving}>
-                    {isSaving ? (
-                      <>
-                        <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                        Submit
-                      </>
-                    )}
+                  <Button
+                    type="button"
+                    disabled={isSaving || completeActivity.isPending || (isTaskOwner && !selectedDecision)}
+                    onClick={() => setIsConfirmOpen(true)}
+                  >
+                    <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
+                    Submit
                   </Button>
                 </div>
               </div>
@@ -385,6 +438,17 @@ const DecisionSummaryPage = () => {
       </FormProvider>
 
       <UnsavedChangesDialog blocker={blocker} />
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => handleSubmit(onSubmit)()}
+        title="Submit Decision Summary"
+        message="Are you sure you want to submit this decision summary?"
+        confirmText="Submit"
+        cancelText="Cancel"
+        variant="primary"
+        isLoading={isSaving || completeActivity.isPending}
+      />
     </div>
   );
 };

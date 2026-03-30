@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
+import { useTaskSummary } from '../api';
 
 type Period = 'calendar' | 'A' | 'M' | 'W' | 'D';
 
@@ -70,16 +71,35 @@ type TaskSummaryWidgetProps = {
   };
 };
 
+const PERIOD_MAP: Record<Period, string> = {
+  calendar: 'yearly',
+  A: 'yearly',
+  M: 'monthly',
+  W: 'monthly',
+  D: 'daily',
+};
+
 function TaskSummaryWidget({ data }: TaskSummaryWidgetProps) {
   const [period, setPeriod] = useState<Period>('A');
 
-  // Mock data if not provided
-  const taskData = data || {
-    notStarted: 9,
-    inProgress: 9,
-    overdue: 9,
-    completed: 9,
-  };
+  const { data: apiData } = useTaskSummary(PERIOD_MAP[period]);
+
+  // Aggregate API items into totals, fall back to prop data or zeros
+  const taskData = (() => {
+    if (data) return data;
+    if (apiData?.items && apiData.items.length > 0) {
+      return apiData.items.reduce(
+        (acc, item) => ({
+          notStarted: acc.notStarted + item.notStarted,
+          inProgress: acc.inProgress + item.inProgress,
+          overdue: acc.overdue + item.overdue,
+          completed: acc.completed + item.completed,
+        }),
+        { notStarted: 0, inProgress: 0, overdue: 0, completed: 0 }
+      );
+    }
+    return { notStarted: 0, inProgress: 0, overdue: 0, completed: 0 };
+  })();
 
   const total = taskData.notStarted + taskData.inProgress + taskData.overdue + taskData.completed;
 

@@ -13,6 +13,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     taskName,
     status,
     priority,
+    activityId,
   } = params;
 
   const queryKey = [
@@ -23,6 +24,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
       ...(taskName && { taskName }),
       ...(status && { status }),
       ...(priority && { priority }),
+      ...(activityId && { activityId }),
     },
   ];
 
@@ -36,6 +38,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
           ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
           ...(priority && { Priority: priority }),
+          ...(activityId && { ActivityId: activityId }),
         },
       });
 
@@ -53,7 +56,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
 export const useGetTasksForKanban = (
   params: Omit<GetTasksParams, 'pageNumber' | 'pageSize'> = {},
 ) => {
-  const { taskName, status, priority } = params;
+  const { taskName, status, priority, activityId } = params;
 
   const queryKey = [
     'my-tasks-kanban',
@@ -61,6 +64,7 @@ export const useGetTasksForKanban = (
       ...(taskName && { taskName }),
       ...(status && { status }),
       ...(priority && { priority }),
+      ...(activityId && { activityId }),
     },
   ];
 
@@ -74,6 +78,7 @@ export const useGetTasksForKanban = (
           ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
           ...(priority && { Priority: priority }),
+          ...(activityId && { ActivityId: activityId }),
         },
       });
 

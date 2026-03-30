@@ -88,9 +88,13 @@ export type MovementType = (typeof Movement)[keyof typeof Movement];
 // Main Task interface - matches API TaskItemType (TaskDto) from v1.ts
 export interface Task {
   id: string;
+  taskId: string;
+  workflowInstanceId: string;
+  activityId: string;
   appraisalNumber: string | null;
   customerName: string | null;
   taskType: string | null;
+  taskDescription: string | null;
   purpose: string | null;
   propertyType: string | null;
   status: string | null;
@@ -103,6 +107,10 @@ export interface Task {
   olaActual: number;
   olaDiff: number;
   priority: string | null;
+  dueAt: string | null;
+  slaStatus: string | null;
+  elapsedHours: number | null;
+  remainingHours: number | null;
 }
 
 // Grouping options for Kanban view
@@ -123,4 +131,5 @@ export interface GetTasksParams {
   taskName?: string;
   status?: string;
   priority?: string;
+  activityId?: string;
 }

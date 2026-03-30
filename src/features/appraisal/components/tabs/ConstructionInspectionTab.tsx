@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef } from 'react';
 import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
 import Toggle from '@shared/components/inputs/Toggle';
 import { formatNumber } from '@shared/utils/formatUtils';
@@ -51,10 +52,12 @@ interface ConstructionInspectionTabProps {
 
 export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTabProps) {
   const navigate = useNavigate();
-  const { appraisalId, propertyId } = useParams<{ appraisalId: string; propertyId: string }>();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
+  const { propertyId } = useParams<{ propertyId: string }>();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId');
-  const basePath = usePropertyBasePath();
+  const propertyBasePath = usePropertyBasePath();
 
   // Fetch work groups from API
   const { data: workGroups = [] } = useConstructionWorkGroups();
@@ -87,7 +90,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
     const params = new URLSearchParams();
     if (gId) params.set('groupId', gId);
     params.set('tab', 'construction');
-    navigate(`/appraisals/${appraisalId}/${basePath}/${segment}/${property.id}?${params.toString()}`);
+    navigate(`${basePath}/${propertyBasePath}/${segment}/${property.id}?${params.toString()}`);
     setIsDropdownOpen(false);
   };
 

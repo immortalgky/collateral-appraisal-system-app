@@ -3,6 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -41,11 +42,12 @@ import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspec
 const CreateLandBuildingPage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
 
   const { propertyId } = useParams<{ propertyId?: string }>();
   const isEditMode = Boolean(propertyId);
 
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
@@ -129,7 +131,7 @@ const CreateLandBuildingPage = () => {
             toast.success('Property land and building created successfully');
             setSaveAction(null);
             skipWarning();
-            navigate(`/appraisals/${appraisalId}/property/land-building/${response.propertyId}`);
+            navigate(`${basePath}/property/land-building/${response.propertyId}`);
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
@@ -181,7 +183,7 @@ const CreateLandBuildingPage = () => {
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
-              navigate(`/appraisals/${appraisalId}/property/land-building/${response.propertyId}`);
+              navigate(`${basePath}/property/land-building/${response.propertyId}`);
             }
           },
           onError: (error: any) => {
