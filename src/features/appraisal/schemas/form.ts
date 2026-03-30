@@ -123,8 +123,10 @@ const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
   }
 };
 
-export const createBuildingForm = buildFormSchema(allBuildingFields, createBuildingFormBase)
-  .superRefine(constructionProportionRefinement);
+export const createBuildingForm = buildFormSchema(
+  allBuildingFields,
+  createBuildingFormBase,
+).superRefine(constructionProportionRefinement);
 
 const AreaDetailDto = z
   .object({
@@ -276,6 +278,7 @@ export const createLandFormDefault: createLandFormType = {
   landShapeType: '',
   urbanPlanningType: '',
   landZoneType: [],
+  landZoneTypeOther: '',
   plotLocationType: [],
   plotLocationTypeOther: '',
   landFillType: '',
@@ -300,6 +303,7 @@ export const createLandFormDefault: createLandFormType = {
   transportationAccessType: [],
   transportationAccessTypeOther: '',
   propertyAnticipationType: '',
+  propertyAnticipationTypeOther: '',
   isExpropriated: false,
   expropriationRemark: '',
   isInExpropriationLine: false,
@@ -342,6 +346,7 @@ export const createBuildingFormDefault: createBuildingFormType = {
   isOwnerVerified: false,
   houseNumber: '',
   buildingConditionType: '',
+  buildingConditionTypeOther: '',
   isUnderConstruction: false,
   constructionCompletionPercent: 100,
   constructionLicenseExpirationDate: null,
@@ -425,6 +430,7 @@ export const createCondoFormDefault: createCondoFormType = {
   landOffice: '',
   isOwnerVerified: false,
   buildingConditionType: '',
+  buildingConditionTypeOther: '',
   hasObligation: false,
   obligationDetails: '',
   documentValidationResultType: '',
@@ -500,6 +506,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   landShapeType: '',
   urbanPlanningType: '',
   landZoneType: [],
+  landZoneTypeOther: '',
   plotLocationType: [],
   plotLocationTypeOther: '',
   landFillType: '',
@@ -524,6 +531,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   transportationAccessType: [],
   transportationAccessTypeOther: '',
   propertyAnticipationType: '',
+  propertyAnticipationTypeOther: '',
   isExpropriated: false,
   expropriationRemark: '',
   isInExpropriationLine: false,
@@ -559,6 +567,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   builtOnTitleNumber: '',
   houseNumber: '',
   buildingConditionType: '',
+  buildingConditionTypeOther: '',
   isUnderConstruction: false,
   constructionCompletionPercent: 100,
   constructionLicenseExpirationDate: null,
@@ -625,6 +634,7 @@ export const createMachineryFormDefault: createMachineryFormType = {
   propertyName: null,
   isOwnerVerified: true,
   ownerName: null,
+  registrationNo: null,
   isOperational: true,
   machineName: null,
   brand: null,

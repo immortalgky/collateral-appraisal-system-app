@@ -90,6 +90,7 @@ export default function AddPaymentModal({
         <NumberInput
           label="Amount"
           required
+          maxIntegerDigits={15}
           decimalPlaces={2}
           name="amount"
           value={watch('amount')}

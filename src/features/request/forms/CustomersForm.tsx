@@ -12,7 +12,7 @@ const CustomersForm = () => {
 
 const customersColumns = [
   { label: 'Seq.no', rowNumberColumn: true as const },
-  { name: 'name', label: 'Customer Name', maxLength: 80 },
+  { name: 'name', label: 'Customer Name', maxLength: 260 },
   { name: 'contactNumber', label: 'Contact Number', maxLength: 20 },
 ];
 

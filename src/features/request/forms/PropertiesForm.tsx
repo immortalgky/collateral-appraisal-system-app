@@ -32,7 +32,7 @@ const propertiesColumns = [
     name: 'sellingPrice',
     label: 'Selling Price',
     inputType: 'number',
-    maxIntegerDigits: 10,
+    maxIntegerDigits: 15,
     decimalDigits: 2,
   },
 ];
