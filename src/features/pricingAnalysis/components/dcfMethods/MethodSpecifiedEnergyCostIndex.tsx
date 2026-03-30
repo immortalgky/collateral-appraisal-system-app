@@ -1,7 +1,8 @@
 import clsx from 'clsx';
-import { RHFInputCell, toNumber } from '../table/RHFInputCell';
+import { RHFInputCell } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
+import { toNumber } from '../../domain/calculation';
 
 interface MethodSpecifiedEnergyCostIndexProps {
   name: string;

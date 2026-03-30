@@ -1,6 +1,6 @@
 type Identifier = 'positive' | 'negative' | 'empty';
 type CategoryIdentifier = 'income' | 'expenses' | 'gop' | 'fixedExps';
-type SectionType = 'income' | 'expenses' | 'summary';
+type SectionType = 'income' | 'expenses' | 'summary' | 'directSummary';
 
 interface MethodSpecifiedRoomIncomePerDay {
   // modal

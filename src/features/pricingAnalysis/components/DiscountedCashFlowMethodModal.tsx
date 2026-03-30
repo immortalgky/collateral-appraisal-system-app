@@ -37,10 +37,9 @@ export function DiscountedCashFlowMethodModal({
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
-    shouldUnregister: true,
   });
 
-  const { handleSubmit, reset, getValues, control, unregister, setValue } = methods;
+  const { handleSubmit, reset, resetField, getValues, control } = methods;
 
   const methodType = useWatch({
     control,
@@ -82,17 +81,12 @@ export function DiscountedCashFlowMethodModal({
     if (prevMethodTypeRef.current !== methodType) {
       prevMethodTypeRef.current = methodType ?? null;
 
-      unregister('method.detail');
-      reset({
-        ...getValues(),
-        method: {
-          methodType: methodType ?? null,
-          detail: undefined,
-        },
+      // better than unregister + reset(undefined)
+      resetField('method.detail', {
+        defaultValue: null, // or {} / explicit empty shape for that method type
       });
-      console.log(getValues());
     }
-  }, [methodType, unregister, setValue, reset, getValues]);
+  }, [methodType, resetField]);
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {

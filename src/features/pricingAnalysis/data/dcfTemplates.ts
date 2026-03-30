@@ -1167,7 +1167,7 @@ export const directApartmentTemplate: DCFTemplateType = {
       ],
     },
     {
-      sectionType: 'summary',
+      sectionType: 'directSummary',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,

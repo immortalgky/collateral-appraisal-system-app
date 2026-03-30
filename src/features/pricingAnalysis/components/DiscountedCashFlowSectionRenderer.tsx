@@ -6,6 +6,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedF
 import { useFieldArray } from 'react-hook-form';
 import { useMemo } from 'react';
 import type { DCFSection } from '../types/dcf';
+import { DirectCashFlowSummarySection } from './dcfSections/DirectCashFlowSummarySection';
 
 interface DiscountedCashFlowSectionRendererProps {
   name: string;
@@ -76,6 +77,9 @@ export function DiscountedCashFlowSectionRenderer({
     }
     case 'summary': {
       return <SummarySection name={name} totalNumberOfYears={totalNumberOfYears} />;
+    }
+    case 'directSummary': {
+      return <DirectCashFlowSummarySection name={name} totalNumberOfYears={totalNumberOfYears} />;
     }
   }
 }

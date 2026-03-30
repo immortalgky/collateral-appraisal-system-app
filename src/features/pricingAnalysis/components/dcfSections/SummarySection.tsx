@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '../table/RHFInputCell';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import type { DCFSection, DCFSummarySection } from '../../types/dcf';
 
