@@ -23,26 +23,6 @@ export function DiscountedCashFlowSectionRenderer({
   icon,
   color,
 }: DiscountedCashFlowSectionRendererProps) {
-  const { fields } = useFieldArray({ name: `${name}.categories` });
-  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-      return [
-        {
-          targetPath: `${name}.totalSectionValues.${idx}`,
-          deps: [`${name}.categories`],
-          compute: ({ getValues }) => {
-            const categories = getValues(`${name}.categories`) ?? [];
-            const totalCategoryValue = categories.reduce((prev, curr) => {
-              return prev + Number(curr.totalCategoryValues?.[idx] ?? 0);
-            }, 0);
-            return Number(totalCategoryValue);
-          },
-        },
-      ];
-    });
-  }, [fields]);
-  useDerivedFields({ rules });
-
   switch (section.sectionType) {
     case 'income': {
       return (

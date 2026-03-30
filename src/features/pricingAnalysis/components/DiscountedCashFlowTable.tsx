@@ -1,9 +1,16 @@
 import clsx from 'clsx';
-import { useWatch } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
 import { DiscountedCashFlowSectionRenderer } from '@features/pricingAnalysis/components/DiscountedCashFlowSectionRenderer.tsx';
 import type { DCFSection } from '../types/dcf';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
+import {
+  buildCalculateTotalAssumptionDerivedRules,
+  buildCalculateTotalCategoryDerivedRules,
+  buildCalculateTotalIncomeDerivedRules,
+} from '../adapters/buildDiscountedCashFlowDerivedRules';
+import { useMemo } from 'react';
+import { useDerivedFields } from '../adapters/useDerivedFieldArray';
 
 export interface SectionColor {
   bg: string;
@@ -83,7 +90,25 @@ export function DiscountedCashFlowTable({
   totalNumberOfYears,
   property,
 }: DiscountedCashFlowTableProps) {
-  const sections = useWatch({ name: 'sections' });
+  const { control } = useFormContext();
+  const sections = useWatch({ control, name: 'sections' });
+
+  // rules
+  const calculateTotalIncomeDerivedRules = useMemo(() => {
+    return buildCalculateTotalIncomeDerivedRules(sections, totalNumberOfYears);
+  }, [sections, totalNumberOfYears]);
+
+  const calculateTotalCategoryDerivedRules = useMemo(() => {
+    return buildCalculateTotalCategoryDerivedRules(sections, totalNumberOfYears);
+  }, [sections, totalNumberOfYears]);
+
+  const calculateTotalAssumptionDerivedRules = useMemo(() => {
+    return buildCalculateTotalAssumptionDerivedRules(sections, totalNumberOfYears);
+  }, [sections, totalNumberOfYears]);
+
+  useDerivedFields({ rules: calculateTotalIncomeDerivedRules });
+  useDerivedFields({ rules: calculateTotalCategoryDerivedRules });
+  useDerivedFields({ rules: calculateTotalAssumptionDerivedRules });
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">

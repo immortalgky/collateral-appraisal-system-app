@@ -1,4 +1,5 @@
 type Identifier = 'positive' | 'negative' | 'empty';
+type CategoryIdentifier = 'income' | 'expenses' | 'gop' | 'fixedExps';
 type SectionType = 'income' | 'expenses' | 'summary';
 
 interface MethodSpecifiedRoomIncomePerDay {
@@ -148,6 +149,7 @@ interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
   // table
   increaseRate: number[];
   totalFoodAndBeveragePerRoomPerDay: number[];
+  totalFoodAndBeveragePerRoomPerYear: number[];
 }
 
 interface MethodPositionBasedSalaryCalculation {
@@ -170,11 +172,25 @@ interface MethodPositionBasedSalaryCalculation {
 
 interface MethodParameterBasedOnTierOfPropertyValue {}
 
-interface MethodSpecifiedEnergyCostIndex {}
+interface MethodSpecifiedEnergyCostIndex {
+  // modal
+  energyCostIndex: number;
+  increaseRatePct: number;
+  increaseRateYrs: number;
+
+  // table
+  increaseRate: number[];
+  energyCostIndexIncrease: number[];
+  totalEnegyCost: number[];
+}
 
 interface MethodProportionOfTheNewReplacementCost {
+  // modal
   proportionPct: number;
 
+  // table
+  newReplacementCost: number;
+  proportionOfNewReplacementCosts: number[];
   totalMethodValues: number[];
 }
 
@@ -327,7 +343,7 @@ export interface DCFAssumption extends Base {
 export interface DCFCategory extends Base {
   categoryType: string; // maybe don't need
   categoryName: string;
-  identifier: Identifier;
+  identifier: CategoryIdentifier;
   displaySeq: number;
   totalCategoryValues: number[];
   assumptions: DCFAssumption[];
@@ -384,7 +400,7 @@ export interface DCFTemplateType {
     categories?: {
       categoryType: string;
       categoryName: string;
-      identifier: Identifier;
+      identifier: CategoryIdentifier;
       displaySeq: number;
       assumptions: {
         assumptionType: string;

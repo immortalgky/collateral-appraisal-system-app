@@ -37,25 +37,27 @@ export function DiscountedCashFlowMethodModal({
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
+    shouldUnregister: true,
   });
 
-  const { handleSubmit, reset, getValues, control } = methods;
+  const { handleSubmit, reset, getValues, control, unregister, setValue } = methods;
 
   const methodType = useWatch({
     control,
     name: 'method.methodType',
   });
 
+  const systemMethodType = useMemo(
+    () => mapDCFMethodCodeToSystemType(methodType ?? null),
+    [methodType],
+  );
+
   const assumptionType = useWatch({
     control,
     name: 'assumptionType',
   });
 
-  const [systemMethodType, setSystemMethodType] = useState<string | null>(
-    mapDCFMethodCodeToSystemType(initialData.method.methodType),
-  );
-
-  const prevMethodTypeRef = useRef<string | undefined>(undefined);
+  const prevMethodTypeRef = useRef<string | null | undefined>(undefined);
   const skipNextMethodResetRef = useRef(false);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export function DiscountedCashFlowMethodModal({
 
     skipNextMethodResetRef.current = true;
     reset(initialData);
-    prevMethodTypeRef.current = initialData.method?.methodType;
+    prevMethodTypeRef.current = initialData.method?.methodType ?? null;
   }, [editing, initialData, reset]);
 
   useEffect(() => {
@@ -73,13 +75,14 @@ export function DiscountedCashFlowMethodModal({
     }
 
     if (prevMethodTypeRef.current === undefined) {
-      prevMethodTypeRef.current = methodType;
+      prevMethodTypeRef.current = methodType ?? null;
       return;
     }
 
     if (prevMethodTypeRef.current !== methodType) {
-      prevMethodTypeRef.current = methodType;
+      prevMethodTypeRef.current = methodType ?? null;
 
+      unregister('method.detail');
       reset({
         ...getValues(),
         method: {
@@ -87,10 +90,9 @@ export function DiscountedCashFlowMethodModal({
           detail: undefined,
         },
       });
-
-      setSystemMethodType(mapDCFMethodCodeToSystemType(methodType));
+      console.log(getValues());
     }
-  }, [methodType, reset, getValues]);
+  }, [methodType, unregister, setValue, reset, getValues]);
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {
@@ -102,7 +104,7 @@ export function DiscountedCashFlowMethodModal({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      if (e.key === 'Enter') {
         e.preventDefault();
         handleSubmit(onSubmit)();
       }
@@ -179,6 +181,7 @@ export function DiscountedCashFlowMethodModal({
           </div>
 
           <DiscountedCashFlowModalRenderer
+            key={systemMethodType ?? 'none'}
             name="method.detail"
             methodType={systemMethodType}
             getOuterFormValues={getOuterFormValues}

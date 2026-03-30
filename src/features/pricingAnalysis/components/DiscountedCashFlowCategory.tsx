@@ -65,21 +65,6 @@ export function DiscountedCashFlowCategory({
     remove(index);
   };
 
-  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => ({
-      targetPath: `${name}.totalCategoryValues.${idx}`,
-      deps: [`${name}.assumptions`],
-      compute: ({ getValues }) => {
-        const assumptions = getValues(`${name}.assumptions`) ?? [];
-        return assumptions.reduce((prev: number, curr: DCFAssumption) => {
-          return prev + Number(curr.totalAssumptionValues?.[idx] ?? 0);
-        }, 0);
-      },
-    }));
-  }, [totalNumberOfYears, name, fields.length]);
-
-  useDerivedFields({ rules });
-
   const rowHeaderStyle = 'pl-8 px-1 py-1.5 h-12 text-sm border-b border-gray-300';
   const rowBodyStyle = 'pl-8 px-1.5 py-1.5 h-12 text-sm text-right border-b border-gray-300';
   const rowStyle = 'cursor-pointer bg-white';

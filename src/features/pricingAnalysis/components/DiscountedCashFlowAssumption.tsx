@@ -28,22 +28,6 @@ export function DiscountedCashFlowAssumption({
 }: DiscountedCashFlowAssumptionProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-      return [
-        {
-          targetPath: `${name}.totalAssumptionValues.${idx}`,
-          deps: [`${name}.method.totalMethodValues.${idx}`],
-          compute: ({ getValues }) => {
-            const totalMethodValue = getValues(`${name}.method.totalMethodValues.${idx}`) ?? 0;
-            return Number(totalMethodValue);
-          },
-        },
-      ];
-    });
-  }, [name, totalNumberOfYears]);
-  useDerivedFields({ rules });
-
   return (
     <>
       <tr>

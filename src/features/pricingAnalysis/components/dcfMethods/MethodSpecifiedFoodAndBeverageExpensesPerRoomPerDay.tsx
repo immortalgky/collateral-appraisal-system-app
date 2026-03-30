@@ -32,24 +32,36 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
           deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.firstYearAmt`],
           compute: ({ getValues }) => {
             const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
-            const totalNumberOfSaleableArea =
-              getDCFFilteredAssumptions(getValues)
 
-            if (idx === 0) return firstYearAmt * totalNumberOfSaleableArea;
+            if (idx === 0) return firstYearAmt;
 
-            const prevRoomIncome = getValues(
-              `${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx - 1}`,
-            );
+            const prevTotalFoodAndBeveragePerRoomPerDay =
+              getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx - 1}`) ?? 0;
             const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-            return toNumber(prevRoomIncome * (1 + increaseRate / 100));
+            return toNumber(prevTotalFoodAndBeveragePerRoomPerDay * (1 + increaseRate / 100));
+          },
+        },
+        {
+          targetPath: `${name}.detail.totalFoodAndBeveragePerRoomPerYear.${idx}`,
+          deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
+          compute: ({ getValues }) => {
+            const totalFoodAndBeveragePerRoomPerDay =
+              getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
+            const totalNumberOfSaleableArea =
+              getDCFFilteredAssumptions(getValues, a => a.method.methodType === '01')?.[0]
+                ?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
+
+            return (
+              toNumber(totalFoodAndBeveragePerRoomPerDay) * toNumber(totalNumberOfSaleableArea)
+            );
           },
         },
         {
           targetPath: `${name}.totalMethodValues.${idx}`,
           deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
           compute: ({ getValues }) => {
-            return getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
+            return getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerYear.${idx}`) ?? 0;
           },
         },
       ];
@@ -100,7 +112,7 @@ function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayTable({
       </tr>
       <tr>
         <td className={clsx(rowHeaderStyle)}>
-          <span>Total</span>
+          <span>Total Food and Beverage per Room per Day</span>
         </td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
@@ -109,6 +121,28 @@ function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayTable({
                 <div className="w-16">
                   <RHFInputCell
                     fieldName={`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`}
+                    inputType="display"
+                    accessor={({ value }) => (
+                      <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                    )}
+                  />
+                </div>
+              </div>
+            </td>
+          );
+        })}
+      </tr>
+      <tr>
+        <td className={clsx(rowHeaderStyle)}>
+          <span>Total</span>
+        </td>
+        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
+          return (
+            <td key={idx} className={clsx(rowBodyStyle)}>
+              <div className="flex flex-row justify-end items-center">
+                <div className="w-16">
+                  <RHFInputCell
+                    fieldName={`${name}.detail.totalFoodAndBeveragePerRoomPerYear.${idx}`}
                     inputType="display"
                     accessor={({ value }) => (
                       <span className="text-right">{value ? value.toLocaleString() : 0}</span>

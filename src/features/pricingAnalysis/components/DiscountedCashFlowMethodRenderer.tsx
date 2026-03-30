@@ -11,6 +11,7 @@ import { MethodRoomCostBasedOnExpensesPerRoomPerDay } from './dcfMethods/MethodR
 import { MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay } from './dcfMethods/MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay';
 import { MethodPositionBasedSalaryCalculation } from './dcfMethods/MethodPositionBasedSalaryCalculation';
 import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProportionOfTheNewReplacementCost';
+import { MethodSpecifiedEnergyCostIndex } from './dcfMethods/MethodSpecifiedEnergyCostIndex';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
@@ -66,7 +67,7 @@ export function DiscountedCashFlowMethodRenderer({
     case 'parameterBasedOnTierOfPropertyValue':
       return <></>;
     case 'specifiedEnergyCostIndex':
-      return <></>;
+      return <MethodSpecifiedEnergyCostIndex {...props} />;
     case 'proportionOfTheNewReplacementCost':
       return <MethodProportionOfTheNewReplacementCost {...props} />;
     case 'proportion':

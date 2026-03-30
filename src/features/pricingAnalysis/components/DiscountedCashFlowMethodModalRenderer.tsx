@@ -3,6 +3,7 @@ import { MethodProportionModal } from './dcfMethods/MethodProportionModal';
 import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProportionOfTheNewReplacementCost';
 import { MethodProportionOfTheNewReplacementCostModal } from './dcfMethods/MethodProportionOfTheNewReplacementCostModal';
 import { MethodRoomCostBasedOnExpensesPerRoomPerDayModal } from './dcfMethods/MethodRoomCostBasedOnExpensesPerRoomPerDayModal';
+import { MethodSpecifiedEnergyCostIndexModal } from './dcfMethods/MethodSpecifiedEnergyCostIndexModal';
 import { MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal } from './dcfMethods/MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal';
 import { MethodSpecifiedRentalIncomePerMonthModal } from './dcfMethods/MethodSpecifiedRentalIncomePerMonthModal';
 import { MethodSpecifiedRentalIncomePerSquareMeterModal } from './dcfMethods/MethodSpecifiedRentalIncomePerSquareMeterModal';
@@ -23,6 +24,8 @@ export function DiscountedCashFlowModalRenderer({
   getOuterFormValues,
 }: DiscountedCashFlowModalRendererProps) {
   const props = { name, getOuterFormValues };
+
+  console.log(methodType);
 
   switch (methodType) {
     case 'specifiedRoomIncomePerDay': {
@@ -47,7 +50,7 @@ export function DiscountedCashFlowModalRenderer({
     case 'parameterBasedOnTierOfPropertyValue':
       return <></>;
     case 'specifiedEnergyCostIndex':
-      return <></>;
+      return <MethodSpecifiedEnergyCostIndexModal {...props} />;
     case 'proportionOfTheNewReplacementCost':
       return <MethodProportionOfTheNewReplacementCostModal {...props} />;
     case 'proportion': {

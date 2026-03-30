@@ -10,7 +10,7 @@ import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { getNewId } from '../domain/getNewId';
-import { dcfHotelTemplate, dcfTemplateList } from '../data/dcfTemplates';
+import { dcfTemplateList, dcfTemplateQueries } from '../data/dcfTemplates';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -53,7 +53,7 @@ export function DiscountedCashFlowPanel({
   const selectedTemplateId = (templateList ?? []).find(
     t => t.templateCode === selectedTemplateCode,
   )?.id;
-  const templateDetailQuery = dcfHotelTemplate; // replace by query template detail by template id function.
+  const templateDetailQuery = dcfTemplateQueries.find(t => t.id === selectedTemplateId)?.data; // replace by query template detail by template id function.
 
   const handleOnGenerate = async () => {
     setIsGenerated(false);
@@ -151,7 +151,7 @@ export function DiscountedCashFlowPanel({
           template={{
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
-            options: [{ value: 'dcf-hotel', label: 'DCF-HOTEL' }],
+            options: dcfTemplateList.map(t => ({ value: t.templateCode, label: t.templateName })),
           }}
         />
 
