@@ -22,7 +22,7 @@ const SERVER_TO_CONFIG_METHOD: Record<string, string> = {
   BuildingCost: 'BC',
   ProfitRent: 'PR',
   Leasehold: 'LH',
-  MachineryCost: 'MC',
+  MachineryCost: 'MC_COST',
   // Income
   Income: 'I',
   // Residual
