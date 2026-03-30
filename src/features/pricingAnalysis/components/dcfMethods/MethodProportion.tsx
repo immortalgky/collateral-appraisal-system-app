@@ -3,7 +3,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDeriv
 import { useMemo } from 'react';
 import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import clsx from 'clsx';
-import type { DcfRefTargetId, DCFSection } from '../../types/dcf';
+import type { DCFSection } from '../../types/dcf';
 
 function resolveRefTarget(sections: DCFSection[], refTargetId: DcfRefTargetId | null | undefined) {
   if (!refTargetId) return null;

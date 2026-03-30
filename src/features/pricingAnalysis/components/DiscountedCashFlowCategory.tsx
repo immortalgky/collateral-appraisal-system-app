@@ -16,6 +16,7 @@ import { editAssumption } from '../domain/dcf/editAssumption';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
+  property: Record<string, unknown> | undefined;
   section: DCFSection;
   category: DCFCategory;
   totalNumberOfYears: number;
@@ -24,6 +25,7 @@ interface DiscountedCashFlowCategoryProps {
 
 export function DiscountedCashFlowCategory({
   name,
+  property,
   section,
   category,
   totalNumberOfYears,
@@ -36,7 +38,7 @@ export function DiscountedCashFlowCategory({
   const watchedAssumptions: DCFAssumption[] =
     useWatch({ control, name: `${name}.assumptions` }) ?? [];
 
-  const [expanded, setExpanded] = useState(true);
+  const [isExpanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
 
   const handleOnCancelEditMode = () => setEditing(null);
@@ -87,11 +89,11 @@ export function DiscountedCashFlowCategory({
 
   return (
     <>
-      <tr className={clsx(rowStyle)} onClick={() => setExpanded(!expanded)}>
+      <tr className={clsx(rowStyle)} onClick={() => setExpanded(!isExpanded)}>
         <td
           className={clsx(
             rowHeaderStyle,
-            expanded ? 'bg-gray-50 transition-colors duration-300' : '',
+            isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
           )}
         >
           <div className="flex flex-row items-center gap-1.5">
@@ -100,7 +102,7 @@ export function DiscountedCashFlowCategory({
               style="solid"
               className={clsx(
                 'size-2 transition-transform duration-300 ease-in-out shrink-0',
-                expanded ? 'rotate-180' : '',
+                isExpanded ? 'rotate-180' : '',
               )}
             />
             {category?.categoryName ?? ''}
@@ -121,7 +123,7 @@ export function DiscountedCashFlowCategory({
             key={index}
             className={clsx(
               rowBodyStyle,
-              expanded ? 'bg-gray-50 transition-colors duration-300' : '',
+              isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
             )}
           >
             <RHFInputCell
@@ -135,7 +137,7 @@ export function DiscountedCashFlowCategory({
         ))}
       </tr>
 
-      {expanded && (
+      {isExpanded && (
         <>
           {fields.map((field, idx) => {
             const assumption = watchedAssumptions[idx];
@@ -146,11 +148,11 @@ export function DiscountedCashFlowCategory({
               <Fragment key={field.id}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
+                  property={property}
+                  editing={editing}
                   assumption={assumption}
                   totalNumberOfYears={totalNumberOfYears}
-                  editing={editing}
                   onOpenEditMode={handleOnOpenEditMode}
-                  onCancelEditMode={handleOnCancelEditMode}
                   onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
                 />
 

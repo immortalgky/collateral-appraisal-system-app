@@ -1,23 +1,22 @@
 import clsx from 'clsx';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { toNumber } from '../../domain/calculation';
 
-interface MethodSpecifiedRoomIncomeWithGrowthProps {
+interface MethodPositionBasedSalaryCalculationProps {
   name: string;
   expanded: boolean;
   totalNumberOfYears: number;
 }
-export function MethodSpecifiedRoomIncomeWithGrowth({
-  name = '',
+export function MethodPositionBasedSalaryCalculation({
+  name,
   expanded,
   totalNumberOfYears,
-}: MethodSpecifiedRoomIncomeWithGrowthProps) {
+}: MethodPositionBasedSalaryCalculationProps) {
   const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
     (_, idx) => {
       return [
         {
-          targetPath: `${name}.detail.roomRateIncrease.${idx}`,
+          targetPath: `${name}.detail.increaseRate.${idx}`,
           deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
           compute: ({ getValues }) => {
             const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
@@ -28,24 +27,26 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
           },
         },
         {
-          targetPath: `${name}.detail.roomIncome.${idx}`,
-          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.firstYearAmt`],
+          targetPath: `${name}.detail.totalPositionBasedSalaryPerYear.${idx}`,
+          deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.sumTotalSalaryPerYear`],
           compute: ({ getValues }) => {
-            const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+            const firstYearAmt = getValues(`${name}.detail.sumTotalSalaryPerYear`) ?? 0;
 
             if (idx === 0) return firstYearAmt;
 
-            const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`);
-            const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
+            const prevTotalSalaryCost = getValues(
+              `${name}.detail.totalPositionBasedSalaryPerYear.${idx - 1}`,
+            );
+            const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-            return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
+            return toNumber(prevTotalSalaryCost * (1 + increaseRate / 100));
           },
         },
         {
           targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.roomIncome.${idx}`],
+          deps: [`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`],
           compute: ({ getValues }) => {
-            return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+            return getValues(`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`) ?? 0;
           },
         },
       ];
@@ -56,7 +57,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   return (
     <>
       {expanded && (
-        <MethodSpecifiedRoomIncomeWithGrowthTabe
+        <MethodPositionBasedSalaryCalculationTable
           name={name}
           totalNumberOfYear={totalNumberOfYears}
         />
@@ -65,16 +66,16 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   );
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthTabeProps {
+interface MethodPositionBasedSalaryCalculationTableProps {
   name: string;
   totalNumberOfYear: number;
 }
-function MethodSpecifiedRoomIncomeWithGrowthTabe({
+function MethodPositionBasedSalaryCalculationTable({
   name,
   totalNumberOfYear,
-}: MethodSpecifiedRoomIncomeWithGrowthTabeProps) {
-  const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300';
-  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300';
+}: MethodPositionBasedSalaryCalculationTableProps) {
+  const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300';
+  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300';
 
   return (
     <>
@@ -84,7 +85,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.detail.roomRateIncrease.${idx}`}
+                fieldName={`${name}.detail.increaseRate.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -96,12 +97,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
       </tr>
       <tr>
         <td className={clsx(rowHeaderStyle)}>
-          <span>Room Income</span>
-          <RHFInputCell
-            fieldName={`${name}.detail.saleableArea`}
-            inputType="display"
-            accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
-          />
+          <span>Total</span>
         </td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
@@ -109,7 +105,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
               <div className="flex flex-row justify-end items-center">
                 <div className="w-16">
                   <RHFInputCell
-                    fieldName={`${name}.detail.roomIncome.${idx}`}
+                    fieldName={`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`}
                     inputType="display"
                     accessor={({ value }) => (
                       <span className="text-right">{value ? value.toLocaleString() : 0}</span>

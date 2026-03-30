@@ -6,13 +6,15 @@ import { useFieldArray } from 'react-hook-form';
 import { ScrollableTableContainer } from '../ScrollableTableContainer';
 import { toNumber } from '../../domain/calculation';
 
-interface MethodSpecifiedRentalIncomePerSquareMeterModalProps {
+interface MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps {
   name: string;
+  getOuterFormValues: (name: string) => object;
 }
-export function MethodSpecifiedRentalIncomePerSquareMeterModal({
+export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   name,
-}: MethodSpecifiedRentalIncomePerSquareMeterModalProps) {
-  const { fields, append, remove } = useFieldArray({ name: `${name}.areaDetail` });
+  getOuterFormValues,
+}: MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps) {
+  const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
     append({});
@@ -27,46 +29,36 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
       ...fields.flatMap((_, idx) => {
         return [
           {
-            targetPath: `${name}.areaDetail.${idx}.totalRentalIncomePerMonth`,
+            targetPath: `${name}.roomDetails.${idx}.totalRoomExpensePerDay`,
             deps: [
-              `${name}.areaDetail.${idx}.rentalPrice`,
-              `${name}.areaDetail.${idx}.saleableArea`,
+              `${name}.roomDetails.${idx}.roomExpensePerDay`,
+              `${name}.roomDetails.${idx}.saleableArea`,
             ],
             compute: ({ getValues }) => {
-              const rentalPrice = getValues(`${name}.areaDetail.${idx}.rentalPrice`) ?? 0;
-              const saleableArea = getValues(`${name}.areaDetail.${idx}.saleableArea`) ?? 0;
-              return toNumber(rentalPrice * saleableArea);
+              const roomExpensePerDay =
+                getValues(`${name}.roomDetails.${idx}.roomExpensePerDay`) ?? 0;
+              const saleableArea = getValues(`${name}.roomDetails.${idx}.saleableArea`) ?? 0;
+              return toNumber(roomExpensePerDay * saleableArea);
             },
           },
           {
-            targetPath: `${name}.areaDetail.${idx}.totalRentalIncomePerYear`,
-            deps: [`${name}.areaDetail.${idx}.totalRentalIncomePerMonth`],
+            targetPath: `${name}.roomDetails.${idx}.totalRoomExpensePerYear`,
+            deps: [`${name}.roomDetails.${idx}.totalRoomExpensePerDay`, 'totalNumberOfDayInYear'],
             compute: ({ getValues }) => {
-              const totalRentalIncomePerMonth =
-                getValues(`${name}.areaDetail.${idx}.totalRentalIncomePerMonth`) ?? 0;
-              return totalRentalIncomePerMonth * 12;
+              const totalRoomExpensePerDay =
+                getValues(`${name}.roomDetails.${idx}.totalRoomExpensePerDay`) ?? 0;
+              const totalNumberOfDayInYear = getOuterFormValues(`totalNumberOfDayInYear`) ?? 0;
+              return totalRoomExpensePerDay * totalNumberOfDayInYear;
             },
           },
         ];
       }),
       {
-        targetPath: `${name}.sumRentalPrice`,
-        deps: [`${name}.areaDetail`],
-        compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumRentalPrice = areaDetail.reduce((prev, curr) => {
-            const currRentalPrice = curr.rentalPrice ? toNumber(curr.rentalPrice) : 0;
-            return prev + currRentalPrice;
-          }, 0);
-          return sumRentalPrice;
-        },
-      },
-      {
         targetPath: `${name}.sumSaleableArea`,
-        deps: [`${name}.areaDetail`],
+        deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumSaleableArea = areaDetail.reduce((prev, curr) => {
+          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
+          const sumSaleableArea = roomDetails.reduce((prev, curr) => {
             const currSaleableArea = curr.saleableArea ? toNumber(curr.saleableArea) : 0;
             return prev + currSaleableArea;
           }, 0);
@@ -74,41 +66,31 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         },
       },
       {
-        targetPath: `${name}.sumTotalRentalIncomePerMonth`,
-        deps: [`${name}.areaDetail`],
+        targetPath: `${name}.sumTotalRoomExpensePerDay`,
+        deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumTotalRentalIncomePerMonth = areaDetail.reduce((prev, curr) => {
-            const currRoomIncome = curr.totalRentalIncomePerMonth
-              ? toNumber(curr.totalRentalIncomePerMonth)
+          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
+          const sumTotalRoomExpensePerDay = roomDetails.reduce((prev, curr) => {
+            const currRoomIncome = curr.totalRoomExpensePerDay
+              ? toNumber(curr.totalRoomExpensePerDay)
               : 0;
             return prev + currRoomIncome;
           }, 0);
-          return sumTotalRentalIncomePerMonth;
+          return sumTotalRoomExpensePerDay;
         },
       },
       {
-        targetPath: `${name}.sumTotalRentalIncomePerYear`,
-        deps: [`${name}.areaDetail`],
+        targetPath: `${name}.sumTotalRoomExpensePerYear`,
+        deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumTotalRentalIncomePerYear = areaDetail.reduce((prev, curr) => {
-            const currTotalRoomIncomePerYear = curr.totalRentalIncomePerYear
-              ? toNumber(curr.totalRentalIncomePerYear)
+          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
+          const sumTotalRoomExpensePerYear = roomDetails.reduce((prev, curr) => {
+            const currTotalRoomIncomePerYear = curr.totalRoomExpensePerYear
+              ? toNumber(curr.totalRoomExpensePerYear)
               : 0;
             return prev + currTotalRoomIncomePerYear;
           }, 0);
-          return sumTotalRentalIncomePerYear;
-        },
-      },
-      {
-        targetPath: `${name}.avgRentalRatePerMonth`,
-        deps: [`${name}.sumTotalRentalIncomePerMonth`, `${name}.sumSaleableArea`],
-        compute: ({ getValues }) => {
-          const sumTotalRentalIncomePerMonth =
-            getValues(`${name}.sumTotalRentalIncomePerMonth`) ?? 0;
-          const sumSaleableArea = getValues(`${name}.sumSaleableArea`) ?? 0;
-          return toNumber(sumTotalRentalIncomePerMonth / sumSaleableArea);
+          return sumTotalRoomExpensePerYear;
         },
       },
     ];
@@ -122,28 +104,27 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           <table className={'table table-sm'}>
             <thead>
               <tr>
-                <th className="px-1.5 py-1.5 bg-gray-100">Area Description</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">Room Type</th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Rental Price</span>
-                    <span>Bath / Sq.M / Month</span>
+                    <span>Room Cost</span>
+                    <span>Bath / Room / Day</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Saleable Area</span>
-                    <span>Sq. M</span>
+                    <span>Saleable Area</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Rental Income</span>
-                    <span>Bath / Month</span>
+                    <span>Total Room Expenses</span>
+                    <span>Bath / Day</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Rental Income</span>
+                    <span>Total Room Expenses</span>
                     <span>Bath / Year</span>
                   </div>
                 </th>
@@ -156,7 +137,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <div className="flex flex-row gap-1.5">
                         <RHFInputCell
-                          fieldName={`${name}.areaDetail.${index}.description`}
+                          fieldName={`${name}.roomDetails.${index}.roomType`}
                           inputType="select"
                         />
                         <button
@@ -171,20 +152,20 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
-                        fieldName={`${name}.areaDetail.${index}.rentalPrice`}
+                        fieldName={`${name}.roomDetails.${index}.roomExpensePerDay`}
                         inputType="number"
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
-                        fieldName={`${name}.areaDetail.${index}.saleableArea`}
+                        fieldName={`${name}.roomDetails.${index}.saleableArea`}
                         inputType="number"
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <div className="flex justify-end items-center text-right">
                         <RHFInputCell
-                          fieldName={`${name}.areaDetail.${index}.totalRentalIncomePerMonth`}
+                          fieldName={`${name}.roomDetails.${index}.totalRoomExpensePerDay`}
                           inputType="display"
                           accessor={({ value }) => (
                             <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -195,7 +176,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <div className="flex justify-end items-center text-right">
                         <RHFInputCell
-                          fieldName={`${name}.areaDetail.${index}.totalRentalIncomePerYear`}
+                          fieldName={`${name}.roomDetails.${index}.totalRoomExpensePerYear`}
                           inputType="display"
                           accessor={({ value }) => (
                             <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -222,17 +203,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               </tr>
               <tr>
                 <td className="sticky bottom-0 px-1.5 bg-white"></td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
-                  <div className="text-right">
-                    <RHFInputCell
-                      fieldName={`${name}.sumRentalPrice`}
-                      inputType="display"
-                      accessor={({ value }) => (
-                        <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                      )}
-                    />
-                  </div>
-                </td>
+                <td className="sticky bottom-0 px-1.5 bg-white"></td>
                 <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
@@ -247,7 +218,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
-                      fieldName={`${name}.sumTotalRentalIncomePerMonth`}
+                      fieldName={`${name}.sumTotalRoomExpensePerDay`}
                       inputType="display"
                       accessor={({ value }) => (
                         <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -258,7 +229,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
-                      fieldName={`${name}.sumTotalRentalIncomePerYear`}
+                      fieldName={`${name}.sumTotalRoomExpensePerYear`}
                       inputType="display"
                       accessor={({ value }) => (
                         <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -273,24 +244,17 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Average Rental Price</span>
+          <span className={'w-56'}>Total Room Expenses</span>
           <div className={'w-24 text-right'}>
             <RHFInputCell
-              fieldName={`${name}.avgRentalRatePerMonth`}
+              fieldName={`${name}.sumTotalRoomExpensePerYear`}
               inputType={'display'}
               accessor={({ value }) => (
                 <span className="text-right">{value ? value.toLocaleString() : 0}</span>
               )}
             />
           </div>
-          <span>Baht/ Sq. Meter/ Month</span>
-        </div>
-        <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Total Saleable Area</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.totalSaleableArea`} inputType={'number'} />
-          </div>
-          <span className={''}>Sq. Meter</span>
+          <span>Baht / Year</span>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
@@ -302,21 +266,6 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
             <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
           </div>
           <span className={'w-44'}>year(s)</span>
-        </div>
-        <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Occupancy Rate - First Year</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateFirstYearPct`} inputType={'number'} />
-          </div>
-          <span className={''}>% with growth</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRatePct`} inputType={'number'} />
-          </div>
-          <span className={''}>% every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateYrs`} inputType={'number'} />
-          </div>
-          <span className={''}>year(s)</span>
         </div>
       </div>
     </div>

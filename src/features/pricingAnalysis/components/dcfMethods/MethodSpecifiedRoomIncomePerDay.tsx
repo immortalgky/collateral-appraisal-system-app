@@ -14,7 +14,7 @@ export function MethodSpecifiedRoomIncomePerDay({
   expanded,
   totalNumberOfYears,
 }: MethodSpecifiedRoomIncomePerDayProps) {
-  const { control } = useFormContext();
+  const { control, getValues } = useFormContext();
   const { fields } = useFieldArray({ control, name: name });
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
@@ -23,7 +23,7 @@ export function MethodSpecifiedRoomIncomePerDay({
         {
           targetPath: `${name}.detail.saleableArea.${idx}`,
           deps: ['totalNumberOfDayInYear', `${name}.detail.sumSaleableArea`],
-          compute: ({ value, getValues }) => {
+          compute: ({ getValues }) => {
             const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
             const sumSaleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
             return toNumber(sumSaleableArea * totalNumberOfDayInYear);
@@ -40,7 +40,7 @@ export function MethodSpecifiedRoomIncomePerDay({
             const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
             return !isDirty;
           },
-          compute: ({ value, getValues }) => {
+          compute: ({ getValues }) => {
             const occupancyRateFirstYearPct =
               getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
             const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
@@ -118,7 +118,11 @@ export function MethodSpecifiedRoomIncomePerDay({
   return (
     <>
       {expanded && (
-        <MethodSpecifyRoomIncomePerDayTable name={name} totalNumberOfYear={totalNumberOfYears} />
+        <MethodSpecifyRoomIncomePerDayTable
+          name={name}
+          totalNumberOfYear={totalNumberOfYears}
+          data-total-saleable-area={getValues(`${name}.detail.totalSaleableAreaDeductByOccRate`)}
+        />
       )}
     </>
   );

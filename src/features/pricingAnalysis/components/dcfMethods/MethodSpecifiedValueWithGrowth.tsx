@@ -1,11 +1,8 @@
-import { useFormContext, useWatch } from 'react-hook-form';
-import type { DCFMethodFormType } from '../../schemas/dcfForm';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { RHFInputCell } from '../table/RHFInputCell';
 import clsx from 'clsx';
 import { formatFixed2 } from '../../domain/calculation';
-import type { DCFAssumption, DCFCategory, DCFSection } from '../../types/dcf';
 
 interface MethodSpecifiedValueWithGrowthProps {
   name: string;

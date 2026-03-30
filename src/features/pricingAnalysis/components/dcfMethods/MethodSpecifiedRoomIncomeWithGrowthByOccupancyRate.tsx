@@ -26,7 +26,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
             const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
             return !isDirty;
           },
-          compute: ({ value, getValues }) => {
+          compute: ({ getValues }) => {
             const occupancyRateFirstYearPct =
               getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
             const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;

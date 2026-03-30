@@ -75,8 +75,6 @@ export function DiscountedCashFlowMethodModal({
     if (prevMethodTypeRef.current !== methodType) {
       prevMethodTypeRef.current = methodType;
 
-      console.log('method change!');
-
       reset({
         ...getValues(),
         method: {
@@ -91,7 +89,6 @@ export function DiscountedCashFlowMethodModal({
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {
-      console.log(data);
       onSaveEditMode(data);
       onCancelEditMode();
     },

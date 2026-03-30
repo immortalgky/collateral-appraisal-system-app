@@ -1,15 +1,15 @@
 import { DynamicSection } from '@features/pricingAnalysis/components/dcfSections/DynamicSection.tsx';
-import type { DCFSectionFormType } from '@features/pricingAnalysis/schemas/dcfForm.ts';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
 import { DiscountedCashFlowCategory } from '@features/pricingAnalysis/components/DiscountedCashFlowCategory.tsx';
 import { SummarySection } from './dcfSections/SummarySection';
 import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useFieldArray } from 'react-hook-form';
 import { useMemo } from 'react';
 import type { DCFSection } from '../types/dcf';
 
 interface DiscountedCashFlowSectionRendererProps {
   name: string;
+  property: Record<string, unknown> | undefined;
   section: DCFSection;
   totalNumberOfYears: number;
   icon: string;
@@ -17,6 +17,7 @@ interface DiscountedCashFlowSectionRendererProps {
 }
 export function DiscountedCashFlowSectionRenderer({
   name,
+  property,
   section,
   totalNumberOfYears,
   icon,
@@ -57,6 +58,7 @@ export function DiscountedCashFlowSectionRenderer({
               <DiscountedCashFlowCategory
                 key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
+                property={property}
                 section={section}
                 category={category}
                 totalNumberOfYears={totalNumberOfYears}
@@ -81,6 +83,7 @@ export function DiscountedCashFlowSectionRenderer({
               <DiscountedCashFlowCategory
                 key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
+                property={property}
                 totalNumberOfYears={totalNumberOfYears}
                 section={section}
                 category={category}

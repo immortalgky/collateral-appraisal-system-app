@@ -79,49 +79,15 @@ const getIconSection = (identifier: string) => {
   }
 };
 
-// function AddAssumptionButton({ color }) {
-//   return (
-//     <tr>
-//       <td colSpan={7} style={{ padding: '6px 20px 6px 36px' }}>
-//         <button
-//           style={{
-//             display: 'inline-flex',
-//             alignItems: 'center',
-//             gap: '5px',
-//             padding: '4px 12px',
-//             borderRadius: '6px',
-//             border: `1px dashed ${color.accent}50`,
-//             background: 'transparent',
-//             color: color.accent,
-//             fontSize: '12px',
-//             fontWeight: 500,
-//             cursor: 'pointer',
-//             transition: 'all 0.15s ease',
-//           }}
-//           onMouseEnter={e => {
-//             e.currentTarget.style.background = color.bg;
-//             e.currentTarget.style.borderColor = color.accent;
-//           }}
-//           onMouseLeave={e => {
-//             e.currentTarget.style.background = 'transparent';
-//             e.currentTarget.style.borderColor = `${color.accent}50`;
-//           }}
-//         >
-//           <PlusIcon /> Add Category
-//         </button>
-//       </td>
-//     </tr>
-//   );
-// }
-
 interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
+  property: Record<string, unknown> | undefined;
 }
 
-export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFlowTableProps) {
-  const { getValues } = useFormContext();
-  // const sections = getValues('sections');
-
+export function DiscountedCashFlowTable({
+  totalNumberOfYears,
+  property,
+}: DiscountedCashFlowTableProps) {
   const sections = useWatch({ name: 'sections' });
 
   return (
@@ -163,6 +129,7 @@ export function DiscountedCashFlowTable({ totalNumberOfYears }: DiscountedCashFl
                 <DiscountedCashFlowSectionRenderer
                   key={section.clientId ?? `section.${index}`}
                   name={`sections.${index}`}
+                  property={property}
                   section={section}
                   color={getSectionColor(section.sectionType)}
                   totalNumberOfYears={totalNumberOfYears}

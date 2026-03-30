@@ -9,20 +9,20 @@ import { assumptionParams, methodParams } from '../data/dcfParameters';
 
 interface DiscountedCashFlowAssumptionProps {
   name: string;
+  property: Record<string, unknown> | undefined;
   totalNumberOfYears: number;
   assumption: DCFAssumption;
   editing: string | null;
-  onCancelEditMode: () => void;
   onOpenEditMode: (assumptionType: string) => void;
   onRemoveAssumption: () => void;
 }
 
 export function DiscountedCashFlowAssumption({
   name,
+  property,
   totalNumberOfYears,
   assumption,
   editing,
-  onCancelEditMode,
   onOpenEditMode,
   onRemoveAssumption,
 }: DiscountedCashFlowAssumptionProps) {
@@ -136,13 +136,13 @@ export function DiscountedCashFlowAssumption({
       </tr>
       <DiscountedCashFlowMethodRenderer
         name={`${name}.method`}
+        property={property}
         editing={editing}
         expanded={expanded}
         assumptionId={assumption.clientId}
         assumptionName={assumption.assumptionName}
         method={assumption.method}
         totalNumberOfYear={totalNumberOfYears}
-        onCancelEditMode={onCancelEditMode}
       />
     </>
   );

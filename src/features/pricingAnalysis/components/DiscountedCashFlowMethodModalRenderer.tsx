@@ -1,9 +1,14 @@
+import { MethodPositionBasedSalaryCalculationModal } from './dcfMethods/MethodPositionBasedSalaryCalculationModal';
 import { MethodProportionModal } from './dcfMethods/MethodProportionModal';
+import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProportionOfTheNewReplacementCost';
+import { MethodProportionOfTheNewReplacementCostModal } from './dcfMethods/MethodProportionOfTheNewReplacementCostModal';
+import { MethodRoomCostBasedOnExpensesPerRoomPerDayModal } from './dcfMethods/MethodRoomCostBasedOnExpensesPerRoomPerDayModal';
+import { MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal } from './dcfMethods/MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal';
 import { MethodSpecifiedRentalIncomePerMonthModal } from './dcfMethods/MethodSpecifiedRentalIncomePerMonthModal';
 import { MethodSpecifiedRentalIncomePerSquareMeterModal } from './dcfMethods/MethodSpecifiedRentalIncomePerSquareMeterModal';
 import { MethodSpecifyRoomIncomePerDayModal } from './dcfMethods/MethodSpecifiedRoomIncomePerDayModal';
 import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal';
-import { MethodSpecifiedRoomIncomeWithGrowthModal } from './dcfMethods/MethodSpecifiedRoomIncomewithGrowthModal';
+import { MethodSpecifiedRoomIncomeWithGrowthModal } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthModal';
 import { MethodSpecifiedValueWithGrowthModal } from './dcfMethods/MethodSpecifiedValueWithGrowthModal';
 
 interface DiscountedCashFlowModalRendererProps {
@@ -34,17 +39,17 @@ export function DiscountedCashFlowModalRenderer({
     case 'specifiedRentalIncomePerSquareMeter':
       return <MethodSpecifiedRentalIncomePerSquareMeterModal {...props} />;
     case 'roomCostBasedOnExpensesPerRoomPerDay':
-      return <></>;
+      return <MethodRoomCostBasedOnExpensesPerRoomPerDayModal {...props} />;
     case 'specifiedFoodAndBeverageExpensesPerRoomPerDay':
-      return <></>;
+      return <MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal {...props} />;
     case 'positionBasedSalaryCalculation':
-      return <></>;
+      return <MethodPositionBasedSalaryCalculationModal {...props} />;
     case 'parameterBasedOnTierOfPropertyValue':
       return <></>;
     case 'specifiedEnergyCostIndex':
       return <></>;
     case 'proportionOfTheNewReplacementCost':
-      return <></>;
+      return <MethodProportionOfTheNewReplacementCostModal {...props} />;
     case 'proportion': {
       return <MethodProportionModal {...props} />;
     }

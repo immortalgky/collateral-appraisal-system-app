@@ -1,7 +1,6 @@
-import { useFormContext } from 'react-hook-form';
 import { RHFInputCell } from '../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
-import type { DCFAssumption, DCFCategory, DCFSection } from '../../types/dcf';
+import type { DCFSection } from '../../types/dcf';
 
 export function MethodProportionModal({
   name,

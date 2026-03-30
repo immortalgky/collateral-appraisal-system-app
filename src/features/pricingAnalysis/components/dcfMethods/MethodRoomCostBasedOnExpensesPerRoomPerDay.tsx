@@ -1,18 +1,17 @@
 import clsx from 'clsx';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { toNumber } from '../../domain/calculation';
 
-interface MethodSpecifiedRoomIncomeWithGrowthProps {
+interface MethodRoomCostBasedOnExpensesPerRoomPerDayProps {
   name: string;
   expanded: boolean;
   totalNumberOfYears: number;
 }
-export function MethodSpecifiedRoomIncomeWithGrowth({
-  name = '',
+export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
+  name,
   expanded,
   totalNumberOfYears,
-}: MethodSpecifiedRoomIncomeWithGrowthProps) {
+}: MethodRoomCostBasedOnExpensesPerRoomPerDayProps) {
   const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
     (_, idx) => {
       return [
@@ -23,19 +22,22 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
             const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
             const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
             if (idx === 0) return 0;
-            if (idx % increateRateYrs === 0) return increaseRatePct;
+            if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
             return 0;
           },
         },
         {
-          targetPath: `${name}.detail.roomIncome.${idx}`,
-          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.firstYearAmt`],
+          targetPath: `${name}.detail.roomExpense.${idx}`,
+          deps: [
+            `${name}.detail.roomRateIncrease.${idx}`,
+            `${name}.detail.sumTotalRoomExpensePerYear`,
+          ],
           compute: ({ getValues }) => {
-            const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+            const firstYearAmt = getValues(`${name}.detail.sumTotalRoomExpensePerYear`) ?? 0;
 
             if (idx === 0) return firstYearAmt;
 
-            const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`);
+            const prevRoomIncome = getValues(`${name}.detail.roomExpense.${idx - 1}`);
             const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
             return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
@@ -43,9 +45,9 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
         },
         {
           targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.roomIncome.${idx}`],
+          deps: [`${name}.detail.roomExpense.${idx}`],
           compute: ({ getValues }) => {
-            return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+            return getValues(`${name}.detail.roomExpense.${idx}`) ?? 0;
           },
         },
       ];
@@ -56,7 +58,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   return (
     <>
       {expanded && (
-        <MethodSpecifiedRoomIncomeWithGrowthTabe
+        <MethodSpecifiedRentalIncomePerSquareMeterTable
           name={name}
           totalNumberOfYear={totalNumberOfYears}
         />
@@ -65,14 +67,14 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   );
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthTabeProps {
+interface MethodSpecifiedRentalIncomePerSquareMeterTableProps {
   name: string;
   totalNumberOfYear: number;
 }
-function MethodSpecifiedRoomIncomeWithGrowthTabe({
+function MethodSpecifiedRentalIncomePerSquareMeterTable({
   name,
   totalNumberOfYear,
-}: MethodSpecifiedRoomIncomeWithGrowthTabeProps) {
+}: MethodSpecifiedRentalIncomePerSquareMeterTableProps) {
   const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300';
   const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300';
 
@@ -98,7 +100,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
         <td className={clsx(rowHeaderStyle)}>
           <span>Room Income</span>
           <RHFInputCell
-            fieldName={`${name}.detail.saleableArea`}
+            fieldName={`${name}.detail.sumSaleableArea`}
             inputType="display"
             accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
           />
@@ -109,7 +111,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
               <div className="flex flex-row justify-end items-center">
                 <div className="w-16">
                   <RHFInputCell
-                    fieldName={`${name}.detail.roomIncome.${idx}`}
+                    fieldName={`${name}.detail.roomExpense.${idx}`}
                     inputType="display"
                     accessor={({ value }) => (
                       <span className="text-right">{value ? value.toLocaleString() : 0}</span>

@@ -1,23 +1,22 @@
 import clsx from 'clsx';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { toNumber } from '../../domain/calculation';
 
-interface MethodSpecifiedRoomIncomeWithGrowthProps {
+interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps {
   name: string;
   expanded: boolean;
   totalNumberOfYears: number;
 }
-export function MethodSpecifiedRoomIncomeWithGrowth({
-  name = '',
+export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
+  name,
   expanded,
   totalNumberOfYears,
-}: MethodSpecifiedRoomIncomeWithGrowthProps) {
+}: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps) {
   const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
     (_, idx) => {
       return [
         {
-          targetPath: `${name}.detail.roomRateIncrease.${idx}`,
+          targetPath: `${name}.detail.increaseRate.${idx}`,
           deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
           compute: ({ getValues }) => {
             const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
@@ -28,24 +27,28 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
           },
         },
         {
-          targetPath: `${name}.detail.roomIncome.${idx}`,
-          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.firstYearAmt`],
+          targetPath: `${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`,
+          deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.firstYearAmt`],
           compute: ({ getValues }) => {
             const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+            const totalNumberOfSaleableArea =
+              document.querySelector('[data-total-saleable-area]') ?? 0;
 
-            if (idx === 0) return firstYearAmt;
+            if (idx === 0) return firstYearAmt * totalNumberOfSaleableArea;
 
-            const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`);
-            const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
+            const prevRoomIncome = getValues(
+              `${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx - 1}`,
+            );
+            const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-            return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
+            return toNumber(prevRoomIncome * (1 + increaseRate / 100));
           },
         },
         {
           targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.roomIncome.${idx}`],
+          deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
           compute: ({ getValues }) => {
-            return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+            return getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
           },
         },
       ];
@@ -56,7 +59,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   return (
     <>
       {expanded && (
-        <MethodSpecifiedRoomIncomeWithGrowthTabe
+        <MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayTable
           name={name}
           totalNumberOfYear={totalNumberOfYears}
         />
@@ -65,14 +68,14 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   );
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthTabeProps {
+interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayTableProps {
   name: string;
   totalNumberOfYear: number;
 }
-function MethodSpecifiedRoomIncomeWithGrowthTabe({
+function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayTable({
   name,
   totalNumberOfYear,
-}: MethodSpecifiedRoomIncomeWithGrowthTabeProps) {
+}: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayTableProps) {
   const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300';
   const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300';
 
@@ -84,7 +87,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell
-                fieldName={`${name}.detail.roomRateIncrease.${idx}`}
+                fieldName={`${name}.detail.increaseRate.${idx}`}
                 inputType="display"
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
@@ -96,12 +99,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
       </tr>
       <tr>
         <td className={clsx(rowHeaderStyle)}>
-          <span>Room Income</span>
-          <RHFInputCell
-            fieldName={`${name}.detail.saleableArea`}
-            inputType="display"
-            accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
-          />
+          <span>Total</span>
         </td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
@@ -109,7 +107,7 @@ function MethodSpecifiedRoomIncomeWithGrowthTabe({
               <div className="flex flex-row justify-end items-center">
                 <div className="w-16">
                   <RHFInputCell
-                    fieldName={`${name}.detail.roomIncome.${idx}`}
+                    fieldName={`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`}
                     inputType="display"
                     accessor={({ value }) => (
                       <span className="text-right">{value ? value.toLocaleString() : 0}</span>

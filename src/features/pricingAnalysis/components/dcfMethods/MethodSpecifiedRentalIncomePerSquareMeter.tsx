@@ -26,7 +26,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
             return !isDirty;
           },
-          compute: ({ value, getValues }) => {
+          compute: ({ getValues }) => {
             const occupancyRateFirstYearPct =
               getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
             const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
@@ -132,23 +132,7 @@ function MethodSpecifiedRentalIncomePerSquareMeterTable({
   return (
     <>
       <tr>
-        <td className={clsx(rowHeaderStyle)}>Total Saleable Area</td>
-        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-          return (
-            <td key={idx} className={clsx(rowBodyStyle)}>
-              <RHFInputCell
-                fieldName={`${name}.detail.totalSaleableArea`}
-                inputType="display"
-                accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                )}
-              />
-            </td>
-          );
-        })}
-      </tr>
-      <tr>
-        <td className={clsx(rowHeaderStyle)}>Actual Saleable Area</td>
+        <td className={clsx(rowHeaderStyle)}>Saleable Area</td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
@@ -169,6 +153,22 @@ function MethodSpecifiedRentalIncomePerSquareMeterTable({
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
               <RHFInputCell fieldName={`${name}.detail.occupancyRate.${idx}`} inputType="number" />
+            </td>
+          );
+        })}
+      </tr>
+      <tr>
+        <td className={clsx(rowHeaderStyle)}>Total Number of Saleable Area</td>
+        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
+          return (
+            <td key={idx} className={clsx(rowBodyStyle)}>
+              <RHFInputCell
+                fieldName={`${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`}
+                inputType="display"
+                accessor={({ value }) => (
+                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                )}
+              />
             </td>
           );
         })}

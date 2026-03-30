@@ -20,6 +20,7 @@ interface DiscountedCashFlowPanelProps {
     methodId?: string;
     methodType?: string;
   };
+  property: Record<string, unknown> | undefined;
   templateList: unknown;
   onCalculationSave: (payload: {
     approachType: string;
@@ -31,6 +32,7 @@ interface DiscountedCashFlowPanelProps {
 }
 export function DiscountedCashFlowPanel({
   activeMethod,
+  property,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -155,7 +157,10 @@ export function DiscountedCashFlowPanel({
 
         {!isLoading && (
           <div className="flex flex-col gap-1">
-            <DiscountedCashFlowTable totalNumberOfYears={data.totalNumberOfYears} />
+            <DiscountedCashFlowTable
+              totalNumberOfYears={data.totalNumberOfYears}
+              property={property}
+            />
 
             {/* footer save, reset, cancel */}
             <MethodFooterActions
