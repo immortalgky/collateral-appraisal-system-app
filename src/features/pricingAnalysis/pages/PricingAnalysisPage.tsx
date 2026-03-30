@@ -2,6 +2,7 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
 import {
   DispatchCtx,
@@ -62,6 +63,7 @@ function PricingAnalysisPage() {
   }>();
 
   const navigate = useNavigate();
+  const basePath = useBasePath();
   const queryClient = useQueryClient();
   const isReadOnly = usePageReadOnly();
 
@@ -94,7 +96,7 @@ function PricingAnalysisPage() {
             queryKey: propertyGroupKeys.detail(appraisalId, groupId),
           });
         }
-        navigate(`/appraisals/${appraisalId}/groups/${groupId}/pricing-analysis/${newId}`, {
+        navigate(`${basePath}/groups/${groupId}/pricing-analysis/${newId}`, {
           replace: true,
         });
       })

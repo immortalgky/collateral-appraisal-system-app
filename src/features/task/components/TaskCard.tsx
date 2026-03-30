@@ -52,7 +52,7 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
             name="clipboard-list"
             className="size-3.5 text-gray-400 mt-0.5 flex-shrink-0"
           />
-          <span className="text-sm text-gray-600 line-clamp-1">{task.taskType}</span>
+          <span className="text-sm text-gray-600 line-clamp-1">{task.taskDescription || task.taskType}</span>
         </div>
 
         {/* Purpose */}

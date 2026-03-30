@@ -4,7 +4,7 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import type { UploadDocumentResponse } from '../api';
-import { ALL_DOCUMENT_TYPES, type DocumentTypeInfo } from '../types/document';
+import { useGetDocumentTypes } from '../api/documentTypes';
 
 interface FileAssignmentModalProps {
   isOpen: boolean;
@@ -36,6 +36,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
   const titles = watch('titles') || [];
   const requestNumber = watch('requestNumber');
   const requestDocuments = watch('documents') || [];
+  const { data: documentTypes = [], isLoading: isLoadingTypes } = useGetDocumentTypes();
 
   const [assignments, setAssignments] = useState<Record<string, Partial<FileAssignment>>>({});
 
@@ -117,9 +118,8 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
     }));
   };
 
-  const getAvailableDocumentTypes = (_entityType: 'request' | 'title'): DocumentTypeInfo[] => {
-    // Same document types available for both request and title entities
-    return ALL_DOCUMENT_TYPES;
+  const getAvailableDocumentTypes = () => {
+    return documentTypes;
   };
 
   const isValidAssignment = (assignment: Partial<FileAssignment>): assignment is FileAssignment => {
@@ -232,9 +232,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
             <tbody className="divide-y divide-gray-200">
               {uploadedFiles.map(file => {
                 const assignment = assignments[file.documentId];
-                const availableTypes = getAvailableDocumentTypes(
-                  assignment?.entityType || 'request',
-                );
+                const availableTypes = getAvailableDocumentTypes();
 
                 return (
                   <tr key={file.documentId} className="hover:bg-gray-50">
@@ -304,10 +302,10 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                         }}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">Select type...</option>
+                        <option value="">{isLoadingTypes ? 'Loading...' : 'Select type...'}</option>
                         {availableTypes.map(type => (
-                          <option key={type.type} value={type.type}>
-                            {type.displayName}
+                          <option key={type.code} value={type.code}>
+                            {type.name}
                           </option>
                         ))}
                       </select>

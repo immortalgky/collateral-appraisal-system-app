@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
@@ -46,7 +47,7 @@ export const PropertyTableRow = ({
   hasClipboard,
 }: PropertyTableRowProps) => {
   const navigate = useNavigate();
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
   const basePath = usePropertyBasePath();
 
   const handleClick = () => {

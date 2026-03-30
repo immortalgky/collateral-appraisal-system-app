@@ -1,9 +1,18 @@
+import { useEffect } from 'react';
 import { useNotificationStore } from '../store';
+import { useAuthStore } from '@features/auth/store';
 import NotificationList from '../components/NotificationList';
 
 export default function NotificationPage() {
-  const { notifications, markAllAsRead } = useNotificationStore();
+  const { notifications, markAllAsRead, fetchNotifications } = useNotificationStore();
+  const username = useAuthStore(s => s.user?.username ?? '');
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  useEffect(() => {
+    if (username) {
+      fetchNotifications(username);
+    }
+  }, [username, fetchNotifications]);
 
   return (
     <div className="w-full">
@@ -22,7 +31,7 @@ export default function NotificationPage() {
           {unreadCount > 0 && (
             <button
               type="button"
-              onClick={markAllAsRead}
+              onClick={() => markAllAsRead(username)}
               className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Mark all as read

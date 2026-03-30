@@ -1,15 +1,24 @@
+import { useEffect } from 'react';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { Link } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
 import { useNotificationStore } from '../store';
 import { notificationTypeConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
+import { useAuthStore } from '@features/auth/store';
 import clsx from 'clsx';
 
 export default function NotificationDropdown() {
-  const { notifications, markAsRead, markAllAsRead } = useNotificationStore();
+  const { notifications, markAsRead, markAllAsRead, fetchNotifications } = useNotificationStore();
+  const username = useAuthStore(s => s.user?.username ?? '');
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const recent = notifications.slice(0, 5);
+
+  useEffect(() => {
+    if (username) {
+      fetchNotifications(username);
+    }
+  }, [username, fetchNotifications]);
 
   return (
     <Popover className="relative">
@@ -42,7 +51,7 @@ export default function NotificationDropdown() {
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={markAllAsRead}
+                  onClick={() => markAllAsRead(username)}
                   className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   Mark all as read
@@ -64,24 +73,28 @@ export default function NotificationDropdown() {
                       !notification.isRead && 'bg-blue-50/30',
                     )}
                   >
-                    <div className={clsx('mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center', config.color)}>
+                    <div
+                      className={clsx(
+                        'mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
+                        config.color,
+                      )}
+                    >
                       <Icon name={config.icon} style={config.iconStyle} className="size-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className={clsx('text-sm truncate', !notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700')}>
+                        <p
+                          className={clsx(
+                            'text-sm truncate',
+                            !notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700',
+                          )}
+                        >
                           {notification.title}
                         </p>
-                        {!notification.isRead && (
-                          <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
-                        )}
+                        {!notification.isRead && <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />}
                       </div>
-                      <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                        {notification.description}
-                      </p>
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        {timeAgo(notification.createdAt)}
-                      </p>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{notification.message}</p>
+                      <p className="text-[11px] text-gray-400 mt-1">{timeAgo(notification.createdAt)}</p>
                     </div>
                   </button>
                 );

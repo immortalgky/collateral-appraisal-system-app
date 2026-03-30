@@ -16,6 +16,7 @@ export interface UploadedDocument {
   // Local-only fields (not sent to API)
   file?: File;
   isUploading?: boolean;
+  displayName?: string | null;
 }
 
 export interface DocumentChecklistItem {
@@ -31,27 +32,11 @@ export interface DocumentTypeInfo {
   isRequired: boolean;
 }
 
-export const DOCUMENT_TYPES = {
-  D001: { type: 'D001', displayName: 'Title Deed', isRequired: false },
-  D002: { type: 'D002', displayName: 'Registration Document', isRequired: false },
-  D003: { type: 'D003', displayName: 'Invoice', isRequired: false },
-  D004: { type: 'D004', displayName: 'Building Plan', isRequired: false },
-  D005: { type: 'D005', displayName: 'ID Card', isRequired: false },
-  D006: { type: 'D006', displayName: 'Certificate', isRequired: false },
-} as const;
-
-// Array of all document types for dropdown use (shared by request and title)
-export const ALL_DOCUMENT_TYPES: DocumentTypeInfo[] = Object.values(DOCUMENT_TYPES);
-
 export const ENTITY_KEY_PREFIXES = {
   request: '67',
   title_chonot: 'ฉ.',
   title_regis: 'Regis no ',
 } as const;
-
-export const getDocumentTypeInfo = (docType: string): DocumentTypeInfo | undefined => {
-  return Object.values(DOCUMENT_TYPES).find(dt => dt.type === docType);
-};
 
 // Session and Upload API Types
 export interface CreateUploadSessionResponse {
@@ -97,6 +82,7 @@ export const getDocumentCategory = (documentType: string): string => {
 export interface RequiredDocumentConfig {
   documentType: string;
   displayName: string;
+  isRequired: boolean;
 }
 
 export interface GetRequiredDocumentsParams {
@@ -106,4 +92,58 @@ export interface GetRequiredDocumentsParams {
 
 export interface GetRequiredDocumentsResponse {
   documents: RequiredDocumentConfig[];
+}
+
+// Parameter Document Checklist Types (from GET /document-checklist)
+export interface ParameterDocumentChecklistResponse {
+  applicationDocuments: ParameterChecklistItemDto[];
+  propertyTypeGroups: PropertyTypeDocumentGroupDto[];
+}
+
+export interface ParameterChecklistItemDto {
+  documentTypeId: string;
+  code: string;
+  name: string;
+  category: string | null;
+  isRequired: boolean;
+  notes: string | null;
+}
+
+export interface PropertyTypeDocumentGroupDto {
+  propertyTypeCode: string;
+  propertyTypeName: string;
+  documents: ParameterChecklistItemDto[];
+}
+
+// Document Checklist Types (from GET /requests/{id}/document-checklist)
+export interface DocumentChecklistResponse {
+  applicationDocuments: ApplicationDocumentChecklistItem[];
+  titleDocuments: TitleDocumentChecklistGroup[];
+  isComplete: boolean;
+  missingRequiredCount: number;
+}
+
+export interface ApplicationDocumentChecklistItem {
+  code: string;
+  name: string;
+  category: string | null;
+  isRequired: boolean;
+  isUploaded: boolean;
+  notes: string | null;
+}
+
+export interface TitleDocumentChecklistGroup {
+  titleId: string;
+  collateralType: string | null;
+  ownerName: string | null;
+  documents: TitleDocumentChecklistItem[];
+}
+
+export interface TitleDocumentChecklistItem {
+  code: string;
+  name: string;
+  category: string | null;
+  isRequired: boolean;
+  isUploaded: boolean;
+  notes: string | null;
 }

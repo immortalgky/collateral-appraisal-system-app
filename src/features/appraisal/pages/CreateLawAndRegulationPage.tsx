@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import ActionBar from '@shared/components/ActionBar';
 import Icon from '@shared/components/Icon';
@@ -64,7 +65,9 @@ const formFields: FormField[] = [
 const CreateLawAndRegulationPage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
-  const { appraisalId, itemId } = useParams<{ appraisalId: string; itemId?: string }>();
+  const basePath = useBasePath();
+  const appraisalId = useAppraisalId();
+  const { itemId } = useParams<{ itemId?: string }>();
   const isEditMode = Boolean(itemId);
 
   // RHF + Zod
@@ -434,7 +437,7 @@ const CreateLawAndRegulationPage = () => {
     ];
   };
 
-  const navigateBack = () => navigate(`/appraisals/${appraisalId}/property?tab=laws`);
+  const navigateBack = () => navigate(`${basePath}/property?tab=laws`);
 
   const handleSave = (action: 'draft' | 'submit') => {
     if (!appraisalId) return;

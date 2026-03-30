@@ -6,6 +6,7 @@ import {
 } from '../schemas/form';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 //import { useGetLandAndBuildingPMAPropertyById, useUpdateLandAndBuildingPMAProperty } from '../api';
 import { useEffect, useState } from 'react';
 import { mapLandAndBuildingPMAPropertyResponseToForm } from '../utils/mappers';
@@ -22,7 +23,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 const LandBuildingPMAPage = () => {
   const isReadOnly = usePageReadOnly();
   const { propertyId } = useParams<{ propertyId?: string }>();
-  const appraisalId = useParams<{ appraisalId: string }>().appraisalId;
+  const appraisalId = useAppraisalId();
 
   const methods = useForm<createLandAndBuildingPMAFormType>({
     defaultValues: createLandAndBuildingPMAFormDefault,

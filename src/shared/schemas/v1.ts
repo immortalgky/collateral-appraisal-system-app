@@ -814,6 +814,7 @@ const TaskDto = z
     appraisalNumber: z.string().nullable(),
     customerName: z.string().nullable(),
     taskType: z.string().nullable(),
+    taskDescription: z.string().nullable(),
     purpose: z.string().nullable(),
     propertyType: z.string().nullable(),
     status: z.string().nullable(),

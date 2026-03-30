@@ -1,78 +1,73 @@
 import { useQuery } from '@tanstack/react-query';
+import axios from '@shared/api/axiosInstance';
 import type {
+  DocumentChecklistResponse,
   GetRequiredDocumentsParams,
   GetRequiredDocumentsResponse,
-  RequiredDocumentConfig,
+  ParameterDocumentChecklistResponse,
 } from '../types/document';
 
-// Mock data: purpose -> required documents
-const REQUIRED_DOCS_BY_PURPOSE: Record<string, RequiredDocumentConfig[]> = {
-  '01': [{ documentType: 'D005', displayName: 'ID Card' }],
-  '02': [
-    { documentType: 'D002', displayName: 'Registration Document' },
-    { documentType: 'D005', displayName: 'ID Card' },
-  ],
-  '03': [{ documentType: 'D003', displayName: 'Invoice' }],
-  '04': [{ documentType: 'D006', displayName: 'Certificate' }],
-};
-
-// Mock data: collateralType -> required documents
-const REQUIRED_DOCS_BY_COLLATERAL: Record<string, RequiredDocumentConfig[]> = {
-  L: [{ documentType: 'D001', displayName: 'Title Deed' }],
-  LB: [
-    { documentType: 'D001', displayName: 'Title Deed' },
-    { documentType: 'D004', displayName: 'Building Plan' },
-  ],
-  B: [
-    { documentType: 'D004', displayName: 'Building Plan' },
-    { documentType: 'D002', displayName: 'Registration Document' },
-  ],
-  U: [
-    { documentType: 'D001', displayName: 'Title Deed' },
-    { documentType: 'D002', displayName: 'Registration Document' },
-  ],
-  VEH: [
-    { documentType: 'D002', displayName: 'Registration Document' },
-    { documentType: 'D003', displayName: 'Invoice' },
-  ],
-  MAC: [
-    { documentType: 'D003', displayName: 'Invoice' },
-    { documentType: 'D006', displayName: 'Certificate' },
-  ],
-  LSL: [
-    { documentType: 'D001', displayName: 'Title Deed' },
-    { documentType: 'D006', displayName: 'Certificate' },
-  ],
-  LS: [
-    { documentType: 'D001', displayName: 'Title Deed' },
-    { documentType: 'D004', displayName: 'Building Plan' },
-    { documentType: 'D006', displayName: 'Certificate' },
-  ],
-  LSB: [
-    { documentType: 'D004', displayName: 'Building Plan' },
-    { documentType: 'D006', displayName: 'Certificate' },
-  ],
-};
-
 /**
- * Hook for fetching required documents based on purpose or collateral type
- * Uses mock data - to be replaced with real API later
+ * Hook for fetching required documents based on purpose or collateral type.
+ * Calls GET /document-checklist from the Parameter module.
  */
 export const useGetRequiredDocuments = (params: GetRequiredDocumentsParams) => {
   return useQuery({
     queryKey: ['requiredDocuments', params],
     queryFn: async (): Promise<GetRequiredDocumentsResponse> => {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 200));
+      const queryParams = new URLSearchParams();
 
       if (params.purpose) {
-        return { documents: REQUIRED_DOCS_BY_PURPOSE[params.purpose] || [] };
+        queryParams.set('purposeCode', params.purpose);
       }
       if (params.collateralType) {
-        return { documents: REQUIRED_DOCS_BY_COLLATERAL[params.collateralType] || [] };
+        queryParams.set('propertyTypeCodes', params.collateralType);
       }
+
+      const { data } = await axios.get<ParameterDocumentChecklistResponse>(
+        `/document-checklist?${queryParams.toString()}`,
+      );
+
+      // Map response to RequiredDocumentConfig[] based on what was requested
+      if (params.collateralType && data.propertyTypeGroups.length > 0) {
+        return {
+          documents: data.propertyTypeGroups[0].documents.map(d => ({
+            documentType: d.code,
+            displayName: d.name,
+            isRequired: d.isRequired,
+          })),
+        };
+      }
+
+      if (params.purpose) {
+        return {
+          documents: data.applicationDocuments.map(d => ({
+            documentType: d.code,
+            displayName: d.name,
+            isRequired: d.isRequired,
+          })),
+        };
+      }
+
       return { documents: [] };
     },
     enabled: !!(params.purpose || params.collateralType),
+  });
+};
+
+/**
+ * Hook for fetching the document checklist for a specific request.
+ * Returns which required documents are uploaded and whether the checklist is complete.
+ */
+export const useGetDocumentChecklist = (requestId: string | undefined) => {
+  return useQuery<DocumentChecklistResponse>({
+    queryKey: ['document-checklist', requestId],
+    queryFn: async () => {
+      const { data } = await axios.get<DocumentChecklistResponse>(
+        `/requests/${requestId}/document-checklist`,
+      );
+      return data;
+    },
+    enabled: !!requestId,
   });
 };

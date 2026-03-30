@@ -87,7 +87,7 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
         </div>
         <div className="flex items-center gap-1.5 text-gray-600">
           <Icon style="regular" name="clipboard-list" className="size-3.5 text-gray-400" />
-          <span className="truncate">{task.taskType}</span>
+          <span className="truncate">{task.taskDescription || task.taskType}</span>
         </div>
 
         {/* Row 2 */}

@@ -11,6 +11,7 @@ import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
 import { useGetAppraisalById } from '@features/appraisal/api/appraisal';
+import { useGetRequestById } from '@features/request/api/requests';
 import { DetailPageSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -125,6 +126,8 @@ function AppraisalLayout() {
     error: appraisalError,
   } = useGetAppraisalById(appraisalId);
 
+  const { data: requestData } = useGetRequestById(appraisalData?.requestId);
+
   // Build breadcrumb items based on the current route
   const breadcrumbItems = useMemo(() => {
     const appraisalNo = appraisalData?.appraisalNumber || appraisalData?.id || appraisalId;
@@ -215,13 +218,16 @@ function AppraisalLayout() {
             appraisalType: appraisalData.appraisalType ?? undefined,
             priority: appraisalData.priority ?? undefined,
             isPma: (appraisalData as any).isPma ?? true, // TODO: change default back to false once backend returns isPma
+            facilityLimit: (requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0,
+            hasAppraisalBook: (requestData as any)?.detail?.hasAppraisalBook ?? false,
+            basePath: `/appraisals/${appraisalId}`,
           }
         : null,
       isLoading: isAppraisalLoading,
       isError: isAppraisalError,
       error: appraisalError as Error | null,
     }),
-    [appraisalData, appraisalId, isAppraisalLoading, isAppraisalError, appraisalError],
+    [appraisalData, appraisalId, isAppraisalLoading, isAppraisalError, appraisalError, requestData],
   );
 
   // Show loading skeleton while fetching appraisal data

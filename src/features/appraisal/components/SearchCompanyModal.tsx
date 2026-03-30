@@ -1,21 +1,39 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useSearchCompanies } from '../api/administration';
 import type { ExternalCompany } from '../types/administration';
 
 interface SearchCompanyModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (company: ExternalCompany) => void;
+  /** Pre-loaded list from useGetEligibleCompanies. When provided, filtering is client-side. */
+  eligibleCompanies?: ExternalCompany[];
 }
 
-const SearchCompanyModal = ({ isOpen, onClose, onSelect }: SearchCompanyModalProps) => {
+const SearchCompanyModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  eligibleCompanies,
+}: SearchCompanyModalProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<ExternalCompany | null>(null);
 
-  const { data: companyList = [], isLoading } = useSearchCompanies(searchQuery, isOpen);
+  const isLoading = eligibleCompanies === undefined;
+
+  const companyList = useMemo(() => {
+    if (!eligibleCompanies) return [];
+    if (!searchQuery.trim()) return eligibleCompanies;
+    const query = searchQuery.toLowerCase();
+    return eligibleCompanies.filter(
+      company =>
+        company.companyName.toLowerCase().includes(query) ||
+        company.registrationNo.toLowerCase().includes(query) ||
+        company.contactPerson.toLowerCase().includes(query),
+    );
+  }, [eligibleCompanies, searchQuery]);
 
   const handleSelect = () => {
     if (selectedCompany) {

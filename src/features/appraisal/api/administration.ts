@@ -10,128 +10,23 @@ import type {
   Quotation,
 } from '../types/administration';
 
-// Mock data for development
-const mockStaffList: InternalStaff[] = [
-  {
-    id: 'staff-001',
-    employeeId: 'EMP001',
-    name: 'Somchai Prasert',
-    email: 'somchai.prasert@lhbank.co.th',
-    department: 'Appraisal Department',
-    avatar: null,
-    currentWorkload: 3,
-  },
-  {
-    id: 'staff-002',
-    employeeId: 'EMP002',
-    name: 'Nattaya Srisawat',
-    email: 'nattaya.srisawat@lhbank.co.th',
-    department: 'Appraisal Department',
-    avatar: null,
-    currentWorkload: 5,
-  },
-  {
-    id: 'staff-003',
-    employeeId: 'EMP003',
-    name: 'Wichai Kongpan',
-    email: 'wichai.kongpan@lhbank.co.th',
-    department: 'Appraisal Department',
-    avatar: null,
-    currentWorkload: 2,
-  },
-  {
-    id: 'staff-004',
-    employeeId: 'EMP004',
-    name: 'Pranee Thongchai',
-    email: 'pranee.thongchai@lhbank.co.th',
-    department: 'Senior Appraisal',
-    avatar: null,
-    currentWorkload: 4,
-  },
-  {
-    id: 'staff-005',
-    employeeId: 'EMP005',
-    name: 'Kittisak Wongprasert',
-    email: 'kittisak.wongprasert@lhbank.co.th',
-    department: 'Appraisal Department',
-    avatar: null,
-    currentWorkload: 1,
-  },
-];
-
-const mockCompanyList: ExternalCompany[] = [
-  {
-    id: 'company-001',
-    companyName: 'Thai Appraisal Co., Ltd.',
-    registrationNo: 'TAC-001',
-    contactPerson: 'Sompong Chaiyasit',
-    contactPhone: '02-123-4567',
-    contactEmail: 'contact@thaiappraisal.co.th',
-    rating: 4.5,
-    activeAssignments: 12,
-  },
-  {
-    id: 'company-002',
-    companyName: 'Bangkok Property Valuers',
-    registrationNo: 'BPV-002',
-    contactPerson: 'Naree Wongsawat',
-    contactPhone: '02-234-5678',
-    contactEmail: 'info@bkkvaluers.co.th',
-    rating: 4.8,
-    activeAssignments: 8,
-  },
-  {
-    id: 'company-003',
-    companyName: 'Siam Valuation Group',
-    registrationNo: 'SVG-003',
-    contactPerson: 'Prasit Chaimongkol',
-    contactPhone: '02-345-6789',
-    contactEmail: 'service@siamvaluation.co.th',
-    rating: 4.2,
-    activeAssignments: 15,
-  },
-  {
-    id: 'company-004',
-    companyName: 'Premium Asset Appraisal',
-    registrationNo: 'PAA-004',
-    contactPerson: 'Kannika Suthep',
-    contactPhone: '02-456-7890',
-    contactEmail: 'premium@assetappraisal.co.th',
-    rating: 4.6,
-    activeAssignments: 6,
-  },
-  {
-    id: 'company-005',
-    companyName: 'Metro Property Services',
-    registrationNo: 'MPS-005',
-    contactPerson: 'Thaworn Petcharat',
-    contactPhone: '02-567-8901',
-    contactEmail: 'metro@propertyservices.co.th',
-    rating: 4.0,
-    activeAssignments: 20,
-  },
-];
 
 /**
  * Get a user by ID
- * GET /users/{userId}
+ * GET /auth/users/{userId}
  */
 export const useGetUserById = (userId: string | null) => {
   return useQuery({
     queryKey: ['users', userId],
     queryFn: async (): Promise<InternalStaff> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get(`/users/${userId}`);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return mockStaffList.find(s => s.id === userId) ?? {
-        id: userId!,
-        employeeId: '-',
-        name: 'Unknown Staff',
-        email: '-',
-        department: '-',
-        avatar: null,
+      const { data } = await axios.get(`/auth/users/${userId}`);
+      return {
+        id: data.id,
+        employeeId: data.username,
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email ?? '',
+        department: data.department ?? '',
+        avatar: data.avatarUrl ?? null,
         currentWorkload: 0,
       };
     },
@@ -147,18 +42,15 @@ export const useGetCompanyById = (companyId: string | null) => {
   return useQuery({
     queryKey: ['companies', companyId],
     queryFn: async (): Promise<ExternalCompany> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get(`/companies/${companyId}`);
-      // return data;
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return mockCompanyList.find(c => c.id === companyId) ?? {
-        id: companyId!,
-        companyName: 'Unknown Company',
-        registrationNo: '-',
-        contactPerson: '-',
-        contactPhone: '-',
-        contactEmail: '-',
+      const { data } = await axios.get(`/companies/${companyId}`);
+      const company = data.company ?? data;
+      return {
+        id: company.id,
+        companyName: company.name,
+        registrationNo: company.taxId ?? '',
+        contactPerson: company.contactPerson ?? '',
+        contactPhone: company.phone ?? '',
+        contactEmail: company.email ?? '',
         rating: 0,
         activeAssignments: 0,
       };
@@ -206,63 +98,62 @@ export const useCreateAssignment = () => {
 };
 
 /**
- * Search internal staff
- * GET /staff/search?q={query}
+ * Get eligible assignees for a workflow activity (same pool as round-robin)
+ * GET /api/workflows/instances/{workflowInstanceId}/activities/{targetActivityId}/eligible-assignees
  */
-export const useSearchStaff = (searchQuery: string, enabled = true) => {
+export const useGetEligibleStaff = (
+  workflowInstanceId: string | undefined,
+  targetActivityId: string,
+  enabled = true,
+) => {
   return useQuery({
-    queryKey: ['staff', 'search', searchQuery],
+    queryKey: ['eligible-assignees', workflowInstanceId, targetActivityId],
     queryFn: async (): Promise<InternalStaff[]> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get('/staff/search', {
-      //   params: { q: searchQuery },
-      // });
-
-      // Mock: Filter from mock list
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      if (!searchQuery.trim()) return mockStaffList;
-
-      const query = searchQuery.toLowerCase();
-      return mockStaffList.filter(
-        staff =>
-          staff.name.toLowerCase().includes(query) ||
-          staff.email.toLowerCase().includes(query) ||
-          staff.employeeId.toLowerCase().includes(query) ||
-          staff.department.toLowerCase().includes(query),
+      const { data } = await axios.get(
+        `/api/workflows/instances/${workflowInstanceId}/activities/${targetActivityId}/eligible-assignees`,
+      );
+      return (data.eligibleAssignees ?? []).map(
+        (a: { userId: string; displayName: string }) => ({
+          id: a.userId,
+          employeeId: a.userId,
+          name: a.displayName,
+          email: '',
+          department: '',
+          avatar: null,
+          currentWorkload: 0,
+        }),
       );
     },
-    enabled: enabled && searchQuery.length >= 0,
+    enabled: enabled && !!workflowInstanceId,
   });
 };
 
 /**
- * Search external companies
- * GET /companies/search?q={query}
+ * Get eligible external companies for assignment by loan type / banking segment
+ * GET /companies/eligible?loanType={bankingSegment}
  */
-export const useSearchCompanies = (searchQuery: string, enabled = true) => {
+export const useGetEligibleCompanies = (
+  bankingSegment: string | undefined,
+  enabled = true,
+) => {
   return useQuery({
-    queryKey: ['companies', 'search', searchQuery],
+    queryKey: ['eligible-companies', bankingSegment],
     queryFn: async (): Promise<ExternalCompany[]> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.get('/companies/search', {
-      //   params: { q: searchQuery },
-      // });
-
-      // Mock: Filter from mock list
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      if (!searchQuery.trim()) return mockCompanyList;
-
-      const query = searchQuery.toLowerCase();
-      return mockCompanyList.filter(
-        company =>
-          company.companyName.toLowerCase().includes(query) ||
-          company.registrationNo.toLowerCase().includes(query) ||
-          company.contactPerson.toLowerCase().includes(query),
-      );
+      const { data } = await axios.get('/companies/eligible', {
+        params: { loanType: bankingSegment },
+      });
+      return (data.companies ?? []).map((c: { id: string; name: string; taxId?: string; contactPerson?: string; phone?: string; email?: string }) => ({
+        id: c.id,
+        companyName: c.name,
+        registrationNo: c.taxId ?? '',
+        contactPerson: c.contactPerson ?? '',
+        contactPhone: c.phone ?? '',
+        contactEmail: c.email ?? '',
+        rating: 0,
+        activeAssignments: 0,
+      }));
     },
-    enabled: enabled && searchQuery.length >= 0,
+    enabled: enabled && !!bankingSegment,
   });
 };
 

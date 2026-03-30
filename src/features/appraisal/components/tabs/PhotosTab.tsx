@@ -4,6 +4,7 @@ import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
@@ -224,7 +225,7 @@ const UploadPlaceholder = ({
 export const PhotosTab = () => {
   const readOnly = usePageReadOnly();
   // Get appraisalId from URL params
-  const { appraisalId } = useParams<{ appraisalId: string }>();
+  const appraisalId = useAppraisalId();
 
   // API hooks for topics
   const { data: topicsData, isLoading: isLoadingTopics } = useGetPhotoTopics(appraisalId);
