@@ -10,7 +10,6 @@ import {
 } from '../schemas';
 import pricingAnalysisConfig from '../data/pricingAnalysis.config.json';
 import { pricingAnalysisKeys } from '../api/queryKeys';
-import { ConsoleLogger } from '@microsoft/signalr/dist/esm/Utils';
 
 // Stable fallback for new pricing analyses — avoids creating a new object every render
 const EMPTY_PRICING_SELECTION = { approaches: [] } as unknown as GetPricingAnalysisResponseType;
@@ -169,7 +168,6 @@ export function useEnrichedPricingAnalysis({
     string,
     unknown
   >[];
-  console.log(properties);
   const marketSurveyDetails = marketSurveyDetailQueries
     .map(q => q.data?.marketComparable)
     .filter(Boolean) as MarketComparableDetailType[];
