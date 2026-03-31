@@ -22,7 +22,7 @@ interface CostMachinePanelProps {
     methodId?: string;
     methodType?: string;
   };
-  property: Record<string, unknown>[] | undefined;
+  properties: Record<string, unknown>[] | undefined;
   savedMethodValue?: number | null;
   onCalculationSave: (payload: {
     approachType: string;
@@ -35,7 +35,7 @@ interface CostMachinePanelProps {
 
 export function CostMachinePanel({
   activeMethod,
-  property,
+  properties,
   savedMethodValue,
   onCalculationSave,
   onCalculationMethodDirty,
@@ -45,7 +45,7 @@ export function CostMachinePanel({
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
   const resetMutation = useResetMethod();
 
-  const machineryItems: MachineryItem[] = (property ?? [])
+  const machineryItems: MachineryItem[] = (properties ?? [])
     .filter(f => (f as any).propertyType === 'MAC')
     .map(m => {
       const item = m as Record<string, any>;
