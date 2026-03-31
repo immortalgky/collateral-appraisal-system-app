@@ -22,7 +22,7 @@ interface CostMachinePanelProps {
     methodId?: string;
     methodType?: string;
   };
-  property: Record<string, unknown> | undefined;
+  property: Record<string, unknown>[] | undefined;
   savedMethodValue?: number | null;
   onCalculationSave: (payload: {
     approachType: string;
@@ -45,17 +45,19 @@ export function CostMachinePanel({
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
   const resetMutation = useResetMethod();
 
-  const properties = mockMachineryItems;
-  const machineryItems: MachineryItem[] = (properties ?? [])
-    .filter(f => f.propertyType === 'MAC')
-    .map(m => ({
-      quantity: m.quantity ?? 0,
-      machineName: m.machineName ?? '',
-      registrationNo: m.registrationNo ?? '',
-      manufacturer: m.manufacturer ?? '',
-      conditionUse: m.conditionUse ?? '',
-      yearOfManufacture: m.yearOfManufacture ?? 0,
-    }));
+  const machineryItems: MachineryItem[] = (property ?? [])
+    .filter(f => (f as any).propertyType === 'MAC')
+    .map(m => {
+      const item = m as Record<string, any>;
+      return {
+        quantity: Number(item.quantity ?? 0),
+        machineName: String(item.machineName ?? ''),
+        registrationNo: String(item.registrationNo ?? ''),
+        manufacturer: String(item.manufacturer ?? ''),
+        conditionUse: String(item.conditionUse ?? ''),
+        yearOfManufacture: Number(item.yearOfManufacture ?? 0),
+      };
+    });
 
   const methods = useForm<CostMachineFormType>({
     mode: 'onSubmit',
