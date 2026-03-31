@@ -73,6 +73,7 @@ export function WQSPanel({
   onCancelCalculationMethod,
 }: WQSPanelProps) {
   const { methodId, methodType } = activeMethod ?? {};
+  const isCostApproach = methodType === 'WQS_COST';
 
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
@@ -382,6 +383,7 @@ export function WQSPanel({
               <WQSForm
                 {...methods}
                 property={property}
+                isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
                 comparativeMarketSurveys={comparativeSurveys}
                 template={pricingTemplate}

@@ -15,7 +15,15 @@ import {
 import { ServerDataCtx } from '../store/selectionContext';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 
-export const AdjustFinalValueSection = ({ property }: { property: Record<string, unknown> }) => {
+interface AdjustFinalValueSectionProp {
+  property: Record<string, unknown>;
+  isCostApproach: boolean;
+}
+
+export const AdjustFinalValueSection = ({
+  property,
+  isCostApproach,
+}: AdjustFinalValueSectionProp) => {
   const {
     finalValueCoefficientOfDecision: coeffPath,
     finalValueIncludeLandArea: includeLandAreaPath,
@@ -26,10 +34,15 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
     finalValueAppraisalPrice: finalValueAppraisalPricePath,
     finalValueAppraisalPriceRounded: appraisalPriceRoundedPath,
     finalValuePriceDifferentiate: priceDifferentiatePath,
+    finalValueTotalBuildingCost: totalBuildingCostPath,
+    finalValueAppraisalPriceIncludeBuildinCost: appraisalPriceIncludeBuildingCostPath,
+    finalValueAppraisalPriceIncludeBuildinCostRounded: appraisalPriceIncludeBuildingCostRoundedPath,
+    finalValuePriceIncluadeBuildingCostDifferentiate: priceIncludeBuildingDifferentiatePath,
   } = wqsFieldPath;
 
   const { control } = useFormContext();
   const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
+  const includeBuildingCost = useWatch({ control, name: hasBuildingCostPath() });
 
   // Track previous finalValueRounded to detect actual changes.
   // On initial load: preserve saved appraisalPriceRounded (auto-fill only if 0).
@@ -193,14 +206,96 @@ export const AdjustFinalValueSection = ({ property }: { property: Record<string,
       </div>
 
       {/* Include building cost toggle */}
-      {/* <div className="flex items-center gap-4">
-        <span className="w-48 text-gray-500">Include building cost</span>
-        <RHFInputCell
-          fieldName={hasBuildingCostPath()}
-          inputType="toggle"
-          toggle={{ checked: false, options: ['No', 'Yes'] }}
-        />
-      </div> */}
+      {isCostApproach && (
+        <div className="flex items-center gap-4">
+          <span className="w-48 text-gray-500">Include building cost</span>
+          <RHFInputCell
+            fieldName={hasBuildingCostPath()}
+            inputType="toggle"
+            toggle={{ checked: includeBuildingCost, options: ['No', 'Yes'] }}
+          />
+        </div>
+      )}
+
+      {includeBuildingCost && (
+        <div className="flex flex-col gap-3 text-sm">
+          <div className="flex items-center gap-4">
+            <span className="w-48 text-gray-500">Land Price</span>
+            <span className="font-medium text-gray-800">
+              <RHFInputCell
+                fieldName={appraisalPriceRoundedPath()}
+                inputType="display"
+                accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+              />
+            </span>
+            <span className="text-gray-500">Baht</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="w-48 text-gray-500">Building Cost</span>
+            <span className="font-medium text-gray-800">
+              <RHFInputCell
+                fieldName={totalBuildingCostPath()}
+                inputType="display"
+                accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+              />
+            </span>
+            <span className="text-gray-500">Baht</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="w-48 text-gray-500">Appraisal Price Include Building Cost</span>
+            <span className="font-medium text-gray-800">
+              <RHFInputCell
+                fieldName={appraisalPriceIncludeBuildingCostPath()}
+                inputType="display"
+                accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+              />
+            </span>
+            <span className="text-gray-500">Baht</span>
+          </div>
+
+          <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
+            <span className="w-48 text-xs shrink-0 font-semibold text-gray-800">
+              Appraisal Price Include Building Cost (rounded)
+            </span>
+            <div className="w-40">
+              <RHFInputCell
+                fieldName={appraisalPriceIncludeBuildingCostRoundedPath()}
+                inputType="number"
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
+              />
+            </div>
+            <span className="text-gray-500">Baht</span>
+            <div className="flex items-center">
+              <RHFInputCell
+                fieldName={priceIncludeBuildingDifferentiatePath()}
+                inputType="display"
+                accessor={({ value }) => {
+                  const num = Number(value) || 0;
+                  if (num === 0) return <span className="text-gray-400"></span>;
+                  const color = num > 0 ? 'text-green-600' : 'text-red-600';
+                  const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
+                  const icon = num > 0 ? 'arrow-up' : 'arrow-down';
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
+                    >
+                      <Icon name={icon} style="solid" className="size-3" />
+                      {Math.abs(num).toLocaleString()}
+                    </span>
+                  );
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

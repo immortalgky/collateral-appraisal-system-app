@@ -13,9 +13,11 @@ import { round2 } from '../domain/calculateDirectComparison';
 
 interface DirectComparisonAdjustAppraisalPriceSectionProps {
   property: Record<string, unknown>;
+  isCostApproach: boolean;
 }
 export function DirectComparisonAdjustAppraisalPriceSection({
   property,
+  isCostApproach,
 }: DirectComparisonAdjustAppraisalPriceSectionProps) {
   const { getValues } = useFormContext();
 
@@ -27,6 +29,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
     appraisalPrice: appraisalPricePath,
     appraisalPriceRounded: appraisalPriceRoundedPath,
     priceDifferentiate: priceDifferentiatePath,
+    finalValueHasBuildingCost: hasBuildingCostPath,
   } = directComparisonPath;
 
   const prevAppraisalPriceRef = useRef<number | null>(null);
@@ -174,6 +177,17 @@ export function DirectComparisonAdjustAppraisalPriceSection({
           />
         </div>
       </div>
+      {/* Include building cost toggle */}
+      {isCostApproach && (
+        <div className="flex items-center gap-4">
+          <span className="w-48 text-gray-500">Include building cost</span>
+          <RHFInputCell
+            fieldName={hasBuildingCostPath()}
+            inputType="toggle"
+            toggle={{ checked: false, options: ['No', 'Yes'] }}
+          />
+        </div>
+      )}
     </div>
   );
 }

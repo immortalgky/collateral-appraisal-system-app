@@ -65,6 +65,12 @@ export function MethodSectionRenderer({
       return <DirectComparisonPanel {...panelProps} />;
     case 'MC_COST':
       return <CostMachinePanel {...panelProps} />;
+    case 'WQS_COST':
+      return <WQSPanel {...panelProps} />;
+    case 'SAG_COST':
+      return <SaleAdjustmentGridPanel {...panelProps} />;
+    case 'DC_COST':
+      return <DirectComparisonPanel {...panelProps} />;
     default:
       return <></>;
   }
