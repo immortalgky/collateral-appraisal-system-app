@@ -16,7 +16,7 @@ const DCFAssumptionForm = z.object({
   assumptionName: z.string(),
   displaySeq: z.number(),
   identifier: z.string(),
-  totalAssumptionValues: z.array(YearlyValue),
+  totalAssumptionValues: z.array(YearlyValue), // update form to follow the same pattern
   method: DCFMethodForm,
 });
 

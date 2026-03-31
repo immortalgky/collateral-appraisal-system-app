@@ -79,7 +79,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               getValues(`${name}.detail.roomIncomeAdjustedValuedByGrowthRates.${idx}`) ?? 0;
             const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
 
-            return toNumber(adjRoomIncome * occupancyRate);
+            return toNumber((adjRoomIncome * occupancyRate) / 100);
           },
         },
         {
@@ -120,16 +120,6 @@ function MethodSpecifiedRoomIncomeWithGrowthTable({
   return (
     <>
       <tr>
-        <td className={clsx(rowHeaderStyle)}>Occupancy Rate</td>
-        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-          return (
-            <td key={idx} className={clsx(rowBodyStyle)}>
-              <RHFInputCell fieldName={`${name}.detail.occupancyRate.${idx}`} inputType="number" />
-            </td>
-          );
-        })}
-      </tr>
-      <tr>
         <td className={clsx(rowHeaderStyle)}>Increase Rate</td>
         {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
           return (
@@ -157,6 +147,16 @@ function MethodSpecifiedRoomIncomeWithGrowthTable({
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
                 )}
               />
+            </td>
+          );
+        })}
+      </tr>
+      <tr>
+        <td className={clsx(rowHeaderStyle)}>Occupancy Rate</td>
+        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
+          return (
+            <td key={idx} className={clsx(rowBodyStyle)}>
+              <RHFInputCell fieldName={`${name}.detail.occupancyRate.${idx}`} inputType="number" />
             </td>
           );
         })}

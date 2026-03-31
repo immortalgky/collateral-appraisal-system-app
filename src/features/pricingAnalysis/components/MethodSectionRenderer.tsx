@@ -57,9 +57,7 @@ export function MethodSectionRenderer({
     onCancelCalculationMethod,
   };
 
-  const methodType = 'I';
-  // switch (state.activeMethod?.methodType) {
-  switch (methodType) {
+  switch (state.activeMethod?.methodType) {
     case 'WQS_MARKET':
       return <WQSPanel {...panelProps} />;
     case 'SAG_MARKET':

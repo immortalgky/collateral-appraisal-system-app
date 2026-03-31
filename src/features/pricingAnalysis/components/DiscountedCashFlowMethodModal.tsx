@@ -39,7 +39,7 @@ export function DiscountedCashFlowMethodModal({
     defaultValues: initialData,
   });
 
-  const { handleSubmit, reset, resetField, getValues, control } = methods;
+  const { handleSubmit, reset, getValues, control } = methods;
 
   const methodType = useWatch({
     control,
@@ -81,12 +81,13 @@ export function DiscountedCashFlowMethodModal({
     if (prevMethodTypeRef.current !== methodType) {
       prevMethodTypeRef.current = methodType ?? null;
 
-      // better than unregister + reset(undefined)
-      resetField('method.detail', {
-        defaultValue: null, // or {} / explicit empty shape for that method type
+      const currentValues = getValues();
+      reset({
+        ...currentValues,
+        method: { methodType: currentValues.method.methodType, detail: undefined },
       });
     }
-  }, [methodType, resetField]);
+  }, [methodType, getValues, reset]);
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {
@@ -131,7 +132,7 @@ export function DiscountedCashFlowMethodModal({
           <div className="flex flex-col gap-2 mb-4">
             <div className="flex flex-row gap-1.5">
               <span className="w-44">Category</span>
-              <div className="w-56">
+              <div className="w-64">
                 <RHFInputCell
                   fieldName="targetCategoryClientId"
                   inputType="select"
@@ -142,7 +143,7 @@ export function DiscountedCashFlowMethodModal({
 
             <div className="flex flex-row items-center gap-1.5">
               <span className="w-44">Assumption</span>
-              <div className="w-56">
+              <div className="w-64">
                 <RHFInputCell
                   fieldName="assumptionType"
                   inputType="select"
@@ -161,7 +162,7 @@ export function DiscountedCashFlowMethodModal({
 
             <div className="flex flex-row gap-1.5">
               <span className="w-44">Method</span>
-              <div className="w-56">
+              <div className="w-64">
                 <RHFInputCell
                   fieldName="method.methodType"
                   inputType="select"
@@ -174,13 +175,15 @@ export function DiscountedCashFlowMethodModal({
             </div>
           </div>
 
-          <DiscountedCashFlowModalRenderer
-            key={systemMethodType ?? 'none'}
-            name="method.detail"
-            methodType={systemMethodType}
-            getOuterFormValues={getOuterFormValues}
-            getInnerFormValues={getValues}
-          />
+          {systemMethodType && (
+            <DiscountedCashFlowModalRenderer
+              key={systemMethodType ?? 'none'}
+              name="method.detail"
+              methodType={systemMethodType}
+              getOuterFormValues={getOuterFormValues}
+              getInnerFormValues={getValues}
+            />
+          )}
 
           <div className="flex items-center justify-between mt-4">
             <Button

@@ -125,6 +125,7 @@ export function DiscountedCashFlowAssumption({
         })}
       </tr>
       <DiscountedCashFlowMethodRenderer
+        key={assumption.dbId ?? assumption.clientId}
         name={`${name}.method`}
         property={property}
         editing={editing}

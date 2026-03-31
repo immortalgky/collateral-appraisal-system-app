@@ -54,7 +54,7 @@ export const mappingAssumptionMethodParams = [
 
 export const methodParams = [
   // income
-  { code: '01', description: 'Specified Room Income Per Pay' },
+  { code: '01', description: 'Specified Room Income Per Day' },
   { code: '02', description: 'Specified Room Income By Seasonal Rates' },
   { code: '03', description: 'Specified Room Income with Growth' },
   { code: '04', description: 'Specified Room Income with Growth by Occupancy Rate' },

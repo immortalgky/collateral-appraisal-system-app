@@ -11,6 +11,7 @@ import {
 } from '../adapters/buildDiscountedCashFlowDerivedRules';
 import { useMemo } from 'react';
 import { useDerivedFields } from '../adapters/useDerivedFieldArray';
+import { useCalculations } from '../domain/dcf/useCalculations';
 
 export interface SectionColor {
   bg: string;
@@ -109,6 +110,8 @@ export function DiscountedCashFlowTable({
   useDerivedFields({ rules: calculateTotalIncomeDerivedRules });
   useDerivedFields({ rules: calculateTotalCategoryDerivedRules });
   useDerivedFields({ rules: calculateTotalAssumptionDerivedRules });
+
+  useCalculations(sections, totalNumberOfYears);
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">

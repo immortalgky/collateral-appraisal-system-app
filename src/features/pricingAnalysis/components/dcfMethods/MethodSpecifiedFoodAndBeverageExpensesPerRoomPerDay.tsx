@@ -49,7 +49,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
             const totalFoodAndBeveragePerRoomPerDay =
               getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
             const totalNumberOfSaleableArea =
-              getDCFFilteredAssumptions(getValues, a => a.method.methodType === '01')?.[0]
+              getDCFFilteredAssumptions(getValues, a => a.method?.methodType === '01')?.[0]
                 ?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
 
             return (

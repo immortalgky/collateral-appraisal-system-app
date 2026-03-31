@@ -45,7 +45,7 @@ export function MethodSpecifiedEnergyCostIndex({
         },
         {
           targetPath: `${name}.detail.totalEnegyCost.${idx}`,
-          deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
+          deps: [`${name}.detail.energyCostIndexIncrease.${idx}`],
           compute: ({ getValues }) => {
             const totalEnegyCost = getValues(`${name}.detail.energyCostIndexIncrease.${idx}`) ?? 0;
             const totalNumberOfSaleableArea =

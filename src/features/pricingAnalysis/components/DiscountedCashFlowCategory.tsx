@@ -1,10 +1,9 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
-import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { RHFInputCell } from './table/RHFInputCell';
 import { getNewId } from '../domain/getNewId';
 import { type DCFAssumption, type DCFCategory, type DCFSection } from '../types/dcf';
@@ -13,6 +12,7 @@ import {
   type AssumptionEditDraft,
 } from './DiscountedCashFlowMethodModal';
 import { editAssumption } from '../domain/dcf/editAssumption';
+import { useAssumptionManagement } from '../domain/dcf/useAssumptionManagement';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
@@ -31,39 +31,19 @@ export function DiscountedCashFlowCategory({
   totalNumberOfYears,
   color,
 }: DiscountedCashFlowCategoryProps) {
-  const { getValues, setValue } = useFormContext();
+  const { getValues, setValue, control } = useFormContext();
 
-  const { append, remove, fields } = useFieldArray({ name: `${name}.assumptions` });
+  const {
+    fields,
+    editing,
+    handleOnAddAssumption,
+    handleOnRemoveAssumption,
+    handleOnOpenEditMode,
+    handleOnCancelEditMode,
+    handleOnSaveEditMode,
+  } = useAssumptionManagement(name, getValues, setValue, control);
 
   const [isExpanded, setExpanded] = useState(true);
-  const [editing, setEditing] = useState<string | null>(null);
-
-  const handleOnCancelEditMode = () => setEditing(null);
-
-  const handleOnOpenEditMode = (assumptionId: string) => setEditing(assumptionId);
-
-  const handleOnSaveEditMode = (draft: AssumptionEditDraft) => {
-    const nextSections = editAssumption(getValues('sections'), draft);
-    setValue('sections', nextSections, {
-      shouldDirty: false,
-      shouldValidate: true,
-    });
-  };
-
-  const handleOnAddAssumption = () => {
-    const newAssumptionId = getNewId();
-    append({
-      clientId: newAssumptionId,
-      assumptionType: null,
-      displaySeq: fields.length,
-      method: { id: getNewId(), methodType: null },
-    });
-    setEditing(newAssumptionId);
-  };
-
-  const handleOnRemoveAssumption = (index: number) => {
-    remove(index);
-  };
 
   const rowHeaderStyle = 'pl-8 px-1 py-1.5 h-12 text-sm border-b border-gray-300';
   const rowBodyStyle = 'pl-8 px-1.5 py-1.5 h-12 text-sm text-right border-b border-gray-300';
@@ -121,13 +101,13 @@ export function DiscountedCashFlowCategory({
 
       {isExpanded && (
         <>
-          {category.assumptions.map((field, idx) => {
-            const assumption = getValues(`${name}.assumptions.${idx}`);
+          {fields.map((field, idx) => {
+            const assumption = getValues(`${name}.assumptions.${idx}`) as DCFAssumption;
 
             if (!assumption) return null;
 
             return (
-              <Fragment key={field.clientId}>
+              <Fragment key={field.id}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
                   property={property}

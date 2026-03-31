@@ -12,47 +12,47 @@ export function MethodPositionBasedSalaryCalculation({
   expanded,
   totalNumberOfYears,
 }: MethodPositionBasedSalaryCalculationProps) {
-  const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
-    (_, idx) => {
-      return [
-        {
-          targetPath: `${name}.detail.increaseRate.${idx}`,
-          deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
-          compute: ({ getValues }) => {
-            const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
-            const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
-            if (idx === 0) return 0;
-            if (idx % increateRateYrs === 0) return increaseRatePct;
-            return 0;
-          },
-        },
-        {
-          targetPath: `${name}.detail.totalPositionBasedSalaryPerYear.${idx}`,
-          deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.sumTotalSalaryPerYear`],
-          compute: ({ getValues }) => {
-            const firstYearAmt = getValues(`${name}.detail.sumTotalSalaryPerYear`) ?? 0;
+  // const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
+  //   (_, idx) => {
+  //     return [
+  //       {
+  //         targetPath: `${name}.detail.increaseRate.${idx}`,
+  //         deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+  //         compute: ({ getValues }) => {
+  //           const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+  //           const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+  //           if (idx === 0) return 0;
+  //           if (idx % increateRateYrs === 0) return increaseRatePct;
+  //           return 0;
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.detail.totalPositionBasedSalaryPerYear.${idx}`,
+  //         deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.sumTotalSalaryPerYear`],
+  //         compute: ({ getValues }) => {
+  //           const firstYearAmt = getValues(`${name}.detail.sumTotalSalaryPerYear`) ?? 0;
 
-            if (idx === 0) return firstYearAmt;
+  //           if (idx === 0) return firstYearAmt;
 
-            const prevTotalSalaryCost = getValues(
-              `${name}.detail.totalPositionBasedSalaryPerYear.${idx - 1}`,
-            );
-            const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
+  //           const prevTotalSalaryCost = getValues(
+  //             `${name}.detail.totalPositionBasedSalaryPerYear.${idx - 1}`,
+  //           );
+  //           const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-            return toNumber(prevTotalSalaryCost * (1 + increaseRate / 100));
-          },
-        },
-        {
-          targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`],
-          compute: ({ getValues }) => {
-            return getValues(`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`) ?? 0;
-          },
-        },
-      ];
-    },
-  );
-  useDerivedFields({ rules });
+  //           return toNumber(prevTotalSalaryCost * (1 + increaseRate / 100));
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.totalMethodValues.${idx}`,
+  //         deps: [`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`],
+  //         compute: ({ getValues }) => {
+  //           return getValues(`${name}.detail.totalPositionBasedSalaryPerYear.${idx}`) ?? 0;
+  //         },
+  //       },
+  //     ];
+  //   },
+  // );
+  // useDerivedFields({ rules });
 
   return (
     <>
