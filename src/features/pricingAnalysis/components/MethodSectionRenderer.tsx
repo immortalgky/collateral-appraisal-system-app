@@ -5,6 +5,7 @@ import { WQSPanel } from '@features/pricingAnalysis/components/WQSPanel.tsx';
 import type { PricingServerData } from '../types/selection';
 import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
+import { DiscountedCashFlowPanel } from './DiscountedCashFlowPanel';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { CostMachinePanel } from './CostMachinePanel';
 
@@ -63,6 +64,8 @@ export function MethodSectionRenderer({
       return <SaleAdjustmentGridPanel {...panelProps} />;
     case 'DC_MARKET':
       return <DirectComparisonPanel {...panelProps} />;
+    case 'I':
+      return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
       return <CostMachinePanel {...panelProps} />;
     default:

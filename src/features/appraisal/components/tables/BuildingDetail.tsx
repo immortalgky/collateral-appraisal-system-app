@@ -64,8 +64,18 @@ export function BuildingDetail({ name }: BuildingDetailProps) {
         rowGrouping={{
           field: 'isBuilding',
           groups: [
-            { value: true, label: 'Building', className: 'bg-primary-50', subtotalClassName: 'bg-primary-50/50' },
-            { value: false, label: 'Non-Building', className: 'bg-amber-50', subtotalClassName: 'bg-amber-50/50' },
+            {
+              value: true,
+              label: 'Building',
+              className: 'bg-primary-50',
+              subtotalClassName: 'bg-primary-50/50',
+            },
+            {
+              value: false,
+              label: 'Non-Building',
+              className: 'bg-amber-50',
+              subtotalClassName: 'bg-amber-50/50',
+            },
           ],
         }}
         defaultValue={{
@@ -259,9 +269,7 @@ const propertiesTableHeader: FormTableHeader[] = [
       return (
         <span
           className={`inline-flex items-center justify-center text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-            isGross
-              ? 'bg-success-100 text-success-700'
-              : 'bg-primary-100 text-primary-700'
+            isGross ? 'bg-success-100 text-success-700' : 'bg-primary-100 text-primary-700'
           }`}
         >
           {isGross ? 'Gross' : 'Period'}

@@ -152,6 +152,8 @@ export function useDerivedFields<
     name: depNames as any,
   });
 
+  const depValuesKey = useMemo(() => JSON.stringify(depValues), [depValues]);
+
   // Register target paths only once (avoids re-register churn)
   const registeredRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -203,5 +205,5 @@ export function useDerivedFields<
 
       if (!didAnyUpdate) break; // settled
     }
-  }, [rules, ctx, getValues, setValue, depValues]);
+  }, [rules, ctx, getValues, setValue, depValuesKey]);
 }
