@@ -1,4 +1,6 @@
 import { toNumber } from '../domain/calculation';
+import { resolveRefTarget } from '../domain/dcf/resolveRefTarget';
+import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
 import type { DCFAssumption, DCFCategory, DCFSection } from '../types/dcf';
 import type { DerivedFieldRule } from './useDerivedFieldArray';
 
@@ -358,6 +360,443 @@ export function buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRu
         deps: [`${name}.detail.roomIncome.${idx}`],
         compute: ({ getValues }) => {
           return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodSpecifiedRentalIncomePerMonthDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.roomRateIncrease.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+          if (idx % increateRateYrs === 0) return increaseRatePct;
+          return 0;
+        },
+      },
+      {
+        targetPath: `${name}.detail.roomIncome.${idx}`,
+        deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.sumRoomIncomePerYear`],
+        compute: ({ getValues }) => {
+          const totalRoomIncomePerYear = getValues(`${name}.detail.sumRoomIncomePerYear`) ?? 0;
+          const increaseRate = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
+
+          if (idx === 0) return totalRoomIncomePerYear;
+
+          const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`) ?? 0;
+
+          return toNumber(prevRoomIncome * (1 + increaseRate / 100));
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.roomIncome.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.occupancyRate.${idx}`,
+        deps: [
+          `${name}.detail.occupancyRateFirstYearPct`,
+          `${name}.detail.occupancyRatePct`,
+          `${name}.detail.occupancyRateYrs`,
+        ],
+        when: ({ getFieldState, formState }) => {
+          const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
+          return !isDirty;
+        },
+        compute: ({ getValues }) => {
+          const occupancyRateFirstYearPct =
+            getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
+          const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
+          const occupancyRateYrs = getValues(`${name}.detail.occupancyRateYrs`) ?? 0;
+
+          if (idx === 0) return occupancyRateFirstYearPct;
+
+          const prevOccupancyRate = getValues(`${name}.detail.occupancyRate.${idx - 1}`) ?? 0;
+
+          if (idx % occupancyRateYrs === 0) return prevOccupancyRate + occupancyRatePct;
+
+          return prevOccupancyRate;
+        },
+      },
+      {
+        targetPath: `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+        deps: [`${name}.detail.sumSaleableArea`],
+        compute: ({ getValues }) => {
+          const saleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
+          const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
+          return toNumber(saleableArea * (occupancyRate / 100));
+        },
+      },
+      {
+        targetPath: `${name}.detail.rentalRateIncrease.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+          if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
+          return 0;
+        },
+      },
+      {
+        targetPath: `${name}.detail.avgRentalRate.${idx}`,
+        deps: [`${name}.detail.avgRentalRatePerMonth`, `${name}.detail.rentalRateIncrease.${idx}`],
+        compute: ({ getValues }) => {
+          const avgRentalRatePerMonth = getValues(`${name}.detail.avgRentalRatePerMonth`) ?? 0;
+          const increaseRate = getValues(`${name}.detail.rentalRateIncrease.${idx}`) ?? 0;
+
+          if (idx === 0) return toNumber(avgRentalRatePerMonth);
+
+          const prevAvgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx - 1}`) ?? 0;
+
+          return toNumber(prevAvgRentalRate * (1 + increaseRate / 100));
+        },
+      },
+      {
+        targetPath: `${name}.detail.totalRentalIncome.${idx}`,
+        deps: [
+          `${name}.detail.avgRentalRate.${idx}`,
+          `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+        ],
+        compute: ({ getValues }) => {
+          const avgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx}`) ?? 0;
+          const totalSaleableAreaDeductByOccRate =
+            getValues(`${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`) ?? 0;
+
+          return toNumber(avgRentalRate * totalSaleableAreaDeductByOccRate * 12);
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.totalRentalIncome.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.totalRentalIncome.${idx}`) ?? 0;
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.roomRateIncrease.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+          if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
+          return 0;
+        },
+      },
+      {
+        targetPath: `${name}.detail.roomExpense.${idx}`,
+        deps: [
+          `${name}.detail.roomRateIncrease.${idx}`,
+          `${name}.detail.sumTotalRoomExpensePerYear`,
+        ],
+        compute: ({ getValues }) => {
+          const firstYearAmt = getValues(`${name}.detail.sumTotalRoomExpensePerYear`) ?? 0;
+
+          if (idx === 0) return firstYearAmt;
+
+          const prevRoomIncome = getValues(`${name}.detail.roomExpense.${idx - 1}`);
+          const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
+
+          return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.roomExpense.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.roomExpense.${idx}`) ?? 0;
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRulesDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.increaseRate.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+          if (idx % increateRateYrs === 0) return increaseRatePct;
+          return 0;
+        },
+      },
+      {
+        targetPath: `${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`,
+        deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.firstYearAmt`],
+        compute: ({ getValues }) => {
+          const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+
+          if (idx === 0) return firstYearAmt;
+
+          const prevTotalFoodAndBeveragePerRoomPerDay =
+            getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx - 1}`) ?? 0;
+          const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
+
+          return toNumber(prevTotalFoodAndBeveragePerRoomPerDay * (1 + increaseRate / 100));
+        },
+      },
+      {
+        targetPath: `${name}.detail.totalFoodAndBeveragePerRoomPerYear.${idx}`,
+        deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
+        compute: ({ getValues }) => {
+          const totalFoodAndBeveragePerRoomPerDay =
+            getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
+          const totalNumberOfSaleableArea =
+            getDCFFilteredAssumptions(getValues, a => a.method?.methodType === '01')?.[0]
+              ?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
+
+          return toNumber(totalFoodAndBeveragePerRoomPerDay) * toNumber(totalNumberOfSaleableArea);
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerYear.${idx}`) ?? 0;
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.increaseRate.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+          if (idx % increateRateYrs === 0) return increaseRatePct;
+          return 0;
+        },
+      },
+      {
+        targetPath: `${name}.detail.energyCostIndexIncrease.${idx}`,
+        deps: [`${name}.detail.increaseRate.${idx}`, `${name}.detail.energyCostIndex`],
+        compute: ({ getValues }) => {
+          const firstYearAmt = getValues(`${name}.detail.energyCostIndex`) ?? 0;
+
+          if (idx === 0) return firstYearAmt;
+
+          const prevEnergyCostIndexIncrease =
+            getValues(`${name}.detail.energyCostIndexIncrease.${idx - 1}`) ?? 0;
+          const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
+
+          return toNumber(prevEnergyCostIndexIncrease * (1 + increaseRate / 100));
+        },
+      },
+      {
+        targetPath: `${name}.detail.totalEnegyCost.${idx}`,
+        deps: [`${name}.detail.energyCostIndexIncrease.${idx}`],
+        compute: ({ getValues }) => {
+          const totalEnegyCost = getValues(`${name}.detail.energyCostIndexIncrease.${idx}`) ?? 0;
+          const totalNumberOfSaleableArea =
+            getDCFFilteredAssumptions(getValues, a => a.method.methodType === '06')?.[0]?.assumption
+              .method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
+
+          return toNumber(totalEnegyCost) * toNumber(totalNumberOfSaleableArea) * 12;
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.totalEnegyCost.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.totalEnegyCost.${idx}`) ?? 0;
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  console.log('build new replacemen rules');
+  return [
+    // {
+    //   targetPath: `${name}.detail.newReplacementCost`,
+    //   deps: [],
+    //   compute: ({ ctx }) => {
+    //     const newReplacementCost = (ctx.properties ?? [])
+    //       .filter(p => p.propertyType === 'B')
+    //       .flatMap(p => p.depreciationDetails)
+    //       .filter(d => {
+    //         console.log(d);
+    //         return d.isBuilding;
+    //       })
+    //       .reduce((acc, curr) => {
+    //         const priceBeforeDepreciation = curr.priceBeforeDepreciation ?? 0;
+    //         return acc + toNumber(priceBeforeDepreciation);
+    //       }, 0);
+
+    //     return newReplacementCost;
+    //   },
+    // },
+    ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+      return [
+        {
+          targetPath: `${name}.detail.proportionOfNewReplacementCosts.${idx}`,
+          deps: [`${name}.detail.proportionPct`],
+          compute: ({ getValues, ctx }) => {
+            console.log(ctx.newReplacementCost);
+            const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
+            const newReplacementCost = ctx.newReplacementCost ?? 0;
+
+            return toNumber((Number(proportionPct) / 100) * Number(newReplacementCost));
+          },
+        },
+        {
+          targetPath: `${name}.totalMethodValues.${idx}`,
+          deps: [`${name}.detail.proportionOfNewReplacementCosts.${idx}`],
+          compute: ({ getValues }) => {
+            const proportionOfNewReplacementCost =
+              getValues(`${name}.detail.proportionOfNewReplacementCosts.${idx}`) ?? 0;
+
+            return proportionOfNewReplacementCost;
+          },
+        },
+      ];
+    }),
+  ];
+}
+
+export function buildMethodProportionDerivedRules({
+  sections,
+  name,
+  totalNumberOfYears,
+}: {
+  sections: DCFSection[];
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  // const { getValues } = useFormContext();
+
+  // const refTargetId = useWatch({ name: `${name}.detail.refTargetId` });
+  // const watchSecions = useWatch({ name: 'sections' });
+
+  // const refTarget = useMemo(() => {
+  //   return resolveRefTarget(sections, refTargetId);
+  // }, [getValues, refTargetId, watchSecions]);
+
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.proportionPct`, `${name}.detail.refAssumption`],
+        compute: ({ getValues, ctx }) => {
+          const proportionPct = getValues(`${name}.detail.proportionPct`);
+          const totalAssumptionValue =
+            resolveRefTarget(sections, getValues(`${name}.detail.refTargetId`))?.[idx] ?? 0;
+          return toNumber((Number(proportionPct) / 100) * Number(totalAssumptionValue));
+        },
+      },
+    ];
+  });
+}
+
+export function buildMethodSpecifiedValueWithGrowthDerivedRules({
+  sections,
+  name,
+  totalNumberOfYears,
+}: {
+  sections: DCFSection[];
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.increaseRates.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increaseRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+
+          if (idx % increaseRateYrs === 0) return Number(increaseRatePct);
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [
+          `${name}.detail.firstYearAmt`,
+          `${name}.detail.increaseRatePct`,
+          `${name}.increaseRates.${idx}`,
+        ],
+        compute: ({ getValues }) => {
+          const prevYearValue = getValues(`${name}.totalMethodValues.${idx - 1}`) ?? 0;
+          const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+          const increaseRate = getValues(`${name}.increaseRates.${idx}`) ?? 0;
+
+          if (idx === 0) return firstYearAmt;
+
+          return toNumber(Number(prevYearValue) * (1 + Number(increaseRate) / 100));
         },
       },
     ];

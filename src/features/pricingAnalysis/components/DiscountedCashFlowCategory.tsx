@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
@@ -16,7 +16,7 @@ import { useAssumptionManagement } from '../domain/dcf/useAssumptionManagement';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   section: DCFSection;
   category: DCFCategory;
   totalNumberOfYears: number;
@@ -25,7 +25,7 @@ interface DiscountedCashFlowCategoryProps {
 
 export function DiscountedCashFlowCategory({
   name,
-  property,
+  properties,
   section,
   category,
   totalNumberOfYears,
@@ -42,6 +42,31 @@ export function DiscountedCashFlowCategory({
     handleOnCancelEditMode,
     handleOnSaveEditMode,
   } = useAssumptionManagement(name, getValues, setValue, control);
+
+  const activeAssumption = fields
+    .map((_, idx) => getValues(`${name}.assumptions.${idx}`) as DCFAssumption)
+    .find(a => a?.clientId === editing);
+
+  const modalInitialData = useMemo(() => {
+    if (!activeAssumption) return null;
+
+    return {
+      targetSectionClientId: section.clientId,
+      targetCategoryClientId: category.clientId,
+      targetAssumptionClientId: activeAssumption.clientId,
+      assumptionType: activeAssumption.assumptionType ?? null,
+      assumptionName: activeAssumption.assumptionName ?? null,
+      displayName: activeAssumption.assumptionName ?? null,
+      method: activeAssumption.method ?? null,
+    };
+  }, [
+    section.clientId,
+    category.clientId,
+    activeAssumption?.clientId,
+    activeAssumption?.assumptionType,
+    activeAssumption?.assumptionName,
+    activeAssumption?.method,
+  ]);
 
   const [isExpanded, setExpanded] = useState(true);
 
@@ -107,10 +132,10 @@ export function DiscountedCashFlowCategory({
             if (!assumption) return null;
 
             return (
-              <Fragment key={field.id}>
+              <Fragment key={assumption.dbId ?? assumption.clientId}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
-                  property={property}
+                  property={properties}
                   editing={editing}
                   assumption={assumption}
                   totalNumberOfYears={totalNumberOfYears}
@@ -118,7 +143,7 @@ export function DiscountedCashFlowCategory({
                   onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
                 />
 
-                {editing === assumption?.clientId && (
+                {/* {editing === assumption?.clientId && (
                   <DiscountedCashFlowMethodModal
                     initialData={{
                       targetSectionClientId: section.clientId,
@@ -135,10 +160,21 @@ export function DiscountedCashFlowCategory({
                     onSaveEditMode={handleOnSaveEditMode}
                     size="xl"
                   />
-                )}
+                )} */}
               </Fragment>
             );
           })}
+
+          {editing && modalInitialData && (
+            <DiscountedCashFlowMethodModal
+              initialData={modalInitialData}
+              getOuterFormValues={getValues}
+              editing={editing}
+              onCancelEditMode={handleOnCancelEditMode}
+              onSaveEditMode={handleOnSaveEditMode}
+              size="xl"
+            />
+          )}
 
           <tr>
             <td className={clsx(rowHeaderStyle)}>

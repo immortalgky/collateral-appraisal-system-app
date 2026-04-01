@@ -14,42 +14,42 @@ export function MethodSpecifiedValueWithGrowth({
   expanded,
   totalNumberOfYears,
 }: MethodSpecifiedValueWithGrowthProps) {
-  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-      return [
-        {
-          targetPath: `${name}.increaseRates.${idx}`,
-          deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
-          compute: ({ getValues }) => {
-            const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
-            const increaseRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
-            if (idx === 0) return 0;
+  // const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
+  //   return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+  //     return [
+  //       {
+  //         targetPath: `${name}.increaseRates.${idx}`,
+  //         deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+  //         compute: ({ getValues }) => {
+  //           const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+  //           const increaseRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+  //           if (idx === 0) return 0;
 
-            if (idx % increaseRateYrs === 0) return Number(increaseRatePct);
-          },
-        },
-        {
-          targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [
-            `${name}.detail.firstYearAmt`,
-            `${name}.detail.increaseRatePct`,
-            `${name}.increaseRates.${idx}`,
-          ],
-          compute: ({ getValues }) => {
-            const prevYearValue = getValues(`${name}.totalMethodValues.${idx - 1}`) ?? 0;
-            const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
-            const increaseRate = getValues(`${name}.increaseRates.${idx}`) ?? 0;
+  //           if (idx % increaseRateYrs === 0) return Number(increaseRatePct);
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.totalMethodValues.${idx}`,
+  //         deps: [
+  //           `${name}.detail.firstYearAmt`,
+  //           `${name}.detail.increaseRatePct`,
+  //           `${name}.increaseRates.${idx}`,
+  //         ],
+  //         compute: ({ getValues }) => {
+  //           const prevYearValue = getValues(`${name}.totalMethodValues.${idx - 1}`) ?? 0;
+  //           const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
+  //           const increaseRate = getValues(`${name}.increaseRates.${idx}`) ?? 0;
 
-            if (idx === 0) return firstYearAmt;
+  //           if (idx === 0) return firstYearAmt;
 
-            return formatFixed2(Number(prevYearValue) * (1 + Number(increaseRate) / 100));
-          },
-        },
-      ];
-    });
-  }, [totalNumberOfYears, name]);
+  //           return formatFixed2(Number(prevYearValue) * (1 + Number(increaseRate) / 100));
+  //         },
+  //       },
+  //     ];
+  //   });
+  // }, [totalNumberOfYears, name]);
 
-  useDerivedFields({ rules });
+  // useDerivedFields({ rules });
 
   return (
     <>

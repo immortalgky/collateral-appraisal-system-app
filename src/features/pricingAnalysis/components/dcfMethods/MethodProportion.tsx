@@ -3,30 +3,6 @@ import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDeriv
 import { useMemo } from 'react';
 import { RHFInputCell, toNumber } from '../table/RHFInputCell';
 import clsx from 'clsx';
-import type { DCFSection } from '../../types/dcf';
-
-function resolveRefTarget(sections: DCFSection[], refTargetId: DcfRefTargetId | null | undefined) {
-  if (!refTargetId) return null;
-
-  const [kind, id] = refTargetId.split(':');
-
-  if (kind === 'section') {
-    const section = sections.find(s => s.clientId === id);
-    return section ? section.totalSectionValues : null;
-  }
-
-  if (kind === 'category') {
-    const category = sections.flatMap(s => s.categories ?? []).find(c => c.clientId === id);
-    return category ? category.totalCategoryValues : null;
-  }
-
-  const assumption = sections
-    .flatMap(s => s.categories ?? [])
-    .flatMap(c => c.assumptions ?? [])
-    .find(a => a.clientId === id);
-
-  return assumption ? assumption.totalAssumptionValues : null;
-}
 
 interface MethodProportionProps {
   name: string;
@@ -38,32 +14,32 @@ export function MethodProportion({
   expanded,
   totalNumberOfYears,
 }: MethodProportionProps) {
-  const { getValues } = useFormContext();
+  // const { getValues } = useFormContext();
 
-  const refTargetId = useWatch({ name: `${name}.detail.refTargetId` });
-  const watchSecions = useWatch({ name: 'sections' });
+  // const refTargetId = useWatch({ name: `${name}.detail.refTargetId` });
+  // const watchSecions = useWatch({ name: 'sections' });
 
-  const refTarget = useMemo(() => {
-    return resolveRefTarget(getValues('sections'), refTargetId);
-  }, [getValues, refTargetId, watchSecions]);
+  // const refTarget = useMemo(() => {
+  //   return resolveRefTarget(getValues('sections'), refTargetId);
+  // }, [getValues, refTargetId, watchSecions]);
 
-  const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-      return [
-        {
-          targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.proportionPct`, `${name}.detail.refAssumption`],
-          compute: ({ getValues, ctx }) => {
-            const proportionPct = getValues(`${name}.detail.proportionPct`);
-            const totalAssumptionValue = ctx.refTarget?.[idx] ?? 0;
-            return toNumber((Number(proportionPct) / 100) * Number(totalAssumptionValue));
-          },
-        },
-      ];
-    });
-  }, [totalNumberOfYears, name]);
+  // const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
+  //   return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+  //     return [
+  //       {
+  //         targetPath: `${name}.totalMethodValues.${idx}`,
+  //         deps: [`${name}.detail.proportionPct`, `${name}.detail.refAssumption`],
+  //         compute: ({ getValues, ctx }) => {
+  //           const proportionPct = getValues(`${name}.detail.proportionPct`);
+  //           const totalAssumptionValue = ctx.refTarget?.[idx] ?? 0;
+  //           return toNumber((Number(proportionPct) / 100) * Number(totalAssumptionValue));
+  //         },
+  //       },
+  //     ];
+  //   });
+  // }, [totalNumberOfYears, name]);
 
-  useDerivedFields({ rules, ctx: { refTarget } });
+  // useDerivedFields({ rules, ctx: { refTarget } });
 
   return (
     <>

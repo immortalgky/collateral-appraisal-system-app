@@ -2,7 +2,7 @@ import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import { assumptionParams, categoryParams, methodParams } from '../data/dcfParameters';
+import { assumptionParams, methodParams } from '../data/dcfParameters';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../types/dcf';
@@ -38,6 +38,8 @@ export function DiscountedCashFlowMethodModal({
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
   });
+
+  console.log('render modal with initial data', initialData);
 
   const { handleSubmit, reset, getValues, control } = methods;
 

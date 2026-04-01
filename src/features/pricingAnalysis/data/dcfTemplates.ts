@@ -1,5 +1,209 @@
 import type { DCFTemplateType } from '../types/dcf';
 
+export const dcfTestTemplate: DCFTemplateType = {
+  id: 'dcf-000',
+  templateCode: 'dcf-test',
+  templateName: 'dcf-test',
+  totalNumberOfYears: 6,
+  totalNumberOfDayInYear: 365,
+  capitalizeRate: 3,
+  discountedRate: 5,
+  sections: [
+    {
+      sectionType: 'income',
+      sectionName: 'Income',
+      identifier: 'positive',
+      displaySeq: 0,
+      categories: [
+        {
+          categoryType: '',
+          categoryName: 'Operating Income',
+          identifier: 'income',
+          displaySeq: 0,
+          assumptions: [
+            {
+              assumptionType: 'I00',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
+                methodType: '01',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I04',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 1,
+              method: {
+                methodType: '02',
+                detail: { proportionPct: 10, refTargetId: 'a1' },
+              },
+            },
+            {
+              assumptionType: 'I05',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 2,
+              method: {
+                methodType: '03',
+              },
+            },
+            {
+              assumptionType: 'I05',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 2,
+              method: {
+                methodType: '04',
+              },
+            },
+            {
+              assumptionType: 'I05',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 2,
+              method: {
+                methodType: '05',
+              },
+            },
+            {
+              assumptionType: 'I05',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 2,
+              method: {
+                methodType: '06',
+              },
+            },
+            {
+              assumptionType: 'I05',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 2,
+              method: {
+                methodType: '13',
+              },
+            },
+            {
+              assumptionType: 'I05',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 2,
+              method: {
+                methodType: '14',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      sectionType: 'expenses',
+      sectionName: 'Expenses / Costs',
+      identifier: 'negative',
+      displaySeq: 1,
+      categories: [
+        {
+          categoryType: 'c3',
+          categoryName: 'Direct Operating Expenses',
+          identifier: 'expenses',
+          displaySeq: 0,
+          assumptions: [
+            {
+              assumptionType: 'E17',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '07',
+              },
+            },
+            {
+              assumptionType: 'E09',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '08',
+              },
+            },
+            {
+              assumptionType: 'E12',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '09',
+              },
+            },
+          ],
+        },
+        {
+          categoryType: 'c4',
+          categoryName: 'Administrative and Management Expenses',
+          identifier: 'expenses',
+          displaySeq: 0,
+          assumptions: [
+            {
+              assumptionType: 'E11',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '10',
+              },
+            },
+            {
+              assumptionType: 'E19',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '11',
+              },
+            },
+            {
+              assumptionType: 'E15',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '12',
+              },
+            },
+          ],
+        },
+        {
+          categoryType: 'E22',
+          categoryName: 'Gross Operating Profit (GOP)',
+          identifier: 'gop',
+          displaySeq: 0,
+          assumptions: [
+            {
+              assumptionType: 'a1',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '15',
+                detail: {},
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      sectionType: 'summary',
+      sectionName: 'Summary',
+      identifier: 'empty',
+      displaySeq: 2,
+    },
+  ],
+};
+
 export const dcfHotelTemplate: DCFTemplateType = {
   id: 'dcf-001',
   templateCode: 'dcf-hotel',
@@ -1176,6 +1380,7 @@ export const directApartmentTemplate: DCFTemplateType = {
 };
 
 export const dcfTemplateQueries = [
+  { id: 'dcf-000', data: dcfTestTemplate },
   { id: 'dcf-001', data: dcfHotelTemplate },
   { id: 'dcf-002', data: dcfApartmentTemplate },
   { id: 'dcf-003', data: dcfOfficeTemplate },
@@ -1184,6 +1389,7 @@ export const dcfTemplateQueries = [
 ];
 
 export const dcfTemplateList = [
+  { templateCode: 'dcf-test', templateName: 'Test', id: 'dcf-000' },
   { templateCode: 'dcf-hotel', templateName: 'Hotel', id: 'dcf-001' },
   { templateCode: 'dcf-apartment', templateName: 'Apartment', id: 'dcf-002' },
   { templateCode: 'dcf-office', templateName: 'Office', id: 'dcf-003' },

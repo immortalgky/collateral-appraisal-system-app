@@ -1,6 +1,5 @@
 import { MethodPositionBasedSalaryCalculationModal } from './dcfMethods/MethodPositionBasedSalaryCalculationModal';
 import { MethodProportionModal } from './dcfMethods/MethodProportionModal';
-import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProportionOfTheNewReplacementCost';
 import { MethodProportionOfTheNewReplacementCostModal } from './dcfMethods/MethodProportionOfTheNewReplacementCostModal';
 import { MethodRoomCostBasedOnExpensesPerRoomPerDayModal } from './dcfMethods/MethodRoomCostBasedOnExpensesPerRoomPerDayModal';
 import { MethodSpecifiedEnergyCostIndexModal } from './dcfMethods/MethodSpecifiedEnergyCostIndexModal';

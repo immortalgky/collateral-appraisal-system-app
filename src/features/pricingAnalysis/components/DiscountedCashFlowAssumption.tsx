@@ -9,7 +9,7 @@ import { assumptionParams, methodParams } from '../data/dcfParameters';
 
 interface DiscountedCashFlowAssumptionProps {
   name: string;
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   totalNumberOfYears: number;
   assumption: DCFAssumption;
   editing: string | null;
@@ -19,7 +19,7 @@ interface DiscountedCashFlowAssumptionProps {
 
 export function DiscountedCashFlowAssumption({
   name,
-  property,
+  properties,
   totalNumberOfYears,
   assumption,
   editing,
@@ -127,7 +127,6 @@ export function DiscountedCashFlowAssumption({
       <DiscountedCashFlowMethodRenderer
         key={assumption.dbId ?? assumption.clientId}
         name={`${name}.method`}
-        property={property}
         editing={editing}
         expanded={expanded}
         assumptionId={assumption.clientId}

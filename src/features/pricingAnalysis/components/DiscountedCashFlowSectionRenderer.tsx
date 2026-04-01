@@ -10,7 +10,7 @@ import { DirectCashFlowSummarySection } from './dcfSections/DirectCashFlowSummar
 
 interface DiscountedCashFlowSectionRendererProps {
   name: string;
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   section: DCFSection;
   totalNumberOfYears: number;
   icon: string;
@@ -18,7 +18,7 @@ interface DiscountedCashFlowSectionRendererProps {
 }
 export function DiscountedCashFlowSectionRenderer({
   name,
-  property,
+  properties,
   section,
   totalNumberOfYears,
   icon,
@@ -39,7 +39,7 @@ export function DiscountedCashFlowSectionRenderer({
               <DiscountedCashFlowCategory
                 key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
-                property={property}
+                property={properties}
                 section={section}
                 category={category}
                 totalNumberOfYears={totalNumberOfYears}
@@ -64,7 +64,7 @@ export function DiscountedCashFlowSectionRenderer({
               <DiscountedCashFlowCategory
                 key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
-                property={property}
+                property={properties}
                 totalNumberOfYears={totalNumberOfYears}
                 section={section}
                 category={category}

@@ -11,6 +11,7 @@ import { MethodFooterActions } from '@features/pricingAnalysis/components/Method
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { dcfTemplateList, dcfTemplateQueries } from '../data/dcfTemplates';
 import { initializeDiscountedCashFlowForm } from '../adapters/initializeDiscountedCashFlowForm';
+import { DiscountedCashFlowForm } from './DiscountedCashFlowForm';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -20,7 +21,7 @@ interface DiscountedCashFlowPanelProps {
     methodId?: string;
     methodType?: string;
   };
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   templateList: unknown;
   onCalculationSave: (payload: {
     approachType: string;
@@ -32,13 +33,11 @@ interface DiscountedCashFlowPanelProps {
 }
 export function DiscountedCashFlowPanel({
   activeMethod,
-  property,
+  properties,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
-  // const { methodId, methodType } = activeMethod ?? {};
-
   const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCFForm) });
 
   const { handleSubmit, reset, getValues } = methods;
@@ -116,7 +115,7 @@ export function DiscountedCashFlowPanel({
           <div className="flex flex-col gap-1">
             <DiscountedCashFlowTable
               totalNumberOfYears={data.totalNumberOfYears}
-              property={property}
+              properties={properties}
             />
 
             {/* footer save, reset, cancel */}

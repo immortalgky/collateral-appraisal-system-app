@@ -9,9 +9,9 @@ import {
   buildCalculateTotalCategoryDerivedRules,
   buildCalculateTotalIncomeDerivedRules,
 } from '../adapters/buildDiscountedCashFlowDerivedRules';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useDerivedFields } from '../adapters/useDerivedFieldArray';
-import { useCalculations } from '../domain/dcf/useCalculations';
+import { buildMethodCalculationRules } from '../domain/dcf/useCalculations';
 
 export interface SectionColor {
   bg: string;
@@ -84,15 +84,20 @@ const getIconSection = (identifier: string) => {
 
 interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
 }
 
 export function DiscountedCashFlowTable({
   totalNumberOfYears,
-  property,
+  properties,
 }: DiscountedCashFlowTableProps) {
   const { control } = useFormContext();
-  const sections = useWatch({ control, name: 'sections' });
+  const watchSections = useWatch({ control, name: 'sections' });
+
+  const sections = useMemo(() => {
+    console.log('watch sections', watchSections);
+    return watchSections ?? [];
+  }, [watchSections]);
 
   // rules
   const calculateTotalIncomeDerivedRules = useMemo(() => {
@@ -111,7 +116,30 @@ export function DiscountedCashFlowTable({
   useDerivedFields({ rules: calculateTotalCategoryDerivedRules });
   useDerivedFields({ rules: calculateTotalAssumptionDerivedRules });
 
-  useCalculations(sections, totalNumberOfYears);
+  const methodCalculationRules = useMemo(() => {
+    return buildMethodCalculationRules(sections, totalNumberOfYears);
+  }, [sections, totalNumberOfYears]);
+
+  const newReplacementCost = (properties ?? [])
+    .filter((p: any) => p.propertyType === 'B')
+    .flatMap((p: any) => p.depreciationDetails ?? [])
+    .filter((d: any) => d.isBuilding)
+    .reduce((sum: number, d: any) => sum + Number(d.priceBeforeDepreciation ?? 0), 0);
+
+  // const derivedCtx = useMemo(() => ({ newReplacementCost }), [newReplacementCost]);
+
+  const derivedCtx = useRef({ newReplacementCost });
+
+  useEffect(() => {
+    if (derivedCtx.current.newReplacementCost != newReplacementCost) {
+      derivedCtx.current.newReplacementCost = newReplacementCost;
+    }
+  }, [newReplacementCost, watchSections]);
+
+  useDerivedFields({
+    rules: methodCalculationRules,
+    ctx: { newReplacementCost: derivedCtx.current.newReplacementCost },
+  });
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
@@ -152,9 +180,9 @@ export function DiscountedCashFlowTable({
             {(sections ?? []).map((section: DCFSection, index) => {
               return (
                 <DiscountedCashFlowSectionRenderer
-                  key={section.clientId ?? `section.${index}`}
+                  key={section.dbId ?? section.clientId}
                   name={`sections.${index}`}
-                  property={property}
+                  property={properties}
                   section={section}
                   color={getSectionColor(section.sectionType)}
                   totalNumberOfYears={totalNumberOfYears}

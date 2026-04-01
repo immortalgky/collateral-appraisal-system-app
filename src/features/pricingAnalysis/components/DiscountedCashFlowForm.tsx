@@ -3,6 +3,7 @@ import { DiscountedCashFlowTable } from './DiscountedCashFlowTable';
 
 interface DiscountedCashFlowFormProps {
   data: DCFFormType;
+  properties: Record<string, unknown>[] | undefined;
 }
 
 export function DiscountedCashFlowForm({ data }: DiscountedCashFlowFormProps) {
@@ -20,7 +21,10 @@ export function DiscountedCashFlowForm({ data }: DiscountedCashFlowFormProps) {
               </h3>
             </div>
             <div className="px-4">
-              <DiscountedCashFlowTable totalNumberOfYears={data.totalNumberOfYears} />
+              <DiscountedCashFlowTable
+                totalNumberOfYears={data.totalNumberOfYears}
+                properties={properties}
+              />
             </div>
           </div>
           <div>

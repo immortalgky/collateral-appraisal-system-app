@@ -59,7 +59,7 @@ export function useEnrichedPricingAnalysis({
       if (!!prop.propertyId && !!prop.sequenceInGroup) {
         allPropertyEntries.push({
           propertyId: prop.propertyId,
-          propertyType: prop.propertyType ?? 'Lands',
+          propertyType: prop.propertyType ?? 'L',
           groupId: gId,
           sequenceInGroup: prop.sequenceInGroup,
         });
@@ -192,7 +192,6 @@ export function useEnrichedPricingAnalysis({
 const typeToDetailEndpoint: Record<string, string> = {
   Lands: 'land-detail',
   'Lease Agreement Lands': 'land-detail',
-  Building: 'building-detail',
   'Lease Agreement Building': 'building-detail',
   'Land and building': 'land-and-building-detail',
   'Lease Agreement Land and building': 'land-and-building-detail',
@@ -201,6 +200,7 @@ const typeToDetailEndpoint: Record<string, string> = {
   Vehicle: 'vehicle-detail',
   Vessel: 'vessel-detail',
   L: 'land-detail',
+  B: 'building-detail',
   U: 'condo-detail',
   LB: 'land-and-building-detail',
 };

@@ -12,45 +12,45 @@ export function MethodSpecifiedRentalIncomePerMonth({
   expanded,
   totalNumberOfYears,
 }: MethodSpecifiedRentalIncomePerMonthProps) {
-  const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
-    (_, idx) => {
-      return [
-        {
-          targetPath: `${name}.detail.roomRateIncrease.${idx}`,
-          deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
-          compute: ({ getValues }) => {
-            const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
-            const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
-            if (idx === 0) return 0;
-            if (idx % increateRateYrs === 0) return increaseRatePct;
-            return 0;
-          },
-        },
-        {
-          targetPath: `${name}.detail.roomIncome.${idx}`,
-          deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.sumRoomIncomePerYear`],
-          compute: ({ getValues }) => {
-            const totalRoomIncomePerYear = getValues(`${name}.detail.sumRoomIncomePerYear`) ?? 0;
-            const increaseRate = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
+  // const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
+  //   (_, idx) => {
+  //     return [
+  //       {
+  //         targetPath: `${name}.detail.roomRateIncrease.${idx}`,
+  //         deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+  //         compute: ({ getValues }) => {
+  //           const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+  //           const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+  //           if (idx === 0) return 0;
+  //           if (idx % increateRateYrs === 0) return increaseRatePct;
+  //           return 0;
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.detail.roomIncome.${idx}`,
+  //         deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.sumRoomIncomePerYear`],
+  //         compute: ({ getValues }) => {
+  //           const totalRoomIncomePerYear = getValues(`${name}.detail.sumRoomIncomePerYear`) ?? 0;
+  //           const increaseRate = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
-            if (idx === 0) return totalRoomIncomePerYear;
+  //           if (idx === 0) return totalRoomIncomePerYear;
 
-            const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`) ?? 0;
+  //           const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`) ?? 0;
 
-            return toNumber(prevRoomIncome * (1 + increaseRate / 100));
-          },
-        },
-        {
-          targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.roomIncome.${idx}`],
-          compute: ({ getValues }) => {
-            return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
-          },
-        },
-      ];
-    },
-  );
-  useDerivedFields({ rules });
+  //           return toNumber(prevRoomIncome * (1 + increaseRate / 100));
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.totalMethodValues.${idx}`,
+  //         deps: [`${name}.detail.roomIncome.${idx}`],
+  //         compute: ({ getValues }) => {
+  //           return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+  //         },
+  //       },
+  //     ];
+  //   },
+  // );
+  // useDerivedFields({ rules });
 
   return (
     <>

@@ -12,97 +12,97 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
   expanded,
   totalNumberOfYears,
 }: MethodSpecifiedRentalIncomePerSquareMeterProps) {
-  const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
-    (_, idx) => {
-      return [
-        {
-          targetPath: `${name}.detail.occupancyRate.${idx}`,
-          deps: [
-            `${name}.detail.occupancyRateFirstYearPct`,
-            `${name}.detail.occupancyRatePct`,
-            `${name}.detail.occupancyRateYrs`,
-          ],
-          when: ({ getFieldState, formState }) => {
-            const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
-            return !isDirty;
-          },
-          compute: ({ getValues }) => {
-            const occupancyRateFirstYearPct =
-              getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
-            const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
-            const occupancyRateYrs = getValues(`${name}.detail.occupancyRateYrs`) ?? 0;
+  // const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
+  //   (_, idx) => {
+  //     return [
+  //       {
+  //         targetPath: `${name}.detail.occupancyRate.${idx}`,
+  //         deps: [
+  //           `${name}.detail.occupancyRateFirstYearPct`,
+  //           `${name}.detail.occupancyRatePct`,
+  //           `${name}.detail.occupancyRateYrs`,
+  //         ],
+  //         when: ({ getFieldState, formState }) => {
+  //           const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
+  //           return !isDirty;
+  //         },
+  //         compute: ({ getValues }) => {
+  //           const occupancyRateFirstYearPct =
+  //             getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
+  //           const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
+  //           const occupancyRateYrs = getValues(`${name}.detail.occupancyRateYrs`) ?? 0;
 
-            if (idx === 0) return occupancyRateFirstYearPct;
+  //           if (idx === 0) return occupancyRateFirstYearPct;
 
-            const prevOccupancyRate = getValues(`${name}.detail.occupancyRate.${idx - 1}`) ?? 0;
+  //           const prevOccupancyRate = getValues(`${name}.detail.occupancyRate.${idx - 1}`) ?? 0;
 
-            if (idx % occupancyRateYrs === 0) return prevOccupancyRate + occupancyRatePct;
+  //           if (idx % occupancyRateYrs === 0) return prevOccupancyRate + occupancyRatePct;
 
-            return prevOccupancyRate;
-          },
-        },
-        {
-          targetPath: `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
-          deps: [`${name}.detail.sumSaleableArea`],
-          compute: ({ getValues }) => {
-            const saleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
-            const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
-            return toNumber(saleableArea * (occupancyRate / 100));
-          },
-        },
-        {
-          targetPath: `${name}.detail.rentalRateIncrease.${idx}`,
-          deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
-          compute: ({ getValues }) => {
-            const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
-            const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
-            if (idx === 0) return 0;
-            if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
-            return 0;
-          },
-        },
-        {
-          targetPath: `${name}.detail.avgRentalRate.${idx}`,
-          deps: [
-            `${name}.detail.avgRentalRatePerMonth`,
-            `${name}.detail.rentalRateIncrease.${idx}`,
-          ],
-          compute: ({ getValues }) => {
-            const avgRentalRatePerMonth = getValues(`${name}.detail.avgRentalRatePerMonth`) ?? 0;
-            const increaseRate = getValues(`${name}.detail.rentalRateIncrease.${idx}`) ?? 0;
+  //           return prevOccupancyRate;
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+  //         deps: [`${name}.detail.sumSaleableArea`],
+  //         compute: ({ getValues }) => {
+  //           const saleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
+  //           const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
+  //           return toNumber(saleableArea * (occupancyRate / 100));
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.detail.rentalRateIncrease.${idx}`,
+  //         deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+  //         compute: ({ getValues }) => {
+  //           const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+  //           const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+  //           if (idx === 0) return 0;
+  //           if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
+  //           return 0;
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.detail.avgRentalRate.${idx}`,
+  //         deps: [
+  //           `${name}.detail.avgRentalRatePerMonth`,
+  //           `${name}.detail.rentalRateIncrease.${idx}`,
+  //         ],
+  //         compute: ({ getValues }) => {
+  //           const avgRentalRatePerMonth = getValues(`${name}.detail.avgRentalRatePerMonth`) ?? 0;
+  //           const increaseRate = getValues(`${name}.detail.rentalRateIncrease.${idx}`) ?? 0;
 
-            if (idx === 0) return toNumber(avgRentalRatePerMonth);
+  //           if (idx === 0) return toNumber(avgRentalRatePerMonth);
 
-            const prevAvgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx - 1}`) ?? 0;
+  //           const prevAvgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx - 1}`) ?? 0;
 
-            return toNumber(prevAvgRentalRate * (1 + increaseRate / 100));
-          },
-        },
-        {
-          targetPath: `${name}.detail.totalRentalIncome.${idx}`,
-          deps: [
-            `${name}.detail.avgRentalRate.${idx}`,
-            `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
-          ],
-          compute: ({ getValues }) => {
-            const avgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx}`) ?? 0;
-            const totalSaleableAreaDeductByOccRate =
-              getValues(`${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`) ?? 0;
+  //           return toNumber(prevAvgRentalRate * (1 + increaseRate / 100));
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.detail.totalRentalIncome.${idx}`,
+  //         deps: [
+  //           `${name}.detail.avgRentalRate.${idx}`,
+  //           `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+  //         ],
+  //         compute: ({ getValues }) => {
+  //           const avgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx}`) ?? 0;
+  //           const totalSaleableAreaDeductByOccRate =
+  //             getValues(`${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`) ?? 0;
 
-            return toNumber(avgRentalRate * totalSaleableAreaDeductByOccRate * 12);
-          },
-        },
-        {
-          targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.totalRentalIncome.${idx}`],
-          compute: ({ getValues }) => {
-            return getValues(`${name}.detail.totalRentalIncome.${idx}`) ?? 0;
-          },
-        },
-      ];
-    },
-  );
-  useDerivedFields({ rules });
+  //           return toNumber(avgRentalRate * totalSaleableAreaDeductByOccRate * 12);
+  //         },
+  //       },
+  //       {
+  //         targetPath: `${name}.totalMethodValues.${idx}`,
+  //         deps: [`${name}.detail.totalRentalIncome.${idx}`],
+  //         compute: ({ getValues }) => {
+  //           return getValues(`${name}.detail.totalRentalIncome.${idx}`) ?? 0;
+  //         },
+  //       },
+  //     ];
+  //   },
+  // );
+  // useDerivedFields({ rules });
 
   return (
     <>

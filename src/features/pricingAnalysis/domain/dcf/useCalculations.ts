@@ -3,9 +3,17 @@ import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import {
   buildMethodPositionBasedSalaryCalculationDerviedRules,
+  buildMethodProportionDerivedRules,
+  buildMethodProportionOfTheNewReplacementCostDerivedRules,
+  buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules,
+  buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRulesDerivedRules,
+  buildMethodSpecifiedEnergyCostIndexDerivedRules,
+  buildMethodSpecifiedRentalIncomePerMonthDerivedRules,
+  buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules,
   buildMethodSpecifiedRoomIncomePerDayDerivedRules,
   buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
   buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
+  buildMethodSpecifiedValueWithGrowthDerivedRules,
 } from '../../adapters/buildDiscountedCashFlowDerivedRules';
 
 type MethodType = DCFMethod['methodType'];
@@ -18,12 +26,23 @@ type MethodRuleBuilder = (args: {
 
 const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '01': buildMethodSpecifiedRoomIncomePerDayDerivedRules,
+  // '02'
   '03': buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
   '04': buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
+  '05': buildMethodSpecifiedRentalIncomePerMonthDerivedRules,
+  '06': buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules,
+  '07': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules,
+  '08': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRulesDerivedRules,
   '09': buildMethodPositionBasedSalaryCalculationDerviedRules,
+  // // '10':
+  '11': buildMethodSpecifiedEnergyCostIndexDerivedRules,
+  '12': buildMethodProportionOfTheNewReplacementCostDerivedRules,
+  // '13': buildMethodProportionDerivedRules,
+  '14': buildMethodSpecifiedValueWithGrowthDerivedRules,
+  // '15':
 };
 
-function buildCalculationRules(
+export function buildMethodCalculationRules(
   sections: DCFSection[] = [],
   totalNumberOfYears: number,
 ): DerivedFieldRule[] {
@@ -48,14 +67,4 @@ function buildCalculationRules(
       });
     });
   });
-}
-
-export function useCalculations(sections: DCFSection[] = [], totalNumberOfYears: number) {
-  const rules = useMemo(
-    () => buildCalculationRules(sections, totalNumberOfYears),
-    [sections, totalNumberOfYears],
-  );
-
-  console.log(rules);
-  useDerivedFields({ rules });
 }
