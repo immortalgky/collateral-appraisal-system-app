@@ -4,6 +4,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDeriv
 import {
   buildMethodPositionBasedSalaryCalculationDerviedRules,
   buildMethodSpecifiedRoomIncomePerDayDerivedRules,
+  buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
   buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
 } from '../../adapters/buildDiscountedCashFlowDerivedRules';
 
@@ -18,6 +19,7 @@ type MethodRuleBuilder = (args: {
 const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '01': buildMethodSpecifiedRoomIncomePerDayDerivedRules,
   '03': buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
+  '04': buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
   '09': buildMethodPositionBasedSalaryCalculationDerviedRules,
 };
 

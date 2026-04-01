@@ -1,7 +1,5 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '../table/RHFInputCell';
-import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
-import { toNumber } from '../../domain/calculation';
 
 interface MethodSpecifiedRoomIncomeWithGrowthProps {
   name: string;
@@ -13,46 +11,6 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
   expanded,
   totalNumberOfYears,
 }: MethodSpecifiedRoomIncomeWithGrowthProps) {
-  // const rules: DerivedFieldRule<unknown>[] = Array.from({ length: totalNumberOfYears }).flatMap(
-  //   (_, idx) => {
-  //     return [
-  //       {
-  //         targetPath: `${name}.detail.roomRateIncrease.${idx}`,
-  //         deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
-  //         compute: ({ getValues }) => {
-  //           const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
-  //           const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
-  //           if (idx === 0) return 0;
-  //           if (idx % increateRateYrs === 0) return increaseRatePct;
-  //           return 0;
-  //         },
-  //       },
-  //       {
-  //         targetPath: `${name}.detail.roomIncome.${idx}`,
-  //         deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.firstYearAmt`],
-  //         compute: ({ getValues }) => {
-  //           const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
-
-  //           if (idx === 0) return firstYearAmt;
-
-  //           const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`);
-  //           const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
-
-  //           return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
-  //         },
-  //       },
-  //       {
-  //         targetPath: `${name}.totalMethodValues.${idx}`,
-  //         deps: [`${name}.detail.roomIncome.${idx}`],
-  //         compute: ({ getValues }) => {
-  //           return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
-  //         },
-  //       },
-  //     ];
-  //   },
-  // );
-  // useDerivedFields({ rules });
-
   return (
     <>
       {expanded && (
