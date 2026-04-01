@@ -164,7 +164,10 @@ export function useEnrichedPricingAnalysis({
   const error = pricingSelectionQuery.error;
 
   const groupDetail = groupDetailQuery.data;
-  const properties = propertyDetailQueries[0]?.data;
+  const properties = propertyDetailQueries.map(q => q.data).filter(Boolean) as Record<
+    string,
+    unknown
+  >[];
   const marketSurveyDetails = marketSurveyDetailQueries
     .map(q => q.data?.marketComparable)
     .filter(Boolean) as MarketComparableDetailType[];
