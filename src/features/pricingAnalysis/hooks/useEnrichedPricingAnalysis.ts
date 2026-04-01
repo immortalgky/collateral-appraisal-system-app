@@ -34,7 +34,7 @@ export function useEnrichedPricingAnalysis({
 }) {
   // Step 1: For a group, fetch group detail (to get property IDs + types)
   const groupDetailQuery = useQuery({
-    queryKey: propertyGroupKeys.detail(appraisalId!, groupId),
+    queryKey: [propertyGroupKeys.detail(appraisalId!, groupId), 'price'],
     queryFn: async (): Promise<GetPropertyGroupByIdResponse> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
       return data;
@@ -164,7 +164,10 @@ export function useEnrichedPricingAnalysis({
   const error = pricingSelectionQuery.error;
 
   const groupDetail = groupDetailQuery.data;
-  const properties = propertyDetailQueries[0]?.data;
+  const properties = propertyDetailQueries.map(q => q.data).filter(Boolean) as Record<
+    string,
+    unknown
+  >[];
   const marketSurveyDetails = marketSurveyDetailQueries
     .map(q => q.data?.marketComparable)
     .filter(Boolean) as MarketComparableDetailType[];

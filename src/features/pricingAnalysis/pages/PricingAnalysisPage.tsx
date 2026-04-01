@@ -2,17 +2,10 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
-import {
-  DispatchCtx,
-  ServerDataCtx,
-  StateCtx,
-} from '@features/pricingAnalysis/store/selectionContext';
-import {
-  approachMethodReducer,
-  type SelectionState,
-} from '@features/pricingAnalysis/store/selectionReducer';
+import { DispatchCtx, ServerDataCtx, StateCtx, } from '@features/pricingAnalysis/store/selectionContext';
+import { approachMethodReducer, type SelectionState, } from '@features/pricingAnalysis/store/selectionReducer';
 import { useEnrichedPricingAnalysis } from '@features/pricingAnalysis/hooks/useEnrichedPricingAnalysis';
 import { useEnrichedCalculationMethod } from '@features/pricingAnalysis/hooks/useEnrichedCalculationMethod';
 import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectionActions';
@@ -56,11 +49,11 @@ const initialState: SelectionState = {
  * and redirect. Once we have an ID, render the full content component.
  */
 function PricingAnalysisPage() {
-  const { appraisalId, groupId, pricingAnalysisId } = useParams<{
-    appraisalId: string;
+  const { groupId, pricingAnalysisId } = useParams<{
     groupId: string;
     pricingAnalysisId?: string;
   }>();
+  const appraisalId = useAppraisalId();
 
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -168,7 +161,6 @@ function PricingAnalysisContent({
   pricingAnalysisId: string;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('properties');
-
   // (1) Fetch all server data
   const {
     groupDetail,

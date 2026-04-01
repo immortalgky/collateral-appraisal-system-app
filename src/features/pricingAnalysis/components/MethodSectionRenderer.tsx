@@ -5,6 +5,7 @@ import { WQSPanel } from '@features/pricingAnalysis/components/WQSPanel.tsx';
 import type { PricingServerData } from '../types/selection';
 import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
+import { DiscountedCashFlowPanel } from './DiscountedCashFlowPanel';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { CostMachinePanel } from './CostMachinePanel';
 
@@ -40,7 +41,7 @@ export function MethodSectionRenderer({
 
   const panelProps = {
     activeMethod: state.activeMethod,
-    property: serverData.properties,
+    properties: serverData.properties,
     marketSurveys: filteredMarketSurveys,
     allFactors: serverData.allFactors,
     templateList: calculationMethodData.templateList,
@@ -58,11 +59,13 @@ export function MethodSectionRenderer({
 
   switch (state.activeMethod?.methodType) {
     case 'WQS_MARKET':
-      return <WQSPanel {...panelProps} />;
+      return <WQSPanel {...panelProps} property={serverData.properties?.[0]} />;
     case 'SAG_MARKET':
-      return <SaleAdjustmentGridPanel {...panelProps} />;
+      return <SaleAdjustmentGridPanel {...panelProps} property={serverData.properties?.[0]} />;
     case 'DC_MARKET':
-      return <DirectComparisonPanel {...panelProps} />;
+      return <DirectComparisonPanel {...panelProps} property={serverData.properties?.[0]} />;
+    case 'I':
+      return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
       return <CostMachinePanel {...panelProps} />;
     case 'WQS_COST':
