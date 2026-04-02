@@ -1,4 +1,5 @@
-import { ActionBar, Button, Icon } from '@/shared/components';
+import ActionBar from '@/shared/components/ActionBar';
+import { Button, Icon } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export function MethodFooterActions({
@@ -18,13 +19,19 @@ export function MethodFooterActions({
   return (
     <ActionBar>
       <ActionBar.Left>
-        <Button variant="ghost" type="button" onClick={onCancel}>
+        <Button variant="ghost" type="button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
         {showReset && onReset && (
           <>
             <ActionBar.Divider />
-            <Button variant="ghost" type="button" onClick={onReset} className="text-red-500 hover:text-red-600">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onReset}
+              disabled={isSubmitting}
+              className="text-red-500 hover:text-red-600"
+            >
               <Icon name="arrow-rotate-left" style="solid" className="size-4 mr-2" />
               Reset
             </Button>
@@ -33,13 +40,13 @@ export function MethodFooterActions({
         <ActionBar.Divider />
       </ActionBar.Left>
       <ActionBar.Right>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-          ) : (
-            <Icon name="check" style="solid" className="size-4 mr-2" />
-          )}
-          {isSubmitting ? 'Saving...' : 'Save'}
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          {!isSubmitting && <Icon style="solid" name="check" className="size-4 mr-2" />}
+          Save
         </Button>
       </ActionBar.Right>
     </ActionBar>

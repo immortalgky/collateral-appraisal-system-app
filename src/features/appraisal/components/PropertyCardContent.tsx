@@ -3,6 +3,8 @@ import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 
+const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
+
 type CardSize = 'xs' | 'compact' | 'sm' | 'md';
 
 interface PropertyCardContentProps {
@@ -136,15 +138,61 @@ export function PropertyCardContent({
 
             {size === 'md' || size === 'compact' ? (
               <div className={`flex items-center gap-1 flex-wrap ${size === 'compact' ? 'mt-1' : 'mt-2 gap-1.5'}`}>
-                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
-                  <Icon name="ruler-combined" className="text-[9px] text-gray-400" style="solid" />
-                  {property.area}
-                </span>
-                <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
-                  <Icon name="location-dot" className="text-[9px] text-gray-400" style="solid" />
-                  {property.location}
-                </span>
+                {MACHINE_TYPES.has(property.type) ? (
+                  <>
+                    {property.machineName && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                        <Icon name="gear" className="text-[9px] text-gray-400" style="solid" />
+                        {property.machineName}
+                      </span>
+                    )}
+                    {(property.brand || property.model) && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                        <Icon name="tag" className="text-[9px] text-gray-400" style="solid" />
+                        {[property.brand, property.model].filter(Boolean).join(' ')}
+                      </span>
+                    )}
+                    {property.registrationNo && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                        <Icon name="hashtag" className="text-[9px] text-gray-400" style="solid" />
+                        {property.registrationNo}
+                      </span>
+                    )}
+                    {property.dimension && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                        <Icon name="cube" className="text-[9px] text-gray-400" style="solid" />
+                        {property.dimension}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                      <Icon name="ruler-combined" className="text-[9px] text-gray-400" style="solid" />
+                      {property.area}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                      <Icon name="location-dot" className="text-[9px] text-gray-400" style="solid" />
+                      {property.location}
+                    </span>
+                  </>
+                )}
               </div>
+            ) : MACHINE_TYPES.has(property.type) ? (
+              <>
+                {(property.brand || property.model) && (
+                  <div className={`flex items-center gap-1 ${cfg.text} text-gray-500 mt-1`}>
+                    <Icon name="tag" className={`text-gray-400 ${cfg.iconSize}`} style="solid" />
+                    <span>{[property.brand, property.model].filter(Boolean).join(' ')}</span>
+                  </div>
+                )}
+                {property.registrationNo && (
+                  <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
+                    <Icon name="hashtag" className={cfg.iconSize} style="solid" />
+                    <span>{property.registrationNo}</span>
+                  </div>
+                )}
+              </>
             ) : (
               <>
                 <div className={`flex items-center ${cfg.gap} ${cfg.text} text-gray-500 mt-1`}>

@@ -7,6 +7,7 @@ import {
   allLandAndBuildingPMAFields,
   allLandBuildingFields,
   allLandFields,
+  allLeaseAgreementFields,
   allMachineryFields,
 } from '../configs/fields';
 
@@ -721,3 +722,54 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   salePriceUnit: null,
   saleDate: null,
 };
+
+// =============================================================================
+// Lease Agreement Form
+// =============================================================================
+
+export const createLeaseAgreementForm = buildFormSchema(allLeaseAgreementFields);
+export type createLeaseAgreementFormType = z.infer<typeof createLeaseAgreementForm>;
+
+// =============================================================================
+// Rental Info Form
+// =============================================================================
+
+const upFrontEntryItem = z.object({
+  atYear: z.number(),
+  upFrontAmount: z.number(),
+});
+
+const growthPeriodEntryItem = z.object({
+  fromYear: z.number(),
+  toYear: z.number(),
+  growthRate: z.number(),
+  growthAmount: z.number(),
+  totalAmount: z.number(),
+});
+
+export const rentalInfoFormSchema = z.object({
+  numberOfYears: z.number().nullable().optional(),
+  firstYearStartDate: z.string().nullable().optional(),
+  contractRentalFeePerYear: z.number().nullable().optional(),
+  upFrontTotalAmount: z.number().nullable().optional(),
+  growthRateType: z.string().nullable().optional(),
+  growthRatePercent: z.number().nullable().optional(),
+  growthIntervalYears: z.number().nullable().optional(),
+  upFrontEntries: z.array(upFrontEntryItem).nullable().optional(),
+  growthPeriodEntries: z.array(growthPeriodEntryItem).nullable().optional(),
+  scheduleEntries: z.array(z.object({
+    year: z.number(),
+    contractStart: z.string(),
+    contractEnd: z.string(),
+    upFront: z.number(),
+    contractRentalFee: z.number(),
+    totalAmount: z.number(),
+    contractRentalFeeGrowthRatePercent: z.number(),
+  })).nullable().optional(),
+  scheduleOverrides: z.array(z.object({
+    year: z.number(),
+    upFront: z.number().nullable().optional(),
+    contractRentalFee: z.number().nullable().optional(),
+  })).nullable().optional(),
+});
+export type RentalInfoFormType = z.infer<typeof rentalInfoFormSchema>;

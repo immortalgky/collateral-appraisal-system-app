@@ -62,6 +62,7 @@ export type PricingAnalysisSelectorMode = 'editing' | 'summary';
 export interface PricingServerData {
   groupDetail: GetPropertyGroupByIdResponse | undefined;
   properties: Record<string, unknown>[] | undefined;
+  propertiesMap: Record<string, Record<string, unknown>>;
   marketSurveyDetails: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   pricingConfiguration: PricingAnalysisConfigType[] | undefined;
