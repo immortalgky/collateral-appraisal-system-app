@@ -47,7 +47,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
             compute: ({ getValues }) => {
               const totalRoomExpensePerDay =
                 getValues(`${name}.roomDetails.${idx}.totalRoomExpensePerDay`) ?? 0;
-              const totalNumberOfDayInYear = getOuterFormValues(`totalNumberOfDayInYear`) ?? 0;
+              const totalNumberOfDayInYear = getOuterFormValues(`totalNumberOfDayInYear`) ?? 365;
               return totalRoomExpensePerDay * totalNumberOfDayInYear;
             },
           },

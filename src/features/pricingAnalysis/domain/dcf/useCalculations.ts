@@ -18,11 +18,7 @@ import {
 
 type MethodType = DCFMethod['methodType'];
 
-type MethodRuleBuilder = (args: {
-  name: string;
-  sections: DCFSection[];
-  totalNumberOfYears: number;
-}) => DerivedFieldRule[];
+type MethodRuleBuilder = (args: { name: string; totalNumberOfYears: number }) => DerivedFieldRule[];
 
 const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '01': buildMethodSpecifiedRoomIncomePerDayDerivedRules,
@@ -37,7 +33,7 @@ const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   // // '10':
   '11': buildMethodSpecifiedEnergyCostIndexDerivedRules,
   '12': buildMethodProportionOfTheNewReplacementCostDerivedRules,
-  // '13': buildMethodProportionDerivedRules,
+  '13': buildMethodProportionDerivedRules,
   '14': buildMethodSpecifiedValueWithGrowthDerivedRules,
   // '15':
 };
@@ -61,7 +57,6 @@ export function buildMethodCalculationRules(
 
         return buildRules({
           name: `sections.${sectionIdx}.categories.${categoryIdx}.assumptions.${assumptionIdx}.method`,
-          sections,
           totalNumberOfYears,
         });
       });

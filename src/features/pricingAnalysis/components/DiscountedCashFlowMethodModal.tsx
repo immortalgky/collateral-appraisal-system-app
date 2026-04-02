@@ -37,9 +37,8 @@ export function DiscountedCashFlowMethodModal({
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
+    shouldUnregister: true,
   });
-
-  console.log('render modal with initial data', initialData);
 
   const { handleSubmit, reset, getValues, control } = methods;
 
@@ -58,38 +57,26 @@ export function DiscountedCashFlowMethodModal({
     name: 'assumptionType',
   });
 
-  const prevMethodTypeRef = useRef<string | null | undefined>(undefined);
-  const skipNextMethodResetRef = useRef(false);
+  const handleMethodTypeChange = useCallback(
+    (nextMethodType: string) => {
+      const currentValues = getValues();
+
+      reset({
+        ...currentValues,
+        method: {
+          ...currentValues.method,
+          methodType: nextMethodType as AssumptionEditDraft['method']['methodType'],
+          detail: undefined,
+        },
+      });
+    },
+    [getValues, reset],
+  );
 
   useEffect(() => {
     if (!editing) return;
-
-    skipNextMethodResetRef.current = true;
     reset(initialData);
-    prevMethodTypeRef.current = initialData.method?.methodType ?? null;
   }, [editing, initialData, reset]);
-
-  useEffect(() => {
-    if (skipNextMethodResetRef.current) {
-      skipNextMethodResetRef.current = false;
-      return;
-    }
-
-    if (prevMethodTypeRef.current === undefined) {
-      prevMethodTypeRef.current = methodType ?? null;
-      return;
-    }
-
-    if (prevMethodTypeRef.current !== methodType) {
-      prevMethodTypeRef.current = methodType ?? null;
-
-      const currentValues = getValues();
-      reset({
-        ...currentValues,
-        method: { methodType: currentValues.method.methodType, detail: undefined },
-      });
-    }
-  }, [methodType, getValues, reset]);
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {
@@ -172,6 +159,7 @@ export function DiscountedCashFlowMethodModal({
                     value: m.code,
                     label: m.description,
                   }))}
+                  onSelectChange={handleMethodTypeChange}
                 />
               </div>
             </div>

@@ -39,7 +39,7 @@ export function DiscountedCashFlowSectionRenderer({
               <DiscountedCashFlowCategory
                 key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
-                property={properties}
+                properties={properties}
                 section={section}
                 category={category}
                 totalNumberOfYears={totalNumberOfYears}
@@ -64,7 +64,7 @@ export function DiscountedCashFlowSectionRenderer({
               <DiscountedCashFlowCategory
                 key={category.clientId ?? `${name}.categories.${index}`}
                 name={`${name}.categories.${index}`}
-                property={properties}
+                properties={properties}
                 totalNumberOfYears={totalNumberOfYears}
                 section={section}
                 category={category}

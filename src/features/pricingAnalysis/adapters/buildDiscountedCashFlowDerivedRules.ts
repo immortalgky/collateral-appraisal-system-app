@@ -677,83 +677,48 @@ export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
   name: string;
   totalNumberOfYears: number;
 }): DerivedFieldRule[] {
-  console.log('build new replacemen rules');
-  return [
-    // {
-    //   targetPath: `${name}.detail.newReplacementCost`,
-    //   deps: [],
-    //   compute: ({ ctx }) => {
-    //     const newReplacementCost = (ctx.properties ?? [])
-    //       .filter(p => p.propertyType === 'B')
-    //       .flatMap(p => p.depreciationDetails)
-    //       .filter(d => {
-    //         console.log(d);
-    //         return d.isBuilding;
-    //       })
-    //       .reduce((acc, curr) => {
-    //         const priceBeforeDepreciation = curr.priceBeforeDepreciation ?? 0;
-    //         return acc + toNumber(priceBeforeDepreciation);
-    //       }, 0);
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.proportionOfNewReplacementCosts.${idx}`,
+        deps: [`${name}.detail.proportionPct`],
+        compute: ({ getValues, ctx }) => {
+          const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
+          const newReplacementCost = ctx.newReplacementCost ?? 0;
 
-    //     return newReplacementCost;
-    //   },
-    // },
-    ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-      return [
-        {
-          targetPath: `${name}.detail.proportionOfNewReplacementCosts.${idx}`,
-          deps: [`${name}.detail.proportionPct`],
-          compute: ({ getValues, ctx }) => {
-            console.log(ctx.newReplacementCost);
-            const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
-            const newReplacementCost = ctx.newReplacementCost ?? 0;
-
-            return toNumber((Number(proportionPct) / 100) * Number(newReplacementCost));
-          },
+          return toNumber((Number(proportionPct) / 100) * Number(newReplacementCost));
         },
-        {
-          targetPath: `${name}.totalMethodValues.${idx}`,
-          deps: [`${name}.detail.proportionOfNewReplacementCosts.${idx}`],
-          compute: ({ getValues }) => {
-            const proportionOfNewReplacementCost =
-              getValues(`${name}.detail.proportionOfNewReplacementCosts.${idx}`) ?? 0;
-
-            return proportionOfNewReplacementCost;
-          },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.proportionOfNewReplacementCosts.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.proportionOfNewReplacementCosts.${idx}`) ?? 0;
         },
-      ];
-    }),
-  ];
+      },
+    ];
+  });
 }
 
 export function buildMethodProportionDerivedRules({
-  sections,
   name,
   totalNumberOfYears,
 }: {
-  sections: DCFSection[];
   name: string;
   totalNumberOfYears: number;
 }): DerivedFieldRule[] {
-  // const { getValues } = useFormContext();
-
-  // const refTargetId = useWatch({ name: `${name}.detail.refTargetId` });
-  // const watchSecions = useWatch({ name: 'sections' });
-
-  // const refTarget = useMemo(() => {
-  //   return resolveRefTarget(sections, refTargetId);
-  // }, [getValues, refTargetId, watchSecions]);
-
   return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
     return [
       {
         targetPath: `${name}.totalMethodValues.${idx}`,
-        deps: [`${name}.detail.proportionPct`, `${name}.detail.refAssumption`],
+        deps: [`${name}.detail.proportionPct`, `${name}.detail.refTargetId`],
         compute: ({ getValues, ctx }) => {
-          const proportionPct = getValues(`${name}.detail.proportionPct`);
-          const totalAssumptionValue =
-            resolveRefTarget(sections, getValues(`${name}.detail.refTargetId`))?.[idx] ?? 0;
-          return toNumber((Number(proportionPct) / 100) * Number(totalAssumptionValue));
+          const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
+          const refTargetId = getValues(`${name}.detail.refTargetId`);
+          const sections = ctx?.sections ?? [];
+          const totalRefValue = resolveRefTarget(sections, refTargetId)?.[idx] ?? 0;
+
+          return toNumber((Number(proportionPct) / 100) * Number(totalRefValue));
         },
       },
     ];

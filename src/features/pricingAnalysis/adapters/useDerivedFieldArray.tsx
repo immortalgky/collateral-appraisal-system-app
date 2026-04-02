@@ -112,6 +112,7 @@ export type DerivedFieldRule<
  *
  * How it works:
  * - Watches `deps` across all rules (useWatch).
+ * - Optionally reacts to caller-provided `externalDeps` for values that live outside RHF.
  * - Runs rules in passes until stable (MAX_PASSES) to resolve dependencies between derived fields.
  *
  * Side effects:
@@ -119,6 +120,7 @@ export type DerivedFieldRule<
  *
  * @param rules - Derived rules describing dependencies and computations.
  * @param ctx - Optional shared context used by compute/when functions.
+ * @param externalDeps - Optional primitive/stable dependencies from outside RHF that should trigger recomputation.
  *
  * Example:
  * ```ts
@@ -136,7 +138,15 @@ export type DerivedFieldRule<
 export function useDerivedFields<
   TFieldValues extends FieldValues = FieldValues,
   Ctx = Record<string, any>,
->({ rules, ctx }: { rules: DerivedFieldRule<Ctx, TFieldValues>[]; ctx?: Ctx }) {
+>({
+  rules,
+  ctx,
+  externalDeps = [],
+}: {
+  rules: DerivedFieldRule<Ctx, TFieldValues>[];
+  ctx?: Ctx;
+  externalDeps?: readonly unknown[];
+}) {
   const { control, register, setValue, getValues, getFieldState } = useFormContext<TFieldValues>();
   const formState = useFormState<TFieldValues>({ control });
   // Accessing dirtyFields ensures RHF subscribes to dirtiness updates (required for getFieldState(...).isDirty)
@@ -153,6 +163,14 @@ export function useDerivedFields<
   });
 
   const depValuesKey = useMemo(() => JSON.stringify(depValues), [depValues]);
+  // Keep externalDeps primitive or memoized by the caller to avoid unnecessary re-runs.
+  const externalDepsKey = useMemo(() => JSON.stringify(externalDeps), [externalDeps]);
+
+  const ctxRef = useRef<Ctx | undefined>(ctx);
+
+  useEffect(() => {
+    ctxRef.current = ctx;
+  }, [ctx]);
 
   // Register target paths only once (avoids re-register churn)
   const registeredRef = useRef<Set<string>>(new Set());
@@ -165,8 +183,10 @@ export function useDerivedFields<
     }
   }, [register, rules]);
 
+  // Re-run on RHF deps and explicit externalDeps only.
+  // ctx is read from a ref so fresh object identities do not retrigger the derivation loop.
   useEffect(() => {
-    if (depNames.length === 0) return;
+    if (depNames.length === 0 && externalDeps.length === 0) return;
 
     // If you ever return arrays/objects, supply r.equals or r.normalize to stable primitives
     const defaultEquals = (a: any, b: any) => Object.is(a, b);
@@ -176,12 +196,13 @@ export function useDerivedFields<
       let didAnyUpdate = false;
 
       for (const r of rules) {
+        const latestCtx = ctxRef.current as Ctx;
         const shouldRun = r.when
-          ? r.when({ getValues, getFieldState, formState, ctx: ctx as Ctx })
+          ? r.when({ getValues, getFieldState, formState, ctx: latestCtx })
           : true;
         if (!shouldRun) continue;
 
-        let next = r.compute({ getValues, getFieldState, formState, ctx: ctx as Ctx });
+        let next = r.compute({ getValues, getFieldState, formState, ctx: latestCtx });
 
         if (next == null || Number.isNaN(next)) {
           next = r.defaultValue ?? 0;
@@ -205,5 +226,5 @@ export function useDerivedFields<
 
       if (!didAnyUpdate) break; // settled
     }
-  }, [rules, ctx, getValues, setValue, depValuesKey]);
+  }, [rules, getValues, setValue, depValuesKey, externalDepsKey]);
 }

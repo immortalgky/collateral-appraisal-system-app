@@ -9,7 +9,7 @@ import {
   buildCalculateTotalCategoryDerivedRules,
   buildCalculateTotalIncomeDerivedRules,
 } from '../adapters/buildDiscountedCashFlowDerivedRules';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useDerivedFields } from '../adapters/useDerivedFieldArray';
 import { buildMethodCalculationRules } from '../domain/dcf/useCalculations';
 
@@ -120,25 +120,42 @@ export function DiscountedCashFlowTable({
     return buildMethodCalculationRules(sections, totalNumberOfYears);
   }, [sections, totalNumberOfYears]);
 
-  const newReplacementCost = (properties ?? [])
-    .filter((p: any) => p.propertyType === 'B')
-    .flatMap((p: any) => p.depreciationDetails ?? [])
-    .filter((d: any) => d.isBuilding)
-    .reduce((sum: number, d: any) => sum + Number(d.priceBeforeDepreciation ?? 0), 0);
+  const newReplacementCost = useMemo(() => {
+    return (properties ?? [])
+      .filter((p: any) => p.propertyType === 'B')
+      .flatMap((p: any) => p.depreciationDetails ?? [])
+      .filter((d: any) => d.isBuilding)
+      .reduce((sum: number, d: any) => sum + Number(d.priceBeforeDepreciation ?? 0), 0);
+  }, [properties]);
 
-  // const derivedCtx = useMemo(() => ({ newReplacementCost }), [newReplacementCost]);
+  const derivedCtx = useMemo(
+    () => ({ newReplacementCost, sections }),
+    [newReplacementCost, sections],
+  );
 
-  const derivedCtx = useRef({ newReplacementCost });
-
-  useEffect(() => {
-    if (derivedCtx.current.newReplacementCost != newReplacementCost) {
-      derivedCtx.current.newReplacementCost = newReplacementCost;
-    }
-  }, [newReplacementCost, watchSections]);
-
+  // Method 13 depends on referenced section/category/assumption totals, so use a stable snapshot
+  // of only the values that can affect resolveRefTarget-based calculations.
+  // Method 13 also got the issue if select section, category that its stay
   useDerivedFields({
     rules: methodCalculationRules,
-    ctx: { newReplacementCost: derivedCtx.current.newReplacementCost },
+    ctx: derivedCtx,
+    externalDeps: [
+      newReplacementCost,
+      JSON.stringify(
+        sections.map((section: DCFSection) => ({
+          clientId: section.clientId,
+          totalSectionValues: section.totalSectionValues,
+          categories: (section.categories ?? []).map(category => ({
+            clientId: category.clientId,
+            totalCategoryValues: category.totalCategoryValues,
+            assumptions: (category.assumptions ?? []).map(assumption => ({
+              clientId: assumption.clientId,
+              totalAssumptionValues: assumption.totalAssumptionValues,
+            })),
+          })),
+        })),
+      ),
+    ],
   });
 
   return (
@@ -182,7 +199,7 @@ export function DiscountedCashFlowTable({
                 <DiscountedCashFlowSectionRenderer
                   key={section.dbId ?? section.clientId}
                   name={`sections.${index}`}
-                  property={properties}
+                  properties={properties}
                   section={section}
                   color={getSectionColor(section.sectionType)}
                   totalNumberOfYears={totalNumberOfYears}
