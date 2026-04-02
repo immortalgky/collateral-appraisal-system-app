@@ -24,10 +24,10 @@ const Alert = ({
   ...props
 }: AlertProps) => {
   const variantStyles = {
-    info: 'bg-blue-50 text-blue-800 border-blue-200',
-    success: 'bg-green-50 text-success border-green-200',
-    warning: 'bg-amber-50 text-amber-800 border-amber-200',
-    danger: 'bg-red-50 text-danger border-red-200',
+    info: 'bg-blue-50 text-blue-800',
+    success: 'bg-green-50 text-success',
+    warning: 'bg-amber-50 text-amber-800',
+    danger: 'bg-red-50 text-danger',
   };
 
   const iconStyles = {
@@ -48,7 +48,7 @@ const Alert = ({
     <div
       role="alert"
       className={clsx(
-        'relative rounded-lg border p-4',
+        'relative rounded-lg p-4',
         variantStyles[variant],
         className,
       )}

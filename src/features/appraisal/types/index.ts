@@ -30,6 +30,11 @@ export interface PropertyItem {
   location: string;
   sequenceNumber?: number;
   detailId?: string;
+  machineName?: string;
+  brand?: string;
+  model?: string;
+  registrationNo?: string;
+  dimension?: string;
 }
 
 export interface PropertyGroup {

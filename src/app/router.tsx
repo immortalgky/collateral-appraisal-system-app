@@ -34,6 +34,9 @@ import ComparativeTemplateListPage from '@features/templateManagement/pages/Comp
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
 import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
+import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
+import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
+import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
 import { ReadOnlyPageWrapper, AppraisalReadOnlyWrapper } from '@shared/contexts/PageReadOnlyContext';
@@ -299,6 +302,30 @@ export const router = createBrowserRouter([
             element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper>,
           },
           {
+            path: 'lease-land/new',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-land/:propertyId',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-building/new',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-building/:propertyId',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-land-building/new',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-land-building/:propertyId',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
             path: 'law-and-regulation/new',
             element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper>,
           },
@@ -384,6 +411,12 @@ export const router = createBrowserRouter([
           { path: 'land-building/:propertyId/pma', element: <AppraisalReadOnlyWrapper pageName="Property Information"><LandBuildingPMAPage /></AppraisalReadOnlyWrapper> },
           { path: 'machinery/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper> },
           { path: 'machinery/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-building/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-building/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land-building/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land-building/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper> },
           { path: 'law-and-regulation/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper> },
           { path: 'law-and-regulation/:itemId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper> },
           { path: 'market-comparable/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper> },

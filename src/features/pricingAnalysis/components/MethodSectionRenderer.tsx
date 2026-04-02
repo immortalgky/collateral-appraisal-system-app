@@ -67,13 +67,7 @@ export function MethodSectionRenderer({
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
-      return <CostMachinePanel {...panelProps} />;
-    case 'WQS_COST':
-      return <WQSPanel {...panelProps} />;
-    case 'SAG_COST':
-      return <SaleAdjustmentGridPanel {...panelProps} />;
-    case 'DC_COST':
-      return <DirectComparisonPanel {...panelProps} />;
+      return <CostMachinePanel {...panelProps} propertiesMap={serverData.propertiesMap} />;
     default:
       return <></>;
   }
