@@ -73,3 +73,37 @@ export const methodParams = [
   // GOP
   { code: '15', description: 'Gross Operating Profit (GOP)' },
 ];
+
+// Room type parameters
+export const roomTypeParameters = [
+  { code: '00', description: 'Standard Room' },
+  { code: '01', description: 'Superior Room' },
+  { code: '02', description: 'Deluxe Room' },
+  { code: '03', description: 'Premier Room' },
+  { code: '04', description: 'Executive Room' },
+  { code: '05', description: 'Studio Room' },
+  { code: '06', description: 'Suite' },
+  { code: '07', description: 'Junior Suite' },
+  { code: '08', description: 'Executive Suite' },
+  { code: '09', description: 'Presidential Suite' },
+  { code: '10', description: 'Family Room' },
+  { code: '11', description: 'Connecting Room' },
+  { code: '12', description: 'Adjoining Room' },
+  { code: '13', description: 'Twin Room' },
+  { code: '14', description: 'Double Room' },
+  { code: '15', description: 'Single Room' },
+  { code: '16', description: 'Triple Room' },
+  { code: '17', description: 'Quad Room' },
+  { code: '18', description: 'King Room' },
+  { code: '19', description: 'Queen Room' },
+  { code: '20', description: 'Accessible Room' },
+  { code: '21', description: 'Ocean View Room' },
+  { code: '22', description: 'City View Room' },
+  { code: '23', description: 'Garden View Room' },
+  { code: '24', description: 'Pool View Room' },
+  { code: '25', description: 'Beachfront Room' },
+  { code: '26', description: 'Villa' },
+  { code: '27', description: 'Bungalow' },
+  { code: '28', description: 'Penthouse' },
+  { code: '29', description: 'Loft Room' },
+];

@@ -1,15 +1,13 @@
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
-import { useDerivedFields, type DerivedFieldRule } from '../adapters/useDerivedFieldArray';
 import { RHFInputCell } from './table/RHFInputCell';
 import type { DCFAssumption } from '../types/dcf';
 import { assumptionParams, methodParams } from '../data/dcfParameters';
 
 interface DiscountedCashFlowAssumptionProps {
   name: string;
-  properties: Record<string, unknown>[] | undefined;
   totalNumberOfYears: number;
   assumption: DCFAssumption;
   editing: string | null;
@@ -19,7 +17,6 @@ interface DiscountedCashFlowAssumptionProps {
 
 export function DiscountedCashFlowAssumption({
   name,
-  properties,
   totalNumberOfYears,
   assumption,
   editing,

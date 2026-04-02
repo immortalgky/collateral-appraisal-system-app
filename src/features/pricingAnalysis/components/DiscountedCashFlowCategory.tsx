@@ -1,17 +1,11 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
 import type { SectionColor } from '@features/pricingAnalysis/components/DiscountedCashFlowTable.tsx';
-import { useFieldArray, useFormContext } from 'react-hook-form';
-import { RHFInputCell } from './table/RHFInputCell';
-import { getNewId } from '../domain/getNewId';
+import { useFormContext } from 'react-hook-form';
 import { type DCFAssumption, type DCFCategory, type DCFSection } from '../types/dcf';
-import {
-  DiscountedCashFlowMethodModal,
-  type AssumptionEditDraft,
-} from './DiscountedCashFlowMethodModal';
-import { editAssumption } from '../domain/dcf/editAssumption';
+import { DiscountedCashFlowMethodModal } from './DiscountedCashFlowMethodModal';
 import { useAssumptionManagement } from '../domain/dcf/useAssumptionManagement';
 
 interface DiscountedCashFlowCategoryProps {
@@ -25,7 +19,6 @@ interface DiscountedCashFlowCategoryProps {
 
 export function DiscountedCashFlowCategory({
   name,
-  properties,
   section,
   category,
   totalNumberOfYears,
@@ -113,13 +106,11 @@ export function DiscountedCashFlowCategory({
               isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
             )}
           >
-            <RHFInputCell
-              fieldName={`${name}.totalCategoryValues.${index}`}
-              inputType="display"
-              accessor={({ value }) => (
-                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-              )}
-            />
+            <span>
+              {category.totalCategoryValues?.[index]
+                ? category.totalCategoryValues?.[index].toLocaleString()
+                : 0}
+            </span>
           </td>
         ))}
       </tr>
@@ -135,32 +126,12 @@ export function DiscountedCashFlowCategory({
               <Fragment key={assumption.dbId ?? assumption.clientId}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
-                  property={properties}
                   editing={editing}
                   assumption={assumption}
                   totalNumberOfYears={totalNumberOfYears}
                   onOpenEditMode={handleOnOpenEditMode}
                   onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
                 />
-
-                {/* {editing === assumption?.clientId && (
-                  <DiscountedCashFlowMethodModal
-                    initialData={{
-                      targetSectionClientId: section.clientId,
-                      targetCategoryClientId: category.clientId,
-                      targetAssumptionClientId: assumption?.clientId,
-                      assumptionType: assumption?.assumptionType ?? null,
-                      assumptionName: assumption?.assumptionName ?? null,
-                      displayName: assumption?.assumptionName ?? null,
-                      method: assumption?.method ?? null,
-                    }}
-                    getOuterFormValues={getValues}
-                    editing={editing}
-                    onCancelEditMode={handleOnCancelEditMode}
-                    onSaveEditMode={handleOnSaveEditMode}
-                    size="xl"
-                  />
-                )} */}
               </Fragment>
             );
           })}

@@ -1,108 +1,84 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '../table/RHFInputCell';
+import type { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper } from '../../types/dcf';
 
 interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps {
   name: string;
   expanded: boolean;
   totalNumberOfYears: number;
+  method: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper;
+  baseStyles: { rowHeader: string; rowBody: string };
 }
 export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
   name = '',
   expanded,
   totalNumberOfYears,
+  method,
+  baseStyles,
 }: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps) {
   return (
     <>
       {expanded && (
-        <MethodSpecifiedRoomIncomeWithGrowthTable
-          name={name}
-          totalNumberOfYear={totalNumberOfYears}
-        />
+        <>
+          <tr>
+            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
+              return (
+                <td key={idx} className={clsx(baseStyles.rowBody)}>
+                  <span className="text-right">{val ? val.toLocaleString() : 0}</span>
+                </td>
+              );
+            })}
+          </tr>
+          <tr>
+            <td className={clsx(baseStyles.rowHeader)}>Income Adjusted by Growth Rate</td>
+            {(method.detail?.roomIncomeAdjustedValuedByGrowthRates ?? []).map((val, idx) => {
+              return (
+                <td key={idx} className={clsx(baseStyles.rowBody)}>
+                  <span className="text-right">{val ? val.toLocaleString() : 0}</span>
+                </td>
+              );
+            })}
+          </tr>
+          <tr>
+            <td className={clsx(baseStyles.rowHeader)}>Occupancy Rate</td>
+            {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
+              return (
+                <td key={idx} className={clsx(baseStyles.rowBody)}>
+                  <div className="flex justify-end items-center">
+                    <div className="flex justify-end items-center w-16">
+                      <RHFInputCell
+                        fieldName={`${name}.detail.occupancyRate.${idx}`}
+                        inputType="number"
+                        number={{
+                          decimalPlaces: 2,
+                          maxIntegerDigits: 3,
+                          maxValue: 100,
+                          minValue: 0,
+                          allowNegative: false,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </td>
+              );
+            })}
+          </tr>
+          <tr>
+            <td className={clsx(baseStyles.rowHeader)}>
+              <span>Room Income</span>
+              <span>({method.detail?.saleableArea ?? 0} rooms)</span>
+            </td>
+            {(method.detail?.roomIncome ?? []).map((val, idx) => {
+              return (
+                <td key={idx} className={clsx(baseStyles.rowBody)}>
+                  <span>{val ? val.toLocaleString() : 0}</span>
+                </td>
+              );
+            })}
+          </tr>
+        </>
       )}
-    </>
-  );
-}
-
-interface MethodSpecifiedRoomIncomeWithGrowthTableProps {
-  name: string;
-  totalNumberOfYear: number;
-}
-function MethodSpecifiedRoomIncomeWithGrowthTable({
-  name,
-  totalNumberOfYear,
-}: MethodSpecifiedRoomIncomeWithGrowthTableProps) {
-  const rowHeaderStyle = 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300';
-  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300';
-
-  return (
-    <>
-      <tr>
-        <td className={clsx(rowHeaderStyle)}>Increase Rate</td>
-        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-          return (
-            <td key={idx} className={clsx(rowBodyStyle)}>
-              <RHFInputCell
-                fieldName={`${name}.detail.roomRateIncrease.${idx}`}
-                inputType="display"
-                accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                )}
-              />
-            </td>
-          );
-        })}
-      </tr>
-      <tr>
-        <td className={clsx(rowHeaderStyle)}>Income Adjusted by Growth Rate</td>
-        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-          return (
-            <td key={idx} className={clsx(rowBodyStyle)}>
-              <RHFInputCell
-                fieldName={`${name}.detail.roomIncomeAdjustedValuedByGrowthRates.${idx}`}
-                inputType="display"
-                accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                )}
-              />
-            </td>
-          );
-        })}
-      </tr>
-      <tr>
-        <td className={clsx(rowHeaderStyle)}>Occupancy Rate</td>
-        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-          return (
-            <td key={idx} className={clsx(rowBodyStyle)}>
-              <RHFInputCell fieldName={`${name}.detail.occupancyRate.${idx}`} inputType="number" />
-            </td>
-          );
-        })}
-      </tr>
-      <tr>
-        <td className={clsx(rowHeaderStyle)}>
-          <span>Room Income</span>
-          <RHFInputCell
-            fieldName={`${name}.detail.saleableArea`}
-            inputType="display"
-            accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
-          />
-        </td>
-        {Array.from({ length: totalNumberOfYear }).map((_, idx) => {
-          return (
-            <td key={idx} className={clsx(rowBodyStyle)}>
-              <div className="flex flex-row justify-end items-center">
-                <RHFInputCell
-                  fieldName={`${name}.detail.roomIncome.${idx}`}
-                  inputType="display"
-                  accessor={({ value }) => (
-                    <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                  )}
-                />
-              </div>
-            </td>
-          );
-        })}
-      </tr>
     </>
   );
 }

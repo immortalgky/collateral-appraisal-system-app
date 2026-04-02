@@ -187,7 +187,7 @@ export function DiscountedCashFlowTable({
                     'text-right text-sm px-1.5 py-1.5 font-medium whitespace-nowrap border-b border-gray-300',
                   )}
                 >
-                  Year {i}
+                  Year {i + 1}
                 </td>
               ))}
             </tr>

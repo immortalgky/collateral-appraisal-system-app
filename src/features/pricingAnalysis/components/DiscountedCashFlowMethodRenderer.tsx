@@ -15,7 +15,6 @@ import { MethodSpecifiedEnergyCostIndex } from './dcfMethods/MethodSpecifiedEner
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
-  property: Record<string, unknown> | undefined;
   editing: string | null;
   expanded: boolean;
   assumptionId?: string | null;
@@ -27,7 +26,6 @@ export function DiscountedCashFlowMethodRenderer({
   name,
   editing,
   expanded,
-  property,
   assumptionId,
   assumptionName,
   method,
@@ -35,13 +33,16 @@ export function DiscountedCashFlowMethodRenderer({
 }: DiscountedCashFlowMethodRendererProps) {
   const props = {
     name: name,
-    property: property,
     editing: editing,
     expanded: expanded,
     totalNumberOfYears: totalNumberOfYear,
     method: method,
     assumptionId: assumptionId,
     assumptionName: assumptionName,
+    baseStyles: {
+      rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300',
+      rowBody: 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300',
+    },
   };
 
   const systemMethodType = mapDCFMethodCodeToSystemType(method.methodType);

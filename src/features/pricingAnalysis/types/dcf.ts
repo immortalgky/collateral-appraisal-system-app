@@ -32,10 +32,37 @@ interface MethodSpecifiedRoomIncomePerDay {
   totalMethodValues: number[];
 }
 
-interface MethodSpecifiedRoomIncomeBySeasonalRates {}
+interface MethodSpecifiedRoomIncomeBySeasonalRates {
+  // modal
+  seasonCount: number;
+  seasonNames: string[];
+  rows: {
+    roomType: string;
+    otherRoomType: string;
+    seasons: {
+      seasonName: string;
+      numberOfMonths: number;
+      description: string;
+      roomType: {
+        roomIncome: number;
+        saleableArea: number;
+        totalRoomIncomePerDay: number;
+      };
+    }[];
+  }[];
+  totalSaleableArea: number;
+  increaseRatePct: number;
+  increaseRateYrs: number;
+  occupancyRateFirstYearPct: number;
+  occupancyRatePct: number;
+  occupancyRateYrs: number;
+}
 
 interface MethodSpecifiedRoomIncomeWithGrowth {
   // modal
+  saleableArea: number;
+  totalNumberOfSaleableArea: number;
+  remark: string;
   firstYearAmt: number;
   increaseRatePct: number;
   increaseRateYrs: number;
@@ -201,109 +228,114 @@ type RefTarget = {
 };
 
 interface MethodProportion {
+  // modal
   proportionPct: number;
   refTarget: RefTarget;
 }
 
 interface MethodSpecifiedValueWithGrowth {
+  // modal
   firstYearAmt: number;
   increaseRatePct: number;
   increaseRateYrs: number;
+
+  // table
+  increaseRates: number[];
 }
 
 interface MethodGrossOperatingProfit {}
 
-interface MethodSpecifiedRoomIncomePerDayWrapper {
+export interface MethodSpecifiedRoomIncomePerDayWrapper {
   id?: string;
   methodType: '01';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRoomIncomePerDay;
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthWrapper {
+export interface MethodSpecifiedRoomIncomeWithGrowthWrapper {
   id?: string;
   methodType: '03';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRoomIncomeWithGrowth;
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper {
+export interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper {
   id?: string;
   methodType: '04';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate;
 }
 
-interface MethodSpecifiedRentalIncomePerMonthWrapper {
+export interface MethodSpecifiedRentalIncomePerMonthWrapper {
   id?: string;
   methodType: '05';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRentalIncomePerMonth;
 }
 
-interface MethodSpecifiedRentalIncomePerSquareMeterWrapper {
+export interface MethodSpecifiedRentalIncomePerSquareMeterWrapper {
   id?: string;
   methodType: '06';
   totalMethodValues: number[];
   detail?: MethodSpecifiedRentalIncomePerSquareMeter;
 }
 
-interface MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper {
+export interface MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper {
   id?: string;
   methodType: '07';
   totalMethodValues: number[];
   detail?: MethodRoomCostBasedOnExpensesPerRoomPerDay;
 }
 
-interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayWrapper {
+export interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayWrapper {
   id?: string;
   methodType: '08';
   totalMethodValues: number[];
   detail?: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay;
 }
 
-interface MethodPositionBasedSalaryCalculationWrapper {
+export interface MethodPositionBasedSalaryCalculationWrapper {
   id?: string;
   methodType: '09';
   totalMethodValues: number[];
   detail?: MethodPositionBasedSalaryCalculation;
 }
 
-interface MethodParameterBasedOnTierOfPropertyValueWrapper {
+export interface MethodParameterBasedOnTierOfPropertyValueWrapper {
   id?: string;
   methodType: '10';
   totalMethodValues: number[];
   detail?: MethodParameterBasedOnTierOfPropertyValue;
 }
 
-interface MethodSpecifiedEnergyCostIndexWrapper {
+export interface MethodSpecifiedEnergyCostIndexWrapper {
   id?: string;
   methodType: '11';
   totalMethodValues: number[];
   detail?: MethodSpecifiedEnergyCostIndex;
 }
 
-interface MethodProportionOfTheNewReplacementCostWrapper {
+export interface MethodProportionOfTheNewReplacementCostWrapper {
   id?: string;
   methodType: '12';
   totalMethodValues: number[];
   detail?: MethodProportionOfTheNewReplacementCost;
 }
 
-interface MethodProportionWrapper {
+export interface MethodProportionWrapper {
   id?: string;
   methodType: '13';
   totalMethodValues: number[];
   detail?: MethodProportion;
 }
-interface MethodSpecifiedValueWithGrowthWrapper {
+export interface MethodSpecifiedValueWithGrowthWrapper {
   id?: string;
   methodType: '14';
   totalMethodValues: number[];
   detail?: MethodSpecifiedValueWithGrowth;
 }
 
-interface MethodGrossOperatingProfitWrapper {
+export interface MethodGrossOperatingProfitWrapper {
   id?: string;
   methodType: '15';
   totalMethodValues: number[];

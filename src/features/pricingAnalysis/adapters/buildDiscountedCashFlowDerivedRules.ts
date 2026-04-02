@@ -19,11 +19,9 @@ export function buildCalculateTotalIncomeDerivedRules(
             deps: [`${name}.categories`],
             compute: ({ getValues }) => {
               const categories = getValues(`${name}.categories`) ?? [];
-              const totalCategoryValue = categories.reduce((prev, curr: DCFCategory) => {
-                return prev + Number(curr.totalCategoryValues?.[idx] ?? 0);
+              return categories.reduce((prev, curr: DCFCategory) => {
+                return prev + toNumber(curr.totalCategoryValues?.[idx] ?? 0);
               }, 0);
-
-              return Number(totalCategoryValue);
             },
           },
         ];
@@ -47,7 +45,7 @@ export function buildCalculateTotalCategoryDerivedRules(
             compute: ({ getValues }) => {
               const assumptions = getValues(`${name}.assumptions`) ?? [];
               return assumptions.reduce((prev: number, curr: DCFAssumption) => {
-                return prev + Number(curr.totalAssumptionValues?.[yearIdx] ?? 0);
+                return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
               }, 0);
             },
           };
@@ -74,7 +72,7 @@ export function buildCalculateTotalAssumptionDerivedRules(
                 compute: ({ getValues }) => {
                   const totalMethodValue =
                     getValues(`${name}.method.totalMethodValues.${idx}`) ?? 0;
-                  return Number(totalMethodValue);
+                  return toNumber(totalMethodValue);
                 },
               },
             ];
@@ -677,27 +675,37 @@ export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
   name: string;
   totalNumberOfYears: number;
 }): DerivedFieldRule[] {
-  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-    return [
-      {
-        targetPath: `${name}.detail.proportionOfNewReplacementCosts.${idx}`,
-        deps: [`${name}.detail.proportionPct`],
-        compute: ({ getValues, ctx }) => {
-          const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
-          const newReplacementCost = ctx.newReplacementCost ?? 0;
+  return [
+    {
+      targetPath: `${name}.detail.newReplacementCost`,
+      deps: [],
+      compute: ({ ctx }) => {
+        console.log('recompute new replacement cost');
+        return ctx.newReplacementCost ?? 0;
+      },
+    },
+    ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+      return [
+        {
+          targetPath: `${name}.detail.proportionOfNewReplacementCosts.${idx}`,
+          deps: [`${name}.detail.proportionPct`],
+          compute: ({ getValues, ctx }) => {
+            const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
+            const newReplacementCost = ctx.newReplacementCost ?? 0;
 
-          return toNumber((Number(proportionPct) / 100) * Number(newReplacementCost));
+            return toNumber((Number(proportionPct) / 100) * Number(newReplacementCost));
+          },
         },
-      },
-      {
-        targetPath: `${name}.totalMethodValues.${idx}`,
-        deps: [`${name}.detail.proportionOfNewReplacementCosts.${idx}`],
-        compute: ({ getValues }) => {
-          return getValues(`${name}.detail.proportionOfNewReplacementCosts.${idx}`) ?? 0;
+        {
+          targetPath: `${name}.totalMethodValues.${idx}`,
+          deps: [`${name}.detail.proportionOfNewReplacementCosts.${idx}`],
+          compute: ({ getValues }) => {
+            return getValues(`${name}.detail.proportionOfNewReplacementCosts.${idx}`) ?? 0;
+          },
         },
-      },
-    ];
-  });
+      ];
+    }),
+  ];
 }
 
 export function buildMethodProportionDerivedRules({
@@ -737,14 +745,14 @@ export function buildMethodSpecifiedValueWithGrowthDerivedRules({
   return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
     return [
       {
-        targetPath: `${name}.increaseRates.${idx}`,
+        targetPath: `${name}.detail.increaseRates.${idx}`,
         deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
         compute: ({ getValues }) => {
           const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
           const increaseRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
           if (idx === 0) return 0;
 
-          if (idx % increaseRateYrs === 0) return Number(increaseRatePct);
+          if (idx % increaseRateYrs === 0) return toNumber(increaseRatePct);
         },
       },
       {
@@ -759,9 +767,9 @@ export function buildMethodSpecifiedValueWithGrowthDerivedRules({
           const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
           const increaseRate = getValues(`${name}.increaseRates.${idx}`) ?? 0;
 
-          if (idx === 0) return firstYearAmt;
+          if (idx === 0) return toNumber(firstYearAmt);
 
-          return toNumber(Number(prevYearValue) * (1 + Number(increaseRate) / 100));
+          return toNumber(prevYearValue * (1 + increaseRate / 100));
         },
       },
     ];

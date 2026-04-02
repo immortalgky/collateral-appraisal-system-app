@@ -3,6 +3,7 @@ import { type ReactNode } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@shared/components';
 import { RHFInputCell } from '../table/RHFInputCell';
+import type { DCFSection } from '../../types/dcf';
 
 interface SectionHeaderProps {
   title: string;
@@ -35,12 +36,12 @@ function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeader
 
 interface SectionTotalRowProps {
   name: string;
-  totalNumberOfYears: number;
+  totalSectionValues: number[];
   label: string;
   color: SectionColor;
   variant?: 'section' | 'final';
 }
-function SectionTotalRow({ name, totalNumberOfYears, label, color }: SectionTotalRowProps) {
+function SectionTotalRow({ totalSectionValues, label, color }: SectionTotalRowProps) {
   return (
     <tr className={color.bg}>
       <td className={clsx('border-b border-gray-300', color.bg)}>
@@ -51,7 +52,7 @@ function SectionTotalRow({ name, totalNumberOfYears, label, color }: SectionTota
           </span>
         </div>
       </td>
-      {Array.from({ length: totalNumberOfYears }, (_, index) => {
+      {(totalSectionValues ?? []).map((val, index) => {
         return (
           <td
             key={index}
@@ -61,13 +62,7 @@ function SectionTotalRow({ name, totalNumberOfYears, label, color }: SectionTota
               color.textAccent,
             )}
           >
-            <RHFInputCell
-              fieldName={`${name}.totalSectionValues.${index}`}
-              inputType="display"
-              accessor={({ value }) => (
-                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-              )}
-            />
+            <span>{val.toLocaleString() ?? 0}</span>
           </td>
         );
       })}
@@ -77,7 +72,7 @@ function SectionTotalRow({ name, totalNumberOfYears, label, color }: SectionTota
 
 interface DynamicSectionProps {
   name: string;
-  sectionName: string;
+  section: DCFSection;
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;
@@ -86,17 +81,16 @@ interface DynamicSectionProps {
 }
 export function DynamicSection({
   name,
-  sectionName,
+  section,
   totalNumberOfYears,
   icon,
   color,
   children,
-  totalSectionValues,
 }: DynamicSectionProps) {
   return (
     <>
       <SectionHeader
-        title={sectionName}
+        title={section.sectionName}
         color={color}
         icon={icon}
         totalNumberOfYears={totalNumberOfYears}
@@ -104,7 +98,7 @@ export function DynamicSection({
       {children}
       <SectionTotalRow
         name={name}
-        totalNumberOfYears={totalNumberOfYears}
+        totalSectionValues={section.totalSectionValues}
         label={'Total'}
         color={color}
         variant={'section'}

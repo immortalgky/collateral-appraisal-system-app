@@ -29,7 +29,7 @@ export function DiscountedCashFlowSectionRenderer({
       return (
         <DynamicSection
           name={`${name}`}
-          sectionName={section.sectionName}
+          section={section}
           totalNumberOfYears={totalNumberOfYears}
           color={color}
           icon={icon}
@@ -54,7 +54,7 @@ export function DiscountedCashFlowSectionRenderer({
       return (
         <DynamicSection
           name={`${name}`}
-          sectionName={section.sectionName}
+          section={section}
           totalNumberOfYears={totalNumberOfYears}
           color={color}
           icon={icon}
