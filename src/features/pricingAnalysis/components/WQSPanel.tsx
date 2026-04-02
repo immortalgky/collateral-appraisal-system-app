@@ -37,7 +37,7 @@ interface WQSPanelProps {
     methodId?: string;
     methodType?: string;
   };
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   templateList: TemplateDtoType[] | undefined;
@@ -58,7 +58,7 @@ interface WQSPanelProps {
 
 export function WQSPanel({
   activeMethod,
-  property,
+  properties,
   marketSurveys,
   allFactors,
   templateList,
@@ -74,6 +74,10 @@ export function WQSPanel({
 }: WQSPanelProps) {
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'WQS_COST';
+  const property = isCostApproach
+    ? (properties?.filter(p => p.propertyType === 'L')[0] as Record<string, unknown>)
+    : (properties?.[0] as Record<string, unknown>);
+  const buildingCost = properties?.filter(p => p.propertyType === 'B');
 
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
@@ -383,6 +387,7 @@ export function WQSPanel({
               <WQSForm
                 {...methods}
                 property={property}
+                buildingCost={buildingCost}
                 isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
                 comparativeMarketSurveys={comparativeSurveys}

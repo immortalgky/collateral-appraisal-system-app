@@ -85,4 +85,11 @@ export const directComparisonPath = {
   appraisalPriceRounded: () => 'directComparisonAppraisalPrice.appraisalPriceRounded',
   priceDifferentiate: () => 'directComparisonAppraisalPrice.priceDifferentiate',
   finalValueHasBuildingCost: () => `directComparisonAppraisalPrice.hasBuildingCost`,
+  finalValueTotalBuildingCost: () => `directComparisonAppraisalPrice.totalBuildingCost`,
+  finalValueAppraisalPriceIncludeBuildinCost: () =>
+    `directComparisonAppraisalPrice.appraisalPriceIncludeBuildingCost`,
+  finalValueAppraisalPriceIncludeBuildinCostRounded: () =>
+    `directComparisonAppraisalPrice.appraisalPriceIncludeBuildingCostRounded`,
+  finalValuePriceIncluadeBuildingCostDifferentiate: () =>
+    `directComparisonAppraisalPrice.priceIncludeBuildingCostDifferentiate`,
 };

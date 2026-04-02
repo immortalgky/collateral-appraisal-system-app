@@ -1,4 +1,4 @@
-import { useContext, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -14,14 +14,17 @@ import {
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { ServerDataCtx } from '../store/selectionContext';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
+import { BuildingCostTable } from './BuildingCostTable';
 
 interface AdjustFinalValueSectionProp {
   property: Record<string, unknown>;
+  buildingCost?: Record<string, unknown>[];
   isCostApproach: boolean;
 }
 
 export const AdjustFinalValueSection = ({
   property,
+  buildingCost,
   isCostApproach,
 }: AdjustFinalValueSectionProp) => {
   const {
@@ -37,17 +40,56 @@ export const AdjustFinalValueSection = ({
     finalValueTotalBuildingCost: totalBuildingCostPath,
     finalValueAppraisalPriceIncludeBuildinCost: appraisalPriceIncludeBuildingCostPath,
     finalValueAppraisalPriceIncludeBuildinCostRounded: appraisalPriceIncludeBuildingCostRoundedPath,
-    finalValuePriceIncluadeBuildingCostDifferentiate: priceIncludeBuildingDifferentiatePath,
+    finalValuePriceIncluadeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
   } = wqsFieldPath;
 
-  const { control } = useFormContext();
+  const { control, setValue } = useFormContext();
   const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
   const includeBuildingCost = useWatch({ control, name: hasBuildingCostPath() });
+
+  useEffect(() => {
+    if (!buildingCost?.length) {
+      setValue(totalBuildingCostPath(), 0, { shouldDirty: false });
+      return;
+    }
+
+    const toNum = (v: any): number => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    let grandTotal = 0;
+
+    for (const building of buildingCost) {
+      const rawRows: any[] = (building.depreciationDetails as any[]) ?? [];
+
+      for (let rowIndex = 0; rowIndex < rawRows.length; rowIndex++) {
+        const row = { ...rawRows[rowIndex] };
+
+        // Pass 1: compute priceBeforeDepreciation and priceDepreciation
+        const priceBeforeDepreciation =
+          toNum(row['area']) * toNum(row['pricePerSqMBeforeDepreciation']);
+
+        const periods: any[] = row['depreciationPeriods'] ?? [];
+        const priceDepreciation = periods.reduce(
+          (acc: number, b: any) => acc + toNum(b.priceDepreciation),
+          0,
+        );
+
+        // Pass 2: priceAfterDepreciation = before - depreciation
+        const priceAfterDepreciation = priceBeforeDepreciation - priceDepreciation;
+        grandTotal += priceAfterDepreciation;
+      }
+    }
+
+    setValue(totalBuildingCostPath(), grandTotal, { shouldDirty: false });
+  }, [buildingCost, totalBuildingCostPath, setValue]);
 
   // Track previous finalValueRounded to detect actual changes.
   // On initial load: preserve saved appraisalPriceRounded (auto-fill only if 0).
   // After initial load: always auto-default when finalValueRounded changes.
   const prevFinalValueRef = useRef<number | null>(null);
+  const prevValueIncludeCostRef = useRef<number | null>(null);
 
   const rules: DerivedFieldRule[] = [
     {
@@ -89,6 +131,58 @@ export const AdjustFinalValueSection = ({
         }
 
         return false;
+      },
+    },
+    {
+      targetPath: priceDifferentiatePath(),
+      deps: [appraisalPriceRoundedPath(), finalValueRoundedPath()],
+      compute: ({ getValues }) => {
+        const appraisalPriceRounded = getValues(appraisalPriceRoundedPath()) ?? 0;
+        const finalValueRounded = getValues(finalValueAppraisalPricePath()) ?? 0;
+        return appraisalPriceRounded - finalValueRounded;
+      },
+    },
+    {
+      targetPath: appraisalPriceIncludeBuildingCostPath(),
+      deps: [appraisalPriceRoundedPath(), totalBuildingCostPath()],
+      compute: ({ getValues }) => {
+        const landPrice = Number(getValues(appraisalPriceRoundedPath())) || 0;
+        const buildingCost = Number(getValues(totalBuildingCostPath())) || 0;
+        return landPrice + buildingCost;
+      },
+    },
+    {
+      targetPath: appraisalPriceIncludeBuildingCostRoundedPath(),
+      deps: [appraisalPriceIncludeBuildingCostPath()],
+      compute: ({ getValues }) => Number(getValues(appraisalPriceIncludeBuildingCostPath())) || 0,
+      when: ({ getValues }) => {
+        const depValue = Number(getValues(appraisalPriceIncludeBuildingCostPath())) || 0;
+        const current = Number(getValues(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
+
+        if (prevValueIncludeCostRef.current === null) {
+          prevValueIncludeCostRef.current = depValue;
+          return current === 0;
+        }
+
+        if (prevValueIncludeCostRef.current !== depValue) {
+          prevValueIncludeCostRef.current = depValue;
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      targetPath: priceIncludeBuildingCostDifferentiatePath(),
+      deps: [
+        appraisalPriceIncludeBuildingCostPath(),
+        appraisalPriceIncludeBuildingCostRoundedPath(),
+      ],
+      compute: ({ getValues }) => {
+        const appraisalPriceRounded =
+          getValues(appraisalPriceIncludeBuildingCostRoundedPath()) ?? 0;
+        const finalValueRounded = getValues(appraisalPriceIncludeBuildingCostPath()) ?? 0;
+        return appraisalPriceRounded - finalValueRounded;
       },
     },
   ];
@@ -219,6 +313,15 @@ export const AdjustFinalValueSection = ({
 
       {includeBuildingCost && (
         <div className="flex flex-col gap-3 text-sm">
+          <div className="">
+            {includeBuildingCost && (
+              <div className="flex flex-col gap-3 text-sm">
+                <div>
+                  <BuildingCostTable buildingCost={buildingCost ?? []} />
+                </div>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             <span className="w-48 text-gray-500">Land Price</span>
             <span className="font-medium text-gray-800">
@@ -274,7 +377,7 @@ export const AdjustFinalValueSection = ({
             <span className="text-gray-500">Baht</span>
             <div className="flex items-center">
               <RHFInputCell
-                fieldName={priceIncludeBuildingDifferentiatePath()}
+                fieldName={priceIncludeBuildingCostDifferentiatePath()}
                 inputType="display"
                 accessor={({ value }) => {
                   const num = Number(value) || 0;

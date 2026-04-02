@@ -2058,7 +2058,7 @@ export const machineInfoFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Country of Manufacture',
-    name: 'countryOfManufacture',
+    name: 'manufacturer',
     wrapperClassName: 'col-span-4',
     group: 'Country',
   },
@@ -2694,28 +2694,85 @@ export const leaseInfoField: FormField[] = [
 ];
 
 export const leaseContractField: FormField[] = [
-  { type: 'text-input', label: 'Lease Period as Contract', name: 'leasePeriodAsContract', wrapperClassName: 'col-span-6' },
-  { type: 'text-input', label: 'Remaining Lease as Appraisal Date', name: 'remainingLeaseAsAppraisalDate', wrapperClassName: 'col-span-6' },
+  {
+    type: 'text-input',
+    label: 'Lease Period as Contract',
+    name: 'leasePeriodAsContract',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'Remaining Lease as Appraisal Date',
+    name: 'remainingLeaseAsAppraisalDate',
+    wrapperClassName: 'col-span-6',
+  },
   { type: 'text-input', label: 'Contract No', name: 'contractNo', wrapperClassName: 'col-span-6' },
 ];
 
 export const leaseDatesFeesField: FormField[] = [
-  { type: 'date-input', label: 'Lease Start Date', name: 'leaseStartDate', wrapperClassName: 'col-span-3' },
-  { type: 'date-input', label: 'Lease End Date', name: 'leaseEndDate', wrapperClassName: 'col-span-3' },
-  { type: 'number-input', label: 'Lease Rent Fee', name: 'leaseRentFee', wrapperClassName: 'col-span-3', decimalPlaces: 2 },
-  { type: 'number-input', label: 'Rent Adjust', name: 'rentAdjust', wrapperClassName: 'col-span-3', decimalPlaces: 2 },
+  {
+    type: 'date-input',
+    label: 'Lease Start Date',
+    name: 'leaseStartDate',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'date-input',
+    label: 'Lease End Date',
+    name: 'leaseEndDate',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'number-input',
+    label: 'Lease Rent Fee',
+    name: 'leaseRentFee',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 2,
+  },
+  {
+    type: 'number-input',
+    label: 'Rent Adjust',
+    name: 'rentAdjust',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 2,
+  },
 ];
 
 export const leaseTermsField: FormField[] = [
   { type: 'text-input', label: 'Sublease', name: 'sublease', wrapperClassName: 'col-span-6' },
-  { type: 'text-input', label: 'Additional Expenses', name: 'additionalExpenses', wrapperClassName: 'col-span-6' },
-  { type: 'text-input', label: 'Lease Timestamp', name: 'leaseTimestamp', wrapperClassName: 'col-span-6' },
-  { type: 'text-input', label: 'Contract Renewal', name: 'contractRenewal', wrapperClassName: 'col-span-6' },
+  {
+    type: 'text-input',
+    label: 'Additional Expenses',
+    name: 'additionalExpenses',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'Lease Timestamp',
+    name: 'leaseTimestamp',
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'text-input',
+    label: 'Contract Renewal',
+    name: 'contractRenewal',
+    wrapperClassName: 'col-span-6',
+  },
 ];
 
 export const leaseRentalTermsField: FormField[] = [
-  { type: 'textarea', label: 'Rental Terms Impacting Property Use', name: 'rentalTermsImpactingPropertyUse', wrapperClassName: 'col-span-12' },
-  { type: 'textarea', label: 'Termination of Lease', name: 'terminationOfLease', wrapperClassName: 'col-span-12' },
+  {
+    type: 'textarea',
+    label: 'Rental Terms Impacting Property Use',
+    name: 'rentalTermsImpactingPropertyUse',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Termination of Lease',
+    name: 'terminationOfLease',
+    wrapperClassName: 'col-span-12',
+  },
 ];
 
 export const leaseOtherField: FormField[] = [
@@ -2737,13 +2794,46 @@ export const allLeaseAgreementFields: FormField[] = [
 // =============================================================================
 
 export const rentalScheduleField: FormField[] = [
-  { type: 'number-input', label: 'Number of Year', name: 'numberOfYears', wrapperClassName: 'col-span-3' },
-  { type: 'date-input', label: 'First Year Start From', name: 'firstYearStartDate', wrapperClassName: 'col-span-3' },
-  { type: 'number-input', label: 'Contract Rental Fee per Year', name: 'contractRentalFeePerYear', wrapperClassName: 'col-span-3', decimalPlaces: 2 },
-  { type: 'number-input', label: 'Up Front', name: 'upFrontTotalAmount', wrapperClassName: 'col-span-3', decimalPlaces: 2 },
+  {
+    type: 'number-input',
+    label: 'Number of Year',
+    name: 'numberOfYears',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'date-input',
+    label: 'First Year Start From',
+    name: 'firstYearStartDate',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'number-input',
+    label: 'Contract Rental Fee per Year',
+    name: 'contractRentalFeePerYear',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 2,
+  },
+  {
+    type: 'number-input',
+    label: 'Up Front',
+    name: 'upFrontTotalAmount',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 2,
+  },
 ];
 
 export const rentalGrowthPeriodField: FormField[] = [
-  { type: 'number-input', label: 'Growth Rate %', name: 'growthRatePercent', wrapperClassName: 'col-span-3', decimalPlaces: 2 },
-  { type: 'number-input', label: 'Every (Year)', name: 'growthIntervalYears', wrapperClassName: 'col-span-3' },
+  {
+    type: 'number-input',
+    label: 'Growth Rate %',
+    name: 'growthRatePercent',
+    wrapperClassName: 'col-span-3',
+    decimalPlaces: 2,
+  },
+  {
+    type: 'number-input',
+    label: 'Every (Year)',
+    name: 'growthIntervalYears',
+    wrapperClassName: 'col-span-3',
+  },
 ];

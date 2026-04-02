@@ -8,6 +8,7 @@ import { wqsFieldPath } from '../adapters/wqsFieldPath';
 interface WQSProps {
   isCostApproach: boolean;
   property: Record<string, unknown>;
+  buildingCost?: Record<string, unknown>[];
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
   template?: TemplateDetailType;
@@ -17,6 +18,7 @@ interface WQSProps {
 export const WQSForm = ({
   isCostApproach,
   property,
+  buildingCost,
   marketSurveys,
   comparativeMarketSurveys,
   template,
@@ -66,7 +68,11 @@ export const WQSForm = ({
                   <h3 className="text-base font-semibold text-gray-800">Adjust Final Value</h3>
                 </div>
                 <div className="px-4">
-                  <AdjustFinalValueSection property={property} isCostApproach={isCostApproach} />
+                  <AdjustFinalValueSection
+                    property={property}
+                    buildingCost={buildingCost}
+                    isCostApproach={isCostApproach}
+                  />
                 </div>
               </div>
             </>

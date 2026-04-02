@@ -308,9 +308,6 @@ export function buildWQSFinalValueDerivedRules(args: {
     finalValuSlope: finalValuSlopePath,
     finalValueLowestEstimate: finalValueLowestEstimatePath,
     finalValueHighestEstimate: finalValueHighestEstimatePath,
-    finalValueAppraisalPriceRounded: finalValueAppraisalPriceRoundedPath,
-    finalValueAppraisalPrice: finalValueAppraisalPricePath,
-    finalValuePriceDifferentiate: finalValuePriceDifferentiatePath,
   } = wqsFieldPath;
 
   const rules: DerivedFieldRule[] = [
@@ -456,15 +453,6 @@ export function buildWQSFinalValueDerivedRules(args: {
         const finalValueRounded = getValues(finalValueFinalValueRoundedPath()) ?? 0;
         const stdError = getValues(finalValueStandardErrorPath()) ?? 0;
         return round2(finalValueRounded + stdError);
-      },
-    },
-    {
-      targetPath: finalValuePriceDifferentiatePath(),
-      deps: [finalValueAppraisalPriceRoundedPath(), finalValueFinalValueRoundedPath()],
-      compute: ({ getValues }) => {
-        const appraisalPriceRounded = getValues(finalValueAppraisalPriceRoundedPath()) ?? 0;
-        const finalValueRounded = getValues(finalValueAppraisalPricePath()) ?? 0;
-        return appraisalPriceRounded - finalValueRounded;
       },
     },
   ];

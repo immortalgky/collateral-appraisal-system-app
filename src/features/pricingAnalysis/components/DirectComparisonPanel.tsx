@@ -37,7 +37,7 @@ interface DirectComparisonPanelProps {
     methodId?: string;
     methodType?: string;
   };
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   templateList: TemplateDtoType[] | undefined;
@@ -58,7 +58,7 @@ interface DirectComparisonPanelProps {
 
 export function DirectComparisonPanel({
   activeMethod,
-  property,
+  properties,
   marketSurveys,
   allFactors,
   templateList,
@@ -73,6 +73,12 @@ export function DirectComparisonPanel({
   onCancelCalculationMethod,
 }: DirectComparisonPanelProps) {
   const { methodId, methodType } = activeMethod ?? {};
+  const isCostApproach = methodType === 'DC_COST';
+
+  const property = isCostApproach
+    ? (properties?.filter(p => p.propertyType === 'L')[0] as Record<string, unknown>)
+    : (properties?.[0] as Record<string, unknown>);
+  const buildingCost = properties?.filter(p => p.propertyType === 'B');
 
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
@@ -374,6 +380,8 @@ export function DirectComparisonPanel({
               <DirectComparisonForm
                 {...methods}
                 property={property}
+                buildingCost={buildingCost}
+                isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
                 comparativeMarketSurveys={comparativeSurveys}
                 template={pricingTemplate}
