@@ -19,17 +19,23 @@ export const propertyGroupKeys = {
     ['appraisal', appraisalId, 'property-groups', groupId] as const,
   propertyDetail: (appraisalId: string, propertyId: string) =>
     ['appraisal', appraisalId, 'property', propertyId, 'detail'] as const,
+  leaseAgreement: (appraisalId: string, propertyId: string) =>
+    ['appraisals', appraisalId, 'properties', propertyId, 'lease-agreement'] as const,
+  rentalInfo: (appraisalId: string, propertyId: string) =>
+    ['appraisals', appraisalId, 'properties', propertyId, 'rental-info'] as const,
+  rentalSchedule: (appraisalId: string, propertyId: string) =>
+    ['appraisals', appraisalId, 'properties', propertyId, 'rental-schedule'] as const,
 };
 
 // ==================== Type-to-Endpoint Mapping ====================
 
 const typeToDetailEndpoint: Record<string, string> = {
   'Lands': 'land-detail',
-  'Lease Agreement Lands': 'land-detail',
+  'Lease Agreement Lands': 'lease-agreement-land-detail',
   'Building': 'building-detail',
-  'Lease Agreement Building': 'building-detail',
+  'Lease Agreement Building': 'lease-agreement-building-detail',
   'Land and building': 'land-and-building-detail',
-  'Lease Agreement Land and building': 'land-and-building-detail',
+  'Lease Agreement Land and building': 'lease-agreement-land-building-detail',
   'Condominium': 'condo-detail',
   'Machine': 'machinery-detail',
   'Vehicle': 'vehicle-detail',

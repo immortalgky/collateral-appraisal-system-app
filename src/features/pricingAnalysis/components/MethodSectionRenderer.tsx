@@ -67,7 +67,7 @@ export function MethodSectionRenderer({
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
-      return <CostMachinePanel {...panelProps} />;
+      return <CostMachinePanel {...panelProps} propertiesMap={serverData.propertiesMap} />;
     default:
       return <></>;
   }

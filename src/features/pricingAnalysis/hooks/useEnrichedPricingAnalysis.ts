@@ -1,4 +1,5 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import axios from '@shared/api/axiosInstance';
 import { type GetPropertyGroupByIdResponse, propertyGroupKeys } from '@/features/appraisal/api';
 import {
@@ -168,6 +169,18 @@ export function useEnrichedPricingAnalysis({
     string,
     unknown
   >[];
+
+  // Map propertyId → detail data for panels that need all properties (e.g., CostMachinePanel)
+  // Memoized to prevent infinite re-render loops when used as a dependency
+  const propertiesMap = useMemo(() => {
+    const map: Record<string, Record<string, unknown>> = {};
+    allPropertyEntries.forEach((entry, idx) => {
+      const data = propertyDetailQueries[idx]?.data;
+      if (data) map[entry.propertyId] = data;
+    });
+    return map;
+  }, [allPropertyEntries.length, propertyDetailQueries.map(q => q.dataUpdatedAt).join(',')]);
+
   const marketSurveyDetails = marketSurveyDetailQueries
     .map(q => q.data?.marketComparable)
     .filter(Boolean) as MarketComparableDetailType[];
@@ -178,6 +191,7 @@ export function useEnrichedPricingAnalysis({
   return {
     groupDetail,
     properties,
+    propertiesMap,
     marketSurveyDetails,
     pricingConfiguration,
     pricingSelection,

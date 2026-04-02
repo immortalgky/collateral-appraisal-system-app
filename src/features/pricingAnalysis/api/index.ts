@@ -435,6 +435,107 @@ export function useResetMethod() {
   });
 }
 
+// ==================== Machine Cost Hooks ====================
+
+export interface MachineCostItemResponse {
+  id: string;
+  appraisalPropertyId: string;
+  displaySequence: number;
+  rcnReplacementCost: number | null;
+  lifeSpanYears: number | null;
+  conditionFactor: number;
+  functionalObsolescence: number;
+  economicObsolescence: number;
+  fairMarketValue: number | null;
+  marketDemandAvailable: boolean;
+  notes: string | null;
+}
+
+export interface GetMachineCostItemsResponse {
+  items: MachineCostItemResponse[];
+  totalFmv: number;
+  remark: string | null;
+}
+
+export interface SaveMachineCostItemInput {
+  id: string | null;
+  appraisalPropertyId: string;
+  displaySequence: number;
+  rcnReplacementCost: number | null;
+  lifeSpanYears: number | null;
+  conditionFactor: number;
+  functionalObsolescence: number;
+  economicObsolescence: number;
+  fairMarketValue: number | null;
+  marketDemandAvailable: boolean;
+  notes: string | null;
+}
+
+export interface SaveMachineCostItemsResponse {
+  pricingAnalysisId: string;
+  methodId: string;
+  itemCount: number;
+  totalFmv: number;
+}
+
+/**
+ * Fetch saved machine cost items for a method
+ * GET /pricing-analysis/{id}/methods/{methodId}/machine-cost-items
+ */
+export function useGetMachineCostItems(pricingAnalysisId: string | undefined, methodId: string | undefined) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.machineCostItems(pricingAnalysisId ?? '', methodId ?? ''),
+    queryFn: async (): Promise<GetMachineCostItemsResponse> => {
+      const { data } = await axios.get(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/machine-cost-items`,
+      );
+      return data as GetMachineCostItemsResponse;
+    },
+    enabled: !!pricingAnalysisId && !!methodId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Save machine cost items (bulk create/update/delete)
+ * PUT /pricing-analysis/{id}/methods/{methodId}/machine-cost-items
+ */
+export function useSaveMachineCostItems() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      items,
+      groupDescription,
+      remark,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      items: SaveMachineCostItemInput[];
+      remark?: string | null;
+    }): Promise<SaveMachineCostItemsResponse> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/machine-cost-items`,
+        { items, remark },
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.machineCostItems(variables.pricingAnalysisId, variables.methodId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+        refetchType: 'none',
+      });
+    },
+  });
+}
+
 // ==================== Template & Factor Hooks ====================
 
 /**

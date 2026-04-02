@@ -381,3 +381,218 @@ export const useUpdateMachineryProperty = () => {
     },
   });
 };
+
+// ─── Lease Agreement Types ───────────────────────────────────────
+
+export interface LeaseAgreementResponse {
+  detailId: string;
+  appraisalPropertyId: string;
+  lesseeName?: string;
+  tenantName?: string;
+  leasePeriodAsContract?: string;
+  remainingLeaseAsAppraisalDate?: string;
+  contractNo?: string;
+  leaseStartDate?: string;
+  leaseEndDate?: string;
+  leaseRentFee?: number;
+  rentAdjust?: number;
+  sublease?: string;
+  additionalExpenses?: string;
+  leaseTimestamp?: string;
+  contractRenewal?: string;
+  rentalTermsImpactingPropertyUse?: string;
+  terminationOfLease?: string;
+  remark?: string;
+  banking?: string;
+}
+
+export interface UpdateLeaseAgreementRequest {
+  lesseeName?: string;
+  tenantName?: string;
+  leasePeriodAsContract?: string;
+  remainingLeaseAsAppraisalDate?: string;
+  contractNo?: string;
+  leaseStartDate?: string;
+  leaseEndDate?: string;
+  leaseRentFee?: number;
+  rentAdjust?: number;
+  sublease?: string;
+  additionalExpenses?: string;
+  leaseTimestamp?: string;
+  contractRenewal?: string;
+  rentalTermsImpactingPropertyUse?: string;
+  terminationOfLease?: string;
+  remark?: string;
+  banking?: string;
+}
+
+// ─── Rental Info Types ───────────────────────────────────────────
+
+export interface UpFrontEntryDto {
+  id: string;
+  atYear: number;
+  upFrontAmount: number;
+}
+
+export interface GrowthPeriodEntryDto {
+  id: string;
+  fromYear: number;
+  toYear: number;
+  growthRate: number;
+  growthAmount: number;
+  totalAmount: number;
+}
+
+export interface RentalInfoResponse {
+  detailId: string;
+  appraisalPropertyId: string;
+  numberOfYears: number;
+  firstYearStartDate?: string;
+  contractRentalFeePerYear: number;
+  upFrontTotalAmount: number;
+  growthRateType?: string;
+  growthRatePercent: number;
+  growthIntervalYears: number;
+  upFrontEntries: UpFrontEntryDto[];
+  growthPeriodEntries: GrowthPeriodEntryDto[];
+}
+
+export interface UpdateRentalInfoRequest {
+  numberOfYears?: number;
+  firstYearStartDate?: string;
+  contractRentalFeePerYear?: number;
+  upFrontTotalAmount?: number;
+  growthRateType?: string;
+  growthRatePercent?: number;
+  growthIntervalYears?: number;
+  upFrontEntries?: { atYear: number; upFrontAmount: number }[];
+  growthPeriodEntries?: {
+    fromYear: number;
+    toYear: number;
+    growthRate: number;
+    growthAmount: number;
+    totalAmount: number;
+  }[];
+}
+
+// ─── Rental Schedule Types ───────────────────────────────────────
+
+export interface RentalScheduleRow {
+  year: number;
+  contractStart: string;
+  contractEnd: string;
+  upFront: number;
+  contractRentalFee: number;
+  totalAmount: number;
+  contractRentalFeeGrowthRatePercent: number;
+}
+
+export interface RentalScheduleResponse {
+  rows: RentalScheduleRow[];
+}
+
+// ─── Lease Agreement Get/Update Hooks ────────────────────────────
+
+export const useGetLeaseAgreement = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: propertyGroupKeys.leaseAgreement(appraisalId, propertyId!),
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<LeaseAgreementResponse> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/lease-agreement`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useUpdateLeaseAgreement = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateLeaseAgreementRequest;
+    }) => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/lease-agreement`,
+        params.data,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.leaseAgreement(variables.appraisalId, variables.propertyId),
+      });
+    },
+  });
+};
+
+// ─── Rental Info Get/Update Hooks ────────────────────────────────
+
+export const useGetRentalInfo = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: propertyGroupKeys.rentalInfo(appraisalId, propertyId!),
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<RentalInfoResponse> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/rental-info`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useUpdateRentalInfo = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateRentalInfoRequest;
+    }) => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/rental-info`,
+        params.data,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.rentalInfo(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.rentalSchedule(variables.appraisalId, variables.propertyId),
+      });
+    },
+  });
+};
+
+// ─── Rental Schedule Get Hook (read-only) ────────────────────────
+
+export const useGetRentalSchedule = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: propertyGroupKeys.rentalSchedule(appraisalId, propertyId!),
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<RentalScheduleResponse> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/rental-schedule`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};

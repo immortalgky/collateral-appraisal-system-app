@@ -44,6 +44,8 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
   const thumbnailId =
     photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;
 
+  const isMachine = item.propertyType === 'MAC';
+
   return {
     id: item.propertyId!,
     type: (item.propertyType as PropertyType) || 'Lands',
@@ -52,11 +54,20 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
       : undefined,
     photos,
     address: item.propertyName || '-',
-    area: formatArea(item.area, item.propertyType ?? undefined),
+    area: isMachine
+      ? (item.dimension || '-')
+      : formatArea(item.area, item.propertyType ?? undefined),
     priceRange: '-',
     location: item.location || '-',
     sequenceNumber: item.sequenceInGroup ?? undefined,
     detailId: item.appraisalDetailId ?? undefined,
+    ...(isMachine && {
+      machineName: item.machineName ?? undefined,
+      brand: item.brand ?? undefined,
+      model: item.model ?? undefined,
+      registrationNo: item.registrationNo ?? undefined,
+      dimension: item.dimension ?? undefined,
+    }),
   };
 }
 

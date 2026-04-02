@@ -4,9 +4,11 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { RHFInputCell } from './table/RHFInputCell';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { ParameterDisplay } from '@/shared/components';
+import { Skeleton } from '@/shared/components/Skeleton';
 import { useEffect } from 'react';
 
 export interface MachineryItem {
+  appraisalPropertyId: string;
   quantity: number | null;
   machineName: string | null;
   registrationNo: string | null;
@@ -16,6 +18,8 @@ export interface MachineryItem {
 }
 
 export interface MachineryRowFormValue {
+  id: string | null;
+  appraisalPropertyId: string;
   machine: MachineryItem;
   rcn: number | null;
   lifeSpan: number | null;
@@ -27,7 +31,7 @@ export interface MachineryRowFormValue {
   economicObsolescence: number | null;
   fmv: number;
   marketDemand: 'Y' | 'N';
-  remark: string;
+  notes: string;
 }
 
 const costMachinePath = {
@@ -42,7 +46,7 @@ const costMachinePath = {
   economicObsolescence: (r: number) => `machineryCosts.${r}.economicObsolescence`,
   fmv: (r: number) => `machineryCosts.${r}.fmv`,
   marketDemand: (r: number) => `machineryCosts.${r}.marketDemand`,
-  remark: (r: number) => `machineryCosts.${r}.remark`,
+  notes: (r: number) => `machineryCosts.${r}.notes`,
   conditionUse: (r: number) => `machineryCosts.${r}.machine.conditionUse`,
   yearOfManufacture: (r: number) => `machineryCosts.${r}.machine.yearOfManufacture`,
 };
@@ -228,7 +232,7 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
       </td>
 
       <td className="border-b border-r border-gray-300">
-        <RHFInputCell fieldName={costMachinePath.remark(rowIndex)} inputType="text" />
+        <RHFInputCell fieldName={costMachinePath.notes(rowIndex)} inputType="text" />
       </td>
     </tr>
   );
@@ -255,7 +259,73 @@ export function CostMachineSection({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-40 text-sm text-gray-400">Loading...</div>
+      <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl overflow-hidden">
+        <ScrollableTableContainer className="flex-1 min-h-0">
+          <table className="table table-xs min-w-max border-separate border-spacing-0">
+            <thead className="bg-neutral-50">
+              <tr>
+                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>No.</th>
+                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>Quantity</th>
+                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>Machinery Infomation</th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32 text-right')}>
+                  RCN Replacement Cost<br />
+                  <span className="font-normal text-gray-500">(Baht)</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  N<br /><span className="font-normal text-xs text-gray-500">Life Span (Year(s))</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  n<br /><span className="font-normal text-xs text-gray-500">Duration in Use (Year(s))</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  R<br /><span className="font-normal text-gray-500">Residual Life Span (Year(s))</span>
+                </th>
+                <th colSpan={4} className={clsx(thCenter, 'border-b-2')}>Depreciation</th>
+                <th rowSpan={3} className={clsx(th, 'text-right')}>
+                  Fair Market Value<br />
+                  <span className="text-xs font-normal text-gray-500">FMV (Baht)</span>
+                </th>
+                <th rowSpan={3} className={clsx(thCenter, 'min-w-32')}>
+                  Market Demand<br />
+                  <span className="text-xs font-normal text-gray-500">Available / Used</span>
+                </th>
+                <th rowSpan={3} className={clsx(th, 'min-w-32')}>Notes</th>
+              </tr>
+              <tr>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Machinery Name</th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Registration No.</th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Country of Manufacturer</th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>Condition Use</th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>Year</th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  C<br /><span className="font-normal text-xs text-gray-500">Condition Factor</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  P<br /><span className="font-normal text-xs text-gray-500">Physical Deterioration</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  F<br /><span className="font-normal text-xs text-gray-500">Functional Obsolescence</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  E<br />
+                  <span className="font-normal text-xs text-gray-500">Economic / External Obsolescence</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  {Array.from({ length: 17 }).map((_, j) => (
+                    <td key={j} className="border-b border-r border-gray-300 px-2 py-3">
+                      <Skeleton className="h-4 w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollableTableContainer>
+      </div>
     );
   }
 
@@ -305,7 +375,7 @@ export function CostMachineSection({
                 <span className="text-xs font-normal text-gray-500">Available / Used</span>
               </th>
               <th rowSpan={3} className={clsx(th, 'min-w-32')}>
-                Remark
+                Notes
               </th>
             </tr>
             <tr>

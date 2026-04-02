@@ -2482,6 +2482,11 @@ const PropertyGroupItemDto = z
     appraisalDetailId: z.string().uuid().nullable(),
     propertyName: z.string().nullable(),
     area: z.number().nullable(),
+    machineName: z.string().nullable(),
+    brand: z.string().nullable(),
+    model: z.string().nullable(),
+    registrationNo: z.string().nullable(),
+    dimension: z.string().nullable(),
     location: z.string().nullable(),
     photos: z.array(PropertyPhotoDto).nullable(),
   })

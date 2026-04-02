@@ -165,6 +165,7 @@ function PricingAnalysisContent({
   const {
     groupDetail,
     properties,
+    propertiesMap,
     marketSurveyDetails,
     pricingConfiguration,
     pricingSelection,
@@ -295,6 +296,7 @@ function PricingAnalysisContent({
   const serverData: PricingServerData = {
     groupDetail,
     properties,
+    propertiesMap: propertiesMap ?? {},
     marketSurveyDetails: marketSurveyDetails ?? [],
     allFactors,
     pricingConfiguration,
