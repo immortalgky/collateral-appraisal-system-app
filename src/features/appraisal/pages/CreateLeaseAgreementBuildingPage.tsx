@@ -108,10 +108,7 @@ const CreateLeaseAgreementBuildingPage = () => {
     defaultValues: formDefaults,
     resolver: zodResolver(createBuildingForm),
   });
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
-
-  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
-  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
+  const { handleSubmit, getValues, reset } = methods;
 
   useEffect(() => {
     if (isEditMode && propertyData) reset(mapBuildingPropertyResponseToForm(propertyData));
@@ -155,6 +152,9 @@ const CreateLeaseAgreementBuildingPage = () => {
   useEffect(() => {
     if (rentalInfoData) rentalInfoMethods.reset(rentalInfoData as any);
   }, [rentalInfoData, rentalInfoMethods]);
+
+  const hasDirtyFields = methods.formState.isDirty || leaseAgreementMethods.formState.isDirty || rentalInfoMethods.formState.isDirty;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   // ─── Save handlers ────────────────────────────────────────────
 

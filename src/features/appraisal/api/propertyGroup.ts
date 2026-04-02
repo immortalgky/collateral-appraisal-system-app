@@ -20,11 +20,11 @@ export const propertyGroupKeys = {
   propertyDetail: (appraisalId: string, propertyId: string) =>
     ['appraisal', appraisalId, 'property', propertyId, 'detail'] as const,
   leaseAgreement: (appraisalId: string, propertyId: string) =>
-    ['appraisals', appraisalId, 'properties', propertyId, 'lease-agreement'] as const,
+    ['appraisal', appraisalId, 'properties', propertyId, 'lease-agreement'] as const,
   rentalInfo: (appraisalId: string, propertyId: string) =>
-    ['appraisals', appraisalId, 'properties', propertyId, 'rental-info'] as const,
+    ['appraisal', appraisalId, 'properties', propertyId, 'rental-info'] as const,
   rentalSchedule: (appraisalId: string, propertyId: string) =>
-    ['appraisals', appraisalId, 'properties', propertyId, 'rental-schedule'] as const,
+    ['appraisal', appraisalId, 'properties', propertyId, 'rental-schedule'] as const,
 };
 
 // ==================== Type-to-Endpoint Mapping ====================

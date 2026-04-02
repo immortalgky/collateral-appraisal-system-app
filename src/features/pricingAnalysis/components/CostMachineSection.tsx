@@ -266,7 +266,7 @@ export function CostMachineSection({
               <tr>
                 <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>No.</th>
                 <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>Quantity</th>
-                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>Machinery Infomation</th>
+                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>Machinery Information</th>
                 <th rowSpan={2} className={clsx(th, 'min-w-32 text-right')}>
                   RCN Replacement Cost<br />
                   <span className="font-normal text-gray-500">(Baht)</span>
@@ -342,7 +342,7 @@ export function CostMachineSection({
                 Quantity
               </th>
               <th colSpan={5} className={clsx(thCenter, 'border-b-2 ')}>
-                Machinery Infomation
+                Machinery Information
               </th>
               <th rowSpan={2} className={clsx(th, 'min-w-32 text-right')}>
                 RCN Replacement Cost

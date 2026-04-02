@@ -10,8 +10,10 @@ import { Icon } from '@/shared/components';
 import { initializeCostMachineForm } from '../adapters/initializeCostMachineForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import CostMachineForm from './CostMachineForm';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGetMachineCostItems, useResetMethod, useSaveMachineCostItems } from '../api';
 import type { SaveMachineCostItemInput } from '../api';
+import { pricingAnalysisKeys } from '../api/queryKeys';
 
 interface CostMachinePanelProps {
   activeMethod?: {
@@ -41,6 +43,7 @@ export function CostMachinePanel({
   onCancelCalculationMethod,
 }: CostMachinePanelProps) {
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
+  const queryClient = useQueryClient();
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
   const resetMutation = useResetMethod();
   const saveMutation = useSaveMachineCostItems();
@@ -82,7 +85,7 @@ export function CostMachinePanel({
   // Initialize form once when machine list and saved data are ready
   const isInitialized = useRef(false);
   useEffect(() => {
-    if (machineryItems.length > 0 && savedData !== undefined && !isInitialized.current) {
+    if (savedData !== undefined && !isInitialized.current) {
       isInitialized.current = true;
       initializeCostMachineForm({
         machineryItems,
@@ -147,6 +150,10 @@ export function CostMachinePanel({
       await resetMutation.mutateAsync({
         pricingAnalysisId,
         methodId,
+      });
+      // Invalidate cached saved data so re-init uses fresh state
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.machineCostItems(pricingAnalysisId, methodId),
       });
       isInitialized.current = false;
       initializeCostMachineForm({ machineryItems, reset });

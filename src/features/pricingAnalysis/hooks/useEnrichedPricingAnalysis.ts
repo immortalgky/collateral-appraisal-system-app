@@ -179,7 +179,10 @@ export function useEnrichedPricingAnalysis({
       if (data) map[entry.propertyId] = data;
     });
     return map;
-  }, [allPropertyEntries.length, propertyDetailQueries.map(q => q.dataUpdatedAt).join(',')]);
+  }, [
+    allPropertyEntries.map(entry => entry.propertyId).join(','),
+    propertyDetailQueries.map(q => q.dataUpdatedAt).join(','),
+  ]);
 
   const marketSurveyDetails = marketSurveyDetailQueries
     .map(q => q.data?.marketComparable)

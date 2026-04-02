@@ -113,10 +113,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
     defaultValues: formDefaults,
     resolver: zodResolver(createLandAndBuildingForm),
   });
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
-
-  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
-  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
+  const { handleSubmit, getValues, reset } = methods;
 
   useEffect(() => {
     if (isEditMode && propertyData) reset(mapLandAndBuildingPropertyResponseToForm(propertyData));
@@ -162,6 +159,9 @@ const CreateLeaseAgreementLandBuildingPage = () => {
   useEffect(() => {
     if (rentalInfoData) rentalInfoMethods.reset(rentalInfoData as any);
   }, [rentalInfoData, rentalInfoMethods]);
+
+  const hasDirtyFields = methods.formState.isDirty || leaseAgreementMethods.formState.isDirty || rentalInfoMethods.formState.isDirty;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   // ─── Save handlers ────────────────────────────────────────────
 

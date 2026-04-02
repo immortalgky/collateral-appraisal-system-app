@@ -45,7 +45,7 @@ export function MethodFooterActions({
           isLoading={isSubmitting}
           disabled={isSubmitting}
         >
-          <Icon style="solid" name="check" className="size-4 mr-2" />
+          {!isSubmitting && <Icon style="solid" name="check" className="size-4 mr-2" />}
           Save
         </Button>
       </ActionBar.Right>

@@ -61,13 +61,15 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     location: item.location || '-',
     sequenceNumber: item.sequenceInGroup ?? undefined,
     detailId: item.appraisalDetailId ?? undefined,
-    ...(isMachine && {
-      machineName: item.machineName ?? undefined,
-      brand: item.brand ?? undefined,
-      model: item.model ?? undefined,
-      registrationNo: item.registrationNo ?? undefined,
-      dimension: item.dimension ?? undefined,
-    }),
+    ...(isMachine
+      ? {
+          machineName: item.machineName ?? undefined,
+          brand: item.brand ?? undefined,
+          model: item.model ?? undefined,
+          registrationNo: item.registrationNo ?? undefined,
+          dimension: item.dimension ?? undefined,
+        }
+      : {}),
   };
 }
 

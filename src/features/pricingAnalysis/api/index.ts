@@ -510,7 +510,6 @@ export function useSaveMachineCostItems() {
       pricingAnalysisId,
       methodId,
       items,
-      groupDescription,
       remark,
     }: {
       pricingAnalysisId: string;
