@@ -32,24 +32,46 @@ interface MethodSpecifiedRoomIncomePerDay {
   totalMethodValues: number[];
 }
 
+type SeasonRateInput = {
+  seasonId: string;
+  roomIncome: number | null;
+  saleableArea: number | null;
+};
+
+type RoomIncomeRow = {
+  id: string;
+  roomType: string;
+  seasons: SeasonRateInput[];
+};
+
+type SeasonalRoomIncomeFormValues = {
+  seasonCount: number;
+  seasonLabels: string[];
+  rows: RoomIncomeRow[];
+};
+
 interface MethodSpecifiedRoomIncomeBySeasonalRates {
   // modal
   seasonCount: number;
-  seasonNames: string[];
-  rows: {
+  seasonDetails: {
+    seasonName: string;
+    numberOfMonths: number;
+    description: string;
+  };
+  roomDetails: {
     roomType: string;
     otherRoomType: string;
     seasons: {
-      seasonName: string;
-      numberOfMonths: number;
-      description: string;
       roomType: {
         roomIncome: number;
         saleableArea: number;
-        totalRoomIncomePerDay: number;
+        totalRoomIncomePerDay: number; // room income * saleable area
       };
     }[];
   }[];
+  avgTotalRoomIncomePerDay: number[]; // one season => sum total room income per day / sum saleable area
+  avgTotalRoomIncomePerSeason: number[]; // one season => avgTotalRoomIncomePerDay * number of months * 30
+  avgRoomRate: number; // sum(avgTotalRoomIncomePerSeason) / sum(number of month * 30)
   totalSaleableArea: number;
   increaseRatePct: number;
   increaseRateYrs: number;
