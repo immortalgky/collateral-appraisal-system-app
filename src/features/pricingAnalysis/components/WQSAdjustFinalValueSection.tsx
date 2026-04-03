@@ -38,9 +38,10 @@ export const AdjustFinalValueSection = ({
     finalValueAppraisalPriceRounded: appraisalPriceRoundedPath,
     finalValuePriceDifferentiate: priceDifferentiatePath,
     finalValueTotalBuildingCost: totalBuildingCostPath,
-    finalValueAppraisalPriceIncludeBuildinCost: appraisalPriceIncludeBuildingCostPath,
-    finalValueAppraisalPriceIncludeBuildinCostRounded: appraisalPriceIncludeBuildingCostRoundedPath,
-    finalValuePriceIncluadeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
+    finalValueAppraisalPriceIncludeBuildingCost: appraisalPriceIncludeBuildingCostPath,
+    finalValueAppraisalPriceIncludeBuildingCostRounded:
+      appraisalPriceIncludeBuildingCostRoundedPath,
+    finalValuePriceIncludeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
   } = wqsFieldPath;
 
   const { control, setValue } = useFormContext();
@@ -135,7 +136,7 @@ export const AdjustFinalValueSection = ({
     },
     {
       targetPath: priceDifferentiatePath(),
-      deps: [appraisalPriceRoundedPath(), finalValueRoundedPath()],
+      deps: [appraisalPriceRoundedPath(), finalValueAppraisalPricePath()],
       compute: ({ getValues }) => {
         const appraisalPriceRounded = getValues(appraisalPriceRoundedPath()) ?? 0;
         const finalValueRounded = getValues(finalValueAppraisalPricePath()) ?? 0;
@@ -311,7 +312,7 @@ export const AdjustFinalValueSection = ({
         </div>
       )}
 
-      {includeBuildingCost && (
+      {includeBuildingCost && isCostApproach && (
         <div className="flex flex-col gap-3 text-sm">
           <div className="">
             {includeBuildingCost && (

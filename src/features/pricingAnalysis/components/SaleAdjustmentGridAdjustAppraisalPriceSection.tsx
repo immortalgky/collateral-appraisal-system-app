@@ -278,7 +278,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
           </div>
         )}
 
-        {includeBuildingCost && (
+        {isCostApproach && includeBuildingCost && (
           <div className="flex flex-col gap-3 text-sm">
             <div className="">
               {includeBuildingCost && (

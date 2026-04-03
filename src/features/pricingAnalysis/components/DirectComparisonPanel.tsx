@@ -75,10 +75,10 @@ export function DirectComparisonPanel({
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'DC_COST';
 
-  const property = isCostApproach
-    ? (properties?.filter(p => p.propertyType === 'L')[0] as Record<string, unknown>)
-    : (properties?.[0] as Record<string, unknown>);
-  const buildingCost = properties?.filter(p => p.propertyType === 'B');
+  const property: Record<string, unknown> | undefined = isCostApproach
+    ? properties?.find(p => p.propertyType === 'L')
+    : properties?.[0];
+  const buildingCost = properties?.filter(p => p.propertyType === 'B') ?? [];
 
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',

@@ -32,9 +32,10 @@ export function DirectComparisonAdjustAppraisalPriceSection({
     priceDifferentiate: priceDifferentiatePath,
     finalValueHasBuildingCost: hasBuildingCostPath,
     finalValueTotalBuildingCost: totalBuildingCostPath,
-    finalValueAppraisalPriceIncludeBuildinCost: appraisalPriceIncludeBuildingCostPath,
-    finalValueAppraisalPriceIncludeBuildinCostRounded: appraisalPriceIncludeBuildingCostRoundedPath,
-    finalValuePriceIncluadeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
+    finalValueAppraisalPriceIncludeBuildingCost: appraisalPriceIncludeBuildingCostPath,
+    finalValueAppraisalPriceIncludeBuildingCostRounded:
+      appraisalPriceIncludeBuildingCostRoundedPath,
+    finalValuePriceIncludeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
   } = directComparisonPath;
 
   const prevAppraisalPriceRef = useRef<number | null>(null);
@@ -272,12 +273,12 @@ export function DirectComparisonAdjustAppraisalPriceSection({
           <RHFInputCell
             fieldName={hasBuildingCostPath()}
             inputType="toggle"
-            toggle={{ checked: false, options: ['No', 'Yes'] }}
+            toggle={{ checked: includeBuildingCost, options: ['No', 'Yes'] }}
           />
         </div>
       )}
 
-      {includeBuildingCost && (
+      {isCostApproach && includeBuildingCost && (
         <div className="flex flex-col gap-3 text-sm">
           <div className="">
             {includeBuildingCost && (
