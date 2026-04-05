@@ -60,7 +60,7 @@ export function useEnrichedPricingAnalysis({
       if (!!prop.propertyId && !!prop.sequenceInGroup) {
         allPropertyEntries.push({
           propertyId: prop.propertyId,
-          propertyType: prop.propertyType ?? 'Lands',
+          propertyType: prop.propertyType ?? 'L',
           groupId: gId,
           sequenceInGroup: prop.sequenceInGroup,
         });
@@ -220,4 +220,5 @@ const typeToDetailEndpoint: Record<string, string> = {
   L: 'land-detail',
   U: 'condo-detail',
   LB: 'land-and-building-detail',
+  B: 'building-detail',
 };

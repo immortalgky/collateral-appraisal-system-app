@@ -45,10 +45,10 @@ const CreateMarketComparablePage = () => {
   const navigate = useNavigate();
   const basePath = useBasePath();
   const queryClient = useQueryClient();
+  const appraisalId = useAppraisalId();
 
   // Support both appraisal-nested routes (URL params) and standalone routes (search params)
-  const { appraisalId, marketComparableId } = useParams<{
-    appraisalId?: string;
+  const { marketComparableId } = useParams<{
     marketComparableId?: string;
   }>();
   const [searchParams] = useSearchParams();
@@ -270,88 +270,88 @@ const CreateMarketComparablePage = () => {
       </div>
 
       <FormProvider methods={methods} schema={createMarketComparableForm}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-            {/* Scrollable Form Content */}
-            <div
-              id="form-scroll-container"
-              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+          {/* Scrollable Form Content */}
+          <div
+            id="form-scroll-container"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
+          >
+            <ResizableSidebar
+              isOpen={isOpen}
+              onToggle={onToggle}
+              openedWidth="w-1/5"
+              closedWidth="w-1/50"
             >
-              <ResizableSidebar
-                isOpen={isOpen}
-                onToggle={onToggle}
-                openedWidth="w-1/5"
-                closedWidth="w-1/50"
-              >
-                <ResizableSidebar.Main>
-                  <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    {/* Photo Section (appraisal context only) */}
-                    {appraisalId && (
-                      <Section id="photos-section" anchor>
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <Icon name="images" style="solid" className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                        </div>
-                        <div className="h-px bg-gray-200 mb-4" />
-                        <MarketComparablePhotoSection
-                          ref={photoSectionRef}
-                          appraisalId={appraisalId}
-                          marketComparableId={marketId ?? undefined}
-                          images={marketComparable?.marketComparable?.images}
-                        />
-                      </Section>
-                    )}
-
-                    {/* Comparable Information Header */}
-                    <Section id="comparable-section" anchor>
+              <ResizableSidebar.Main>
+                <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Photo Section (appraisal context only) */}
+                  {appraisalId && (
+                    <Section id="photos-section" anchor>
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
-                          <Icon
-                            name="magnifying-glass-location"
-                            style="solid"
-                            className="w-5 h-5 text-orange-600"
-                          />
+                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Icon name="images" style="solid" className="w-5 h-5 text-blue-600" />
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          Comparable Information
-                        </h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
                       </div>
                       <div className="h-px bg-gray-200 mb-4" />
+                      <MarketComparablePhotoSection
+                        ref={photoSectionRef}
+                        appraisalId={appraisalId}
+                        marketComparableId={marketId ?? undefined}
+                        images={marketComparable?.marketComparable?.images}
+                      />
                     </Section>
+                  )}
 
-                    {/* Market Comparable Form */}
-                    <Section anchor className="flex flex-col gap-6">
-                      <MarketComparableForm />
-                    </Section>
-                  </div>
-                </ResizableSidebar.Main>
-              </ResizableSidebar>
-            </div>
+                  {/* Comparable Information Header */}
+                  <Section id="comparable-section" anchor>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <Icon
+                          name="magnifying-glass-location"
+                          style="solid"
+                          className="w-5 h-5 text-orange-600"
+                        />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Comparable Information
+                      </h2>
+                    </div>
+                    <div className="h-px bg-gray-200 mb-4" />
+                  </Section>
 
-            {/* Sticky Action Bar */}
-            <ActionBar>
-              <ActionBar.Left>
-                <CancelButton />
-                {!isReadOnly && (
-                  <>
-                    <ActionBar.Divider />
-                    <ActionBar.UnsavedIndicator show={isDirty} />
-                  </>
-                )}
-              </ActionBar.Left>
+                  {/* Market Comparable Form */}
+                  <Section anchor className="flex flex-col gap-6">
+                    <MarketComparableForm />
+                  </Section>
+                </div>
+              </ResizableSidebar.Main>
+            </ResizableSidebar>
+          </div>
+
+          {/* Sticky Action Bar */}
+          <ActionBar>
+            <ActionBar.Left>
+              <CancelButton />
               {!isReadOnly && (
-                <ActionBar.Right>
-                  <Button type="submit" isLoading={isPending} disabled={isPending}>
-                    <Icon name="check" style="solid" className="size-4 mr-2" />
-                    Save
-                  </Button>
-                </ActionBar.Right>
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={isDirty} />
+                </>
               )}
-            </ActionBar>
+            </ActionBar.Left>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button type="submit" isLoading={isPending} disabled={isPending}>
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
+          </ActionBar>
 
-            <UnsavedChangesDialog blocker={blocker} />
-          </form>
+          <UnsavedChangesDialog blocker={blocker} />
+        </form>
       </FormProvider>
     </div>
   );

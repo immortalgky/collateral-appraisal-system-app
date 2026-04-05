@@ -6,7 +6,9 @@ import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } f
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 
 interface WQSProps {
+  isCostApproach: boolean;
   property: Record<string, unknown>;
+  buildingCost?: Record<string, unknown>[];
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
   template?: TemplateDetailType;
@@ -14,7 +16,9 @@ interface WQSProps {
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
 }
 export const WQSForm = ({
+  isCostApproach,
   property,
+  buildingCost,
   marketSurveys,
   comparativeMarketSurveys,
   template,
@@ -43,7 +47,9 @@ export const WQSForm = ({
             <>
               <div>
                 <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
-                  <h3 className="text-base font-semibold text-gray-800">Calculation of Appraisal Value</h3>
+                  <h3 className="text-base font-semibold text-gray-800">
+                    Calculation of Appraisal Value
+                  </h3>
                 </div>
                 <div className="px-4">
                   <WQSScoringSection
@@ -62,7 +68,11 @@ export const WQSForm = ({
                   <h3 className="text-base font-semibold text-gray-800">Adjust Final Value</h3>
                 </div>
                 <div className="px-4">
-                  <AdjustFinalValueSection property={property} />
+                  <AdjustFinalValueSection
+                    property={property}
+                    buildingCost={buildingCost}
+                    isCostApproach={isCostApproach}
+                  />
                 </div>
               </div>
             </>

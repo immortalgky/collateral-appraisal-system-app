@@ -18,7 +18,9 @@ import { DirectComparisonAdjustAppraisalPriceSection } from '@features/pricingAn
  */
 
 interface DirectComparisonProps {
+  isCostApproach: boolean;
   property: Record<string, unknown>;
+  buildingCost?: Record<string, unknown>[];
   marketSurveys: MarketComparableDetailType[];
   comparativeMarketSurveys: MarketComparableDetailType[];
   template?: TemplateDetailType;
@@ -27,7 +29,9 @@ interface DirectComparisonProps {
 }
 
 export const DirectComparisonForm = ({
+  isCostApproach,
   property,
+  buildingCost,
   marketSurveys,
   comparativeMarketSurveys,
   template,
@@ -73,7 +77,11 @@ export const DirectComparisonForm = ({
                   <h3 className="text-base font-semibold text-gray-800">Adjust Final Value</h3>
                 </div>
                 <div className="px-4">
-                  <DirectComparisonAdjustAppraisalPriceSection property={property} />
+                  <DirectComparisonAdjustAppraisalPriceSection
+                    property={property}
+                    buildingCost={buildingCost}
+                    isCostApproach={isCostApproach}
+                  />
                 </div>
               </div>
             </>

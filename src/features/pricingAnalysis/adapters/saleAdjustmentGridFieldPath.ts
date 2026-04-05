@@ -90,4 +90,12 @@ export const saleGridFieldPath = {
   appraisalPrice: () => 'saleAdjustmentGridAppraisalPrice.appraisalPrice',
   appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded',
   priceDifferentiate: () => 'saleAdjustmentGridAppraisalPrice.priceDifferentiate',
+  finalValueHasBuildingCost: () => `saleAdjustmentGridAppraisalPrice.hasBuildingCost`,
+  finalValueTotalBuildingCost: () => `saleAdjustmentGridAppraisalPrice.totalBuildingCost`,
+  finalValueAppraisalPriceIncludeBuildingCost: () =>
+    `saleAdjustmentGridAppraisalPrice.appraisalPriceIncludeBuildingCost`,
+  finalValueAppraisalPriceIncludeBuildingCostRounded: () =>
+    `saleAdjustmentGridAppraisalPrice.appraisalPriceIncludeBuildingCostRounded`,
+  finalValuePriceIncludeBuildingCostDifferentiate: () =>
+    `saleAdjustmentGridAppraisalPrice.priceIncludeBuildingCostDifferentiate`,
 };
