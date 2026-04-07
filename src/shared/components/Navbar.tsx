@@ -4,6 +4,7 @@ import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
+import { setAccessToken } from '@shared/api/axiosInstance';
 import { queryClient } from '@app/queryClient';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
@@ -32,7 +33,7 @@ function handleLogout(href: string) {
   // Navigate FIRST — clearing Zustand state would trigger ProtectedRoute
   // to redirect to /login, which cancels the server logout navigation.
   // Clear storage directly without triggering React re-renders.
-  localStorage.removeItem('auth_token');
+  setAccessToken(null);
   queryClient.clear();
   sessionStorage.clear();
   window.location.replace(href);

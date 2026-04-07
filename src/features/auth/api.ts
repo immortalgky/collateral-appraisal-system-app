@@ -7,6 +7,7 @@ import { useAuthStore } from './store';
 // Function to get the current user profile
 export const useCurrentUser = () => {
   const { setUser } = useAuthStore();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   return useQuery<User, Error, User, string[]>({
     queryKey: ['currentUser'],
@@ -20,12 +21,10 @@ export const useCurrentUser = () => {
       return user;
     },
     onError: () => {
-      // If we can't get the user, they're not authenticated
-      localStorage.removeItem('auth_token');
       setUser(null);
     },
-    // Only run if we have a token
-    enabled: !!localStorage.getItem('auth_token'),
+    // Only run if we have an authenticated session
+    enabled: isAuthenticated,
   } as UseQueryOptions<User, Error, User, string[]>);
 };
 

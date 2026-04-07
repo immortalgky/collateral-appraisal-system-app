@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { setAccessToken } from '@shared/api/axiosInstance';
 import type { User } from './types';
 
 type AuthStore = {
@@ -22,18 +23,19 @@ export const useAuthStore = create<AuthStore>(set => ({
 
   setUser: user => set({ user, isAuthenticated: !!user }),
   setToken: token => {
-    localStorage.setItem('auth_token', token);
+    setAccessToken(token);
+    set({ isAuthenticated: true });
   },
   setLoading: isLoading => set({ isLoading }),
   setError: error => set({ error }),
 
   login: (user, token) => {
-    localStorage.setItem('auth_token', token);
+    setAccessToken(token);
     set({ user, isAuthenticated: true, error: null });
   },
 
   logout: () => {
-    localStorage.removeItem('auth_token');
+    setAccessToken(null);
     set({ user: null, isAuthenticated: false });
   },
 }));
