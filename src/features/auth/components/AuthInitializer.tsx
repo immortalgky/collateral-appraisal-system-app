@@ -9,11 +9,19 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     refreshClient
       .post('/auth/refresh')
       .then(({ data }) => {
-        setAccessToken(data.accessToken);
-        useAuthStore.setState({ isAuthenticated: true });
+        if (data?.accessToken) {
+          setAccessToken(data.accessToken);
+          useAuthStore.setState({ isAuthenticated: true });
+          return;
+        }
+        // Refresh succeeded (2xx) but no token in the body — treat as unauthenticated.
+        setAccessToken(null);
+        useAuthStore.setState({ isAuthenticated: false });
       })
       .catch(() => {
-        // No valid refresh cookie — user will be redirected to login by ProtectedRoute
+        // No valid refresh cookie — clear state; ProtectedRoute will redirect to /login.
+        setAccessToken(null);
+        useAuthStore.setState({ isAuthenticated: false });
       })
       .finally(() => {
         setIsInitialized(true);

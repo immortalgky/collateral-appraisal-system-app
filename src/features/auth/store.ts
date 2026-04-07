@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { setAccessToken } from '@shared/api/axiosInstance';
+import { broadcastLogout, setAccessToken } from '@shared/api/axiosInstance';
 import type { User } from './types';
 
 type AuthStore = {
@@ -35,7 +35,8 @@ export const useAuthStore = create<AuthStore>(set => ({
   },
 
   logout: () => {
-    setAccessToken(null);
+    // Broadcast an explicit logout so other tabs clear auth + redirect.
+    broadcastLogout();
     set({ user: null, isAuthenticated: false });
   },
 }));
