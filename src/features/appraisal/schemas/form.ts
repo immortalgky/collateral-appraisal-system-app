@@ -735,7 +735,7 @@ export type createLeaseAgreementFormType = z.infer<typeof createLeaseAgreementFo
 // =============================================================================
 
 const upFrontEntryItem = z.object({
-  atYear: z.number(),
+  atYear: z.union([z.number(), z.string()]),
   upFrontAmount: z.number(),
 });
 
@@ -747,7 +747,7 @@ const growthPeriodEntryItem = z.object({
   totalAmount: z.number(),
 });
 
-export const rentalInfoFormSchema = z.object({
+export const rentalInfoBaseSchema = z.object({
   numberOfYears: z.number().nullable().optional(),
   firstYearStartDate: z.string().nullable().optional(),
   contractRentalFeePerYear: z.number().nullable().optional(),
@@ -757,19 +757,114 @@ export const rentalInfoFormSchema = z.object({
   growthIntervalYears: z.number().nullable().optional(),
   upFrontEntries: z.array(upFrontEntryItem).nullable().optional(),
   growthPeriodEntries: z.array(growthPeriodEntryItem).nullable().optional(),
-  scheduleEntries: z.array(z.object({
-    year: z.number(),
-    contractStart: z.string(),
-    contractEnd: z.string(),
-    upFront: z.number(),
-    contractRentalFee: z.number(),
-    totalAmount: z.number(),
-    contractRentalFeeGrowthRatePercent: z.number(),
-  })).nullable().optional(),
-  scheduleOverrides: z.array(z.object({
-    year: z.number(),
-    upFront: z.number().nullable().optional(),
-    contractRentalFee: z.number().nullable().optional(),
-  })).nullable().optional(),
+  scheduleEntries: z
+    .array(
+      z.object({
+        year: z.number(),
+        contractStart: z.string(),
+        contractEnd: z.string(),
+        upFront: z.number(),
+        contractRentalFee: z.number(),
+        totalAmount: z.number(),
+        contractRentalFeeGrowthRatePercent: z.number(),
+      }),
+    )
+    .nullable()
+    .optional(),
+  scheduleOverrides: z
+    .array(
+      z.object({
+        year: z.number(),
+        upFront: z.number().nullable().optional(),
+        contractRentalFee: z.number().nullable().optional(),
+      }),
+    )
+    .nullable()
+    .optional(),
 });
+
+const rentalInfoRefinement = (data: any, ctx: z.RefinementCtx) => {
+  const ri = data.rentalInfo ?? data; // support both nested and flat
+  const numberOfYears = ri.numberOfYears ?? 0;
+
+  const upFrontTotal = ri.upFrontTotalAmount ?? 0;
+  const entriesTotal = (ri.upFrontEntries ?? []).reduce(
+    (sum: number, e: any) => sum + (e.upFrontAmount ?? 0),
+    0,
+  );
+  if (
+    upFrontTotal > 0 &&
+    (ri.upFrontEntries ?? []).length > 0 &&
+    Math.abs(entriesTotal - upFrontTotal) > 0.01
+  ) {
+    const path = data.rentalInfo ? ['rentalInfo', 'upFrontEntries'] : ['upFrontEntries'];
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Up front entries total (${entriesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}) does not match Up Front amount (${upFrontTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`,
+      path,
+    });
+  }
+
+  if (numberOfYears > 0 && ri.growthPeriodEntries?.length) {
+    ri.growthPeriodEntries.forEach((entry: any, idx: number) => {
+      if (entry.fromYear > numberOfYears) {
+        const path = data.rentalInfo
+          ? ['rentalInfo', 'growthPeriodEntries', idx, 'fromYear']
+          : ['growthPeriodEntries', idx, 'fromYear'];
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `At Year (${entry.fromYear}) exceeds Number of Years (${numberOfYears})`,
+          path,
+        });
+      }
+    });
+  }
+};
+
+export const rentalInfoFormSchema = rentalInfoBaseSchema.superRefine(rentalInfoRefinement);
 export type RentalInfoFormType = z.infer<typeof rentalInfoFormSchema>;
+
+// =============================================================================
+// Combined Lease Agreement Schemas (one form per page)
+// =============================================================================
+
+const leaseAgreementExtension = {
+  leaseAgreement: createLeaseAgreementForm.nullable().optional(),
+  rentalInfo: rentalInfoBaseSchema.nullable().optional(),
+};
+
+export const createLeaseAgreementBuildingForm = buildFormSchema(
+  allBuildingFields,
+  createBuildingFormBase.extend(leaseAgreementExtension),
+).superRefine(constructionProportionRefinement).superRefine(rentalInfoRefinement);
+export type createLeaseAgreementBuildingFormType = z.infer<typeof createLeaseAgreementBuildingForm>;
+
+export const createLeaseAgreementLandForm = buildFormSchema(
+  allLandFields,
+  createLandFormBase.extend(leaseAgreementExtension),
+).superRefine(rentalInfoRefinement);
+export type createLeaseAgreementLandFormType = z.infer<typeof createLeaseAgreementLandForm>;
+
+export const createLeaseAgreementLandAndBuildingForm = buildFormSchema(
+  allLandBuildingFields,
+  createLandAndBuildingFormBase.extend(leaseAgreementExtension),
+).superRefine(constructionProportionRefinement).superRefine(rentalInfoRefinement);
+export type createLeaseAgreementLandAndBuildingFormType = z.infer<typeof createLeaseAgreementLandAndBuildingForm>;
+
+export const createLeaseAgreementBuildingFormDefault: createLeaseAgreementBuildingFormType = {
+  ...createBuildingFormDefault,
+  leaseAgreement: null,
+  rentalInfo: null,
+};
+
+export const createLeaseAgreementLandFormDefault: createLeaseAgreementLandFormType = {
+  ...createLandFormDefault,
+  leaseAgreement: null,
+  rentalInfo: null,
+};
+
+export const createLeaseAgreementLandAndBuildingFormDefault: createLeaseAgreementLandAndBuildingFormType = {
+  ...createLandAndBuildingFormDefault,
+  leaseAgreement: null,
+  rentalInfo: null,
+};
