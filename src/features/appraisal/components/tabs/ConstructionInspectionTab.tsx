@@ -13,38 +13,7 @@ import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
 import type { PropertyItem } from '../../types';
-
-const BUILDING_TYPES = new Set([
-  'Building',
-  'Land and building',
-  'Lease Agreement Building',
-  'Lease Agreement Land and building',
-  'B',
-  'LB',
-]);
-
-const typeToDetailEndpoint: Record<string, string> = {
-  Building: 'building-detail',
-  'Lease Agreement Building': 'building-detail',
-  'Land and building': 'land-and-building-detail',
-  'Lease Agreement Land and building': 'land-and-building-detail',
-  B: 'building-detail',
-  LB: 'land-and-building-detail',
-};
-
-const getRouteSegment = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    Building: 'building',
-    'Land and building': 'land-building',
-    Lands: 'land',
-    Condominium: 'condo',
-    'Lease Agreement Building': 'building',
-    'Lease Agreement Land and building': 'land-building',
-    B: 'building',
-    LB: 'land-building',
-  };
-  return typeMap[type] || 'building';
-};
+import { isBuildingType, getDetailEndpoint, getRouteSegment } from '../../utils/propertyTypeConfig';
 
 interface ConstructionInspectionTabProps {
   readOnly?: boolean;
@@ -69,7 +38,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
       const found = group.items.find(item => item.id === propertyId);
       if (found) {
         return {
-          buildingProperties: group.items.filter(item => BUILDING_TYPES.has(item.type)),
+          buildingProperties: group.items.filter(item => isBuildingType(item.type)),
           currentProperty: found,
         };
       }
@@ -186,7 +155,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
     setIsCopyOpen(false);
     setIsCopying(true);
     try {
-      const endpoint = typeToDetailEndpoint[source.type] ?? 'building-detail';
+      const endpoint = getDetailEndpoint(source.type) ?? 'building-detail';
       const { data } = await axios.get(
         `/appraisals/${appraisalId}/properties/${source.id}/${endpoint}`,
       );
