@@ -34,24 +34,9 @@ import { PropertyContextMenu } from '../PropertyContextMenu';
 import type { PropertyItem } from '../../types';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { getRouteSegment as getRouteSegmentFromConfig } from '../../utils/propertyTypeConfig';
 
-// Map property type to route segment
-const getRouteSegment = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    Building: 'building',
-    Condo: 'condo',
-    'Land and building': 'land-building',
-    Lands: 'land',
-    'Lease Agreement Building': 'building',
-    'Lease Agreement Land and building': 'land-building',
-    'Lease Agreement Lands': 'land',
-    L: 'land',
-    B: 'building',
-    LB: 'land-building',
-    U: 'condo',
-  };
-  return typeMap[type] || 'land';
-};
+const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
 // Only measure droppables before a drag starts — prevents ResizeObserver
 // from firing on trivial CSS changes (hover states) and causing re-render loops.

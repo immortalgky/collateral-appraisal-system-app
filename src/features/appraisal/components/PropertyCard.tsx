@@ -7,29 +7,9 @@ import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import { PropertyCardContent } from './PropertyCardContent';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
+import { getRouteSegment as getRouteSegmentFromConfig } from '../utils/propertyTypeConfig';
 
-// Map property type to route a segment
-const getRouteSegment = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    Building: 'building',
-    Condominium: 'condo',
-    'Land and building': 'land-building',
-    Lands: 'land',
-    Machinery: 'machinery',
-    'Lease Agreement Building': 'lease-building',
-    'Lease Agreement Land and building': 'lease-land-building',
-    'Lease Agreement Lands': 'lease-land',
-    LSL: 'lease-land',
-    LSB: 'lease-building',
-    LS: 'lease-land-building',
-    L: 'land',
-    B: 'building',
-    LB: 'land-building',
-    U: 'condo',
-    MAC: 'machinery',
-  };
-  return typeMap[type] || 'land';
-};
+const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
 interface PropertyCardProps {
   property: PropertyItem;

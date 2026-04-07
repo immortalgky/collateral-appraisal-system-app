@@ -6,6 +6,7 @@ import Icon from '@/shared/components/Icon';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import type { PropertyType } from '../../types';
 import { getSectionsForType, type FieldDef } from './propertyDetailFieldConfigs';
+import { getDetailEndpoint } from '../../utils/propertyTypeConfig';
 
 interface PropertyDetailSlideOverProps {
   appraisalId: string;
@@ -15,31 +16,11 @@ interface PropertyDetailSlideOverProps {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-const LAND_CONFIG = { detailPath: 'land-detail', queryKey: 'land-properties' };
-const BUILDING_CONFIG = { detailPath: 'building-detail', queryKey: 'building-properties' };
-const CONDO_CONFIG = { detailPath: 'condo-detail', queryKey: 'condo-properties' };
-const LAND_BUILDING_CONFIG = { detailPath: 'land-and-building-detail', queryKey: 'land-and-building-properties' };
-const MACHINERY_CONFIG = { detailPath: 'machinery-detail', queryKey: 'machinery-properties' };
-
-const PROPERTY_TYPE_CONFIG: Record<string, { detailPath: string; queryKey: string }> = {
-  Lands: LAND_CONFIG,
-  Building: BUILDING_CONFIG,
-  Condominium: CONDO_CONFIG,
-  'Land and building': LAND_BUILDING_CONFIG,
-  'Lease Agreement Lands': LAND_CONFIG,
-  'Lease Agreement Building': BUILDING_CONFIG,
-  'Lease Agreement Land and building': LAND_BUILDING_CONFIG,
-  Machine: MACHINERY_CONFIG,
-  Vehicle: MACHINERY_CONFIG,
-  Vessel: MACHINERY_CONFIG,
-  L: LAND_CONFIG,
-  B: BUILDING_CONFIG,
-  U: CONDO_CONFIG,
-  LB: LAND_BUILDING_CONFIG,
-  M: MACHINERY_CONFIG,
-};
-
-const DEFAULT_CONFIG = { detailPath: 'land-detail', queryKey: 'land-properties' };
+function getConfig(propertyType: string) {
+  const detailPath = getDetailEndpoint(propertyType) ?? 'land-detail';
+  const queryKey = detailPath.replace('-detail', '-properties');
+  return { detailPath, queryKey };
+}
 
 function formatNumber(value: unknown, decimalPlaces?: number): string {
   const num = Number(value);
@@ -62,7 +43,7 @@ const PropertyDetailSlideOver = ({
   propertyId,
   propertyType,
 }: PropertyDetailSlideOverProps) => {
-  const config = PROPERTY_TYPE_CONFIG[propertyType] || DEFAULT_CONFIG;
+  const config = getConfig(propertyType);
 
   // Use the same query key pattern as existing hooks in api/property.ts
   const { data, isLoading, error } = useQuery({

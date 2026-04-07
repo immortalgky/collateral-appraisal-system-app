@@ -6,24 +6,9 @@ import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
+import { getRouteSegment as getRouteSegmentFromConfig } from '../utils/propertyTypeConfig';
 
-// Map property type to route segment
-const getRouteSegment = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    Building: 'building',
-    Condominium: 'condo',
-    'Land and building': 'land-building',
-    Lands: 'land',
-    'Lease Agreement Building': 'building',
-    'Lease Agreement Land and building': 'land-building',
-    'Lease Agreement Lands': 'land',
-    L: 'land',
-    B: 'building',
-    LB: 'land-building',
-    U: 'condo',
-  };
-  return typeMap[type] || 'land';
-};
+const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
 interface PropertyTableRowProps {
   property: PropertyItem;
