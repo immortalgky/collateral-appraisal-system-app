@@ -1,11 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store.ts';
 import { useCurrentUser } from '../api.ts';
+import { getAccessToken } from '@shared/api/axiosInstance';
 import type { JSX } from 'react';
 
 export function ProtectedRoute({ component }: { component: JSX.Element }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const hasToken = !!localStorage.getItem('auth_token');
+  const hasToken = !!getAccessToken();
   const { isLoading } = useCurrentUser();
 
   // No token and not authenticated → go to login

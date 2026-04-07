@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { useAuthStore } from '@features/auth/store';
 import type {
   UserProfile,
   AdminUserListResult,
@@ -16,13 +17,15 @@ const USERS_KEY = 'users';
 
 /** Current user's own profile */
 export const useGetMe = () => {
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
   return useQuery({
     queryKey: ME_KEY,
     queryFn: async (): Promise<UserProfile> => {
       const { data } = await axios.get<UserProfile>('/auth/me');
       return data;
     },
-    enabled: !!localStorage.getItem('auth_token'),
+    enabled: isAuthenticated,
   });
 };
 
