@@ -1,11 +1,11 @@
 import type { DCFSection } from '@/features/pricingAnalysis/types/dcf';
-import { DiscountedCashFlowCategory } from '../DiscountedCashFlowCategory';
 import { DynamicSection } from './DynamicSection';
 import type { SectionColor } from '../DiscountedCashFlowTable';
+import { DiscountedCashFlowCategoryRenderer } from '@features/pricingAnalysis/components/dcf/DiscountedCashFlowCategoryRenderer.tsx';
 
 interface SectionExpenseProps {
   name: string;
-  properties: Record<string, unknown>[] | undefined;
+  properties: Record<string, unknown>[];
   section: DCFSection;
   totalNumberOfYears: number;
   icon: string;
@@ -30,8 +30,8 @@ export function SectionExpense({
     >
       {(section?.categories ?? []).map((category, index) => {
         return (
-          <DiscountedCashFlowCategory
-            key={category.clientId ?? `${name}.categories.${index}`}
+          <DiscountedCashFlowCategoryRenderer
+            key={category.dbId ?? category.clientId}
             name={`${name}.categories.${index}`}
             properties={properties}
             section={section}

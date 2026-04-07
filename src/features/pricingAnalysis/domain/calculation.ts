@@ -2,6 +2,7 @@
  * Numeric utility functions for the Collateral Appraisal System.
  * Place this file in: src/shared/utils/number.utils.ts
  */
+import { propertyTaxRanges } from '@features/pricingAnalysis/data/dcfParameters.ts';
 
 type Numberish = string | number | null | undefined;
 
@@ -197,4 +198,18 @@ export function toDecimal(value: Numberish, places = 2): number {
  */
 export function formatFixed2(value: Numberish): string {
   return toFixed2(value).toFixed(2);
+}
+
+export function getPropertyTaxRate(totalGovPrice: number): number {
+  const matchedRange = propertyTaxRanges.find(
+    range =>
+      totalGovPrice >= range.minValue &&
+      (range.maxValue === null || totalGovPrice <= range.maxValue),
+  );
+
+  return matchedRange?.taxRate ?? 0;
+}
+
+export function getPropertyTaxAmount(totalGovPrice: number): number {
+  return totalGovPrice * getPropertyTaxRate(totalGovPrice);
 }

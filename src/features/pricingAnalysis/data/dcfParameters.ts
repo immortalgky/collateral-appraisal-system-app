@@ -109,7 +109,7 @@ export const roomTypeParameters = [
   { code: '99', description: 'Others' },
 ];
 
-const taxRange = [
+export const propertyTaxRanges = [
   { taxRate: 0.02, maxValue: 50_000_000, minValue: 10_000_000 },
   { taxRate: 0.03, maxValue: 75_000_000, minValue: 50_000_001 },
   { taxRate: 0.05, maxValue: 100_000_000, minValue: 75_000_001 },

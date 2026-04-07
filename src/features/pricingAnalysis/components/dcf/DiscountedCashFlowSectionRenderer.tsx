@@ -7,7 +7,7 @@ import { SectionExpense } from './dcfSections/SectionExpense';
 
 interface DiscountedCashFlowSectionRendererProps {
   name: string;
-  properties: Record<string, unknown>[] | undefined;
+  properties: Record<string, unknown>[];
   section: DCFSection;
   totalNumberOfYears: number;
   icon: string;

@@ -84,7 +84,7 @@ const getIconSection = (identifier: string) => {
 
 interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
-  properties: Record<string, unknown>[] | undefined;
+  properties: Record<string, unknown>[];
 }
 
 export function DiscountedCashFlowTable({
@@ -105,12 +105,9 @@ export function DiscountedCashFlowTable({
 
   useDerivedFields({ rules: calculateStaticCalculationDerivedRules, ctx: { sections } });
 
+  // assumption rules which will be update due to assumption change; add, remove
   const calculateTotalAssumptionDerivedRules = useMemo(() => {
     return buildCalculateTotalAssumptionDerivedRules(sections, totalNumberOfYears);
-  }, [sections, totalNumberOfYears]);
-
-  const calculateGOPDerivedRules = useMemo(() => {
-    return buildCalculateGOPDerivedRules(sections, totalNumberOfYears);
   }, [sections, totalNumberOfYears]);
 
   useDerivedFields({ rules: calculateTotalAssumptionDerivedRules });
@@ -172,7 +169,7 @@ export function DiscountedCashFlowTable({
                       number={{
                         decimalPlaces: 0,
                         maxIntegerDigits: 3,
-                        maxValue: 367,
+                        maxValue: 370,
                         allowNegative: false,
                       }}
                     />
@@ -180,24 +177,23 @@ export function DiscountedCashFlowTable({
                 </div>
               </td>
               {Array.from({ length: totalNumberOfYears }, (_, i) => (
-                <td
+                <th
                   key={i}
                   className={clsx(
                     'text-right text-sm px-1.5 py-1.5 font-medium whitespace-nowrap border-b border-gray-300',
                   )}
                 >
                   Year {i + 1}
-                </td>
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {/* style? data? */}
-            {(sections ?? []).map((section: DCFSection, index) => {
+            {(sections ?? []).map((section: DCFSection, sectionIdx: number) => {
               return (
                 <DiscountedCashFlowSectionRenderer
                   key={section.dbId ?? section.clientId}
-                  name={`sections.${index}`}
+                  name={`sections.${sectionIdx}`}
                   properties={properties}
                   section={section}
                   color={getSectionColor(section.sectionType)}
