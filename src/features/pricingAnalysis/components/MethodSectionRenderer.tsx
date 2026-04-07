@@ -5,7 +5,7 @@ import { WQSPanel } from '@features/pricingAnalysis/components/WQSPanel.tsx';
 import type { PricingServerData } from '../types/selection';
 import type { GetComparativeFactorsResponseType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
-import { DiscountedCashFlowPanel } from './DiscountedCashFlowPanel';
+import { DiscountedCashFlowPanel } from './dcf/DiscountedCashFlowPanel';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { CostMachinePanel } from './CostMachinePanel';
 

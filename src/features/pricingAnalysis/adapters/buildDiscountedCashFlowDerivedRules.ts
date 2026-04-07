@@ -4,17 +4,17 @@ import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
 import type { DCFAssumption, DCFCategory, DCFSection } from '../types/dcf';
 import type { DerivedFieldRule } from './useDerivedFieldArray';
 
-export function buildCalculateTotalIncomeDerivedRules(
+export function buildStaticCalculationDerivedRules(
   sections: DCFSection[] | undefined,
   totalNumberOfYears: number,
-): DerivedFieldRule[] {
-  return (sections ?? [])
-    .filter(section => section.sectionType === 'income' || section.sectionType === 'expenses')
-    .flatMap((section, sectionIdx) => {
-      return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
-        const name = `sections.${sectionIdx}`;
-        return [
-          {
+) {
+  return (sections ?? []).flatMap((section, sectionIdx) => {
+    if (section.sectionType === 'income') {
+      return [
+        // calculate summation of categories under section
+        ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+          const name = `sections.${sectionIdx}`;
+          return {
             targetPath: `${name}.totalSectionValues.${idx}`,
             deps: [`${name}.categories`],
             compute: ({ getValues }) => {
@@ -23,35 +23,293 @@ export function buildCalculateTotalIncomeDerivedRules(
                 return prev + toNumber(curr.totalCategoryValues?.[idx] ?? 0);
               }, 0);
             },
-          },
-        ];
-      });
-    });
-}
+          };
+        }),
 
-export function buildCalculateTotalCategoryDerivedRules(
-  sections: DCFSection[] | undefined,
-  totalNumberOfYears: number,
-): DerivedFieldRule[] {
-  return (sections ?? [])
-    .filter(section => section.sectionType === 'income' || section.sectionType === 'expenses')
-    .flatMap((section, sectionIdx) => {
-      return (section.categories ?? []).flatMap((category, categoryIdx) => {
-        return Array.from({ length: totalNumberOfYears }).flatMap((_, yearIdx) => {
-          const name = `sections.${sectionIdx}.categories.${categoryIdx}`;
+        // calculate summation of assumptions under categories
+        ...(section.categories ?? []).flatMap((category, categoryIdx) => {
+          return Array.from({ length: totalNumberOfYears }).flatMap((_, yearIdx) => {
+            const name = `sections.${sectionIdx}.categories.${categoryIdx}`;
+            return {
+              targetPath: `${name}.totalCategoryValues.${yearIdx}`,
+              deps: [`${name}.assumptions`],
+              compute: ({ getValues }) => {
+                const assumptions = getValues(`${name}.assumptions`) ?? [];
+                return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+                  return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
+                }, 0);
+              },
+            };
+          });
+        }),
+      ];
+    }
+
+    if (section.sectionType === 'expenses') {
+      return [
+        // calculate summation of categories under section
+        ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+          const name = `sections.${sectionIdx}`;
           return {
-            targetPath: `${name}.totalCategoryValues.${yearIdx}`,
-            deps: [`${name}.assumptions`],
+            targetPath: `${name}.totalSectionValues.${idx}`,
+            deps: [`${name}.categories`],
             compute: ({ getValues }) => {
-              const assumptions = getValues(`${name}.assumptions`) ?? [];
-              return assumptions.reduce((prev: number, curr: DCFAssumption) => {
-                return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
+              const categories = getValues(`${name}.categories`) ?? [];
+              return categories.reduce((prev, curr: DCFCategory) => {
+                if (curr.categoryType === 'gop') return prev;
+                return prev + toNumber(curr.totalCategoryValues?.[idx] ?? 0);
               }, 0);
             },
           };
-        });
-      });
-    });
+        }),
+
+        // calculate summation of assumptions under categories
+        ...(section.categories ?? []).flatMap((category, categoryIdx) => {
+          if (category.categoryType === 'expenses') {
+            return Array.from({ length: totalNumberOfYears }).flatMap((_, yearIdx) => {
+              const name = `sections.${sectionIdx}.categories.${categoryIdx}`;
+              return {
+                targetPath: `${name}.totalCategoryValues.${yearIdx}`,
+                deps: [`${name}.assumptions`],
+                compute: ({ getValues }) => {
+                  const assumptions = getValues(`${name}.assumptions`) ?? [];
+                  return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+                    return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
+                  }, 0);
+                },
+              };
+            });
+          }
+
+          if (category.categoryType === 'gop') {
+            const totalIncome = sections?.find(
+              section => section.sectionType === 'income',
+            )?.totalSectionValues;
+            const TotalExpensesExcludeFixedCharge = sections
+              ?.find(section => section.sectionType === 'expenses')
+              ?.categories?.filter(
+                category =>
+                  category.categoryType !== 'gop' && category.categoryType !== 'fixedExps',
+              );
+
+            return Array.from({ length: totalNumberOfYears }).flatMap((_, yearIdx) => {
+              const name = `sections.${sectionIdx}.categories.${categoryIdx}`;
+              return {
+                targetPath: `${name}.totalCategoryValues.${yearIdx}`,
+                deps: [],
+                compute: ({ ctx }) => {
+                  const totalIncome = ctx.sections?.find(
+                    section => section.sectionType === 'income',
+                  )?.totalSectionValues;
+                  const TotalExpensesExcludeFixedCharge = ctx.sections
+                    ?.find(section => section.sectionType === 'expenses')
+                    ?.categories?.filter(
+                      category =>
+                        category.categoryType !== 'gop' && category.categoryType !== 'fixedExps',
+                    );
+                  const income = totalIncome?.[yearIdx] ?? 0;
+                  const exps =
+                    TotalExpensesExcludeFixedCharge?.reduce(
+                      (acc, curr) => (acc += curr.totalCategoryValues?.[yearIdx] ?? 0),
+                      0,
+                    ) ?? 0;
+                  return income - exps;
+                },
+              };
+            });
+          }
+
+          if (category.categoryType === 'fixedExps') {
+            return Array.from({ length: totalNumberOfYears }).flatMap((_, yearIdx) => {
+              const name = `sections.${sectionIdx}.categories.${categoryIdx}`;
+              return {
+                targetPath: `${name}.totalCategoryValues.${yearIdx}`,
+                deps: [`${name}.assumptions`],
+                compute: ({ getValues }) => {
+                  const assumptions = getValues(`${name}.assumptions`) ?? [];
+                  return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+                    return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
+                  }, 0);
+                },
+              };
+            });
+          }
+        }),
+      ];
+    }
+
+    if (section.sectionType === 'summaryDCF') {
+      return [
+        ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+          return [
+            {
+              targetPath: `sections.${sectionIdx}.grossRevenue.${idx}`,
+              deps: ['sections'],
+              compute: ({ getValues, ctx }) => {
+                const grossRevenue = (ctx.sections ?? []).reduce((prev, curr) => {
+                  const identifer = curr.identifier ?? '';
+                  if (identifer === 'positive')
+                    return prev + toNumber(curr.totalSectionValues?.[idx] ?? 0);
+                  if (identifer === 'negative')
+                    return prev - toNumber(curr.totalSectionValues?.[idx] ?? 0);
+                  return prev;
+                }, 0);
+
+                // minus contract fee from lease agreement
+                const contractRentalFee =
+                  getValues(`sections.${sectionIdx}.contractRentalFee.${idx}`) ?? 0;
+                console.log(grossRevenue);
+                return grossRevenue - contractRentalFee;
+              },
+            },
+            {
+              targetPath: `sections.${sectionIdx}.grossRevenueProportional.${idx}`,
+              deps: ['sections'],
+              compute: ({ getValues }) => {
+                const grossRevenue = getValues(`sections.${sectionIdx}.grossRevenue.${idx}`) ?? 0;
+                const income = (sections ?? []).reduce((prev, curr) => {
+                  const identifer = curr.identifier ?? '';
+                  if (identifer === 'positive')
+                    return prev + Number(curr.totalSectionValues?.[idx] ?? 0);
+                  return prev;
+                }, 0);
+                if (income == 0) return 0;
+                return (grossRevenue / income) * 100;
+              },
+            },
+            {
+              targetPath: `sections.${sectionIdx}.contractRentalFee.${idx}`,
+              deps: [],
+              compute: ({ getValues }) => {
+                return 0;
+              },
+            },
+          ];
+        }),
+        ...Array.from({ length: totalNumberOfYears - 1 }).flatMap((_, idx) => {
+          return [
+            {
+              targetPath: `sections.${sectionIdx}.terminalRevenue.${idx}`,
+              deps: ['sections', `capitalizeRate`],
+              when: () => {
+                return idx === totalNumberOfYears - 2;
+              },
+              compute: ({ getValues }) => {
+                const lastYearGrossRevenue =
+                  getValues(`sections.${sectionIdx}.grossRevenue.${totalNumberOfYears - 1}`) ?? 0;
+                const capRate = getValues(`capitalizeRate`) ?? 0;
+                if (capRate === 0) return 0;
+                return lastYearGrossRevenue / (capRate / 100);
+              },
+            },
+            {
+              targetPath: `sections.${sectionIdx}.totalNet.${idx}`,
+              deps: ['sections'],
+              compute: ({ getValues }) => {
+                const terminalRevenue =
+                  getValues(`sections.${sectionIdx}.terminalRevenue.${idx}`) ?? 0;
+                const grossRevenue = getValues(`sections.${sectionIdx}.grossRevenue.${idx}`) ?? 0;
+                return Number(terminalRevenue) + Number(grossRevenue);
+              },
+            },
+            {
+              targetPath: `sections.${sectionIdx}.discount.${idx}`,
+              deps: ['discountedRate'],
+              compute: ({ getValues }) => {
+                const dicountedRate = getValues('discountedRate');
+                return 1 / Math.pow(1 + dicountedRate / 100, idx + 1);
+              },
+            },
+            {
+              targetPath: `sections.${sectionIdx}.presentValue.${idx}`,
+              deps: [],
+              compute: ({ getValues }) => {
+                const discount = getValues(`sections.${sectionIdx}.discount.${idx}`) ?? 0;
+                const totalNet = getValues(`sections.${sectionIdx}.totalNet.${idx}`) ?? 0;
+                return discount * totalNet;
+              },
+            },
+          ];
+        }),
+        {
+          targetPath: `finalValue`,
+          deps: ['sections'],
+          compute: ({ getValues }) => {
+            const summarySection = (getValues('sections') ?? []).find(
+              (s: DCFSection) => s.sectionType === 'summary',
+            ) as DCFSummarySection;
+            const finalValue = (summarySection?.presentValue ?? []).reduce((prev, curr) => {
+              return prev + Number(curr ?? 0);
+            }, 0);
+            return finalValue;
+          },
+        },
+        {
+          targetPath: `finalValueRounded`,
+          deps: [],
+          when: ({ getFieldState, formState }) => {
+            const { isDirty } = getFieldState('finalValueRounded', formState);
+            return !isDirty;
+          },
+          compute: ({ getValues }) => {
+            const finalValue = getValues('finalValue') ?? 0;
+            return finalValue;
+          },
+        },
+      ];
+    }
+
+    if (section.sectionType === 'summaryDirect') {
+      return [
+        {
+          targetPath: `sections.${sectionIdx}.totalNet`,
+          deps: ['sections'],
+          compute: ({ getValues }) => {
+            const grossRevenue = (sections ?? []).reduce((prev, curr) => {
+              const identifer = curr.identifier ?? '';
+              if (identifer === 'positive') return prev + Number(curr.totalSectionValues?.[0] ?? 0);
+              if (identifer === 'negative') return prev - Number(curr.totalSectionValues?.[0] ?? 0);
+              return prev;
+            }, 0);
+
+            // minus contract fee from lease agreement
+            const contractRentalFee = getValues(`sections.${sectionIdx}.contractRentalFee`) ?? 0;
+            return grossRevenue - contractRentalFee;
+          },
+        },
+        {
+          targetPath: `sections.${sectionIdx}.contractRentalFee`,
+          deps: [],
+          compute: ({ getValues }) => {
+            return 0;
+          },
+        },
+        {
+          targetPath: `sections.${sectionIdx}.presentValue`,
+          deps: [`capitalizeRate`, `sections.${sectionIdx}.totalNet`],
+          compute: ({ getValues }) => {
+            const capitalizeRate = getValues(`capitalizeRate`);
+            const totalNet = getValues(`sections.${sectionIdx}.totalNet`) ?? 0;
+
+            if (!capitalizeRate) return 0;
+
+            return toNumber(totalNet / capitalizeRate / 100);
+          },
+        },
+      ];
+    }
+  });
+}
+
+export function buildCalculateGOPDerivedRules(
+  sections: DCFSection[] | undefined,
+  totalNumberOfYears: number,
+): DerivedFieldRule[] {
+  const categoriesData = document.querySelectorAll('[data-category]');
+  (categoriesData ?? []).forEach(element => {
+    console.log(element.dataset.category);
+  });
+  return;
 }
 
 export function buildCalculateTotalAssumptionDerivedRules(
@@ -144,6 +402,109 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
         compute: ({ getValues }) => {
           const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
           const sumSaleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
+          return toNumber(sumSaleableArea * totalNumberOfDayInYear);
+        },
+      },
+      {
+        targetPath: `${name}.detail.occupancyRate.${idx}`,
+        deps: [
+          `${name}.detail.occupancyRateFirstYearPct`,
+          `${name}.detail.occupancyRatePct`,
+          `${name}.detail.occupancyRateYrs`,
+        ],
+        when: ({ getFieldState, formState }) => {
+          const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
+          return !isDirty;
+        },
+        compute: ({ getValues }) => {
+          const occupancyRateFirstYearPct =
+            getValues(`${name}.detail.occupancyRateFirstYearPct`) ?? 0;
+          const occupancyRatePct = getValues(`${name}.detail.occupancyRatePct`) ?? 0;
+          const occupancyRateYrs = getValues(`${name}.detail.occupancyRateYrs`) ?? 0;
+
+          if (idx === 0) return toNumber(occupancyRateFirstYearPct);
+
+          const prevOccupancyRate = getValues(`${name}.detail.occupancyRate.${idx - 1}`) ?? 0;
+
+          if (prevOccupancyRate >= 100) return 100;
+
+          if (idx % occupancyRateYrs === 0) return toNumber(prevOccupancyRate + occupancyRatePct);
+
+          return toNumber(prevOccupancyRate);
+        },
+      },
+      {
+        targetPath: `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+        deps: [`${name}.detail.saleableArea.${idx}`, `${name}.detail.occupancyRate.${idx}`],
+        compute: ({ getValues }) => {
+          const saleableArea = getValues(`${name}.detail.saleableArea.${idx}`) ?? 0;
+          const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
+          return toNumber(saleableArea * (occupancyRate / 100));
+        },
+      },
+      {
+        targetPath: `${name}.detail.roomRateIncrease.${idx}`,
+        deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+        compute: ({ getValues }) => {
+          const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+          const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+          if (idx === 0) return 0;
+          if (idx % increateRateYrs === 0) return toNumber(increaseRatePct);
+          return 0;
+        },
+      },
+      {
+        targetPath: `${name}.detail.avgDailyRate.${idx}`,
+        deps: [`${name}.detail.roomRateIncrease.${idx}`, `${name}.detail.avgRoomRate`],
+        compute: ({ getValues }) => {
+          const avgRoomRate = getValues(`${name}.detail.avgRoomRate`);
+          const prevAvgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx - 1}`);
+          const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`);
+          if (idx === 0) return avgRoomRate;
+          return toNumber(prevAvgDailyRate * (1 + roomRateIncrease / 100));
+        },
+      },
+      {
+        targetPath: `${name}.detail.roomIncome.${idx}`,
+        deps: [
+          `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+          `${name}.detail.avgDailyRate.${idx}`,
+        ],
+        compute: ({ getValues }) => {
+          const totalSaleableAreaDeductByOccRate = getValues(
+            `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
+          );
+          const avgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx}`);
+          return toNumber(totalSaleableAreaDeductByOccRate * avgDailyRate);
+        },
+      },
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.roomIncome.${idx}`],
+        compute: ({ getValues }) => {
+          const roomIncome = getValues(`${name}.detail.roomIncome.${idx}`);
+          return toNumber(roomIncome);
+        },
+      },
+    ];
+  });
+}
+
+export function buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.detail.saleableArea.${idx}`,
+        deps: ['totalNumberOfDayInYear', `${name}.detail.sumSaleableArea`],
+        compute: ({ getValues }) => {
+          const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
+          const sumSaleableArea = getValues(`${name}.detail.totalSaleableArea`) ?? 0;
           return toNumber(sumSaleableArea * totalNumberOfDayInYear);
         },
       },

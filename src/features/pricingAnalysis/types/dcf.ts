@@ -1,6 +1,7 @@
 type Identifier = 'positive' | 'negative' | 'empty';
 type CategoryIdentifier = 'income' | 'expenses' | 'gop' | 'fixedExps';
-type SectionType = 'income' | 'expenses' | 'summary' | 'directSummary';
+type CategoryType = 'income' | 'expenses' | 'gop' | 'fixedExps';
+type SectionType = 'income' | 'expenses' | 'summaryDCF' | 'summaryDirect';
 
 interface MethodSpecifiedRoomIncomePerDay {
   // modal
@@ -44,12 +45,6 @@ type RoomIncomeRow = {
   seasons: SeasonRateInput[];
 };
 
-type SeasonalRoomIncomeFormValues = {
-  seasonCount: number;
-  seasonLabels: string[];
-  rows: RoomIncomeRow[];
-};
-
 interface MethodSpecifiedRoomIncomeBySeasonalRates {
   // modal
   seasonCount: number;
@@ -57,20 +52,10 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
     seasonName: string;
     numberOfMonths: number;
     description: string;
+    avgTotalRoomIncomePerDay: number;
+    avgTotalRoomIncomePerSeason: number;
   };
-  roomDetails: {
-    roomType: string;
-    otherRoomType: string;
-    seasons: {
-      roomType: {
-        roomIncome: number;
-        saleableArea: number;
-        totalRoomIncomePerDay: number; // room income * saleable area
-      };
-    }[];
-  }[];
-  avgTotalRoomIncomePerDay: number[]; // one season => sum total room income per day / sum saleable area
-  avgTotalRoomIncomePerSeason: number[]; // one season => avgTotalRoomIncomePerDay * number of months * 30
+  roomDetails: RoomIncomeRow[];
   avgRoomRate: number; // sum(avgTotalRoomIncomePerSeason) / sum(number of month * 30)
   totalSaleableArea: number;
   increaseRatePct: number;
@@ -78,6 +63,14 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
   occupancyRateFirstYearPct: number;
   occupancyRatePct: number;
   occupancyRateYrs: number;
+
+  // table
+  saleableArea: number[];
+  occupancyRate: number[];
+  totalSaleableAreaDeductByOccRate: number[];
+  roomRateIncrease: number[];
+  avgDailyRate: number[];
+  roomIncome: number[];
 }
 
 interface MethodSpecifiedRoomIncomeWithGrowth {
@@ -274,6 +267,13 @@ export interface MethodSpecifiedRoomIncomePerDayWrapper {
   detail?: MethodSpecifiedRoomIncomePerDay;
 }
 
+export interface MethodSpecifiedRoomIncomeBySeasonalRatesWrapper {
+  id?: string;
+  methodType: '02';
+  totalMethodValues: number[];
+  detail?: MethodSpecifiedRoomIncomeBySeasonalRates;
+}
+
 export interface MethodSpecifiedRoomIncomeWithGrowthWrapper {
   id?: string;
   methodType: '03';
@@ -366,6 +366,7 @@ export interface MethodGrossOperatingProfitWrapper {
 
 export type DCFMethod =
   | MethodSpecifiedRoomIncomePerDayWrapper
+  | MethodSpecifiedRoomIncomeBySeasonalRatesWrapper
   | MethodSpecifiedRoomIncomeWithGrowthWrapper
   | MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper
   | MethodSpecifiedRentalIncomePerMonthWrapper
@@ -395,9 +396,9 @@ export interface DCFAssumption extends Base {
 }
 
 export interface DCFCategory extends Base {
-  categoryType: string; // maybe don't need
+  categoryType: CategoryType; // maybe don't need
   categoryName: string;
-  identifier: CategoryIdentifier;
+  identifier: Identifier;
   displaySeq: number;
   totalCategoryValues: number[];
   assumptions: DCFAssumption[];

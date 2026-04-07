@@ -15,7 +15,7 @@ export function initializeDiscountedCashFlowForm(
     totalNumberOfDayInYear: templateDetailQuery.totalNumberOfDayInYear,
     capitalizeRate: templateDetailQuery.capitalizeRate,
     discountedRate: templateDetailQuery.discountedRate,
-    sections: templateDetailQuery.sections.map((s, s_idx) => {
+    sections: (templateDetailQuery.sections ?? []).map((s, s_idx) => {
       return {
         clientId: getNewId(),
         sectionType: s.sectionType,
@@ -23,14 +23,14 @@ export function initializeDiscountedCashFlowForm(
         identifier: s.identifier,
         displaySeq: s_idx,
         categories:
-          s.categories?.map((c, c_idx) => {
+          (s.categories ?? []).map((c, c_idx) => {
             return {
               clientId: getNewId(),
               categoryType: c.categoryType,
               categoryName: c.categoryName,
               identifier: c.identifier,
               displaySeq: c_idx,
-              assumptions: c.assumptions.map((a, a_idx) => {
+              assumptions: (c.assumptions ?? []).map((a, a_idx) => {
                 return {
                   clientId: getNewId(),
                   assumptionType: a.assumptionType,

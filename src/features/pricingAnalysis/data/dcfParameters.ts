@@ -106,4 +106,12 @@ export const roomTypeParameters = [
   { code: '27', description: 'Bungalow' },
   { code: '28', description: 'Penthouse' },
   { code: '29', description: 'Loft Room' },
+  { code: '99', description: 'Others' },
+];
+
+const taxRange = [
+  { taxRate: 0.02, maxValue: 50_000_000, minValue: 10_000_000 },
+  { taxRate: 0.03, maxValue: 75_000_000, minValue: 50_000_001 },
+  { taxRate: 0.05, maxValue: 100_000_000, minValue: 75_000_001 },
+  { taxRate: 0.1, maxValue: null, minValue: 100_000_001 },
 ];

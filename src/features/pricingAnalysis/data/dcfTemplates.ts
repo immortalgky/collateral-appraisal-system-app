@@ -16,7 +16,7 @@ export const dcfTestTemplate: DCFTemplateType = {
       displaySeq: 0,
       categories: [
         {
-          categoryType: '',
+          categoryType: 'income',
           categoryName: 'Operating Income',
           identifier: 'income',
           displaySeq: 0,
@@ -38,7 +38,7 @@ export const dcfTestTemplate: DCFTemplateType = {
               displaySeq: 1,
               method: {
                 methodType: '02',
-                detail: { proportionPct: 10, refTargetId: 'a1' },
+                detail: { seasonCount: 3 },
               },
             },
             {
@@ -106,7 +106,7 @@ export const dcfTestTemplate: DCFTemplateType = {
       displaySeq: 1,
       categories: [
         {
-          categoryType: 'c3',
+          categoryType: 'expenses',
           categoryName: 'Direct Operating Expenses',
           identifier: 'expenses',
           displaySeq: 0,
@@ -141,7 +141,7 @@ export const dcfTestTemplate: DCFTemplateType = {
           ],
         },
         {
-          categoryType: 'c4',
+          categoryType: 'expenses',
           categoryName: 'Administrative and Management Expenses',
           identifier: 'expenses',
           displaySeq: 0,
@@ -176,19 +176,41 @@ export const dcfTestTemplate: DCFTemplateType = {
           ],
         },
         {
-          categoryType: 'E22',
+          categoryType: 'gop',
           categoryName: 'Gross Operating Profit (GOP)',
           identifier: 'gop',
+        },
+        {
+          categoryType: 'expenses',
+          categoryName: 'Administrative and Management Expenses',
+          identifier: 'fixedExps',
           displaySeq: 0,
           assumptions: [
             {
-              assumptionType: 'a1',
+              assumptionType: 'E11',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 0,
               method: {
-                methodType: '15',
-                detail: {},
+                methodType: '10',
+              },
+            },
+            {
+              assumptionType: 'E19',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '11',
+              },
+            },
+            {
+              assumptionType: 'E15',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '12',
               },
             },
           ],
@@ -196,7 +218,7 @@ export const dcfTestTemplate: DCFTemplateType = {
       ],
     },
     {
-      sectionType: 'summary',
+      sectionType: 'summaryDCF',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,
@@ -208,7 +230,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
   id: 'dcf-001',
   templateCode: 'dcf-hotel',
   templateName: 'dcf-hotel',
-  totalNumberOfYears: 6,
+  totalNumberOfYears: 30,
   totalNumberOfDayInYear: 365,
   capitalizeRate: 3,
   discountedRate: 5,
@@ -220,7 +242,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
       displaySeq: 0,
       categories: [
         {
-          categoryType: '',
+          categoryType: 'income',
           categoryName: 'Operating Income',
           identifier: 'income',
           displaySeq: 0,
@@ -266,7 +288,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
       displaySeq: 1,
       categories: [
         {
-          categoryType: 'c3',
+          categoryType: 'expenses',
           categoryName: 'Direct Operating Expenses',
           identifier: 'expenses',
           displaySeq: 0,
@@ -313,7 +335,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
           ],
         },
         {
-          categoryType: 'c4',
+          categoryType: 'expenses',
           categoryName: 'Administrative and Management Expenses',
           identifier: 'expenses',
           displaySeq: 0,
@@ -399,27 +421,14 @@ export const dcfHotelTemplate: DCFTemplateType = {
           ],
         },
         {
-          categoryType: 'E22',
+          categoryType: 'gop',
           categoryName: 'Gross Operating Profit (GOP)',
           identifier: 'gop',
-          displaySeq: 0,
-          assumptions: [
-            {
-              assumptionType: 'a1',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 0,
-              method: {
-                methodType: '15',
-                detail: {},
-              },
-            },
-          ],
         },
       ],
     },
     {
-      sectionType: 'summary',
+      sectionType: 'summaryDCF',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,
@@ -672,7 +681,7 @@ export const dcfApartmentTemplate: DCFTemplateType = {
       ],
     },
     {
-      sectionType: 'summary',
+      sectionType: 'summaryDCF',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,
@@ -895,7 +904,7 @@ export const dcfOfficeTemplate: DCFTemplateType = {
       ],
     },
     {
-      sectionType: 'summary',
+      sectionType: 'summaryDCF',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,
@@ -1118,7 +1127,7 @@ export const dcfDepartmentStoreTemplate: DCFTemplateType = {
       ],
     },
     {
-      sectionType: 'summary',
+      sectionType: 'summaryDCF',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,
@@ -1371,7 +1380,7 @@ export const directApartmentTemplate: DCFTemplateType = {
       ],
     },
     {
-      sectionType: 'directSummary',
+      sectionType: 'summaryDirect',
       sectionName: 'Summary',
       identifier: 'empty',
       displaySeq: 2,

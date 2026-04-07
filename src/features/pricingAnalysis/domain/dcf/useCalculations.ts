@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
-import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
+import { type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import {
   buildMethodPositionBasedSalaryCalculationDerviedRules,
   buildMethodProportionDerivedRules,
@@ -14,6 +13,7 @@ import {
   buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
   buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
   buildMethodSpecifiedValueWithGrowthDerivedRules,
+  buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules,
 } from '../../adapters/buildDiscountedCashFlowDerivedRules';
 
 type MethodType = DCFMethod['methodType'];
@@ -22,7 +22,7 @@ type MethodRuleBuilder = (args: { name: string; totalNumberOfYears: number }) =>
 
 const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '01': buildMethodSpecifiedRoomIncomePerDayDerivedRules,
-  // '02'
+  '02': buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules,
   '03': buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
   '04': buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
   '05': buildMethodSpecifiedRentalIncomePerMonthDerivedRules,
@@ -30,12 +30,11 @@ const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '07': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules,
   '08': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRulesDerivedRules,
   '09': buildMethodPositionBasedSalaryCalculationDerviedRules,
-  // // '10':
+  // '10':
   '11': buildMethodSpecifiedEnergyCostIndexDerivedRules,
   '12': buildMethodProportionOfTheNewReplacementCostDerivedRules,
   '13': buildMethodProportionDerivedRules,
   '14': buildMethodSpecifiedValueWithGrowthDerivedRules,
-  // '15':
 };
 
 export function buildMethodCalculationRules(
