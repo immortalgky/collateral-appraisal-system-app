@@ -32,9 +32,10 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     priceDifferentiate: priceDifferentiatePath,
     finalValueHasBuildingCost: hasBuildingCostPath,
     finalValueTotalBuildingCost: totalBuildingCostPath,
-    finalValueAppraisalPriceIncludeBuildinCost: appraisalPriceIncludeBuildingCostPath,
-    finalValueAppraisalPriceIncludeBuildinCostRounded: appraisalPriceIncludeBuildingCostRoundedPath,
-    finalValuePriceIncluadeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
+    finalValueAppraisalPriceIncludeBuildingCost: appraisalPriceIncludeBuildingCostPath,
+    finalValueAppraisalPriceIncludeBuildingCostRounded:
+      appraisalPriceIncludeBuildingCostRoundedPath,
+    finalValuePriceIncludeBuildingCostDifferentiate: priceIncludeBuildingCostDifferentiatePath,
   } = saleGridFieldPath;
 
   const prevAppraisalPriceRef = useRef<number | null>(null);
