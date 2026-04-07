@@ -29,18 +29,7 @@ export const propertyGroupKeys = {
 
 // ==================== Type-to-Endpoint Mapping ====================
 
-const typeToDetailEndpoint: Record<string, string> = {
-  'Lands': 'land-detail',
-  'Lease Agreement Lands': 'lease-agreement-land-detail',
-  'Building': 'building-detail',
-  'Lease Agreement Building': 'lease-agreement-building-detail',
-  'Land and building': 'land-and-building-detail',
-  'Lease Agreement Land and building': 'lease-agreement-land-building-detail',
-  'Condominium': 'condo-detail',
-  'Machine': 'machinery-detail',
-  'Vehicle': 'vehicle-detail',
-  'Vessel': 'vessel-detail',
-};
+import { getDetailEndpoint } from '../utils/propertyTypeConfig';
 
 // ==================== Property Group CRUD ====================
 
@@ -337,7 +326,7 @@ export const useGetPropertyDetail = (
   propertyId: string | undefined,
   propertyType: PropertyType | string | undefined,
 ) => {
-  const endpoint = propertyType ? typeToDetailEndpoint[propertyType] : undefined;
+  const endpoint = propertyType ? getDetailEndpoint(propertyType) : undefined;
 
   return useQuery({
     queryKey: propertyGroupKeys.propertyDetail(appraisalId!, propertyId!),

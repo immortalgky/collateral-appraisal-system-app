@@ -17,21 +17,15 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import {
-  useGetLandPropertyById,
-  useGetLeaseAgreement,
-  useGetRentalInfo,
+  useGetLeaseAgreementLandPropertyById,
 } from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
 import LeaseAgreementForm from '../forms/LeaseAgreementForm';
 import RentalInfoForm from '../forms/RentalInfoForm';
 import {
-  createLandForm,
-  createLandFormDefault,
-  type createLandFormType,
-  createLeaseAgreementForm,
-  type createLeaseAgreementFormType,
-  rentalInfoFormSchema,
-  type RentalInfoFormType,
+  createLeaseAgreementLandForm,
+  createLeaseAgreementLandFormDefault,
+  type createLeaseAgreementLandFormType,
 } from '../schemas/form';
 import { mapLandPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
@@ -94,60 +88,49 @@ const CreateLeaseAgreementLandPage = () => {
   const isEditMode = Boolean(propertyId);
 
   // ─── Land detail form ─────────────────────────────────────────
-  const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetLeaseAgreementLandPropertyById(appraisalId, propertyId);
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData) return mapLandPropertyResponseToForm(propertyData);
-    return createLandFormDefault;
+    if (isEditMode && propertyData)
+      return {
+        ...mapLandPropertyResponseToForm(propertyData),
+        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+        rentalInfo: (propertyData as any).rentalInfo ?? null,
+      };
+    return createLeaseAgreementLandFormDefault;
   }, [isEditMode, propertyData]);
 
-  const methods = useForm<createLandFormType>({
+  const methods = useForm<createLeaseAgreementLandFormType>({
     defaultValues: formDefaults,
-    resolver: zodResolver(createLandForm),
+    resolver: zodResolver(createLeaseAgreementLandForm),
   });
   const { handleSubmit, getValues, reset } = methods;
 
   useEffect(() => {
-    if (isEditMode && propertyData) reset(mapLandPropertyResponseToForm(propertyData));
-  }, [isEditMode, propertyData, reset]);
+    if (!isEditMode || !propertyData) return;
+    const base = mapLandPropertyResponseToForm(propertyData);
+    reset({
+      ...createLeaseAgreementLandFormDefault,
+      ...base,
+      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+      rentalInfo: (propertyData as any).rentalInfo ?? null,
+    } as any);
+  }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } = useCreateLeaseAgreementLandProperty();
   const { mutate: updateProperty, isPending: isUpdating } = useUpdateLeaseAgreementLandProperty();
   const isPending = isCreating || isUpdating;
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
-  // ─── Lease Agreement form ─────────────────────────────────────
-  const { data: leaseAgreementData } = useGetLeaseAgreement(appraisalId, propertyId);
-
-  const leaseAgreementMethods = useForm<createLeaseAgreementFormType>({
-    resolver: zodResolver(createLeaseAgreementForm),
-  });
-
-  useEffect(() => {
-    if (leaseAgreementData) leaseAgreementMethods.reset(leaseAgreementData as any);
-  }, [leaseAgreementData, leaseAgreementMethods]);
-
-  // ─── Rental Info form ─────────────────────────────────────────
-  const { data: rentalInfoData } = useGetRentalInfo(appraisalId, propertyId);
-
-  const rentalInfoMethods = useForm<RentalInfoFormType>({
-    resolver: zodResolver(rentalInfoFormSchema),
-  });
-
-  useEffect(() => {
-    if (rentalInfoData) rentalInfoMethods.reset(rentalInfoData as any);
-  }, [rentalInfoData, rentalInfoMethods]);
-
-  const hasDirtyFields = methods.formState.isDirty || leaseAgreementMethods.formState.isDirty || rentalInfoMethods.formState.isDirty;
+  const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   // ─── Save handlers ────────────────────────────────────────────
 
-  const onSubmit: SubmitHandler<createLandFormType> = data => {
+  const onSubmit: SubmitHandler<createLeaseAgreementLandFormType> = async data => {
     setSaveAction('submit');
-    const leaseData = leaseAgreementMethods.getValues();
-    const rentalData = rentalInfoMethods.getValues();
-    const payload = { ...data, leaseAgreement: leaseData, rentalInfo: rentalData };
+    const { leaseAgreement, rentalInfo, ...rest } = data;
+    const payload = { ...rest, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -155,8 +138,6 @@ const CreateLeaseAgreementLandPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Lease agreement land updated successfully');
             setSaveAction(null);
           },
@@ -173,8 +154,6 @@ const CreateLeaseAgreementLandPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Lease agreement land created successfully');
             setSaveAction(null);
             skipWarning();
@@ -191,10 +170,8 @@ const CreateLeaseAgreementLandPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
-    const leaseData = leaseAgreementMethods.getValues();
-    const rentalData = rentalInfoMethods.getValues();
-    const payload = { ...data, leaseAgreement: leaseData, rentalInfo: rentalData };
+    const { leaseAgreement, rentalInfo, ...rest } = getValues();
+    const payload = { ...rest, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -202,8 +179,6 @@ const CreateLeaseAgreementLandPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
           },
@@ -220,8 +195,6 @@ const CreateLeaseAgreementLandPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.propertyId) {
@@ -265,7 +238,7 @@ const CreateLeaseAgreementLandPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandForm}>
+      <FormProvider methods={methods} schema={createLeaseAgreementLandForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -341,9 +314,7 @@ const CreateLeaseAgreementLandPage = () => {
                         <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
                       </div>
                       <div className="h-px bg-gray-200 mb-6" />
-                      <FormProvider methods={leaseAgreementMethods} schema={createLeaseAgreementForm}>
-                        <LeaseAgreementForm />
-                      </FormProvider>
+                      <LeaseAgreementForm namePrefix="leaseAgreement" />
                     </Section>
                   </div>
 
@@ -360,9 +331,7 @@ const CreateLeaseAgreementLandPage = () => {
                         <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
                       </div>
                       <div className="h-px bg-gray-200 mb-6" />
-                      <FormProvider methods={rentalInfoMethods} schema={rentalInfoFormSchema}>
-                        <RentalInfoForm />
-                      </FormProvider>
+                      <RentalInfoForm namePrefix="rentalInfo" />
                     </Section>
                   </div>
                 </div>

@@ -614,25 +614,41 @@ export function BuildingCostTable({ buildingCost, onChange }: BuildingCostTableP
 
             <tbody className="divide-y divide-neutral-3">
               {!isEmpty &&
-                buildings.map(({ bIdx, computedRows }) => {
+                buildings.map(({ building, bIdx, computedRows }) => {
                   if (computedRows.length === 0 && !canEdit) return null;
 
-                  const firstGroupWithRows = ROW_GROUPING.groups.find(g =>
-                    computedRows.some(r => r[ROW_GROUPING.field] === g.value),
-                  );
                   const totalDataRows = computedRows.length;
-                  let bldgCellRendered = false;
 
                   const groupsWithData = ROW_GROUPING.groups.filter(g =>
                     computedRows.some(r => r[ROW_GROUPING.field] === g.value),
                   );
                   const bldgCellRowSpan =
+                    1 + // property name header row
                     groupsWithData.length * 2 + // group-label row + subtotal row per group
                     totalDataRows +
                     (canEdit ? 1 : 0); // "Add row" row
 
                   return (
                     <Fragment key={bIdx}>
+                      {/* Property name header row */}
+                      <tr className="bg-white">
+                        <td
+                          rowSpan={bldgCellRowSpan}
+                          className="border-b border-r border-neutral-3 text-center align-middle px-1 bg-white"
+                        >
+                          <div className="flex flex-col items-center gap-1 py-1">
+                            <div className="items-center justify-center text-xs font-bold text-primary shrink-0">
+                              {bIdx + 1}
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          colSpan={visibleColCount - 1}
+                          className="py-1.5 px-3 text-xs font-bold border-b border-neutral-3"
+                        >
+                          {building.propertyName || `Property ${bIdx + 1}`}
+                        </td>
+                      </tr>
                       {ROW_GROUPING.groups.map(group => {
                         const groupIndices: number[] = [];
                         computedRows.forEach((row, i) => {
@@ -641,29 +657,12 @@ export function BuildingCostTable({ buildingCost, onChange }: BuildingCostTableP
                         if (groupIndices.length === 0) return null;
 
                         const groupRows = groupIndices.map(i => computedRows[i]);
-                        const isFirstGroup = group === firstGroupWithRows;
-                        const shouldRenderBldgCell = isFirstGroup && !bldgCellRendered;
-                        if (shouldRenderBldgCell) bldgCellRendered = true;
 
                         return (
                           <Fragment key={`${bIdx}-${String(group.value)}`}>
                             <tr className={clsx(group.className)}>
-                              {shouldRenderBldgCell && (
-                                <td
-                                  rowSpan={bldgCellRowSpan}
-                                  className="border-b border-r border-neutral-3 text-center align-middle px-1 bg-white"
-                                >
-                                  <div className="flex flex-col items-center gap-1 py-1">
-                                    <div className="items-center justify-center text-xs font-bold text-primary shrink-0">
-                                      {bIdx + 1}
-                                    </div>
-                                  </div>
-                                </td>
-                              )}
                               <td
-                                colSpan={
-                                  shouldRenderBldgCell ? visibleColCount - 1 : visibleColCount
-                                }
+                                colSpan={visibleColCount}
                                 className="py-1.5 px-3 text-xs font-semibold border-b border-neutral-3"
                               >
                                 {group.label} ({groupIndices.length})

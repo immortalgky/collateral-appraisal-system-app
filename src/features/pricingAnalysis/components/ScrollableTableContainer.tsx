@@ -6,22 +6,20 @@ import clsx from 'clsx';
 interface ScrollableTableContainerProps {
   children: ReactNode;
   className?: string;
+  maxHeight?: string;
 }
 
-export function ScrollableTableContainer({ children, className }: ScrollableTableContainerProps) {
+export function ScrollableTableContainer({ children, className, maxHeight }: ScrollableTableContainerProps) {
   const { t } = useTranslation('common');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [buttonTop, setButtonTop] = useState(0);
-
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const hasOverflow = el.scrollWidth > el.clientWidth;
     setCanScrollLeft(hasOverflow && el.scrollLeft > 1);
     setCanScrollRight(hasOverflow && el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-    setButtonTop(el.scrollTop + el.clientHeight / 2);
   }, []);
 
   useEffect(() => {
@@ -67,7 +65,7 @@ export function ScrollableTableContainer({ children, className }: ScrollableTabl
   const hasOverflow = canScrollLeft || canScrollRight;
 
   return (
-    <div className={clsx('relative', className)}>
+    <div className={clsx('relative overflow-hidden', className)}>
       {hasOverflow && (
         <div className="flex justify-end px-2 py-1">
           <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -81,6 +79,7 @@ export function ScrollableTableContainer({ children, className }: ScrollableTabl
       <div
         ref={scrollRef}
         tabIndex={0}
+        style={maxHeight ? { maxHeight } : undefined}
         className="h-full overflow-auto outline-none focus-visible:outline-none"
         onScroll={updateScrollState}
         onKeyDown={handleKeyDown}
@@ -92,8 +91,7 @@ export function ScrollableTableContainer({ children, className }: ScrollableTabl
         <button
           type="button"
           onClick={() => scroll('left')}
-          style={{ top: buttonTop }}
-          className="absolute left-2 -translate-y-1/2 z-40 size-8 rounded-full bg-white/80 shadow-md border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-white hover:shadow-lg transition-all"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 size-8 rounded-full bg-white/80 shadow-md border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-white hover:shadow-lg transition-all"
           aria-label="Scroll left"
         >
           <Icon name="chevron-left" className="size-4 text-gray-600" />
@@ -104,8 +102,7 @@ export function ScrollableTableContainer({ children, className }: ScrollableTabl
         <button
           type="button"
           onClick={() => scroll('right')}
-          style={{ top: buttonTop }}
-          className="absolute right-2 -translate-y-1/2 z-40 size-8 rounded-full bg-white/80 shadow-md border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-white hover:shadow-lg transition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 size-8 rounded-full bg-white/80 shadow-md border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-white hover:shadow-lg transition-all"
           aria-label="Scroll right"
         >
           <Icon name="chevron-right" className="size-4 text-gray-600" />

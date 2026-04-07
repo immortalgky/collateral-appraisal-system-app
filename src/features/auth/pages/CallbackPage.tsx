@@ -32,6 +32,7 @@ function CallbackPage() {
     fetch(`${baseApiUrl}/auth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         grantType: 'authorization_code',
         clientId: 'spa',

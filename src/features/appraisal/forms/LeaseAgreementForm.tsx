@@ -35,33 +35,33 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
   </>
 );
 
-const LeaseAgreementForm = () => {
+const LeaseAgreementForm = ({ namePrefix }: { namePrefix?: string }) => {
   return (
     <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Detail of Lease Agreement</h2>
       <div className="grid grid-cols-5 gap-x-6 gap-y-4">
         <SectionRow title="Information" icon="info-circle">
-          <FormFields fields={leaseInfoField} />
+          <FormFields fields={leaseInfoField} namePrefix={namePrefix} />
         </SectionRow>
 
         <SectionRow title="Contract" icon="file-contract">
-          <FormFields fields={leaseContractField} />
+          <FormFields fields={leaseContractField} namePrefix={namePrefix} />
         </SectionRow>
 
         <SectionRow title="Dates & Fees" icon="calendar-days">
-          <FormFields fields={leaseDatesFeesField} />
+          <FormFields fields={leaseDatesFeesField} namePrefix={namePrefix} />
         </SectionRow>
 
         <SectionRow title="Terms" icon="file-lines">
-          <FormFields fields={leaseTermsField} />
+          <FormFields fields={leaseTermsField} namePrefix={namePrefix} />
         </SectionRow>
 
         <SectionRow title="Rental Terms" icon="scroll">
-          <FormFields fields={leaseRentalTermsField} />
+          <FormFields fields={leaseRentalTermsField} namePrefix={namePrefix} />
         </SectionRow>
 
         <SectionRow title="Other" icon="circle-info" isLast>
-          <FormFields fields={leaseOtherField} />
+          <FormFields fields={leaseOtherField} namePrefix={namePrefix} />
         </SectionRow>
       </div>
     </div>

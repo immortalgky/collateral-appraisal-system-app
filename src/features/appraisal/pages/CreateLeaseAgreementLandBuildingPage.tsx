@@ -3,7 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -16,32 +16,19 @@ import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import {
-  useGetLandAndBuildingPropertyById,
-  useGetLeaseAgreement,
-  useGetRentalInfo,
-} from '../api/property';
+import { useGetLeaseAgreementLandAndBuildingPropertyById } from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
 import LeaseAgreementForm from '../forms/LeaseAgreementForm';
 import RentalInfoForm from '../forms/RentalInfoForm';
 import {
-  createLandAndBuildingForm,
-  createLandAndBuildingFormDefault,
-  type createLandAndBuildingFormType,
-  createLeaseAgreementForm,
-  type createLeaseAgreementFormType,
-  rentalInfoFormSchema,
-  type RentalInfoFormType,
+  createLeaseAgreementLandAndBuildingForm,
+  createLeaseAgreementLandAndBuildingFormDefault,
+  type createLeaseAgreementLandAndBuildingFormType,
 } from '../schemas/form';
 import toast from 'react-hot-toast';
-import {
-  mapLandAndBuildingFormDataToApiPayload,
-  mapLandAndBuildingPropertyResponseToForm,
-} from '../utils/mappers';
-import PropertyPhotoSection, {
-  type PropertyPhotoSectionRef,
-} from '../components/PropertyPhotoSection';
+import { mapLandAndBuildingFormDataToApiPayload, mapLandAndBuildingPropertyResponseToForm, } from '../utils/mappers';
+import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -53,7 +40,11 @@ import { propertyGroupKeys } from '../api/propertyGroup';
 const useCreateLeaseAgreementLandBuildingProperty = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { appraisalId: string; groupId?: string; data: any }): Promise<any> => {
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: any;
+    }): Promise<any> => {
       const url = `/appraisals/${params.appraisalId}/lease-agreement-land-and-building-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
       const { data } = await axios.post(url, params.data);
       return data;
@@ -67,7 +58,11 @@ const useCreateLeaseAgreementLandBuildingProperty = () => {
 const useUpdateLeaseAgreementLandBuildingProperty = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { appraisalId: string; propertyId: string; data: any }): Promise<any> => {
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: any;
+    }): Promise<any> => {
       const { data } = await axios.put(
         `/appraisals/${params.appraisalId}/properties/${params.propertyId}/lease-agreement-land-building-detail`,
         params.data,
@@ -99,25 +94,37 @@ const CreateLeaseAgreementLandBuildingPage = () => {
   const photoSectionRef = useRef<PropertyPhotoSectionRef>(null);
 
   // ─── Land + Building detail form ─────────────────────────────
-  const { data: propertyData, isLoading } = useGetLandAndBuildingPropertyById(
+  const { data: propertyData, isLoading } = useGetLeaseAgreementLandAndBuildingPropertyById(
     appraisalId,
     propertyId,
   );
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData) return mapLandAndBuildingPropertyResponseToForm(propertyData);
-    return createLandAndBuildingFormDefault;
+    if (isEditMode && propertyData)
+      return {
+        ...mapLandAndBuildingPropertyResponseToForm(propertyData),
+        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+        rentalInfo: (propertyData as any).rentalInfo ?? null,
+      };
+    return createLeaseAgreementLandAndBuildingFormDefault;
   }, [isEditMode, propertyData]);
 
-  const methods = useForm<createLandAndBuildingFormType>({
+  const methods = useForm<createLeaseAgreementLandAndBuildingFormType>({
     defaultValues: formDefaults,
-    resolver: zodResolver(createLandAndBuildingForm),
+    resolver: zodResolver(createLeaseAgreementLandAndBuildingForm),
   });
   const { handleSubmit, getValues, reset } = methods;
 
   useEffect(() => {
-    if (isEditMode && propertyData) reset(mapLandAndBuildingPropertyResponseToForm(propertyData));
-  }, [isEditMode, propertyData, reset]);
+    if (!isEditMode || !propertyData) return;
+    const base = mapLandAndBuildingPropertyResponseToForm(propertyData);
+    reset({
+      ...createLeaseAgreementLandAndBuildingFormDefault,
+      ...base,
+      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+      rentalInfo: (propertyData as any).rentalInfo ?? null,
+    } as any);
+  }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } =
     useCreateLeaseAgreementLandBuildingProperty();
@@ -130,7 +137,9 @@ const CreateLeaseAgreementLandBuildingPage = () => {
   const isUnderConstruction = methods.watch('isUnderConstruction');
   const tabParam = searchParams.get('tab');
   const initialTab = tabParam === 'construction' ? 'construction' : 'land';
-  const [activeTab, setActiveTab] = useState<'land' | 'building' | 'construction' | 'lease-agreement' | 'rental-info'>(initialTab);
+  const [activeTab, setActiveTab] = useState<
+    'land' | 'building' | 'construction' | 'lease-agreement' | 'rental-info'
+  >(initialTab);
 
   useEffect(() => {
     if (activeTab === 'construction' && !isUnderConstruction) {
@@ -138,39 +147,16 @@ const CreateLeaseAgreementLandBuildingPage = () => {
     }
   }, [isUnderConstruction, activeTab]);
 
-  // ─── Lease Agreement form ─────────────────────────────────────
-  const { data: leaseAgreementData } = useGetLeaseAgreement(appraisalId, propertyId);
-
-  const leaseAgreementMethods = useForm<createLeaseAgreementFormType>({
-    resolver: zodResolver(createLeaseAgreementForm),
-  });
-
-  useEffect(() => {
-    if (leaseAgreementData) leaseAgreementMethods.reset(leaseAgreementData as any);
-  }, [leaseAgreementData, leaseAgreementMethods]);
-
-  // ─── Rental Info form ─────────────────────────────────────────
-  const { data: rentalInfoData } = useGetRentalInfo(appraisalId, propertyId);
-
-  const rentalInfoMethods = useForm<RentalInfoFormType>({
-    resolver: zodResolver(rentalInfoFormSchema),
-  });
-
-  useEffect(() => {
-    if (rentalInfoData) rentalInfoMethods.reset(rentalInfoData as any);
-  }, [rentalInfoData, rentalInfoMethods]);
-
-  const hasDirtyFields = methods.formState.isDirty || leaseAgreementMethods.formState.isDirty || rentalInfoMethods.formState.isDirty;
+  const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   // ─── Save handlers ────────────────────────────────────────────
 
-  const onSubmit: SubmitHandler<createLandAndBuildingFormType> = data => {
+  const onSubmit: SubmitHandler<createLeaseAgreementLandAndBuildingFormType> = async data => {
     setSaveAction('submit');
-    const basePayload = mapLandAndBuildingFormDataToApiPayload(data);
-    const leaseData = leaseAgreementMethods.getValues();
-    const rentalData = rentalInfoMethods.getValues();
-    const payload = { ...basePayload, leaseAgreement: leaseData, rentalInfo: rentalData };
+    const { leaseAgreement, rentalInfo, ...rest } = data;
+    const basePayload = mapLandAndBuildingFormDataToApiPayload(rest as any);
+    const payload = { ...basePayload, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -178,8 +164,6 @@ const CreateLeaseAgreementLandBuildingPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Lease agreement land and building updated successfully');
             setSaveAction(null);
           },
@@ -196,8 +180,6 @@ const CreateLeaseAgreementLandBuildingPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Lease agreement land and building created successfully');
             setSaveAction(null);
             skipWarning();
@@ -215,10 +197,9 @@ const CreateLeaseAgreementLandBuildingPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    const basePayload = mapLandAndBuildingFormDataToApiPayload(data);
-    const leaseData = leaseAgreementMethods.getValues();
-    const rentalData = rentalInfoMethods.getValues();
-    const payload = { ...basePayload, leaseAgreement: leaseData, rentalInfo: rentalData };
+    const { leaseAgreement, rentalInfo, ...rest } = data;
+    const basePayload = mapLandAndBuildingFormDataToApiPayload(rest as any);
+    const payload = { ...basePayload, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -226,8 +207,6 @@ const CreateLeaseAgreementLandBuildingPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
           },
@@ -244,8 +223,6 @@ const CreateLeaseAgreementLandBuildingPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            leaseAgreementMethods.reset(leaseAgreementMethods.getValues());
-            rentalInfoMethods.reset(rentalInfoMethods.getValues());
             toast.success('Draft saved successfully');
             setSaveAction(null);
             if (response.propertyId) {
@@ -302,13 +279,23 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                   },
                 ]
               : []),
-            { label: 'Lease Agreement', id: 'lease-agreement-section', icon: 'file-contract', onClick: () => setActiveTab('lease-agreement') },
-            { label: 'Rental Info', id: 'rental-info-section', icon: 'calendar-days', onClick: () => setActiveTab('rental-info') },
+            {
+              label: 'Lease Agreement',
+              id: 'lease-agreement-section',
+              icon: 'file-contract',
+              onClick: () => setActiveTab('lease-agreement'),
+            },
+            {
+              label: 'Rental Info',
+              id: 'rental-info-section',
+              icon: 'calendar-days',
+              onClick: () => setActiveTab('rental-info'),
+            },
           ]}
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandAndBuildingForm}>
+      <FormProvider methods={methods} schema={createLeaseAgreementLandAndBuildingForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
@@ -348,7 +335,11 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon name="mountain-sun" style="solid" className="w-5 h-5 text-amber-600" />
+                        <Icon
+                          name="mountain-sun"
+                          style="solid"
+                          className="w-5 h-5 text-amber-600"
+                        />
                       </div>
                       <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
                     </div>
@@ -394,9 +385,15 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon name="helmet-safety" style="solid" className="w-5 h-5 text-teal-600" />
+                          <Icon
+                            name="helmet-safety"
+                            style="solid"
+                            className="w-5 h-5 text-teal-600"
+                          />
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Construction Inspection</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          Construction Inspection
+                        </h2>
                       </div>
                       <div className="h-px bg-gray-200" />
                       <Section id="construction-info" anchor className="flex flex-col gap-6">
@@ -413,14 +410,16 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                     <Section anchor className="min-w-0 overflow-hidden">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                          <Icon name="file-contract" style="solid" className="w-5 h-5 text-purple-600" />
+                          <Icon
+                            name="file-contract"
+                            style="solid"
+                            className="w-5 h-5 text-purple-600"
+                          />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
                       </div>
                       <div className="h-px bg-gray-200 mb-6" />
-                      <FormProvider methods={leaseAgreementMethods} schema={createLeaseAgreementForm}>
-                        <LeaseAgreementForm />
-                      </FormProvider>
+                      <LeaseAgreementForm namePrefix="leaseAgreement" />
                     </Section>
                   </div>
 
@@ -432,14 +431,16 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                     <Section anchor className="min-w-0 overflow-hidden">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon name="calendar-days" style="solid" className="w-5 h-5 text-teal-600" />
+                          <Icon
+                            name="calendar-days"
+                            style="solid"
+                            className="w-5 h-5 text-teal-600"
+                          />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
                       </div>
                       <div className="h-px bg-gray-200 mb-6" />
-                      <FormProvider methods={rentalInfoMethods} schema={rentalInfoFormSchema}>
-                        <RentalInfoForm />
-                      </FormProvider>
+                      <RentalInfoForm namePrefix="rentalInfo" />
                     </Section>
                   </div>
                 </div>

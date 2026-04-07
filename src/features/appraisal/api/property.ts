@@ -202,6 +202,57 @@ export const useGetLandAndBuildingPropertyById = (appraisalId: string, propertyI
   });
 };
 
+export const useGetLeaseAgreementLandPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'lease-agreement-land-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/lease-agreement-land-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetLeaseAgreementBuildingPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'lease-agreement-building-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetBuildingPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/lease-agreement-building-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetLeaseAgreementLandAndBuildingPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'lease-agreement-land-and-building-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandAndBuildingPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/lease-agreement-land-building-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
 export const useGetMachineryPropertyById = (appraisalId: string, propertyId?: string) => {
   return useQuery({
     queryKey: ['appraisals', appraisalId, 'machinery-properties', propertyId],
@@ -430,7 +481,7 @@ export interface UpdateLeaseAgreementRequest {
 
 export interface UpFrontEntryDto {
   id: string;
-  atYear: number;
+  atYear: string;
   upFrontAmount: number;
 }
 
@@ -455,6 +506,8 @@ export interface RentalInfoResponse {
   growthIntervalYears: number;
   upFrontEntries: UpFrontEntryDto[];
   growthPeriodEntries: GrowthPeriodEntryDto[];
+  scheduleEntries: RentalScheduleRow[];
+  scheduleOverrides: { year: number; upFront?: number; contractRentalFee?: number }[];
 }
 
 export interface UpdateRentalInfoRequest {
