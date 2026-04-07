@@ -47,6 +47,11 @@ import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
+import BlockCondoPage from '@/features/blockCondo/pages/BlockCondoPage';
+import ModelDetailPage from '@/features/blockCondo/pages/ModelDetailPage';
+import TowerDetailPage from '@/features/blockCondo/pages/TowerDetailPage';
+import BlockVillagePage from '@/features/blockVillage/pages/BlockVillagePage';
+import VillageModelDetailPage from '@/features/blockVillage/pages/ModelDetailPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -344,6 +349,24 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        path: 'block-condo',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockCondoPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/:towerId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
+        path: 'block-village',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockVillagePage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
         path: 'documents',
         element: <AppraisalReadOnlyWrapper pageName="Document Checklist"><DocumentChecklistPage /></AppraisalReadOnlyWrapper>,
       },
@@ -421,6 +444,24 @@ export const router = createBrowserRouter([
           { path: 'law-and-regulation/:itemId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper> },
           { path: 'market-comparable/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper> },
           { path: 'market-comparable/:marketComparableId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
+        path: 'block-condo',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockCondoPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/:towerId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
+        path: 'block-village',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockVillagePage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
         ],
       },
       {

@@ -20,6 +20,9 @@ export interface AppraisalData {
   /** Whether this appraisal is a PMA (Property Market Assessment) */
   isPma?: boolean;
 
+  /** Whether this appraisal is a Block (Condo) appraisal (Purpose = '07') */
+  isBlockCondo?: boolean;
+
   /** Facility limit from the request's loan detail */
   facilityLimit?: number;
 
@@ -88,6 +91,15 @@ export function useAppraisalRequestId(): string | undefined {
 export function useAppraisalIsPma(): boolean {
   const context = useContext(AppraisalContext);
   return context?.appraisal?.isPma ?? false;
+}
+
+/**
+ * Hook to get the isBlockCondo flag from appraisal context
+ * Returns true when Purpose = '07'
+ */
+export function useAppraisalIsBlockCondo(): boolean {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.isBlockCondo ?? false;
 }
 
 /**
