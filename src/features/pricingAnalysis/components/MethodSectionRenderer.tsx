@@ -8,10 +8,13 @@ import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { DiscountedCashFlowPanel } from './DiscountedCashFlowPanel';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { CostMachinePanel } from './CostMachinePanel';
+import { LeaseholdPanel } from './LeaseholdPanel';
+import { ProfitRentPanel } from './ProfitRentPanel';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
   serverData: PricingServerData;
+  appraisalId?: string;
   calculationMethodData: {
     comparativeFactors: GetComparativeFactorsResponseType | undefined;
     templateList: TemplateDtoType[] | undefined;
@@ -28,6 +31,7 @@ interface MethodSectionRendererProps {
 export function MethodSectionRenderer({
   state,
   serverData,
+  appraisalId,
   calculationMethodData,
   onCalculationSave,
   onCalculationMethodDirty,
@@ -74,6 +78,24 @@ export function MethodSectionRenderer({
       return <SaleAdjustmentGridPanel {...panelProps} />;
     case 'DC_COST':
       return <DirectComparisonPanel {...panelProps} />;
+    case 'LH':
+      return (
+        <LeaseholdPanel
+          {...panelProps}
+          propertiesMap={serverData.propertiesMap}
+          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
+          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+        />
+      );
+    case 'PR':
+      return (
+        <ProfitRentPanel
+          {...panelProps}
+          propertiesMap={serverData.propertiesMap}
+          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
+          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+        />
+      );
     default:
       return <></>;
   }
