@@ -156,6 +156,7 @@ function TaskLayout() {
             appraisalType: appraisalData.appraisalType ?? undefined,
             priority: appraisalData.priority ?? undefined,
             isPma: (appraisalData as any).isPma ?? true,
+            isBlockCondo: (appraisalData as any).purpose === '07',
             facilityLimit: (requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0,
             hasAppraisalBook: (requestData as any)?.detail?.hasAppraisalBook ?? false,
             workflowInstanceId: taskData?.workflowInstanceId,

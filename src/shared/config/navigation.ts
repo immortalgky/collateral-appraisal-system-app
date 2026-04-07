@@ -19,6 +19,7 @@ export type WorkflowActivity =
  */
 export type NavContext = {
   isPma?: boolean;
+  isBlockCondo?: boolean;
   status?: string;
 };
 
