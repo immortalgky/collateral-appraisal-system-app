@@ -535,6 +535,144 @@ export function useSaveMachineCostItems() {
   });
 }
 
+// ==================== Leasehold Analysis Hooks ====================
+
+import type {
+  GetLeaseholdAnalysisResponse,
+  SaveLeaseholdAnalysisRequest,
+  SaveLeaseholdAnalysisResponse,
+} from '../types/leasehold';
+
+/**
+ * Fetch leasehold analysis for a method
+ * GET /pricing-analysis/{id}/methods/{methodId}/leasehold-analysis
+ */
+export function useGetLeaseholdAnalysis(
+  pricingAnalysisId: string | undefined,
+  methodId: string | undefined,
+) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.leaseholdAnalysis(pricingAnalysisId ?? '', methodId ?? ''),
+    queryFn: async (): Promise<GetLeaseholdAnalysisResponse> => {
+      const { data } = await axios.get(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/leasehold-analysis`,
+      );
+      return data as GetLeaseholdAnalysisResponse;
+    },
+    enabled: !!pricingAnalysisId && !!methodId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Save leasehold analysis (create or update)
+ * PUT /pricing-analysis/{id}/methods/{methodId}/leasehold-analysis
+ */
+export function useSaveLeaseholdAnalysis() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: SaveLeaseholdAnalysisRequest;
+    }): Promise<SaveLeaseholdAnalysisResponse> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/leasehold-analysis`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.leaseholdAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+        refetchType: 'none',
+      });
+    },
+  });
+}
+
+// ==================== Profit Rent Analysis Hooks ====================
+
+import type {
+  GetProfitRentAnalysisResponse,
+  SaveProfitRentAnalysisRequest,
+  SaveProfitRentAnalysisResponse,
+} from '../types/profitRent';
+
+/**
+ * Fetch profit rent analysis for a method
+ * GET /pricing-analysis/{id}/methods/{methodId}/profit-rent-analysis
+ */
+export function useGetProfitRentAnalysis(
+  pricingAnalysisId: string | undefined,
+  methodId: string | undefined,
+) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId ?? '', methodId ?? ''),
+    queryFn: async (): Promise<GetProfitRentAnalysisResponse> => {
+      const { data } = await axios.get(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/profit-rent-analysis`,
+      );
+      return data as GetProfitRentAnalysisResponse;
+    },
+    enabled: !!pricingAnalysisId && !!methodId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Save profit rent analysis (create or update)
+ * PUT /pricing-analysis/{id}/methods/{methodId}/profit-rent-analysis
+ */
+export function useSaveProfitRentAnalysis() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: SaveProfitRentAnalysisRequest;
+    }): Promise<SaveProfitRentAnalysisResponse> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/profit-rent-analysis`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.profitRentAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+        refetchType: 'none',
+      });
+    },
+  });
+}
+
 // ==================== Template & Factor Hooks ====================
 
 /**

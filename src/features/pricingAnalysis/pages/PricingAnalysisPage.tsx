@@ -350,6 +350,7 @@ function PricingAnalysisContent({
                         <MethodSectionRenderer
                           state={state}
                           serverData={serverData}
+                          appraisalId={appraisalId}
                           calculationMethodData={calculationMethodData}
                           onCalculationSave={calcFlow.onCalculationSave}
                           onCalculationMethodDirty={handleOnCalculationMethodDirty}
