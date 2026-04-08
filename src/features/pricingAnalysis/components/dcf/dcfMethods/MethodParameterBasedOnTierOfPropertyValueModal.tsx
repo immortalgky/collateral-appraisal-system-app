@@ -131,7 +131,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
               <tr>
                 <th></th>
                 {Array.from({ length: totalNumberOfYears }, (_, i) => (
-                  <th>Year {i + 1}</th>
+                  <th key={i}>Year {i + 1}</th>
                 ))}
               </tr>
             </thead>

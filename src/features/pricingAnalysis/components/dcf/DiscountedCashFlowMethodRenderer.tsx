@@ -13,6 +13,7 @@ import { MethodPositionBasedSalaryCalculation } from './dcfMethods/MethodPositio
 import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProportionOfTheNewReplacementCost';
 import { MethodSpecifiedEnergyCostIndex } from './dcfMethods/MethodSpecifiedEnergyCostIndex';
 import { MethodSpecifiedRoomIncomeBySeasonalRates } from './dcfMethods/MethodSpecifiedRoomIncomeBySeasonalRates';
+import { MethodParameterBasedOnTierOfPropertyValue } from './dcfMethods/MethodParameterBasedOnTierOfPropertyValue';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
@@ -67,7 +68,7 @@ export function DiscountedCashFlowMethodRenderer({
     case 'positionBasedSalaryCalculation':
       return <MethodPositionBasedSalaryCalculation {...props} />;
     case 'parameterBasedOnTierOfPropertyValue':
-      return <></>;
+      return <MethodParameterBasedOnTierOfPropertyValue {...props} />;
     case 'specifiedEnergyCostIndex':
       return <MethodSpecifiedEnergyCostIndex {...props} />;
     case 'proportionOfTheNewReplacementCost':
@@ -76,8 +77,6 @@ export function DiscountedCashFlowMethodRenderer({
       return <MethodProportion {...props} />;
     case 'specifiedValueWithGrowth':
       return <MethodSpecifiedValueWithGrowth {...props} />;
-    case 'grossOperatingProfit':
-      return <></>;
     default:
       return <></>;
   }

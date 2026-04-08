@@ -387,6 +387,26 @@ export function buildMethodPositionBasedSalaryCalculationDerviedRules({
   });
 }
 
+export function buildMethodParameterBasedOnTierOfPropertyValueDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    return [
+      {
+        targetPath: `${name}.totalMethodValues.${idx}`,
+        deps: [`${name}.detail.propertyTax.totalPropertyTax.${idx}`],
+        compute: ({ getValues }) => {
+          return getValues(`${name}.detail.propertyTax.totalPropertyTax.${idx}`);
+        },
+      },
+    ];
+  });
+}
+
 export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
   name,
   totalNumberOfYears,
@@ -1095,11 +1115,9 @@ export function buildMethodProportionDerivedRules({
 }
 
 export function buildMethodSpecifiedValueWithGrowthDerivedRules({
-  sections,
   name,
   totalNumberOfYears,
 }: {
-  sections: DCFSection[];
   name: string;
   totalNumberOfYears: number;
 }): DerivedFieldRule[] {

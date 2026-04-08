@@ -178,8 +178,6 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   saleableArea: number[];
   roomRateIncrease: number[];
   roomExpense: number[];
-
-  totalMethodValues: number[];
 }
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
@@ -212,7 +210,18 @@ interface MethodPositionBasedSalaryCalculation {
   totalPositionBasedSalaryPerYear: number[];
 }
 
-interface MethodParameterBasedOnTierOfPropertyValue {}
+interface MethodParameterBasedOnTierOfPropertyValue {
+  // modal
+  propertyTax: {
+    landPrices: number[];
+    totalPropertyPrice: number[];
+    totalPropertyTax: number[];
+    totalPropertyTaxRates: number[];
+  };
+
+  // table
+  totalMethodValues: number[];
+}
 
 interface MethodSpecifiedEnergyCostIndex {
   // modal

@@ -38,9 +38,6 @@ export const assumptionParams = [
   { code: 'E20', description: 'Utility Expenses' },
   { code: 'E21', description: 'Other Costs' },
 
-  // GOP
-  { code: 'E22', description: 'Gross Operating Profit (GOP)' },
-
   // others
   { code: 'M99', description: 'Miscellaneous' },
 ];
@@ -70,8 +67,6 @@ export const methodParams = [
   // general
   { code: '13', description: 'Proportional' },
   { code: '14', description: 'Specified Value with Growth' },
-  // GOP
-  { code: '15', description: 'Gross Operating Profit (GOP)' },
 ];
 
 // Room type parameters

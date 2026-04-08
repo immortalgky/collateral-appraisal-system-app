@@ -1,6 +1,7 @@
 import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import {
+  buildMethodParameterBasedOnTierOfPropertyValueDerivedRules,
   buildMethodPositionBasedSalaryCalculationDerviedRules,
   buildMethodProportionDerivedRules,
   buildMethodProportionOfTheNewReplacementCostDerivedRules,
@@ -30,7 +31,7 @@ const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '07': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules,
   '08': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRulesDerivedRules,
   '09': buildMethodPositionBasedSalaryCalculationDerviedRules,
-  // '10':
+  '10': buildMethodParameterBasedOnTierOfPropertyValueDerivedRules,
   '11': buildMethodSpecifiedEnergyCostIndexDerivedRules,
   '12': buildMethodProportionOfTheNewReplacementCostDerivedRules,
   '13': buildMethodProportionDerivedRules,
