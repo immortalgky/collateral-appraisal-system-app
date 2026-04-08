@@ -9,4 +9,10 @@ export const pricingAnalysisKeys = {
   marketComparableDetail: (id: string) => ['market-comparables', 'detail', id] as const,
   finalValue: (id: string, methodId: string) =>
     ['price-analysis', id, 'final-value', methodId] as const,
+  machineCostItems: (pricingAnalysisId: string, methodId: string) =>
+    ['price-analysis', pricingAnalysisId, 'machine-cost-items', methodId] as const,
+  leaseholdAnalysis: (pricingAnalysisId: string, methodId: string) =>
+    ['price-analysis', pricingAnalysisId, 'leasehold-analysis', methodId] as const,
+  profitRentAnalysis: (pricingAnalysisId: string, methodId: string) =>
+    ['price-analysis', pricingAnalysisId, 'profit-rent-analysis', methodId] as const,
 };

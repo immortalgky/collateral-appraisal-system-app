@@ -40,7 +40,7 @@ interface SaleAdjustmentGridPanelProps {
     methodId?: string;
     methodType?: string;
   };
-  property: Record<string, unknown> | undefined;
+  properties: Record<string, unknown>[] | undefined;
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   templateList: TemplateDtoType[] | undefined;
@@ -61,7 +61,7 @@ interface SaleAdjustmentGridPanelProps {
 
 export function SaleAdjustmentGridPanel({
   activeMethod,
-  property,
+  properties,
   marketSurveys,
   allFactors,
   templateList,
@@ -76,6 +76,12 @@ export function SaleAdjustmentGridPanel({
   onCancelCalculationMethod,
 }: SaleAdjustmentGridPanelProps) {
   const { methodId, methodType } = activeMethod ?? {};
+  const isCostApproach = methodType === 'SAG_COST';
+
+  const property: Record<string, unknown> | undefined = isCostApproach
+    ? properties?.find(p => p.propertyType === 'L')
+    : properties?.[0];
+  const buildingCost = properties?.filter(p => p.propertyType === 'B') ?? [];
 
   const methods = useForm<SaleAdjustmentGridType>({
     mode: 'onSubmit',
@@ -372,6 +378,8 @@ export function SaleAdjustmentGridPanel({
               <SaleAdjustmentGridForm
                 {...methods}
                 property={property}
+                buildingCost={buildingCost}
+                isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
                 comparativeMarketSurveys={comparativeSurveys}
                 template={pricingTemplate}

@@ -8,10 +8,13 @@ import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { DiscountedCashFlowPanel } from './dcf/DiscountedCashFlowPanel';
 import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { CostMachinePanel } from './CostMachinePanel';
+import { LeaseholdPanel } from './LeaseholdPanel';
+import { ProfitRentPanel } from './ProfitRentPanel';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
   serverData: PricingServerData;
+  appraisalId?: string;
   calculationMethodData: {
     comparativeFactors: GetComparativeFactorsResponseType | undefined;
     templateList: TemplateDtoType[] | undefined;
@@ -28,6 +31,7 @@ interface MethodSectionRendererProps {
 export function MethodSectionRenderer({
   state,
   serverData,
+  appraisalId,
   calculationMethodData,
   onCalculationSave,
   onCalculationMethodDirty,
@@ -59,15 +63,39 @@ export function MethodSectionRenderer({
 
   switch (state.activeMethod?.methodType) {
     case 'WQS_MARKET':
-      return <WQSPanel {...panelProps} property={serverData.properties?.[0]} />;
+      return <WQSPanel {...panelProps} />;
     case 'SAG_MARKET':
-      return <SaleAdjustmentGridPanel {...panelProps} property={serverData.properties?.[0]} />;
+      return <SaleAdjustmentGridPanel {...panelProps} />;
     case 'DC_MARKET':
-      return <DirectComparisonPanel {...panelProps} property={serverData.properties?.[0]} />;
+      return <DirectComparisonPanel {...panelProps} />;
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
-      return <CostMachinePanel {...panelProps} />;
+      return <CostMachinePanel {...panelProps} propertiesMap={serverData.propertiesMap} />;
+    case 'WQS_COST':
+      return <WQSPanel {...panelProps} />;
+    case 'SAG_COST':
+      return <SaleAdjustmentGridPanel {...panelProps} />;
+    case 'DC_COST':
+      return <DirectComparisonPanel {...panelProps} />;
+    case 'LH':
+      return (
+        <LeaseholdPanel
+          {...panelProps}
+          propertiesMap={serverData.propertiesMap}
+          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
+          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+        />
+      );
+    case 'PR':
+      return (
+        <ProfitRentPanel
+          {...panelProps}
+          propertiesMap={serverData.propertiesMap}
+          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
+          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+        />
+      );
     default:
       return <></>;
   }

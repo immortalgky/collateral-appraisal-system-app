@@ -72,4 +72,11 @@ export const wqsFieldPath = {
   finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice`,
   finalValueAppraisalPriceRounded: () => `WQSFinalValue.appraisalPriceRounded`,
   finalValuePriceDifferentiate: () => `WQSFinalValue.priceDifferentiate`,
+  finalValueTotalBuildingCost: () => `WQSFinalValue.totalBuildingCost`,
+  finalValueAppraisalPriceIncludeBuildingCost: () =>
+    `WQSFinalValue.appraisalPriceIncludeBuildingCost`,
+  finalValueAppraisalPriceIncludeBuildingCostRounded: () =>
+    `WQSFinalValue.appraisalPriceIncludeBuildingCostRounded`,
+  finalValuePriceIncludeBuildingCostDifferentiate: () =>
+    `WQSFinalValue.priceIncludeBuildingCostDifferentiate`,
 };

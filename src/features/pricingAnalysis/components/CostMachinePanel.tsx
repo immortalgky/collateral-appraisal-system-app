@@ -5,15 +5,16 @@ import { MethodFooterActions } from './MethodFooterActions';
 import { CostMachineFormSchema, type CostMachineFormType } from '../schemas/costMachineForm';
 import { type MachineryItem } from './CostMachineSection';
 import toast from 'react-hot-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/shared/components';
 import { initializeCostMachineForm } from '../adapters/initializeCostMachineForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import CostMachineForm from './CostMachineForm';
-import { useResetMethod } from '../api';
-import { mockMachineryItems } from '../data/machineData';
+import { useQueryClient } from '@tanstack/react-query';
+import { useGetMachineCostItems, useResetMethod, useSaveMachineCostItems } from '../api';
+import type { SaveMachineCostItemInput } from '../api';
+import { pricingAnalysisKeys } from '../api/queryKeys';
 
-// interface เหมือน WQSPanel — รับ props จาก panelProps ใน MethodSectionRenderer
 interface CostMachinePanelProps {
   activeMethod?: {
     pricingAnalysisId?: string;
@@ -22,7 +23,7 @@ interface CostMachinePanelProps {
     methodId?: string;
     methodType?: string;
   };
-  properties: Record<string, unknown>[] | undefined;
+  propertiesMap?: Record<string, Record<string, unknown>>;
   savedMethodValue?: number | null;
   onCalculationSave: (payload: {
     approachType: string;
@@ -35,29 +36,39 @@ interface CostMachinePanelProps {
 
 export function CostMachinePanel({
   activeMethod,
-  properties,
+  propertiesMap,
   savedMethodValue,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: CostMachinePanelProps) {
-  const { methodId } = activeMethod ?? {};
+  const { pricingAnalysisId, methodId } = activeMethod ?? {};
+  const queryClient = useQueryClient();
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
   const resetMutation = useResetMethod();
+  const saveMutation = useSaveMachineCostItems();
 
-  const machineryItems: MachineryItem[] = (properties ?? [])
-    .filter(f => (f as any).propertyType === 'MAC')
-    .map(m => {
-      const item = m as Record<string, any>;
-      return {
-        quantity: Number(item.quantity ?? 0),
-        machineName: String(item.machineName ?? ''),
-        registrationNo: String(item.registrationNo ?? ''),
-        manufacturer: String(item.manufacturer ?? ''),
-        conditionUse: String(item.conditionUse ?? ''),
-        yearOfManufacture: Number(item.yearOfManufacture ?? 0),
-      };
-    });
+  // Fetch saved machine cost items from API
+  const { data: savedData, isPending: isLoadingCostItems } = useGetMachineCostItems(pricingAnalysisId, methodId);
+
+  // Build machinery items from propertiesMap (all MAC-type properties in the group)
+  const machineryItems: MachineryItem[] = useMemo(() => {
+    if (!propertiesMap) return [];
+    return Object.entries(propertiesMap)
+      .filter(([, detail]) => (detail as any).propertyType === 'MAC')
+      .map(([propertyId, detail]) => {
+        const d = detail as Record<string, any>;
+        return {
+          appraisalPropertyId: String(d.propertyId ?? propertyId),
+          quantity: d.quantity != null ? Number(d.quantity) : null,
+          machineName: d.machineName != null ? String(d.machineName) : null,
+          registrationNo: d.registrationNo != null ? String(d.registrationNo) : null,
+          manufacturer: d.manufacturer != null ? String(d.manufacturer) : null,
+          conditionUse: d.conditionUse != null ? String(d.conditionUse) : null,
+          yearOfManufacture: d.yearOfManufacture != null ? Number(d.yearOfManufacture) : null,
+        };
+      });
+  }, [propertiesMap]);
 
   const methods = useForm<CostMachineFormType>({
     mode: 'onSubmit',
@@ -71,38 +82,80 @@ export function CostMachinePanel({
     reset,
   } = methods;
 
+  // Initialize form once when machine list and saved data are ready
+  const isInitialized = useRef(false);
   useEffect(() => {
-    initializeCostMachineForm({ machineryItems, reset });
-  }, []);
+    if (savedData !== undefined && !isInitialized.current) {
+      isInitialized.current = true;
+      initializeCostMachineForm({
+        machineryItems,
+        savedItems: savedData?.items,
+        remark: savedData?.remark ?? '',
+        reset,
+      });
+    }
+  }, [machineryItems, savedData]);
 
   useEffect(() => {
     onCalculationMethodDirty(isDirty);
   }, [isDirty, onCalculationMethodDirty]);
 
-  const handleOnSubmit = () => {
-    const data = getValues();
-    const totalFmv = data.machineryCosts.reduce((sum, row) => sum + (row.fmv ?? 0), 0);
+  const handleOnSubmit = async () => {
+    if (!pricingAnalysisId || !methodId) return;
 
-    if (activeMethod?.approachType && activeMethod?.methodType) {
-      onCalculationSave({
-        approachType: activeMethod.approachType,
-        methodType: activeMethod.methodType,
-        appraisalValue: totalFmv,
+    const data = getValues();
+
+    // Map form rows to API request format
+    const items: SaveMachineCostItemInput[] = data.machineryCosts.map((row, idx) => ({
+      id: row.id ?? null,
+      appraisalPropertyId: row.appraisalPropertyId,
+      displaySequence: idx + 1,
+      rcnReplacementCost: row.rcn,
+      lifeSpanYears: row.lifeSpan,
+      conditionFactor: row.conditionFactor ?? 0,
+      functionalObsolescence: row.functionalObsolescence ?? 1,
+      economicObsolescence: row.economicObsolescence ?? 1,
+      fairMarketValue: row.fmv,
+      marketDemandAvailable: row.marketDemand === 'Y',
+      notes: row.notes || null,
+    }));
+
+    try {
+      const result = await saveMutation.mutateAsync({
+        pricingAnalysisId,
+        methodId,
+        items,
+        remark: data.remark,
       });
+
+      if (activeMethod?.approachType && activeMethod?.methodType) {
+        onCalculationSave({
+          approachType: activeMethod.approachType,
+          methodType: activeMethod.methodType,
+          appraisalValue: result.totalFmv,
+        });
+      }
+      toast.success('Saved!');
+    } catch {
+      toast.error('Failed to save');
     }
-    toast.success('Saved!');
   };
 
   /** reset handler */
   const handleOnReset = () => setIsShowResetDialog(true);
   const handleOnConfirmReset = async () => {
     setIsShowResetDialog(false);
-    if (!activeMethod?.pricingAnalysisId || !methodId) return;
+    if (!pricingAnalysisId || !methodId) return;
     try {
       await resetMutation.mutateAsync({
-        pricingAnalysisId: activeMethod.pricingAnalysisId,
+        pricingAnalysisId,
         methodId,
       });
+      // Invalidate cached saved data so re-init uses fresh state
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.machineCostItems(pricingAnalysisId, methodId),
+      });
+      isInitialized.current = false;
       initializeCostMachineForm({ machineryItems, reset });
       toast.success('Method reset successfully');
     } catch {
@@ -128,11 +181,12 @@ export function CostMachinePanel({
         </div>
 
         {/* Content */}
-        <CostMachineForm machineryItems={machineryItems} />
+        <CostMachineForm machineryItems={machineryItems} isLoading={isLoadingCostItems} />
 
         {/* Footer save/cancel */}
         <MethodFooterActions
           showReset={true}
+          isSubmitting={saveMutation.isPending}
           onReset={handleOnReset}
           onCancel={onCancelCalculationMethod}
         />

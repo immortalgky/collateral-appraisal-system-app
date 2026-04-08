@@ -34,6 +34,9 @@ import ComparativeTemplateListPage from '@features/templateManagement/pages/Comp
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
 import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
+import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
+import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
+import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
 import { ReadOnlyPageWrapper, AppraisalReadOnlyWrapper } from '@shared/contexts/PageReadOnlyContext';
@@ -44,6 +47,11 @@ import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
+import BlockCondoPage from '@/features/blockCondo/pages/BlockCondoPage';
+import ModelDetailPage from '@/features/blockCondo/pages/ModelDetailPage';
+import TowerDetailPage from '@/features/blockCondo/pages/TowerDetailPage';
+import BlockVillagePage from '@/features/blockVillage/pages/BlockVillagePage';
+import VillageModelDetailPage from '@/features/blockVillage/pages/ModelDetailPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -299,6 +307,30 @@ export const router = createBrowserRouter([
             element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper>,
           },
           {
+            path: 'lease-land/new',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-land/:propertyId',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-building/new',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-building/:propertyId',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-land-building/new',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
+            path: 'lease-land-building/:propertyId',
+            element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper>,
+          },
+          {
             path: 'law-and-regulation/new',
             element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper>,
           },
@@ -314,6 +346,24 @@ export const router = createBrowserRouter([
             path: 'market-comparable/:marketComparableId',
             element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper>,
           },
+        ],
+      },
+      {
+        path: 'block-condo',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockCondoPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/:towerId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
+        path: 'block-village',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockVillagePage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
         ],
       },
       {
@@ -384,10 +434,34 @@ export const router = createBrowserRouter([
           { path: 'land-building/:propertyId/pma', element: <AppraisalReadOnlyWrapper pageName="Property Information"><LandBuildingPMAPage /></AppraisalReadOnlyWrapper> },
           { path: 'machinery/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper> },
           { path: 'machinery/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMachineryPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-building/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-building/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementBuildingPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land-building/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper> },
+          { path: 'lease-land-building/:propertyId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLeaseAgreementLandBuildingPage /></AppraisalReadOnlyWrapper> },
           { path: 'law-and-regulation/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper> },
           { path: 'law-and-regulation/:itemId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateLawAndRegulationPage /></AppraisalReadOnlyWrapper> },
           { path: 'market-comparable/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper> },
           { path: 'market-comparable/:marketComparableId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><CreateMarketComparablePage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
+        path: 'block-condo',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockCondoPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><ModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'tower/:towerId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><TowerDetailPage /></AppraisalReadOnlyWrapper> },
+        ],
+      },
+      {
+        path: 'block-village',
+        children: [
+          { index: true, element: <AppraisalReadOnlyWrapper pageName="Property Information"><BlockVillagePage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/new', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
+          { path: 'model/:modelId', element: <AppraisalReadOnlyWrapper pageName="Property Information"><VillageModelDetailPage /></AppraisalReadOnlyWrapper> },
         ],
       },
       {

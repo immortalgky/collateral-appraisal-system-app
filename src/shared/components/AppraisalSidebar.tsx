@@ -11,7 +11,7 @@ import {
   getCollapsibleNavigationByRole,
   getFooterNavigationByRole,
 } from '@shared/config/appraisalNavigation';
-import { useAppraisalRequestId, useAppraisalIsPma, useAppraisalStatus, useBasePath } from '@features/appraisal/context/AppraisalContext';
+import { useAppraisalRequestId, useAppraisalIsPma, useAppraisalIsBlockCondo, useAppraisalStatus, useBasePath } from '@features/appraisal/context/AppraisalContext';
 
 type AppraisalSidebarProps = {
   appraisalId: string;
@@ -182,11 +182,12 @@ export function MobileAppraisalSidebar({
   const requestId = useAppraisalRequestId();
   const basePath = useBasePath();
   const isPma = useAppraisalIsPma();
+  const isBlockCondo = useAppraisalIsBlockCondo();
   const status = useAppraisalStatus();
   const user = useUserStore(state => state.user);
   const role = user?.role ?? 'viewer';
 
-  const navContext = useMemo(() => ({ isPma, status }), [isPma, status]);
+  const navContext = useMemo(() => ({ isPma, isBlockCondo, status }), [isPma, isBlockCondo, status]);
 
   // Get role-filtered navigation with access levels
   const applicationNav = useMemo(

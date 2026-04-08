@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { HubConnectionBuilder, LogLevel, HubConnectionState } from '@microsoft/signalr';
+import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationStore } from '../store';
 import { showNotificationToast } from '../components/NotificationToast';
 import type { Notification } from '../types';
@@ -14,12 +15,12 @@ export function useNotificationHub() {
   const addNotification = useNotificationStore(s => s.addNotification);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = getAccessToken();
     if (!token) return;
 
     const connection = new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
-        accessTokenFactory: () => localStorage.getItem('auth_token') ?? '',
+        accessTokenFactory: () => getAccessToken() ?? '',
       })
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)

@@ -5,14 +5,16 @@ import './i18n';
 import './index.css'; // Import global CSS which includes Tailwind
 import App from '@app/App';
 import { queryClient } from '@app/queryClient';
-import { AuthProvider } from '@features/auth/components';
+import { AuthInitializer, AuthProvider } from '@features/auth/components';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <AuthInitializer>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </AuthInitializer>
     </QueryClientProvider>
   </StrictMode>,
 );

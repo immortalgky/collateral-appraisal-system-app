@@ -41,7 +41,6 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
       sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
       sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
       numberOfYears: yearDiffFromToday(survey.saleDate),
-      adjustedValue: 0,
     } as WQSCalculation;
   });
 }
