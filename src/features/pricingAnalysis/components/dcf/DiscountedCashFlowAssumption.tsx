@@ -67,7 +67,7 @@ export function DiscountedCashFlowAssumption({
               />
             </button>
             <div className="flex gap-1.5 items-center justify-end">
-              <div className="flex gap-1.5 max-w-72">
+              <div className="flex gap-1.5 items-center max-w-72">
                 <RHFInputCell
                   fieldName={`${name}.method.methodType`}
                   inputType="display"

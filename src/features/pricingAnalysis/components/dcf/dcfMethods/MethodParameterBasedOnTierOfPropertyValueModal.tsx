@@ -9,6 +9,7 @@ import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedF
 import { useMemo } from 'react';
 import type { UseFormGetValues } from 'react-hook-form';
 import type { FormValues } from '@/features/appraisal/components/tables/bType';
+import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
 
 export function MethodParameterBasedOnTierOfPropertyValueModal({
   name,
@@ -88,7 +89,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   useDerivedFields({ rules, ctx: { landGovPrice, buildingGovPrice } });
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-row gap-1.5 items-center">
         <span className={'w-80'}>Total government land appraisal price</span>
         <div className={'flex flex-row w-44 gap-1.5'}>
@@ -109,7 +110,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
       </div>
       <div className="flex flex-row gap-1.5 items-center">
         <span className={'w-80'}>Government land prices increase by</span>
-        <div className="w-24">
+        <div className="w-44">
           <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
         </div>
         <span className={''}>% every</span>
@@ -120,9 +121,56 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
       </div>
       <div className="flex flex-row gap-1.5">
         <span className={'w-80'}>Start in</span>
-        <div className={'w-24'}>
+        <div className={'w-44'}>
           <RHFInputCell fieldName={`${name}.startIn`} inputType={'number'} />
         </div>
+      </div>
+
+      <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
+        <ScrollableTableContainer className="flex-1 min-h-0">
+          <table className={'table table-xs min-w-max border-separate border-spacing-0'}>
+            <thead>
+              <tr>
+                <th colSpan={4} className="border-b border-gray-300 text-center">
+                  Land and Building Tax Rates
+                </th>
+              </tr>
+              <tr>
+                <th colSpan={2} rowSpan={1} className="border-b border-r border-gray-300">
+                  Estimated Price (Baht)
+                </th>
+                <th colSpan={1} rowSpan={2} className="border-b border-r border-gray-300">
+                  Tax Rate
+                </th>
+                <th colSpan={1} rowSpan={2} className="border-b border-gray-300">
+                  Tax Ceiling (Baht)
+                </th>
+              </tr>
+              <tr>
+                <th className="border-b border-gray-300">From</th>
+                <th className="border-b border-r border-gray-300">To</th>
+              </tr>
+            </thead>
+            <tbody>
+              {propertyTaxRanges.map(t => {
+                return (
+                  <>
+                    <tr>
+                      <td className="border-b border-r border-gray-300 px-1.5 py-2">
+                        {t.minValue}
+                      </td>
+                      <td className="border-b border-r border-gray-300 px-1.5 py-2">
+                        {t.maxValue}
+                      </td>
+                      <td className="border-b border-r border-gray-300 px-1.5 py-2">{t.taxRate}</td>
+                      <td className="border-b border-gray-300 px-1.5 py-2">{/* tax ceiling */}</td>
+                    </tr>
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        </ScrollableTableContainer>
       </div>
 
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">

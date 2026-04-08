@@ -16,7 +16,7 @@ interface SummarySectionTableProps {
 function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTableProps) {
   const rowHeaderStyle = 'px-1.5 h-12 text-sm text-gray-700 border-b border-gray-300';
   const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-700 border-b border-gray-300';
-  const rowStyle = 'bg-white hover:bg-secondary/10';
+  const rowStyle = 'bg-white';
 
   return (
     <>
@@ -70,9 +70,9 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                 fieldName="capitalizeRate"
                 inputType="number"
                 number={{
-                  decimalPlaces: 0,
-                  maxIntegerDigits: 3,
-                  maxValue: 367,
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 5,
+                  maxValue: 100,
                   allowNegative: false,
                 }}
               />
@@ -83,11 +83,15 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
         {Array.from({ length: totalNumberOfYears }, (_, idx) => {
           return (
             <td key={idx} className={clsx(rowBodyStyle)}>
-              <RHFInputCell
-                fieldName={`${name}.terminalRevenue.${idx}`}
-                inputType="display"
-                accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
-              />
+              {idx === totalNumberOfYears - 2 && (
+                <RHFInputCell
+                  fieldName={`${name}.terminalRevenue.${idx}`}
+                  inputType="display"
+                  accessor={({ value }) => (
+                    <span>{value ? Number(value).toLocaleString() : 0}</span>
+                  )}
+                />
+              )}
             </td>
           );
         })}
@@ -96,11 +100,13 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
         <td className={clsx(rowHeaderStyle)}>Total Net Cashflow</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
           <td key={idx} className={clsx(rowBodyStyle)}>
-            <RHFInputCell
-              fieldName={`${name}.totalNet.${idx}`}
-              inputType="display"
-              accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
-            />
+            {idx !== totalNumberOfYears - 1 && (
+              <RHFInputCell
+                fieldName={`${name}.totalNet.${idx}`}
+                inputType="display"
+                accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
+              />
+            )}
           </td>
         ))}
       </tr>
@@ -113,9 +119,9 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                 fieldName="discountedRate"
                 inputType="number"
                 number={{
-                  decimalPlaces: 0,
-                  maxIntegerDigits: 3,
-                  maxValue: 367,
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 5,
+                  maxValue: 100,
                   allowNegative: false,
                 }}
               />
@@ -137,11 +143,13 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
         <td className={clsx(rowHeaderStyle)}>Present Vaue of Cashflows</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
           <td key={idx} className={clsx(rowBodyStyle)}>
-            <RHFInputCell
-              fieldName={`${name}.presentValue.${idx}`}
-              inputType="display"
-              accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
-            />
+            {idx !== totalNumberOfYears - 1 && (
+              <RHFInputCell
+                fieldName={`${name}.presentValue.${idx}`}
+                inputType="display"
+                accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
+              />
+            )}
           </td>
         ))}
       </tr>
@@ -151,13 +159,15 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
           if (idx === 0) {
             return (
               <td key={idx} className={clsx(rowBodyStyle)}>
-                <RHFInputCell
-                  fieldName={'finalValue'}
-                  inputType="display"
-                  accessor={({ value }) => (
-                    <span>{value ? Number(value).toLocaleString() : ''}</span>
-                  )}
-                />
+                {idx === 0 && (
+                  <RHFInputCell
+                    fieldName={'finalValue'}
+                    inputType="display"
+                    accessor={({ value }) => (
+                      <span>{value ? Number(value).toLocaleString() : 0}</span>
+                    )}
+                  />
+                )}
               </td>
             );
           }
@@ -172,7 +182,15 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
               <td key={idx} className={clsx(rowBodyStyle)}>
                 <div className="flex flex-row justify-end items-center">
                   <div className="w-28">
-                    <RHFInputCell fieldName={'finalValueRounded'} inputType="number" />
+                    <RHFInputCell
+                      fieldName={'finalValueRounded'}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 2,
+                        maxIntegerDigits: 15,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                 </div>
               </td>

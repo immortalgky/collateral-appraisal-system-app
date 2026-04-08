@@ -5,6 +5,7 @@ import { convertLandAreaToTotalSqWa } from '../../domain/convertLandAreaToTotalS
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { floorToThousands } from '../../domain/calculation';
 import { useRef } from 'react';
+import { shouldAutoDefault } from '../../domain/shouldAutoDefault';
 
 export function DiscountedCashFlowHighestBestUsed() {
   const { control, getValues, setValue } = useFormContext();
@@ -51,21 +52,10 @@ export function DiscountedCashFlowHighestBestUsed() {
       targetPath: 'AppraisalPriceRounded',
       deps: ['AppraisalPrice'],
       compute: ({ getValues }) => Number(getValues('AppraisalPrice')) || 0,
-      when: ({ getValues }) => {
-        const depValue = Number(getValues('AppraisalPrice')) || 0;
-        const current = Number(getValues('AppraisalPriceRounded')) || 0;
-
-        if (prevAppraisalValueRef.current === null) {
-          prevAppraisalValueRef.current = depValue;
-          return current === 0;
-        }
-
-        if (prevAppraisalValueRef.current !== depValue) {
-          prevAppraisalValueRef.current = depValue;
-          return true;
-        }
-
-        return false;
+      when: ({ getValues, getFieldState, formState }) => {
+        const curr = getValues('AppraisalPriceRounded') ?? 0;
+        const { isDirty } = getFieldState('AppraisalPriceRounded', formState);
+        return shouldAutoDefault({ value: curr, isDirty });
       },
     },
   ];

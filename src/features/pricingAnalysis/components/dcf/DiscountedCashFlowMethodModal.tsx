@@ -12,6 +12,7 @@ import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModal
 import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { buildDiscountedCashFlowCategoryOptions } from '../../adapters/buildDiscountedCashFlowCategoryOptions';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
+import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -108,6 +109,18 @@ export function DiscountedCashFlowMethodModal({
   );
 
   const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
+  const assumptions = getDCFFilteredAssumptions(getOuterFormValues).map(a => a.assumption);
+
+  const filteredAssumptionOptions = useMemo(() => {
+    return assumptionParams
+      .filter(
+        p =>
+          !assumptions.some(
+            a => a.assumptionType === p.code && a.assumptionType !== initialData.assumptionType,
+          ),
+      )
+      .map(a => ({ value: a.code, label: a.description }));
+  }, [assumptionType, assumptions]);
 
   const filteredMethodOptions = useMemo(() => {
     if (!assumptionType) return [];
@@ -182,10 +195,7 @@ export function DiscountedCashFlowMethodModal({
                 <RHFInputCell
                   fieldName="assumptionType"
                   inputType="select"
-                  options={assumptionParams.map(a => ({
-                    value: a.code,
-                    label: a.description,
-                  }))}
+                  options={filteredAssumptionOptions}
                   onSelectChange={handleAssumptionTypeChange}
                 />
               </div>

@@ -138,6 +138,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           <RHFInputCell
                             fieldName={`${name}.jobPositionDetails.${index}.jobPositionOther`}
                             inputType="text"
+                            text={{ maxLength: 50 }}
                           />
                         )}
                         <button
@@ -154,12 +155,14 @@ export function MethodPositionBasedSalaryCalculationModal({
                       <RHFInputCell
                         fieldName={`${name}.jobPositionDetails.${index}.salaryBahtPerPersonPerMonth`}
                         inputType="number"
+                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
                         fieldName={`${name}.jobPositionDetails.${index}.numberOfEmployees`}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 4, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -191,7 +194,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                 <td></td>
               </tr>
               <tr>
-                <td className="sticky bottom-0 px-1.5 bg-white"></td>
+                <td className="sticky bottom-0 px-1.5 bg-white">Total</td>
                 <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
                     <RHFInputCell
@@ -247,11 +250,29 @@ export function MethodPositionBasedSalaryCalculationModal({
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
           <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
+            <RHFInputCell
+              fieldName={`${name}.increaseRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>every</span>
           <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
+            <RHFInputCell
+              fieldName={`${name}.increaseRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>

@@ -13,49 +13,6 @@ export function SectionSummaryDirectCashFlow({
   name,
   totalNumberOfYears,
 }: SectionSummaryDirectCashFlowProps) {
-  const { getValues } = useFormContext();
-  const sections = (getValues('sections') ?? []).filter((s: DCFSection) => s.identifier != 'empty');
-
-  // const rules: DerivedFieldRule<unknown>[] = [
-  //   {
-  //     targetPath: `${name}.totalNet`,
-  //     deps: ['sections'],
-  //     compute: ({ getValues, ctx }) => {
-  //       const grossRevenue = ctx.sections.reduce((prev, curr) => {
-  //         const identifer = curr.identifier ?? '';
-  //         if (identifer === 'positive') return prev + Number(curr.totalSectionValues?.[0] ?? 0);
-  //         if (identifer === 'negative') return prev - Number(curr.totalSectionValues?.[0] ?? 0);
-  //         return prev;
-  //       }, 0);
-
-  //       // minus contract fee from lease agreement
-  //       const contractRentalFee = getValues(`${name}.contractRentalFee`) ?? 0;
-  //       return grossRevenue - contractRentalFee;
-  //     },
-  //   },
-  //   {
-  //     targetPath: `${name}.contractRentalFee`,
-  //     deps: [],
-  //     compute: ({ getValues }) => {
-  //       return 0;
-  //     },
-  //   },
-  //   {
-  //     targetPath: `${name}.presentValue`,
-  //     deps: [`capitalizeRate`, `${name}.totalNet`],
-  //     compute: ({ getValues }) => {
-  //       const capitalizeRate = getValues(`capitalizeRate`);
-  //       const totalNet = getValues(`${name}.totalNet`) ?? 0;
-
-  //       if (!capitalizeRate) return 0;
-
-  //       return toNumber(totalNet / capitalizeRate / 100);
-  //     },
-  //   },
-  // ];
-
-  // useDerivedFields({ rules, ctx: { sections, totalNumberOfYears } });
-
   return <SummarySectionTable name={name} totalNumberOfYears={totalNumberOfYears} />;
 }
 
@@ -92,9 +49,9 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                 fieldName="capitalizeRate"
                 inputType="number"
                 number={{
-                  decimalPlaces: 0,
-                  maxIntegerDigits: 3,
-                  maxValue: 367,
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 5,
+                  maxValue: 100,
                   allowNegative: false,
                 }}
               />
@@ -130,7 +87,15 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
               <td key={idx} className={clsx(rowBodyStyle)}>
                 <div className="flex flex-row justify-end items-center">
                   <div className="w-28">
-                    <RHFInputCell fieldName={'finalValueRounded'} inputType="number" />
+                    <RHFInputCell
+                      fieldName={'finalValueRounded'}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 2,
+                        maxIntegerDigits: 15,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                 </div>
               </td>
