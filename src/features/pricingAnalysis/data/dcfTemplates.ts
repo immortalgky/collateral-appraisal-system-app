@@ -504,9 +504,9 @@ export const dcfApartmentTemplate: DCFTemplateType = {
       displaySeq: 0,
       categories: [
         {
-          categoryType: '',
-          categoryName: 'Operating Income',
-          identifier: 'income',
+          categoryType: 'income',
+          categoryName: 'Gross Income',
+          identifier: 'positive',
           displaySeq: 0,
           assumptions: [
             {
@@ -515,28 +515,46 @@ export const dcfApartmentTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 0,
               method: {
-                methodType: '05',
-                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+                methodType: '06',
+                detail: {
+                  increaseRatePct: 10,
+                  increaseRateYrs: 3,
+                  occupancyRateFirstYearPct: 80,
+                  occupancyRatePct: 5,
+                  occupancyRateYrs: 3,
+                },
               },
             },
+          ],
+        },
+        {
+          categoryType: 'income',
+          categoryName: 'Other Income',
+          identifier: 'positive',
+          displaySeq: 0,
+          assumptions: [
             {
-              assumptionType: 'I04',
+              assumptionType: 'I03',
               assumptionName: '',
               identifier: 'positive',
-              displaySeq: 1,
+              displaySeq: 0,
               method: {
                 methodType: '13',
-                detail: { proportionPct: 10, refTarget: {} },
+                detail: {
+                  proportionPct: 2,
+                },
               },
             },
             {
-              assumptionType: 'I05',
-              assumptionName: '',
+              assumptionType: 'I06',
+              assumptionName: 'Other Income',
               identifier: 'positive',
-              displaySeq: 2,
+              displaySeq: 0,
               method: {
-                methodType: '14',
-                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+                methodType: '13',
+                detail: {
+                  proportionPct: 2,
+                },
               },
             },
           ],
@@ -550,7 +568,7 @@ export const dcfApartmentTemplate: DCFTemplateType = {
       displaySeq: 1,
       categories: [
         {
-          categoryType: 'c3',
+          categoryType: 'expenses',
           categoryName: 'Direct Operating Expenses',
           identifier: 'expenses',
           displaySeq: 0,
@@ -563,41 +581,32 @@ export const dcfApartmentTemplate: DCFTemplateType = {
               method: {
                 methodType: '13',
                 detail: {
-                  proportionPct: 15,
-                  refTargetId: 'I00',
+                  proportionPct: 1,
                 },
               },
             },
             {
-              assumptionType: 'E09',
+              assumptionType: 'E10',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 1,
               method: {
                 methodType: '13',
                 detail: {
-                  proportionPct: 10,
-                  refTargetId: 'I00',
+                  proportionPct: 1,
                 },
               },
             },
-          ],
-        },
-        {
-          categoryType: 'c4',
-          categoryName: 'Administrative and Management Expenses',
-          identifier: 'expenses',
-          displaySeq: 0,
-          assumptions: [
             {
-              assumptionType: 'E18',
+              assumptionType: 'E05',
               assumptionName: '',
               identifier: 'negative',
-              displaySeq: 0,
+              displaySeq: 1,
               method: {
-                methodType: '09',
+                methodType: '11',
                 detail: {
-                  increaseRatePct: 5,
+                  energyCostIndex: 30,
+                  increaseRatePct: 3,
                   increaseRateYrs: 3,
                 },
               },
@@ -606,87 +615,29 @@ export const dcfApartmentTemplate: DCFTemplateType = {
               assumptionType: 'E10',
               assumptionName: '',
               identifier: 'negative',
-              displaySeq: 0,
-              method: {
-                methodType: '13',
-                detail: {
-                  proportionPct: 3,
-                  refTargetId: 'a1',
-                },
-              },
-            },
-            {
-              assumptionType: 'E15',
-              assumptionName: '',
-              identifier: 'negative',
               displaySeq: 1,
               method: {
                 methodType: '13',
                 detail: {
-                  proportionPct: 2,
-                  refTargetId: 'a1',
-                },
-              },
-            },
-            {
-              assumptionType: 'E21',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 1,
-              method: {
-                methodType: '13',
-                detail: {
-                  proportionPct: 2,
-                  refTargetId: 'a1',
-                },
-              },
-            },
-            {
-              assumptionType: 'E15',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 1,
-              method: {
-                methodType: '13',
-                detail: {
-                  proportionPct: 2,
-                  refTargetId: 'a1',
+                  proportionPct: 10,
                 },
               },
             },
           ],
         },
         {
-          categoryType: 'c5',
-          categoryName: 'Gross Operating Profit (GOP)',
-          identifier: 'gop',
+          categoryType: 'fixedExps',
+          categoryName: 'Fixed Charge',
+          identifier: 'negative',
           displaySeq: 0,
           assumptions: [
             {
-              assumptionType: 'a1',
+              assumptionType: 'E06',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 0,
               method: {
-                methodType: '15',
-                detail: {},
-              },
-            },
-          ],
-        },
-        {
-          categoryType: 'c6',
-          categoryName: 'Fixed Expenses',
-          identifier: 'fixedExps',
-          displaySeq: 0,
-          assumptions: [
-            {
-              assumptionType: 'E16',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 0,
-              method: {
-                methodType: '13',
+                methodType: '12',
                 detail: {
                   proportionPct: 2,
                 },
@@ -1203,7 +1154,7 @@ export const directApartmentTemplate: DCFTemplateType = {
       displaySeq: 0,
       categories: [
         {
-          categoryType: '',
+          categoryType: 'income',
           categoryName: 'Operating Income',
           identifier: 'income',
           displaySeq: 0,
@@ -1249,9 +1200,9 @@ export const directApartmentTemplate: DCFTemplateType = {
       displaySeq: 1,
       categories: [
         {
-          categoryType: 'c3',
+          categoryType: 'expenses',
           categoryName: 'Direct Operating Expenses',
-          identifier: 'expenses',
+          identifier: 'negative',
           displaySeq: 0,
           assumptions: [
             {
@@ -1283,9 +1234,9 @@ export const directApartmentTemplate: DCFTemplateType = {
           ],
         },
         {
-          categoryType: 'c4',
+          categoryType: 'expenses',
           categoryName: 'Administrative and Management Expenses',
-          identifier: 'expenses',
+          identifier: 'negative',
           displaySeq: 0,
           assumptions: [
             {
@@ -1356,25 +1307,13 @@ export const directApartmentTemplate: DCFTemplateType = {
           ],
         },
         {
-          categoryType: 'c5',
+          categoryType: 'gop',
           categoryName: 'Gross Operating Profit (GOP)',
           identifier: 'gop',
           displaySeq: 0,
-          assumptions: [
-            {
-              assumptionType: 'a1',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 0,
-              method: {
-                methodType: '15',
-                detail: {},
-              },
-            },
-          ],
         },
         {
-          categoryType: 'c6',
+          categoryType: 'fixedExps',
           categoryName: 'Fixed Expenses',
           identifier: 'fixedExps',
           displaySeq: 0,

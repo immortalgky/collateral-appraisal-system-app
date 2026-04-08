@@ -42,8 +42,6 @@ export function DiscountedCashFlowPanel({
 
   const { handleSubmit, reset, getValues, setValue, control } = methods;
 
-  const data = getValues();
-
   const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [pricingTemplate, setPricingTemplate] = useState<DCFTemplateType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
@@ -58,7 +56,9 @@ export function DiscountedCashFlowPanel({
     setIsGenerated(false);
 
     // initialize
+    reset({});
     initializeDiscountedCashFlowForm(templateDetailQuery as DCFTemplateType, reset);
+    console.log(getValues());
 
     setIsGenerated(true);
   };
@@ -116,7 +116,7 @@ export function DiscountedCashFlowPanel({
         {!isLoading && (
           <div className="flex flex-col gap-4 mt-4">
             <DiscountedCashFlowTable
-              totalNumberOfYears={data.totalNumberOfYears}
+              totalNumberOfYears={getValues('totalNumberOfYears')}
               properties={properties}
             />
 

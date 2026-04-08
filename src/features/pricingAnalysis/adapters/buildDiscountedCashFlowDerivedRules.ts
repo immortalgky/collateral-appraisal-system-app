@@ -286,6 +286,31 @@ export function buildStaticCalculationDerivedRules(
             return toNumber(totalNet / capitalizeRate / 100);
           },
         },
+        {
+          targetPath: `finalValue`,
+          deps: ['sections'],
+          compute: ({ getValues }) => {
+            const summarySection = (getValues('sections') ?? []).find(
+              (s: DCFSection) => s.sectionType === 'summaryDCF',
+            ) as DCFSummarySection;
+            const finalValue = (summarySection?.presentValue ?? []).reduce((prev, curr) => {
+              return prev + Number(curr ?? 0);
+            }, 0);
+            return finalValue;
+          },
+        },
+        {
+          targetPath: `finalValueRounded`,
+          deps: [],
+          when: ({ getFieldState, formState }) => {
+            const { isDirty } = getFieldState('finalValueRounded', formState);
+            return !isDirty;
+          },
+          compute: ({ getValues }) => {
+            const finalValue = getValues('finalValue') ?? 0;
+            return finalValue;
+          },
+        },
       ];
     }
   });
@@ -1047,13 +1072,31 @@ export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
     ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
       return [
         {
+          targetPath: `${name}.detail.increaseRate.${idx}`,
+          deps: [`${name}.detail.increaseRatePct`, `${name}.detail.increaseRateYrs`],
+          compute: ({ getValues }) => {
+            const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+            const increateRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+            if (idx === 0) return 0;
+            if (idx % increateRateYrs === 0) return increaseRatePct;
+            return 0;
+          },
+        },
+        {
           targetPath: `${name}.detail.proportionOfNewReplacementCosts.${idx}`,
-          deps: [`${name}.detail.proportionPct`],
+          deps: [`${name}.detail.proportionPct`, `${name}.detail.increaseRate.${idx}`],
           compute: ({ getValues, ctx }) => {
             const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
             const newReplacementCost = ctx.newReplacementCost ?? 0;
+            const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-            return toNumber((Number(proportionPct) / 100) * Number(newReplacementCost));
+            if (idx === 0) return (Number(proportionPct) / 100) * Number(newReplacementCost);
+
+            const prevValue = getValues(
+              `${name}.detail.proportionOfNewReplacementCosts.${idx - 1}`,
+            );
+
+            return toNumber(prevValue * (1 + increaseRate / 100));
           },
         },
         {

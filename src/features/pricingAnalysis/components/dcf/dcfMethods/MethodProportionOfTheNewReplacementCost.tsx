@@ -36,6 +36,22 @@ export function MethodProportionOfTheNewReplacementCost({
             })}
           </tr>
           <tr>
+            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
+              return (
+                <td key={idx} className={clsx(baseStyles.rowBody)}>
+                  <RHFInputCell
+                    fieldName={`${name}.detail.increaseRate.${idx}`}
+                    inputType="display"
+                    accessor={({ value }) => (
+                      <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                    )}
+                  />
+                </td>
+              );
+            })}
+          </tr>
+          <tr>
             <td className={clsx(baseStyles.rowHeader)}>Total</td>
             {(method.detail?.proportionOfNewReplacementCosts ?? []).map((val, idx) => {
               return (

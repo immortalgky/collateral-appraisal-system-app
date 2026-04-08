@@ -7,6 +7,7 @@ export function initializeDiscountedCashFlowForm(
   templateDetailQuery: DCFTemplateType,
   reset: UseFormReset<DCFFormType>,
 ) {
+  reset(null);
   reset({
     clientId: getNewId(),
     templateCode: templateDetailQuery.templateCode,
@@ -22,6 +23,7 @@ export function initializeDiscountedCashFlowForm(
         sectionName: s.sectionName,
         identifier: s.identifier,
         displaySeq: s_idx,
+        totalSectionValues: [0],
         categories:
           (s.categories ?? []).map((c, c_idx) => {
             return {
@@ -30,6 +32,7 @@ export function initializeDiscountedCashFlowForm(
               categoryName: c.categoryName,
               identifier: c.identifier,
               displaySeq: c_idx,
+              totalCategoryValues: [0],
               assumptions: (c.assumptions ?? []).map((a, a_idx) => {
                 return {
                   clientId: getNewId(),
@@ -37,10 +40,12 @@ export function initializeDiscountedCashFlowForm(
                   assumptionName: a.assumptionName,
                   identifier: a.identifier,
                   displaySeq: a_idx,
+                  totalAssumptionValues: [0],
                   method: {
                     clientId: getNewId(),
                     methodType: a.method.methodType,
                     detail: a.method.detail,
+                    totalMethodValues: [0],
                   },
                 };
               }),
@@ -50,5 +55,7 @@ export function initializeDiscountedCashFlowForm(
     }),
     finalValue: 0,
     finalValueRounded: 0,
+    appraisalPrice: 0,
+    appraisalPriceRounded: 0,
   });
 }
