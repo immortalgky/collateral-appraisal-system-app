@@ -21,6 +21,7 @@ interface RHFInputCellProps {
   inputType?: 'number' | 'select' | 'text' | 'display' | 'toggle';
   disabled?: boolean;
   number?: {
+    label?: string;
     decimalPlaces?: number;
     maxIntegerDigits?: number;
     allowNegative?: boolean;
@@ -72,6 +73,7 @@ export const RHFInputCell = ({
     return (
       <NumberInput
         {...field}
+        label={number?.label ?? ''}
         value={field.value ?? ''}
         decimalPlaces={number?.decimalPlaces}
         maxIntegerDigits={number?.maxIntegerDigits}

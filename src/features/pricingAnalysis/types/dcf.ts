@@ -7,6 +7,7 @@ interface MethodSpecifiedRoomIncomePerDay {
   // modal
   roomDetails: {
     roomType?: string;
+    roomTypeOther?: string;
     roomIncome: number;
     saleableArea: number;
     totalRoomIncome: number;
@@ -42,6 +43,7 @@ type SeasonRateInput = {
 type RoomIncomeRow = {
   id: string;
   roomType: string;
+  roomTypeOther?: string;
   seasons: SeasonRateInput[];
 };
 
@@ -111,6 +113,7 @@ interface MethodSpecifiedRentalIncomePerMonth {
   // modal
   roomDetails: {
     roomType: string;
+    roomTypeOther?: string;
     roomIncome: number;
     saleableArea: number;
     totalRoomIncomePerMonth: number;
@@ -163,6 +166,7 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   // modal
   roomDetails: {
     roomType?: string;
+    roomTypeOther?: string;
     roomExpensePerDay: number;
     saleableArea: number;
     totalRoomExpensePerDay: number;
@@ -196,6 +200,7 @@ interface MethodPositionBasedSalaryCalculation {
   // modal
   jobPositionDetails: {
     jobPosition: string;
+    jobPositionOther?: string;
     salaryBahtPerPersonPerMonth: number;
     numberOfEmployees: number;
     totalSalaryPerYear: number;
@@ -266,8 +271,6 @@ interface MethodSpecifiedValueWithGrowth {
   // table
   increaseRates: number[];
 }
-
-interface MethodGrossOperatingProfit {}
 
 export interface MethodSpecifiedRoomIncomePerDayWrapper {
   id?: string;
@@ -366,13 +369,6 @@ export interface MethodSpecifiedValueWithGrowthWrapper {
   detail?: MethodSpecifiedValueWithGrowth;
 }
 
-export interface MethodGrossOperatingProfitWrapper {
-  id?: string;
-  methodType: '15';
-  totalMethodValues: number[];
-  detail?: MethodGrossOperatingProfit;
-}
-
 export type DCFMethod =
   | MethodSpecifiedRoomIncomePerDayWrapper
   | MethodSpecifiedRoomIncomeBySeasonalRatesWrapper
@@ -387,8 +383,7 @@ export type DCFMethod =
   | MethodSpecifiedEnergyCostIndexWrapper
   | MethodProportionOfTheNewReplacementCostWrapper
   | MethodProportionWrapper
-  | MethodSpecifiedValueWithGrowthWrapper
-  | MethodGrossOperatingProfitWrapper;
+  | MethodSpecifiedValueWithGrowthWrapper;
 
 interface Base {
   clientId: string; // on runtime generated id for client side usage, not saved in DB
@@ -456,6 +451,19 @@ export interface DCFTemplateType {
   totalNumberOfDayInYear: number;
   capitalizeRate: number;
   discountedRate: number;
+  isHighestBestUsed: boolean;
+  highestBestUsed: {
+    areaRai: number;
+    areaNgan: number;
+    areaWa: number;
+    totalWa: number;
+    pricePerSqWa: number;
+    totalValue: number;
+  };
+  finalValue: number;
+  finalValueRouned: number;
+  AppraisalPrice: number;
+  AppraisalPriceRounded: number;
   sections: {
     sectionType: SectionType; // render section e.g income, expenses
     sectionName: string;

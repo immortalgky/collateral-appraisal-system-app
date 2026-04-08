@@ -1,7 +1,6 @@
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../../types/dcf';
-import { mapDCFMethodCodeToSystemType } from '../../../domain/mapDCFMethodCodeToSystemType';
 import { assumptionParams } from '../../../data/dcfParameters';
 
 export function MethodProportionModal({
@@ -46,7 +45,7 @@ export function MethodProportionModal({
       <div className={'w-44'}>
         <RHFInputCell fieldName={`${name}.proportionPct`} inputType={'number'} />
       </div>
-      <div className="flex flex-row gap-1.5">
+      <div className="flex flex-row gap-1.5 items-center">
         <span className={''}>% of</span>
         <div className="w-64">
           <RHFInputCell fieldName={`${name}.refTargetId`} inputType={'select'} options={options} />

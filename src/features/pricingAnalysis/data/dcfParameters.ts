@@ -10,33 +10,33 @@ export const assumptionParams = [
   // income
   { code: 'I00', description: 'Room Income' },
   { code: 'I01', description: 'Room Rental Income' },
-  { code: 'I02', description: 'Energy Income' },
-  { code: 'I03', description: 'Utility Income' },
-  { code: 'I04', description: 'Food and Beverage Income' },
-  { code: 'I05', description: 'Other Income' },
+  { code: 'I02', description: 'Average Rental Rate' },
+  { code: 'I03', description: 'Energy Income' },
+  { code: 'I04', description: 'Utility Income' },
+  { code: 'I05', description: 'Food and Beverage Income' },
+  { code: 'I06', description: 'Other Income' },
 
   // expenses
-  { code: 'E01', description: 'Administration Fee' },
-  { code: 'E02', description: 'Average Rental Rate' },
-  { code: 'E03', description: 'Advertising and Promotion Costs' },
-  { code: 'E04', description: 'Common Utility Fees' },
-  { code: 'E05', description: 'Contingency Expenses' },
-  { code: 'E06', description: 'Cost of Income from Utilities' },
-  { code: 'E07', description: 'Energy Cost' },
-  { code: 'E08', description: 'Fire Insurance Premium' },
-  { code: 'E09', description: 'Food and beverage expenses' },
-  { code: 'E10', description: 'Marketing and Promotion Costs' },
-  { code: 'E11', description: 'Operational and Administrative expenses' },
-  { code: 'E12', description: 'Other Expenses' },
-  { code: 'E13', description: 'Project Management Compensation' },
-  { code: 'E14', description: 'Property Tax' },
-  { code: 'E15', description: 'Repair and Maintenance Costs' },
-  { code: 'E16', description: 'Reserve Funds for Building Improvements' },
-  { code: 'E17', description: 'Room Cost' },
-  { code: 'E18', description: 'Salary and Benefits' },
-  { code: 'E19', description: 'Sales and Marketing Expenses' },
-  { code: 'E20', description: 'Utility Expenses' },
-  { code: 'E21', description: 'Other Costs' },
+  { code: 'E00', description: 'Administration Fee' },
+  { code: 'E01', description: 'Advertising and Promotion Costs' },
+  { code: 'E02', description: 'Common Utility Fees' },
+  { code: 'E03', description: 'Contingency Expenses' },
+  { code: 'E04', description: 'Cost of Income from Utilities' },
+  { code: 'E05', description: 'Energy Cost' },
+  { code: 'E06', description: 'Fire Insurance Premium' },
+  { code: 'E07', description: 'Food and beverage expenses' },
+  { code: 'E08', description: 'Marketing and Promotion Costs' },
+  { code: 'E09', description: 'Operational and Administrative expenses' },
+  { code: 'E10', description: 'Other Expenses' },
+  { code: 'E11', description: 'Project Management Compensation' },
+  { code: 'E12', description: 'Property Tax' },
+  { code: 'E13', description: 'Repair and Maintenance Costs' },
+  { code: 'E14', description: 'Reserve Funds for Building Improvements' },
+  { code: 'E15', description: 'Room Cost' },
+  { code: 'E16', description: 'Salary and Benefits' },
+  { code: 'E17', description: 'Sales and Marketing Expenses' },
+  { code: 'E18', description: 'Utility Expenses' },
+  { code: 'E19', description: 'Other Costs' },
 
   // others
   { code: 'M99', description: 'Miscellaneous' },
@@ -44,8 +44,116 @@ export const assumptionParams = [
 
 export const mappingAssumptionMethodParams = [
   {
-    assumptionCode: '23',
-    methods: [{ code: '01' }, { code: '02' }, { code: '03' }, { code: '04' }],
+    assumptionCode: 'I00',
+    methods: ['06'],
+  },
+  {
+    assumptionCode: 'I01',
+    methods: ['01', '02', '03', '05'],
+  },
+  {
+    assumptionCode: 'I02',
+    methods: ['06'],
+  },
+  {
+    assumptionCode: 'I03',
+    methods: ['13'],
+  },
+  {
+    assumptionCode: 'I04',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'I05',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'I06',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E00',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E01',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E02',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E03',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E04',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E05',
+    methods: ['11'],
+  },
+  {
+    assumptionCode: 'E06',
+    methods: ['12', '14'],
+  },
+  {
+    assumptionCode: 'E07',
+    methods: ['08', '13'],
+  },
+  {
+    assumptionCode: 'E08',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E09',
+    methods: ['09', '13', '14'],
+  },
+  {
+    assumptionCode: 'E10',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E11',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E12',
+    methods: ['10', '14'],
+  },
+  {
+    assumptionCode: 'E13',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E14',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E15',
+    methods: ['07', '13'],
+  },
+  {
+    assumptionCode: 'E16',
+    methods: ['09', '14'],
+  },
+  {
+    assumptionCode: 'E17',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E18',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E19',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'M99',
+    methods: ['13', '14'],
   },
 ];
 
@@ -102,6 +210,40 @@ export const roomTypeParameters = [
   { code: '28', description: 'Penthouse' },
   { code: '29', description: 'Loft Room' },
   { code: '99', description: 'Others' },
+];
+
+export const jobPositionParameters = [
+  { code: '00', description: 'General Manager' },
+  { code: '01', description: 'Assistant Manager' },
+  { code: '02', description: 'Front Office Manager' },
+  { code: '03', description: 'Front Desk Agent' },
+  { code: '04', description: 'Concierge' },
+  { code: '05', description: 'Reservation Agent' },
+  { code: '06', description: 'Bell Attendant' },
+  { code: '07', description: 'Doorman' },
+  { code: '08', description: 'Housekeeping Manager' },
+  { code: '09', description: 'Room Attendant' },
+  { code: '10', description: 'Laundry Attendant' },
+  { code: '11', description: 'Maintenance Technician' },
+  { code: '12', description: 'Security Officer' },
+  { code: '13', description: 'Food and Beverage Manager' },
+  { code: '14', description: 'Restaurant Manager' },
+  { code: '15', description: 'Executive Chef' },
+  { code: '16', description: 'Sous Chef' },
+  { code: '17', description: 'Cook' },
+  { code: '18', description: 'Kitchen Assistant' },
+  { code: '19', description: 'Server' },
+  { code: '20', description: 'Bartender' },
+  { code: '21', description: 'Room Service Attendant' },
+  { code: '22', description: 'Sales Manager' },
+  { code: '23', description: 'Marketing Manager' },
+  { code: '24', description: 'Human Resources Manager' },
+  { code: '25', description: 'Accountant' },
+  { code: '26', description: 'Purchasing Officer' },
+  { code: '27', description: 'Spa Therapist' },
+  { code: '28', description: 'Valet' },
+  { code: '29', description: 'Night Auditor' },
+  { code: '99', description: 'Other' },
 ];
 
 export const propertyTaxRanges = [

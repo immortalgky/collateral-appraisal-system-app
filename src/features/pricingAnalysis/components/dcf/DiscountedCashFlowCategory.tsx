@@ -15,6 +15,7 @@ interface DiscountedCashFlowCategoryProps {
   category: DCFCategory;
   totalNumberOfYears: number;
   color: SectionColor;
+  baseStyles: { rowHeader: string; rowBody: string };
 }
 
 export function DiscountedCashFlowCategory({
@@ -24,6 +25,7 @@ export function DiscountedCashFlowCategory({
   category,
   totalNumberOfYears,
   color,
+  baseStyles,
 }: DiscountedCashFlowCategoryProps) {
   const { getValues, setValue, control } = useFormContext();
 
@@ -64,20 +66,12 @@ export function DiscountedCashFlowCategory({
 
   const [isExpanded, setExpanded] = useState(true);
 
-  const rowHeaderStyle = 'pl-8 px-1 py-1.5 h-12 text-sm border-b border-gray-300';
-  const rowBodyStyle = 'pl-8 px-1.5 py-1.5 h-12 text-sm text-right border-b border-gray-300';
-  const rowStyle = 'cursor-pointer bg-white';
-
   return (
     <>
-      <tr
-        className={clsx(rowStyle)}
-        onClick={() => setExpanded(!isExpanded)}
-        data-category={{ category: category }}
-      >
+      <tr onClick={() => setExpanded(!isExpanded)} data-category={{ category: category }}>
         <td
           className={clsx(
-            rowHeaderStyle,
+            baseStyles.rowHeader,
             isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
           )}
         >
@@ -107,7 +101,7 @@ export function DiscountedCashFlowCategory({
           <td
             key={index}
             className={clsx(
-              rowBodyStyle,
+              baseStyles.rowBody,
               isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
             )}
           >
@@ -154,7 +148,7 @@ export function DiscountedCashFlowCategory({
           )}
 
           <tr>
-            <td className={clsx(rowHeaderStyle)}>
+            <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row items-center gap-1.5">
                 <button
                   type="button"
@@ -166,7 +160,7 @@ export function DiscountedCashFlowCategory({
               </div>
             </td>
             {Array.from({ length: totalNumberOfYears }, (_, index) => (
-              <td key={index} className={clsx(rowBodyStyle)} />
+              <td key={index} className={clsx(baseStyles.rowBody)} />
             ))}
           </tr>
         </>

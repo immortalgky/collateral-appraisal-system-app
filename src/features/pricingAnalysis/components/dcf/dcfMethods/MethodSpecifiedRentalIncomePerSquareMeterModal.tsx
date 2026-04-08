@@ -152,12 +152,12 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
             <tbody>
               {fields.map((r, index) => {
                 return (
-                  <tr key={index}>
+                  <tr key={r.id}>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <div className="flex flex-row gap-1.5">
+                      <div className="flex flex-row gap-1.5 items-center">
                         <RHFInputCell
                           fieldName={`${name}.areaDetail.${index}.description`}
-                          inputType="select"
+                          inputType="text"
                         />
                         <button
                           type="button"

@@ -1,8 +1,12 @@
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import { assumptionParams, methodParams } from '../../data/dcfParameters';
+import {
+  assumptionParams,
+  mappingAssumptionMethodParams,
+  methodParams,
+} from '../../data/dcfParameters';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
@@ -105,6 +109,41 @@ export function DiscountedCashFlowMethodModal({
 
   const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
 
+  const filteredMethodOptions = useMemo(() => {
+    if (!assumptionType) return [];
+
+    const mapping = mappingAssumptionMethodParams.find(
+      item => item.assumptionCode === assumptionType,
+    );
+
+    if (!mapping) return [];
+
+    return methodParams
+      .filter(method => mapping.methods.includes(method.code))
+      .map(method => ({
+        value: method.code,
+        label: method.description,
+      }));
+  }, [assumptionType]);
+
+  const handleAssumptionTypeChange = useCallback(
+    (nextAssumptionType: string) => {
+      const currentValues = getValues();
+
+      reset({
+        ...currentValues,
+        assumptionType: nextAssumptionType,
+        assumptionName: nextAssumptionType === 'M99' ? currentValues.assumptionName : null,
+        method: {
+          ...currentValues.method,
+          methodType: null,
+          detail: undefined,
+        },
+      });
+    },
+    [getValues, reset],
+  );
+
   return (
     <Modal
       isOpen={!!editing}
@@ -123,18 +162,23 @@ export function DiscountedCashFlowMethodModal({
           <div className="flex flex-col gap-2 mb-4">
             <div className="flex flex-row gap-1.5">
               <span className="w-44">Category</span>
-              <div className="w-64">
-                <RHFInputCell
+              <div className="w-80">
+                {/* <RHFInputCell
                   fieldName="targetCategoryClientId"
                   inputType="select"
                   options={categoryOptions}
-                />
+                /> */}
+                <span className="text-sm">
+                  {currentSection?.categories?.find(
+                    c => c.clientId === getValues('targetCategoryClientId'),
+                  )?.categoryName ?? ''}
+                </span>
               </div>
             </div>
 
             <div className="flex flex-row items-center gap-1.5">
               <span className="w-44">Assumption</span>
-              <div className="w-64">
+              <div className="w-80">
                 <RHFInputCell
                   fieldName="assumptionType"
                   inputType="select"
@@ -142,6 +186,7 @@ export function DiscountedCashFlowMethodModal({
                     value: a.code,
                     label: a.description,
                   }))}
+                  onSelectChange={handleAssumptionTypeChange}
                 />
               </div>
               {assumptionType === 'M99' && (
@@ -153,14 +198,11 @@ export function DiscountedCashFlowMethodModal({
 
             <div className="flex flex-row gap-1.5">
               <span className="w-44">Method</span>
-              <div className="w-64">
+              <div className="w-80">
                 <RHFInputCell
                   fieldName="method.methodType"
                   inputType="select"
-                  options={methodParams.map(m => ({
-                    value: m.code,
-                    label: m.description,
-                  }))}
+                  options={filteredMethodOptions}
                   onSelectChange={handleMethodTypeChange}
                 />
               </div>

@@ -42,8 +42,8 @@ export function DiscountedCashFlowMethodRenderer({
     assumptionId: assumptionId,
     assumptionName: assumptionName,
     baseStyles: {
-      rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-600 border-b border-gray-300',
-      rowBody: 'px-1.5 h-12 text-sm text-right text-gray-600 border-b border-gray-300',
+      rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300',
+      rowBody: 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300',
     },
   };
 

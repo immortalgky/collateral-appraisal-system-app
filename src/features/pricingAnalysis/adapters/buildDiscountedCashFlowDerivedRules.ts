@@ -82,16 +82,6 @@ export function buildStaticCalculationDerivedRules(
           }
 
           if (category.categoryType === 'gop') {
-            const totalIncome = sections?.find(
-              section => section.sectionType === 'income',
-            )?.totalSectionValues;
-            const TotalExpensesExcludeFixedCharge = sections
-              ?.find(section => section.sectionType === 'expenses')
-              ?.categories?.filter(
-                category =>
-                  category.categoryType !== 'gop' && category.categoryType !== 'fixedExps',
-              );
-
             return Array.from({ length: totalNumberOfYears }).flatMap((_, yearIdx) => {
               const name = `sections.${sectionIdx}.categories.${categoryIdx}`;
               return {
@@ -236,7 +226,7 @@ export function buildStaticCalculationDerivedRules(
           deps: ['sections'],
           compute: ({ getValues }) => {
             const summarySection = (getValues('sections') ?? []).find(
-              (s: DCFSection) => s.sectionType === 'summary',
+              (s: DCFSection) => s.sectionType === 'summaryDCF',
             ) as DCFSummarySection;
             const finalValue = (summarySection?.presentValue ?? []).reduce((prev, curr) => {
               return prev + Number(curr ?? 0);
@@ -299,17 +289,6 @@ export function buildStaticCalculationDerivedRules(
       ];
     }
   });
-}
-
-export function buildCalculateGOPDerivedRules(
-  sections: DCFSection[] | undefined,
-  totalNumberOfYears: number,
-): DerivedFieldRule[] {
-  const categoriesData = document.querySelectorAll('[data-category]');
-  (categoriesData ?? []).forEach(element => {
-    console.log(element.dataset.category);
-  });
-  return;
 }
 
 export function buildCalculateTotalAssumptionDerivedRules(

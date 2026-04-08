@@ -5,11 +5,10 @@ import { DiscountedCashFlowSectionRenderer } from '@/features/pricingAnalysis/co
 import type { DCFSection } from '../../types/dcf';
 import { ScrollableTableContainer } from '../ScrollableTableContainer';
 import {
-  buildCalculateGOPDerivedRules,
   buildCalculateTotalAssumptionDerivedRules,
   buildStaticCalculationDerivedRules,
 } from '../../adapters/buildDiscountedCashFlowDerivedRules';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useDerivedFields } from '../../adapters/useDerivedFieldArray';
 import { buildMethodCalculationRules } from '../../domain/dcf/useCalculations';
 

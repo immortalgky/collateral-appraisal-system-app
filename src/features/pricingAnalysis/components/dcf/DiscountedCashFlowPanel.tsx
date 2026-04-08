@@ -11,6 +11,7 @@ import { MethodFooterActions } from '@features/pricingAnalysis/components/Method
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { dcfTemplateList, dcfTemplateQueries } from '../../data/dcfTemplates';
 import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
+import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBestUsed';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -39,7 +40,7 @@ export function DiscountedCashFlowPanel({
 }: DiscountedCashFlowPanelProps) {
   const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCFForm) });
 
-  const { handleSubmit, reset, getValues } = methods;
+  const { handleSubmit, reset, getValues, setValue, control } = methods;
 
   const data = getValues();
 
@@ -64,6 +65,7 @@ export function DiscountedCashFlowPanel({
 
   const handleOnSelectTemplate = (templateCode: string) => {
     setSelectedTemplateCode(templateCode);
+    setValue('templateCode', templateCode);
   };
 
   // restore
@@ -95,7 +97,7 @@ export function DiscountedCashFlowPanel({
       >
         {/* template */}
         <PricingAnalysisTemplateSelector
-          icon={''}
+          icon={'chart-line-up'}
           methodName={'Income'}
           onGenerate={handleOnGenerate}
           collateralType={{
@@ -104,6 +106,7 @@ export function DiscountedCashFlowPanel({
             options: COLLATERAL_TYPE,
           }}
           template={{
+            fieldName: 'templateCode',
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
             options: dcfTemplateList.map(t => ({ value: t.templateCode, label: t.templateName })),
@@ -111,11 +114,13 @@ export function DiscountedCashFlowPanel({
         />
 
         {!isLoading && (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-4 mt-4">
             <DiscountedCashFlowTable
               totalNumberOfYears={data.totalNumberOfYears}
               properties={properties}
             />
+
+            <DiscountedCashFlowHighestBestUsed />
 
             {/* footer save, reset, cancel */}
             <MethodFooterActions

@@ -2,9 +2,10 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
+import { jobPositionParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 
 interface MethodPositionBasedSalaryCalculationModalProps {
   name: string;
@@ -14,6 +15,7 @@ export function MethodPositionBasedSalaryCalculationModal({
   name,
   getOuterFormValues,
 }: MethodPositionBasedSalaryCalculationModalProps) {
+  const { getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.jobPositionDetails` });
 
   const handleOnAdd = () => {
@@ -119,6 +121,7 @@ export function MethodPositionBasedSalaryCalculationModal({
             </thead>
             <tbody>
               {fields.map((r, index) => {
+                const jobPosition = getValues(`${name}.jobPositionDetails.${index}.jobPosition`);
                 return (
                   <tr key={index}>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -126,7 +129,17 @@ export function MethodPositionBasedSalaryCalculationModal({
                         <RHFInputCell
                           fieldName={`${name}.jobPositionDetails.${index}.jobPosition`}
                           inputType="select"
+                          options={jobPositionParameters.map(p => ({
+                            value: p.code,
+                            label: p.description,
+                          }))}
                         />
+                        {String(jobPosition) === '99' && (
+                          <RHFInputCell
+                            fieldName={`${name}.jobPositionDetails.${index}.jobPositionOther`}
+                            inputType="text"
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={() => handleOnRemove(index)}

@@ -35,7 +35,26 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr>
-            <td className={clsx(baseStyles.rowHeader)}>Occupancy Rate</td>
+            <td className={clsx(baseStyles.rowHeader)}>
+              <div className="flex flex-row gap-1.5 items-center">
+                <span>Occupancy Rate - 1st year amt</span>
+                <div className="w-20">
+                  <RHFInputCell
+                    fieldName={`${name}.detail.occupancyRateFirstYearPct`}
+                    inputType="number"
+                  />
+                </div>
+                <span>% growth</span>
+                <div className="w-20">
+                  <RHFInputCell fieldName={`${name}.detail.occupancyRatePct`} inputType="number" />
+                </div>
+                <span>% every</span>
+                <div className="w-20">
+                  <RHFInputCell fieldName={`${name}.detail.occupancyRateYrs`} inputType="number" />
+                </div>
+                <span>year(s)</span>
+              </div>
+            </td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>

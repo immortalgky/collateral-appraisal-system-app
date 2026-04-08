@@ -2,9 +2,10 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
+import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 
 interface MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps {
   name: string;
@@ -14,6 +15,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   name,
   getOuterFormValues,
 }: MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps) {
+  const { getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -132,6 +134,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
             </thead>
             <tbody>
               {fields.map((r, index) => {
+                const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
                 return (
                   <tr key={index}>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -139,7 +142,17 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${index}.roomType`}
                           inputType="select"
+                          options={roomTypeParameters.map(p => ({
+                            value: p.code,
+                            label: p.description,
+                          }))}
                         />
+                        {String(roomType) === '99' && (
+                          <RHFInputCell
+                            fieldName={`${name}.roomDetails.${index}.roomTypeOther`}
+                            inputType="text"
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={() => handleOnRemove(index)}

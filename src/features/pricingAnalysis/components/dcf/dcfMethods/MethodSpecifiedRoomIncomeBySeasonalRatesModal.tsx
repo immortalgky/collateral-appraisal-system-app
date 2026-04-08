@@ -6,6 +6,7 @@ import { Icon } from '@shared/components';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
+import clsx from 'clsx';
 
 type SeasonRateInput = {
   seasonId: string;
@@ -166,17 +167,21 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
   useDerivedFields({ rules });
 
   return (
-    <div>
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-3">
-        <span>Number of seasons</span>
-        <RHFInputCell
-          fieldName="seasonCount"
-          inputType="number"
-          onUserChange={v => {
-            if (v) handleSeasonCountChange(v);
-            return v;
-          }}
-        />
+        <div className="w-44">
+          <span>Number of seasons</span>
+        </div>
+        <div className="w-56">
+          <RHFInputCell
+            fieldName="seasonCount"
+            inputType="number"
+            onUserChange={v => {
+              if (v) handleSeasonCountChange(v);
+              return v;
+            }}
+          />
+        </div>
       </div>
 
       <div className="overflow-auto max-h-80 flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
@@ -184,10 +189,16 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
           <table className="table table-xs min-w-max border-separate border-spacing-0">
             <thead>
               <tr>
-                <th rowSpan={2}>Room Type</th>
+                <th rowSpan={2} className="border-b border-r border-gray-300">
+                  Room Type
+                </th>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
-                  <th key={seasonIndex} colSpan={3}>
-                    <div className="flex flex-col gap-1.5">
+                  <th
+                    key={seasonIndex}
+                    colSpan={3}
+                    className={clsx('border-b border-gray-300', seasonCount > 1 ? 'border-r' : 0)}
+                  >
+                    <div className="flex flex-col gap-2 p-1.5">
                       <div className="flex flex-row items-center">
                         <span className="w-64">Season Name</span>
                         <RHFInputCell
@@ -216,9 +227,16 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
               <tr>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                   <Fragment key={seasonIndex}>
-                    <th>Room Income</th>
-                    <th>Saleable Area</th>
-                    <th>Total / Day</th>
+                    <th className="border-b border-gray-300 text-right">Room Income</th>
+                    <th className="border-b border-gray-300 text-right">Saleable Area</th>
+                    <th
+                      className={clsx(
+                        'border-b border-gray-300 text-right',
+                        seasonCount > 1 ? 'border-r' : 0,
+                      )}
+                    >
+                      Total / Day
+                    </th>
                   </Fragment>
                 ))}
               </tr>
@@ -229,8 +247,8 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 const roomType = getValues(`${name}.roomDetails.${rowIndex}.roomType`);
                 return (
                   <tr key={field.id}>
-                    <td>
-                      <div className="flex gap-1.5">
+                    <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                      <div className="flex gap-1.5 items-center">
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${rowIndex}.roomType`}
                           inputType="select"
@@ -264,19 +282,26 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
 
                       return (
                         <Fragment key={`${field.id}-${seasonIndex}`}>
-                          <td>
+                          <td className="border-b border-gray-300 p-1">
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
                               inputType="number"
                             />
                           </td>
-                          <td>
+                          <td className="border-b border-gray-300 p-1">
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.saleableArea`}
                               inputType="number"
                             />
                           </td>
-                          <td className="text-right text-sm">{total.toFixed(2)}</td>
+                          <td
+                            className={clsx(
+                              'border-b border-gray-300 text-sm',
+                              seasonCount > 1 ? 'border-r' : 0,
+                            )}
+                          >
+                            {total.toFixed(2)}
+                          </td>
                         </Fragment>
                       );
                     })}
@@ -284,7 +309,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 );
               })}
               <tr>
-                <td>
+                <td className={clsx('border-b border-r border-gray-300 p-1')}>
                   <button
                     type="button"
                     onClick={() => append(createEmptyRow(seasonCount))}
@@ -296,9 +321,14 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   return (
                     <Fragment key={`${seasonIndex}`}>
-                      <td></td>
-                      <td></td>
-                      <td></td>
+                      <td className="border-b border-gray-300 p-1"></td>
+                      <td className="border-b border-gray-300 p-1"></td>
+                      <td
+                        className={clsx(
+                          'border-b border-gray-300 p-1',
+                          seasonCount > 1 ? 'border-r' : '',
+                        )}
+                      ></td>
                     </Fragment>
                   );
                 })}
@@ -307,50 +337,70 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
 
             <tfoot>
               <tr>
-                <td>Totals</td>
+                <td className="border-b border-r border-gray-300 p-1.5">Totals</td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
 
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
-                      <td></td>
-                      <td className="text-right">{totals.saleableArea.toFixed(2)}</td>
-                      <td className="text-right">{totals.totalRoomIncomePerDay.toFixed(2)}</td>
+                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td className="border-b border-gray-300 p-1.5 text-right">
+                        {totals.saleableArea.toFixed(2)}
+                      </td>
+                      <td
+                        className={clsx(
+                          'border-b border-gray-300 text-right',
+                          seasonCount > 1 ? 'border-r' : 0,
+                        )}
+                      >
+                        {totals.totalRoomIncomePerDay.toFixed(2)}
+                      </td>
                     </Fragment>
                   );
                 })}
-                <td></td>
               </tr>
               <tr>
-                <td>Average/ Room/ Day</td>
+                <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Day</td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
-                      <td></td>
-                      <td></td>
-                      <td className="text-right">{avg.toFixed(2)}</td>
+                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td
+                        className={clsx(
+                          'border-b border-gray-300 text-right text-sm',
+                          seasonCount > 1 ? 'border-r' : 0,
+                        )}
+                      >
+                        {toNumber(avg) ?? 0}
+                      </td>
                     </Fragment>
                   );
                 })}
-                <td></td>
               </tr>
               <tr>
-                <td>Average/ Room/ Season</td>
+                <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Season</td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
                   const avgPerSeason = avg * (seasonDetails[seasonIndex]?.NumberOfMonths ?? 0) * 30;
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
-                      <td></td>
-                      <td></td>
-                      <td className="text-right">{avgPerSeason.toFixed(2)}</td>
+                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td
+                        className={clsx(
+                          'border-b border-gray-300 text-right',
+                          seasonCount > 1 ? 'border-r' : 0,
+                        )}
+                      >
+                        {toNumber(avgPerSeason) ?? 0}
+                      </td>
                     </Fragment>
                   );
                 })}
-                <td></td>
               </tr>
             </tfoot>
           </table>
@@ -359,16 +409,14 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Average Room Rate</span>
-          <div className={'grid-cols-12'}>
-            <div className={'col-span-2'}>
-              <RHFInputCell
-                fieldName={`${name}.avgRoomRate`}
-                inputType={'display'}
-                accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                )}
-              />
-            </div>
+          <div className={'w-24 text-right'}>
+            <RHFInputCell
+              fieldName={`${name}.avgRoomRate`}
+              inputType={'display'}
+              accessor={({ value }) => (
+                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+              )}
+            />
           </div>
         </div>
         <div className="flex flex-row gap-1.5 items-center">

@@ -213,3 +213,7 @@ export function getPropertyTaxRate(totalGovPrice: number): number {
 export function getPropertyTaxAmount(totalGovPrice: number): number {
   return totalGovPrice * getPropertyTaxRate(totalGovPrice);
 }
+
+export function floorToThousands(num) {
+  return Math.floor(num / 1000) * 1000;
+}

@@ -27,7 +27,67 @@ export const dcfTestTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 0,
               method: {
+                methodType: '06',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I01',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
                 methodType: '01',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I01',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
+                methodType: '02',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I01',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
+                methodType: '03',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I01',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
+                methodType: '05',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I02',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
+                methodType: '06',
+                detail: { increaseRatePct: 10, increaseRateYrs: 3 },
+              },
+            },
+            {
+              assumptionType: 'I03',
+              assumptionName: '',
+              identifier: 'positive',
+              displaySeq: 0,
+              method: {
+                methodType: '13',
                 detail: { increaseRatePct: 10, increaseRateYrs: 3 },
               },
             },
@@ -37,62 +97,18 @@ export const dcfTestTemplate: DCFTemplateType = {
               identifier: 'positive',
               displaySeq: 1,
               method: {
-                methodType: '02',
+                methodType: '13',
                 detail: { seasonCount: 3 },
               },
             },
             {
-              assumptionType: 'I05',
+              assumptionType: 'I04',
               assumptionName: '',
               identifier: 'positive',
-              displaySeq: 2,
-              method: {
-                methodType: '03',
-              },
-            },
-            {
-              assumptionType: 'I05',
-              assumptionName: '',
-              identifier: 'positive',
-              displaySeq: 2,
-              method: {
-                methodType: '04',
-              },
-            },
-            {
-              assumptionType: 'I05',
-              assumptionName: '',
-              identifier: 'positive',
-              displaySeq: 2,
-              method: {
-                methodType: '05',
-              },
-            },
-            {
-              assumptionType: 'I05',
-              assumptionName: '',
-              identifier: 'positive',
-              displaySeq: 2,
-              method: {
-                methodType: '06',
-              },
-            },
-            {
-              assumptionType: 'I05',
-              assumptionName: '',
-              identifier: 'positive',
-              displaySeq: 2,
-              method: {
-                methodType: '13',
-              },
-            },
-            {
-              assumptionType: 'I05',
-              assumptionName: '',
-              identifier: 'positive',
-              displaySeq: 2,
+              displaySeq: 1,
               method: {
                 methodType: '14',
+                detail: { seasonCount: 3 },
               },
             },
           ],
@@ -112,16 +128,52 @@ export const dcfTestTemplate: DCFTemplateType = {
           displaySeq: 0,
           assumptions: [
             {
-              assumptionType: 'E17',
+              assumptionType: 'E00',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 0,
               method: {
-                methodType: '07',
+                methodType: '13',
               },
             },
             {
-              assumptionType: 'E09',
+              assumptionType: 'E00',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '14',
+              },
+            },
+            {
+              assumptionType: 'E05',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '11',
+              },
+            },
+            {
+              assumptionType: 'E06',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '12',
+              },
+            },
+            {
+              assumptionType: 'E06',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '14',
+              },
+            },
+            {
+              assumptionType: 'E07',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 1,
@@ -130,7 +182,16 @@ export const dcfTestTemplate: DCFTemplateType = {
               },
             },
             {
-              assumptionType: 'E12',
+              assumptionType: 'E07',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
+                methodType: '13',
+              },
+            },
+            {
+              assumptionType: 'E09',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 1,
@@ -147,30 +208,21 @@ export const dcfTestTemplate: DCFTemplateType = {
           displaySeq: 0,
           assumptions: [
             {
-              assumptionType: 'E11',
+              assumptionType: 'E15',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 0,
               method: {
+                methodType: '07',
+              },
+            },
+            {
+              assumptionType: 'E12',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 1,
+              method: {
                 methodType: '10',
-              },
-            },
-            {
-              assumptionType: 'E19',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 1,
-              method: {
-                methodType: '11',
-              },
-            },
-            {
-              assumptionType: 'E15',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 1,
-              method: {
-                methodType: '12',
               },
             },
           ],
@@ -187,12 +239,21 @@ export const dcfTestTemplate: DCFTemplateType = {
           displaySeq: 0,
           assumptions: [
             {
-              assumptionType: 'E11',
+              assumptionType: 'E17',
               assumptionName: '',
               identifier: 'negative',
               displaySeq: 0,
               method: {
-                methodType: '10',
+                methodType: '13',
+              },
+            },
+            {
+              assumptionType: 'E18',
+              assumptionName: '',
+              identifier: 'negative',
+              displaySeq: 0,
+              method: {
+                methodType: '14',
               },
             },
             {
@@ -201,16 +262,7 @@ export const dcfTestTemplate: DCFTemplateType = {
               identifier: 'negative',
               displaySeq: 1,
               method: {
-                methodType: '11',
-              },
-            },
-            {
-              assumptionType: 'E15',
-              assumptionName: '',
-              identifier: 'negative',
-              displaySeq: 1,
-              method: {
-                methodType: '12',
+                methodType: '13',
               },
             },
           ],
@@ -1398,10 +1450,10 @@ export const dcfTemplateQueries = [
 ];
 
 export const dcfTemplateList = [
-  { templateCode: 'dcf-test', templateName: 'Test', id: 'dcf-000' },
-  { templateCode: 'dcf-hotel', templateName: 'Hotel', id: 'dcf-001' },
-  { templateCode: 'dcf-apartment', templateName: 'Apartment', id: 'dcf-002' },
-  { templateCode: 'dcf-office', templateName: 'Office', id: 'dcf-003' },
-  { templateCode: 'dcf-department-store', templateName: 'Department Store', id: 'dcf-004' },
-  { templateCode: 'direct-apartment', templateName: 'Apartment', id: 'dcf-005' },
+  { templateCode: 'dcf-00', templateName: 'Test', id: 'dcf-000' },
+  { templateCode: 'dcf-01', templateName: 'DCF - Hotel', id: 'dcf-001' },
+  { templateCode: 'dcf-02', templateName: 'DCF - Apartment', id: 'dcf-002' },
+  { templateCode: 'dcf-03', templateName: 'DCF - Office', id: 'dcf-003' },
+  { templateCode: 'dcf-04', templateName: 'DCF - Department Store', id: 'dcf-004' },
+  { templateCode: 'direct-00', templateName: 'Direct - Apartment', id: 'dcf-005' },
 ];

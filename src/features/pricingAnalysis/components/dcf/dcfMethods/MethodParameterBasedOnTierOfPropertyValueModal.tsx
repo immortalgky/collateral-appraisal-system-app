@@ -90,19 +90,25 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-64'}>Total government land appraisal price</span>
-        <div className={'w-44'}>
-          <span>{landGovPrice}</span>
+        <span className={'w-80'}>Total government land appraisal price</span>
+        <div className={'flex flex-row w-44 gap-1.5'}>
+          <span className="w-44 text-right">
+            {landGovPrice ? Number(landGovPrice).toLocaleString() : 0}
+          </span>
+          <span>Baht</span>
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-64'}>Total government building appraisal price</span>
-        <div className={'w-44'}>
-          <span>{buildingGovPrice}</span>
+        <span className={'w-80'}>Total government building appraisal price</span>
+        <div className={'flex flex-row w-44 gap-1.5'}>
+          <span className="w-44 text-right">
+            {buildingGovPrice ? Number(buildingGovPrice).toLocaleString() : 0}
+          </span>
+          <span>Baht</span>
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-64'}>Government land prices increase by</span>
+        <span className={'w-80'}>Government land prices increase by</span>
         <div className="w-24">
           <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
         </div>
@@ -113,7 +119,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
         <span className={''}>year(s)</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-64'}>Start in</span>
+        <span className={'w-80'}>Start in</span>
         <div className={'w-24'}>
           <RHFInputCell fieldName={`${name}.startIn`} inputType={'number'} />
         </div>
