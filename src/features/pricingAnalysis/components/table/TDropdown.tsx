@@ -101,7 +101,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
         >
           {dropdownOptions.map(option => (
             <ListBoxOption key={option.id ?? option.value} value={option}>
-              <span className={option.colorClass}>{option.label}</span>
+              <span className={clsx(option.colorClass, 'truncate')}>{option.label}</span>
             </ListBoxOption>
           ))}
         </ListBox>

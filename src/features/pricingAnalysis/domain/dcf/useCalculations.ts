@@ -1,29 +1,44 @@
-import { useMemo } from 'react';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
-import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
+import { type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import {
+  buildMethodParameterBasedOnTierOfPropertyValueDerivedRules,
   buildMethodPositionBasedSalaryCalculationDerviedRules,
+  buildMethodProportionDerivedRules,
+  buildMethodProportionOfTheNewReplacementCostDerivedRules,
+  buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules,
+  buildMethodSpecifiedEnergyCostIndexDerivedRules,
+  buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedRules,
+  buildMethodSpecifiedRentalIncomePerMonthDerivedRules,
+  buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules,
   buildMethodSpecifiedRoomIncomePerDayDerivedRules,
   buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
   buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
+  buildMethodSpecifiedValueWithGrowthDerivedRules,
+  buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules,
 } from '../../adapters/buildDiscountedCashFlowDerivedRules';
 
 type MethodType = DCFMethod['methodType'];
 
-type MethodRuleBuilder = (args: {
-  name: string;
-  sections: DCFSection[];
-  totalNumberOfYears: number;
-}) => DerivedFieldRule[];
+type MethodRuleBuilder = (args: { name: string; totalNumberOfYears: number }) => DerivedFieldRule[];
 
 const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '01': buildMethodSpecifiedRoomIncomePerDayDerivedRules,
+  '02': buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules,
   '03': buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules,
   '04': buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRules,
+  '05': buildMethodSpecifiedRentalIncomePerMonthDerivedRules,
+  '06': buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules,
+  '07': buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules,
+  '08': buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedRules,
   '09': buildMethodPositionBasedSalaryCalculationDerviedRules,
+  '10': buildMethodParameterBasedOnTierOfPropertyValueDerivedRules,
+  '11': buildMethodSpecifiedEnergyCostIndexDerivedRules,
+  '12': buildMethodProportionOfTheNewReplacementCostDerivedRules,
+  '13': buildMethodProportionDerivedRules,
+  '14': buildMethodSpecifiedValueWithGrowthDerivedRules,
 };
 
-function buildCalculationRules(
+export function buildMethodCalculationRules(
   sections: DCFSection[] = [],
   totalNumberOfYears: number,
 ): DerivedFieldRule[] {
@@ -42,20 +57,9 @@ function buildCalculationRules(
 
         return buildRules({
           name: `sections.${sectionIdx}.categories.${categoryIdx}.assumptions.${assumptionIdx}.method`,
-          sections,
           totalNumberOfYears,
         });
       });
     });
   });
-}
-
-export function useCalculations(sections: DCFSection[] = [], totalNumberOfYears: number) {
-  const rules = useMemo(
-    () => buildCalculationRules(sections, totalNumberOfYears),
-    [sections, totalNumberOfYears],
-  );
-
-  console.log(rules);
-  useDerivedFields({ rules });
 }

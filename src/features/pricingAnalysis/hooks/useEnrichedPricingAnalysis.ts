@@ -209,7 +209,6 @@ export function useEnrichedPricingAnalysis({
 const typeToDetailEndpoint: Record<string, string> = {
   Lands: 'land-detail',
   'Lease Agreement Lands': 'land-detail',
-  Building: 'building-detail',
   'Lease Agreement Building': 'building-detail',
   'Land and building': 'land-and-building-detail',
   'Lease Agreement Land and building': 'land-and-building-detail',

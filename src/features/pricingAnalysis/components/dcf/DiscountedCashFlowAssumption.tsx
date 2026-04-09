@@ -1,0 +1,136 @@
+import { Icon } from '@/shared/components';
+import clsx from 'clsx';
+import { useState } from 'react';
+import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
+import { RHFInputCell } from '../table/RHFInputCell';
+import type { DCFAssumption } from '../../types/dcf';
+import { assumptionParams, methodParams } from '../../data/dcfParameters';
+
+interface DiscountedCashFlowAssumptionProps {
+  name: string;
+  totalNumberOfYears: number;
+  assumption: DCFAssumption;
+  editing: string | null;
+  onOpenEditMode: (assumptionType: string) => void;
+  onRemoveAssumption: () => void;
+}
+
+export function DiscountedCashFlowAssumption({
+  name,
+  totalNumberOfYears,
+  assumption,
+  editing,
+  onOpenEditMode,
+  onRemoveAssumption,
+}: DiscountedCashFlowAssumptionProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <>
+      <tr>
+        <td className="bg-white border-b border-gray-300">
+          <div
+            className={clsx(
+              'text-sm text-right bg-white flex flex-row items-center justify-between px-1 py-1.5 pl-15 gap-8',
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              className="flex flex-row gap-1.5 cursor-pointer"
+            >
+              <Icon
+                name="chevron-down"
+                style="solid"
+                className={clsx(
+                  'size-2 transition-transform duration-300 ease-in-out shrink-0',
+                  expanded ? 'rotate-180' : '',
+                )}
+              />
+              <RHFInputCell
+                fieldName={`${name}.assumptionType`}
+                inputType="display"
+                accessor={({ value, getValues }) => (
+                  <span
+                    className="truncate"
+                    title={
+                      getValues(`${name}.assumptionName`)
+                        ? getValues(`${name}.assumptionName`)
+                        : assumptionParams.find(p => p.code === value)?.description
+                    }
+                  >
+                    {getValues(`${name}.assumptionName`)
+                      ? getValues(`${name}.assumptionName`)
+                      : assumptionParams.find(p => p.code === value)?.description}
+                  </span>
+                )}
+              />
+            </button>
+            <div className="flex gap-1.5 items-center justify-end">
+              <div className="flex gap-1.5 items-center max-w-72">
+                <RHFInputCell
+                  fieldName={`${name}.method.methodType`}
+                  inputType="display"
+                  accessor={({ value }) => (
+                    <span
+                      className="truncate"
+                      title={methodParams.find(p => p.code === value)?.description ?? ''}
+                    >
+                      {methodParams.find(p => p.code === value)?.description ?? ''}
+                    </span>
+                  )}
+                />
+                <button
+                  type="button"
+                  className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
+                  onClick={() => {
+                    onOpenEditMode(assumption.clientId);
+                  }}
+                >
+                  <Icon name="pencil" style="regular" className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
+                  onClick={onRemoveAssumption}
+                >
+                  <Icon name="trash" style="regular" className="size-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </td>
+        {Array.from({ length: totalNumberOfYears }, (_, index) => {
+          return (
+            <td
+              key={index}
+              className={clsx(
+                'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
+                // color.badge,
+                'bg-white',
+              )}
+            >
+              <RHFInputCell
+                fieldName={`${name}.totalAssumptionValues.${index}`}
+                inputType="display"
+                accessor={({ value }) => (
+                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                )}
+              />
+            </td>
+          );
+        })}
+      </tr>
+      <DiscountedCashFlowMethodRenderer
+        key={assumption.dbId ?? assumption.clientId}
+        name={`${name}.method`}
+        editing={editing}
+        expanded={expanded}
+        assumptionId={assumption.clientId}
+        assumptionName={assumption.assumptionName}
+        method={assumption.method}
+        totalNumberOfYear={totalNumberOfYears}
+      />
+    </>
+  );
+}

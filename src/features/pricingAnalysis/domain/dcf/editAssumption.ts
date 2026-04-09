@@ -1,4 +1,4 @@
-import type { AssumptionEditDraft } from '../../components/DiscountedCashFlowMethodModal';
+import type { AssumptionEditDraft } from '../../components/dcf/DiscountedCashFlowMethodModal';
 import type { DCFAssumption, DCFSection } from '../../types/dcf';
 
 // editAssumption.ts
