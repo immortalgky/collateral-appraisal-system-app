@@ -185,225 +185,228 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
       </div>
 
       <div className="overflow-auto flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
-        <ScrollableTableContainer className="flex-1 min-h-0 max-h-80">
-          <table className="table table-xs min-w-max border-separate border-spacing-0">
-            <thead>
-              <tr>
-                <th rowSpan={2} className="border-b border-r border-gray-300">
-                  Room Type
-                </th>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => (
-                  <th
-                    key={seasonIndex}
-                    colSpan={3}
-                    className={clsx('border-b border-gray-300', seasonCount > 1 ? 'border-r' : 0)}
-                  >
-                    <div className="flex flex-col gap-2 p-1.5">
-                      <div className="flex flex-row items-center">
-                        <span className="w-64">Season Name</span>
-                        <RHFInputCell
-                          fieldName={`${name}.seasonDetails.${seasonIndex}.seasonName`}
-                          inputType="text"
-                        />
-                      </div>
-                      <div className="flex flex-row items-center">
-                        <span className="w-64">No. Of Month</span>
-                        <RHFInputCell
-                          fieldName={`${name}.seasonDetails.${seasonIndex}.numberOfMonths`}
-                          inputType="number"
-                        />
-                      </div>
-                      <div className="flex flex-row items-center">
-                        <span className="w-64">Season Description</span>
-                        <RHFInputCell
-                          fieldName={`${name}.seasonDetails.${seasonIndex}.description`}
-                          inputType="text"
-                        />
-                      </div>
-                    </div>
+        <ScrollableTableContainer className="flex-1 min-h-0">
+          <div className="overflow-auto max-h-80">
+            <table className="table table-xs min-w-max border-separate border-spacing-0">
+              <thead>
+                <tr>
+                  <th rowSpan={2} className="border-b border-r border-gray-300">
+                    Room Type
                   </th>
-                ))}
-              </tr>
-              <tr>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => (
-                  <Fragment key={seasonIndex}>
-                    <th className="border-b border-gray-300 text-right">Room Income</th>
-                    <th className="border-b border-gray-300 text-right">Saleable Area</th>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                     <th
-                      className={clsx(
-                        'border-b border-gray-300 text-right',
-                        seasonCount > 1 ? 'border-r' : 0,
-                      )}
+                      key={seasonIndex}
+                      colSpan={3}
+                      className={clsx('border-b border-gray-300', seasonCount > 1 ? 'border-r' : 0)}
                     >
-                      Total / Day
-                    </th>
-                  </Fragment>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {fields.map((field, rowIndex) => {
-                const roomType = getValues(`${name}.roomDetails.${rowIndex}.roomType`);
-                return (
-                  <tr key={field.id}>
-                    <td className={clsx('border-b border-r border-gray-300 p-1')}>
-                      <div className="flex gap-1.5 items-center">
-                        <RHFInputCell
-                          fieldName={`${name}.roomDetails.${rowIndex}.roomType`}
-                          inputType="select"
-                          options={roomTypeParameters.map(p => ({
-                            value: p.code,
-                            label: p.description,
-                          }))}
-                        />
-                        {String(roomType) === '99' && (
+                      <div className="flex flex-col gap-2 p-1.5">
+                        <div className="flex flex-row items-center">
+                          <span className="w-64">Season Name</span>
                           <RHFInputCell
-                            fieldName={`${name}.roomDetails.${rowIndex}.roomTypeOther`}
+                            fieldName={`${name}.seasonDetails.${seasonIndex}.seasonName`}
                             inputType="text"
                           />
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => remove(rowIndex)}
-                          className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-1" />
-                        </button>
+                        </div>
+                        <div className="flex flex-row items-center">
+                          <span className="w-64">No. Of Month</span>
+                          <RHFInputCell
+                            fieldName={`${name}.seasonDetails.${seasonIndex}.numberOfMonths`}
+                            inputType="number"
+                          />
+                        </div>
+                        <div className="flex flex-row items-center">
+                          <span className="w-64">Season Description</span>
+                          <RHFInputCell
+                            fieldName={`${name}.seasonDetails.${seasonIndex}.description`}
+                            inputType="text"
+                          />
+                        </div>
                       </div>
-                    </td>
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => (
+                    <Fragment key={seasonIndex}>
+                      <th className="border-b border-gray-300 text-right">Room Income</th>
+                      <th className="border-b border-gray-300 text-right">Saleable Area</th>
+                      <th
+                        className={clsx(
+                          'border-b border-gray-300 text-right',
+                          seasonCount > 1 ? 'border-r' : 0,
+                        )}
+                      >
+                        Total / Day
+                      </th>
+                    </Fragment>
+                  ))}
+                </tr>
+              </thead>
 
-                    {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                      const cell = rows[rowIndex]?.seasons?.[seasonIndex];
-                      const total =
-                        (Number(cell?.roomIncome) || 0) * (Number(cell?.saleableArea) || 0);
-                      console.log(rows, cell, total);
-
-                      return (
-                        <Fragment key={`${field.id}-${seasonIndex}`}>
-                          <td className="border-b border-gray-300 p-1">
+              <tbody>
+                {fields.map((field, rowIndex) => {
+                  const roomType = getValues(`${name}.roomDetails.${rowIndex}.roomType`);
+                  return (
+                    <tr key={field.id}>
+                      <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                        <div className="flex gap-1.5 items-center">
+                          <RHFInputCell
+                            fieldName={`${name}.roomDetails.${rowIndex}.roomType`}
+                            inputType="select"
+                            options={roomTypeParameters.map(p => ({
+                              value: p.code,
+                              label: p.description,
+                            }))}
+                          />
+                          {String(roomType) === '99' && (
                             <RHFInputCell
-                              fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
-                              inputType="number"
+                              fieldName={`${name}.roomDetails.${rowIndex}.roomTypeOther`}
+                              inputType="text"
                             />
-                          </td>
-                          <td className="border-b border-gray-300 p-1">
-                            <RHFInputCell
-                              fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.saleableArea`}
-                              inputType="number"
-                            />
-                          </td>
-                          <td
-                            className={clsx(
-                              'border-b border-gray-300 text-sm',
-                              seasonCount > 1 ? 'border-r' : 0,
-                            )}
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => remove(rowIndex)}
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            title="Delete"
                           >
-                            {total.toFixed(2)}
-                          </td>
-                        </Fragment>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-              <tr>
-                <td className={clsx('border-b border-r border-gray-300 p-1')}>
-                  <button
-                    type="button"
-                    onClick={() => append(createEmptyRow(seasonCount))}
-                    className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                  >
-                    + Add Room Type
-                  </button>
-                </td>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                  return (
-                    <Fragment key={`${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1"></td>
-                      <td className="border-b border-gray-300 p-1"></td>
-                      <td
-                        className={clsx(
-                          'border-b border-gray-300 p-1',
-                          seasonCount > 1 ? 'border-r' : '',
-                        )}
-                      ></td>
-                    </Fragment>
-                  );
-                })}
-              </tr>
-            </tbody>
+                            <Icon style="solid" name="trash" className="size-1" />
+                          </button>
+                        </div>
+                      </td>
 
-            <tfoot>
-              <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">Totals</td>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                  const totals = calculateSeasonTotals(rows, seasonIndex);
+                      {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                        const cell = rows[rowIndex]?.seasons?.[seasonIndex];
+                        const total =
+                          (Number(cell?.roomIncome) || 0) * (Number(cell?.saleableArea) || 0);
+                        console.log(rows, cell, total);
 
-                  return (
-                    <Fragment key={`totals-${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td className="border-b border-gray-300 p-1.5 text-right">
-                        {totals.saleableArea.toFixed(2)}
-                      </td>
-                      <td
-                        className={clsx(
-                          'border-b border-gray-300 text-right',
-                          seasonCount > 1 ? 'border-r' : 0,
-                        )}
-                      >
-                        {totals.totalRoomIncomePerDay.toFixed(2)}
-                      </td>
-                    </Fragment>
+                        return (
+                          <Fragment key={`${field.id}-${seasonIndex}`}>
+                            <td className="border-b border-gray-300 p-1">
+                              <RHFInputCell
+                                fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
+                                inputType="number"
+                              />
+                            </td>
+                            <td className="border-b border-gray-300 p-1">
+                              <RHFInputCell
+                                fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.saleableArea`}
+                                inputType="number"
+                              />
+                            </td>
+                            <td
+                              className={clsx(
+                                'border-b border-gray-300 text-sm',
+                                seasonCount > 1 ? 'border-r' : 0,
+                              )}
+                            >
+                              {total.toFixed(2)}
+                            </td>
+                          </Fragment>
+                        );
+                      })}
+                    </tr>
                   );
                 })}
-              </tr>
-              <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Day</td>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                  const totals = calculateSeasonTotals(rows, seasonIndex);
-                  const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
-                  return (
-                    <Fragment key={`totals-${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td
-                        className={clsx(
-                          'border-b border-gray-300 text-right text-sm',
-                          seasonCount > 1 ? 'border-r' : 0,
-                        )}
-                      >
-                        {toNumber(avg) ?? 0}
-                      </td>
-                    </Fragment>
-                  );
-                })}
-              </tr>
-              <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Season</td>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                  const totals = calculateSeasonTotals(rows, seasonIndex);
-                  const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
-                  const avgPerSeason = avg * (seasonDetails[seasonIndex]?.NumberOfMonths ?? 0) * 30;
-                  return (
-                    <Fragment key={`totals-${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td
-                        className={clsx(
-                          'border-b border-gray-300 text-right',
-                          seasonCount > 1 ? 'border-r' : 0,
-                        )}
-                      >
-                        {toNumber(avgPerSeason) ?? 0}
-                      </td>
-                    </Fragment>
-                  );
-                })}
-              </tr>
-            </tfoot>
-          </table>
+                <tr>
+                  <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                    <button
+                      type="button"
+                      onClick={() => append(createEmptyRow(seasonCount))}
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                    >
+                      + Add Room Type
+                    </button>
+                  </td>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                    return (
+                      <Fragment key={`${seasonIndex}`}>
+                        <td className="border-b border-gray-300 p-1"></td>
+                        <td className="border-b border-gray-300 p-1"></td>
+                        <td
+                          className={clsx(
+                            'border-b border-gray-300 p-1',
+                            seasonCount > 1 ? 'border-r' : '',
+                          )}
+                        ></td>
+                      </Fragment>
+                    );
+                  })}
+                </tr>
+              </tbody>
+
+              <tfoot>
+                <tr>
+                  <td className="border-b border-r border-gray-300 p-1.5">Totals</td>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                    const totals = calculateSeasonTotals(rows, seasonIndex);
+
+                    return (
+                      <Fragment key={`totals-${seasonIndex}`}>
+                        <td className="border-b border-gray-300 p-1.5"></td>
+                        <td className="border-b border-gray-300 p-1.5 text-right">
+                          {totals.saleableArea.toFixed(2)}
+                        </td>
+                        <td
+                          className={clsx(
+                            'border-b border-gray-300 text-right',
+                            seasonCount > 1 ? 'border-r' : 0,
+                          )}
+                        >
+                          {totals.totalRoomIncomePerDay.toFixed(2)}
+                        </td>
+                      </Fragment>
+                    );
+                  })}
+                </tr>
+                <tr>
+                  <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Day</td>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                    const totals = calculateSeasonTotals(rows, seasonIndex);
+                    const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
+                    return (
+                      <Fragment key={`totals-${seasonIndex}`}>
+                        <td className="border-b border-gray-300 p-1.5"></td>
+                        <td className="border-b border-gray-300 p-1.5"></td>
+                        <td
+                          className={clsx(
+                            'border-b border-gray-300 text-right text-sm',
+                            seasonCount > 1 ? 'border-r' : 0,
+                          )}
+                        >
+                          {toNumber(avg) ?? 0}
+                        </td>
+                      </Fragment>
+                    );
+                  })}
+                </tr>
+                <tr>
+                  <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Season</td>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                    const totals = calculateSeasonTotals(rows, seasonIndex);
+                    const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
+                    const avgPerSeason =
+                      avg * (seasonDetails[seasonIndex]?.NumberOfMonths ?? 0) * 30;
+                    return (
+                      <Fragment key={`totals-${seasonIndex}`}>
+                        <td className="border-b border-gray-300 p-1.5"></td>
+                        <td className="border-b border-gray-300 p-1.5"></td>
+                        <td
+                          className={clsx(
+                            'border-b border-gray-300 text-right',
+                            seasonCount > 1 ? 'border-r' : 0,
+                          )}
+                        >
+                          {toNumber(avgPerSeason) ?? 0}
+                        </td>
+                      </Fragment>
+                    );
+                  })}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </ScrollableTableContainer>
       </div>
       <div className="flex flex-col gap-2 mb-4">

@@ -102,160 +102,166 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   return (
     <div className="flex flex-col gap-2">
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
-        <ScrollableTableContainer className="flex-1 min-h-0 max-h-[274px]">
-          <table className={'table table-sm'}>
-            <thead>
-              <tr>
-                <th className="px-1.5 py-1.5 bg-gray-100">Room Type</th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
-                  <div className="flex flex-col gap-1.5">
-                    <span>Room Cost</span>
-                    <span>Bath / Room / Day</span>
-                  </div>
-                </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
-                  <div className="flex flex-col gap-1.5">
-                    <span>Saleable Area</span>
-                  </div>
-                </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
-                  <div className="flex flex-col gap-1.5">
-                    <span>Total Room Expenses</span>
-                    <span>Bath / Day</span>
-                  </div>
-                </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
-                  <div className="flex flex-col gap-1.5">
-                    <span>Total Room Expenses</span>
-                    <span>Bath / Year</span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map((r, index) => {
-                const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
-                return (
-                  <tr key={index}>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <div className="flex flex-row gap-1.5">
-                        <RHFInputCell
-                          fieldName={`${name}.roomDetails.${index}.roomType`}
-                          inputType="select"
-                          options={roomTypeParameters.map(p => ({
-                            value: p.code,
-                            label: p.description,
-                          }))}
-                        />
-                        {String(roomType) === '99' && (
+        <ScrollableTableContainer className="flex-1 min-h-0">
+          <div className="overflow-auto max-h-[274px]">
+            <table className={'table table-sm'}>
+              <thead>
+                <tr>
+                  <th className="px-1.5 py-1.5 bg-gray-100">Room Type</th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">
+                    <div className="flex flex-col gap-1.5">
+                      <span>Room Cost</span>
+                      <span>Bath / Room / Day</span>
+                    </div>
+                  </th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">
+                    <div className="flex flex-col gap-1.5">
+                      <span>Saleable Area</span>
+                    </div>
+                  </th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">
+                    <div className="flex flex-col gap-1.5">
+                      <span>Total Room Expenses</span>
+                      <span>Bath / Day</span>
+                    </div>
+                  </th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">
+                    <div className="flex flex-col gap-1.5">
+                      <span>Total Room Expenses</span>
+                      <span>Bath / Year</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {fields.map((r, index) => {
+                  const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
+                  return (
+                    <tr key={index}>
+                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                        <div className="flex flex-row gap-1.5">
                           <RHFInputCell
-                            fieldName={`${name}.roomDetails.${index}.roomTypeOther`}
-                            inputType="text"
-                            text={{ maxLength: 50 }}
+                            fieldName={`${name}.roomDetails.${index}.roomType`}
+                            inputType="select"
+                            options={roomTypeParameters.map(p => ({
+                              value: p.code,
+                              label: p.description,
+                            }))}
                           />
+                          {String(roomType) === '99' && (
+                            <RHFInputCell
+                              fieldName={`${name}.roomDetails.${index}.roomTypeOther`}
+                              inputType="text"
+                              text={{ maxLength: 50 }}
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleOnRemove(index)}
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-1" />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                        <RHFInputCell
+                          fieldName={`${name}.roomDetails.${index}.roomExpensePerDay`}
+                          inputType="number"
+                          number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                        />
+                      </td>
+                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                        <RHFInputCell
+                          fieldName={`${name}.roomDetails.${index}.saleableArea`}
+                          inputType="number"
+                          number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+                        />
+                      </td>
+                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                        <div className="flex justify-end items-center text-right">
+                          <RHFInputCell
+                            fieldName={`${name}.roomDetails.${index}.totalRoomExpensePerDay`}
+                            inputType="display"
+                            accessor={({ value }) => (
+                              <span className="text-right">
+                                {value ? value.toLocaleString() : 0}
+                              </span>
+                            )}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                        <div className="flex justify-end items-center text-right">
+                          <RHFInputCell
+                            fieldName={`${name}.roomDetails.${index}.totalRoomExpensePerYear`}
+                            inputType="display"
+                            accessor={({ value }) => (
+                              <span className="text-right">
+                                {value ? value.toLocaleString() : 0}
+                              </span>
+                            )}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => handleOnAdd()}
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                    >
+                      + Add Room
+                    </button>
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td className="sticky bottom-0 px-1.5 bg-white"></td>
+                  <td className="sticky bottom-0 px-1.5 bg-white"></td>
+                  <td className="sticky bottom-0 px-1.5 bg-white">
+                    <div className="text-right">
+                      <RHFInputCell
+                        fieldName={`${name}.sumSaleableArea`}
+                        inputType="display"
+                        accessor={({ value }) => (
+                          <span className="text-right">{value ? value.toLocaleString() : 0}</span>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => handleOnRemove(index)}
-                          className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-1" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <RHFInputCell
-                        fieldName={`${name}.roomDetails.${index}.roomExpensePerDay`}
-                        inputType="number"
-                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                       />
-                    </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                    </div>
+                  </td>
+                  <td className="sticky bottom-0 px-1.5 bg-white">
+                    <div className="text-right">
                       <RHFInputCell
-                        fieldName={`${name}.roomDetails.${index}.saleableArea`}
-                        inputType="number"
-                        number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+                        fieldName={`${name}.sumTotalRoomExpensePerDay`}
+                        inputType="display"
+                        accessor={({ value }) => (
+                          <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                        )}
                       />
-                    </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <div className="flex justify-end items-center text-right">
-                        <RHFInputCell
-                          fieldName={`${name}.roomDetails.${index}.totalRoomExpensePerDay`}
-                          inputType="display"
-                          accessor={({ value }) => (
-                            <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                          )}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <div className="flex justify-end items-center text-right">
-                        <RHFInputCell
-                          fieldName={`${name}.roomDetails.${index}.totalRoomExpensePerYear`}
-                          inputType="display"
-                          accessor={({ value }) => (
-                            <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                          )}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr>
-                <td>
-                  <button
-                    type="button"
-                    onClick={() => handleOnAdd()}
-                    className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                  >
-                    + Add Room
-                  </button>
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td className="sticky bottom-0 px-1.5 bg-white"></td>
-                <td className="sticky bottom-0 px-1.5 bg-white"></td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
-                  <div className="text-right">
-                    <RHFInputCell
-                      fieldName={`${name}.sumSaleableArea`}
-                      inputType="display"
-                      accessor={({ value }) => (
-                        <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                      )}
-                    />
-                  </div>
-                </td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
-                  <div className="text-right">
-                    <RHFInputCell
-                      fieldName={`${name}.sumTotalRoomExpensePerDay`}
-                      inputType="display"
-                      accessor={({ value }) => (
-                        <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                      )}
-                    />
-                  </div>
-                </td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
-                  <div className="text-right">
-                    <RHFInputCell
-                      fieldName={`${name}.sumTotalRoomExpensePerYear`}
-                      inputType="display"
-                      accessor={({ value }) => (
-                        <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                      )}
-                    />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    </div>
+                  </td>
+                  <td className="sticky bottom-0 px-1.5 bg-white">
+                    <div className="text-right">
+                      <RHFInputCell
+                        fieldName={`${name}.sumTotalRoomExpensePerYear`}
+                        inputType="display"
+                        accessor={({ value }) => (
+                          <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                        )}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </ScrollableTableContainer>
       </div>
       <div className="flex flex-col gap-2 mb-4">
