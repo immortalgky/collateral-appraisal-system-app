@@ -2369,7 +2369,7 @@ export const landtitlesFields: FormField[] = [
     label: 'Aerial Photo Number',
     type: 'text-input',
     wrapperClassName: 'col-span-3',
-    maxLength: 30,
+    maxLength: 50,
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
@@ -2689,24 +2689,46 @@ export const allLandAndBuildingPMAFields: FormField[] = [...pmaField, ...landAnd
 // =============================================================================
 
 export const leaseInfoField: FormField[] = [
-  { type: 'text-input', label: 'Lessee Name', name: 'lesseeName', wrapperClassName: 'col-span-6' },
-  { type: 'text-input', label: 'Tenant Name', name: 'tenantName', wrapperClassName: 'col-span-6' },
+  {
+    type: 'text-input',
+    label: 'Lessor Name',
+    name: 'lessorName',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
+    type: 'text-input',
+    label: 'Lessee Name',
+    name: 'lesseeName',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
 ];
 
 export const leaseContractField: FormField[] = [
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Lease Period as Contract',
     name: 'leasePeriodAsContract',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 3,
+    decimalPlaces: 2,
   },
   {
-    type: 'text-input',
+    type: 'number-input',
     label: 'Remaining Lease as Appraisal Date',
     name: 'remainingLeaseAsAppraisalDate',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 3,
+    decimalPlaces: 2,
   },
-  { type: 'text-input', label: 'Contract No', name: 'contractNo', wrapperClassName: 'col-span-6' },
+  {
+    type: 'text-input',
+    label: 'Contract No',
+    name: 'contractNo',
+    wrapperClassName: 'col-span-6',
+    maxLength: 40,
+  },
 ];
 
 export const leaseDatesFeesField: FormField[] = [
@@ -2727,6 +2749,7 @@ export const leaseDatesFeesField: FormField[] = [
     label: 'Lease Rent Fee',
     name: 'leaseRentFee',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 15,
     decimalPlaces: 2,
   },
   {
@@ -2734,29 +2757,40 @@ export const leaseDatesFeesField: FormField[] = [
     label: 'Rent Adjust',
     name: 'rentAdjust',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 15,
     decimalPlaces: 2,
   },
 ];
 
 export const leaseTermsField: FormField[] = [
-  { type: 'text-input', label: 'Sublease', name: 'sublease', wrapperClassName: 'col-span-6' },
   {
     type: 'text-input',
+    label: 'Sublease',
+    name: 'sublease',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
+    type: 'number-input',
     label: 'Additional Expenses',
     name: 'additionalExpenses',
     wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 15,
+    decimalPlaces: 2,
   },
   {
     type: 'text-input',
-    label: 'Lease Timestamp',
-    name: 'leaseTimestamp',
+    label: 'Lease Terminate',
+    name: 'leaseTerminate',
     wrapperClassName: 'col-span-6',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Contract Renewal',
     name: 'contractRenewal',
     wrapperClassName: 'col-span-6',
+    maxLength: 100,
   },
 ];
 
@@ -2766,18 +2800,25 @@ export const leaseRentalTermsField: FormField[] = [
     label: 'Rental Terms Impacting Property Use',
     name: 'rentalTermsImpactingPropertyUse',
     wrapperClassName: 'col-span-12',
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Termination of Lease',
     name: 'terminationOfLease',
     wrapperClassName: 'col-span-12',
+    maxLength: 100,
   },
 ];
 
 export const leaseOtherField: FormField[] = [
-  { type: 'textarea', label: 'Remark', name: 'remark', wrapperClassName: 'col-span-12' },
-  { type: 'text-input', label: 'Banking', name: 'banking', wrapperClassName: 'col-span-6' },
+  {
+    type: 'textarea',
+    label: 'Remark',
+    name: 'remark',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
 ];
 
 export const allLeaseAgreementFields: FormField[] = [
@@ -2799,6 +2840,7 @@ export const rentalScheduleField: FormField[] = [
     label: 'Number of Year',
     name: 'numberOfYears',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 3,
   },
   {
     type: 'date-input',
@@ -2812,6 +2854,7 @@ export const rentalScheduleField: FormField[] = [
     name: 'contractRentalFeePerYear',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
   },
   {
     type: 'number-input',
@@ -2819,6 +2862,7 @@ export const rentalScheduleField: FormField[] = [
     name: 'upFrontTotalAmount',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
   },
 ];
 
@@ -2828,6 +2872,7 @@ export const rentalGrowthPeriodField: FormField[] = [
     label: 'Growth Rate %',
     name: 'growthRatePercent',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 3,
     decimalPlaces: 2,
   },
   {
@@ -2835,5 +2880,7 @@ export const rentalGrowthPeriodField: FormField[] = [
     label: 'Every (Year)',
     name: 'growthIntervalYears',
     wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
 ];
