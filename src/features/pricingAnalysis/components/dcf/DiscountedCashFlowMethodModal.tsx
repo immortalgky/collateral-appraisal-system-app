@@ -162,7 +162,7 @@ export function DiscountedCashFlowMethodModal({
       isOpen={!!editing}
       onClose={onCancelEditMode}
       title={`Edit Assumption: ${initialData.displayName}`}
-      size={size ?? 'lg'}
+      size={size ?? 'xl'}
     >
       <FormProvider {...methods}>
         <form

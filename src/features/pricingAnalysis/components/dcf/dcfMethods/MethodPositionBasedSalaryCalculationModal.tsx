@@ -240,7 +240,7 @@ export function MethodPositionBasedSalaryCalculationModal({
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Total Salary</span>
-          <div className={'w-24 text-right'}>
+          <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumTotalSalaryPerYear`}
               inputType={'display'}
@@ -253,20 +253,19 @@ export function MethodPositionBasedSalaryCalculationModal({
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
-          <div className={'w-24'}>
+          <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
               inputType={'number'}
               number={{
                 decimalPlaces: 2,
                 maxIntegerDigits: 3,
-                maxValue: 100,
                 allowNegative: false,
               }}
             />
           </div>
-          <span className={''}>every</span>
-          <div className={'w-24'}>
+          <span className={''}>% every</span>
+          <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
               inputType={'number'}

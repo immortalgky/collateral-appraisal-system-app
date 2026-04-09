@@ -1118,10 +1118,11 @@ export function buildMethodProportionDerivedRules({
         deps: [`${name}.detail.proportionPct`, `${name}.detail.refTargetId`],
         compute: ({ getValues, ctx }) => {
           const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
-          const refTargetId = getValues(`${name}.detail.refTargetId`);
+          const refTargetId = getValues(`${name}.detail.refTarget.clientId`);
           const sections = ctx?.sections ?? [];
           const totalRefValue = resolveRefTarget(sections, refTargetId)?.[idx] ?? 0;
 
+          console.log(refTargetId, totalRefValue);
           return toNumber((Number(proportionPct) / 100) * Number(totalRefValue));
         },
       },

@@ -253,6 +253,7 @@ interface MethodProportionOfTheNewReplacementCost {
 
 type RefTarget = {
   kind: 'section' | 'category' | 'assumption';
+  templateId?: string | null;
   clientId?: string | null;
   dbId?: string | null;
 };
@@ -387,6 +388,7 @@ export type DCFMethod =
   | MethodSpecifiedValueWithGrowthWrapper;
 
 interface Base {
+  templateId?: string | null;
   clientId: string; // on runtime generated id for client side usage, not saved in DB
   dbId?: string | null; // id from DB, null when the data is note yet saved in DB. system will mainly use dbId to identify the data and clientId
 }

@@ -252,8 +252,9 @@ export const jobPositionParameters = [
 ];
 
 export const propertyTaxRanges = [
-  { taxRate: 0.02, maxValue: 50_000_000, minValue: 10_000_000 },
-  { taxRate: 0.03, maxValue: 75_000_000, minValue: 50_000_001 },
-  { taxRate: 0.05, maxValue: 100_000_000, minValue: 75_000_001 },
-  { taxRate: 0.1, maxValue: null, minValue: 100_000_001 },
+  { taxRate: 0.003, minValue: 0, maxValue: 50_000_000 },
+  { taxRate: 0.004, minValue: 50_000_000, maxValue: 200_000_000 },
+  { taxRate: 0.005, minValue: 200_000_000, maxValue: 1_000_000_000 },
+  { taxRate: 0.006, minValue: 1_000_000_000, maxValue: 5_000_000_000 },
+  { taxRate: 0.007, minValue: 5_000_000_000, maxValue: null },
 ];

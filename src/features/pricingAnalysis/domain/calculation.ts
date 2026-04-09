@@ -201,17 +201,22 @@ export function formatFixed2(value: Numberish): string {
 }
 
 export function getPropertyTaxRate(totalGovPrice: number): number {
-  const matchedRange = propertyTaxRanges.find(
-    range =>
-      totalGovPrice >= range.minValue &&
-      (range.maxValue === null || totalGovPrice <= range.maxValue),
-  );
+  const matchedRange = [...propertyTaxRanges]
+    .reverse()
+    .find(range => totalGovPrice > range.minValue);
 
   return matchedRange?.taxRate ?? 0;
 }
 
 export function getPropertyTaxAmount(totalGovPrice: number): number {
-  return totalGovPrice * getPropertyTaxRate(totalGovPrice);
+  return propertyTaxRanges.reduce((sum, range) => {
+    if (totalGovPrice <= range.minValue) return sum;
+
+    const upperBound = range.maxValue ?? totalGovPrice;
+    const taxableInThisBracket = Math.min(totalGovPrice, upperBound) - range.minValue;
+
+    return sum + taxableInThisBracket * range.taxRate;
+  }, 0);
 }
 
 export function floorToThousands(num) {

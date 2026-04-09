@@ -126,8 +126,7 @@ export function DiscountedCashFlowAssumption({
         name={`${name}.method`}
         editing={editing}
         expanded={expanded}
-        assumptionId={assumption.clientId}
-        assumptionName={assumption.assumptionName}
+        assumption={assumption}
         method={assumption.method}
         totalNumberOfYear={totalNumberOfYears}
       />

@@ -97,10 +97,16 @@ export function DiscountedCashFlowTable({
     return watchSections ?? [];
   }, [watchSections]);
 
+  const watchTemplateCode = useWatch({ control, name: 'templateCode' });
+
+  const templateCode = useMemo(() => {
+    return watchTemplateCode ?? [];
+  }, [watchTemplateCode]);
+
   // section rules build only once
   const calculateStaticCalculationDerivedRules = useMemo(() => {
     return buildStaticCalculationDerivedRules(sections, totalNumberOfYears);
-  }, [sections, totalNumberOfYears]);
+  }, [templateCode]);
 
   useDerivedFields({ rules: calculateStaticCalculationDerivedRules, ctx: { sections } });
 
