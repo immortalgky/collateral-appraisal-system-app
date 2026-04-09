@@ -49,6 +49,7 @@ export function MethodProportionModal({
             fieldName={`${name}.refTarget.clientId`}
             inputType={'select'}
             options={refTargetOptions}
+            dropdown={{ showValue: false }}
           />
         </div>
       </div>

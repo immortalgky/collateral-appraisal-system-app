@@ -38,6 +38,7 @@ interface RHFInputCellProps {
   };
   dropdown?: {
     label?: string;
+    showValue?: boolean;
   };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
@@ -107,6 +108,7 @@ export const RHFInputCell = ({
         }}
         label={dropdown?.label ?? ''}
         options={options ?? []}
+        showValue={dropdown?.showValue ?? true}
         error={error?.message}
       />
     );

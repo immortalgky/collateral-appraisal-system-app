@@ -5,26 +5,26 @@ type SectionType = 'income' | 'expenses' | 'summaryDCF' | 'summaryDirect';
 interface MethodSpecifiedRoomIncomePerDay {
   // modal
   roomDetails: {
-    roomType?: string;
-    roomTypeOther?: string;
-    roomIncome: number;
-    saleableArea: number;
+    roomType?: string; // collect to db
+    roomTypeOther?: string; // collect to db
+    roomIncome: number; // collect to db
+    saleableArea: number; // collect to db
     totalRoomIncome: number;
   }[];
   sumRoomIncome: number;
   sumSaleableArea: number;
   sumTotalRoomIncome: number;
   avgRoomRate: number;
-  totalSaleableArea: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
-  occupancyRateFirstYearPct: number;
-  occupancyRatePct: number;
-  occupancyRateYrs: number;
+  totalSaleableArea: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
+  occupancyRateFirstYearPct: number; // collect to db
+  occupancyRatePct: number; // collect to db
+  occupancyRateYrs: number; // collect to db
 
   // table
   saleableArea: number[];
-  occupancyRate: number[];
+  occupancyRate: number[]; // collect to db
   totalSaleableAreaDeductByOccRate: number[];
   roomRateIncrease: number[];
   avgDailyRate: number[];
@@ -35,39 +35,39 @@ interface MethodSpecifiedRoomIncomePerDay {
 
 type SeasonRateInput = {
   seasonId: string;
-  roomIncome: number | null;
-  saleableArea: number | null;
+  roomIncome: number | null; // collect to db
+  saleableArea: number | null; // collect to db
 };
 
 type RoomIncomeRow = {
   id: string;
-  roomType: string;
-  roomTypeOther?: string;
+  roomType: string; // collect to db
+  roomTypeOther?: string; // collect to db
   seasons: SeasonRateInput[];
 };
 
 interface MethodSpecifiedRoomIncomeBySeasonalRates {
   // modal
-  seasonCount: number;
+  seasonCount: number; // collect to db
   seasonDetails: {
-    seasonName: string;
-    numberOfMonths: number;
-    description: string;
+    seasonName: string; // collect to db
+    numberOfMonths: number; // collect to db
+    description: string; // collect to db
     avgTotalRoomIncomePerDay: number;
     avgTotalRoomIncomePerSeason: number;
-  };
+  }[];
   roomDetails: RoomIncomeRow[];
-  avgRoomRate: number; // sum(avgTotalRoomIncomePerSeason) / sum(number of month * 30)
-  totalSaleableArea: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
-  occupancyRateFirstYearPct: number;
-  occupancyRatePct: number;
-  occupancyRateYrs: number;
+  avgRoomRate: number;
+  totalSaleableArea: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
+  occupancyRateFirstYearPct: number; // collect to db
+  occupancyRatePct: number; // collect to db
+  occupancyRateYrs: number; // collect to db
 
   // table
   saleableArea: number[];
-  occupancyRate: number[];
+  occupancyRate: number[]; // collect to db
   totalSaleableAreaDeductByOccRate: number[];
   roomRateIncrease: number[];
   avgDailyRate: number[];
@@ -76,12 +76,12 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
 
 interface MethodSpecifiedRoomIncomeWithGrowth {
   // modal
-  saleableArea: number;
-  totalNumberOfSaleableArea: number;
-  remark: string;
-  firstYearAmt: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  saleableArea: number; // collect to db
+  totalNumberOfSaleableArea: number; // collect to db
+  remark: string; // collect to db
+  firstYearAmt: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   roomRateIncrease: number[];
@@ -91,18 +91,18 @@ interface MethodSpecifiedRoomIncomeWithGrowth {
 
 interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
   // modal
-  saleableArea: number;
-  totalNumberOfSaleableArea: number;
-  remark: string;
-  firstYearAmt: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
-  occupancyRateFirstYearPct: number;
-  occupancyRatePct: number;
-  occupancyRateYrs: number;
+  saleableArea: number; // collect to db
+  totalNumberOfSaleableArea: number; // collect to db
+  remark: string; // collect to db
+  firstYearAmt: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
+  occupancyRateFirstYearPct: number; // collect to db
+  occupancyRatePct: number; // collect to db
+  occupancyRateYrs: number; // collect to db
 
   // table
-  occupancyRate: number[];
+  occupancyRate: number[]; // collect to db
   roomRateIncrease: number[];
   roomIncomeAdjustedValuedByGrowthRates: number[];
   roomIncome: number[];
@@ -111,19 +111,19 @@ interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
 interface MethodSpecifiedRentalIncomePerMonth {
   // modal
   roomDetails: {
-    roomType: string;
-    roomTypeOther?: string;
-    roomIncome: number;
-    saleableArea: number;
+    roomType: string; // collect to db
+    roomTypeOther?: string; // collect to db
+    roomIncome: number; // collect to db
+    saleableArea: number; // collect to db
     totalRoomIncomePerMonth: number;
     totalRoomIncomePerYear: number;
   };
   sumSaleableArea: number;
   sumRoomIncomePerMonth: number;
   sumRoomIncomePerYear: number;
-  totalSaleableArea: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  totalSaleableArea: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   roomRateIncrease: number[];
@@ -133,9 +133,9 @@ interface MethodSpecifiedRentalIncomePerMonth {
 interface MethodSpecifiedRentalIncomePerSquareMeter {
   // modal
   areaDetail: {
-    description: string;
-    rentalPrice: number;
-    saleableArea: number;
+    description: string; // collect to db
+    rentalPrice: number; // collect to db
+    saleableArea: number; // collect to db
     totalRentalIncomePerMonth: number;
     totalRentalIncomePerYear: number;
   };
@@ -143,16 +143,16 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
   sumSaleableArea: number;
   sumTotalRentalIncomePerMonth: number;
   sumTotalRentalIncomePerYear: number;
-  totalSaleableArea: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
   avgRentalRatePerMonth: number;
-  occupancyRateFirstYearPct: number;
-  occupancyRatePct: number;
-  occupancyRateYrs: number;
+  totalSaleableArea: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
+  occupancyRateFirstYearPct: number; // collect to db
+  occupancyRatePct: number; // collect to db
+  occupancyRateYrs: number; // collect to db
 
   // table
-  occupancyRate: number[];
+  occupancyRate: number[]; // collect to db
   totalSaleableAreaDeductByOccRate: number[];
   rentalRateIncrease: number[];
   avgRentalRate: number[];
@@ -164,18 +164,18 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
 interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   // modal
   roomDetails: {
-    roomType?: string;
-    roomTypeOther?: string;
-    roomExpensePerDay: number;
-    saleableArea: number;
+    roomType?: string; // collect to db
+    roomTypeOther?: string; // collect to db
+    roomExpensePerDay: number; // collect to db
+    saleableArea: number; // collect to db
     totalRoomExpensePerDay: number;
-    totalRoomExpensePerYear: number; // same rate as
+    totalRoomExpensePerYear: number;
   }[];
   sumSaleableArea: number;
   sumTotalRoomExpensePerDay: number;
   sumTotalRoomExpensePerYear: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   saleableArea: number[];
@@ -185,9 +185,9 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
   // modal
-  firstYearAmt: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  firstYearAmt: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   increaseRate: number[];
@@ -198,16 +198,16 @@ interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
 interface MethodPositionBasedSalaryCalculation {
   // modal
   jobPositionDetails: {
-    jobPosition: string;
-    jobPositionOther?: string;
-    salaryBahtPerPersonPerMonth: number;
-    numberOfEmployees: number;
+    jobPosition: string; // collect to db
+    jobPositionOther?: string; // collect to db
+    salaryBahtPerPersonPerMonth: number; // collect to db
+    numberOfEmployees: number; // collect to db
     totalSalaryPerYear: number;
   }[];
   sumSalaryBahtPerPersonPerMonth: number;
   sumTotalSalaryPerYear: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   increaseRate: number[];
@@ -222,6 +222,9 @@ interface MethodParameterBasedOnTierOfPropertyValue {
     totalPropertyTax: number[];
     totalPropertyTaxRates: number[];
   };
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
+  startIn: number; // collect to db
 
   // table
   totalMethodValues: number[];
@@ -229,9 +232,9 @@ interface MethodParameterBasedOnTierOfPropertyValue {
 
 interface MethodSpecifiedEnergyCostIndex {
   // modal
-  energyCostIndex: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  energyCostIndex: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   increaseRate: number[];
@@ -241,9 +244,9 @@ interface MethodSpecifiedEnergyCostIndex {
 
 interface MethodProportionOfTheNewReplacementCost {
   // modal
-  proportionPct: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  proportionPct: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   newReplacementCost: number;
@@ -260,15 +263,15 @@ type RefTarget = {
 
 interface MethodProportion {
   // modal
-  proportionPct: number;
-  refTarget: RefTarget;
+  proportionPct: number; // collect to db
+  refTarget: RefTarget; // collect to db
 }
 
 interface MethodSpecifiedValueWithGrowth {
   // modal
-  firstYearAmt: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
+  firstYearAmt: number; // collect to db
+  increaseRatePct: number; // collect to db
+  increaseRateYrs: number; // collect to db
 
   // table
   increaseRates: number[];

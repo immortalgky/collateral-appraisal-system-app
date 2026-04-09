@@ -394,7 +394,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
-                        {toNumber(avg) ?? 0}
+                        {toNumber(avg).toLocaleString() ?? 0}
                       </td>
                     </Fragment>
                   );
@@ -405,7 +405,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
-                  const avgPerSeason = avg * (seasonDetails[seasonIndex]?.NumberOfMonths ?? 0) * 30;
+                  const avgPerSeason = avg * (seasonDetails[seasonIndex]?.numberOfMonths ?? 0) * 30;
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
                       <td className="border-b border-gray-300 p-1.5"></td>
@@ -416,7 +416,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
-                        {toNumber(avgPerSeason) ?? 0}
+                        {toNumber(avgPerSeason).toLocaleString() ?? 0}
                       </td>
                     </Fragment>
                   );
