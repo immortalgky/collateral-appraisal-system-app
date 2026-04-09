@@ -1,4 +1,4 @@
-import type { DCFMethod } from '../../types/dcf';
+import type { DCFAssumption, DCFMethod } from '../../types/dcf';
 import { MethodProportion } from './dcfMethods/MethodProportion';
 import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoomIncomePerDay';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
@@ -19,8 +19,7 @@ interface DiscountedCashFlowMethodRendererProps {
   name: string;
   editing: string | null;
   expanded: boolean;
-  assumptionId?: string | null;
-  assumptionName: string;
+  assumption: DCFAssumption;
   method: DCFMethod;
   totalNumberOfYear: number;
 }
@@ -28,8 +27,7 @@ export function DiscountedCashFlowMethodRenderer({
   name,
   editing,
   expanded,
-  assumptionId,
-  assumptionName,
+  assumption,
   method,
   totalNumberOfYear,
 }: DiscountedCashFlowMethodRendererProps) {
@@ -39,8 +37,9 @@ export function DiscountedCashFlowMethodRenderer({
     expanded: expanded,
     totalNumberOfYears: totalNumberOfYear,
     method: method,
-    assumptionId: assumptionId,
-    assumptionName: assumptionName,
+    assumptionId: assumption.clientId,
+    assumptionName: assumption.assumptionName,
+    assumptionType: assumption.assumptionType,
     baseStyles: {
       rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300',
       rowBody: 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300',

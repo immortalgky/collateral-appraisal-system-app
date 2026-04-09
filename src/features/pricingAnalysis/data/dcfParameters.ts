@@ -8,39 +8,43 @@ export const categoryParams = [
 
 export const assumptionParams = [
   // income
-  { code: 'I00', description: 'Room Income' },
-  { code: 'I01', description: 'Room Rental Income' },
-  { code: 'I02', description: 'Average Rental Rate' },
-  { code: 'I03', description: 'Energy Income' },
-  { code: 'I04', description: 'Utility Income' },
-  { code: 'I05', description: 'Food and Beverage Income' },
-  { code: 'I06', description: 'Other Income' },
+  { code: 'I00', description: 'Room Income', sectionType: 'income' },
+  { code: 'I01', description: 'Room Rental Income', sectionType: 'income' },
+  { code: 'I02', description: 'Average Rental Rate', sectionType: 'income' },
+  { code: 'I03', description: 'Energy Income', sectionType: 'income' },
+  { code: 'I04', description: 'Utility Income', sectionType: 'income' },
+  { code: 'I05', description: 'Food and Beverage Income', sectionType: 'income' },
+  { code: 'I06', description: 'Other Income', sectionType: 'income' },
 
   // expenses
-  { code: 'E00', description: 'Administration Fee' },
-  { code: 'E01', description: 'Advertising and Promotion Costs' },
-  { code: 'E02', description: 'Common Utility Fees' },
-  { code: 'E03', description: 'Contingency Expenses' },
-  { code: 'E04', description: 'Cost of Income from Utilities' },
-  { code: 'E05', description: 'Energy Cost' },
-  { code: 'E06', description: 'Fire Insurance Premium' },
-  { code: 'E07', description: 'Food and beverage expenses' },
-  { code: 'E08', description: 'Marketing and Promotion Costs' },
-  { code: 'E09', description: 'Operational and Administrative expenses' },
-  { code: 'E10', description: 'Other Expenses' },
-  { code: 'E11', description: 'Project Management Compensation' },
-  { code: 'E12', description: 'Property Tax' },
-  { code: 'E13', description: 'Repair and Maintenance Costs' },
-  { code: 'E14', description: 'Reserve Funds for Building Improvements' },
-  { code: 'E15', description: 'Room Cost' },
-  { code: 'E16', description: 'Salary and Benefits' },
-  { code: 'E17', description: 'Sales and Marketing Expenses' },
-  { code: 'E18', description: 'Utility Expenses' },
-  { code: 'E19', description: 'Other Costs' },
-  { code: 'E20', description: 'Reserve for Asset Maintenance (FF&E / Cap Ex)' },
+  { code: 'E00', description: 'Administration Fee', sectionType: 'expenses' },
+  { code: 'E01', description: 'Advertising and Promotion Costs', sectionType: 'expenses' },
+  { code: 'E02', description: 'Common Utility Fees', sectionType: 'expenses' },
+  { code: 'E03', description: 'Contingency Expenses', sectionType: 'expenses' },
+  { code: 'E04', description: 'Cost of Income from Utilities', sectionType: 'expenses' },
+  { code: 'E05', description: 'Energy Cost', sectionType: 'expenses' },
+  { code: 'E06', description: 'Fire Insurance Premium', sectionType: 'expenses' },
+  { code: 'E07', description: 'Food and beverage expenses', sectionType: 'expenses' },
+  { code: 'E08', description: 'Marketing and Promotion Costs', sectionType: 'expenses' },
+  { code: 'E09', description: 'Operational and Administrative expenses', sectionType: 'expenses' },
+  { code: 'E10', description: 'Other Expenses', sectionType: 'expenses' },
+  { code: 'E11', description: 'Project Management Compensation', sectionType: 'expenses' },
+  { code: 'E12', description: 'Property Tax', sectionType: 'expenses' },
+  { code: 'E13', description: 'Repair and Maintenance Costs', sectionType: 'expenses' },
+  { code: 'E14', description: 'Reserve Funds for Building Improvements', sectionType: 'expenses' },
+  { code: 'E15', description: 'Room Cost', sectionType: 'expenses' },
+  { code: 'E16', description: 'Salary and Benefits', sectionType: 'expenses' },
+  { code: 'E17', description: 'Sales and Marketing Expenses', sectionType: 'expenses' },
+  { code: 'E18', description: 'Utility Expenses', sectionType: 'expenses' },
+  { code: 'E19', description: 'Other Costs', sectionType: 'expenses' },
+  {
+    code: 'E20',
+    description: 'Reserve for Asset Maintenance (FF&E / Cap Ex)',
+    sectionType: 'expenses',
+  },
 
   // others
-  { code: 'M99', description: 'Miscellaneous' },
+  { code: 'M99', description: 'Miscellaneous', sectionType: 'any' },
 ];
 
 export const mappingAssumptionMethodParams = [
@@ -252,8 +256,9 @@ export const jobPositionParameters = [
 ];
 
 export const propertyTaxRanges = [
-  { taxRate: 0.02, maxValue: 50_000_000, minValue: 10_000_000 },
-  { taxRate: 0.03, maxValue: 75_000_000, minValue: 50_000_001 },
-  { taxRate: 0.05, maxValue: 100_000_000, minValue: 75_000_001 },
-  { taxRate: 0.1, maxValue: null, minValue: 100_000_001 },
+  { taxRate: 0.003, minValue: 0, maxValue: 50_000_000 },
+  { taxRate: 0.004, minValue: 50_000_001, maxValue: 200_000_000 },
+  { taxRate: 0.005, minValue: 200_000_001, maxValue: 1_000_000_000 },
+  { taxRate: 0.006, minValue: 1_000_000_001, maxValue: 5_000_000_000 },
+  { taxRate: 0.007, minValue: 5_000_000_001, maxValue: null },
 ];

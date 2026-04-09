@@ -180,12 +180,13 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
               if (v) handleSeasonCountChange(v);
               return v;
             }}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 1, allowNegative: false }}
           />
         </div>
       </div>
 
       <div className="overflow-auto flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
-        <ScrollableTableContainer className="flex-1 min-h-0 max-h-80">
+        <ScrollableTableContainer maxHeight={'200px'} className="flex-1 min-h-0">
           <table className="table table-xs min-w-max border-separate border-spacing-0">
             <thead>
               <tr>
@@ -204,6 +205,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.seasonName`}
                           inputType="text"
+                          text={{ maxLength: 50 }}
                         />
                       </div>
                       <div className="flex flex-row items-center">
@@ -211,6 +213,12 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.numberOfMonths`}
                           inputType="number"
+                          number={{
+                            decimalPlaces: 0,
+                            maxIntegerDigits: 2,
+                            maxValue: 12,
+                            allowNegative: false,
+                          }}
                         />
                       </div>
                       <div className="flex flex-row items-center">
@@ -218,6 +226,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.description`}
                           inputType="text"
+                          text={{ maxLength: 100 }}
                         />
                       </div>
                     </div>
@@ -261,6 +270,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${rowIndex}.roomTypeOther`}
                             inputType="text"
+                            text={{ maxLength: 50 }}
                           />
                         )}
                         <button
@@ -286,21 +296,31 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
                               inputType="number"
+                              number={{
+                                decimalPlaces: 2,
+                                maxIntegerDigits: 15,
+                                allowNegative: false,
+                              }}
                             />
                           </td>
                           <td className="border-b border-gray-300 p-1">
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.saleableArea`}
                               inputType="number"
+                              number={{
+                                decimalPlaces: 0,
+                                maxIntegerDigits: 6,
+                                allowNegative: false,
+                              }}
                             />
                           </td>
                           <td
                             className={clsx(
-                              'border-b border-gray-300 text-sm',
+                              'border-b border-gray-300 text-sm text-right',
                               seasonCount > 1 ? 'border-r' : 0,
                             )}
                           >
-                            {total.toFixed(2)}
+                            {Number(total.toFixed(2)).toLocaleString()}
                           </td>
                         </Fragment>
                       );
@@ -345,7 +365,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                     <Fragment key={`totals-${seasonIndex}`}>
                       <td className="border-b border-gray-300 p-1.5"></td>
                       <td className="border-b border-gray-300 p-1.5 text-right">
-                        {totals.saleableArea.toFixed(2)}
+                        {Number(totals.saleableArea.toFixed(2)).toLocaleString()}
                       </td>
                       <td
                         className={clsx(
@@ -353,7 +373,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
-                        {totals.totalRoomIncomePerDay.toFixed(2)}
+                        {Number(totals.totalRoomIncomePerDay.toFixed(2)).toLocaleString()}
                       </td>
                     </Fragment>
                   );
@@ -374,7 +394,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
-                        {toNumber(avg) ?? 0}
+                        {toNumber(avg).toLocaleString() ?? 0}
                       </td>
                     </Fragment>
                   );
@@ -385,7 +405,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
-                  const avgPerSeason = avg * (seasonDetails[seasonIndex]?.NumberOfMonths ?? 0) * 30;
+                  const avgPerSeason = avg * (seasonDetails[seasonIndex]?.numberOfMonths ?? 0) * 30;
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
                       <td className="border-b border-gray-300 p-1.5"></td>
@@ -396,7 +416,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
-                        {toNumber(avgPerSeason) ?? 0}
+                        {toNumber(avgPerSeason).toLocaleString() ?? 0}
                       </td>
                     </Fragment>
                   );
@@ -409,7 +429,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Average Room Rate</span>
-          <div className={'w-24 text-right'}>
+          <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRoomRate`}
               inputType={'display'}
@@ -421,33 +441,81 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
         </div>
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Total Number of Saleable Area</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.totalSaleableArea`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.totalSaleableArea`}
+              inputType={'number'}
+              number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+            />
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Occupancy Rate - First Year</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateFirstYearPct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRateFirstYearPct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>% with growth</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRatePct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>% every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>year(s)</span>
         </div>

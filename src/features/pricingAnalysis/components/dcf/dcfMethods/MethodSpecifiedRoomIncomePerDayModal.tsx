@@ -92,7 +92,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
   return (
     <div className="flex flex-col gap-2">
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
-        <ScrollableTableContainer className="flex-1 min-h-0 max-h-[274px]">
+        <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
           <table className={'table table-sm'}>
             <thead>
               <tr>
@@ -121,6 +121,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${index}.roomTypeOther`}
                             inputType="text"
+                            text={{ maxLength: 50 }}
                           />
                         )}
                         <button
@@ -137,12 +138,14 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                       <RHFInputCell
                         fieldName={`${name}.roomDetails.${index}.roomIncome`}
                         inputType="number"
+                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
                         fieldName={`${name}.roomDetails.${index}.saleableArea`}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -216,47 +219,93 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Average Room Rate</span>
-          <div className={'grid-cols-12'}>
-            <div className={'col-span-2'}>
-              <RHFInputCell
-                fieldName={`${name}.avgRoomRate`}
-                inputType={'display'}
-                accessor={({ value }) => (
-                  <span className="text-right">{value ? value.toLocaleString() : 0}</span>
-                )}
-              />
-            </div>
+          <div className={'w-44 text-right'}>
+            <RHFInputCell
+              fieldName={`${name}.avgRoomRate`}
+              inputType={'display'}
+              accessor={({ value }) => (
+                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+              )}
+            />
           </div>
         </div>
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Total Number of Saleable Area</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.totalSaleableArea`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.totalSaleableArea`}
+              inputType={'number'}
+              number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+            />
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Occupancy Rate - First Year</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateFirstYearPct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRateFirstYearPct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>% with growth</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRatePct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>% every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>year(s)</span>
         </div>

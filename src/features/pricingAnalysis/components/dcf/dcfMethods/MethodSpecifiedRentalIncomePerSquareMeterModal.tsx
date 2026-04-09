@@ -118,7 +118,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
   return (
     <div className="flex flex-col gap-2">
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
-        <ScrollableTableContainer className="flex-1 min-h-0 max-h-[274px]">
+        <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
           <table className={'table table-sm'}>
             <thead>
               <tr>
@@ -158,6 +158,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         <RHFInputCell
                           fieldName={`${name}.areaDetail.${index}.description`}
                           inputType="text"
+                          text={{ maxLength: 50 }}
                         />
                         <button
                           type="button"
@@ -173,12 +174,14 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                       <RHFInputCell
                         fieldName={`${name}.areaDetail.${index}.rentalPrice`}
                         inputType="number"
+                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
                         fieldName={`${name}.areaDetail.${index}.saleableArea`}
                         inputType="number"
+                        number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -274,7 +277,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Average Rental Price</span>
-          <div className={'w-24 text-right'}>
+          <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRentalRatePerMonth`}
               inputType={'display'}
@@ -287,34 +290,82 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Total Saleable Area</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.totalSaleableArea`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.totalSaleableArea`}
+              inputType={'number'}
+              number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+            />
           </div>
           <span className={''}>Sq. Meter</span>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Occupancy Rate - First Year</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateFirstYearPct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRateFirstYearPct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>% with growth</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRatePct`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>% every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.occupancyRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.occupancyRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>year(s)</span>
         </div>

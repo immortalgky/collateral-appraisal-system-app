@@ -1,14 +1,39 @@
 import clsx from 'clsx';
-import type { MethodProportionWrapper } from '../../../types/dcf';
+import type { DCFSection, MethodProportionWrapper } from '../../../types/dcf';
 import { RHFInputCell } from '../../table/RHFInputCell';
+import { getDCFFilteredAssumptions } from '@/features/pricingAnalysis/domain/getDCFFilteredAssumptions';
+import { buildMethodProportionOptions } from '@/features/pricingAnalysis/domain/dcf/buildMethodProportionOptions';
+import { useFormContext } from 'react-hook-form';
 
 interface MethodProportionProps {
   name: string;
   expanded: boolean;
   method: MethodProportionWrapper;
+  assumptionType: string;
   baseStyles: { rowHeader: string; rowBody: string };
 }
-export function MethodProportion({ name, expanded, method, baseStyles }: MethodProportionProps) {
+export function MethodProportion({
+  name,
+  expanded,
+  method,
+  assumptionType,
+  baseStyles,
+}: MethodProportionProps) {
+  const { getValues } = useFormContext();
+  const sections = (getValues('sections') ?? []).filter(
+    (s: DCFSection) => s.identifier !== 'empty',
+  );
+
+  const assumptions = getDCFFilteredAssumptions(
+    getValues,
+    a => assumptionType !== a.assumptionType,
+  );
+
+  const refTargetOptions = buildMethodProportionOptions({
+    sections,
+    assumptions,
+  });
+
   return (
     <>
       {expanded && (
@@ -19,11 +44,20 @@ export function MethodProportion({ name, expanded, method, baseStyles }: MethodP
                 <span>Total</span>
                 <div className="flex flex-row gap-1.5 items-center">
                   <div className="w-20">
-                    <RHFInputCell fieldName={`${name}.detail.proportionPct`} inputType="number" />
+                    <RHFInputCell
+                      fieldName={`${name}.detail.proportionPct`}
+                      inputType="number"
+                      number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
+                    />
                   </div>
                   <span>% of</span>
-                  <div className="w-32">
-                    <RHFInputCell fieldName={`${name}.detail.refTargetId`} inputType="select" />
+                  <div className="w-72">
+                    <RHFInputCell
+                      fieldName={`${name}.detail.refTarget.clientId`}
+                      inputType={'select'}
+                      options={refTargetOptions}
+                      dropdown={{ showValue: false }}
+                    />
                   </div>
                 </div>
               </div>

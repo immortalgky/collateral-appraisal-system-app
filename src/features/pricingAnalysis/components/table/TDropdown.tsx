@@ -18,6 +18,7 @@ interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   placeholder?: string;
   onChange?: (value: any) => void;
+  showValue?: boolean;
   error?: string;
 }
 
@@ -28,6 +29,7 @@ interface ListBoxProps {
   selected?: ListBoxItem | null;
   children: ReactNode;
   disabled?: boolean;
+  showValue?: boolean;
   error?: string;
 }
 
@@ -41,6 +43,7 @@ export type ListBoxItem = {
   label: string;
   id?: string | number;
   colorClass?: string;
+  showValue?: boolean;
 };
 
 const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
@@ -55,6 +58,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       error,
       required,
       disabled,
+      showValue = true,
       ...props
     },
     ref,
@@ -97,6 +101,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
           selected={selectedOption}
           placeholder={placeholder}
           disabled={isDisabled}
+          showValue={showValue}
           error={error}
         >
           {dropdownOptions.map(option => (
@@ -112,7 +117,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 );
 
 const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
-  ({ placeholder, selected, children, disabled, error, ...props }, ref) => {
+  ({ placeholder, selected, children, disabled, showValue, error, ...props }, ref) => {
     return (
       <HeadlessListBox disabled={disabled} by="value" {...props}>
         <div className="relative">
@@ -134,7 +139,11 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             </div>
             <div className={clsx('px-3 py-2 truncate', selected?.colorClass)}>
               {selected?.value ? (
-                `${selected.value} - ${selected.label}`
+                showValue ? (
+                  `${selected.value} - ${selected.label}`
+                ) : (
+                  `${selected.label}`
+                )
               ) : (
                 <span className="text-gray-400">{placeholder}</span>
               )}

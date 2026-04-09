@@ -255,12 +255,14 @@ export function buildStaticCalculationDerivedRules(
           targetPath: `sections.${sectionIdx}.totalNet`,
           deps: ['sections'],
           compute: ({ getValues }) => {
-            const grossRevenue = (sections ?? []).reduce((prev, curr) => {
+            const grossRevenue = (getValues('sections') ?? []).reduce((prev, curr) => {
               const identifer = curr.identifier ?? '';
               if (identifer === 'positive') return prev + Number(curr.totalSectionValues?.[0] ?? 0);
               if (identifer === 'negative') return prev - Number(curr.totalSectionValues?.[0] ?? 0);
               return prev;
             }, 0);
+
+            console.log(grossRevenue);
 
             // minus contract fee from lease agreement
             const contractRentalFee = getValues(`sections.${sectionIdx}.contractRentalFee`) ?? 0;
@@ -283,14 +285,14 @@ export function buildStaticCalculationDerivedRules(
 
             if (!capitalizeRate) return 0;
 
-            return toNumber(totalNet / capitalizeRate / 100);
+            return toNumber(totalNet / (capitalizeRate / 100));
           },
         },
         {
           targetPath: `finalValue`,
           deps: ['sections'],
           compute: ({ getValues }) => {
-            return getValues(`sections.${sectionIdx}.presentValue`) ?? 0;
+            return toNumber(getValues(`sections.${sectionIdx}.presentValue`) ?? 0);
           },
         },
         {
@@ -302,7 +304,7 @@ export function buildStaticCalculationDerivedRules(
           },
           compute: ({ getValues }) => {
             const finalValue = getValues('finalValue') ?? 0;
-            return finalValue;
+            return floorToThousand(finalValue);
           },
         },
       ];
@@ -1115,13 +1117,14 @@ export function buildMethodProportionDerivedRules({
     return [
       {
         targetPath: `${name}.totalMethodValues.${idx}`,
-        deps: [`${name}.detail.proportionPct`, `${name}.detail.refTargetId`],
+        deps: [`${name}.detail.proportionPct`, `${name}.detail.refTarget.clientId`],
         compute: ({ getValues, ctx }) => {
           const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
-          const refTargetId = getValues(`${name}.detail.refTargetId`);
+          const refTargetId = getValues(`${name}.detail.refTarget.clientId`);
           const sections = ctx?.sections ?? [];
           const totalRefValue = resolveRefTarget(sections, refTargetId)?.[idx] ?? 0;
 
+          console.log(refTargetId, totalRefValue);
           return toNumber((Number(proportionPct) / 100) * Number(totalRefValue));
         },
       },

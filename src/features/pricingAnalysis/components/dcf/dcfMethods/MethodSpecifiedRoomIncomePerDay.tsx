@@ -45,15 +45,39 @@ export function MethodSpecifiedRoomIncomePerDay({
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateFirstYearPct`}
                     inputType="number"
+                    number={{
+                      decimalPlaces: 2,
+                      maxIntegerDigits: 3,
+                      maxValue: 100,
+                      allowNegative: false,
+                    }}
                   />
                 </div>
                 <span>% growth</span>
                 <div className="w-20">
-                  <RHFInputCell fieldName={`${name}.detail.occupancyRatePct`} inputType="number" />
+                  <RHFInputCell
+                    fieldName={`${name}.detail.occupancyRatePct`}
+                    inputType="number"
+                    number={{
+                      decimalPlaces: 2,
+                      maxIntegerDigits: 3,
+                      maxValue: 100,
+                      allowNegative: false,
+                    }}
+                  />
                 </div>
                 <span>% every</span>
                 <div className="w-20">
-                  <RHFInputCell fieldName={`${name}.detail.occupancyRateYrs`} inputType="number" />
+                  <RHFInputCell
+                    fieldName={`${name}.detail.occupancyRateYrs`}
+                    inputType="number"
+                    number={{
+                      decimalPlaces: 0,
+                      maxIntegerDigits: 3,
+                      maxValue: 100,
+                      allowNegative: false,
+                    }}
+                  />
                 </div>
                 <span>year(s)</span>
               </div>

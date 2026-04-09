@@ -143,7 +143,7 @@ export function DiscountedCashFlowCategory({
               editing={editing}
               onCancelEditMode={handleOnCancelEditMode}
               onSaveEditMode={handleOnSaveEditMode}
-              size="xl"
+              size="2xl"
             />
           )}
 

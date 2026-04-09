@@ -2,13 +2,15 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../../types/dcf';
 import { assumptionParams } from '../../../data/dcfParameters';
+import type { UseFormGetValues } from 'react-hook-form';
+import type { FormValues } from '@/features/appraisal/components/tables/bType';
 
 export function MethodProportionModal({
   name,
   getOuterFormValues,
 }: {
   name: string;
-  getOuterFormValues: (name: string) => object;
+  getOuterFormValues: UseFormGetValues<FormValues>;
 }) {
   const sections = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
