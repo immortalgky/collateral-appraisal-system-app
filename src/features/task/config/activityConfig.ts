@@ -1,76 +1,63 @@
-import type { ActivityColumnDef } from '../components/ActivityTaskTable';
+import type { ColumnKey } from './columnDefs';
 
 export interface ActivityConfig {
   activityId: string;
   title: string;
   description: string;
-  columns: ActivityColumnDef[];
+  columns: ColumnKey[];
   icon: string;
   allowedRoles: string[];
 }
 
-// ---------------------------------------------------------------------------
-// Column patterns (3 patterns per design doc)
-// ---------------------------------------------------------------------------
-
-const BASE_COLUMNS: ActivityColumnDef[] = [
-  { key: 'appraisalNumber', label: 'Appraisal Number' },
-  { key: 'customerName', label: 'Customer Name' },
-  { key: 'taskType', label: 'Task Type' },
-  { key: 'purpose', label: 'Purpose' },
-  { key: 'propertyType', label: 'Property Type' },
-  { key: 'status', label: 'Status' },
+const BASE_COLUMNS: ColumnKey[] = [
+  'appraisalNumber',
+  'customerName',
+  'taskType',
+  'purpose',
+  'propertyType',
+  'status',
 ];
 
-// For: initiation-check, appraisal-initiation, appraisal-assignment,
-//      int-appraisal-execution, appraisal-book-verification
-const INTERNAL_COLUMNS: ActivityColumnDef[] = [
+const INTERNAL_COLUMNS: ColumnKey[] = [
   ...BASE_COLUMNS,
-  { key: 'appointmentDateTime', label: 'Appointment Date' },
-  { key: 'requestedBy', label: 'Requested By' },
-  { key: 'assignedDate', label: 'Assigned Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'elapsedHours', label: 'SLA (Actual)' },
-  { key: 'remainingHours', label: 'SLA (Difference)' },
-  { key: 'slaStatus', label: 'SLA Status' },
-  { key: 'priority', label: 'Priority' },
+  'appointmentDateTime',
+  'requestedBy',
+  'assignedDate',
+  'movement',
+  'dueAt',
+  'elapsedHours',
+  'remainingHours',
+  'slaStatus',
+  'priority',
 ];
 
-// For: ext-appraisal-assignment, ext-appraisal-execution
-const EXTERNAL_COLUMNS: ActivityColumnDef[] = [
+const EXTERNAL_COLUMNS: ColumnKey[] = [
   ...BASE_COLUMNS,
-  { key: 'appointmentDateTime', label: 'Appointment Date' },
-  { key: 'internalFollowupStaff', label: 'Internal Followup Staff' },
-  { key: 'requestReceivedDate', label: 'Request Received Date' },
-  { key: 'assignedDate', label: 'Assigned Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'elapsedHours', label: 'SLA (Actual)' },
-  { key: 'remainingHours', label: 'SLA (Difference)' },
-  { key: 'slaStatus', label: 'SLA Status' },
-  { key: 'priority', label: 'Priority' },
+  'appointmentDateTime',
+  'internalFollowupStaff',
+  'requestReceivedDate',
+  'assignedDate',
+  'movement',
+  'dueAt',
+  'elapsedHours',
+  'remainingHours',
+  'slaStatus',
+  'priority',
 ];
 
-// For: ext-appraisal-check, ext-appraisal-verification,
-//      int-appraisal-check, int-appraisal-verification, pending-approval
-const CHECKER_COLUMNS: ActivityColumnDef[] = [
+const CHECKER_COLUMNS: ColumnKey[] = [
   ...BASE_COLUMNS,
-  { key: 'appointmentDateTime', label: 'Appointment Date' },
-  { key: 'appraiser', label: 'Appraiser' },
-  { key: 'requestReceivedDate', label: 'Request Received Date' },
-  { key: 'assignedDate', label: 'Assigned Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'elapsedHours', label: 'SLA (Actual)' },
-  { key: 'remainingHours', label: 'SLA (Difference)' },
-  { key: 'slaStatus', label: 'SLA Status' },
-  { key: 'priority', label: 'Priority' },
+  'appointmentDateTime',
+  'appraiser',
+  'requestReceivedDate',
+  'assignedDate',
+  'movement',
+  'dueAt',
+  'elapsedHours',
+  'remainingHours',
+  'slaStatus',
+  'priority',
 ];
-
-// ---------------------------------------------------------------------------
-// Activity config map — 1:1 with workflow-definition.json TaskActivity nodes
-// ---------------------------------------------------------------------------
 
 const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
   'appraisal-initiation-check': {
@@ -173,12 +160,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     activityId: 'provide-additional-documents',
     title: 'Provide Additional Documents',
     description: 'Tasks for providing documents requested by a checker during their review',
-    columns: [
-      ...BASE_COLUMNS,
-      { key: 'requestedAt', label: 'Requested Date' },
-      { key: 'dueAt', label: 'Due Date' },
-      { key: 'slaStatus', label: 'SLA Status' },
-    ],
+    columns: [...BASE_COLUMNS, 'requestReceivedDate', 'dueAt', 'slaStatus'],
     icon: 'file-circle-plus',
     allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
   },
