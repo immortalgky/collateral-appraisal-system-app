@@ -14,6 +14,14 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     status,
     priority,
     activityId,
+    sortBy,
+    sortDir,
+    appraisalNumber,
+    customerName,
+    taskStatus,
+    taskType,
+    dateFrom,
+    dateTo,
   } = params;
 
   const queryKey = [
@@ -25,6 +33,14 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
       ...(status && { status }),
       ...(priority && { priority }),
       ...(activityId && { activityId }),
+      ...(sortBy && { sortBy }),
+      ...(sortDir && { sortDir }),
+      ...(appraisalNumber && { appraisalNumber }),
+      ...(customerName && { customerName }),
+      ...(taskStatus && { taskStatus }),
+      ...(taskType && { taskType }),
+      ...(dateFrom && { dateFrom }),
+      ...(dateTo && { dateTo }),
     },
   ];
 
@@ -39,6 +55,14 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
           ...(status && { Status: status }),
           ...(priority && { Priority: priority }),
           ...(activityId && { ActivityId: activityId }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortDir && { SortDir: sortDir }),
+          ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
+          ...(customerName && { CustomerName: customerName }),
+          ...(taskStatus && { TaskStatus: taskStatus }),
+          ...(taskType && { TaskType: taskType }),
+          ...(dateFrom && { DateFrom: dateFrom }),
+          ...(dateTo && { DateTo: dateTo }),
         },
       });
 

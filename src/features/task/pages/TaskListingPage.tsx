@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetTasks, useGetTasksForKanban } from '../api';
-import type { GroupByField, Task, TaskListResponse } from '../types';
+import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
+import { TaskFilterDialog } from '../components/TaskFilterDialog';
 import { format } from 'date-fns';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
@@ -36,11 +37,13 @@ type SortField =
   | 'propertyType'
   | 'status'
   | 'appointmentDateTime'
-  | 'requestedAt'
+  | 'requestedBy'
+  | 'assignedDate'
   | 'movement'
-  | 'slaDays'
-  | 'olaActual'
-  | 'olaDiff'
+  | 'dueAt'
+  | 'elapsedHours'
+  | 'remainingHours'
+  | 'slaStatus'
   | 'priority';
 type SortDirection = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
@@ -73,6 +76,10 @@ function TaskListingPage() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
+  // Filter dialog state
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<TaskFilterParams>({});
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
@@ -93,16 +100,19 @@ function TaskListingPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Reset to first page when sorting or search changes
+  // Reset to first page when sorting, search, or filters change
   useEffect(() => {
     setPageNumber(0);
-  }, [sortField, sortDirection, searchTerm]);
+  }, [sortField, sortDirection, searchTerm, filters]);
 
   // Build request params for list view
   const listRequestParams = {
     pageNumber,
     pageSize,
     taskName: searchTerm || undefined,
+    sortBy: sortField ?? undefined,
+    sortDir: sortDirection,
+    ...filters,
   };
 
   // Build request params for Kanban view (no pagination)
@@ -208,9 +218,10 @@ function TaskListingPage() {
 
   const handleClearFilters = () => {
     setSearchTerm('');
+    setFilters({});
   };
 
-  const hasFilters = !!searchTerm;
+  const hasFilters = !!searchTerm || Object.keys(filters).some(k => filters[k as keyof TaskFilterParams]);
 
   if (isError) {
     return (
@@ -302,7 +313,19 @@ function TaskListingPage() {
           />
         </div>
 
-        {/* Clear Search */}
+        {/* Filter button */}
+        <button
+          onClick={() => setFilterDialogOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+        >
+          <Icon style="solid" name="filter" className="size-3.5" />
+          Filter
+          {Object.keys(filters).some(k => filters[k as keyof TaskFilterParams]) && (
+            <span className="size-1.5 rounded-full bg-primary" />
+          )}
+        </button>
+
+        {/* Clear all */}
         {hasFilters && (
           <button
             onClick={handleClearFilters}
@@ -313,6 +336,13 @@ function TaskListingPage() {
           </button>
         )}
       </div>
+
+      <TaskFilterDialog
+        open={filterDialogOpen}
+        initialValues={filters}
+        onApply={v => setFilters(v)}
+        onClose={() => setFilterDialogOpen(false)}
+      />
 
       {/* Content */}
       {viewMode === 'list' ? (
@@ -386,12 +416,21 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('requestedAt')}
+                    onClick={() => handleSort('requestedBy')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      Request Date
-                      <SortIcon field="requestedAt" />
+                      Requested By
+                      <SortIcon field="requestedBy" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('assignedDate')}
+                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      Assigned Date
+                      <SortIcon field="assignedDate" />
                     </div>
                   </th>
                   <th
@@ -404,30 +443,39 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('slaDays')}
+                    onClick={() => handleSort('dueAt')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      OLA
-                      <SortIcon field="slaDays" />
+                      Due Date
+                      <SortIcon field="dueAt" />
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('olaActual')}
+                    onClick={() => handleSort('elapsedHours')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      OLA (Actual)
-                      <SortIcon field="olaActual" />
+                      SLA (Actual)
+                      <SortIcon field="elapsedHours" />
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('olaDiff')}
+                    onClick={() => handleSort('remainingHours')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      OLA (Difference)
-                      <SortIcon field="olaDiff" />
+                      SLA (Difference)
+                      <SortIcon field="remainingHours" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('slaStatus')}
+                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      SLA Status
+                      <SortIcon field="slaStatus" />
                     </div>
                   </th>
                   <th
@@ -454,10 +502,12 @@ function TaskListingPage() {
                       { width: 'w-16' },
                       { width: 'w-24' },
                       { width: 'w-24' },
+                      { width: 'w-24' },
                       { width: 'w-20' },
-                      { width: 'w-12' },
+                      { width: 'w-24' },
                       { width: 'w-16' },
                       { width: 'w-20' },
+                      { width: 'w-16' },
                       { width: 'w-16' },
                       { width: 'w-8' },
                     ]}
@@ -465,7 +515,7 @@ function TaskListingPage() {
                   />
                 ) : listTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={14} className="text-center py-16">
+                    <td colSpan={16} className="text-center py-16">
                       <div className="flex flex-col items-center gap-2">
                         <Icon
                           style="regular"
@@ -517,13 +567,23 @@ function TaskListingPage() {
                       <td className="px-3 py-2.5 text-gray-600">
                         {formatDate(task.appointmentDateTime ?? undefined)}
                       </td>
+                      <td className="px-3 py-2.5 text-gray-600">{task.requestedBy ?? '-'}</td>
                       <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.requestedAt ?? undefined)}
+                        {formatDate(task.assignedDate ?? undefined)}
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.movement || '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.slaDays ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.olaActual ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.olaDiff ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {formatDate(task.dueAt ?? undefined)}
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {task.elapsedHours != null ? `${task.elapsedHours}h` : '-'}
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-600">
+                        {task.remainingHours != null ? `${task.remainingHours}h` : '-'}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <Badge type="status" value={task.slaStatus} size="sm" />
+                      </td>
                       <td className="px-3 py-2.5">
                         <Badge type="priority" value={task.priority} size="sm" />
                       </td>

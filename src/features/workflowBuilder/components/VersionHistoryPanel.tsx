@@ -9,12 +9,23 @@ interface Props {
   onSelectVersion?: (version: WorkflowDefinitionVersion) => void;
 }
 
-function InstanceCountBadge({ definitionId, versionId }: { definitionId: string; versionId: string }) {
-  const { data: instances } = useListRunningInstances(definitionId, { versionId });
+function InstanceCountBadge({
+  definitionId,
+  versionId,
+}: {
+  definitionId: string;
+  versionId: string;
+}) {
+  const { data: instances } = useListRunningInstances(definitionId, { onVersionId: versionId });
   const count = instances?.length ?? 0;
   if (count === 0) return null;
   return (
-    <span className="badge badge-sm badge-warning">{count} running</span>
+    <span
+      className="badge badge-xs badge-warning"
+      title={`${count} running instance${count !== 1 ? 's' : ''}`}
+    >
+      {count} running
+    </span>
   );
 }
 
@@ -26,8 +37,9 @@ export function VersionHistoryPanel({
 }: Props) {
   const navigate = useNavigate();
   const { data: versions, isLoading } = useGetVersions(definitionId);
-  const { data: publishedVersions } = useGetVersions(definitionId);
-  const currentPublished = publishedVersions?.find((v) => v.status === 'Published');
+
+  // Find the currently Published version id for the "Migrate" button target
+  const publishedVersion = versions?.find((v) => v.status === 'Published');
 
   const statusBadge = (status: string) => {
     switch (status) {
@@ -67,7 +79,7 @@ export function VersionHistoryPanel({
                 }`}
               >
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">v{v.version}</span>
                     <span className={`badge badge-sm ${statusBadge(v.status)}`}>
                       {v.status}
@@ -88,26 +100,25 @@ export function VersionHistoryPanel({
                   </div>
                 </div>
 
-                <div className="flex gap-1">
+                <div className="flex items-center gap-1">
+                  {v.status === 'Deprecated' && publishedVersion && (
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/workflow-builder/${definitionId}/versions/${publishedVersion.id}/migrate?fromVersionId=${v.id}`,
+                        )
+                      }
+                      className="btn btn-warning btn-xs"
+                    >
+                      Migrate
+                    </button>
+                  )}
                   {onSelectVersion && v.id !== currentVersionId && (
                     <button
                       onClick={() => onSelectVersion(v)}
                       className="btn btn-ghost btn-xs"
                     >
                       View
-                    </button>
-                  )}
-                  {v.status === 'Deprecated' && currentPublished && (
-                    <button
-                      onClick={() => {
-                        onClose();
-                        navigate(
-                          `/workflow-builder/${definitionId}/versions/${currentPublished.id}/migrate?fromVersionId=${v.id}`,
-                        );
-                      }}
-                      className="btn btn-warning btn-xs"
-                    >
-                      Migrate
                     </button>
                   )}
                 </div>

@@ -33,11 +33,12 @@ export type ActivityColumnKey =
   | 'propertyType'
   | 'status'
   | 'appointmentDateTime'
-  | 'requestedAt'
+  | 'requestedBy'
+  | 'requestReceivedDate'
+  | 'internalFollowupStaff'
+  | 'appraiser'
+  | 'assignedDate'
   | 'movement'
-  | 'slaDays'
-  | 'olaActual'
-  | 'olaDiff'
   | 'priority'
   | 'dueAt'
   | 'slaStatus'
@@ -99,6 +100,8 @@ export function ActivityTaskTable({
     pageSize,
     taskName: searchTerm || undefined,
     activityId,
+    sortBy: sortField ?? undefined,
+    sortDir: sortDirection,
   });
 
   const [minLoadingDone, setMinLoadingDone] = useState(true);
@@ -220,34 +223,40 @@ export function ActivityTaskTable({
             {formatDate(task.appointmentDateTime ?? undefined)}
           </td>
         );
-      case 'requestedAt':
+      case 'requestedBy':
         return (
           <td key={key} className="px-3 py-2.5 text-gray-600">
-            {formatDate(task.requestedAt ?? undefined)}
+            {task.requestedBy ?? '-'}
+          </td>
+        );
+      case 'requestReceivedDate':
+        return (
+          <td key={key} className="px-3 py-2.5 text-gray-600">
+            {formatDate(task.requestReceivedDate ?? undefined)}
+          </td>
+        );
+      case 'internalFollowupStaff':
+        return (
+          <td key={key} className="px-3 py-2.5 text-gray-600">
+            {task.internalFollowupStaff ?? '-'}
+          </td>
+        );
+      case 'appraiser':
+        return (
+          <td key={key} className="px-3 py-2.5 text-gray-600">
+            {task.appraiser ?? '-'}
+          </td>
+        );
+      case 'assignedDate':
+        return (
+          <td key={key} className="px-3 py-2.5 text-gray-600">
+            {formatDate(task.assignedDate ?? undefined)}
           </td>
         );
       case 'movement':
         return (
           <td key={key} className="px-3 py-2.5 text-gray-600">
             {task.movement || '-'}
-          </td>
-        );
-      case 'slaDays':
-        return (
-          <td key={key} className="px-3 py-2.5 text-gray-600">
-            {task.slaDays ?? '-'}
-          </td>
-        );
-      case 'olaActual':
-        return (
-          <td key={key} className="px-3 py-2.5 text-gray-600">
-            {task.olaActual ?? '-'}
-          </td>
-        );
-      case 'olaDiff':
-        return (
-          <td key={key} className="px-3 py-2.5 text-gray-600">
-            {task.olaDiff ?? '-'}
           </td>
         );
       case 'priority':
