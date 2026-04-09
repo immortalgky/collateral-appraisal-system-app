@@ -159,6 +159,73 @@ export interface WorkflowSchema {
   metadata: WorkflowMetadata;
 }
 
+// Versioning / breaking-change types
+
+export type BreakingChangeType = 'ActivityRemoved' | 'PropertyChanged' | 'TransitionRemoved';
+export type ChangeImpact = 'Low' | 'Medium' | 'High' | 'Critical';
+
+export interface BreakingChange {
+  type: BreakingChangeType;
+  description: string;
+  affectedComponent: string;
+  impact: ChangeImpact;
+  migrationData?: Record<string, unknown>;
+}
+
+export type InstanceImpact = 'Safe' | 'Unsafe';
+
+export interface InstanceClassification {
+  instanceId: string;
+  currentActivityId: string;
+  startedOn: string;
+  classification: InstanceImpact;
+}
+
+export interface PublishImpactReport {
+  breakingChanges: BreakingChange[];
+  breakingChangeHash: string;
+  safeCount: number;
+  unsafeCount: number;
+  sample: InstanceClassification[];
+}
+
+export interface PublishVersionResponse {
+  isSuccess: boolean;
+  version: number;
+  errorMessage: string | null;
+  impactReport?: PublishImpactReport;
+}
+
+export interface RunningInstanceSummary {
+  instanceId: string;
+  definitionId: string;
+  versionId: string;
+  currentActivityId: string;
+  startedOn: string;
+  startedBy: string;
+  classification: InstanceImpact;
+}
+
+export interface MigrateInstancesRequest {
+  targetVersionId: string;
+  safeInstanceIds: string[];
+  manualRemaps: Record<string, string>;
+  migratedBy: string;
+}
+
+export interface MigrationInstanceResult {
+  instanceId: string;
+  success: boolean;
+  errorMessage: string | null;
+}
+
+export interface MigrateInstancesResult {
+  migratedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  results: MigrationInstanceResult[];
+}
+
 // Backend API response types
 
 export interface WorkflowDefinitionSummary {
