@@ -6,6 +6,7 @@ export function useAnnotationHistory(canvasRef: React.RefObject<FabricCanvas | n
   const historyRef = useRef<string[]>([]);
   const currentIndexRef = useRef(-1);
   const isRestoringRef = useRef(false);
+  const pausedRef = useRef(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -14,8 +15,16 @@ export function useAnnotationHistory(canvasRef: React.RefObject<FabricCanvas | n
     setCanRedo(currentIndexRef.current < historyRef.current.length - 1);
   }, []);
 
+  const pauseSnapshots = useCallback(() => {
+    pausedRef.current = true;
+  }, []);
+
+  const resumeSnapshots = useCallback(() => {
+    pausedRef.current = false;
+  }, []);
+
   const saveSnapshot = useCallback(() => {
-    if (isRestoringRef.current || !canvasRef.current) return;
+    if (isRestoringRef.current || pausedRef.current || !canvasRef.current) return;
 
     const json = JSON.stringify(canvasRef.current.toJSON());
 
@@ -69,5 +78,15 @@ export function useAnnotationHistory(canvasRef: React.RefObject<FabricCanvas | n
     updateState();
   }, [updateState]);
 
-  return { saveSnapshot, undo, redo, canUndo, canRedo, reset, isRestoringRef };
+  return {
+    saveSnapshot,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset,
+    isRestoringRef,
+    pauseSnapshots,
+    resumeSnapshots,
+  };
 }

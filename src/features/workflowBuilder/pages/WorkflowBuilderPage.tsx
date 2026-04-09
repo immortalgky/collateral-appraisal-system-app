@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useParams, useBlocker, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useWorkflowStore } from '../hooks/useWorkflowStore';
@@ -6,19 +6,21 @@ import {
   useGetLatestVersion,
   useCreateDefinition,
   useSaveDraftSchema,
-  usePublishVersion,
 } from '../api';
 import { WorkflowCanvas } from '../components/canvas/WorkflowCanvas';
 import { ActivityPalette } from '../components/palette/ActivityPalette';
 import { PropertyPanel } from '../components/panels/PropertyPanel';
 import { WorkflowToolbar } from '../components/toolbar/WorkflowToolbar';
+import { PublishPreviewModal } from '../components/publish/PublishPreviewModal';
 import { ActivityType } from '../types';
+import type { PublishVersionResponse } from '../types';
 import { normalizeSchema } from '../utils/normalizeSchema';
 
 export default function WorkflowBuilderPage() {
   const { workflowId = 'new' } = useParams<{ workflowId: string }>();
   const isNew = workflowId === 'new';
   const navigate = useNavigate();
+  const [showPublishModal, setShowPublishModal] = useState(false);
 
   const loadFromSchema = useWorkflowStore((s) => s.loadFromSchema);
   const addActivity = useWorkflowStore((s) => s.addActivity);
@@ -32,7 +34,6 @@ export default function WorkflowBuilderPage() {
 
   const createDefinitionMutation = useCreateDefinition();
   const saveDraftMutation = useSaveDraftSchema();
-  const publishMutation = usePublishVersion();
 
   // Load data into store
   useEffect(() => {
@@ -170,35 +171,7 @@ export default function WorkflowBuilderPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Are you sure you want to publish this workflow? This will make it the live version.',
-    );
-    if (!confirmed) return;
-
-    // Save draft first if dirty, then publish
-    const doPublish = () => {
-      publishMutation.mutate(
-        {
-          definitionId: workflowId,
-          versionId: latestVersion.id,
-          publishedBy: 'current-user',
-        },
-        {
-          onSuccess: (result) => {
-            if (!result.isSuccess) {
-              toast.error(result.errorMessage || 'Publish failed');
-              return;
-            }
-            markClean();
-            toast.success(`Workflow published (v${result.version})`);
-          },
-          onError: () => {
-            toast.error('Failed to publish workflow');
-          },
-        },
-      );
-    };
-
+    // Save draft first if dirty, then open preview modal
     if (isDirty) {
       const schema = toSchema();
       saveDraftMutation.mutate(
@@ -210,7 +183,8 @@ export default function WorkflowBuilderPage() {
         },
         {
           onSuccess: () => {
-            doPublish();
+            markClean();
+            setShowPublishModal(true);
           },
           onError: () => {
             toast.error('Failed to save before publishing');
@@ -218,17 +192,26 @@ export default function WorkflowBuilderPage() {
         },
       );
     } else {
-      doPublish();
+      setShowPublishModal(true);
     }
-  }, [
-    workflowId,
-    latestVersion,
-    isDirty,
-    toSchema,
-    markClean,
-    saveDraftMutation,
-    publishMutation,
-  ]);
+  }, [workflowId, latestVersion, isDirty, toSchema, markClean, saveDraftMutation]);
+
+  const handlePublished = useCallback(
+    (result: PublishVersionResponse) => {
+      setShowPublishModal(false);
+      markClean();
+      const hasInstances =
+        result.impactReport &&
+        (result.impactReport.safeCount > 0 || result.impactReport.unsafeCount > 0);
+      if (hasInstances) {
+        navigate(
+          `/workflow-builder/${workflowId}/versions/${result.versionId}/migrate`,
+          { state: { impactReport: result.impactReport } },
+        );
+      }
+    },
+    [workflowId, navigate, markClean],
+  );
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col">
@@ -238,7 +221,7 @@ export default function WorkflowBuilderPage() {
         isSaving={
           saveDraftMutation.isPending || createDefinitionMutation.isPending
         }
-        isPublishing={publishMutation.isPending}
+        isPublishing={saveDraftMutation.isPending && showPublishModal}
         versionNumber={latestVersion?.version}
         versionStatus={latestVersion?.status}
       />
@@ -252,6 +235,17 @@ export default function WorkflowBuilderPage() {
 
         <PropertyPanel />
       </div>
+
+      {showPublishModal && latestVersion && (
+        <PublishPreviewModal
+          open={showPublishModal}
+          onClose={() => setShowPublishModal(false)}
+          definitionId={workflowId}
+          versionId={latestVersion.id}
+          publishedBy="current-user"
+          onPublished={handlePublished}
+        />
+      )}
     </div>
   );
 }

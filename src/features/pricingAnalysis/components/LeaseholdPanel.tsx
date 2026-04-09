@@ -651,15 +651,6 @@ export function LeaseholdPanel({
               { label: 'Total Income', value: tableResult.totalIncomeOverLeaseTerm, icon: 'coins', color: 'blue' },
               { label: 'Value at Expiry', value: tableResult.valueAtLeaseExpiry, icon: 'building', color: 'gray' },
               { label: 'Final Value', value: tableResult.finalValueRounded, icon: 'circle-check', color: 'green', primary: true },
-              {
-                label: 'Effective Yield',
-                value: tableResult.finalValueRounded
-                  ? (tableResult.totalIncomeOverLeaseTerm / tableResult.finalValueRounded) * 100
-                  : null,
-                icon: 'chart-line',
-                color: 'amber',
-                suffix: '%',
-              },
             ] satisfies KpiCard[]}
           />
         )}

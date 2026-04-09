@@ -6,6 +6,11 @@ import type {
   WorkflowDefinitionVersion,
   WorkflowSchema,
   ActivityTypeDefinition,
+  PublishImpactReport,
+  PublishVersionResponse,
+  RunningInstanceSummary,
+  MigrateInstancesRequest,
+  MigrateInstancesResult,
 } from '../types';
 
 // === Activity Types ===
@@ -208,20 +213,29 @@ export function usePublishVersion() {
       definitionId,
       versionId,
       publishedBy,
+      confirmedBreakingChangeHash = null,
     }: {
       definitionId: string;
       versionId: string;
       publishedBy: string;
+      confirmedBreakingChangeHash?: string | null;
     }) => {
-      const { data } = await axiosInstance.post<{
-        isSuccess: boolean;
-        version: number;
-        errorMessage: string | null;
-      }>(
-        `/api/workflows/definitions/${definitionId}/versions/${versionId}/publish`,
-        { publishedBy },
-      );
-      return data;
+      try {
+        const { data } = await axiosInstance.post<PublishVersionResponse>(
+          `/api/workflows/definitions/${definitionId}/versions/${versionId}/publish`,
+          { publishedBy, confirmedBreakingChangeHash },
+        );
+        return data;
+      } catch (err: unknown) {
+        // On 409 the backend returns a refreshed PublishImpactReport — surface it
+        const axiosErr = err as { response?: { status: number; data: { impactReport: PublishImpactReport } } };
+        if (axiosErr?.response?.status === 409) {
+          const conflict = new Error('BREAKING_CHANGE_CONFLICT') as Error & { impactReport: PublishImpactReport };
+          conflict.impactReport = axiosErr.response.data.impactReport;
+          throw conflict;
+        }
+        throw err;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -232,6 +246,59 @@ export function usePublishVersion() {
       });
       queryClient.invalidateQueries({
         queryKey: workflowKeys.definitions(),
+      });
+    },
+  });
+}
+
+export function usePreviewPublish() {
+  return useMutation({
+    mutationFn: async ({
+      definitionId,
+      versionId,
+    }: {
+      definitionId: string;
+      versionId: string;
+    }) => {
+      const { data } = await axiosInstance.post<PublishImpactReport>(
+        `/api/workflows/definitions/${definitionId}/versions/${versionId}/publish/preview`,
+      );
+      return data;
+    },
+  });
+}
+
+export function useListRunningInstances(
+  definitionId: string,
+  params?: { onVersionId?: string },
+) {
+  return useQuery({
+    queryKey: workflowKeys.runningInstances(definitionId, params?.onVersionId),
+    queryFn: async () => {
+      const url = params?.onVersionId
+        ? `/api/workflows/definitions/${definitionId}/instances?versionId=${params.onVersionId}`
+        : `/api/workflows/definitions/${definitionId}/instances`;
+      const { data } = await axiosInstance.get<{ instances: RunningInstanceSummary[] }>(url);
+      return data.instances;
+    },
+    enabled: !!definitionId,
+  });
+}
+
+export function useMigrateInstances(definitionId: string, targetVersionId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: MigrateInstancesRequest) => {
+      const { data } = await axiosInstance.post<MigrateInstancesResult>(
+        `/api/workflows/definitions/${definitionId}/versions/${targetVersionId}/migrate`,
+        payload,
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.runningInstances(definitionId),
       });
     },
   });

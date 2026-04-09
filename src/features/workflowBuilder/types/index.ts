@@ -216,7 +216,77 @@ export interface WorkflowDefinition {
   workflowSchema: WorkflowSchema;
 }
 
-// Default properties factories
+// === Versioning & Migration types ===
+
+export type BreakingChangeType =
+  | 'ActivityRemoved'
+  | 'PropertyChanged'
+  | 'TransitionRemoved';
+
+export type ChangeImpact = 'Low' | 'Medium' | 'High' | 'Critical';
+
+export interface BreakingChange {
+  type: BreakingChangeType;
+  description: string;
+  affectedComponent: string;
+  impact: ChangeImpact;
+  migrationData?: Record<string, unknown>;
+}
+
+export type InstanceImpact = 'Safe' | 'Unsafe';
+
+export interface InstanceClassification {
+  instanceId: string;
+  currentActivityId: string;
+  startedOn: string;
+  classification: InstanceImpact;
+}
+
+export interface PublishImpactReport {
+  breakingChanges: BreakingChange[];
+  breakingChangeHash: string;
+  safeCount: number;
+  unsafeCount: number;
+  sample: InstanceClassification[];
+}
+
+export interface PublishVersionResponse {
+  isSuccess: boolean;
+  version: number;
+  versionId: string;
+  errorMessage: string | null;
+  impactReport: PublishImpactReport;
+}
+
+export interface RunningInstanceSummary {
+  id: string;
+  name: string;
+  currentActivityId: string;
+  startedOn: string;
+  workflowDefinitionVersionId: string;
+  status: string;
+}
+
+export interface MigrateInstancesRequest {
+  targetVersionId: string;
+  safeInstanceIds: string[];
+  manualRemaps: Record<string, string>; // instanceId → new currentActivityId
+  migratedBy: string;
+}
+
+export interface MigrateInstancesResult {
+  migratedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  errors: Array<{ instanceId: string; message: string }>;
+}
+
+export type MigrationAction =
+  | { kind: 'skip' }
+  | { kind: 'bump' }
+  | { kind: 'remap'; newActivityId: string };
+
+// === Default properties factories ===
 
 export function createDefaultTaskProperties(): TaskProperties {
   return {

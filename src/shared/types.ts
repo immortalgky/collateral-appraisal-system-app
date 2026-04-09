@@ -1,6 +1,5 @@
 import type { Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
-import type { WorkflowActivity } from './config/navigation';
 
 export type UIStore = {
   sidebarOpen: boolean;
@@ -58,25 +57,3 @@ export type LocaleStore = {
   setLocale: (country: string, language: string) => void;
 };
 
-/**
- * Current user information
- */
-export type CurrentUser = {
-  id: string;
-  username: string;
-  displayName: string;
-  email: string | null;
-  avatar: string | null;
-  role: WorkflowActivity;
-};
-
-/**
- * User store for managing current user state
- */
-export type UserStore = {
-  user: CurrentUser | null;
-  isAuthenticated: boolean;
-  setUser: (user: CurrentUser | null) => void;
-  setRole: (role: WorkflowActivity) => void;
-  logout: () => void;
-};

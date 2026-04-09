@@ -11,17 +11,59 @@ export type SaveDecisionSummaryResponse = z.infer<typeof schemas.SaveDecisionSum
 export type ApproachMatrixGroup = z.infer<typeof schemas.ApproachMatrixGroup>;
 export type ApproachItem = z.infer<typeof schemas.ApproachItem>;
 export type GovernmentPriceRow = z.infer<typeof schemas.GovernmentPriceRow>;
-export type GetApprovalListResponse = z.infer<typeof schemas.GetApprovalListResponse>;
-export type ApprovalListItem = z.infer<typeof schemas.ApprovalListItem>;
-export type AssignCommitteeResponse = z.infer<typeof schemas.AssignCommitteeResponse>;
-export type SubmitVoteRequest = z.infer<typeof schemas.SubmitVoteRequest>;
-export type SubmitVoteResponse = z.infer<typeof schemas.SubmitVoteResponse>;
+
+/**
+ * Workflow-scoped approval list types.
+ *
+ * The canonical shape lives in the backend's
+ * `GetApprovalListEndpoint` projection. The auto-generated zod schemas in
+ * `@shared/schemas/v1.ts` lag behind the new workflow-scoped endpoint, so we
+ * hand-type the response here until the generator catches up.
+ */
+export interface ApprovalMember {
+  username: string;
+  role: string;
+  status: 'Voted' | 'Pending';
+  vote: string | null;
+  comments: string | null;
+  votedAt: string | null;
+  isCurrentUser: boolean;
+}
+
+export interface ApprovalCondition {
+  conditionType: 'RoleRequired' | 'MinVotes';
+  roleRequired: string | null;
+  minVotesRequired: number | null;
+  met: boolean;
+}
+
+export interface ApprovalMeetingRef {
+  meetingId: string;
+  title: string;
+  scheduledAt: string | null;
+  endedAt: string | null;
+}
+
+export interface GetApprovalListResponse {
+  activityId: string;
+  committeeName: string | null;
+  committeeCode: string | null;
+  tier: number | null;
+  totalMembers: number;
+  votesReceived: number;
+  quorumMet: boolean;
+  majorityMet: boolean;
+  members: ApprovalMember[];
+  conditions: ApprovalCondition[];
+  meetingRef: ApprovalMeetingRef | null;
+}
 
 // ==================== Query Keys ====================
 
 export const decisionSummaryKeys = {
   detail: (appraisalId: string) => ['appraisal', appraisalId, 'decision-summary'] as const,
-  approvalList: (appraisalId: string) => ['appraisal', appraisalId, 'approval-list'] as const,
+  approvalList: (workflowInstanceId: string, activityId: string) =>
+    ['workflow', workflowInstanceId, 'activity', activityId, 'approval-list'] as const,
 };
 
 // ==================== Queries ====================
@@ -58,10 +100,7 @@ export const useSaveDecisionSummary = () => {
       appraisalId: string;
       body: SaveDecisionSummaryRequest;
     }): Promise<SaveDecisionSummaryResponse> => {
-      const { data } = await axios.post(
-        `/appraisals/${appraisalId}/decision-summary`,
-        body,
-      );
+      const { data } = await axios.post(`/appraisals/${appraisalId}/decision-summary`, body);
       return data;
     },
     onSuccess: (_data, variables) => {
@@ -73,78 +112,32 @@ export const useSaveDecisionSummary = () => {
 };
 
 /**
- * Get approval list with polling
- * GET /appraisals/{appraisalId}/approval-list
+ * Get workflow-scoped approval list with polling.
+ * GET /api/workflows/instances/{workflowInstanceId}/activities/{activityId}/approval-list
+ *
+ * Polls every 10s while the approval is still pending (quorum + majority not
+ * yet met AND no member has voted `route_back`) so peer votes surface without
+ * a manual refresh.
  */
-export const useGetApprovalList = (appraisalId: string | undefined) => {
+export const useGetApprovalList = (
+  workflowInstanceId: string | undefined,
+  activityId: string | undefined,
+) => {
   return useQuery({
-    queryKey: decisionSummaryKeys.approvalList(appraisalId!),
+    queryKey: decisionSummaryKeys.approvalList(workflowInstanceId!, activityId!),
     queryFn: async (): Promise<GetApprovalListResponse> => {
-      const { data } = await axios.get(`/appraisals/${appraisalId}/approval-list`);
-      return data;
-    },
-    enabled: !!appraisalId,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (data?.reviewStatus === 'Pending') return 10_000;
-      return false;
-    },
-  });
-};
-
-/**
- * Assign committee
- * POST /appraisals/{appraisalId}/reviews/assign-committee
- */
-export const useAssignCommittee = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ appraisalId }: { appraisalId: string }): Promise<AssignCommitteeResponse> => {
-      const { data } = await axios.post(`/appraisals/${appraisalId}/reviews/assign-committee`);
-      return data;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: decisionSummaryKeys.approvalList(variables.appraisalId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: decisionSummaryKeys.detail(variables.appraisalId),
-      });
-    },
-  });
-};
-
-/**
- * Submit vote
- * POST /appraisals/{appraisalId}/reviews/{reviewId}/votes
- */
-export const useSubmitVote = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      appraisalId,
-      reviewId,
-      body,
-    }: {
-      appraisalId: string;
-      reviewId: string;
-      body: SubmitVoteRequest;
-    }): Promise<SubmitVoteResponse> => {
-      const { data } = await axios.post(
-        `/appraisals/${appraisalId}/reviews/${reviewId}/votes`,
-        body,
+      const { data } = await axios.get(
+        `/api/workflows/instances/${workflowInstanceId}/activities/${activityId}/approval-list`,
       );
       return data;
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: decisionSummaryKeys.approvalList(variables.appraisalId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: decisionSummaryKeys.detail(variables.appraisalId),
-      });
+    enabled: !!workflowInstanceId && !!activityId,
+    refetchInterval: query => {
+      const data = query.state.data;
+      if (!data) return false;
+      const routedBack = data.members.some(m => m.vote === 'route_back');
+      const decided = (data.quorumMet && data.majorityMet) || routedBack;
+      return decided ? false : 10_000;
     },
   });
 };

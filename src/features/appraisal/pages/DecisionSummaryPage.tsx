@@ -389,7 +389,10 @@ const DecisionSummaryPage = () => {
               </FormCard>
 
               {/* 12. Committee Approval */}
-              <ApprovalListSection appraisalId={appraisalId!} />
+              <ApprovalListSection
+                workflowInstanceId={workflowInstanceId}
+                activityId={activityId}
+              />
 
               {/* 13. Decision */}
               <DecisionSection

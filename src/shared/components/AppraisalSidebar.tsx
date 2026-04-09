@@ -1,16 +1,22 @@
 import { useState, useMemo } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
 import { Link, useLocation } from 'react-router-dom';
-import { useUIStore, useUserStore } from '../store';
+import { useUIStore } from '../store';
+import { useAuthStore } from '@features/auth/store';
 import Icon from './Icon';
 import clsx from 'clsx';
-import type { NavItem } from '@shared/config/navigation';
+import type { NavItem, UserRole } from '@shared/config/navigation';
 import {
   getAppraisalNavigationWithAccess,
-  getGeneralNavigationByRole,
-  getCollapsibleNavigationByRole,
-  getFooterNavigationByRole,
+  getGeneralNavigationByRoles,
+  getCollapsibleNavigationByRoles,
+  getFooterNavigationByRoles,
 } from '@shared/config/appraisalNavigation';
+
+// Stable fallback used when no authenticated user is present.
+// Empty = least privilege; ProtectedRoute redirects unauthenticated users
+// before this is ever rendered, so the empty state is unreachable in practice.
+const DEFAULT_ROLES: UserRole[] = [];
 import { useAppraisalRequestId, useAppraisalIsPma, useAppraisalIsBlockCondo, useAppraisalStatus, useBasePath } from '@features/appraisal/context/AppraisalContext';
 
 type AppraisalSidebarProps = {
@@ -184,21 +190,21 @@ export function MobileAppraisalSidebar({
   const isPma = useAppraisalIsPma();
   const isBlockCondo = useAppraisalIsBlockCondo();
   const status = useAppraisalStatus();
-  const user = useUserStore(state => state.user);
-  const role = user?.role ?? 'viewer';
+  const user = useAuthStore(state => state.user);
+  const roles = user?.roles ?? DEFAULT_ROLES;
 
   const navContext = useMemo(() => ({ isPma, isBlockCondo, status }), [isPma, isBlockCondo, status]);
 
   // Get role-filtered navigation with access levels
   const applicationNav = useMemo(
-    () => getAppraisalNavigationWithAccess({ appraisalId, requestId, basePath }, role, navContext),
-    [appraisalId, requestId, basePath, role, navContext],
+    () => getAppraisalNavigationWithAccess({ appraisalId, requestId, basePath }, roles, navContext),
+    [appraisalId, requestId, basePath, roles, navContext],
   );
   const generalItems = useMemo(
-    () => [...getGeneralNavigationByRole(role), ...getCollapsibleNavigationByRole(role)],
-    [role],
+    () => [...getGeneralNavigationByRoles(roles), ...getCollapsibleNavigationByRoles(roles)],
+    [roles],
   );
-  const footerItems = useMemo(() => getFooterNavigationByRole(role), [role]);
+  const footerItems = useMemo(() => getFooterNavigationByRoles(roles), [roles]);
 
   return (
     <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
@@ -294,8 +300,8 @@ export default function AppraisalSidebar({
   const basePath = useBasePath();
   const isPma = useAppraisalIsPma();
   const status = useAppraisalStatus();
-  const user = useUserStore(state => state.user);
-  const role = user?.role ?? 'viewer';
+  const user = useAuthStore(state => state.user);
+  const roles = user?.roles ?? DEFAULT_ROLES;
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
@@ -303,14 +309,14 @@ export default function AppraisalSidebar({
 
   // Get role-filtered navigation with access levels
   const applicationNav = useMemo(
-    () => getAppraisalNavigationWithAccess({ appraisalId, requestId, basePath }, role, navContext),
-    [appraisalId, requestId, basePath, role, navContext],
+    () => getAppraisalNavigationWithAccess({ appraisalId, requestId, basePath }, roles, navContext),
+    [appraisalId, requestId, basePath, roles, navContext],
   );
   const generalItems = useMemo(
-    () => [...getGeneralNavigationByRole(role), ...getCollapsibleNavigationByRole(role)],
-    [role],
+    () => [...getGeneralNavigationByRoles(roles), ...getCollapsibleNavigationByRoles(roles)],
+    [roles],
   );
-  const footerItems = useMemo(() => getFooterNavigationByRole(role), [role]);
+  const footerItems = useMemo(() => getFooterNavigationByRoles(roles), [roles]);
 
   return (
     <aside

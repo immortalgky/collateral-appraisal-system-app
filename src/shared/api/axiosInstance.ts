@@ -1,7 +1,30 @@
 import axios, { AxiosHeaders, type AxiosError } from 'axios';
+import toast from 'react-hot-toast';
 import { queryClient } from '@app/queryClient';
 import { extractApiError } from '../utils/errorUtils';
 import type { ProblemDetails } from '../types/api';
+
+/**
+ * Known backend error detail fragments that map to a user-friendly message.
+ * Checked against the 'detail' field of the ProblemDetails response.
+ *
+ * The followup gate pattern intentionally uses the word "followup" as a
+ * distinctive anchor — this avoids false matches on unrelated messages that
+ * contain "resolve" or "document" alone (e.g. "Please resolve the missing
+ * document type for the comparables").
+ *
+ * Preferred upgrade path: ask the backend to add a stable `errorCode` field
+ * to the ProblemDetails response (e.g. "OPEN_DOCUMENT_FOLLOWUP") so we can
+ * match on a code rather than a localised string.
+ */
+const FRIENDLY_ERROR_MAP: Array<{ pattern: RegExp; message: string }> = [
+  {
+    // Matches any backend message that contains "followup" within 20 chars of "document".
+    // Triggered when the document-followup gate blocks a task submission.
+    pattern: /document.{0,20}followup/i,
+    message: 'Resolve open document requests before submitting.',
+  },
+];
 
 // Development delay for seeing loading states (in milliseconds)
 const DEV_API_DELAY = Number(import.meta.env.VITE_API_DELAY) || 0;
@@ -178,6 +201,17 @@ axiosInstance.interceptors.response.use(
     // Extract ProblemDetails and attach to error for consumers
     const apiError = extractApiError(error);
     (error as AxiosError & { apiError: typeof apiError }).apiError = apiError;
+
+    // Map known backend gate-rejection errors to friendly toasts
+    if (apiError.detail || apiError.title) {
+      const errorText = `${apiError.detail ?? ''} ${apiError.title ?? ''}`;
+      for (const entry of FRIENDLY_ERROR_MAP) {
+        if (entry.pattern.test(errorText)) {
+          toast.error(entry.message);
+          break;
+        }
+      }
+    }
 
     return Promise.reject(error);
   },

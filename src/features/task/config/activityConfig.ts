@@ -1,119 +1,104 @@
-import type { ActivityColumnDef } from '../components/ActivityTaskTable';
+import type { ColumnKey } from './columnDefs';
 
 export interface ActivityConfig {
   activityId: string;
   title: string;
   description: string;
-  columns: ActivityColumnDef[];
+  columns: ColumnKey[];
   icon: string;
   allowedRoles: string[];
 }
 
-// ---------------------------------------------------------------------------
-// Column patterns (derived from the original per-activity page files)
-// ---------------------------------------------------------------------------
-
-const BASE_COLUMNS: ActivityColumnDef[] = [
-  { key: 'appraisalNumber', label: 'Appraisal Number' },
-  { key: 'customerName', label: 'Customer Name' },
-  { key: 'taskType', label: 'Task Type' },
-  { key: 'purpose', label: 'Purpose' },
-  { key: 'propertyType', label: 'Property Type' },
-  { key: 'status', label: 'Status' },
+const BASE_COLUMNS: ColumnKey[] = [
+  'appraisalNumber',
+  'customerName',
+  'taskType',
+  'purpose',
+  'propertyType',
+  'status',
 ];
 
-const ADMIN_COLUMNS: ActivityColumnDef[] = [
+const INTERNAL_COLUMNS: ColumnKey[] = [
   ...BASE_COLUMNS,
-  { key: 'requestedAt', label: 'Request Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'slaDays', label: 'OLA' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'slaStatus', label: 'SLA Status' },
-  { key: 'priority', label: 'Priority' },
+  'appointmentDateTime',
+  'requestedBy',
+  'assignedDate',
+  'movement',
+  'dueAt',
+  'elapsedHours',
+  'remainingHours',
+  'slaStatus',
+  'priority',
 ];
 
-const EXECUTION_COLUMNS: ActivityColumnDef[] = [
+const EXTERNAL_COLUMNS: ColumnKey[] = [
   ...BASE_COLUMNS,
-  { key: 'appointmentDateTime', label: 'Appointment Date' },
-  { key: 'requestedAt', label: 'Request Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'slaDays', label: 'OLA' },
-  { key: 'elapsedHours', label: 'Elapsed' },
-  { key: 'remainingHours', label: 'Remaining' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'slaStatus', label: 'SLA Status' },
-  { key: 'priority', label: 'Priority' },
+  'appointmentDateTime',
+  'internalFollowupStaff',
+  'requestReceivedDate',
+  'assignedDate',
+  'movement',
+  'dueAt',
+  'elapsedHours',
+  'remainingHours',
+  'slaStatus',
+  'priority',
 ];
 
-const CHECKER_COLUMNS: ActivityColumnDef[] = [
+const CHECKER_COLUMNS: ColumnKey[] = [
   ...BASE_COLUMNS,
-  { key: 'requestedAt', label: 'Request Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'slaDays', label: 'OLA' },
-  { key: 'olaActual', label: 'OLA (Actual)' },
-  { key: 'olaDiff', label: 'OLA (Diff)' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'slaStatus', label: 'SLA Status' },
-  { key: 'priority', label: 'Priority' },
+  'appointmentDateTime',
+  'appraiser',
+  'requestReceivedDate',
+  'assignedDate',
+  'movement',
+  'dueAt',
+  'elapsedHours',
+  'remainingHours',
+  'slaStatus',
+  'priority',
 ];
-
-const INITIATION_COLUMNS: ActivityColumnDef[] = [
-  ...BASE_COLUMNS,
-  { key: 'appointmentDateTime', label: 'Appointment Date' },
-  { key: 'requestedAt', label: 'Request Date' },
-  { key: 'movement', label: 'Movement' },
-  { key: 'slaDays', label: 'OLA' },
-  { key: 'olaActual', label: 'OLA ( Actual )' },
-  { key: 'olaDiff', label: 'OLA ( Difference )' },
-  { key: 'priority', label: 'Priority' },
-  { key: 'dueAt', label: 'Due Date' },
-  { key: 'slaStatus', label: 'SLA Status' },
-];
-
-// ---------------------------------------------------------------------------
-// Activity config map — 1:1 with workflow-definition.json TaskActivity nodes
-// ---------------------------------------------------------------------------
 
 const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
   'appraisal-initiation-check': {
     activityId: 'appraisal-initiation-check',
     title: 'Appraisal Initiation Check',
     description: 'Tasks for reviewing initiated appraisal requests for completeness and accuracy',
-    columns: CHECKER_COLUMNS,
+    columns: INTERNAL_COLUMNS,
     icon: 'clipboard-check',
-    allowedRoles: ['admin', 'request_creator'],
+    allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
   },
   'appraisal-initiation': {
     activityId: 'appraisal-initiation',
     title: 'Appraisal Initiation',
     description: 'Tasks for providing additional information when routed back',
-    columns: INITIATION_COLUMNS,
+    columns: INTERNAL_COLUMNS,
     icon: 'file-pen',
-    allowedRoles: ['admin', 'request_creator'],
+    allowedRoles: ['Admin', 'RequestMaker'],
   },
   'appraisal-assignment': {
     activityId: 'appraisal-assignment',
     title: 'Appraisal Assignment',
     description: 'Tasks for reviewing requests and assigning to external or internal appraisal',
-    columns: ADMIN_COLUMNS,
+    columns: INTERNAL_COLUMNS,
     icon: 'building',
-    allowedRoles: ['admin', 'task_assigner'],
+    allowedRoles: ['Admin', 'IntAdmin'],
   },
   'ext-appraisal-assignment': {
     activityId: 'ext-appraisal-assignment',
     title: 'External Appraisal Assignment',
     description: 'Tasks for handling appointment, fee, and assigning to company appraiser',
-    columns: ADMIN_COLUMNS,
+    columns: EXTERNAL_COLUMNS,
     icon: 'building-columns',
-    allowedRoles: ['admin', 'external_appraiser'],
+    allowedRoles: ['Admin', 'ExtAdmin'],
   },
   'ext-appraisal-execution': {
     activityId: 'ext-appraisal-execution',
     title: 'External Appraisal Execution',
     description: 'Tasks for conducting external property appraisal',
-    columns: EXECUTION_COLUMNS,
+    columns: EXTERNAL_COLUMNS,
     icon: 'user-tie',
-    allowedRoles: ['admin', 'task_assigner', 'external_appraiser'],
+    allowedRoles: ['Admin', 'ExtAdmin', 'ExtAppraisalStaff'],
   },
   'ext-appraisal-check': {
     activityId: 'ext-appraisal-check',
@@ -121,7 +106,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for reviewing external appraisal work for accuracy and completeness',
     columns: CHECKER_COLUMNS,
     icon: 'clipboard-check',
-    allowedRoles: ['admin', 'task_assigner', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'ExtAdmin', 'ExtAppraisalChecker'],
   },
   'ext-appraisal-verification': {
     activityId: 'ext-appraisal-verification',
@@ -129,23 +114,23 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for final verification before handoff to internal',
     columns: CHECKER_COLUMNS,
     icon: 'shield-check',
-    allowedRoles: ['admin', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'ExtAdmin', 'ExtAppraisalVerifier'],
   },
   'appraisal-book-verification': {
     activityId: 'appraisal-book-verification',
     title: 'Appraisal Book Verification',
     description: 'Tasks for verifying the external company appraisal book',
-    columns: CHECKER_COLUMNS,
+    columns: INTERNAL_COLUMNS,
     icon: 'book-open',
-    allowedRoles: ['admin', 'task_assigner', 'internal_appraiser'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
   },
   'int-appraisal-execution': {
     activityId: 'int-appraisal-execution',
     title: 'Internal Appraisal Execution',
     description: 'Tasks for conducting internal property appraisal',
-    columns: EXECUTION_COLUMNS,
+    columns: INTERNAL_COLUMNS,
     icon: 'user',
-    allowedRoles: ['admin', 'task_assigner', 'internal_appraiser'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
   },
   'int-appraisal-check': {
     activityId: 'int-appraisal-check',
@@ -153,7 +138,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for reviewing internal appraisal work for accuracy and completeness',
     columns: CHECKER_COLUMNS,
     icon: 'magnifying-glass-check',
-    allowedRoles: ['admin', 'task_assigner', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalChecker'],
   },
   'int-appraisal-verification': {
     activityId: 'int-appraisal-verification',
@@ -161,7 +146,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for final internal verification and sign-off',
     columns: CHECKER_COLUMNS,
     icon: 'badge-check',
-    allowedRoles: ['admin', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalVerifier'],
   },
   'pending-approval': {
     activityId: 'pending-approval',
@@ -169,7 +154,15 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks awaiting final approval from appraisal committee',
     columns: CHECKER_COLUMNS,
     icon: 'hourglass-half',
-    allowedRoles: ['admin', 'task_assigner', 'appraisal_approver'],
+    allowedRoles: ['Admin', 'IntAdmin', 'AppraisalCommittee'],
+  },
+  'provide-additional-documents': {
+    activityId: 'provide-additional-documents',
+    title: 'Provide Additional Documents',
+    description: 'Tasks for providing documents requested by a checker during their review',
+    columns: [...BASE_COLUMNS, 'requestReceivedDate', 'dueAt', 'slaStatus'],
+    icon: 'file-circle-plus',
+    allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
   },
 };
 

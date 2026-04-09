@@ -59,6 +59,10 @@ export default function FabricCanvas({
   onNumberPlaced,
   onCanvasReady,
   onSelectionChange,
+  onImageLoaded,
+  pauseSnapshots,
+  resumeSnapshots,
+  saveSnapshot,
 }: FabricCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -69,6 +73,12 @@ export default function FabricCanvas({
     startY: number;
     shape: FabricObject | null;
   }>({ isDrawing: false, startX: 0, startY: 0, shape: null });
+
+  // Stash callbacks in a ref so the init effect (which should only re-run when
+  // the image source changes) always calls the latest versions without needing
+  // to list them as dependencies.
+  const onImageLoadedRef = useRef(onImageLoaded);
+  onImageLoadedRef.current = onImageLoaded;
 
   // Initialize canvas
   useEffect(() => {
@@ -124,6 +134,12 @@ export default function FabricCanvas({
         img.scaleY = scale;
         canvas.backgroundImage = img;
         canvas.renderAll();
+
+        // Capture the pristine "before any edit" snapshot synchronously now
+        // that the background image is in place. Doing this race-free (rather
+        // than via after:render + setTimeout) is essential so that the very
+        // first edit always has a distinct previous state to undo back to.
+        onImageLoadedRef.current?.();
       } finally {
         if (shouldRevoke) {
           URL.revokeObjectURL(imgUrl);
@@ -345,11 +361,16 @@ export default function FabricCanvas({
       }
 
       if (shape) {
+        // Pause history while the shape is being dragged out. The final
+        // geometry is captured once in handleMouseUp; without pausing here we
+        // would otherwise snapshot the shape at its initial zero size (via
+        // object:added) and then never re-snapshot the finalized shape.
+        pauseSnapshots?.();
         drawingRef.current.shape = shape;
         canvas.add(shape);
       }
     },
-    [activeTool, toolOptions, numberCounter, selectedSticker, onNumberPlaced],
+    [activeTool, toolOptions, numberCounter, selectedSticker, onNumberPlaced, pauseSnapshots],
   );
 
   const handleMouseMove = useCallback(
@@ -394,9 +415,36 @@ export default function FabricCanvas({
 
     const { shape, startX, startY } = drawingRef.current;
     drawingRef.current.isDrawing = false;
+    drawingRef.current.shape = null;
 
-    if (shape) {
-      // If arrow, add arrowhead
+    if (!shape) return;
+
+    // Minimum size for a shape to be considered a real draw vs a stray click.
+    const MIN_SIZE = 2;
+
+    try {
+      // Check degeneracy against the in-progress shape's current geometry.
+      let degenerate = false;
+      if (shape instanceof Line) {
+        const dx = (shape.x2 ?? startX) - (shape.x1 ?? startX);
+        const dy = (shape.y2 ?? startY) - (shape.y1 ?? startY);
+        degenerate = Math.hypot(dx, dy) < MIN_SIZE;
+      } else if (shape instanceof Rect) {
+        degenerate = (shape.width ?? 0) < MIN_SIZE || (shape.height ?? 0) < MIN_SIZE;
+      } else if (shape instanceof Circle) {
+        degenerate = (shape.radius ?? 0) < MIN_SIZE;
+      }
+
+      if (degenerate) {
+        // Stray click — remove the zero-size shape without polluting history.
+        canvas.remove(shape);
+        canvas.renderAll();
+        return;
+      }
+
+      let finalObject: FabricObject = shape;
+
+      // If arrow, swap the line for a Group(line, triangle head)
       if (activeTool === 'arrow' && shape instanceof Line) {
         const line = shape;
         const x1 = line.x1 ?? startX;
@@ -425,15 +473,20 @@ export default function FabricCanvas({
           opacity: toolOptions.opacity,
         });
         canvas.add(group);
+        finalObject = group;
       }
 
-      // Make selectable after drawing
-      shape.set({ selectable: true, evented: true });
+      finalObject.set({ selectable: true, evented: true });
       canvas.renderAll();
+    } finally {
+      // Always resume, even if arrow finalization throws, so history can
+      // never get stuck in the paused state.
+      resumeSnapshots?.();
     }
 
-    drawingRef.current.shape = null;
-  }, [activeTool, toolOptions]);
+    // Single snapshot capturing the finalized shape / arrow group.
+    saveSnapshot?.();
+  }, [activeTool, toolOptions, resumeSnapshots, saveSnapshot]);
 
   // Attach mouse event handlers
   useEffect(() => {

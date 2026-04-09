@@ -1,8 +1,13 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import { isTerminalStatus } from '@shared/config/navigation';
+import { isTerminalStatus, type UserRole } from '@shared/config/navigation';
 import { canEditAppraisalPage } from '@shared/config/appraisalNavigation';
-import { useUserStore } from '@shared/store';
+import { useAuthStore } from '@features/auth/store';
+
+// Stable fallback when no authenticated user is present.
+// Empty = least privilege; ProtectedRoute redirects unauthenticated users
+// before this hook ever runs in production.
+const DEFAULT_ROLES: UserRole[] = [];
 
 /**
  * Appraisal data returned from the backend
@@ -138,13 +143,13 @@ export function useAppraisalReadOnly(pageName?: string): {
   status: string | undefined;
 } {
   const context = useContext(AppraisalContext);
-  const role = useUserStore(state => state.user?.role ?? 'viewer');
+  const roles = useAuthStore(state => state.user?.roles ?? DEFAULT_ROLES);
   const status = context?.appraisal?.status;
   const terminal = isTerminalStatus(status);
 
   let isReadOnly = terminal;
   if (!isReadOnly && pageName) {
-    isReadOnly = !canEditAppraisalPage(pageName, role, { status });
+    isReadOnly = !canEditAppraisalPage(pageName, roles, { status });
   }
 
   return { isReadOnly, isTerminalStatus: terminal, status };

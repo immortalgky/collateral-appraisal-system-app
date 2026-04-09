@@ -1,4 +1,5 @@
-import { useGetVersions } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { useGetVersions, useListRunningInstances } from '../api';
 import type { WorkflowDefinitionVersion } from '../types';
 
 interface Props {
@@ -8,13 +9,37 @@ interface Props {
   onSelectVersion?: (version: WorkflowDefinitionVersion) => void;
 }
 
+function InstanceCountBadge({
+  definitionId,
+  versionId,
+}: {
+  definitionId: string;
+  versionId: string;
+}) {
+  const { data: instances } = useListRunningInstances(definitionId, { onVersionId: versionId });
+  const count = instances?.length ?? 0;
+  if (count === 0) return null;
+  return (
+    <span
+      className="badge badge-xs badge-warning"
+      title={`${count} running instance${count !== 1 ? 's' : ''}`}
+    >
+      {count} running
+    </span>
+  );
+}
+
 export function VersionHistoryPanel({
   definitionId,
   currentVersionId,
   onClose,
   onSelectVersion,
 }: Props) {
+  const navigate = useNavigate();
   const { data: versions, isLoading } = useGetVersions(definitionId);
+
+  // Find the currently Published version id for the "Migrate" button target
+  const publishedVersion = versions?.find((v) => v.status === 'Published');
 
   const statusBadge = (status: string) => {
     switch (status) {
@@ -54,7 +79,7 @@ export function VersionHistoryPanel({
                 }`}
               >
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">v{v.version}</span>
                     <span className={`badge badge-sm ${statusBadge(v.status)}`}>
                       {v.status}
@@ -64,6 +89,7 @@ export function VersionHistoryPanel({
                         current
                       </span>
                     )}
+                    <InstanceCountBadge definitionId={definitionId} versionId={v.id} />
                   </div>
                   <div className="mt-1 text-xs text-base-content/60">
                     {v.publishedAt
@@ -74,14 +100,28 @@ export function VersionHistoryPanel({
                   </div>
                 </div>
 
-                {onSelectVersion && v.id !== currentVersionId && (
-                  <button
-                    onClick={() => onSelectVersion(v)}
-                    className="btn btn-ghost btn-xs"
-                  >
-                    View
-                  </button>
-                )}
+                <div className="flex items-center gap-1">
+                  {v.status === 'Deprecated' && publishedVersion && (
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/workflow-builder/${definitionId}/versions/${publishedVersion.id}/migrate?fromVersionId=${v.id}`,
+                        )
+                      }
+                      className="btn btn-warning btn-xs"
+                    >
+                      Migrate
+                    </button>
+                  )}
+                  {onSelectVersion && v.id !== currentVersionId && (
+                    <button
+                      onClick={() => onSelectVersion(v)}
+                      className="btn btn-ghost btn-xs"
+                    >
+                      View
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -254,3 +254,19 @@ export interface AdminUpdateUserRequest {
 export interface UpdateUserRolesRequest {
   roleNames: string[];
 }
+
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  position?: string | null;
+  department?: string | null;
+  companyId?: string | null;
+  roles: string[];
+}
+
+export interface CreateUserResponse {
+  id: string;
+}

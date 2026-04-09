@@ -1,4 +1,12 @@
-export type NotificationType = 'TaskAssigned' | 'TaskCompleted' | 'WorkflowTransition' | 'SystemNotification';
+export type NotificationType =
+  | 'TaskAssigned'
+  | 'TaskCompleted'
+  | 'WorkflowTransition'
+  | 'SystemNotification'
+  | 'DocumentFollowupRaised'
+  | 'DocumentFollowupResolved'
+  | 'DocumentFollowupCancelled'
+  | 'DocumentLineItemDeclined';
 
 export interface Notification {
   id: string;
@@ -19,4 +27,8 @@ export const notificationTypeConfig: Record<
   TaskCompleted: { icon: 'circle-check', iconStyle: 'solid', color: 'text-green-500 bg-green-50' },
   WorkflowTransition: { icon: 'arrow-right-arrow-left', iconStyle: 'solid', color: 'text-purple-500 bg-purple-50' },
   SystemNotification: { icon: 'gear', iconStyle: 'solid', color: 'text-orange-500 bg-orange-50' },
+  DocumentFollowupRaised: { icon: 'file-circle-plus', iconStyle: 'solid', color: 'text-amber-500 bg-amber-50' },
+  DocumentFollowupResolved: { icon: 'file-circle-check', iconStyle: 'solid', color: 'text-green-500 bg-green-50' },
+  DocumentFollowupCancelled: { icon: 'file-circle-xmark', iconStyle: 'solid', color: 'text-gray-500 bg-gray-50' },
+  DocumentLineItemDeclined: { icon: 'hand', iconStyle: 'solid', color: 'text-red-500 bg-red-50' },
 };
