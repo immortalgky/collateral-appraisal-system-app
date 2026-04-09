@@ -1,4 +1,5 @@
-import { useGetVersions } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { useGetVersions, useListRunningInstances } from '../api';
 import type { WorkflowDefinitionVersion } from '../types';
 
 interface Props {
@@ -8,13 +9,25 @@ interface Props {
   onSelectVersion?: (version: WorkflowDefinitionVersion) => void;
 }
 
+function InstanceCountBadge({ definitionId, versionId }: { definitionId: string; versionId: string }) {
+  const { data: instances } = useListRunningInstances(definitionId, { versionId });
+  const count = instances?.length ?? 0;
+  if (count === 0) return null;
+  return (
+    <span className="badge badge-sm badge-warning">{count} running</span>
+  );
+}
+
 export function VersionHistoryPanel({
   definitionId,
   currentVersionId,
   onClose,
   onSelectVersion,
 }: Props) {
+  const navigate = useNavigate();
   const { data: versions, isLoading } = useGetVersions(definitionId);
+  const { data: publishedVersions } = useGetVersions(definitionId);
+  const currentPublished = publishedVersions?.find((v) => v.status === 'Published');
 
   const statusBadge = (status: string) => {
     switch (status) {
@@ -64,6 +77,7 @@ export function VersionHistoryPanel({
                         current
                       </span>
                     )}
+                    <InstanceCountBadge definitionId={definitionId} versionId={v.id} />
                   </div>
                   <div className="mt-1 text-xs text-base-content/60">
                     {v.publishedAt
@@ -74,14 +88,29 @@ export function VersionHistoryPanel({
                   </div>
                 </div>
 
-                {onSelectVersion && v.id !== currentVersionId && (
-                  <button
-                    onClick={() => onSelectVersion(v)}
-                    className="btn btn-ghost btn-xs"
-                  >
-                    View
-                  </button>
-                )}
+                <div className="flex gap-1">
+                  {onSelectVersion && v.id !== currentVersionId && (
+                    <button
+                      onClick={() => onSelectVersion(v)}
+                      className="btn btn-ghost btn-xs"
+                    >
+                      View
+                    </button>
+                  )}
+                  {v.status === 'Deprecated' && currentPublished && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        navigate(
+                          `/workflow-builder/${definitionId}/versions/${currentPublished.id}/migrate?fromVersionId=${v.id}`,
+                        );
+                      }}
+                      className="btn btn-warning btn-xs"
+                    >
+                      Migrate
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

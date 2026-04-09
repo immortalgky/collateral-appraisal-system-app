@@ -42,6 +42,7 @@ import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
 import { ReadOnlyPageWrapper, AppraisalReadOnlyWrapper } from '@shared/contexts/PageReadOnlyContext';
 import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
+import MigrateInstancesPage from '@features/workflowBuilder/pages/MigrateInstancesPage';
 import PermissionListPage from '@features/userManagement/pages/PermissionListPage';
 import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
@@ -164,6 +165,10 @@ export const router = createBrowserRouter([
           { index: true, element: <WorkflowListPage /> },
           { path: 'new', element: <WorkflowBuilderPage /> },
           { path: ':workflowId', element: <WorkflowBuilderPage /> },
+          {
+            path: ':workflowId/versions/:targetVersionId/migrate',
+            element: <MigrateInstancesPage />,
+          },
         ],
       },
       // Admin Routes
