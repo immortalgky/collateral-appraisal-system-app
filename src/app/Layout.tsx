@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom';
 import { useRef } from 'react';
-import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
 import Sidebar, { MobileSidebar } from '@shared/components/Sidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -18,7 +17,6 @@ import {
 } from '@shared/contexts/RightMenuPortalContext';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useUIStore } from '@shared/store';
-import { useNotificationHub } from '@features/notification/hooks/useNotificationHub';
 
 const userNavigation = [
   { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
@@ -91,7 +89,6 @@ function AddressLoader() {
 }
 
 function Layout() {
-  useNotificationHub();
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
@@ -137,30 +134,6 @@ function Layout() {
         </div>
 
         <LoadingOverlay />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#fff',
-              color: '#363636',
-            },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              duration: 4000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
-            },
-          }}
-        />
       </div>
     </RightMenuPortalProvider>
   );

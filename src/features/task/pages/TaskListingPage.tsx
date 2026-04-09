@@ -3,23 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useGetTasks, useGetTasksForKanban } from '../api';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
 import Icon from '@/shared/components/Icon';
-import Badge from '@/shared/components/Badge';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
-import { format } from 'date-fns';
-import ParameterDisplay from '@/shared/components/ParameterDisplay';
-
-// Format date as DD/MM/YYYY
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return '-';
-  try {
-    return format(new Date(dateString), 'dd/MM/yyyy');
-  } catch {
-    return dateString;
-  }
-};
+import { ALL_COLUMNS, columnDefs } from '../config/columnDefs';
 
 // Context menu state type
 interface ContextMenuState {
@@ -29,22 +17,6 @@ interface ContextMenuState {
   taskId: string | null;
 }
 
-type SortField =
-  | 'appraisalNumber'
-  | 'customerName'
-  | 'taskType'
-  | 'purpose'
-  | 'propertyType'
-  | 'status'
-  | 'appointmentDateTime'
-  | 'requestedBy'
-  | 'assignedDate'
-  | 'movement'
-  | 'dueAt'
-  | 'elapsedHours'
-  | 'remainingHours'
-  | 'slaStatus'
-  | 'priority';
 type SortDirection = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
 
@@ -73,7 +45,7 @@ function TaskListingPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Sorting state (for list view)
-  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Filter dialog state
@@ -189,7 +161,7 @@ function TaskListingPage() {
     setContextMenu(prev => ({ ...prev, visible: false }));
   };
 
-  const handleSort = (field: SortField) => {
+  const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortDirection === 'asc') {
         setSortDirection('desc');
@@ -203,7 +175,7 @@ function TaskListingPage() {
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field) {
       return <Icon style="solid" name="sort" className="size-3 text-gray-300" />;
     }
@@ -352,170 +324,42 @@ function TaskListingPage() {
             <table className="table table-sm min-w-max">
               <thead className="sticky top-0 z-20 bg-gray-50">
                 <tr className="border-b border-gray-200">
-                  <th
-                    onClick={() => handleSort('appraisalNumber')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Appraisal Number
-                      <SortIcon field="appraisalNumber" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('customerName')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Customer Name
-                      <SortIcon field="customerName" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('taskType')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Task Type
-                      <SortIcon field="taskType" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('purpose')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Purpose
-                      <SortIcon field="purpose" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('propertyType')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Property Type
-                      <SortIcon field="propertyType" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('status')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Status
-                      <SortIcon field="status" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('appointmentDateTime')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Appointment Date
-                      <SortIcon field="appointmentDateTime" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('requestedBy')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Requested By
-                      <SortIcon field="requestedBy" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('assignedDate')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Assigned Date
-                      <SortIcon field="assignedDate" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('movement')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Movement
-                      <SortIcon field="movement" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('dueAt')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Due Date
-                      <SortIcon field="dueAt" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('elapsedHours')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      SLA (Actual)
-                      <SortIcon field="elapsedHours" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('remainingHours')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      SLA (Difference)
-                      <SortIcon field="remainingHours" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('slaStatus')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      SLA Status
-                      <SortIcon field="slaStatus" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('priority')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Priority
-                      <SortIcon field="priority" />
-                    </div>
-                  </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 w-10"></th>
+                  {ALL_COLUMNS.map((key) => {
+                    const col = columnDefs[key];
+                    const thClass = col.sticky
+                      ? 'text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap bg-gray-50 sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full'
+                      : col.sortField
+                        ? 'text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap'
+                        : 'text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap';
+                    return (
+                      <th
+                        key={key}
+                        onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
+                        className={thClass}
+                      >
+                        {col.sortField ? (
+                          <div className="flex items-center gap-1.5">
+                            {col.label}
+                            <SortIcon field={col.sortField} />
+                          </div>
+                        ) : (
+                          col.label
+                        )}
+                      </th>
+                    );
+                  })}
+                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 w-10" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {isLoading ? (
                   <TableRowSkeleton
-                    columns={[
-                      { width: 'w-28' },
-                      { width: 'w-32' },
-                      { width: 'w-28' },
-                      { width: 'w-32' },
-                      { width: 'w-28' },
-                      { width: 'w-16' },
-                      { width: 'w-24' },
-                      { width: 'w-24' },
-                      { width: 'w-24' },
-                      { width: 'w-20' },
-                      { width: 'w-24' },
-                      { width: 'w-16' },
-                      { width: 'w-20' },
-                      { width: 'w-16' },
-                      { width: 'w-16' },
-                      { width: 'w-8' },
-                    ]}
+                    columns={ALL_COLUMNS.map(() => ({ width: 'w-24' }))}
                     rows={5}
                   />
                 ) : listTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="text-center py-16">
+                    <td colSpan={ALL_COLUMNS.length + 1} className="text-center py-16">
                       <div className="flex flex-col items-center gap-2">
                         <Icon
                           style="regular"
@@ -538,61 +382,20 @@ function TaskListingPage() {
                       className="hover:bg-gray-50 cursor-default transition-colors"
                       title="Double-click to open, right-click for more options"
                     >
-                      <td className="bg-white sticky left-0 z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full">
-                        <div>
-                          <span
-                            onClick={e => {
-                              e.stopPropagation();
-                              navigate(`/tasks/${task.taskId}`);
-                            }}
-                            className="font-medium text-primary hover:underline cursor-pointer"
-                          >
-                            {task.appraisalNumber}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.customerName}</td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {task.taskDescription || task.taskType}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {<ParameterDisplay group="AppraisalPurpose" code={task.purpose} />}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {<ParameterDisplay group="PropertyType" code={task.propertyType} />}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <Badge type="status" value={task.status} size="sm" />
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.appointmentDateTime ?? undefined)}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.requestedBy ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.assignedDate ?? undefined)}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.movement || '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.dueAt ?? undefined)}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {task.elapsedHours != null ? `${task.elapsedHours}h` : '-'}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {task.remainingHours != null ? `${task.remainingHours}h` : '-'}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <Badge type="status" value={task.slaStatus} size="sm" />
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <Badge type="priority" value={task.priority} size="sm" />
-                      </td>
+                      {ALL_COLUMNS.map((key) => {
+                        const col = columnDefs[key];
+                        const tdClass = col.sticky
+                          ? 'bg-white sticky left-0 z-10 px-3 py-2.5 after:absolute after:right-0 after:top-0 after:h-full after:w-4 after:bg-gradient-to-r after:from-black/5 after:to-transparent after:translate-x-full'
+                          : (col.tdClassName ?? 'px-3 py-2.5 text-gray-600');
+                        return (
+                          <td key={key} className={tdClass}>
+                            {col.render(task)}
+                          </td>
+                        );
+                      })}
                       <td className="px-3 py-2.5">
                         <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            // Action menu placeholder
-                          }}
+                          onClick={(e) => e.stopPropagation()}
                           className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
                         >
                           <Icon style="solid" name="ellipsis-vertical" className="size-4" />

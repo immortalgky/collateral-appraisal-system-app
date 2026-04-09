@@ -1,0 +1,219 @@
+import { useNavigate, useParams } from 'react-router-dom';
+
+import Button from '@/shared/components/Button';
+import Icon from '@/shared/components/Icon';
+import FormCard from '@/shared/components/sections/FormCard';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+
+import { useGetMeetingDetail } from '../api/meetings';
+import MeetingStatusBadge from '../components/MeetingStatusBadge';
+import MeetingItemsTable from '../components/MeetingItemsTable';
+import MeetingFormDialog from '../components/MeetingFormDialog';
+import ScheduleMeetingDialog from '../components/ScheduleMeetingDialog';
+import CancelMeetingDialog from '../components/CancelMeetingDialog';
+import EndMeetingDialog from '../components/EndMeetingDialog';
+import AddItemsDialog from '../components/AddItemsDialog';
+
+const MeetingDetailPage = () => {
+  const navigate = useNavigate();
+  const { meetingId } = useParams<{ meetingId: string }>();
+  const { data: meeting, isLoading } = useGetMeetingDetail(meetingId);
+
+  const editDialog = useDisclosure();
+  const scheduleDialog = useDisclosure();
+  const cancelDialog = useDisclosure();
+  const endDialog = useDisclosure();
+  const addItemsDialog = useDisclosure();
+
+  if (isLoading || !meeting) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  const isDraft = meeting.status === 'Draft';
+  const isScheduled = meeting.status === 'Scheduled';
+  const isEnded = meeting.status === 'Ended';
+  const isCancelled = meeting.status === 'Cancelled';
+  const isEditable = isDraft || isScheduled;
+  const canSchedule = isDraft && meeting.items.length > 0;
+
+  return (
+    <div className="flex flex-col h-full min-h-0 gap-4 overflow-y-auto pb-6">
+      {/* Header */}
+      <div className="shrink-0 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/meetings')} type="button">
+            <Icon name="arrow-left" style="solid" className="size-3.5 mr-1.5" />
+            Back
+          </Button>
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-base font-semibold text-gray-900">{meeting.title}</h2>
+              <MeetingStatusBadge status={meeting.status} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {isEditable && (
+            <Button variant="ghost" size="sm" type="button" onClick={editDialog.onOpen}>
+              <Icon name="pen" style="solid" className="size-3.5 mr-1.5" />
+              Edit
+            </Button>
+          )}
+          {isDraft && (
+            <Button
+              size="sm"
+              type="button"
+              onClick={scheduleDialog.onOpen}
+              disabled={!canSchedule}
+              title={!canSchedule ? 'Add at least one appraisal before scheduling' : undefined}
+            >
+              <Icon name="calendar" style="solid" className="size-3.5 mr-1.5" />
+              Schedule
+            </Button>
+          )}
+          {isScheduled && (
+            <Button size="sm" type="button" onClick={endDialog.onOpen}>
+              <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
+              End Meeting
+            </Button>
+          )}
+          {isEditable && (
+            <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
+              <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
+              Cancel
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Banners */}
+      {isEnded && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <Icon name="circle-check" style="solid" className="w-5 h-5 text-emerald-500 shrink-0" />
+          <p className="text-sm font-medium text-emerald-700">
+            Released for voting
+            {meeting.endedAt
+              ? ` on ${new Date(meeting.endedAt).toLocaleString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}`
+              : ''}
+            . Items removed from the queue and sent to committee voting.
+          </p>
+        </div>
+      )}
+      {isCancelled && (
+        <div className="flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+          <Icon
+            name="circle-xmark"
+            style="solid"
+            className="w-5 h-5 text-red-500 shrink-0 mt-0.5"
+          />
+          <div>
+            <p className="text-sm font-medium text-red-700">
+              Meeting cancelled. Items returned to the queue.
+            </p>
+            {meeting.cancelReason && (
+              <p className="text-xs text-red-600 mt-0.5">Reason: {meeting.cancelReason}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Metadata card */}
+      <FormCard title="Meeting Details" icon="circle-info" iconColor="blue">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <dt className="text-xs font-medium text-gray-500 uppercase">Scheduled</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {meeting.scheduledAt
+                ? new Date(meeting.scheduledAt).toLocaleString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-gray-500 uppercase">Location</dt>
+            <dd className="mt-1 text-sm text-gray-900">{meeting.location ?? '—'}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-xs font-medium text-gray-500 uppercase">Notes</dt>
+            <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+              {meeting.notes ?? '—'}
+            </dd>
+          </div>
+        </dl>
+      </FormCard>
+
+      {/* Items */}
+      <FormCard
+        title={`Appraisals (${meeting.items.length})`}
+        icon="folder-open"
+        iconColor="emerald"
+        rightIcon={
+          isEditable ? (
+            <Button size="sm" type="button" onClick={addItemsDialog.onOpen}>
+              <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
+              Add Appraisals
+            </Button>
+          ) : undefined
+        }
+      >
+        <MeetingItemsTable
+          meetingId={meeting.id}
+          meetingStatus={meeting.status}
+          items={meeting.items}
+        />
+      </FormCard>
+
+      {/* Dialogs */}
+      <MeetingFormDialog
+        isOpen={editDialog.isOpen}
+        onClose={editDialog.onClose}
+        meetingId={meeting.id}
+        defaultValues={{
+          title: meeting.title,
+          location: meeting.location ?? '',
+          notes: meeting.notes ?? '',
+        }}
+      />
+      <ScheduleMeetingDialog
+        isOpen={scheduleDialog.isOpen}
+        onClose={scheduleDialog.onClose}
+        meetingId={meeting.id}
+        defaultLocation={meeting.location}
+      />
+      <CancelMeetingDialog
+        isOpen={cancelDialog.isOpen}
+        onClose={cancelDialog.onClose}
+        meetingId={meeting.id}
+      />
+      <EndMeetingDialog
+        isOpen={endDialog.isOpen}
+        onClose={endDialog.onClose}
+        meetingId={meeting.id}
+        itemCount={meeting.items.length}
+      />
+      <AddItemsDialog
+        isOpen={addItemsDialog.isOpen}
+        onClose={addItemsDialog.onClose}
+        meetingId={meeting.id}
+      />
+    </div>
+  );
+};
+
+export default MeetingDetailPage;

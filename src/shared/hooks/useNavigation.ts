@@ -1,61 +1,64 @@
 import { useMemo } from 'react';
-import { useUserStore } from '@shared/store';
-import { getNavigationByRole, type NavItem, type WorkflowActivity } from '@shared/config/navigation';
+import { useAuthStore } from '@features/auth/store';
+import { getNavigationByRoles, type NavItem, type UserRole } from '@shared/config/navigation';
 
 /**
- * Hook to get navigation items filtered by the current user's role
- * @returns Filtered navigation items based on user's role
+ * Default role set used when no user is present.
+ * In dev, this mirrors the default dev user so menus render; in production,
+ * ProtectedRoute redirects unauthenticated users before this fallback is hit.
+ */
+const DEFAULT_ROLES: UserRole[] = [];
+
+/**
+ * Hook to get navigation items filtered by the current user's role set
+ * @returns Filtered navigation items based on the user's roles
  */
 export function useNavigation(): NavItem[] {
-  const user = useUserStore(state => state.user);
-  const role = user?.role ?? 'viewer';
-
-  return useMemo(() => getNavigationByRole(role), [role]);
+  const user = useAuthStore(state => state.user);
+  const roles = user?.roles ?? DEFAULT_ROLES;
+  return useMemo(() => getNavigationByRoles(roles), [roles]);
 }
 
 /**
- * Hook to get the current user's role
- * @returns Current user's workflow activity role
+ * Hook to get the current user's roles
+ * @returns Current user's roles (a user may hold multiple roles)
  */
-export function useCurrentRole(): WorkflowActivity {
-  const user = useUserStore(state => state.user);
-  return user?.role ?? 'viewer';
+export function useCurrentRoles(): UserRole[] {
+  const user = useAuthStore(state => state.user);
+  return user?.roles ?? DEFAULT_ROLES;
 }
 
 /**
  * Hook to check if the current user has a specific role
  * @param role - Role to check
- * @returns True if user has the specified role
+ * @returns True if the user has the specified role
  */
-export function useHasRole(role: WorkflowActivity): boolean {
-  const currentRole = useCurrentRole();
-  return currentRole === role;
+export function useHasRole(role: UserRole): boolean {
+  const currentRoles = useCurrentRoles();
+  return currentRoles.includes(role);
 }
 
 /**
  * Hook to check if the current user has any of the specified roles
  * @param roles - Roles to check
- * @returns True if user has any of the specified roles
+ * @returns True if the user has any of the specified roles
  */
-export function useHasAnyRole(roles: WorkflowActivity[]): boolean {
-  const currentRole = useCurrentRole();
-  return roles.includes(currentRole);
+export function useHasAnyRole(roles: UserRole[]): boolean {
+  const currentRoles = useCurrentRoles();
+  return roles.some(r => currentRoles.includes(r));
 }
 
 /**
  * Hook to check if a user can access a specific route
  * @param allowedRoles - Roles allowed to access the route
  * @param deniedRoles - Roles explicitly denied access
- * @returns True if user can access the route
+ * @returns True if the user can access the route
  */
-export function useCanAccess(
-  allowedRoles?: WorkflowActivity[],
-  deniedRoles?: WorkflowActivity[],
-): boolean {
-  const currentRole = useCurrentRole();
+export function useCanAccess(allowedRoles?: UserRole[], deniedRoles?: UserRole[]): boolean {
+  const currentRoles = useCurrentRoles();
 
-  // Check if explicitly denied
-  if (deniedRoles?.includes(currentRole)) {
+  // Check if any of the user's roles is explicitly denied
+  if (deniedRoles && deniedRoles.some(r => currentRoles.includes(r))) {
     return false;
   }
 
@@ -64,6 +67,6 @@ export function useCanAccess(
     return true;
   }
 
-  // Check if role is in allowedRoles
-  return allowedRoles.includes(currentRole);
+  // Grant access if any of the user's roles is in allowedRoles
+  return allowedRoles.some(r => currentRoles.includes(r));
 }

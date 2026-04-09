@@ -4,6 +4,7 @@ import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import UserDetailPanel from '../components/UserDetailPanel';
+import CreateUserModal from '../components/CreateUserModal';
 import { useGetUsers } from '../api/users';
 
 type ScopeTab = 'Bank' | 'Company';
@@ -13,6 +14,7 @@ const UserProfilePage = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
@@ -63,9 +65,9 @@ const UserProfilePage = () => {
             ))}
           </div>
 
-          {/* Search */}
-          <div className="px-3 pt-3 pb-2">
-            <div className="relative">
+          {/* Search + Add */}
+          <div className="px-3 pt-3 pb-2 flex gap-2">
+            <div className="relative flex-1">
               <Icon
                 name="magnifying-glass"
                 style="regular"
@@ -79,6 +81,14 @@ const UserProfilePage = () => {
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              title="Add user"
+              className="shrink-0 size-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/80 transition-colors"
+            >
+              <Icon name="plus" style="solid" className="size-3.5" />
+            </button>
           </div>
 
           {/* User list */}
@@ -140,6 +150,12 @@ const UserProfilePage = () => {
           )}
         </div>
       </div>
+
+      <CreateUserModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={userId => setSelectedUserId(userId)}
+      />
     </div>
   );
 };

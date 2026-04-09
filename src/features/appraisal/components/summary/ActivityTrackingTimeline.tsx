@@ -4,8 +4,10 @@ import Badge from '@/shared/components/Badge';
 
 export interface ActivityStep {
   stepName: string;
+  taskDescription: string | null;
   role: string;
   assigneeName: string | null;
+  assigneeDisplayName: string | null;
   startedAt: string | null;
   completedAt: string | null;
   status: 'completed' | 'in_progress' | 'pending';
@@ -118,7 +120,7 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
                     step.status === 'pending' ? 'text-gray-400' : 'text-gray-800',
                   )}
                 >
-                  {step.stepName}
+                  {step.taskDescription || step.stepName}
                 </span>
                 <Badge type="status" value={statusToBadge[step.status]} size="xs" dot={false} />
               </div>
@@ -128,8 +130,9 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
                 <div className="flex items-center gap-1.5 mt-1">
                   <Icon name="user" style="regular" className="w-3 h-3 text-gray-400" />
                   <span className="text-xs text-gray-600">{step.assigneeName}</span>
-                  <span className="text-gray-300 mx-0.5">|</span>
-                  <Badge type="status" value={step.role} size="xs" badgeStyle="ghost" dot={false} />
+                  {step.assigneeDisplayName && (
+                    <span className="text-xs text-gray-400">({step.assigneeDisplayName})</span>
+                  )}
                 </div>
               )}
               {!step.assigneeName && step.status === 'pending' && (
@@ -155,9 +158,11 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
 
               {/* Remark */}
               {step.remark && (
-                <div className="mt-1.5 flex items-start gap-1.5">
-                  <Icon name="message" style="regular" className="w-3 h-3 text-gray-400 mt-0.5" />
-                  <p className="text-xs text-gray-500 italic">{step.remark}</p>
+                <div className="mt-1.5 flex items-start gap-1.5 min-w-0">
+                  <Icon name="message" style="regular" className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-gray-500 italic break-words whitespace-pre-wrap min-w-0 flex-1">
+                    {step.remark}
+                  </p>
                 </div>
               )}
             </div>

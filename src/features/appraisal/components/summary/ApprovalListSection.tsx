@@ -1,44 +1,84 @@
-import toast from 'react-hot-toast';
-
-import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
+import Button from '@/shared/components/Button';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { useAuthStore } from '@/features/auth/store';
+import MeetingChip from '@/features/meeting/components/MeetingChip';
 
-import { useGetApprovalList, useAssignCommittee } from '../../api/decisionSummary';
+import {
+  useGetApprovalList,
+  type ApprovalCondition,
+  type ApprovalMember,
+  type GetApprovalListResponse,
+} from '../../api/decisionSummary';
 import VoteDialog from './VoteDialog';
 
 interface ApprovalListSectionProps {
-  appraisalId: string;
+  workflowInstanceId: string | undefined;
+  activityId: string | undefined;
 }
 
-const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
-  const { data, isLoading } = useGetApprovalList(appraisalId);
-  const { mutate: assignCommittee, isPending: isAssigning } = useAssignCommittee();
+/** Client-derived status from quorum/majority/route_back — backend does not emit a status string. */
+type DerivedStatus = 'Approved' | 'Returned' | 'Pending';
+
+const TIER_LABELS: Record<number, string> = {
+  1: 'Tier 1',
+  2: 'Tier 2',
+  3: 'Tier 3',
+};
+
+const COMMITTEE_CODE_LABELS: Record<string, string> = {
+  SUB_COMMITTEE: 'Sub-Committee',
+  COMMITTEE: 'Committee',
+  COMMITTEE_WITH_MEETING: 'Committee (with Meeting)',
+};
+
+const tierBadge = (tier: number | null, committeeCode: string | null): string => {
+  if (tier != null && TIER_LABELS[tier]) return TIER_LABELS[tier];
+  if (committeeCode && COMMITTEE_CODE_LABELS[committeeCode])
+    return COMMITTEE_CODE_LABELS[committeeCode];
+  return 'Committee';
+};
+
+const deriveStatus = (data: GetApprovalListResponse): DerivedStatus => {
+  if (data.members.some(m => m.vote === 'route_back')) return 'Returned';
+  if (data.quorumMet && data.majorityMet) return 'Approved';
+  return 'Pending';
+};
+
+const conditionLabel = (condition: ApprovalCondition): string => {
+  if (condition.conditionType === 'RoleRequired') {
+    return condition.roleRequired
+      ? `${condition.roleRequired} must vote`
+      : 'Required role must vote';
+  }
+  // MinVotes
+  return condition.minVotesRequired != null
+    ? `At least ${condition.minVotesRequired} votes required`
+    : 'Minimum vote count required';
+};
+
+const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSectionProps) => {
+  const { data, isLoading } = useGetApprovalList(workflowInstanceId, activityId);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const currentUserId = useAuthStore((s) => s.user?.id);
 
-  const handleAssign = () => {
-    assignCommittee(
-      { appraisalId },
-      {
-        onSuccess: () => {
-          toast.success('Committee assigned successfully');
-        },
-        onError: (error: any) => {
-          if (error.response?.status === 400) {
-            toast.error('A committee review already exists for this appraisal');
-          } else {
-            toast.error(error.apiError?.detail || 'Failed to assign committee');
-          }
-        },
-      },
+  if (!workflowInstanceId || !activityId) {
+    // No active approval activity for this appraisal — committee-review step hasn't been reached.
+    return (
+      <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+            <Icon name="users-gear" style="regular" className="w-6 h-6 text-blue-400" />
+          </div>
+          <p className="text-sm text-gray-500">
+            Committee approval is not active for this appraisal yet.
+          </p>
+        </div>
+      </FormCard>
     );
-  };
+  }
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
         <div className="flex items-center justify-center py-8">
@@ -48,48 +88,36 @@ const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
     );
   }
 
-  // State A: No committee assigned
-  if (!data?.committeeName) {
-    return (
-      <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
-        <div className="flex flex-col items-center justify-center py-8 gap-3">
-          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-            <Icon name="users-gear" style="regular" className="w-6 h-6 text-blue-400" />
-          </div>
-          <p className="text-sm text-gray-500">No committee has been assigned yet.</p>
-          <Button type="button" onClick={handleAssign} disabled={isAssigning}>
-            {isAssigning ? (
-              <>
-                <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                Assigning...
-              </>
-            ) : (
-              <>
-                <Icon name="users-gear" style="solid" className="size-4 mr-2" />
-                Assign to Committee
-              </>
-            )}
-          </Button>
-        </div>
-      </FormCard>
-    );
-  }
-
-  const isPending = data.reviewStatus === 'Pending';
-  const currentUserAlreadyVoted = data.items?.some(
-    (item) => item.committeeMemberId === currentUserId && item.vote != null,
-  );
+  const status = deriveStatus(data);
+  const members: ApprovalMember[] = data.members;
+  const currentUser = members.find(m => m.isCurrentUser);
+  const canVote = status === 'Pending' && currentUser != null && currentUser.status !== 'Voted';
 
   return (
     <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">{data.committeeName}</span>
-            <Badge type="status" value={data.reviewStatus} size="sm" />
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Badge variant="primary" size="sm">
+              {tierBadge(data.tier, data.committeeCode)}
+            </Badge>
+            {data.committeeName && (
+              <span className="text-sm font-medium text-gray-700">{data.committeeName}</span>
+            )}
+            <Badge type="status" value={status} size="sm" />
+            <span className="text-xs text-gray-500">
+              {data.votesReceived}/{data.totalMembers} votes
+            </span>
+            {data.meetingRef && (
+              <MeetingChip
+                meetingId={data.meetingRef.meetingId}
+                title={data.meetingRef.title}
+                endedAt={data.meetingRef.endedAt}
+              />
+            )}
           </div>
-          {isPending && !currentUserAlreadyVoted && (
+          {canVote && (
             <Button type="button" size="sm" onClick={onOpen}>
               <Icon name="check-to-slot" style="solid" className="size-4 mr-2" />
               Submit Vote
@@ -98,7 +126,7 @@ const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
         </div>
 
         {/* Status banner */}
-        {data.reviewStatus === 'Approved' && (
+        {status === 'Approved' && (
           <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
             <Icon name="circle-check" style="solid" className="w-5 h-5 text-emerald-500 shrink-0" />
             <p className="text-sm font-medium text-emerald-700">
@@ -106,7 +134,7 @@ const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
             </p>
           </div>
         )}
-        {data.reviewStatus === 'Returned' && (
+        {status === 'Returned' && (
           <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
             <Icon name="rotate-left" style="solid" className="w-5 h-5 text-amber-500 shrink-0" />
             <p className="text-sm font-medium text-amber-700">
@@ -115,8 +143,33 @@ const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
           </div>
         )}
 
-        {/* Table */}
-        {data.items && data.items.length > 0 && (
+        {/* Conditions panel */}
+        {data.conditions.length > 0 && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+              Approval Conditions
+            </p>
+            <ul className="space-y-1.5">
+              {data.conditions.map((condition, idx) => (
+                <li key={idx} className="flex items-center gap-2 text-sm">
+                  <Icon
+                    name={condition.met ? 'circle-check' : 'circle-xmark'}
+                    style="solid"
+                    className={`w-4 h-4 shrink-0 ${
+                      condition.met ? 'text-emerald-500' : 'text-red-500'
+                    }`}
+                  />
+                  <span className={condition.met ? 'text-gray-700' : 'text-gray-600'}>
+                    {conditionLabel(condition)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Per-member voting table */}
+        {members.length > 0 && (
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -134,38 +187,58 @@ const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
                     Date
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Remark
+                    Comments
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.items.map((item) => (
-                  <tr key={item.committeeMemberId}>
-                    <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
-                      {item.memberName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                      {item.role}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <Badge type="vote" value={item.voteLabel} size="sm" />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                      {item.votedAt
-                        ? new Date(item.votedAt).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                        : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 max-w-[200px] truncate">
-                      {item.remark || '-'}
-                    </td>
-                  </tr>
-                ))}
+                {members.map(member => {
+                  const hasVoted = member.status === 'Voted';
+                  return (
+                    <tr
+                      key={member.username}
+                      className={member.isCurrentUser ? 'bg-blue-50/60' : undefined}
+                    >
+                      <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span>{member.username}</span>
+                          {member.isCurrentUser && (
+                            <Badge variant="info" size="xs">
+                              You
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                        {member.role}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {hasVoted && member.vote ? (
+                          <Badge type="vote" value={member.vote} size="sm" />
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                            <Icon name="clock" style="regular" className="w-3.5 h-3.5" />
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                        {member.votedAt
+                          ? new Date(member.votedAt).toLocaleString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 max-w-[200px] truncate">
+                        {member.comments || '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -173,14 +246,12 @@ const ApprovalListSection = ({ appraisalId }: ApprovalListSectionProps) => {
       </div>
 
       {/* Vote Dialog */}
-      {data.reviewId && (
-        <VoteDialog
-          isOpen={isOpen}
-          onClose={onClose}
-          appraisalId={appraisalId}
-          reviewId={data.reviewId}
-        />
-      )}
+      <VoteDialog
+        isOpen={isOpen}
+        onClose={onClose}
+        workflowInstanceId={workflowInstanceId}
+        activityId={activityId}
+      />
     </FormCard>
   );
 };
