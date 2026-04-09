@@ -108,7 +108,7 @@ export function DiscountedCashFlowMethodModal({
     section => section.clientId === initialData.targetSectionClientId,
   );
 
-  const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
+  // const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
   const assumptions = getDCFFilteredAssumptions(getOuterFormValues).map(a => a.assumption);
 
   const filteredAssumptionOptions = useMemo(() => {
@@ -117,7 +117,8 @@ export function DiscountedCashFlowMethodModal({
         p =>
           !assumptions.some(
             a => a.assumptionType === p.code && a.assumptionType !== initialData.assumptionType,
-          ),
+          ) &&
+          (currentSection?.sectionType === p.sectionType || p.sectionType === 'any'),
       )
       .map(a => ({ value: a.code, label: a.description }));
   }, [assumptionType, assumptions]);
