@@ -12,6 +12,6 @@ export const workflowKeys = {
     ['workflows', definitionId, 'versions', versionId, 'publish-preview'] as const,
   runningInstances: (definitionId: string, versionId?: string) =>
     versionId
-      ? (['workflows', definitionId, 'instances', 'running', versionId] as const)
-      : (['workflows', definitionId, 'instances', 'running'] as const),
+      ? (['workflows', definitionId, 'instances', versionId] as const)
+      : (['workflows', definitionId, 'instances'] as const),
 };

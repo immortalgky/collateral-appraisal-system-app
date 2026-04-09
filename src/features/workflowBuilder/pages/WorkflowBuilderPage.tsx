@@ -13,7 +13,7 @@ import { PropertyPanel } from '../components/panels/PropertyPanel';
 import { WorkflowToolbar } from '../components/toolbar/WorkflowToolbar';
 import { PublishPreviewModal } from '../components/publish/PublishPreviewModal';
 import { ActivityType } from '../types';
-import type { PublishImpactReport } from '../types';
+import type { PublishVersionResponse } from '../types';
 import { normalizeSchema } from '../utils/normalizeSchema';
 
 export default function WorkflowBuilderPage() {
@@ -197,18 +197,20 @@ export default function WorkflowBuilderPage() {
   }, [workflowId, latestVersion, isDirty, toSchema, markClean, saveDraftMutation]);
 
   const handlePublished = useCallback(
-    (report: PublishImpactReport, newVersionId: string) => {
+    (result: PublishVersionResponse) => {
       setShowPublishModal(false);
-      const hasInstances = report.safeCount + report.unsafeCount > 0;
+      markClean();
+      const hasInstances =
+        result.impactReport &&
+        (result.impactReport.safeCount > 0 || result.impactReport.unsafeCount > 0);
       if (hasInstances) {
         navigate(
-          `/workflow-builder/${workflowId}/versions/${newVersionId}/migrate?fromVersionId=${latestVersion?.id ?? ''}`,
+          `/workflow-builder/${workflowId}/versions/${result.versionId}/migrate`,
+          { state: { impactReport: result.impactReport } },
         );
-      } else {
-        toast.success('Workflow published');
       }
     },
-    [workflowId, latestVersion, navigate],
+    [workflowId, navigate, markClean],
   );
 
   return (
@@ -219,7 +221,7 @@ export default function WorkflowBuilderPage() {
         isSaving={
           saveDraftMutation.isPending || createDefinitionMutation.isPending
         }
-        isPublishing={false}
+        isPublishing={saveDraftMutation.isPending && showPublishModal}
         versionNumber={latestVersion?.version}
         versionStatus={latestVersion?.status}
       />

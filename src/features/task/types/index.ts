@@ -103,14 +103,17 @@ export interface Task {
   requestedAt: string | null;
   receivedDate: string | null;
   movement: string | null;
-  slaDays: number;
-  olaActual: number;
-  olaDiff: number;
   priority: string | null;
   dueAt: string | null;
   slaStatus: string | null;
   elapsedHours: number | null;
   remainingHours: number | null;
+  // New fields added to backend DTO
+  requestedBy: string | null;
+  requestReceivedDate: string | null;
+  internalFollowupStaff: string | null;
+  appraiser: string | null;
+  assignedDate: string | null;
 }
 
 // Grouping options for Kanban view
@@ -132,4 +135,22 @@ export interface GetTasksParams {
   status?: string;
   priority?: string;
   activityId?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  // Advanced filter params
+  appraisalNumber?: string;
+  customerName?: string;
+  taskStatus?: string;
+  taskType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface TaskFilterParams {
+  appraisalNumber?: string;
+  customerName?: string;
+  taskStatus?: string;
+  taskType?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
