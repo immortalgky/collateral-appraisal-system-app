@@ -23,11 +23,6 @@ export function buildMethodProportionOptions(params: {
       label: `Total - ${category.categoryName}`,
     })),
     ...params.assumptions.map(item => {
-      console.log(
-        item.assumption.assumptionName
-          ? item.assumption.assumptionName
-          : assumptionParams.find(p => p.code === item.assumption.assumptionType)?.description,
-      );
       return {
         value: `assumption:${item.assumption.clientId}`,
         label: `${item.section.sectionName} - ${

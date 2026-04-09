@@ -29,8 +29,6 @@ export function MethodProportion({
     a => assumptionType !== a.assumptionType,
   );
 
-  console.log(sections, assumptions, assumptionType);
-
   const refTargetOptions = buildMethodProportionOptions({
     sections,
     assumptions,

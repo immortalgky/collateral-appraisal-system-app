@@ -1117,7 +1117,7 @@ export function buildMethodProportionDerivedRules({
     return [
       {
         targetPath: `${name}.totalMethodValues.${idx}`,
-        deps: [`${name}.detail.proportionPct`, `${name}.detail.refTargetId`],
+        deps: [`${name}.detail.proportionPct`, `${name}.detail.refTarget.clientId`],
         compute: ({ getValues, ctx }) => {
           const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
           const refTargetId = getValues(`${name}.detail.refTarget.clientId`);

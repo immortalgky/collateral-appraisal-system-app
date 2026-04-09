@@ -21,8 +21,6 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   properties: Record<string, unknown>[];
   getOuterFormValues: UseFormGetValues<FormValues>;
 }) {
-  const { control } = useFormContext();
-
   const landGovPrice = (properties ?? [])
     .filter(p => p.propertyType === 'L')
     .flatMap((p: any) => p.titles ?? [])
@@ -177,16 +175,22 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                   <>
                     <tr>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
-                        {t.minValue ? Number(t.minValue).toLocaleString() : '-'}
+                        {t.minValue != undefined || t.minValue != null
+                          ? Number(t.minValue).toLocaleString()
+                          : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
-                        {t.maxValue ? Number(t.maxValue).toLocaleString() : '-'}
+                        {t.maxValue != undefined || t.maxValue != null
+                          ? Number(t.maxValue).toLocaleString()
+                          : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
                         {toFixed2(t.taxRate * 100)}
                       </td>
                       <td className="border-b border-gray-300 px-1.5 py-2 text-right">
-                        {t.maxValue ? Number(t.maxValue * t.taxRate).toLocaleString() : '-'}
+                        {t.maxValue
+                          ? Number((t.maxValue - t.minValue) * t.taxRate).toLocaleString()
+                          : '-'}
                       </td>
                     </tr>
                   </>
