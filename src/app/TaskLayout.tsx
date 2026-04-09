@@ -1,6 +1,5 @@
 import { Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMemo } from 'react';
-import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -38,6 +37,7 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   'property-pma': { label: 'Property Information (PMA)', icon: 'buildings' },
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
   groups: { label: 'Groups', icon: 'layer-group' },
+  'provide-documents': { label: 'Provide Additional Documents', icon: 'file-circle-plus' },
 };
 
 const propertySubRouteLabels: Record<string, { label: string; icon: string }> = {
@@ -281,22 +281,15 @@ function TaskLayout() {
         </div>
 
         <LoadingOverlay />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: { background: '#fff', color: '#363636' },
-            success: { duration: 3000, iconTheme: { primary: '#10b981', secondary: '#fff' } },
-            error: { duration: 4000, iconTheme: { primary: '#ef4444', secondary: '#fff' } },
-          }}
-        />
       </div>
     </AppraisalProvider>
   );
 }
 
 /**
- * Redirect to request page using appraisalId from task context
+ * Redirect to the appropriate default page for this task type.
+ * For 'provide-additional-documents' tasks, redirect to the followup page.
+ * For all other tasks, redirect to the request information page.
  */
 export const TaskIndexRedirect = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -304,6 +297,11 @@ export const TaskIndexRedirect = () => {
   const appraisalId = taskData?.appraisalId;
   const { data: appraisalData } = useGetAppraisalById(appraisalId);
   const requestId = appraisalData?.requestId;
+
+  // Followup task lands on the provide-documents page
+  if (taskData?.activityId === 'provide-additional-documents') {
+    return <Navigate to={`/tasks/${taskId}/provide-documents`} replace />;
+  }
 
   if (requestId) {
     return <Navigate to={`/tasks/${taskId}/request/${requestId}`} replace />;

@@ -25,6 +25,8 @@ export interface ActivityActionsResponse {
   activityId: string;
   activityName: string;
   actions: ActivityAction[];
+  /** True when the workflow definition permits this task to raise document followups */
+  canRaiseFollowup?: boolean;
 }
 
 export interface CompleteActivityResponse {
@@ -35,6 +37,23 @@ export interface CompleteActivityResponse {
   nextAssignee: string | null;
   isCompleted: boolean;
   validationErrors: string[] | null;
+}
+
+export interface TaskHistoryItem {
+  taskId: string;
+  taskName: string;
+  taskDescription: string | null;
+  assignedTo: string;
+  assignedToDisplayName: string | null;
+  assignedType: string;
+  assignedAt: string;
+  completedAt: string | null;
+  actionTaken: string | null;
+  remark: string | null;
+}
+
+export interface TaskHistoryResponse {
+  items: TaskHistoryItem[];
 }
 
 /**
@@ -70,6 +89,23 @@ export const useGetActivityActions = (
       return data;
     },
     enabled: !!workflowInstanceId && !!activityId,
+  });
+};
+
+/**
+ * Hook for fetching the task history (completed + currently pending) for a workflow instance.
+ * GET /api/workflows/instances/{workflowInstanceId}/task-history
+ */
+export const useGetTaskHistory = (workflowInstanceId: string | undefined) => {
+  return useQuery({
+    queryKey: ['workflow', 'task-history', workflowInstanceId],
+    queryFn: async (): Promise<TaskHistoryResponse> => {
+      const { data } = await axios.get(
+        `/api/workflows/instances/${workflowInstanceId}/task-history`,
+      );
+      return data;
+    },
+    enabled: !!workflowInstanceId,
   });
 };
 

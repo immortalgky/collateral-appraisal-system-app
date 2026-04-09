@@ -48,6 +48,97 @@ type SortField =
 type SortDirection = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
 
+// Column definition — render returns the cell content (not a <td>).
+// The <td> wrapper is created in the row loop.
+type ColumnDef = {
+  label: string;
+  sortField?: SortField;
+  render: (task: Task) => ReactNode;
+};
+
+const columnDefs: Record<ColumnKey, ColumnDef> = {
+  appraisalNumber: {
+    label: 'Appraisal Number',
+    sortField: 'appraisalNumber',
+    // Rendered specially in the row (sticky + click handler)
+    render: (task) => task.appraisalNumber ?? '-',
+  },
+  customerName: {
+    label: 'Customer Name',
+    sortField: 'customerName',
+    render: (task) => task.customerName ?? '-',
+  },
+  taskType: {
+    label: 'Task Type',
+    sortField: 'taskType',
+    render: (task) => task.taskDescription || task.taskType || '-',
+  },
+  purpose: {
+    label: 'Purpose',
+    sortField: 'purpose',
+    render: (task) => <ParameterDisplay group="AppraisalPurpose" code={task.purpose} />,
+  },
+  propertyType: {
+    label: 'Property Type',
+    sortField: 'propertyType',
+    render: (task) => <ParameterDisplay group="PropertyType" code={task.propertyType} />,
+  },
+  status: {
+    label: 'Status',
+    sortField: 'status',
+    render: (task) => <Badge type="status" value={task.status} size="sm" />,
+  },
+  appointmentDate: {
+    label: 'Appointment Date',
+    sortField: 'appointmentDateTime',
+    render: (task) => formatDate(task.appointmentDateTime),
+  },
+  requestedBy: {
+    label: 'Requested By',
+    render: (task) => task.requestedBy ?? '-',
+  },
+  internalFollowupStaff: {
+    label: 'Internal Followup Staff',
+    render: (task) => task.internalFollowupStaff ?? '-',
+  },
+  requestReceivedDate: {
+    label: 'Request Received Date',
+    sortField: 'requestReceivedDate',
+    render: (task) => formatDate(task.requestReceivedDate),
+  },
+  appraiser: {
+    label: 'Appraiser',
+    render: (task) => task.appraiser ?? '-',
+  },
+  assignedDate: {
+    label: 'Assigned Date',
+    sortField: 'assignedDate',
+    render: (task) => formatDate(task.assignedDate),
+  },
+  movement: {
+    label: 'Movement',
+    sortField: 'movement',
+    render: (task) => task.movement || '-',
+  },
+  slaDueAt: {
+    label: 'SLA Due',
+    render: (task) => formatDate(task.dueAt),
+  },
+  slaElapsedHours: {
+    label: 'SLA Elapsed (hrs)',
+    render: (task) => task.elapsedHours ?? '-',
+  },
+  slaRemainingHours: {
+    label: 'SLA Remaining (hrs)',
+    render: (task) => task.remainingHours ?? '-',
+  },
+  priority: {
+    label: 'Priority',
+    sortField: 'priority',
+    render: (task) => <Badge type="priority" value={task.priority} size="sm" />,
+  },
+};
+
 // Group by options for Kanban view
 const groupByOptions: { value: GroupByField; label: string }[] = [
   { value: 'status', label: 'Appraisal Status' },
@@ -416,21 +507,12 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('requestedBy')}
+                    onClick={() => handleSort('requestedAt')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      Requested By
-                      <SortIcon field="requestedBy" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('assignedDate')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      Assigned Date
-                      <SortIcon field="assignedDate" />
+                      Request Date
+                      <SortIcon field="requestedAt" />
                     </div>
                   </th>
                   <th
@@ -443,39 +525,30 @@ function TaskListingPage() {
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('dueAt')}
+                    onClick={() => handleSort('slaDays')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      Due Date
-                      <SortIcon field="dueAt" />
+                      OLA
+                      <SortIcon field="slaDays" />
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('elapsedHours')}
+                    onClick={() => handleSort('olaActual')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      SLA (Actual)
-                      <SortIcon field="elapsedHours" />
+                      OLA (Actual)
+                      <SortIcon field="olaActual" />
                     </div>
                   </th>
                   <th
-                    onClick={() => handleSort('remainingHours')}
+                    onClick={() => handleSort('olaDiff')}
                     className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1.5">
-                      SLA (Difference)
-                      <SortIcon field="remainingHours" />
-                    </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('slaStatus')}
-                    className="text-left font-medium text-gray-600 px-3 py-2.5 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      SLA Status
-                      <SortIcon field="slaStatus" />
+                      OLA (Difference)
+                      <SortIcon field="olaDiff" />
                     </div>
                   </th>
                   <th
@@ -502,12 +575,10 @@ function TaskListingPage() {
                       { width: 'w-16' },
                       { width: 'w-24' },
                       { width: 'w-24' },
-                      { width: 'w-24' },
                       { width: 'w-20' },
-                      { width: 'w-24' },
+                      { width: 'w-12' },
                       { width: 'w-16' },
                       { width: 'w-20' },
-                      { width: 'w-16' },
                       { width: 'w-16' },
                       { width: 'w-8' },
                     ]}
@@ -515,7 +586,7 @@ function TaskListingPage() {
                   />
                 ) : listTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="text-center py-16">
+                    <td colSpan={14} className="text-center py-16">
                       <div className="flex flex-col items-center gap-2">
                         <Icon
                           style="regular"
@@ -567,23 +638,13 @@ function TaskListingPage() {
                       <td className="px-3 py-2.5 text-gray-600">
                         {formatDate(task.appointmentDateTime ?? undefined)}
                       </td>
-                      <td className="px-3 py-2.5 text-gray-600">{task.requestedBy ?? '-'}</td>
                       <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.assignedDate ?? undefined)}
+                        {formatDate(task.requestedAt ?? undefined)}
                       </td>
                       <td className="px-3 py-2.5 text-gray-600">{task.movement || '-'}</td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {formatDate(task.dueAt ?? undefined)}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {task.elapsedHours != null ? `${task.elapsedHours}h` : '-'}
-                      </td>
-                      <td className="px-3 py-2.5 text-gray-600">
-                        {task.remainingHours != null ? `${task.remainingHours}h` : '-'}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <Badge type="status" value={task.slaStatus} size="sm" />
-                      </td>
+                      <td className="px-3 py-2.5 text-gray-600">{task.slaDays ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-gray-600">{task.olaActual ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-gray-600">{task.olaDiff ?? '-'}</td>
                       <td className="px-3 py-2.5">
                         <Badge type="priority" value={task.priority} size="sm" />
                       </td>

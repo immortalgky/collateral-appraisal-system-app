@@ -29,7 +29,16 @@ export default function ImageAnnotationEditor({
 
   const [selectedObjectInfo, setSelectedObjectInfo] = useState<SelectedObjectInfo | null>(null);
 
-  const { saveSnapshot, undo, redo, canUndo, canRedo, reset } = useAnnotationHistory(canvasRef);
+  const {
+    saveSnapshot,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset,
+    pauseSnapshots,
+    resumeSnapshots,
+  } = useAnnotationHistory(canvasRef);
   const { exportCanvas, getCanvasJson } = useCanvasExport(canvasRef);
 
   // Body scroll lock
@@ -128,21 +137,19 @@ export default function ImageAnnotationEditor({
     (canvas: Canvas) => {
       canvasRef.current = canvas;
 
-      // Save initial snapshot after image loads
-      canvas.on('after:render', function initialSnapshot() {
-        if (canvas.backgroundImage) {
-          canvas.off('after:render', initialSnapshot);
-          setTimeout(() => saveSnapshot(), 100);
-        }
-      });
-
-      // Save snapshot on object modifications
+      // Save snapshot on object modifications. The initial snapshot is
+      // captured synchronously via the onImageLoaded callback below, so the
+      // very first edit always has a pristine "before" state to return to.
       canvas.on('object:added', () => saveSnapshot());
       canvas.on('object:modified', () => saveSnapshot());
       canvas.on('object:removed', () => saveSnapshot());
     },
     [saveSnapshot],
   );
+
+  const handleImageLoaded = useCallback(() => {
+    saveSnapshot();
+  }, [saveSnapshot]);
 
   const handleToolChange = useCallback((tool: AnnotationTool) => {
     setState(prev => ({ ...prev, activeTool: tool }));
@@ -293,6 +300,10 @@ export default function ImageAnnotationEditor({
           onNumberPlaced={handleNumberPlaced}
           onCanvasReady={handleCanvasReady}
           onSelectionChange={handleSelectionChange}
+          onImageLoaded={handleImageLoaded}
+          pauseSnapshots={pauseSnapshots}
+          resumeSnapshots={resumeSnapshots}
+          saveSnapshot={saveSnapshot}
         />
 
         {/* Right panel */}

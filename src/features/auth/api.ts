@@ -1,8 +1,18 @@
 import type { UseQueryOptions } from '@tanstack/react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { allRoles, type UserRole } from '@shared/config/navigation';
 import type { LoginCredentials, LoginResponse, User } from './types';
 import { useAuthStore } from './store';
+
+// Narrow backend-provided role strings to our canonical UserRole union.
+// Unknown roles are silently dropped so a typo or stale backend value can't
+// accidentally grant nav access.
+const KNOWN_ROLES = new Set<string>(allRoles);
+const normalizeRoles = (roles: unknown): UserRole[] => {
+  if (!Array.isArray(roles)) return [];
+  return roles.filter((r): r is UserRole => typeof r === 'string' && KNOWN_ROLES.has(r));
+};
 
 // Function to get the current user profile
 export const useCurrentUser = () => {
@@ -16,6 +26,7 @@ export const useCurrentUser = () => {
       const user: User = {
         ...data,
         name: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || data.username || '',
+        roles: normalizeRoles(data.roles),
       };
       setUser(user);
       return user;

@@ -64,6 +64,10 @@ export interface FabricCanvasProps {
   onNumberPlaced: () => void;
   onCanvasReady: (canvas: FabricCanvas) => void;
   onSelectionChange: (info: SelectedObjectInfo | null) => void;
+  onImageLoaded?: () => void;
+  pauseSnapshots?: () => void;
+  resumeSnapshots?: () => void;
+  saveSnapshot?: () => void;
 }
 
 export interface ToolbarProps {

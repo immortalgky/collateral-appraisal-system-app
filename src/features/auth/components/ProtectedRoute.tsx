@@ -2,12 +2,18 @@ import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store.ts';
 import { useCurrentUser } from '../api.ts';
 import { getAccessToken } from '@shared/api/axiosInstance';
+import { useNotificationHub } from '@features/notification/hooks/useNotificationHub';
 import type { JSX } from 'react';
 
 export function ProtectedRoute({ component }: { component: JSX.Element }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const hasToken = !!getAccessToken();
   const { isLoading } = useCurrentUser();
+
+  // Single SignalR connection for the entire authenticated session — lives
+  // above all layouts so it doesn't tear down on Layout↔AppraisalLayout↔TaskLayout
+  // navigation. Hook returns early if no access token is present yet.
+  useNotificationHub();
 
   // No token and not authenticated → go to login
   if (!hasToken && !isAuthenticated) {

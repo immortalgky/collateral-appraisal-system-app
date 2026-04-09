@@ -6,6 +6,17 @@ import Icon from './Icon';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigation';
+import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
+
+const TASK_ACTIVITY_PREFIX = '/tasks/activity/';
+
+/** Extract activityId from a nav item href like `/tasks/activity/<id>`. */
+function getTaskActivityId(href: string): string | null {
+  if (!href.startsWith(TASK_ACTIVITY_PREFIX)) return null;
+  const rest = href.slice(TASK_ACTIVITY_PREFIX.length);
+  // Guard against trailing segments / query strings.
+  return rest.split(/[/?#]/)[0] || null;
+}
 
 type SidebarProps = {
   navigation: NavItem[];
@@ -163,6 +174,8 @@ function MenuItem({
     );
   }
 
+  const taskActivityId = isChild ? getTaskActivityId(item.href) : null;
+
   return (
     <li>
       <Link
@@ -194,6 +207,7 @@ function MenuItem({
         <span className={clsx('text-sm font-medium text-gray-700', isChild && 'text-sm')}>
           {item.name}
         </span>
+        {taskActivityId && <TaskCountBadge activityId={taskActivityId} />}
       </Link>
     </li>
   );

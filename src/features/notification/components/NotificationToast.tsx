@@ -4,25 +4,23 @@ import { notificationTypeConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
 import type { Notification } from '../types';
 
-const typeBackground: Record<string, string> = {
-  TaskAssigned: 'bg-gray-50 border-blue-400',
-  TaskCompleted: 'bg-gray-50 border-green-400',
-  WorkflowTransition: 'bg-gray-50 border-purple-400',
-  SystemNotification: 'bg-gray-50 border-amber-400',
-};
-
 export function showNotificationToast(notification: Notification) {
-  const config = notificationTypeConfig[notification.type];
-  const bg = typeBackground[notification.type] ?? 'bg-white border-gray-200';
+  const config = notificationTypeConfig[notification.type] ?? {
+    icon: 'bell',
+    iconStyle: 'regular' as const,
+    color: 'text-gray-500 bg-gray-100',
+  };
 
-  toast(
+  toast.custom(
     t => (
       <button
         type="button"
-        className={`flex items-start gap-3 w-full text-left rounded-xl border px-4 py-3 shadow-sm ${bg}`}
+        className={`flex items-start gap-3 w-[380px] max-w-[90vw] text-left rounded-2xl border border-gray-100 bg-white px-4 py-3.5 shadow-xl ring-1 ring-black/5 ${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        }`}
         onClick={() => toast.dismiss(t.id)}
       >
-        <div className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${config.color}`}>
+        <div className={`mt-0.5 flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${config.color}`}>
           <Icon name={config.icon} style={config.iconStyle} className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
@@ -32,14 +30,6 @@ export function showNotificationToast(notification: Notification) {
         </div>
       </button>
     ),
-    {
-      duration: 6000,
-      style: {
-        maxWidth: '380px',
-        padding: 0,
-        background: 'transparent',
-        boxShadow: 'none',
-      },
-    },
+    { duration: 6000 },
   );
 }

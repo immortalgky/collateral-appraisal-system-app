@@ -10,6 +10,8 @@ import type {
   ChangePasswordRequest,
   AdminUpdateUserRequest,
   UpdateUserRolesRequest,
+  CreateUserRequest,
+  CreateUserResponse,
 } from '../types';
 
 const ME_KEY = ['me'];
@@ -104,6 +106,20 @@ export const useResetPassword = () => {
     mutationFn: async ({ id, newPassword, confirmPassword }: { id: string; newPassword: string; confirmPassword: string }) => {
       const { data } = await axios.post(`/auth/users/${id}/reset-password`, { newPassword, confirmPassword });
       return data;
+    },
+  });
+};
+
+/** Admin: create user */
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (request: CreateUserRequest): Promise<CreateUserResponse> => {
+      const { data } = await axios.post<CreateUserResponse>('/auth/users', request);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
     },
   });
 };

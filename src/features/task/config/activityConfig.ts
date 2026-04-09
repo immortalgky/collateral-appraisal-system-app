@@ -79,7 +79,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for reviewing initiated appraisal requests for completeness and accuracy',
     columns: INTERNAL_COLUMNS,
     icon: 'clipboard-check',
-    allowedRoles: ['admin', 'request_creator'],
+    allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
   },
   'appraisal-initiation': {
     activityId: 'appraisal-initiation',
@@ -87,7 +87,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for providing additional information when routed back',
     columns: INTERNAL_COLUMNS,
     icon: 'file-pen',
-    allowedRoles: ['admin', 'request_creator'],
+    allowedRoles: ['Admin', 'RequestMaker'],
   },
   'appraisal-assignment': {
     activityId: 'appraisal-assignment',
@@ -95,7 +95,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for reviewing requests and assigning to external or internal appraisal',
     columns: INTERNAL_COLUMNS,
     icon: 'building',
-    allowedRoles: ['admin', 'task_assigner'],
+    allowedRoles: ['Admin', 'IntAdmin'],
   },
   'ext-appraisal-assignment': {
     activityId: 'ext-appraisal-assignment',
@@ -103,7 +103,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for handling appointment, fee, and assigning to company appraiser',
     columns: EXTERNAL_COLUMNS,
     icon: 'building-columns',
-    allowedRoles: ['admin', 'external_appraiser'],
+    allowedRoles: ['Admin', 'ExtAdmin'],
   },
   'ext-appraisal-execution': {
     activityId: 'ext-appraisal-execution',
@@ -111,7 +111,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for conducting external property appraisal',
     columns: EXTERNAL_COLUMNS,
     icon: 'user-tie',
-    allowedRoles: ['admin', 'task_assigner', 'external_appraiser'],
+    allowedRoles: ['Admin', 'ExtAdmin', 'ExtAppraisalStaff'],
   },
   'ext-appraisal-check': {
     activityId: 'ext-appraisal-check',
@@ -119,7 +119,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for reviewing external appraisal work for accuracy and completeness',
     columns: CHECKER_COLUMNS,
     icon: 'clipboard-check',
-    allowedRoles: ['admin', 'task_assigner', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'ExtAdmin', 'ExtAppraisalChecker'],
   },
   'ext-appraisal-verification': {
     activityId: 'ext-appraisal-verification',
@@ -127,7 +127,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for final verification before handoff to internal',
     columns: CHECKER_COLUMNS,
     icon: 'shield-check',
-    allowedRoles: ['admin', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'ExtAdmin', 'ExtAppraisalVerifier'],
   },
   'appraisal-book-verification': {
     activityId: 'appraisal-book-verification',
@@ -135,7 +135,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for verifying the external company appraisal book',
     columns: INTERNAL_COLUMNS,
     icon: 'book-open',
-    allowedRoles: ['admin', 'task_assigner', 'internal_appraiser'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
   },
   'int-appraisal-execution': {
     activityId: 'int-appraisal-execution',
@@ -143,7 +143,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for conducting internal property appraisal',
     columns: INTERNAL_COLUMNS,
     icon: 'user',
-    allowedRoles: ['admin', 'task_assigner', 'internal_appraiser'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
   },
   'int-appraisal-check': {
     activityId: 'int-appraisal-check',
@@ -151,7 +151,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for reviewing internal appraisal work for accuracy and completeness',
     columns: CHECKER_COLUMNS,
     icon: 'magnifying-glass-check',
-    allowedRoles: ['admin', 'task_assigner', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalChecker'],
   },
   'int-appraisal-verification': {
     activityId: 'int-appraisal-verification',
@@ -159,7 +159,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for final internal verification and sign-off',
     columns: CHECKER_COLUMNS,
     icon: 'badge-check',
-    allowedRoles: ['admin', 'appraisal_checker'],
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalVerifier'],
   },
   'pending-approval': {
     activityId: 'pending-approval',
@@ -167,7 +167,20 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks awaiting final approval from appraisal committee',
     columns: CHECKER_COLUMNS,
     icon: 'hourglass-half',
-    allowedRoles: ['admin', 'task_assigner', 'appraisal_approver'],
+    allowedRoles: ['Admin', 'IntAdmin', 'AppraisalCommittee'],
+  },
+  'provide-additional-documents': {
+    activityId: 'provide-additional-documents',
+    title: 'Provide Additional Documents',
+    description: 'Tasks for providing documents requested by a checker during their review',
+    columns: [
+      ...BASE_COLUMNS,
+      { key: 'requestedAt', label: 'Requested Date' },
+      { key: 'dueAt', label: 'Due Date' },
+      { key: 'slaStatus', label: 'SLA Status' },
+    ],
+    icon: 'file-circle-plus',
+    allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
   },
 };
 

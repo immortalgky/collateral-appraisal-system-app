@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Icon } from '@/shared/components';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import type { LeaseholdTableResult } from '../domain/calculateLeasehold';
 
@@ -17,8 +16,6 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
     result;
 
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
-  const [propertyExpanded, setPropertyExpanded] = useState(true);
-  const [incomeExpanded, setIncomeExpanded] = useState(true);
 
   const colHl = 'bg-blue-50/60';
 
@@ -37,8 +34,6 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
     onMouseLeave: () => setHoveredCol(null),
   });
 
-  const groupHeaderCls = 'sticky left-0 z-10 bg-gray-100 px-3 py-1.5 border-b border-gray-200';
-
   return (
     <>
     <ScrollableTableContainer>
@@ -56,88 +51,75 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
           </tr>
         </thead>
         <tbody>
-          {/* Group: Property Values */}
-          <tr
-            role="button"
-            tabIndex={0}
-            aria-expanded={propertyExpanded}
-            className="bg-gray-100 cursor-pointer hover:bg-gray-200/60 transition-colors"
-            onClick={() => setPropertyExpanded(!propertyExpanded)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPropertyExpanded(!propertyExpanded); } }}
-          >
-            <td className={groupHeaderCls} colSpan={1}>
-              <span className="flex items-center gap-1.5 text-gray-700 font-semibold text-[11px] uppercase tracking-wide">
-                <Icon
-                  name="chevron-down"
-                  className={`size-3 transition-transform ${propertyExpanded ? '' : '-rotate-90'}`}
-                />
-                Property Values
-              </span>
+          {/* Detail label row */}
+          <tr className="bg-gray-100">
+            <td className="sticky left-0 z-10 bg-gray-100 px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-700 font-semibold">Detail</span>
             </td>
             {rows.map((r, i) => (
-              <td key={r.year} className={`border-b border-gray-200 bg-gray-100 ${hoveredCol === i ? colHl : ''}`} {...cp(i)} />
+              <td
+                key={r.year}
+                className={`border-b border-gray-200 bg-gray-100 ${hoveredCol === i ? colHl : ''}`}
+                {...cp(i)}
+              />
             ))}
           </tr>
 
-          {propertyExpanded && (
-            <>
-              {/* Land Value */}
-              <tr className="hover:bg-gray-50/50">
-                <td className={stickyCell}>
-                  <span className="font-medium text-gray-700 pl-4">Land Value</span>
-                </td>
-                {rows.map((r, i) => (
-                  <td key={r.year} className={dataCls(i)} {...cp(i)}>
-                    <div>{fmt(r.landValue)}</div>
-                    {i > 0 && r.landGrowthPercent !== 0 && (
-                      <div className="text-[10px] text-gray-400 mt-0.5">{r.landGrowthPercent.toFixed(2)} %</div>
+          {/* Land Value */}
+          <tr className="hover:bg-gray-50/50">
+            <td className={stickyCell}>
+              <span className="font-medium text-gray-700">Land Value</span>
+            </td>
+            {rows.map((r, i) => (
+              <td key={r.year} className={dataCls(i)} {...cp(i)}>
+                <div>{fmt(r.landValue)}</div>
+                {i > 0 && r.landGrowthPercent !== 0 && (
+                  <div className="text-[10px] text-gray-400 mt-0.5">{r.landGrowthPercent.toFixed(2)} %</div>
+                )}
+              </td>
+            ))}
+          </tr>
+
+          {/* Building Value */}
+          <tr className="hover:bg-gray-50/50">
+            <td className={stickyCell}>
+              <span className="text-gray-700">Building Value</span>
+            </td>
+            {rows.map((r, i) => (
+              <td key={r.year} className={dataCls(i)} {...cp(i)}>{r.buildingValue ? fmt(r.buildingValue) : ''}</td>
+            ))}
+          </tr>
+
+          {/* Depreciation */}
+          <tr className="hover:bg-gray-50/50">
+            <td className={stickyCell}>
+              <span className="text-gray-700">Depreciation</span>
+            </td>
+            {rows.map((r, i) => (
+              <td key={r.year} className={dataCls(i)} {...cp(i)}>
+                {r.depreciationAmount ? (
+                  <>
+                    <div>{fmt(r.depreciationAmount)}</div>
+                    {r.depreciationPercent !== 0 && (
+                      <div className="text-[10px] text-gray-400 mt-0.5">{r.depreciationPercent.toFixed(2)} %</div>
                     )}
-                  </td>
-                ))}
-              </tr>
+                  </>
+                ) : ''}
+              </td>
+            ))}
+          </tr>
 
-              {/* Building Value */}
-              <tr className="hover:bg-gray-50/50">
-                <td className={stickyCell}>
-                  <span className="text-gray-700 pl-4">Building Value</span>
-                </td>
-                {rows.map((r, i) => (
-                  <td key={r.year} className={dataCls(i)} {...cp(i)}>{r.buildingValue ? fmt(r.buildingValue) : ''}</td>
-                ))}
-              </tr>
+          {/* Building value after depreciation */}
+          <tr className="hover:bg-gray-50/50">
+            <td className={stickyCell}>
+              <span className="text-gray-700">Building after depreciation</span>
+            </td>
+            {rows.map((r, i) => (
+              <td key={r.year} className={dataCls(i)} {...cp(i)}>{r.buildingAfterDepreciation ? fmt(r.buildingAfterDepreciation) : ''}</td>
+            ))}
+          </tr>
 
-              {/* Depreciation */}
-              <tr className="hover:bg-gray-50/50">
-                <td className={stickyCell}>
-                  <span className="text-gray-700 pl-4">Depreciation</span>
-                </td>
-                {rows.map((r, i) => (
-                  <td key={r.year} className={dataCls(i)} {...cp(i)}>
-                    {r.depreciationAmount ? (
-                      <>
-                        <div>{fmt(r.depreciationAmount)}</div>
-                        {r.depreciationPercent !== 0 && (
-                          <div className="text-[10px] text-gray-400 mt-0.5">{r.depreciationPercent.toFixed(2)} %</div>
-                        )}
-                      </>
-                    ) : ''}
-                  </td>
-                ))}
-              </tr>
-
-              {/* Building value after depreciation */}
-              <tr className="hover:bg-gray-50/50">
-                <td className={stickyCell}>
-                  <span className="text-gray-700 pl-4">Building after depreciation</span>
-                </td>
-                {rows.map((r, i) => (
-                  <td key={r.year} className={dataCls(i)} {...cp(i)}>{r.buildingAfterDepreciation ? fmt(r.buildingAfterDepreciation) : ''}</td>
-                ))}
-              </tr>
-            </>
-          )}
-
-          {/* Total value of land and buildings — always visible */}
+          {/* Total value of land and buildings */}
           <tr className="bg-gray-50 font-medium">
             <td className={stickyCellBold}>
               <span className="text-gray-800 font-semibold">Total value of land and buildings</span>
@@ -147,54 +129,27 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             ))}
           </tr>
 
-          {/* Group: Income Analysis */}
-          <tr
-            role="button"
-            tabIndex={0}
-            aria-expanded={incomeExpanded}
-            className="bg-gray-100 cursor-pointer hover:bg-gray-200/60 transition-colors"
-            onClick={() => setIncomeExpanded(!incomeExpanded)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIncomeExpanded(!incomeExpanded); } }}
-          >
-            <td className={groupHeaderCls} colSpan={1}>
-              <span className="flex items-center gap-1.5 text-gray-700 font-semibold text-[11px] uppercase tracking-wide">
-                <Icon
-                  name="chevron-down"
-                  className={`size-3 transition-transform ${incomeExpanded ? '' : '-rotate-90'}`}
-                />
-                Income Analysis
-              </span>
+          {/* Rental Income */}
+          <tr className="hover:bg-gray-50/50">
+            <td className={stickyCell}>
+              <span className="text-gray-700">Rental income</span>
             </td>
             {rows.map((r, i) => (
-              <td key={r.year} className={`border-b border-gray-200 bg-gray-100 ${hoveredCol === i ? colHl : ''}`} {...cp(i)} />
+              <td key={r.year} className={dataCls(i)} {...cp(i)}>{fmt(r.rentalIncome)}</td>
             ))}
           </tr>
 
-          {incomeExpanded && (
-            <>
-              {/* Rental Income */}
-              <tr className="hover:bg-gray-50/50">
-                <td className={stickyCell}>
-                  <span className="text-gray-700 pl-4">Rental income</span>
-                </td>
-                {rows.map((r, i) => (
-                  <td key={r.year} className={dataCls(i)} {...cp(i)}>{fmt(r.rentalIncome)}</td>
-                ))}
-              </tr>
+          {/* PV Factor */}
+          <tr className="hover:bg-gray-50/50">
+            <td className={stickyCell}>
+              <span className="text-gray-700">PV Factor</span>
+            </td>
+            {rows.map((r, i) => (
+              <td key={r.year} className={dataCls(i)} {...cp(i)}>{fmtPv(r.pvFactor)}</td>
+            ))}
+          </tr>
 
-              {/* PV Factor */}
-              <tr className="hover:bg-gray-50/50">
-                <td className={stickyCell}>
-                  <span className="text-gray-700 pl-4">PV Factor</span>
-                </td>
-                {rows.map((r, i) => (
-                  <td key={r.year} className={dataCls(i)} {...cp(i)}>{fmtPv(r.pvFactor)}</td>
-                ))}
-              </tr>
-            </>
-          )}
-
-          {/* Net Current Rental Income — always visible */}
+          {/* Net Current Rental Income */}
           <tr className="bg-gray-50 font-medium">
             <td className={stickyCellBold}>
               <span className="text-gray-800 font-semibold">Net Current Rental Income</span>

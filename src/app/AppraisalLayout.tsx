@@ -1,6 +1,5 @@
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMemo } from 'react';
-import { Toaster } from 'react-hot-toast';
 import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -345,30 +344,6 @@ function AppraisalLayout() {
         </div>
 
         <LoadingOverlay />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#fff',
-              color: '#363636',
-            },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              duration: 4000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
-            },
-          }}
-        />
       </div>
     </AppraisalProvider>
   );

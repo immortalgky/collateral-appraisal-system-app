@@ -1,18 +1,34 @@
 /**
- * Workflow Activity Types (User Roles)
- * Each activity represents a different user role in the appraisal workflow
+ * User Roles
+ * Mirrors the backend role table (see seed SQL).
+ * - Admin:                System-wide administrator (full access, platform owner)
+ * - IntAdmin:             Workflow administrator (internal side)
+ * - ExtAdmin:             External company administrator
+ * - RequestMaker:         Request maker / originator (RM) (bank staff)
+ * - RequestChecker:       Request checker / originator (RM) supervisor (bank staff)
+ * - IntAppraisalStaff:    Internal appraisal staff (executes internal appraisals)
+ * - IntAppraisalChecker:  Internal appraisal checker (reviews internal work)
+ * - IntAppraisalVerifier: Internal appraisal verifier (final internal sign-off)
+ * - ExtAppraisalStaff:    External appraisal staff (executes external appraisals)
+ * - ExtAppraisalChecker:  External appraisal checker (reviews external work)
+ * - ExtAppraisalVerifier: External appraisal verifier (final external sign-off)
+ * - AppraisalCommittee:   Appraisal committee member (approves / votes)
+ * - MeetingSecretary:     Meeting secretary — schedules/runs tier-3 approval meetings
  */
-export type WorkflowActivity =
-  | 'admin' // System Administrator - full access
-  | 'request_creator' // Bank staff who creates appraisal requests
-  | 'request_approver' // Approves/rejects incoming requests
-  | 'task_assigner' // Assigns tasks to appraisers
-  | 'external_appraiser' // External appraiser who performs field appraisals
-  | 'internal_appraiser' // Internal appraiser
-  | 'appraisal_checker' // Reviews and checks appraisal reports
-  | 'appraisal_approver' // Final approval of appraisal reports
-  | 'report_reviewer' // Reviews completed reports
-  | 'viewer'; // Read-only access
+export type UserRole =
+  | 'Admin'
+  | 'IntAdmin'
+  | 'ExtAdmin'
+  | 'RequestMaker'
+  | 'RequestChecker'
+  | 'IntAppraisalStaff'
+  | 'IntAppraisalChecker'
+  | 'IntAppraisalVerifier'
+  | 'ExtAppraisalStaff'
+  | 'ExtAppraisalChecker'
+  | 'ExtAppraisalVerifier'
+  | 'AppraisalCommittee'
+  | 'MeetingSecretary';
 
 /**
  * Contextual data used by NavItem.showWhen to conditionally display items
@@ -42,11 +58,11 @@ export type NavItem = {
   iconStyle?: string;
   children?: NavItem[];
   /** Roles that can view this menu item. If empty/undefined, all roles can view */
-  allowedRoles?: WorkflowActivity[];
+  allowedRoles?: UserRole[];
   /** Roles that can edit content on this page. If empty/undefined, inherits from allowedRoles */
-  editableRoles?: WorkflowActivity[];
+  editableRoles?: UserRole[];
   /** Roles that are explicitly denied access. Takes precedence over allowedRoles */
-  deniedRoles?: WorkflowActivity[];
+  deniedRoles?: UserRole[];
   /** Optional condition. Item shown only when this returns true. If undefined, always shown. */
   showWhen?: (context: NavContext) => boolean;
 };
@@ -60,6 +76,16 @@ export type NavItemWithAccess = NavItem & {
   /** Whether the current user can edit content on this page */
   canEdit: boolean;
 };
+
+// Convenience role groups to keep allowedRoles concise and consistent
+const ALL_APPRAISAL_ROLES: UserRole[] = [
+  'IntAppraisalStaff',
+  'IntAppraisalChecker',
+  'IntAppraisalVerifier',
+  'ExtAppraisalStaff',
+  'ExtAppraisalChecker',
+  'ExtAppraisalVerifier',
+];
 
 /**
  * Complete navigation configuration with role-based access
@@ -79,7 +105,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'folder-open',
     iconColor: 'text-emerald-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin', 'request_creator', 'request_approver', 'task_assigner', 'viewer'],
+    allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
     children: [
       {
         name: 'Request Listing',
@@ -94,7 +120,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'file-circle-plus',
         iconColor: 'text-emerald-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'request_creator'],
+        allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
       },
     ],
   },
@@ -105,13 +131,12 @@ export const navigationConfig: NavItem[] = [
     iconColor: 'text-purple-500',
     iconStyle: 'solid',
     allowedRoles: [
-      'admin',
-      'task_assigner',
-      'request_creator',
-      'external_appraiser',
-      'internal_appraiser',
-      'appraisal_checker',
-      'appraisal_approver',
+      'Admin',
+      'IntAdmin',
+      'ExtAdmin',
+      'RequestMaker',
+      ...ALL_APPRAISAL_ROLES,
+      'AppraisalCommittee',
     ],
     children: [
       {
@@ -127,7 +152,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'clipboard-check',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'request_creator'],
+        allowedRoles: ['Admin', 'RequestChecker'],
       },
       {
         name: 'Appraisal Initiation',
@@ -135,7 +160,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'file-pen',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'request_creator'],
+        allowedRoles: ['Admin', 'RequestMaker'],
       },
       {
         name: 'Appraisal Assignment',
@@ -143,7 +168,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'building',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner'],
+        allowedRoles: ['Admin', 'IntAdmin'],
       },
       {
         name: 'External Appraisal Assignment',
@@ -151,7 +176,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'building-columns',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'external_appraiser'],
+        allowedRoles: ['Admin', 'ExtAdmin'],
       },
       {
         name: 'External Appraisal Execution',
@@ -159,7 +184,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'user-tie',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner', 'external_appraiser'],
+        allowedRoles: ['Admin', 'ExtAppraisalStaff'],
       },
       {
         name: 'External Appraisal Check',
@@ -167,7 +192,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'clipboard-check',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner', 'appraisal_checker'],
+        allowedRoles: ['Admin', 'ExtAppraisalChecker'],
       },
       {
         name: 'External Appraisal Verification',
@@ -175,7 +200,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'shield-check',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'appraisal_checker'],
+        allowedRoles: ['Admin', 'ExtAppraisalVerifier'],
       },
       {
         name: 'Appraisal Book Verification',
@@ -183,7 +208,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'book-open',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner', 'internal_appraiser'],
+        allowedRoles: ['Admin', 'IntAppraisalStaff'],
       },
       {
         name: 'Internal Appraisal Execution',
@@ -191,7 +216,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'user',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner', 'internal_appraiser'],
+        allowedRoles: ['Admin', 'IntAppraisalStaff'],
       },
       {
         name: 'Internal Appraisal Check',
@@ -199,7 +224,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'magnifying-glass-check',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner', 'appraisal_checker'],
+        allowedRoles: ['Admin', 'IntAppraisalChecker'],
       },
       {
         name: 'Internal Appraisal Verification',
@@ -207,7 +232,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'badge-check',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'appraisal_checker'],
+        allowedRoles: ['Admin', 'IntAppraisalVerifier'],
       },
       {
         name: 'Pending Approval',
@@ -215,7 +240,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'hourglass-half',
         iconColor: 'text-purple-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'task_assigner', 'appraisal_approver'],
+        allowedRoles: ['Admin', 'AppraisalCommittee'],
       },
     ],
   },
@@ -225,15 +250,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'magnifying-glass-chart',
     iconColor: 'text-cyan-500',
     iconStyle: 'solid',
-    allowedRoles: [
-      'admin',
-      'external_appraiser',
-      'internal_appraiser',
-      'appraisal_checker',
-      'appraisal_approver',
-      'report_reviewer',
-      'viewer',
-    ],
+    allowedRoles: ['Admin', 'IntAdmin', 'ExtAdmin', ...ALL_APPRAISAL_ROLES, 'AppraisalCommittee'],
     children: [
       {
         name: 'Search',
@@ -248,7 +265,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'folder-user',
         iconColor: 'text-cyan-500',
         iconStyle: 'solid',
-        allowedRoles: ['external_appraiser', 'internal_appraiser'],
+        allowedRoles: ALL_APPRAISAL_ROLES,
       },
       {
         name: 'Pending Review',
@@ -256,7 +273,14 @@ export const navigationConfig: NavItem[] = [
         icon: 'clipboard-check',
         iconColor: 'text-amber-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin', 'appraisal_checker', 'appraisal_approver'],
+        allowedRoles: [
+          'Admin',
+          'IntAdmin',
+          'IntAppraisalChecker',
+          'IntAppraisalVerifier',
+          'ExtAppraisalChecker',
+          'ExtAppraisalVerifier',
+        ],
       },
     ],
   },
@@ -266,7 +290,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'chart-line',
     iconColor: 'text-indigo-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin', 'report_reviewer', 'appraisal_approver'],
+    allowedRoles: ['Admin', 'IntAdmin', 'AppraisalCommittee'],
     children: [
       {
         name: 'Completed Reports',
@@ -281,7 +305,31 @@ export const navigationConfig: NavItem[] = [
         icon: 'chart-pie',
         iconColor: 'text-indigo-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin'],
+        allowedRoles: ['Admin', 'IntAdmin'],
+      },
+    ],
+  },
+  {
+    name: 'Meetings',
+    href: '/meetings',
+    icon: 'people-arrows',
+    iconColor: 'text-blue-500',
+    iconStyle: 'solid',
+    allowedRoles: ['Admin', 'IntAdmin', 'MeetingSecretary', 'AppraisalCommittee'],
+    children: [
+      {
+        name: 'All Meetings',
+        href: '/meetings',
+        icon: 'list',
+        iconColor: 'text-blue-500',
+        iconStyle: 'solid',
+      },
+      {
+        name: 'Awaiting Meeting Queue',
+        href: '/meetings/queue',
+        icon: 'hourglass-half',
+        iconColor: 'text-blue-500',
+        iconStyle: 'solid',
       },
     ],
   },
@@ -299,7 +347,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'puzzle-piece',
     iconColor: 'text-teal-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin', 'external_appraiser', 'internal_appraiser'],
+    allowedRoles: ['Admin', 'IntAdmin', 'ExtAdmin', 'IntAppraisalStaff', 'ExtAppraisalStaff'],
   },
   {
     name: 'Parameter',
@@ -307,7 +355,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'sliders',
     iconColor: 'text-rose-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin'],
+    allowedRoles: ['Admin'],
   },
   {
     name: 'User Management',
@@ -315,7 +363,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'users',
     iconColor: 'text-violet-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin'],
+    allowedRoles: ['Admin', 'IntAdmin', 'ExtAdmin'],
     children: [
       {
         name: 'User List',
@@ -337,7 +385,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'shield-halved',
         iconColor: 'text-violet-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin'],
+        allowedRoles: ['Admin'],
       },
       {
         name: 'Roles',
@@ -345,7 +393,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'user-shield',
         iconColor: 'text-violet-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin'],
+        allowedRoles: ['Admin'],
       },
       {
         name: 'Groups',
@@ -353,7 +401,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'users-rectangle',
         iconColor: 'text-violet-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin'],
+        allowedRoles: ['Admin', 'IntAdmin', 'ExtAdmin'],
       },
       {
         name: 'Users',
@@ -361,7 +409,7 @@ export const navigationConfig: NavItem[] = [
         icon: 'circle-user',
         iconColor: 'text-violet-500',
         iconStyle: 'solid',
-        allowedRoles: ['admin'],
+        allowedRoles: ['Admin', 'IntAdmin', 'ExtAdmin'],
       },
     ],
   },
@@ -371,7 +419,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'diagram-project',
     iconColor: 'text-orange-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin'],
+    allowedRoles: ['Admin', 'IntAdmin'],
     children: [
       {
         name: 'Workflow Listing',
@@ -395,7 +443,7 @@ export const navigationConfig: NavItem[] = [
     icon: 'layer-group',
     iconColor: 'text-teal-500',
     iconStyle: 'solid',
-    allowedRoles: ['admin'],
+    allowedRoles: ['Admin', 'IntAdmin'],
     children: [
       {
         name: 'MC Factors',
@@ -423,23 +471,25 @@ export const navigationConfig: NavItem[] = [
 ];
 
 /**
- * Filter navigation items based on user's role
+ * Filter navigation items based on the user's role set.
+ * Access is granted if *any* of the user's roles is in `allowedRoles`,
+ * and none of the user's roles is in `deniedRoles`.
  */
-export function getNavigationByRole(role: WorkflowActivity): NavItem[] {
+export function getNavigationByRoles(roles: UserRole[]): NavItem[] {
   const filterItems = (items: NavItem[]): NavItem[] => {
     return (
       items
         .filter(item => {
-          // Check if explicitly denied
-          if (item.deniedRoles?.includes(role)) {
+          // Check if any of the user's roles is explicitly denied
+          if (item.deniedRoles && roles.some(r => item.deniedRoles!.includes(r))) {
             return false;
           }
           // If no allowedRoles specified, allow all
           if (!item.allowedRoles || item.allowedRoles.length === 0) {
             return true;
           }
-          // Check if role is in allowedRoles
-          return item.allowedRoles.includes(role);
+          // Grant access if any of the user's roles is in allowedRoles
+          return roles.some(r => item.allowedRoles!.includes(r));
         })
         .map(item => ({
           ...item,
@@ -462,54 +512,60 @@ export function getNavigationByRole(role: WorkflowActivity): NavItem[] {
 /**
  * Role display names for UI
  */
-export const roleDisplayNames: Record<WorkflowActivity, string> = {
-  admin: 'System Administrator',
-  request_creator: 'Request Creator',
-  request_approver: 'Request Approver',
-  task_assigner: 'Task Assigner',
-  external_appraiser: 'External Appraiser',
-  internal_appraiser: 'Internal Appraiser',
-  appraisal_checker: 'Appraisal Checker',
-  appraisal_approver: 'Appraisal Approver',
-  report_reviewer: 'Report Reviewer',
-  viewer: 'Viewer',
+export const roleDisplayNames: Record<UserRole, string> = {
+  Admin: 'System Administrator',
+  IntAdmin: 'Workflow Administrator',
+  ExtAdmin: 'External Company Administrator',
+  RequestMaker: 'Request Maker',
+  IntAppraisalStaff: 'Internal Appraisal Staff',
+  IntAppraisalChecker: 'Internal Appraisal Checker',
+  IntAppraisalVerifier: 'Internal Appraisal Verifier',
+  ExtAppraisalStaff: 'External Appraisal Staff',
+  ExtAppraisalChecker: 'External Appraisal Checker',
+  ExtAppraisalVerifier: 'External Appraisal Verifier',
+  AppraisalCommittee: 'Appraisal Committee Member',
+  MeetingSecretary: 'Meeting Secretary',
 };
 
 /**
  * Role descriptions for tooltips/help text
  */
-export const roleDescriptions: Record<WorkflowActivity, string> = {
-  admin: 'Full system access including configuration and user management',
-  request_creator: 'Can create and manage appraisal requests',
-  request_approver: 'Can approve or reject incoming appraisal requests',
-  task_assigner: 'Can assign appraisal tasks to appraisers',
-  external_appraiser: 'External appraiser who performs field appraisals',
-  internal_appraiser: 'Internal bank appraiser',
-  appraisal_checker: 'Reviews and validates appraisal reports',
-  appraisal_approver: 'Final approval authority for appraisal reports',
-  report_reviewer: 'Can view and review completed appraisal reports',
-  viewer: 'Read-only access to view appraisals and requests',
+export const roleDescriptions: Record<UserRole, string> = {
+  Admin: 'Full system access including configuration and user management',
+  IntAdmin: 'Workflow administrator — manages internal workflow, assignments, and parameters',
+  ExtAdmin: 'External company administrator — manages external appraisers and assignments',
+  RequestMaker: 'Creates and originates appraisal requests',
+  IntAppraisalStaff: 'Internal appraisal staff — performs internal appraisals',
+  IntAppraisalChecker: 'Internal appraisal checker — reviews internal appraisal work',
+  IntAppraisalVerifier: 'Internal appraisal verifier — final internal sign-off',
+  ExtAppraisalStaff: 'External appraisal staff — performs external (field) appraisals',
+  ExtAppraisalChecker: 'External appraisal checker — reviews external appraisal work',
+  ExtAppraisalVerifier: 'External appraisal verifier — final external sign-off',
+  AppraisalCommittee: 'Appraisal committee member — approves/votes on tier-3 appraisals',
+  MeetingSecretary: 'Meeting secretary — schedules and runs tier-3 approval meetings',
 };
 
 /**
  * Get all available roles
  */
-export const allRoles: WorkflowActivity[] = [
-  'admin',
-  'request_creator',
-  'request_approver',
-  'task_assigner',
-  'external_appraiser',
-  'internal_appraiser',
-  'appraisal_checker',
-  'appraisal_approver',
-  'report_reviewer',
-  'viewer',
+export const allRoles: UserRole[] = [
+  'Admin',
+  'IntAdmin',
+  'ExtAdmin',
+  'RequestMaker',
+  'IntAppraisalStaff',
+  'IntAppraisalChecker',
+  'IntAppraisalVerifier',
+  'ExtAppraisalStaff',
+  'ExtAppraisalChecker',
+  'ExtAppraisalVerifier',
+  'AppraisalCommittee',
+  'MeetingSecretary',
 ];
 
 /**
  * Legacy export for backward compatibility
- * @deprecated Use getNavigationByRole() instead
+ * @deprecated Use getNavigationByRoles() instead
  */
 export const mainNavigation = navigationConfig;
 

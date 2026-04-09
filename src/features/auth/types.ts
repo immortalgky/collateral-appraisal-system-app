@@ -1,3 +1,5 @@
+import type { UserRole } from '@shared/config/navigation';
+
 export interface User {
   id: string;
   name: string;
@@ -8,7 +10,12 @@ export interface User {
   avatarUrl: string;
   position: string;
   department: string;
-  roles: string[];
+  /**
+   * Roles held by the user. A user can hold multiple roles simultaneously.
+   * Filtered at the API boundary in `useCurrentUser` so only values from the
+   * canonical `UserRole` union reach the store — unknown strings are dropped.
+   */
+  roles: UserRole[];
   permissions: string[];
 }
 
