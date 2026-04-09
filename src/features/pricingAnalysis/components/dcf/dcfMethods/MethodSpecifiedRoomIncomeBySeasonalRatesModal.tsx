@@ -184,8 +184,8 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
         </div>
       </div>
 
-      <div className="overflow-auto max-h-80 flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
-        <ScrollableTableContainer className="flex-1 min-h-0">
+      <div className="overflow-auto flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
+        <ScrollableTableContainer className="flex-1 min-h-0 max-h-80">
           <table className="table table-xs min-w-max border-separate border-spacing-0">
             <thead>
               <tr>

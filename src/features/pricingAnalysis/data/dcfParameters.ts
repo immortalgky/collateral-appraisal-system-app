@@ -37,6 +37,7 @@ export const assumptionParams = [
   { code: 'E17', description: 'Sales and Marketing Expenses' },
   { code: 'E18', description: 'Utility Expenses' },
   { code: 'E19', description: 'Other Costs' },
+  { code: 'E20', description: 'Reserve for Asset Maintenance (FF&E / Cap Ex)' },
 
   // others
   { code: 'M99', description: 'Miscellaneous' },
@@ -45,11 +46,11 @@ export const assumptionParams = [
 export const mappingAssumptionMethodParams = [
   {
     assumptionCode: 'I00',
-    methods: ['06'],
+    methods: ['06', '04'],
   },
   {
     assumptionCode: 'I01',
-    methods: ['01', '02', '03', '05'],
+    methods: ['01', '02', '03', '04', '05'],
   },
   {
     assumptionCode: 'I02',
@@ -149,6 +150,10 @@ export const mappingAssumptionMethodParams = [
   },
   {
     assumptionCode: 'E19',
+    methods: ['13', '14'],
+  },
+  {
+    assumptionCode: 'E20',
     methods: ['13', '14'],
   },
   {

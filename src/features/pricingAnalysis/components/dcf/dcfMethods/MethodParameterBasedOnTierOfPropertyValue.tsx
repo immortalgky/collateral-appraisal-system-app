@@ -14,7 +14,6 @@ export function MethodParameterBasedOnTierOfPropertyValue({
   totalNumberOfYears,
   baseStyles,
 }: MethodParameterBasedOnTierOfPrpertyValueProps) {
-  console.log(method);
   return (
     <>
       {expanded && (

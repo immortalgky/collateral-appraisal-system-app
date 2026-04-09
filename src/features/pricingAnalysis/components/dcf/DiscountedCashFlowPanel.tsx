@@ -38,7 +38,11 @@ export function DiscountedCashFlowPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
-  const methods = useForm<DCFFormType>({ mode: 'onSubmit', resolver: zodResolver(DCFForm) });
+  const methods = useForm<DCFFormType>({
+    mode: 'onSubmit',
+    resolver: zodResolver(DCFForm),
+    // shouldUnregister: true,
+  });
 
   const { handleSubmit, reset, getValues, setValue, control } = methods;
 
@@ -53,18 +57,16 @@ export function DiscountedCashFlowPanel({
   const templateDetailQuery = dcfTemplateQueries.find(t => t.id === selectedTemplateId)?.data; // replace by query template detail by template id function.
 
   const handleOnGenerate = async () => {
-    setIsGenerated(false);
+    const nextTemplate = templateDetailQuery as DCFTemplateType | undefined;
+    if (!nextTemplate) return;
 
-    // initialize
-    reset({});
-    initializeDiscountedCashFlowForm(templateDetailQuery as DCFTemplateType, reset);
-    console.log(getValues());
-
+    initializeDiscountedCashFlowForm(nextTemplate, reset);
     setIsGenerated(true);
   };
 
   const handleOnSelectTemplate = (templateCode: string) => {
     setSelectedTemplateCode(templateCode);
+    setPricingTemplate(templateCode);
     setValue('templateCode', templateCode);
   };
 

@@ -1,5 +1,4 @@
 type Identifier = 'positive' | 'negative' | 'empty';
-type CategoryIdentifier = 'income' | 'expenses' | 'gop' | 'fixedExps';
 type CategoryType = 'income' | 'expenses' | 'gop' | 'fixedExps';
 type SectionType = 'income' | 'expenses' | 'summaryDCF' | 'summaryDirect';
 
@@ -243,6 +242,8 @@ interface MethodSpecifiedEnergyCostIndex {
 interface MethodProportionOfTheNewReplacementCost {
   // modal
   proportionPct: number;
+  increaseRatePct: number;
+  increaseRateYrs: number;
 
   // table
   newReplacementCost: number;
@@ -253,7 +254,7 @@ interface MethodProportionOfTheNewReplacementCost {
 type RefTarget = {
   kind: 'section' | 'category' | 'assumption';
   clientId?: string | null;
-  dbId?: number | null;
+  dbId?: string | null;
 };
 
 interface MethodProportion {
@@ -461,18 +462,18 @@ export interface DCFTemplateType {
     totalValue: number;
   };
   finalValue: number;
-  finalValueRouned: number;
-  AppraisalPrice: number;
-  AppraisalPriceRounded: number;
+  finalValueRounded: number;
+  appraisalPrice: number;
+  appraisalPriceRounded: number;
   sections: {
     sectionType: SectionType; // render section e.g income, expenses
     sectionName: string;
     identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
     displaySeq: number;
     categories?: {
-      categoryType: string;
+      categoryType: CategoryType;
       categoryName: string;
-      identifier: CategoryIdentifier;
+      identifier: Identifier;
       displaySeq: number;
       assumptions: {
         assumptionType: string;

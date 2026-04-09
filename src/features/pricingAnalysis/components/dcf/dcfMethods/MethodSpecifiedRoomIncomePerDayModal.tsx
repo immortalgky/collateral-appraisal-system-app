@@ -108,7 +108,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
                 return (
                   <tr key={r.id}>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <div className="flex flex-row gap-1.5">
+                      <div className="flex flex-row gap-1.5 items-center">
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${index}.roomType`}
                           inputType="select"

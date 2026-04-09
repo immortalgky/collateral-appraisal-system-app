@@ -4,14 +4,12 @@ import { Icon } from '@/shared/components';
 import { convertLandAreaToTotalSqWa } from '../../domain/convertLandAreaToTotalSqWa';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { floorToThousands } from '../../domain/calculation';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { shouldAutoDefault } from '../../domain/shouldAutoDefault';
 
 export function DiscountedCashFlowHighestBestUsed() {
   const { control, getValues, setValue } = useFormContext();
   const isHighestBestUsed = useWatch({ control, name: 'isHighestBestUsed' });
-
-  const prevAppraisalValueRef = useRef<number | null>(null);
 
   const rules: DerivedFieldRule[] = [
     {
@@ -34,14 +32,14 @@ export function DiscountedCashFlowHighestBestUsed() {
       },
     },
     {
-      targetPath: 'AppraisalPrice',
+      targetPath: 'appraisalPrice',
       deps: ['finalValueRounded'],
       compute: ({ getValues }) => {
         const finalValueRounded = getValues('finalValueRounded') ?? 0;
 
         const isHighestBestUsed = getValues('isHighestBestUsed') ?? false;
         const totalHighestBestUsedValue = getValues('highestBestUsed.totalValue');
-        if (isHighestBestUsed && !!totalHighestBestUsedValue) {
+        if (!isHighestBestUsed && !!totalHighestBestUsedValue) {
           return floorToThousands(finalValueRounded + totalHighestBestUsedValue);
         }
 
@@ -49,12 +47,12 @@ export function DiscountedCashFlowHighestBestUsed() {
       },
     },
     {
-      targetPath: 'AppraisalPriceRounded',
-      deps: ['AppraisalPrice'],
-      compute: ({ getValues }) => Number(getValues('AppraisalPrice')) || 0,
+      targetPath: 'appraisalPriceRounded',
+      deps: ['appraisalPrice'],
+      compute: ({ getValues }) => Number(getValues('appraisalPrice')) || 0,
       when: ({ getValues, getFieldState, formState }) => {
-        const curr = getValues('AppraisalPriceRounded') ?? 0;
-        const { isDirty } = getFieldState('AppraisalPriceRounded', formState);
+        const curr = getValues('appraisalPriceRounded') ?? 0;
+        const { isDirty } = getFieldState('appraisalPriceRounded', formState);
         return shouldAutoDefault({ value: curr, isDirty });
       },
     },
@@ -84,7 +82,7 @@ export function DiscountedCashFlowHighestBestUsed() {
         />
       </div>
       {/* Area (shown when include area is on) */}
-      {isHighestBestUsed && (
+      {!isHighestBestUsed && (
         <>
           <div className="flex flex-col justify-start gap-4">
             <div className="flex flex-row justify-start items-end gap-1.5">
@@ -162,7 +160,7 @@ export function DiscountedCashFlowHighestBestUsed() {
       {/* Final Value (Rounded) */}
       <div className="flex items-center gap-4">
         <span className="w-48 text-gray-500">
-          Final Value (Rounded) {isHighestBestUsed ? '+ Land Value' : ''}
+          Final Value (Rounded) {isHighestBestUsed ? '' : '+ Land Value'}
         </span>
         <span className="font-medium text-gray-800">
           <RHFInputCell

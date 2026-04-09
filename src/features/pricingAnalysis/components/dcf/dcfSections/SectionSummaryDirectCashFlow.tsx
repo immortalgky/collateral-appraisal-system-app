@@ -88,7 +88,7 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                 <div className="flex flex-row justify-end items-center">
                   <div className="w-28">
                     <RHFInputCell
-                      fieldName={'finalValueRounded'}
+                      fieldName={`finalValueRounded`}
                       inputType="number"
                       number={{
                         decimalPlaces: 2,

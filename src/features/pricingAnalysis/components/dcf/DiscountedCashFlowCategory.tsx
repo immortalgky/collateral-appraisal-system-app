@@ -122,7 +122,7 @@ export function DiscountedCashFlowCategory({
             if (!assumption) return null;
 
             return (
-              <Fragment key={assumption.dbId ?? assumption.clientId}>
+              <Fragment key={assumption.dbId ?? assumption.clientId ?? field.id}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
                   editing={editing}

@@ -5,7 +5,6 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 interface MethodSpecifiedValueWithGrowthProps {
   name: string;
   expanded: boolean;
-  totalNumberOfYears: number;
   method: MethodSpecifiedValueWithGrowthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
 }

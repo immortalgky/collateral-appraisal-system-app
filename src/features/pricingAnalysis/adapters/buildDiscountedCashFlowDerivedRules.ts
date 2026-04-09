@@ -1,4 +1,4 @@
-import { toNumber } from '../domain/calculation';
+import { floorToThousand, toNumber } from '../domain/calculation';
 import { resolveRefTarget } from '../domain/dcf/resolveRefTarget';
 import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
 import type { DCFAssumption, DCFCategory, DCFSection } from '../types/dcf';
@@ -148,7 +148,6 @@ export function buildStaticCalculationDerivedRules(
                 // minus contract fee from lease agreement
                 const contractRentalFee =
                   getValues(`sections.${sectionIdx}.contractRentalFee.${idx}`) ?? 0;
-                console.log(grossRevenue);
                 return grossRevenue - contractRentalFee;
               },
             },
@@ -236,7 +235,7 @@ export function buildStaticCalculationDerivedRules(
         },
         {
           targetPath: `finalValueRounded`,
-          deps: [],
+          deps: [`finalValue`],
           when: ({ getFieldState, formState }) => {
             const { isDirty } = getFieldState('finalValueRounded', formState);
             return !isDirty;
@@ -290,18 +289,12 @@ export function buildStaticCalculationDerivedRules(
           targetPath: `finalValue`,
           deps: ['sections'],
           compute: ({ getValues }) => {
-            const summarySection = (getValues('sections') ?? []).find(
-              (s: DCFSection) => s.sectionType === 'summaryDCF',
-            ) as DCFSummarySection;
-            const finalValue = (summarySection?.presentValue ?? []).reduce((prev, curr) => {
-              return prev + Number(curr ?? 0);
-            }, 0);
-            return finalValue;
+            return getValues(`sections.${sectionIdx}.presentValue`) ?? 0;
           },
         },
         {
           targetPath: `finalValueRounded`,
-          deps: [],
+          deps: [`finalValue`],
           when: ({ getFieldState, formState }) => {
             const { isDirty } = getFieldState('finalValueRounded', formState);
             return !isDirty;
@@ -1065,7 +1058,6 @@ export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
       targetPath: `${name}.detail.newReplacementCost`,
       deps: [],
       compute: ({ ctx }) => {
-        console.log('recompute new replacement cost');
         return ctx.newReplacementCost ?? 0;
       },
     },
@@ -1166,7 +1158,7 @@ export function buildMethodSpecifiedValueWithGrowthDerivedRules({
         compute: ({ getValues }) => {
           const prevYearValue = getValues(`${name}.totalMethodValues.${idx - 1}`) ?? 0;
           const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
-          const increaseRate = getValues(`${name}.increaseRates.${idx}`) ?? 0;
+          const increaseRate = getValues(`${name}.detail.increaseRates.${idx}`) ?? 0;
 
           if (idx === 0) return toNumber(firstYearAmt);
 

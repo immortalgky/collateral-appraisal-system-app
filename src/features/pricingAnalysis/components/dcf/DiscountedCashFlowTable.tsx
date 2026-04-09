@@ -100,7 +100,7 @@ export function DiscountedCashFlowTable({
   // section rules build only once
   const calculateStaticCalculationDerivedRules = useMemo(() => {
     return buildStaticCalculationDerivedRules(sections, totalNumberOfYears);
-  }, []);
+  }, [sections, totalNumberOfYears]);
 
   useDerivedFields({ rules: calculateStaticCalculationDerivedRules, ctx: { sections } });
 
@@ -191,7 +191,7 @@ export function DiscountedCashFlowTable({
             {(sections ?? []).map((section: DCFSection, sectionIdx: number) => {
               return (
                 <DiscountedCashFlowSectionRenderer
-                  key={section.dbId ?? section.clientId}
+                  key={section.dbId ?? section.clientId ?? sectionIdx}
                   name={`sections.${sectionIdx}`}
                   properties={properties}
                   section={section}
