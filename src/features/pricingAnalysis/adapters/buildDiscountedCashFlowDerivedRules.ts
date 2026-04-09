@@ -3,6 +3,7 @@ import { resolveRefTarget } from '../domain/dcf/resolveRefTarget';
 import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
 import type { DCFAssumption, DCFCategory, DCFSection } from '../types/dcf';
 import type { DerivedFieldRule } from './useDerivedFieldArray';
+import { MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay } from '@features/pricingAnalysis/components/dcf/dcfMethods/MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay.tsx';
 
 export function buildStaticCalculationDerivedRules(
   sections: DCFSection[] | undefined,
@@ -929,7 +930,7 @@ export function buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules({
   });
 }
 
-export function buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRulesDerivedRules({
+export function buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedRules({
   name,
   totalNumberOfYears,
 }: {

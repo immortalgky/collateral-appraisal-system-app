@@ -217,7 +217,6 @@ const typeToDetailEndpoint: Record<string, string> = {
   Vehicle: 'vehicle-detail',
   Vessel: 'vessel-detail',
   L: 'land-detail',
-  B: 'building-detail',
   U: 'condo-detail',
   LB: 'land-and-building-detail',
   B: 'building-detail',
