@@ -1116,6 +1116,10 @@ export const dcfOfficeTemplate: DCFTemplateType = {
                 methodType: '13',
                 detail: {
                   proportionPct: 1,
+                  refTarget: {
+                    kind: 'category',
+                    templateId: '2e7c4a91-5d83-4b6f-a2c8-3d9e1f7b9202',
+                  },
                 },
               },
             },
