@@ -50,7 +50,12 @@ export function MethodProportionModal({
       <div className="flex flex-row gap-1.5 items-center">
         <span className={''}>% of</span>
         <div className="w-64">
-          <RHFInputCell fieldName={`${name}.refTargetId`} inputType={'select'} options={options} />
+          <RHFInputCell
+            fieldName={`${name}.refTarget.clientId`}
+            inputType={'select'}
+            options={options}
+            dropdown={{ showValue: false }}
+          />
         </div>
       </div>
     </div>
