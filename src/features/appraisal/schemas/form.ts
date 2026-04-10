@@ -834,7 +834,7 @@ export type RentalInfoFormType = z.infer<typeof rentalInfoFormSchema>;
 
 const leaseAgreementExtension = {
   leaseAgreement: createLeaseAgreementForm.nullable().optional(),
-  rentalInfo: rentalInfoBaseSchema.nullable().optional(),
+  rentalInfo: rentalInfoFormSchema.nullable().optional(),
 };
 
 export const createLeaseAgreementBuildingForm = buildFormSchema(
