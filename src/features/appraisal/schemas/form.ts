@@ -9,6 +9,7 @@ import {
   allLandFields,
   allLeaseAgreementFields,
   allMachineryFields,
+  rentalScheduleField,
 } from '../configs/fields';
 
 const landTitleItem = z.object({
@@ -821,7 +822,10 @@ const rentalInfoRefinement = (data: any, ctx: z.RefinementCtx) => {
   }
 };
 
-export const rentalInfoFormSchema = rentalInfoBaseSchema.superRefine(rentalInfoRefinement);
+export const rentalInfoFormSchema = buildFormSchema(
+  rentalScheduleField,
+  rentalInfoBaseSchema,
+).superRefine(rentalInfoRefinement);
 export type RentalInfoFormType = z.infer<typeof rentalInfoFormSchema>;
 
 // =============================================================================
@@ -836,7 +840,9 @@ const leaseAgreementExtension = {
 export const createLeaseAgreementBuildingForm = buildFormSchema(
   allBuildingFields,
   createBuildingFormBase.extend(leaseAgreementExtension),
-).superRefine(constructionProportionRefinement).superRefine(rentalInfoRefinement);
+)
+  .superRefine(constructionProportionRefinement)
+  .superRefine(rentalInfoRefinement);
 export type createLeaseAgreementBuildingFormType = z.infer<typeof createLeaseAgreementBuildingForm>;
 
 export const createLeaseAgreementLandForm = buildFormSchema(
@@ -848,8 +854,12 @@ export type createLeaseAgreementLandFormType = z.infer<typeof createLeaseAgreeme
 export const createLeaseAgreementLandAndBuildingForm = buildFormSchema(
   allLandBuildingFields,
   createLandAndBuildingFormBase.extend(leaseAgreementExtension),
-).superRefine(constructionProportionRefinement).superRefine(rentalInfoRefinement);
-export type createLeaseAgreementLandAndBuildingFormType = z.infer<typeof createLeaseAgreementLandAndBuildingForm>;
+)
+  .superRefine(constructionProportionRefinement)
+  .superRefine(rentalInfoRefinement);
+export type createLeaseAgreementLandAndBuildingFormType = z.infer<
+  typeof createLeaseAgreementLandAndBuildingForm
+>;
 
 export const createLeaseAgreementBuildingFormDefault: createLeaseAgreementBuildingFormType = {
   ...createBuildingFormDefault,
@@ -863,8 +873,9 @@ export const createLeaseAgreementLandFormDefault: createLeaseAgreementLandFormTy
   rentalInfo: null,
 };
 
-export const createLeaseAgreementLandAndBuildingFormDefault: createLeaseAgreementLandAndBuildingFormType = {
-  ...createLandAndBuildingFormDefault,
-  leaseAgreement: null,
-  rentalInfo: null,
-};
+export const createLeaseAgreementLandAndBuildingFormDefault: createLeaseAgreementLandAndBuildingFormType =
+  {
+    ...createLandAndBuildingFormDefault,
+    leaseAgreement: null,
+    rentalInfo: null,
+  };

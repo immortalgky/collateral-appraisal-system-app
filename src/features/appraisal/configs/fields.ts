@@ -2841,12 +2841,14 @@ export const rentalScheduleField: FormField[] = [
     name: 'numberOfYears',
     wrapperClassName: 'col-span-3',
     maxIntegerDigits: 3,
+    required: true,
   },
   {
     type: 'date-input',
     label: 'First Year Start From',
     name: 'firstYearStartDate',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'number-input',
@@ -2855,6 +2857,7 @@ export const rentalScheduleField: FormField[] = [
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
     maxIntegerDigits: 15,
+    required: true,
   },
   {
     type: 'number-input',
@@ -2863,6 +2866,8 @@ export const rentalScheduleField: FormField[] = [
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
     maxIntegerDigits: 15,
+    required: true,
+    allowZero: true,
   },
 ];
 

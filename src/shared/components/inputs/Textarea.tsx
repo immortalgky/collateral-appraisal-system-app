@@ -21,7 +21,7 @@ const Textarea = ({
   disabled,
   className,
   showCharCount,
-  maxLength,
+  maxLength = 4000,
   value,
   ...props
 }: TextareaProps) => {
