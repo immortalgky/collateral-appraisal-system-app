@@ -33,10 +33,10 @@ const MeetingDetailPage = () => {
     );
   }
 
-  const isDraft = meeting.status === 'Draft';
-  const isScheduled = meeting.status === 'Scheduled';
-  const isEnded = meeting.status === 'Ended';
-  const isCancelled = meeting.status === 'Cancelled';
+  const isDraft = meeting.status === 'DRAFT';
+  const isScheduled = meeting.status === 'SCHEDULED';
+  const isEnded = meeting.status === 'ENDED';
+  const isCancelled = meeting.status === 'CANCELLED';
   const isEditable = isDraft || isScheduled;
   const canSchedule = isDraft && meeting.items.length > 0;
 

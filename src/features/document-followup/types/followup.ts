@@ -1,8 +1,8 @@
 // TS interfaces matching backend DocumentFollowup DTOs
 
-export type LineItemStatus = 'Pending' | 'Uploaded' | 'Declined' | 'Cancelled';
+export type LineItemStatus = 'PENDING' | 'UPLOADED' | 'DECLINED' | 'CANCELLED';
 
-export type FollowupStatus = 'Open' | 'Resolved' | 'Cancelled';
+export type FollowupStatus = 'OPEN' | 'RESOLVED' | 'CANCELLED';
 
 export interface FollowupLineItem {
   id: string;

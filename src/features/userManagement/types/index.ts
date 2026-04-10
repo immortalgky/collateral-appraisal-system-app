@@ -37,7 +37,7 @@ export interface UpdatePermissionRequest {
 export type RoleScope = 'Bank' | 'Company';
 
 export interface RolePermission {
-  permissionId: string;
+  id: string;
   permissionCode: string;
   description: string;
 }

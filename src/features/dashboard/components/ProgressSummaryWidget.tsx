@@ -15,7 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
   NEW: '#06b6d4',
   SUBMITTED: '#f97316',
   ASSIGNED: '#a855f7',
-  INPROGRESS: '#ef4444',
+  IN_PROGRESS: '#ef4444',
   COMPLETED: '#22c55e',
   CANCELLED: '#6b7280',
 };

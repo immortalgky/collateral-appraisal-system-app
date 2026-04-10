@@ -11,7 +11,7 @@ import type { MeetingStatus } from '../api/types';
 import MeetingFormDialog from '../components/MeetingFormDialog';
 import MeetingStatusBadge from '../components/MeetingStatusBadge';
 
-const STATUS_OPTIONS: MeetingStatus[] = ['Draft', 'Scheduled', 'Ended', 'Cancelled'];
+const STATUS_OPTIONS: MeetingStatus[] = ['DRAFT', 'SCHEDULED', 'ENDED', 'CANCELLED'];
 
 const MeetingListPage = () => {
   const navigate = useNavigate();

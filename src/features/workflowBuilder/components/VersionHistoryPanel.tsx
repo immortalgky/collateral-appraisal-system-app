@@ -45,7 +45,7 @@ export function VersionHistoryPanel({
     switch (status) {
       case 'Published':
         return 'badge-success';
-      case 'Draft':
+      case 'DRAFT':
         return 'badge-warning';
       case 'Deprecated':
         return 'badge-ghost';

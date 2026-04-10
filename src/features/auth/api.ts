@@ -1,7 +1,8 @@
 import type { UseQueryOptions } from '@tanstack/react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import { allRoles, type UserRole } from '@shared/config/navigation';
+import { allRoles } from '@features/userManagement/roleMeta';
+import type { UserRole } from '@shared/config/navigationTypes';
 import type { LoginCredentials, LoginResponse, User } from './types';
 import { useAuthStore } from './store';
 

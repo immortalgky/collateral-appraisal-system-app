@@ -1,11 +1,19 @@
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { router } from './router';
+import { MenuInitializer } from '@features/menuManagement/MenuInitializer';
 
+/**
+ * App root. Wrapped by AuthInitializer + AuthProvider in main.tsx.
+ * MenuInitializer fetches /auth/me/menu once after authentication and
+ * populates useMenuStore before the router renders layout/sidebar.
+ */
 function App() {
   return (
     <>
-      <RouterProvider router={router} />
+      <MenuInitializer>
+        <RouterProvider router={router} />
+      </MenuInitializer>
       <Toaster
         position="top-right"
         toastOptions={{

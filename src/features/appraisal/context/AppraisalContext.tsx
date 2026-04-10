@@ -1,13 +1,8 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
-import { isTerminalStatus, type UserRole } from '@shared/config/navigation';
-import { canEditAppraisalPage } from '@shared/config/appraisalNavigation';
-import { useAuthStore } from '@features/auth/store';
-
-// Stable fallback when no authenticated user is present.
-// Empty = least privilege; ProtectedRoute redirects unauthenticated users
-// before this hook ever runs in production.
-const DEFAULT_ROLES: UserRole[] = [];
+import { isTerminalStatus } from '@shared/config/navigationTypes';
+import { useMenuStore } from '@features/menuManagement/store';
+import type { MenuTreeNode } from '@features/menuManagement/types';
 
 /**
  * Appraisal data returned from the backend
@@ -133,9 +128,42 @@ export function useAppraisalStatus(): string | undefined {
 }
 
 /**
- * Hook to determine if the appraisal is in read-only mode.
- * Combines terminal status check with per-page role-based edit permission.
- * @param pageName - Optional page name to also check role-based edit permission
+ * Maps legacy pageName labels (as used in router.tsx's AppraisalReadOnlyWrapper)
+ * to the seeded ItemKey of the corresponding appraisal menu item. The hook uses
+ * this to look up canEdit on the server-filtered menu tree for page-level
+ * authorization. Unknown pageNames fail CLOSED (isReadOnly=true) so that adding
+ * a new page without a mapping cannot accidentally open up editing.
+ */
+const PAGE_NAME_TO_ITEM_KEY: Record<string, string> = {
+  Administration: 'appraisal.administration',
+  'Appointment & Fee': 'appraisal.appointment',
+  'Property Information': 'appraisal.property',
+  'Document Checklist': 'appraisal.documents',
+  'Summary & Decision': 'appraisal.summary',
+  '360 Summary': 'appraisal.360',
+  'Request Information': 'appraisal.request',
+};
+
+function findByItemKey(nodes: MenuTreeNode[], itemKey: string): MenuTreeNode | undefined {
+  for (const node of nodes) {
+    if (node.itemKey === itemKey) return node;
+    if (node.children?.length) {
+      const hit = findByItemKey(node.children, itemKey);
+      if (hit) return hit;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Hook to determine if the appraisal page is in read-only mode.
+ * Read-only if any of the following is true:
+ * 1. Terminal status (completed/approved/rejected/cancelled)
+ * 2. User lacks edit permission for the page (canEdit=false on the menu node)
+ * 3. The page name has no ItemKey mapping (fail closed)
+ *
+ * Pass the legacy display-name pageName (e.g. 'Property Information') — the hook
+ * resolves it to an ItemKey internally against PAGE_NAME_TO_ITEM_KEY.
  */
 export function useAppraisalReadOnly(pageName?: string): {
   isReadOnly: boolean;
@@ -143,16 +171,24 @@ export function useAppraisalReadOnly(pageName?: string): {
   status: string | undefined;
 } {
   const context = useContext(AppraisalContext);
-  const roles = useAuthStore(state => state.user?.roles ?? DEFAULT_ROLES);
   const status = context?.appraisal?.status;
   const terminal = isTerminalStatus(status);
+  const appraisalTree = useMenuStore(state => state.appraisal);
 
-  let isReadOnly = terminal;
-  if (!isReadOnly && pageName) {
-    isReadOnly = !canEditAppraisalPage(pageName, roles, { status });
-  }
+  if (terminal) return { isReadOnly: true, isTerminalStatus: true, status };
 
-  return { isReadOnly, isTerminalStatus: terminal, status };
+  // No pageName → caller only wants the terminal-status check (e.g. header components).
+  if (!pageName) return { isReadOnly: false, isTerminalStatus: false, status };
+
+  const itemKey = PAGE_NAME_TO_ITEM_KEY[pageName];
+  // Fail closed on unknown pageName — safer than silently allowing edits.
+  if (!itemKey) return { isReadOnly: true, isTerminalStatus: false, status };
+
+  const node = findByItemKey(appraisalTree, itemKey);
+  // Menu not loaded yet OR user has no view permission for the item: keep read-only.
+  if (!node) return { isReadOnly: true, isTerminalStatus: false, status };
+
+  return { isReadOnly: !node.canEdit, isTerminalStatus: false, status };
 }
 
 /**

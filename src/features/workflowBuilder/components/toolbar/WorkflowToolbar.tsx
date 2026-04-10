@@ -28,7 +28,7 @@ export function WorkflowToolbar({
   const statusBadgeClass =
     versionStatus === 'Published'
       ? 'badge-success'
-      : versionStatus === 'Draft'
+      : versionStatus === 'DRAFT'
         ? 'badge-warning'
         : 'badge-ghost';
 

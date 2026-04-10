@@ -3,9 +3,9 @@ import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import type { TaskFilterParams } from '../types';
 
 const TASK_STATUS_OPTIONS = [
-  { value: 'Assigned', label: 'Assigned' },
-  { value: 'InProgress', label: 'In Progress' },
-  { value: 'Completed', label: 'Completed' },
+  { value: 'ASSIGNED', label: 'Assigned' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'COMPLETED', label: 'Completed' },
 ];
 
 const TASK_TYPE_OPTIONS = [

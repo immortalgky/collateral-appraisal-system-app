@@ -1,4 +1,4 @@
-import type { UserRole } from '@shared/config/navigation';
+import type { UserRole } from '@shared/config/navigationTypes';
 
 export interface User {
   id: string;

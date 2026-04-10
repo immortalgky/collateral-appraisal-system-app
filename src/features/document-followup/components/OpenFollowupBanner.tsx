@@ -211,7 +211,7 @@ function FollowupDetail({
                 </td>
                 <td className="px-3 py-2.5 text-gray-500 max-w-xs">
                   <span className="line-clamp-2">{item.notes}</span>
-                  {(item.status === 'Declined' || item.status === 'Cancelled') &&
+                  {(item.status === 'DECLINED' || item.status === 'CANCELLED') &&
                     item.reason && (
                       <span className="block text-xs text-red-500 mt-0.5">
                         Reason: {item.reason}
@@ -224,7 +224,7 @@ function FollowupDetail({
                 {/* Per-item cancel — only for the raising user */}
                 {isRaisingUser && (
                   <td className="px-3 py-2.5">
-                    {item.status === 'Pending' && (
+                    {item.status === 'PENDING' && (
                       <button
                         type="button"
                         onClick={() => setCancelLineItemTarget(item.id)}
@@ -276,7 +276,7 @@ export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
 
   if (isLoading) return null;
 
-  const openFollowups = followups.filter(f => f.status === 'Open');
+  const openFollowups = followups.filter(f => f.status === 'OPEN');
   if (openFollowups.length === 0) return null;
 
   const totalPending = openFollowups.reduce((sum, f) => sum + (f.pendingCount ?? 0), 0);

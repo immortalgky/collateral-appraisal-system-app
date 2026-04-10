@@ -143,8 +143,8 @@ function ProvideDocumentsTaskPage() {
     );
   }
 
-  const pendingItems = followup.lineItems.filter(i => i.status === 'Pending');
-  const resolvedItems = followup.lineItems.filter(i => i.status !== 'Pending');
+  const pendingItems = followup.lineItems.filter(i => i.status === 'PENDING');
+  const resolvedItems = followup.lineItems.filter(i => i.status !== 'PENDING');
 
   return (
     <div className="flex flex-col gap-4">
@@ -270,7 +270,7 @@ function ProvideDocumentsTaskPage() {
         )}
 
         {/* All resolved state */}
-        {pendingItems.length === 0 && followup.status !== 'Cancelled' && (
+        {pendingItems.length === 0 && followup.status !== 'CANCELLED' && (
           <div className="flex items-center gap-3 mt-2 p-3 rounded-xl bg-green-50 border border-green-100">
             <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
             <p className="text-sm text-green-700 font-medium">

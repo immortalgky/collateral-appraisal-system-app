@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
 import HomePage from '../features/dashboard/pages/HomePage';
@@ -14,6 +14,12 @@ import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
 import ActivityTaskListPage from '@/features/task/pages/ActivityTaskListPage';
+
+function TaskPageDispatcher() {
+  const [searchParams] = useSearchParams();
+  const activityId = searchParams.get('activityId');
+  return activityId ? <ActivityTaskListPage /> : <TaskListingPage />;
+}
 import NotificationPage from '@/features/notification/pages/NotificationPage';
 import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
 import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
@@ -61,6 +67,8 @@ import MeetingListPage from '@/features/meeting/pages/MeetingListPage';
 import MeetingQueuePage from '@/features/meeting/pages/MeetingQueuePage';
 import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
+import MenuListPage from '@features/menuManagement/pages/MenuListPage';
+import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -123,8 +131,7 @@ export const router = createBrowserRouter([
       {
         path: 'tasks',
         children: [
-          { index: true, element: <TaskListingPage /> },
-          { path: 'activity/:activityId', element: <ActivityTaskListPage /> },
+          { index: true, element: <TaskPageDispatcher /> },
         ],
       },
       // Meeting Routes (tier-3 approval gate)
@@ -202,6 +209,16 @@ export const router = createBrowserRouter([
           { path: 'roles', element: <RoleListPage /> },
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
+          // Menu management — gated by MENU_MANAGE permission
+          {
+            path: 'menus',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="MENU_MANAGE" />,
+            children: [
+              { index: true, element: <MenuListPage /> },
+              { path: 'new', element: <MenuEditPage /> },
+              { path: ':menuId', element: <MenuEditPage /> },
+            ],
+          },
         ],
       },
       // Template Management Routes

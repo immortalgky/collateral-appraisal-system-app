@@ -7,7 +7,7 @@
  * independently of the shared OpenAPI bundle.
  */
 
-export type MeetingStatus = 'Draft' | 'Scheduled' | 'Ended' | 'Cancelled';
+export type MeetingStatus = 'DRAFT' | 'SCHEDULED' | 'ENDED' | 'CANCELLED';
 
 export type MeetingQueueItemStatus = 'Queued' | 'Assigned' | 'Released';
 

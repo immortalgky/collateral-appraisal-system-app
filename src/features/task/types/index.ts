@@ -1,10 +1,10 @@
 // Task status types (for badges)
 export const TaskStatus = {
-  DRAFT: 'Draft',
-  PENDING: 'Pending',
-  IN_PROGRESS: 'InProgress',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
+  DRAFT: 'DRAFT',
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
 } as const;
 
 export type TaskStatusType = (typeof TaskStatus)[keyof typeof TaskStatus];
@@ -110,10 +110,46 @@ export interface Task {
   remainingHours: number | null;
   // New fields added to backend DTO
   requestedBy: string | null;
+  requestedByName: string | null;
   requestReceivedDate: string | null;
   internalFollowupStaff: string | null;
   appraiser: string | null;
   assignedDate: string | null;
+  reportReceivedAt: string | null;
+  // Pool task / lock fields
+  workingBy: string | null;
+  lockedAt: string | null;
+  assignedType: string | null;  // "1" = USER, "2" = GROUP
+  pendingTaskStatus: string | null;
+}
+
+// Pool task — same as Task but assignedType is always present
+export interface PoolTask extends Task {
+  assignedType: string;
+}
+
+// Paginated response for pool tasks
+export interface PoolTaskListResponse {
+  items: PoolTask[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+// Query params for pool task listing
+export interface GetPoolTasksParams {
+  pageNumber?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  appraisalNumber?: string;
+  customerName?: string;
+  taskStatus?: string;
+  taskType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  activityId?: string;
 }
 
 // Grouping options for Kanban view
@@ -131,6 +167,7 @@ export interface TaskListResponse {
 export interface GetTasksParams {
   pageNumber?: number;
   pageSize?: number;
+  search?: string;
   taskName?: string;
   status?: string;
   priority?: string;

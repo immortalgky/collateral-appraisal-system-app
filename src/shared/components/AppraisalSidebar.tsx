@@ -2,22 +2,20 @@ import { useState, useMemo } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
-import { useAuthStore } from '@features/auth/store';
 import Icon from './Icon';
 import clsx from 'clsx';
-import type { NavItem, UserRole } from '@shared/config/navigation';
+import type { NavItem } from '@shared/config/navigationTypes';
 import {
-  getAppraisalNavigationWithAccess,
-  getGeneralNavigationByRoles,
-  getCollapsibleNavigationByRoles,
-  getFooterNavigationByRoles,
-} from '@shared/config/appraisalNavigation';
-
-// Stable fallback used when no authenticated user is present.
-// Empty = least privilege; ProtectedRoute redirects unauthenticated users
-// before this is ever rendered, so the empty state is unreachable in practice.
-const DEFAULT_ROLES: UserRole[] = [];
-import { useAppraisalRequestId, useAppraisalIsPma, useAppraisalIsBlockCondo, useAppraisalStatus, useBasePath } from '@features/appraisal/context/AppraisalContext';
+  useAppraisalNavigation,
+  useNavigation,
+} from '@shared/hooks/useNavigation';
+import {
+  useAppraisalRequestId,
+  useAppraisalIsPma,
+  useAppraisalIsBlockCondo,
+  useAppraisalStatus,
+  useBasePath,
+} from '@features/appraisal/context/AppraisalContext';
 
 type AppraisalSidebarProps = {
   appraisalId: string;
@@ -43,7 +41,13 @@ const getIconBgClass = (iconColor: string | undefined) => {
   return colorMap[iconColor] || 'bg-gray-100';
 };
 
-function CompactMenuItem({ item, collapsed = false }: { item: NavItem & { canEdit?: boolean }; collapsed?: boolean }) {
+function CompactMenuItem({
+  item,
+  collapsed = false,
+}: {
+  item: NavItem & { canEdit?: boolean };
+  collapsed?: boolean;
+}) {
   const location = useLocation();
   const to = item.href;
   const isActive = location.pathname === item.href;
@@ -190,21 +194,17 @@ export function MobileAppraisalSidebar({
   const isPma = useAppraisalIsPma();
   const isBlockCondo = useAppraisalIsBlockCondo();
   const status = useAppraisalStatus();
-  const user = useAuthStore(state => state.user);
-  const roles = user?.roles ?? DEFAULT_ROLES;
 
-  const navContext = useMemo(() => ({ isPma, isBlockCondo, status }), [isPma, isBlockCondo, status]);
+  const navContext = useMemo(
+    () => ({ isPma, isBlockCondo, status, basePath, requestId }),
+    [isPma, isBlockCondo, status, basePath, requestId],
+  );
 
-  // Get role-filtered navigation with access levels
-  const applicationNav = useMemo(
-    () => getAppraisalNavigationWithAccess({ appraisalId, requestId, basePath }, roles, navContext),
-    [appraisalId, requestId, basePath, roles, navContext],
-  );
-  const generalItems = useMemo(
-    () => [...getGeneralNavigationByRoles(roles), ...getCollapsibleNavigationByRoles(roles)],
-    [roles],
-  );
-  const footerItems = useMemo(() => getFooterNavigationByRoles(roles), [roles]);
+  const applicationNav = useAppraisalNavigation(navContext);
+  const mainNav = useNavigation();
+
+  // Use first 3 main nav items as "general" compact links
+  const generalItems = mainNav.slice(0, 3);
 
   return (
     <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
@@ -254,7 +254,7 @@ export function MobileAppraisalSidebar({
 
             {/* Navigation */}
             <nav className="flex flex-1 flex-col px-3 py-2">
-              {/* GENERAL Section - Show first 3, expand for more */}
+              {/* GENERAL Section */}
               <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} />
 
               {/* APPLICATION Section */}
@@ -266,18 +266,7 @@ export function MobileAppraisalSidebar({
                 </div>
                 <ul className="flex flex-col gap-0.5">
                   {applicationNav.map(item => (
-                    <li key={item.href}>
-                      <CompactMenuItem item={item} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Footer */}
-              <div className="mt-auto pt-3 border-t border-gray-100">
-                <ul className="flex flex-col gap-0.5">
-                  {footerItems.map(item => (
-                    <li key={item.href}>
+                    <li key={item.href + item.itemKey}>
                       <CompactMenuItem item={item} />
                     </li>
                   ))}
@@ -299,24 +288,19 @@ export default function AppraisalSidebar({
   const requestId = useAppraisalRequestId();
   const basePath = useBasePath();
   const isPma = useAppraisalIsPma();
+  const isBlockCondo = useAppraisalIsBlockCondo();
   const status = useAppraisalStatus();
-  const user = useAuthStore(state => state.user);
-  const roles = user?.roles ?? DEFAULT_ROLES;
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
-  const navContext = useMemo(() => ({ isPma, status }), [isPma, status]);
+  const navContext = useMemo(
+    () => ({ isPma, isBlockCondo, status, basePath, requestId }),
+    [isPma, isBlockCondo, status, basePath, requestId],
+  );
 
-  // Get role-filtered navigation with access levels
-  const applicationNav = useMemo(
-    () => getAppraisalNavigationWithAccess({ appraisalId, requestId, basePath }, roles, navContext),
-    [appraisalId, requestId, basePath, roles, navContext],
-  );
-  const generalItems = useMemo(
-    () => [...getGeneralNavigationByRoles(roles), ...getCollapsibleNavigationByRoles(roles)],
-    [roles],
-  );
-  const footerItems = useMemo(() => getFooterNavigationByRoles(roles), [roles]);
+  const applicationNav = useAppraisalNavigation(navContext);
+  const mainNav = useNavigation();
+  const generalItems = mainNav.slice(0, 3);
 
   return (
     <aside
@@ -327,7 +311,9 @@ export default function AppraisalSidebar({
     >
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
-        <div className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}>
+        <div
+          className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}
+        >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-7 w-auto" />
@@ -353,14 +339,29 @@ export default function AppraisalSidebar({
         </div>
 
         {/* Navigation */}
-        <nav className={clsx('flex flex-1 flex-col py-2 transition-all duration-300', sidebarCollapsed ? 'px-1' : 'px-3')}>
+        <nav
+          className={clsx(
+            'flex flex-1 flex-col py-2 transition-all duration-300',
+            sidebarCollapsed ? 'px-1' : 'px-3',
+          )}
+        >
           {/* GENERAL Section */}
           {!hideGeneralNav && (
-            <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} collapsed={sidebarCollapsed} />
+            <ExpandableSection
+              title="General"
+              items={generalItems}
+              initialVisibleCount={3}
+              collapsed={sidebarCollapsed}
+            />
           )}
 
           {/* APPLICATION Section */}
-          <div className={clsx('pt-3', !sidebarCollapsed && !hideGeneralNav && 'border-t border-gray-100')}>
+          <div
+            className={clsx(
+              'pt-3',
+              !sidebarCollapsed && !hideGeneralNav && 'border-t border-gray-100',
+            )}
+          >
             {!sidebarCollapsed && (
               <div className="px-2.5 mb-1">
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -370,26 +371,15 @@ export default function AppraisalSidebar({
             )}
             <ul className="flex flex-col gap-0.5">
               {applicationNav.map(item => (
-                <li key={item.href}>
+                <li key={item.href + item.itemKey}>
                   <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Footer */}
-          <div className={clsx('mt-auto pt-3', !sidebarCollapsed && 'border-t border-gray-100')}>
-            {!hideGeneralNav && (
-              <ul className="flex flex-col gap-0.5">
-                {footerItems.map(item => (
-                  <li key={item.href}>
-                    <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* Toggle Button */}
+          {/* Toggle Button */}
+          <div className="mt-auto pt-3">
             <button
               type="button"
               onClick={toggleSidebar}

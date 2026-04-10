@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import type { GetTasksParams, Task, TaskListResponse } from './types';
+import type { GetPoolTasksParams, GetTasksParams, PoolTaskListResponse, Task, TaskListResponse } from './types';
 
 /**
  * Hook for fetching a paginated list of tasks for the current user
@@ -10,6 +10,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
   const {
     pageNumber = 0,
     pageSize = 10,
+    search,
     taskName,
     status,
     priority,
@@ -29,6 +30,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     {
       pageNumber,
       pageSize,
+      ...(search && { search }),
       ...(taskName && { taskName }),
       ...(status && { status }),
       ...(priority && { priority }),
@@ -51,6 +53,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
+          ...(search && { Search: search }),
           ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
           ...(priority && { Priority: priority }),
@@ -80,11 +83,12 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
 export const useGetTasksForKanban = (
   params: Omit<GetTasksParams, 'pageNumber' | 'pageSize'> = {},
 ) => {
-  const { taskName, status, priority, activityId } = params;
+  const { search, taskName, status, priority, activityId } = params;
 
   const queryKey = [
     'my-tasks-kanban',
     {
+      ...(search && { search }),
       ...(taskName && { taskName }),
       ...(status && { status }),
       ...(priority && { priority }),
@@ -99,6 +103,7 @@ export const useGetTasksForKanban = (
         params: {
           PageNumber: 0,
           PageSize: 200,
+          ...(search && { Search: search }),
           ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
           ...(priority && { Priority: priority }),
@@ -110,5 +115,133 @@ export const useGetTasksForKanban = (
       return result.items ?? [];
     },
     staleTime: 30 * 1000,
+  });
+};
+
+/**
+ * Hook for fetching a paginated list of pool (group-assigned) tasks
+ * GET /tasks/pool
+ */
+export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
+  const {
+    pageNumber = 0,
+    pageSize = 25,
+    search,
+    sortBy,
+    sortDir,
+    appraisalNumber,
+    customerName,
+    taskStatus,
+    taskType,
+    dateFrom,
+    dateTo,
+    activityId,
+  } = params;
+
+  const queryKey = [
+    'pool-tasks',
+    {
+      pageNumber,
+      pageSize,
+      ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(sortDir && { sortDir }),
+      ...(appraisalNumber && { appraisalNumber }),
+      ...(customerName && { customerName }),
+      ...(taskStatus && { taskStatus }),
+      ...(taskType && { taskType }),
+      ...(dateFrom && { dateFrom }),
+      ...(dateTo && { dateTo }),
+      ...(activityId && { activityId }),
+    },
+  ];
+
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<PoolTaskListResponse> => {
+      const { data } = await axios.get('/tasks/pool', {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(search && { Search: search }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortDir && { SortDir: sortDir }),
+          ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
+          ...(customerName && { CustomerName: customerName }),
+          ...(taskStatus && { TaskStatus: taskStatus }),
+          ...(taskType && { TaskType: taskType }),
+          ...(dateFrom && { DateFrom: dateFrom }),
+          ...(dateTo && { DateTo: dateTo }),
+          ...(activityId && { ActivityId: activityId }),
+        },
+      });
+      return data.result ?? data;
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
+/**
+ * Lock a pool task for editing
+ * POST /tasks/{id}/lock → 200 { lockedBy, lockedAt } | 409 { message }
+ */
+export const useLockTask = () => {
+  return useMutation({
+    mutationFn: (taskId: string) =>
+      axios.post<{ lockedBy: string; lockedAt: string }>(`/tasks/${taskId}/lock`),
+  });
+};
+
+/**
+ * Release the lock on a pool task (called by the lock owner)
+ * DELETE /tasks/{id}/lock → 204
+ */
+export const useUnlockTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) => axios.delete(`/tasks/${taskId}/lock`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+    },
+  });
+};
+
+/**
+ * Send a heartbeat to keep the lock alive
+ * PUT /tasks/{id}/lock/heartbeat → 204
+ */
+export const useHeartbeatTaskLock = () => {
+  return useMutation({
+    mutationFn: (taskId: string) => axios.put(`/tasks/${taskId}/lock/heartbeat`),
+  });
+};
+
+/**
+ * Admin-force-release a lock on any pool task
+ * DELETE /tasks/{id}/lock/admin → 204
+ */
+export const useAdminUnlockTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) => axios.delete(`/tasks/${taskId}/lock/admin`),
+    onSuccess: (_data, taskId) => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+    },
+  });
+};
+
+/**
+ * Claim a pool task into personal task list
+ * POST /tasks/{id}/claim → 200
+ */
+export const useClaimTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) => axios.post(`/tasks/${taskId}/claim`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+    },
   });
 };

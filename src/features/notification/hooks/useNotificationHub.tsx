@@ -8,10 +8,10 @@ import { followupKeys } from '@/features/document-followup/api/followup';
 import type { Notification } from '../types';
 
 const FOLLOWUP_NOTIFICATION_TYPES = new Set([
-  'DocumentFollowupRaised',
-  'DocumentFollowupResolved',
-  'DocumentFollowupCancelled',
-  'DocumentLineItemDeclined',
+  'DOCUMENT_FOLLOWUP_RAISED',
+  'DOCUMENT_FOLLOWUP_RESOLVED',
+  'DOCUMENT_FOLLOWUP_CANCELLED',
+  'DOCUMENT_LINE_ITEM_DECLINED',
 ]);
 
 const getHubUrl = () => {
@@ -66,7 +66,7 @@ export function useNotificationHub() {
         // is raised (DocumentFollowupRaised). The other three types (Resolved,
         // Cancelled, LineItemDeclined) are directed at the checker and only
         // need the followup queries above to update the banner.
-        if (notification.type === 'DocumentFollowupRaised') {
+        if (notification.type === 'DOCUMENT_FOLLOWUP_RAISED') {
           queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
           queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
         }

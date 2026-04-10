@@ -17,7 +17,7 @@ const formatCurrency = (value: number) =>
 
 const MeetingItemsTable = ({ meetingId, meetingStatus, items }: MeetingItemsTableProps) => {
   const removeItem = useRemoveMeetingItem();
-  const canRemove = meetingStatus === 'Draft' || meetingStatus === 'Scheduled';
+  const canRemove = meetingStatus === 'DRAFT' || meetingStatus === 'SCHEDULED';
 
   const handleRemove = (appraisalId: string, label: string) => {
     if (!confirm(`Remove ${label} from this meeting? It will return to the queue.`)) return;

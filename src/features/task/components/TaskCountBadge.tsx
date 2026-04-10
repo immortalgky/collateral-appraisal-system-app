@@ -1,8 +1,8 @@
 import { useGetTasks } from '../api';
 
 interface TaskCountBadgeProps {
-  /** Activity id from the task workflow (e.g. 'appraisal-initiation-check') */
-  activityId: string;
+  /** Activity id from the task workflow (e.g. 'appraisal-initiation-check'). Omit for total count. */
+  activityId?: string;
 }
 
 /**
@@ -12,6 +12,7 @@ interface TaskCountBadgeProps {
  * pays for the `count` field — full lists are still cached separately by
  * activity pages (different query key, different page size). Renders nothing
  * while loading, on error, or when count is zero, so the menu stays uncluttered.
+ * When `activityId` is omitted the badge shows the total task count for the user.
  */
 export function TaskCountBadge({ activityId }: TaskCountBadgeProps) {
   const { data } = useGetTasks({ activityId, pageNumber: 0, pageSize: 1 });
