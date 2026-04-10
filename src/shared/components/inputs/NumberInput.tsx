@@ -44,7 +44,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       name,
       decimalPlaces = 2,
       allowNegative = false,
-      maxIntegerDigits,
+      maxIntegerDigits = 18,
       thousandSeparator = true,
       max,
       value,
