@@ -1,7 +1,6 @@
 import type { DCFAssumption, DCFMethod } from '../../types/dcf';
 import { MethodProportion } from './dcfMethods/MethodProportion';
 import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoomIncomePerDay';
-import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { MethodSpecifiedValueWithGrowth } from './dcfMethods/MethodSpecifiedValueWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowth } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate';
@@ -14,6 +13,7 @@ import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProp
 import { MethodSpecifiedEnergyCostIndex } from './dcfMethods/MethodSpecifiedEnergyCostIndex';
 import { MethodSpecifiedRoomIncomeBySeasonalRates } from './dcfMethods/MethodSpecifiedRoomIncomeBySeasonalRates';
 import { MethodParameterBasedOnTierOfPropertyValue } from './dcfMethods/MethodParameterBasedOnTierOfPropertyValue';
+import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;

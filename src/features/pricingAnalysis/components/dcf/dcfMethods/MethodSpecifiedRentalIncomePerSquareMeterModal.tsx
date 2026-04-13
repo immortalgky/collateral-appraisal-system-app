@@ -181,7 +181,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                       <RHFInputCell
                         fieldName={`${name}.areaDetail.${index}.saleableArea`}
                         inputType="number"
-                        number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+                        number={{ decimalPlaces: 2, maxIntegerDigits: 11, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">

@@ -1,6 +1,6 @@
 import type { SectionColor } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
 import { SectionSummaryDCF } from './dcfSections/SectionSummaryDCF';
-import type { DCFSection } from '../../types/dcf';
+import type { DCFSection, DCFSummarySection, DirectSummarySection } from '../../types/dcf';
 import { SectionSummaryDirectCashFlow } from './dcfSections/SectionSummaryDirectCashFlow';
 import { SectionIncome } from './dcfSections/SectionIncome';
 import { SectionExpense } from './dcfSections/SectionExpense';
@@ -8,7 +8,7 @@ import { SectionExpense } from './dcfSections/SectionExpense';
 interface DiscountedCashFlowSectionRendererProps {
   name: string;
   properties: Record<string, unknown>[];
-  section: DCFSection;
+  section: DCFSection | DCFSummarySection | DirectSummarySection;
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;

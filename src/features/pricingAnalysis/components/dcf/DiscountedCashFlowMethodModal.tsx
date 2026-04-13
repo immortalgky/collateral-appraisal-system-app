@@ -10,9 +10,8 @@ import {
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
-import { buildDiscountedCashFlowCategoryOptions } from '../../adapters/buildDiscountedCashFlowCategoryOptions';
-import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
+import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -115,10 +114,11 @@ export function DiscountedCashFlowMethodModal({
     return assumptionParams
       .filter(
         p =>
-          !assumptions.some(
+          (!assumptions.some(
             a => a.assumptionType === p.code && a.assumptionType !== initialData.assumptionType,
           ) &&
-          (currentSection?.sectionType === p.sectionType || p.sectionType === 'any'),
+            currentSection?.sectionType === p.sectionType) ||
+          p.sectionType === 'any',
       )
       .map(a => ({ value: a.code, label: a.description }));
   }, [assumptionType, assumptions]);

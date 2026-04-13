@@ -415,7 +415,7 @@ export interface DCFCategory extends Base {
 }
 
 export interface DCFSection extends Base {
-  sectionType: string; // render section e.g income, expenses
+  sectionType: 'income' | 'expenses'; // render section e.g income, expenses
   sectionName: string;
   identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
   displaySeq: number;
@@ -424,7 +424,7 @@ export interface DCFSection extends Base {
 }
 
 export interface DCFSummarySection extends Base {
-  sectionType: string; // render section e.g income, expenses
+  sectionType: 'summaryDCF'; // render section e.g income, expenses
   sectionName: string;
   identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
   displaySeq: number;
@@ -437,7 +437,19 @@ export interface DCFSummarySection extends Base {
   presentValue: number[];
 }
 
+export interface DirectSummarySection extends Base {
+  sectionType: 'summaryDirect'; // render section e.g income, expenses
+  sectionName: string;
+  identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
+  displaySeq: number;
+  contractRentalFee: number;
+  totalNet: number;
+  presentValue: number;
+  finalValueRounded: number;
+}
+
 export interface DCF extends Base {
+  collateralType: string;
   templateCode: string;
   templateName: string;
   totalNumberOfYears: number;
@@ -446,11 +458,38 @@ export interface DCF extends Base {
   discountedRate: number;
   finalValue: number;
   finalValueRounded: number;
-  sections: (DCFSection | DCFSummarySection)[];
+  isHighestBestUsed: boolean;
+  appraisalPrice: number;
+  appraisalPriceRounded: number;
+  sections: (DCFSection | DCFSummarySection | DirectSummarySection)[];
+}
+
+// Template Type
+export interface DCFAssumption extends Base {
+  assumptionType: string;
+  assumptionName: string;
+  identifier: Identifier;
+  displaySeq: number;
+  method: DCFMethod;
+}
+export interface DCFCategory extends Base {
+  categoryType: CategoryType;
+  categoryName: string;
+  identifier: Identifier;
+  displaySeq: number;
+  assumptions: DCFAssumption[];
+}
+export interface DCFTemplateSection extends Base {
+  sectionType: SectionType; // render section e.g income, expenses
+  sectionName: string;
+  identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
+  displaySeq: number;
+  categories?: DCFCategory[];
 }
 
 export interface DCFTemplateType {
   id: string;
+  collateralType: string;
   templateCode: string;
   templateName: string;
   totalNumberOfYears: number;
@@ -458,35 +497,5 @@ export interface DCFTemplateType {
   capitalizeRate: number;
   discountedRate: number;
   isHighestBestUsed: boolean;
-  highestBestUsed: {
-    areaRai: number;
-    areaNgan: number;
-    areaWa: number;
-    totalWa: number;
-    pricePerSqWa: number;
-    totalValue: number;
-  };
-  finalValue: number;
-  finalValueRounded: number;
-  appraisalPrice: number;
-  appraisalPriceRounded: number;
-  sections: {
-    sectionType: SectionType; // render section e.g income, expenses
-    sectionName: string;
-    identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
-    displaySeq: number;
-    categories?: {
-      categoryType: CategoryType;
-      categoryName: string;
-      identifier: Identifier;
-      displaySeq: number;
-      assumptions: {
-        assumptionType: string;
-        assumptionName: string;
-        identifier: Identifier;
-        displaySeq: number;
-        method: DCFMethod;
-      }[];
-    }[];
-  }[];
+  sections: DCFTemplateSection[];
 }

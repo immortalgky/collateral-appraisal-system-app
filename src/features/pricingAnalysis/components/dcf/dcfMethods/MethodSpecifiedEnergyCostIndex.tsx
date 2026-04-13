@@ -26,11 +26,7 @@ export function MethodSpecifiedEnergyCostIndex({
                   <RHFInputCell
                     fieldName={`${name}.detail.energyCostIndex`}
                     inputType="number"
-                    number={{
-                      decimalPlaces: 2,
-                      maxIntegerDigits: 15,
-                      allowNegative: false,
-                    }}
+                    number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
                   />
                 </div>
                 <span>growth</span>
