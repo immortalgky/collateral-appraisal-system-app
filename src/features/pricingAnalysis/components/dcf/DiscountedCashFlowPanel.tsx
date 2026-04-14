@@ -96,6 +96,7 @@ export function DiscountedCashFlowPanel({
     // 1) restore saved data
     if (!!savedCalculation) {
       restoreDiscountedCashFlowFromSavedData({ savedCalculation, reset });
+      setIsGenerated(true);
     }
 
     // 2) restore selected template
@@ -115,9 +116,8 @@ export function DiscountedCashFlowPanel({
           setValue('templateCode', savedTemplate.templateCode);
         }
       }
+      setIsGenerated(true);
     }
-
-    setIsGenerated(true);
   }, [savedCalculation, reset, isGenerated, methodId, methodType, properties]);
 
   const isLoading = !isGenerated || !properties;
