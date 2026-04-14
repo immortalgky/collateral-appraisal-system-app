@@ -27,7 +27,7 @@ interface DiscountedCashFlowPanelProps {
   };
   properties: Record<string, unknown>[] | undefined;
   savedCalculation: DCF;
-  savedComparativeAnalysisTemplateId;
+  savedComparativeAnalysisTemplateId: string;
   templateList: unknown;
   onCalculationSave: (payload: {
     approachType: string;
@@ -40,8 +40,8 @@ interface DiscountedCashFlowPanelProps {
 export function DiscountedCashFlowPanel({
   activeMethod,
   properties,
-  savedCalculation = dcfMockData,
-  savedComparativeAnalysisTemplateId = 'dcf-001',
+  savedCalculation,
+  savedComparativeAnalysisTemplateId,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -141,24 +141,21 @@ export function DiscountedCashFlowPanel({
 
     try {
       const appraisalValue = dcfForm.appraisalPriceRounded ?? null;
-
-      const request = mapDCFFormToSubmitSchema(dcfForm);
-      console.log(request);
-
+      const request = mapDCFFormToSubmitSchema({ DCFForm: dcfForm });
       // await saveMutation.mutateAsync({
       //   id: activeMethod.pricingAnalysisId,
       //   methodId,
       //   request,
       // });
-      // if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
-      //   onCalculationSave({
-      //     approachType: activeMethod.approachType,
-      //     methodType: activeMethod.methodType,
-      //     appraisalValue,
-      //   });
-      // }
-      // toast.success('Saved!');
-      // reset(value);
+      if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
+        onCalculationSave({
+          approachType: activeMethod.approachType,
+          methodType: activeMethod.methodType,
+          appraisalValue,
+        });
+      }
+      toast.success('Saved!');
+      reset(dcfForm);
     } catch {
       toast.error('Failed to save comparative analysis');
     }
@@ -188,7 +185,11 @@ export function DiscountedCashFlowPanel({
             fieldName: 'templateCode',
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
-            options: dcfTemplateList.map(t => ({ value: t.templateCode, label: t.templateName })),
+            options: dcfTemplateList.map(t => ({
+              value: t.templateCode,
+              label: t.templateName,
+              id: t.id,
+            })),
           }}
         />
 

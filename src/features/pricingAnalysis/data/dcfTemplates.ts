@@ -1120,6 +1120,10 @@ export const dcfOfficeTemplate: DCFTemplateType = {
                 methodType: '13',
                 detail: {
                   proportionPct: 1,
+                  refTarget: {
+                    kind: 'category',
+                    templateId: '2e7c4a91-5d83-4b6f-a2c8-3d9e1f7b9202',
+                  },
                 },
               },
             },
@@ -1691,7 +1695,8 @@ export const directApartmentTemplate: DCFTemplateType = {
           templateId: '6a2d8f1c-7b43-4d95-a2e7-6f3b1c4d9014',
           categoryType: 'gop',
           categoryName: 'Gross Operating Profit (GOP)',
-          identifier: 'gop',
+          identifier: 'positive',
+          displaySeq: 3,
         },
         {
           id: '00000000-0000-0000-0001-000000000002',
@@ -1781,6 +1786,7 @@ export const directApartmentTemplate: DCFTemplateType = {
       ],
     },
     {
+      clientId: '6e132f1c-7b43-4d95-a2e7-6f3b1c4d9014',
       sectionType: 'summaryDirect',
       sectionName: 'Summary',
       identifier: 'empty',
@@ -1840,7 +1846,7 @@ export const dcfTemplateList = [
     isActive: true,
   },
   {
-    id: 'dcf-005',
+    id: 'direct-000',
     templateCode: 'direct-000',
     templateName: 'Direct - Apartment',
     propertyType: 'L',
