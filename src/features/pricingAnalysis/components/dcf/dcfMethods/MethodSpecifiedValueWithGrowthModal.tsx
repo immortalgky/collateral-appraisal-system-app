@@ -1,9 +1,16 @@
 import { RHFInputCell } from '../../table/RHFInputCell';
 
-export function MethodSpecifiedValueWithGrowthModal({ name }: { name: string }) {
+interface MethodSpecifiedValueWithGrowthModalProps {
+  name: string;
+  isReadOnly: boolean;
+}
+export function MethodSpecifiedValueWithGrowthModal({
+  name,
+  isReadOnly,
+}: MethodSpecifiedValueWithGrowthModalProps) {
   return (
     <div className="flex flex-row gap-1.5 items-center">
-      <span className={'w-56'}>First year amount</span>
+      <span className={'w-80'}>First year amount</span>
       <div className={'w-44'}>
         <RHFInputCell
           fieldName={`${name}.firstYearAmt`}
@@ -13,6 +20,7 @@ export function MethodSpecifiedValueWithGrowthModal({ name }: { name: string }) 
             maxIntegerDigits: 15,
             allowNegative: false,
           }}
+          disabled={isReadOnly}
         />
       </div>
       <span className={''}>increase</span>
@@ -25,6 +33,7 @@ export function MethodSpecifiedValueWithGrowthModal({ name }: { name: string }) 
             maxIntegerDigits: 3,
             allowNegative: false,
           }}
+          disabled={isReadOnly}
         />
       </div>
       <span className={''}>% every</span>
@@ -38,6 +47,7 @@ export function MethodSpecifiedValueWithGrowthModal({ name }: { name: string }) 
             maxValue: 100,
             allowNegative: false,
           }}
+          disabled={isReadOnly}
         />
       </div>
       <span className={''}>year(s)</span>

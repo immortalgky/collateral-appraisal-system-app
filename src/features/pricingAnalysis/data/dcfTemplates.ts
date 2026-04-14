@@ -316,7 +316,7 @@ export const dcfTestTemplate: DCFTemplateType = {
 export const dcfHotelTemplate: DCFTemplateType = {
   id: 'dcf-001',
   collateralType: 'L',
-  templateCode: 'dcf-hotel',
+  templateCode: 'dcf-001',
   templateName: 'dcf-hotel',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -663,7 +663,7 @@ export const dcfHotelTemplate: DCFTemplateType = {
 export const dcfApartmentTemplate: DCFTemplateType = {
   id: 'dcf-002',
   collateralType: 'L',
-  templateCode: 'dcf-apartment',
+  templateCode: 'dcf-002',
   templateName: 'dcf-apartment',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -979,7 +979,7 @@ export const dcfApartmentTemplate: DCFTemplateType = {
 export const dcfOfficeTemplate: DCFTemplateType = {
   id: 'dcf-003',
   collateralType: 'L',
-  templateCode: 'dcf-office',
+  templateCode: 'dcf-003',
   templateName: 'dcf-office',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -1212,7 +1212,7 @@ export const dcfOfficeTemplate: DCFTemplateType = {
 export const dcfDepartmentStoreTemplate: DCFTemplateType = {
   id: 'dcf-004',
   collateralType: 'L',
-  templateCode: 'dcf-department-store',
+  templateCode: 'dcf-004',
   templateName: 'dcf-department-store',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -1481,7 +1481,7 @@ export const dcfDepartmentStoreTemplate: DCFTemplateType = {
 export const directApartmentTemplate: DCFTemplateType = {
   id: 'direct-000',
   collateralType: 'L',
-  templateCode: 'direct-apartment',
+  templateCode: 'direct-000',
   templateName: 'direct-apartment',
   totalNumberOfYears: 1,
   totalNumberOfDayInYear: 365,

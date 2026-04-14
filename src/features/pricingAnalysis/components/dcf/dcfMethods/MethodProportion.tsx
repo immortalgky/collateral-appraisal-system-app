@@ -11,6 +11,7 @@ interface MethodProportionProps {
   method: MethodProportionWrapper;
   assumptionType: string;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodProportion({
   name,
@@ -18,6 +19,7 @@ export function MethodProportion({
   method,
   assumptionType,
   baseStyles,
+  isReadOnly,
 }: MethodProportionProps) {
   const { getValues } = useFormContext();
   const sections = (getValues('sections') ?? []).filter(
@@ -48,6 +50,7 @@ export function MethodProportion({
                       fieldName={`${name}.detail.proportionPct`}
                       inputType="number"
                       number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>% of</span>
@@ -57,6 +60,7 @@ export function MethodProportion({
                       inputType={'select'}
                       options={refTargetOptions}
                       dropdown={{ showValue: false }}
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>

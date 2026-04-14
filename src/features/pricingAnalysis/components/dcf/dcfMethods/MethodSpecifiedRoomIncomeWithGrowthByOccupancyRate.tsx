@@ -8,6 +8,7 @@ interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
   name = '',
@@ -15,6 +16,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps) {
   return (
     <>
@@ -57,6 +59,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
                           minValue: 0,
                           allowNegative: false,
                         }}
+                        disabled={isReadOnly}
                       />
                     </div>
                   </div>

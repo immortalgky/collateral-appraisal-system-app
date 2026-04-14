@@ -5,13 +5,16 @@ import { assumptionParams } from '../../../data/dcfParameters';
 import type { UseFormGetValues } from 'react-hook-form';
 import type { FormValues } from '@/features/appraisal/components/tables/bType';
 
+interface MethodProportionModalProps {
+  name: string;
+  getOuterFormValues: UseFormGetValues<FormValues>;
+  isReadOnly: boolean;
+}
 export function MethodProportionModal({
   name,
   getOuterFormValues,
-}: {
-  name: string;
-  getOuterFormValues: UseFormGetValues<FormValues>;
-}) {
+  isReadOnly,
+}: MethodProportionModalProps) {
   const sections = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
   );
@@ -43,9 +46,14 @@ export function MethodProportionModal({
 
   return (
     <div className="flex flex-row gap-1.5 items-center">
-      <span className={'w-44'}>Proportions</span>
+      <span className={'w-80'}>Proportions</span>
       <div className={'w-44'}>
-        <RHFInputCell fieldName={`${name}.proportionPct`} inputType={'number'} />
+        <RHFInputCell
+          fieldName={`${name}.proportionPct`}
+          inputType={'number'}
+          number={{ decimalPlaces: 2, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
+          disabled={isReadOnly}
+        />
       </div>
       <div className="flex flex-row gap-1.5 items-center">
         <span className={''}>% of</span>
@@ -55,6 +63,7 @@ export function MethodProportionModal({
             inputType={'select'}
             options={options}
             dropdown={{ showValue: false }}
+            disabled={isReadOnly}
           />
         </div>
       </div>

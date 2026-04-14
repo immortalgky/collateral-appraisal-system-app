@@ -7,12 +7,14 @@ interface MethodSpecifiedValueWithGrowthProps {
   expanded: boolean;
   method: MethodSpecifiedValueWithGrowthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedValueWithGrowth({
   name,
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedValueWithGrowthProps) {
   return (
     <>
@@ -33,6 +35,7 @@ export function MethodSpecifiedValueWithGrowth({
                         maxIntegerDigits: 15,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>growth</span>
@@ -45,6 +48,7 @@ export function MethodSpecifiedValueWithGrowth({
                         maxIntegerDigits: 3,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>% every</span>
@@ -58,6 +62,7 @@ export function MethodSpecifiedValueWithGrowth({
                         maxValue: 100,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>year(s)</span>

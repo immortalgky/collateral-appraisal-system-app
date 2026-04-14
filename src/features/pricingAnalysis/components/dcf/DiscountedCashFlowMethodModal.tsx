@@ -12,6 +12,7 @@ import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModal
 import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
+import { Icon } from '@shared/components';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -31,6 +32,7 @@ interface DiscountedCashFlowMethodModalProps {
   onCancelEditMode: () => void;
   onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  isReadOnly: boolean;
 }
 export function DiscountedCashFlowMethodModal({
   editing,
@@ -40,6 +42,7 @@ export function DiscountedCashFlowMethodModal({
   onCancelEditMode,
   onSaveEditMode,
   size,
+  isReadOnly,
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
@@ -158,6 +161,11 @@ export function DiscountedCashFlowMethodModal({
     [getValues, reset],
   );
 
+  const handleOnClearMethod = () => {
+    const currValues = getValues();
+    reset({ ...currValues, method: { ...currValues.method, detail: undefined } });
+  };
+
   return (
     <Modal
       isOpen={!!editing}
@@ -198,11 +206,12 @@ export function DiscountedCashFlowMethodModal({
                   inputType="select"
                   options={filteredAssumptionOptions}
                   onSelectChange={handleAssumptionTypeChange}
+                  disabled={isReadOnly}
                 />
               </div>
               {assumptionType === 'M99' && (
                 <div className="flex">
-                  <RHFInputCell fieldName="assumptionName" inputType="text" />
+                  <RHFInputCell fieldName="assumptionName" inputType="text" disabled={isReadOnly} />
                 </div>
               )}
             </div>
@@ -215,6 +224,7 @@ export function DiscountedCashFlowMethodModal({
                   inputType="select"
                   options={filteredMethodOptions}
                   onSelectChange={handleMethodTypeChange}
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -227,22 +237,39 @@ export function DiscountedCashFlowMethodModal({
               methodType={systemMethodType}
               properties={properties}
               getOuterFormValues={getOuterFormValues}
+              isReadOnly={isReadOnly}
             />
           )}
 
           <div className="flex items-center justify-between mt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onCancelEditMode();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" size="sm">
-              Save
-            </Button>
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onCancelEditMode();
+                }}
+              >
+                Cancel
+              </Button>
+
+              {!isReadOnly && (
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleOnClearMethod}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <Icon name="arrow-rotate-left" style="solid" className="size-4 mr-2" />
+                  Clear
+                </Button>
+              )}
+            </div>
+            {!isReadOnly && (
+              <Button type="submit" variant="primary" size="sm">
+                Save
+              </Button>
+            )}
           </div>
         </form>
       </FormProvider>

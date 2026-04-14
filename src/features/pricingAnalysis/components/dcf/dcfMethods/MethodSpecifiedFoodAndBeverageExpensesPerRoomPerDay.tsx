@@ -7,11 +7,13 @@ interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps) {
   return (
     <>

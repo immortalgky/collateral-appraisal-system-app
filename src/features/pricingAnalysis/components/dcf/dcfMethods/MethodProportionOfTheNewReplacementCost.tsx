@@ -7,6 +7,7 @@ interface MethodProportionOfTheNewReplacementCostProps {
   totalNumberOfYears: number;
   method: MethodProportionOfTheNewReplacementCostWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodProportionOfTheNewReplacementCost({
   name = '',
@@ -14,6 +15,7 @@ export function MethodProportionOfTheNewReplacementCost({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodProportionOfTheNewReplacementCostProps) {
   return (
     <>

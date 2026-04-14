@@ -7,7 +7,12 @@ import { floorToThousands } from '../../domain/calculation';
 import { useEffect, useRef } from 'react';
 import { shouldAutoDefault } from '../../domain/shouldAutoDefault';
 
-export function DiscountedCashFlowHighestBestUsed() {
+interface DiscountedCashFlowHighestBestUsedProps {
+  isReadOnly: boolean;
+}
+export function DiscountedCashFlowHighestBestUsed({
+  isReadOnly,
+}: DiscountedCashFlowHighestBestUsedProps) {
   const { control, getValues, setValue } = useFormContext();
   const isHighestBestUsed = useWatch({ control, name: 'isHighestBestUsed' });
 
@@ -79,6 +84,7 @@ export function DiscountedCashFlowHighestBestUsed() {
             }
             return e;
           }}
+          disabled={isReadOnly}
         />
       </div>
       {/* Area (shown when include area is on) */}
@@ -97,6 +103,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                     maxIntegerDigits: 5,
                     allowNegative: false,
                   }}
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="w-36">
@@ -110,6 +117,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                     maxValue: 3,
                     allowNegative: false,
                   }}
+                  disabled={isReadOnly}
                 />
               </div>
               <div className="w-36">
@@ -122,6 +130,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                     maxIntegerDigits: 3,
                     allowNegative: false,
                   }}
+                  disabled={isReadOnly}
                 />
               </div>
               <span className="text-gray-500">
@@ -144,6 +153,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                     maxIntegerDigits: 15,
                     allowNegative: false,
                   }}
+                  disabled={isReadOnly}
                 />
               </div>
               <span className="text-gray-500">
@@ -185,6 +195,7 @@ export function DiscountedCashFlowHighestBestUsed() {
               maxValue: 999_999_999_999_999.0,
               allowNegative: false,
             }}
+            disabled={isReadOnly}
           />
         </div>
         <span className="text-gray-500">Baht</span>

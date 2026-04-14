@@ -4,7 +4,7 @@ import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
-import type { DCF, DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
+import type { DCF, DCFSection, DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
 import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
@@ -13,9 +13,10 @@ import { dcfTemplateList, dcfTemplateQueries } from '../../data/dcfTemplates';
 import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBestUsed';
 import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
 import { restoreDiscountedCashFlowFromSavedData } from '@features/pricingAnalysis/adapters/restoreDiscountedCashFlowFromSavedData.ts';
-import { dcfMockData } from '@features/pricingAnalysis/data/dcfMockData.ts';
 import toast from 'react-hot-toast';
 import { mapDCFFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapDCFormToSubmitSchema.ts';
+import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext.tsx';
+import { DiscountedCashFlowSummaryAssumption } from '@features/pricingAnalysis/components/dcf/DiscountedCashFlowSummaryAssumption.tsx';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -46,6 +47,7 @@ export function DiscountedCashFlowPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
+  const isReadOnly = usePageReadOnly();
   const { methodId, methodType } = activeMethod ?? {};
   const methods = useForm<DCFFormType>({
     mode: 'onSubmit',
@@ -59,6 +61,7 @@ export function DiscountedCashFlowPanel({
   const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [pricingTemplate, setPricingTemplate] = useState<DCFTemplateType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
+  const [showAssumptionSummary, setShowAssumptionSummary] = useState(false);
 
   const templateList = dcfTemplateList; // mock data
   const selectedTemplateId = (templateList ?? []).find(
@@ -73,7 +76,6 @@ export function DiscountedCashFlowPanel({
   };
 
   const handleOnGenerate = async () => {
-    console.log('generate');
     const nextTemplate = templateDetailQuery as DCFTemplateType | undefined;
     if (!nextTemplate) return;
 
@@ -85,6 +87,10 @@ export function DiscountedCashFlowPanel({
   const handleOnSelectTemplate = (templateCode: string) => {
     setSelectedTemplateCode(templateCode);
     setValue('templateCode', templateCode);
+  };
+
+  const handleOnShowAssumptionSummary = () => {
+    setShowAssumptionSummary(!showAssumptionSummary);
   };
 
   // restore
@@ -138,6 +144,7 @@ export function DiscountedCashFlowPanel({
     }
 
     const dcfForm = getValues();
+    console.log(dcfForm);
 
     try {
       const appraisalValue = dcfForm.appraisalPriceRounded ?? null;
@@ -198,9 +205,17 @@ export function DiscountedCashFlowPanel({
             <DiscountedCashFlowTable
               totalNumberOfYears={getValues('totalNumberOfYears')}
               properties={properties}
+              isReadOnly={isReadOnly}
             />
 
-            <DiscountedCashFlowHighestBestUsed />
+            <DiscountedCashFlowSummaryAssumption
+              properties={properties}
+              getValues={getValues}
+              showAssumptionSummary={showAssumptionSummary}
+              onShowAssumptionSummary={handleOnShowAssumptionSummary}
+            />
+
+            <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
 
             {/* footer save, reset, cancel */}
             <MethodFooterActions

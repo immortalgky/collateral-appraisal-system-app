@@ -8,6 +8,7 @@ interface MethodSpecifiedRoomIncomePerDayProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomePerDayWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRoomIncomePerDay({
   name,
@@ -15,6 +16,7 @@ export function MethodSpecifiedRoomIncomePerDay({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomePerDayProps) {
   return (
     <>
@@ -51,6 +53,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% growth</span>
@@ -64,6 +67,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -77,6 +81,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>
@@ -96,6 +101,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                           maxValue: 100,
                           allowNegative: false,
                         }}
+                        disabled={isReadOnly}
                       />
                     </div>
                   </div>

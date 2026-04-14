@@ -7,12 +7,14 @@ interface MethodSpecifiedEnergyCostIndexProps {
   expanded: boolean;
   method: MethodSpecifiedEnergyCostIndexWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedEnergyCostIndex({
   name,
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedEnergyCostIndexProps) {
   return (
     <>
@@ -27,6 +29,7 @@ export function MethodSpecifiedEnergyCostIndex({
                     fieldName={`${name}.detail.energyCostIndex`}
                     inputType="number"
                     number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>growth</span>
@@ -39,6 +42,7 @@ export function MethodSpecifiedEnergyCostIndex({
                       maxIntegerDigits: 3,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -52,6 +56,7 @@ export function MethodSpecifiedEnergyCostIndex({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>

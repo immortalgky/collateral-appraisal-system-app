@@ -8,9 +8,11 @@ import { toNumber } from '../../../domain/calculation';
 
 interface MethodSpecifiedRentalIncomePerSquareMeterModalProps {
   name: string;
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRentalIncomePerSquareMeterModal({
   name,
+  isReadOnly,
 }: MethodSpecifiedRentalIncomePerSquareMeterModalProps) {
   const { fields, append, remove } = useFieldArray({ name: `${name}.areaDetail` });
 
@@ -159,15 +161,18 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                           fieldName={`${name}.areaDetail.${index}.description`}
                           inputType="text"
                           text={{ maxLength: 50 }}
+                          disabled={isReadOnly}
                         />
-                        <button
-                          type="button"
-                          onClick={() => handleOnRemove(index)}
-                          className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-1" />
-                        </button>
+                        {!isReadOnly && (
+                          <button
+                            type="button"
+                            onClick={() => handleOnRemove(index)}
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-1" />
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -175,6 +180,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         fieldName={`${name}.areaDetail.${index}.rentalPrice`}
                         inputType="number"
                         number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                        disabled={isReadOnly}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -182,6 +188,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         fieldName={`${name}.areaDetail.${index}.saleableArea`}
                         inputType="number"
                         number={{ decimalPlaces: 2, maxIntegerDigits: 11, allowNegative: false }}
+                        disabled={isReadOnly}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -209,20 +216,22 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                   </tr>
                 );
               })}
-              <tr>
-                <td>
-                  <button
-                    type="button"
-                    onClick={() => handleOnAdd()}
-                    className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                  >
-                    + Add Room
-                  </button>
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
+              {!isReadOnly && (
+                <tr>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => handleOnAdd()}
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                    >
+                      + Add Room
+                    </button>
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              )}
               <tr>
                 <td className="sticky bottom-0 px-1.5 bg-white"></td>
                 <td className="sticky bottom-0 px-1.5 bg-white">
@@ -276,7 +285,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Average Rental Price</span>
+          <span className={'w-80'}>Average Rental Price</span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRentalRatePerMonth`}
@@ -289,18 +298,19 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           <span>Baht/ Sq. Meter/ Month</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Total Saleable Area</span>
+          <span className={'w-80'}>Total Saleable Area</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}
               inputType={'number'}
               number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>Sq. Meter</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-80'}>Increase Rate</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -310,6 +320,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 maxIntegerDigits: 3,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>every</span>
@@ -323,12 +334,13 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Occupancy Rate - First Year</span>
+          <span className={'w-80'}>Occupancy Rate - First Year</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRateFirstYearPct`}
@@ -339,6 +351,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>% with growth</span>
@@ -352,6 +365,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>% every</span>
@@ -365,6 +379,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>year(s)</span>

@@ -7,11 +7,13 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDayProps {
   totalNumberOfYears: number;
   method: MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodRoomCostBasedOnExpensesPerRoomPerDayProps) {
   return (
     <>

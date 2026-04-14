@@ -5,11 +5,13 @@ interface MethodPositionBasedSalaryCalculationProps {
   expanded: boolean;
   method: MethodPositionBasedSalaryCalculationWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodPositionBasedSalaryCalculation({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodPositionBasedSalaryCalculationProps) {
   return (
     expanded && (

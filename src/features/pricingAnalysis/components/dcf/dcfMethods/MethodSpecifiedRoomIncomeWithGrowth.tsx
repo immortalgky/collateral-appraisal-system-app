@@ -7,11 +7,13 @@ interface MethodSpecifiedRoomIncomeWithGrowthProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomeWithGrowthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRoomIncomeWithGrowth({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomeWithGrowthProps) {
   return (
     <>

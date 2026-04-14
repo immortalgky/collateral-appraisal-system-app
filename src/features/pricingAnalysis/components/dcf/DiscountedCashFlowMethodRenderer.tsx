@@ -22,6 +22,7 @@ interface DiscountedCashFlowMethodRendererProps {
   assumption: DCFAssumption;
   method: DCFMethod;
   totalNumberOfYear: number;
+  isReadOnly: boolean;
 }
 export function DiscountedCashFlowMethodRenderer({
   name,
@@ -30,6 +31,7 @@ export function DiscountedCashFlowMethodRenderer({
   assumption,
   method,
   totalNumberOfYear,
+  isReadOnly,
 }: DiscountedCashFlowMethodRendererProps) {
   const props = {
     name: name,
@@ -44,6 +46,7 @@ export function DiscountedCashFlowMethodRenderer({
       rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300',
       rowBody: 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300',
     },
+    isReadOnly: isReadOnly,
   };
 
   const systemMethodType = mapDCFMethodCodeToSystemType(method.methodType);

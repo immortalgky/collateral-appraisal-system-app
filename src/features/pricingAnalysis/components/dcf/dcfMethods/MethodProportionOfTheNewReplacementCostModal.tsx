@@ -2,14 +2,16 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodProportionOfTheNewReplacementCostModalProps {
   name: string;
+  isReadOnly: boolean;
 }
 export function MethodProportionOfTheNewReplacementCostModal({
   name,
+  isReadOnly,
 }: MethodProportionOfTheNewReplacementCostModalProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Proportions</span>
+        <span className={'w-80'}>Proportions</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.proportionPct`}
@@ -19,6 +21,7 @@ export function MethodProportionOfTheNewReplacementCostModal({
               maxIntegerDigits: 3,
               allowNegative: false,
             }}
+            disabled={isReadOnly}
           />
         </div>
         <div className="flex flex-row gap-1.5">
@@ -26,7 +29,7 @@ export function MethodProportionOfTheNewReplacementCostModal({
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Increase Rate</span>
+        <span className={'w-80'}>Increase Rate</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -36,6 +39,7 @@ export function MethodProportionOfTheNewReplacementCostModal({
               maxIntegerDigits: 3,
               allowNegative: false,
             }}
+            disabled={isReadOnly}
           />
         </div>
         <span className={''}>% every</span>
@@ -49,6 +53,7 @@ export function MethodProportionOfTheNewReplacementCostModal({
               maxValue: 100,
               allowNegative: false,
             }}
+            disabled={isReadOnly}
           />
         </div>
         <span className={''}>year(s)</span>

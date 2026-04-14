@@ -13,6 +13,7 @@ interface DiscountedCashFlowAssumptionProps {
   editing: string | null;
   onOpenEditMode: (assumptionType: string) => void;
   onRemoveAssumption: () => void;
+  isReadOnly: boolean;
 }
 
 export function DiscountedCashFlowAssumption({
@@ -22,8 +23,9 @@ export function DiscountedCashFlowAssumption({
   editing,
   onOpenEditMode,
   onRemoveAssumption,
+  isReadOnly,
 }: DiscountedCashFlowAssumptionProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <>
@@ -64,6 +66,7 @@ export function DiscountedCashFlowAssumption({
                       : assumptionParams.find(p => p.code === value)?.description}
                   </span>
                 )}
+                disabled={isReadOnly}
               />
             </button>
             <div className="flex gap-1.5 items-center justify-end">
@@ -79,6 +82,7 @@ export function DiscountedCashFlowAssumption({
                       {methodParams.find(p => p.code === value)?.description ?? ''}
                     </span>
                   )}
+                  disabled={isReadOnly}
                 />
                 <button
                   type="button"
@@ -87,15 +91,18 @@ export function DiscountedCashFlowAssumption({
                     onOpenEditMode(assumption.clientId);
                   }}
                 >
-                  <Icon name="pencil" style="regular" className="size-4" />
+                  <Icon name={isReadOnly ? 'eye' : 'pencil'} style="regular" className="size-4" />
                 </button>
-                <button
-                  type="button"
-                  className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
-                  onClick={onRemoveAssumption}
-                >
-                  <Icon name="trash" style="regular" className="size-4" />
-                </button>
+
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
+                    onClick={onRemoveAssumption}
+                  >
+                    <Icon name="trash" style="regular" className="size-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -116,6 +123,7 @@ export function DiscountedCashFlowAssumption({
                 accessor={({ value }) => (
                   <span className="text-right">{value ? value.toLocaleString() : 0}</span>
                 )}
+                disabled={isReadOnly}
               />
             </td>
           );
@@ -129,6 +137,7 @@ export function DiscountedCashFlowAssumption({
         assumption={assumption}
         method={assumption.method}
         totalNumberOfYear={totalNumberOfYears}
+        isReadOnly={isReadOnly}
       />
     </>
   );

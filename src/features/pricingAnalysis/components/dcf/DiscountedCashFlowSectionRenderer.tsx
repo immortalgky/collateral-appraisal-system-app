@@ -12,6 +12,7 @@ interface DiscountedCashFlowSectionRendererProps {
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;
+  isReadOnly: boolean;
 }
 export function DiscountedCashFlowSectionRenderer({
   name,
@@ -20,37 +21,29 @@ export function DiscountedCashFlowSectionRenderer({
   totalNumberOfYears,
   icon,
   color,
+  isReadOnly,
 }: DiscountedCashFlowSectionRendererProps) {
+  const props = {
+    name: name,
+    section: section,
+    totalNumberOfYears: totalNumberOfYears,
+    color: color,
+    icon: icon,
+    properties: properties,
+    isReadOnly: isReadOnly,
+  };
   switch (section.sectionType) {
     case 'income': {
-      return (
-        <SectionIncome
-          name={`${name}`}
-          section={section}
-          totalNumberOfYears={totalNumberOfYears}
-          color={color}
-          icon={icon}
-          properties={properties}
-        />
-      );
+      return <SectionIncome {...props} />;
     }
     case 'expenses': {
-      return (
-        <SectionExpense
-          name={`${name}`}
-          section={section}
-          totalNumberOfYears={totalNumberOfYears}
-          color={color}
-          icon={icon}
-          properties={properties}
-        />
-      );
+      return <SectionExpense {...props} />;
     }
     case 'summaryDCF': {
-      return <SectionSummaryDCF name={name} totalNumberOfYears={totalNumberOfYears} />;
+      return <SectionSummaryDCF {...props} />;
     }
     case 'summaryDirect': {
-      return <SectionSummaryDirectCashFlow name={name} totalNumberOfYears={totalNumberOfYears} />;
+      return <SectionSummaryDirectCashFlow {...props} />;
     }
   }
 }

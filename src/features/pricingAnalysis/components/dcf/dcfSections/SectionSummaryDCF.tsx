@@ -4,16 +4,28 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 interface SectionSummaryDCFProps {
   name: string;
   totalNumberOfYears: number;
+  isReadOnly: boolean;
 }
-export function SectionSummaryDCF({ name, totalNumberOfYears }: SectionSummaryDCFProps) {
-  return <SummarySectionTable name={name} totalNumberOfYears={totalNumberOfYears} />;
+export function SectionSummaryDCF({
+  name,
+  totalNumberOfYears,
+  isReadOnly,
+}: SectionSummaryDCFProps) {
+  return (
+    <SummarySectionTable
+      name={name}
+      totalNumberOfYears={totalNumberOfYears}
+      isReadOnly={isReadOnly}
+    />
+  );
 }
 
 interface SummarySectionTableProps {
   name: string;
   totalNumberOfYears: number;
+  isReadOnly: boolean;
 }
-function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTableProps) {
+function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySectionTableProps) {
   const rowHeaderStyle = 'px-1.5 h-12 text-sm text-gray-700 border-b border-gray-300';
   const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-700 border-b border-gray-300';
   const rowStyle = 'bg-white';
@@ -75,6 +87,7 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                   maxValue: 100,
                   allowNegative: false,
                 }}
+                disabled={isReadOnly}
               />
               <span>%</span>
             </div>
@@ -124,6 +137,7 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                   maxValue: 100,
                   allowNegative: false,
                 }}
+                disabled={isReadOnly}
               />
               <span>%</span>
             </div>
@@ -190,6 +204,7 @@ function SummarySectionTable({ name, totalNumberOfYears }: SummarySectionTablePr
                         maxIntegerDigits: 15,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>

@@ -7,11 +7,13 @@ interface MethodSpecifiedRentalIncomePerMonthProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRentalIncomePerMonthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRentalIncomePerMonth({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRentalIncomePerMonthProps) {
   return (
     <>

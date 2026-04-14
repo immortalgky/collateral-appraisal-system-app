@@ -8,6 +8,7 @@ interface MethodSpecifiedRoomIncomeBySeasonalRatesProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomeBySeasonalRatesWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRoomIncomeBySeasonalRates({
   name,
@@ -15,6 +16,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomeBySeasonalRatesProps) {
   return (
     <>
@@ -51,6 +53,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% growth</span>
@@ -64,6 +67,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -77,6 +81,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>
@@ -96,6 +101,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                           maxValue: 100,
                           allowNegative: false,
                         }}
+                        disabled={isReadOnly}
                       />
                     </div>
                   </div>

@@ -12,15 +12,18 @@ import { useFormContext, useWatch, type UseFormGetValues } from 'react-hook-form
 import type { FormValues } from '@/features/appraisal/components/tables/bType';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
 
+interface MethodParameterBasedOnTierOfPropertyValueModalProps {
+  name: string;
+  properties: Record<string, unknown>[];
+  getOuterFormValues: UseFormGetValues<FormValues>;
+  isReadOnly;
+}
 export function MethodParameterBasedOnTierOfPropertyValueModal({
   name,
   properties,
   getOuterFormValues,
-}: {
-  name: string;
-  properties: Record<string, unknown>[];
-  getOuterFormValues: UseFormGetValues<FormValues>;
-}) {
+  isReadOnly,
+}: MethodParameterBasedOnTierOfPropertyValueModalProps) {
   const landGovPrice = (properties ?? [])
     .filter(p => p.propertyType === 'L')
     .flatMap((p: any) => p.titles ?? [])
@@ -116,6 +119,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             fieldName={`${name}.increaseRatePct`}
             inputType={'number'}
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
+            disabled={isReadOnly}
           />
         </div>
         <span className={''}>% every</span>
@@ -124,6 +128,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             fieldName={`${name}.increaseRateYrs`}
             inputType={'number'}
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, allowNegative: false }}
+            disabled={isReadOnly}
           />
         </div>
         <span className={''}>year(s)</span>
@@ -140,6 +145,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
               maxValue: totalNumberOfYears,
               allowNegative: false,
             }}
+            disabled={isReadOnly}
           />
         </div>
       </div>

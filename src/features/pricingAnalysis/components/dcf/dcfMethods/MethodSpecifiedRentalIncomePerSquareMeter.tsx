@@ -8,6 +8,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeterProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRentalIncomePerSquareMeterWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRentalIncomePerSquareMeter({
   name,
@@ -15,6 +16,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRentalIncomePerSquareMeterProps) {
   return (
     <>
@@ -48,6 +50,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% growth</span>
@@ -61,6 +64,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -74,6 +78,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>
@@ -94,6 +99,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                           minValue: 0,
                           allowNegative: false,
                         }}
+                        disabled={isReadOnly}
                       />
                     </div>
                   </div>

@@ -262,8 +262,6 @@ export function buildStaticCalculationDerivedRules(
               return prev;
             }, 0);
 
-            console.log(grossRevenue);
-
             // minus contract fee from lease agreement
             const contractRentalFee = getValues(`sections.${sectionIdx}.contractRentalFee`) ?? 0;
             return grossRevenue - contractRentalFee;
@@ -1124,7 +1122,6 @@ export function buildMethodProportionDerivedRules({
           const sections = ctx?.sections ?? [];
           const totalRefValue = resolveRefTarget(sections, refTargetId)?.[idx] ?? 0;
 
-          console.log(refTargetId, totalRefValue);
           return toNumber((Number(proportionPct) / 100) * Number(totalRefValue));
         },
       },
