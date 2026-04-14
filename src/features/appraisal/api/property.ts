@@ -219,7 +219,10 @@ export const useGetLeaseAgreementLandPropertyById = (appraisalId: string, proper
   });
 };
 
-export const useGetLeaseAgreementBuildingPropertyById = (appraisalId: string, propertyId?: string) => {
+export const useGetLeaseAgreementBuildingPropertyById = (
+  appraisalId: string,
+  propertyId?: string,
+) => {
   return useQuery({
     queryKey: ['appraisals', appraisalId, 'lease-agreement-building-properties', propertyId],
     enabled: !!appraisalId && !!propertyId,
@@ -236,9 +239,17 @@ export const useGetLeaseAgreementBuildingPropertyById = (appraisalId: string, pr
   });
 };
 
-export const useGetLeaseAgreementLandAndBuildingPropertyById = (appraisalId: string, propertyId?: string) => {
+export const useGetLeaseAgreementLandAndBuildingPropertyById = (
+  appraisalId: string,
+  propertyId?: string,
+) => {
   return useQuery({
-    queryKey: ['appraisals', appraisalId, 'lease-agreement-land-and-building-properties', propertyId],
+    queryKey: [
+      'appraisals',
+      appraisalId,
+      'lease-agreement-land-and-building-properties',
+      propertyId,
+    ],
     enabled: !!appraisalId && !!propertyId,
     queryFn: async (): Promise<GetLandAndBuildingPropertyResponseType> => {
       const { data } = await axios.get(
@@ -439,42 +450,40 @@ export interface LeaseAgreementResponse {
   detailId: string;
   appraisalPropertyId: string;
   lesseeName?: string;
-  tenantName?: string;
-  leasePeriodAsContract?: string;
-  remainingLeaseAsAppraisalDate?: string;
+  lessorName?: string;
+  leasePeriodAsContract?: number;
+  remainingLeaseAsAppraisalDate?: number;
   contractNo?: string;
   leaseStartDate?: string;
   leaseEndDate?: string;
   leaseRentFee?: number;
   rentAdjust?: number;
   sublease?: string;
-  additionalExpenses?: string;
-  leaseTimestamp?: string;
+  additionalExpenses?: number;
+  leaseTerminate?: string;
   contractRenewal?: string;
   rentalTermsImpactingPropertyUse?: string;
   terminationOfLease?: string;
   remark?: string;
-  banking?: string;
 }
 
 export interface UpdateLeaseAgreementRequest {
   lesseeName?: string;
-  tenantName?: string;
-  leasePeriodAsContract?: string;
-  remainingLeaseAsAppraisalDate?: string;
+  lessorName?: string;
+  leasePeriodAsContract?: number;
+  remainingLeaseAsAppraisalDate?: number;
   contractNo?: string;
   leaseStartDate?: string;
   leaseEndDate?: string;
   leaseRentFee?: number;
   rentAdjust?: number;
   sublease?: string;
-  additionalExpenses?: string;
-  leaseTimestamp?: string;
+  additionalExpenses?: number;
+  leaseTerminate?: string;
   contractRenewal?: string;
   rentalTermsImpactingPropertyUse?: string;
   terminationOfLease?: string;
   remark?: string;
-  banking?: string;
 }
 
 // ─── Rental Info Types ───────────────────────────────────────────
