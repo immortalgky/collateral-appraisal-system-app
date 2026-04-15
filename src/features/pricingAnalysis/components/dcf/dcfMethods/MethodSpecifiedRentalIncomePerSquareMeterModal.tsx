@@ -55,8 +55,8 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         targetPath: `${name}.sumRentalPrice`,
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumRentalPrice = areaDetail.reduce((prev, curr) => {
+          const areaDetail = getValues(`${name}.areaDetail`);
+          const sumRentalPrice = (areaDetail ?? []).reduce((prev, curr) => {
             const currRentalPrice = curr.rentalPrice ? toNumber(curr.rentalPrice) : 0;
             return prev + currRentalPrice;
           }, 0);

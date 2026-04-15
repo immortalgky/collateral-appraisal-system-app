@@ -26,10 +26,7 @@ export function MethodProportion({
     (s: DCFSection) => s.identifier !== 'empty',
   );
 
-  const assumptions = getDCFFilteredAssumptions(
-    getValues,
-    a => assumptionType !== a.assumptionType,
-  );
+  const assumptions = getDCFFilteredAssumptions(sections, a => assumptionType !== a.assumptionType);
 
   const refTargetOptions = buildMethodProportionOptions({
     sections,

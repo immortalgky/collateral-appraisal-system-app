@@ -1,6 +1,6 @@
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import {
   assumptionParams,
@@ -9,10 +9,11 @@ import {
 } from '../../data/dcfParameters';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
-import type { DCFMethod, DCFSection } from '../../types/dcf';
+import { type DCFMethod, type DCFSection } from '../../types/dcf';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
 import { Icon } from '@shared/components';
+import { createDefaultMethod } from '@features/pricingAnalysis/domain/dcf/createEmptyMethodDetail.ts';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -49,7 +50,7 @@ export function DiscountedCashFlowMethodModal({
     shouldUnregister: true,
   });
 
-  const { handleSubmit, reset, getValues, control } = methods;
+  const { handleSubmit, reset, setValue, getValues, control } = methods;
 
   const methodType = useWatch({
     control,
@@ -69,14 +70,14 @@ export function DiscountedCashFlowMethodModal({
   const handleMethodTypeChange = useCallback(
     (nextMethodType: string) => {
       const currentValues = getValues();
+      const currentMethodId = currentValues.method?.id;
 
       reset({
         ...currentValues,
-        method: {
-          ...currentValues.method,
-          methodType: nextMethodType as AssumptionEditDraft['method']['methodType'],
-          detail: undefined,
-        },
+        method: createDefaultMethod(
+          nextMethodType as AssumptionEditDraft['method']['methodType'],
+          currentMethodId,
+        ),
       });
     },
     [getValues, reset],
@@ -111,7 +112,7 @@ export function DiscountedCashFlowMethodModal({
   );
 
   // const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
-  const assumptions = getDCFFilteredAssumptions(getOuterFormValues).map(a => a.assumption);
+  const assumptions = getDCFFilteredAssumptions(sections).map(a => a.assumption);
 
   const filteredAssumptionOptions = useMemo(() => {
     return assumptionParams
@@ -154,7 +155,7 @@ export function DiscountedCashFlowMethodModal({
         method: {
           ...currentValues.method,
           methodType: null,
-          detail: undefined,
+          detail: null,
         },
       });
     },
@@ -163,7 +164,15 @@ export function DiscountedCashFlowMethodModal({
 
   const handleOnClearMethod = () => {
     const currValues = getValues();
-    reset({ ...currValues, method: { ...currValues.method, detail: undefined } });
+    const currentMethodType = currValues.method?.methodType;
+    const currentMethodId = currValues.method?.id;
+
+    if (!currentMethodType) return;
+
+    reset({
+      ...currValues,
+      method: createDefaultMethod(currentMethodType, currentMethodId),
+    });
   };
 
   return (

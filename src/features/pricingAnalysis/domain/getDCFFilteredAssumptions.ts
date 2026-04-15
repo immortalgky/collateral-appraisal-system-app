@@ -1,4 +1,3 @@
-import type { FieldValues, UseFormGetValues } from 'react-hook-form';
 import type { DCFAssumption, DCFCategory, DCFSection } from '../types/dcf';
 
 type Result = {
@@ -10,13 +9,12 @@ type Result = {
 type Predicate = (assumption: DCFAssumption, category: DCFCategory, section: DCFSection) => boolean;
 
 export function getDCFFilteredAssumptions(
-  getValues: UseFormGetValues<FieldValues>,
+  sections: DCFSection[],
   predicate?: Predicate, // optional — if omitted, return everything
 ): Result[] {
-  const form = getValues();
   const results: Result[] = [];
 
-  for (const section of form.sections) {
+  for (const section of sections) {
     if (!section.categories) continue;
 
     for (const category of section.categories) {

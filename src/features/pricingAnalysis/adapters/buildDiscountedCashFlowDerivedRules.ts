@@ -1,14 +1,14 @@
 import { floorToThousand, toNumber } from '../domain/calculation';
 import { resolveRefTarget } from '../domain/dcf/resolveRefTarget';
 import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
-import type { DCFAssumption, DCFCategory, DCFSection } from '../types/dcf';
+import type { DCFAssumption, DCFCategory, DCFSection, DCFSummarySection } from '../types/dcf';
 import type { DerivedFieldRule } from './useDerivedFieldArray';
-import { MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay } from '@features/pricingAnalysis/components/dcf/dcfMethods/MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay.tsx';
+import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 
 export function buildStaticCalculationDerivedRules(
   sections: DCFSection[] | undefined,
   totalNumberOfYears: number,
-) {
+): DerivedFieldRule[] {
   return (sections ?? []).flatMap((section, sectionIdx) => {
     if (section.sectionType === 'income') {
       return [
@@ -228,22 +228,23 @@ export function buildStaticCalculationDerivedRules(
             const summarySection = (getValues('sections') ?? []).find(
               (s: DCFSection) => s.sectionType === 'summaryDCF',
             ) as DCFSummarySection;
-            const finalValue = (summarySection?.presentValue ?? []).reduce((prev, curr) => {
+            return (summarySection?.presentValue ?? []).reduce((prev, curr) => {
               return prev + Number(curr ?? 0);
             }, 0);
-            return finalValue;
           },
         },
         {
           targetPath: `finalValueRounded`,
           deps: [`finalValue`],
-          when: ({ getFieldState, formState }) => {
-            const { isDirty } = getFieldState('finalValueRounded', formState);
-            return !isDirty;
+          when: ({ getValues, getFieldState, formState }) => {
+            const target = 'finalValueRounded';
+            const curr = getValues(target) ?? 0;
+            const { isDirty } = getFieldState(target, formState);
+            return shouldAutoDefault({ value: curr, isDirty });
           },
           compute: ({ getValues }) => {
             const finalValue = getValues('finalValue') ?? 0;
-            return finalValue;
+            return floorToThousand(finalValue);
           },
         },
       ];
@@ -307,6 +308,8 @@ export function buildStaticCalculationDerivedRules(
         },
       ];
     }
+
+    return;
   });
 }
 
@@ -430,9 +433,11 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
           `${name}.detail.occupancyRatePct`,
           `${name}.detail.occupancyRateYrs`,
         ],
-        when: ({ getFieldState, formState }) => {
-          const { isDirty } = getFieldState(`${name}.detail.occupancyRate.${idx}`, formState);
-          return !isDirty;
+        when: ({ getValues, getFieldState, formState }) => {
+          const target = `${name}.detail.occupancyRate.${idx}`;
+          const curr = getValues(target) ?? 0;
+          const { isDirty } = getFieldState(target, formState);
+          return shouldAutoDefault({ value: curr, isDirty });
         },
         compute: ({ getValues }) => {
           const occupancyRateFirstYearPct =
@@ -969,11 +974,17 @@ export function buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedR
         targetPath: `${name}.detail.totalFoodAndBeveragePerRoomPerYear.${idx}`,
         deps: [`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`],
         compute: ({ getValues }) => {
+          const sections = getValues('sections');
           const totalFoodAndBeveragePerRoomPerDay =
             getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
           const totalNumberOfSaleableArea =
-            getDCFFilteredAssumptions(getValues, a => a.method?.methodType === '01')?.[0]
-              ?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
+            getDCFFilteredAssumptions(
+              sections,
+              a =>
+                a.method?.methodType === '01' ||
+                a.method?.methodType === '06' ||
+                a.method?.methodType === '02',
+            )?.[0]?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
 
           return toNumber(totalFoodAndBeveragePerRoomPerDay) * toNumber(totalNumberOfSaleableArea);
         },
@@ -1028,12 +1039,13 @@ export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
         targetPath: `${name}.detail.totalEnegyCost.${idx}`,
         deps: [`${name}.detail.energyCostIndexIncrease.${idx}`],
         compute: ({ getValues }) => {
-          const totalEnegyCost = getValues(`${name}.detail.energyCostIndexIncrease.${idx}`) ?? 0;
+          const sections = getValues('sections');
+          const totalEnergyCost = getValues(`${name}.detail.energyCostIndexIncrease.${idx}`) ?? 0;
           const totalNumberOfSaleableArea =
-            getDCFFilteredAssumptions(getValues, a => a.method.methodType === '06')?.[0]?.assumption
+            getDCFFilteredAssumptions(sections, a => a.method.methodType === '06')?.[0]?.assumption
               .method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
 
-          return toNumber(totalEnegyCost) * toNumber(totalNumberOfSaleableArea) * 12;
+          return toNumber(totalEnergyCost) * toNumber(totalNumberOfSaleableArea) * 12;
         },
       },
       {

@@ -31,8 +31,6 @@ export function DiscountedCashFlowModalRenderer({
 }: DiscountedCashFlowModalRendererProps) {
   const props = { name, properties, getOuterFormValues, isReadOnly };
 
-  console.log(methodType);
-
   switch (methodType) {
     case 'specifiedRoomIncomePerDay': {
       return <MethodSpecifyRoomIncomePerDayModal {...props} />;

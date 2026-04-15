@@ -2,7 +2,7 @@ type Identifier = 'positive' | 'negative' | 'empty';
 type CategoryType = 'income' | 'expenses' | 'gop' | 'fixedExps';
 type SectionType = 'income' | 'expenses' | 'summaryDCF' | 'summaryDirect';
 
-interface MethodSpecifiedRoomIncomePerDay {
+export interface MethodSpecifiedRoomIncomePerDay {
   // modal
   roomDetails: {
     roomType?: string; // collect to db
@@ -46,7 +46,7 @@ type RoomIncomeRow = {
   seasons: SeasonRateInput[];
 };
 
-interface MethodSpecifiedRoomIncomeBySeasonalRates {
+export interface MethodSpecifiedRoomIncomeBySeasonalRates {
   // modal
   seasonCount: number; // collect to db
   seasonDetails: {
@@ -74,7 +74,7 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
   roomIncome: number[];
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowth {
+export interface MethodSpecifiedRoomIncomeWithGrowth {
   // modal
   saleableArea: number; // collect to db
   totalNumberOfSaleableArea: number; // collect to db
@@ -89,7 +89,7 @@ interface MethodSpecifiedRoomIncomeWithGrowth {
   totalMethodValues: number[];
 }
 
-interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
+export interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
   // modal
   saleableArea: number; // collect to db
   totalNumberOfSaleableArea: number; // collect to db
@@ -108,7 +108,7 @@ interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
   roomIncome: number[];
 }
 
-interface MethodSpecifiedRentalIncomePerMonth {
+export interface MethodSpecifiedRentalIncomePerMonth {
   // modal
   roomDetails: {
     roomType: string; // collect to db
@@ -117,7 +117,7 @@ interface MethodSpecifiedRentalIncomePerMonth {
     saleableArea: number; // collect to db
     totalRoomIncomePerMonth: number;
     totalRoomIncomePerYear: number;
-  };
+  }[];
   sumSaleableArea: number;
   sumRoomIncomePerMonth: number;
   sumRoomIncomePerYear: number;
@@ -130,7 +130,7 @@ interface MethodSpecifiedRentalIncomePerMonth {
   roomIncome: number[];
 }
 
-interface MethodSpecifiedRentalIncomePerSquareMeter {
+export interface MethodSpecifiedRentalIncomePerSquareMeter {
   // modal
   areaDetail: {
     description: string; // collect to db
@@ -138,7 +138,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
     saleableArea: number; // collect to db
     totalRentalIncomePerMonth: number;
     totalRentalIncomePerYear: number;
-  };
+  }[];
   sumRentalPrice: number;
   sumSaleableArea: number;
   sumTotalRentalIncomePerMonth: number;
@@ -161,7 +161,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
   totalMethodValues: number[];
 }
 
-interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
+export interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   // modal
   roomDetails: {
     roomType?: string; // collect to db
@@ -183,7 +183,7 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   roomExpense: number[];
 }
 
-interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
+export interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
   // modal
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -195,7 +195,7 @@ interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
   totalFoodAndBeveragePerRoomPerYear: number[];
 }
 
-interface MethodPositionBasedSalaryCalculation {
+export interface MethodPositionBasedSalaryCalculation {
   // modal
   jobPositionDetails: {
     jobPosition: string; // collect to db
@@ -214,7 +214,7 @@ interface MethodPositionBasedSalaryCalculation {
   totalPositionBasedSalaryPerYear: number[];
 }
 
-interface MethodParameterBasedOnTierOfPropertyValue {
+export interface MethodParameterBasedOnTierOfPropertyValue {
   // modal
   propertyTax: {
     landPrices: number[];
@@ -230,7 +230,7 @@ interface MethodParameterBasedOnTierOfPropertyValue {
   totalMethodValues: number[];
 }
 
-interface MethodSpecifiedEnergyCostIndex {
+export interface MethodSpecifiedEnergyCostIndex {
   // modal
   energyCostIndex: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -242,7 +242,7 @@ interface MethodSpecifiedEnergyCostIndex {
   totalEnegyCost: number[];
 }
 
-interface MethodProportionOfTheNewReplacementCost {
+export interface MethodProportionOfTheNewReplacementCost {
   // modal
   proportionPct: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -261,13 +261,13 @@ type RefTarget = {
   dbId?: string | null;
 };
 
-interface MethodProportion {
+export interface MethodProportion {
   // modal
   proportionPct: number; // collect to db
   refTarget: RefTarget; // collect to db
 }
 
-interface MethodSpecifiedValueWithGrowth {
+export interface MethodSpecifiedValueWithGrowth {
   // modal
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db

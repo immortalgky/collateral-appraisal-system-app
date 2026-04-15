@@ -1,7 +1,15 @@
-import type { AssumptionEditDraft } from '../../components/dcf/DiscountedCashFlowMethodModal';
-import type { DCFAssumption, DCFSection } from '../../types/dcf';
+import type { DCFAssumption, DCFMethod, DCFSection } from '../../types/dcf';
 
-// editAssumption.ts
+interface AssumptionEditDraft {
+  targetSectionClientId: string | null;
+  targetCategoryClientId: string | null;
+  targetAssumptionClientId: string | null;
+  assumptionType: string | null;
+  assumptionName: string | null;
+  displayName: string | null;
+  method: DCFMethod;
+}
+
 export function editAssumption(sections: DCFSection[], draft: AssumptionEditDraft): DCFSection[] {
   let sourceCategoryId: string | null = null;
   let sourceAssumption: DCFAssumption | null = null;
@@ -24,7 +32,7 @@ export function editAssumption(sections: DCFSection[], draft: AssumptionEditDraf
     ...sourceAssumption,
     assumptionType: draft.assumptionType,
     assumptionName: draft.assumptionName,
-    method: draft.method,
+    method: draft.method ?? null,
   };
 
   if (sourceCategoryId !== draft.targetCategoryClientId) {

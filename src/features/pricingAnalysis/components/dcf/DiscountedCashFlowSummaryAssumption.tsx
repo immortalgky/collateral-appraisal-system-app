@@ -31,16 +31,14 @@ export function DiscountedCashFlowSummaryAssumption({
   return (
     <>
       <div className={'flex justify-end items-center'}>
-        <div className={'w-72 p-1.5'}>
-          <Button
-            variant="ghost"
-            type="button"
-            onClick={onShowAssumptionSummary}
-            className={'border border-gray-300 border-dashed cursor-pointer'}
-          >
-            View Assumption Summary
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={onShowAssumptionSummary}
+          className={'border border-gray-300 border-dashed cursor-pointer'}
+        >
+          View Assumption Summary
+        </Button>
       </div>
       <Modal
         isOpen={showAssumptionSummary}
@@ -48,12 +46,12 @@ export function DiscountedCashFlowSummaryAssumption({
         title={`Assumption Summary`}
         size="3xl"
       >
-        <div className={'overflow-auto max-h-[800px]'}>
+        <div className={'overflow-auto max-h-[800px] flex flex-col gap-2'}>
           {(sections ?? []).map((section: DCFSection, sectionIdx) => {
             if (section.sectionType === 'income' || section.sectionType === 'expenses') {
               return (
-                <div className={'flex flex-col gap-2'} key={section.clientId ?? sectionIdx}>
-                  <span>{section.sectionName}</span>
+                <div className={'flex flex-col gap-4'} key={section.clientId ?? sectionIdx}>
+                  <span className={'p-1.5 text-2xl'}>Section: {section.sectionName}</span>
                   {(section.categories ?? []).map((category: DCFCategory, categoryIdx) => {
                     if (
                       category.categoryType === 'income' ||
@@ -61,12 +59,9 @@ export function DiscountedCashFlowSummaryAssumption({
                       category.categoryType === 'fixedExps'
                     ) {
                       return (
-                        <div
-                          className={'flex flex-col gap-1.5 ml-4'}
-                          key={category.clientId ?? categoryIdx}
-                        >
-                          <span>{category.categoryName}</span>
-                          <div className={'flex flex-col gap-1.5'}>
+                        <div className={'p-1.5 gap-2 ml-8'} key={category.clientId ?? categoryIdx}>
+                          <span className={'p-1.5 text-xl'}>Category: {category.categoryName}</span>
+                          <div className={'flex flex-col gap-2'}>
                             {(category.assumptions ?? []).map(
                               (assumption: DCFAssumption, assumptionIdx) => {
                                 const methodProps = {
@@ -78,17 +73,17 @@ export function DiscountedCashFlowSummaryAssumption({
                                 };
                                 return (
                                   <div
-                                    className={'flex flex-col gap-1.5 ml-2'}
+                                    className={'flex flex-col gap-2 ml-8'}
                                     key={assumption.clientId ?? assumptionIdx}
                                   >
-                                    <span>
+                                    <span className={'p-1.5 border-b border-gray-300'}>
                                       {assumption.assumptionName
                                         ? assumption.assumptionName
                                         : assumptionParams.find(
                                             p => p.code === assumption.assumptionType,
                                           )?.description}
                                     </span>
-                                    <div className={'mt-2 p-2 border-b border-gray-300'}>
+                                    <div className={'ml-4 p-2'}>
                                       <DiscountedCashFlowModalRenderer {...methodProps} />
                                     </div>
                                   </div>

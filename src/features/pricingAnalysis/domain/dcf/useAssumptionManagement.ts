@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { getNewId } from '../getNewId';
 import { editAssumption } from './editAssumption';
+import { createDefaultMethod } from '@features/pricingAnalysis/domain/dcf/createEmptyMethodDetail.ts';
 
 // Example of extracted logic
 export function useAssumptionManagement(name: string, getValues, setValue, control) {
@@ -27,7 +28,11 @@ export function useAssumptionManagement(name: string, getValues, setValue, contr
       clientId: newAssumptionId,
       assumptionType: null,
       displaySeq: fields.length,
-      method: { id: getNewId(), methodType: null },
+      method: {
+        ...createDefaultMethod('14', getNewId()),
+        methodType: null,
+        detail: null,
+      },
     });
     setEditing(newAssumptionId);
   }, [append, fields.length]);
@@ -45,6 +50,7 @@ export function useAssumptionManagement(name: string, getValues, setValue, contr
         shouldDirty: false,
         shouldValidate: true,
       });
+      console.log(nextSections);
     },
   };
 }

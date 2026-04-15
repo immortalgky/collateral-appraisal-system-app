@@ -25,7 +25,7 @@ export function MethodProportionModal({
 
   const currAssumptionType = getOuterFormValues(name.split('.method'))?.[0];
   const assumptions = getDCFFilteredAssumptions(
-    getOuterFormValues,
+    sections,
     a => currAssumptionType !== a.assumptionType,
   );
 
