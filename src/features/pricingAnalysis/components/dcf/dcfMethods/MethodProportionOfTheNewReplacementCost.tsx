@@ -21,7 +21,7 @@ export function MethodProportionOfTheNewReplacementCost({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>New Replacement Cost</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -37,7 +37,7 @@ export function MethodProportionOfTheNewReplacementCost({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -53,7 +53,7 @@ export function MethodProportionOfTheNewReplacementCost({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Total</td>
             {(method.detail?.proportionOfNewReplacementCosts ?? []).map((val, idx) => {
               return (

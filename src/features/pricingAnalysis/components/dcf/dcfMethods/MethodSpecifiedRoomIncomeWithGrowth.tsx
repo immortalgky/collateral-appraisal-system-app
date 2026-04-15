@@ -19,7 +19,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -29,7 +29,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Room Income</span>
               <span>({method.detail?.saleableArea ?? 0} rooms)</span>

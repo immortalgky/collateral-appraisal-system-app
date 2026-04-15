@@ -37,7 +37,7 @@ export function MethodProportion({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-3 items-center justify-between">
                 <span>Total</span>

@@ -7,6 +7,7 @@ import { useFormContext } from 'react-hook-form';
 import { type DCFAssumption, type DCFCategory, type DCFSection } from '../../types/dcf';
 import { DiscountedCashFlowMethodModal } from './DiscountedCashFlowMethodModal';
 import { useAssumptionManagement } from '../../domain/dcf/useAssumptionManagement';
+import { useAssumptionEditor } from '@features/pricingAnalysis/domain/dcf/useAssumptionEditor.ts';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
@@ -34,43 +35,21 @@ export function DiscountedCashFlowCategory({
   const {
     fields,
     editing,
+    activeAssumption,
     handleOnAddAssumption,
     handleOnRemoveAssumption,
     handleOnOpenEditMode,
     handleOnCancelEditMode,
     handleOnSaveEditMode,
-  } = useAssumptionManagement(name, getValues, setValue, control);
+  } = useAssumptionManagement({ name, getValues, setValue, control });
 
-  const activeAssumption = fields
-    .map((_, idx) => getValues(`${name}.assumptions.${idx}`) as DCFAssumption)
-    .find(a => a?.clientId === editing);
-
-  const modalInitialData = useMemo(() => {
-    if (!activeAssumption) return null;
-
-    return {
-      targetSectionClientId: section.clientId,
-      targetCategoryClientId: category.clientId,
-      targetAssumptionClientId: activeAssumption.clientId,
-      assumptionType: activeAssumption.assumptionType ?? null,
-      assumptionName: activeAssumption.assumptionName ?? null,
-      displayName: activeAssumption.assumptionName ?? null,
-      method: activeAssumption.method ?? null,
-    };
-  }, [
-    section.clientId,
-    category.clientId,
-    activeAssumption?.clientId,
-    activeAssumption?.assumptionType,
-    activeAssumption?.assumptionName,
-    activeAssumption?.method,
-  ]);
+  const modalInitialData = useAssumptionEditor(activeAssumption, section, category);
 
   const [isExpanded, setExpanded] = useState(true);
 
   return (
     <>
-      <tr onClick={() => setExpanded(!isExpanded)} data-category={{ category: category }}>
+      <tr onClick={() => setExpanded(!isExpanded)} className={'cursor-pointer'}>
         <td
           className={clsx(
             baseStyles.rowHeader,
@@ -124,7 +103,7 @@ export function DiscountedCashFlowCategory({
             if (!assumption) return null;
 
             return (
-              <Fragment key={assumption.dbId ?? assumption.clientId ?? field.id}>
+              <Fragment key={field.id}>
                 <DiscountedCashFlowAssumption
                   name={`${name}.assumptions.${idx}`}
                   editing={editing}

@@ -50,7 +50,7 @@ export function DiscountedCashFlowSummaryAssumption({
           {(sections ?? []).map((section: DCFSection, sectionIdx) => {
             if (section.sectionType === 'income' || section.sectionType === 'expenses') {
               return (
-                <div className={'flex flex-col gap-4'} key={section.clientId ?? sectionIdx}>
+                <div className={'flex flex-col gap-2'} key={section.clientId ?? sectionIdx}>
                   <span className={'p-1.5 text-2xl'}>Section: {section.sectionName}</span>
                   {(section.categories ?? []).map((category: DCFCategory, categoryIdx) => {
                     if (
@@ -64,11 +64,13 @@ export function DiscountedCashFlowSummaryAssumption({
                           <div className={'flex flex-col gap-2'}>
                             {(category.assumptions ?? []).map(
                               (assumption: DCFAssumption, assumptionIdx) => {
+                                const methodCode = assumption.method?.methodType ?? null;
+
                                 const methodProps = {
                                   ...props,
-                                  methodType: mapDCFMethodCodeToSystemType(
-                                    assumption.method.methodType,
-                                  ),
+                                  methodType: methodCode
+                                    ? mapDCFMethodCodeToSystemType(methodCode)
+                                    : null,
                                   name: `sections.${sectionIdx}.categories.${categoryIdx}.assumptions.${assumptionIdx}.method.detail`,
                                 };
                                 return (

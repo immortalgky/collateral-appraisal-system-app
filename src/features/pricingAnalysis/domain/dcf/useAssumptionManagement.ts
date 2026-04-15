@@ -1,11 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFieldArray, type UseFormGetValues, type UseFormSetValue } from 'react-hook-form';
 import { getNewId } from '../getNewId';
 import { editAssumption } from './editAssumption';
 import { createDefaultMethod } from '@features/pricingAnalysis/domain/dcf/createEmptyMethodDetail.ts';
+import type { DCFAssumption } from '@features/pricingAnalysis/types/dcf.ts';
 
 // Example of extracted logic
-export function useAssumptionManagement(name: string, getValues, setValue, control) {
+interface UseAssumptionManagementProps {
+  name: string;
+  getValues: UseFormGetValues<any>;
+  setValue: UseFormSetValue<any>;
+  control: any;
+}
+export function useAssumptionManagement({
+  name,
+  getValues,
+  setValue,
+  control,
+}: UseAssumptionManagementProps) {
   const { append, remove, fields } = useFieldArray({
     control,
     name: `${name}.assumptions`,
@@ -37,11 +49,29 @@ export function useAssumptionManagement(name: string, getValues, setValue, contr
     setEditing(newAssumptionId);
   }, [append, fields.length]);
 
+  const handleOnRemoveAssumption = useCallback(
+    (idx: number) => {
+      const current = getValues(`${name}.assumptions.${idx}`) as DCFAssumption | undefined;
+
+      if (current?.clientId === editing) {
+        setEditing(null);
+      }
+
+      remove(idx);
+    },
+    [remove, getValues, name, editing],
+  );
+
+  const activeAssumption = fields
+    .map((_, idx) => getValues(`${name}.assumptions.${idx}`) as DCFAssumption)
+    .find(a => a?.clientId === editing);
+
   return {
     fields,
     editing,
+    activeAssumption,
     handleOnAddAssumption,
-    handleOnRemoveAssumption: remove,
+    handleOnRemoveAssumption: handleOnRemoveAssumption,
     handleOnOpenEditMode: setEditing,
     handleOnCancelEditMode: () => setEditing(null),
     handleOnSaveEditMode: draft => {

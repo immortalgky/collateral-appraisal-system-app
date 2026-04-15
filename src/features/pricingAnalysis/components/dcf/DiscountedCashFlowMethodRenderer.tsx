@@ -43,8 +43,10 @@ export function DiscountedCashFlowMethodRenderer({
     assumptionName: assumption.assumptionName,
     assumptionType: assumption.assumptionType,
     baseStyles: {
-      rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300',
-      rowBody: 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300',
+      rowHeader:
+        'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300 group-hover:border-primary/50 group-hover:border-dashed group-hover:border-b-2',
+      rowBody:
+        'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300 group-hover:border-primary/50 group-hover:border-dashed group-hover:border-b-2',
     },
     isReadOnly: isReadOnly,
   };

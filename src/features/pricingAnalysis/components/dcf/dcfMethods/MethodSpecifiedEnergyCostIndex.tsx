@@ -20,7 +20,7 @@ export function MethodSpecifiedEnergyCostIndex({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
                 <span>Increase Rate - 1st year amt</span>
@@ -70,7 +70,7 @@ export function MethodSpecifiedEnergyCostIndex({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Enegy Cost Index</span>
             </td>
@@ -82,7 +82,7 @@ export function MethodSpecifiedEnergyCostIndex({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total Energy Cost</span>
             </td>

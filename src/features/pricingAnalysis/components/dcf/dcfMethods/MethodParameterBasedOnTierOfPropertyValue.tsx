@@ -20,7 +20,7 @@ export function MethodParameterBasedOnTierOfPropertyValue({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total</span>
             </td>

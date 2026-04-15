@@ -1,4 +1,6 @@
 import { assumptionParams } from '../../data/dcfParameters';
+import type { DCFSection } from '@features/pricingAnalysis/types/dcf.ts';
+import type { getDCFFilteredAssumptions } from '@features/pricingAnalysis/domain/getDCFFilteredAssumptions.ts';
 
 type SelectOption = {
   value: string;

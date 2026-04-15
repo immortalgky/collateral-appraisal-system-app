@@ -7,13 +7,14 @@ import {
   mappingAssumptionMethodParams,
   methodParams,
 } from '../../data/dcfParameters';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, type UseFormGetValues, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import { type DCFMethod, type DCFSection } from '../../types/dcf';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
 import { Icon } from '@shared/components';
 import { createDefaultMethod } from '@features/pricingAnalysis/domain/dcf/createEmptyMethodDetail.ts';
+import type { FormValues } from '@features/appraisal/components/tables/bType.tsx';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -29,7 +30,7 @@ interface DiscountedCashFlowMethodModalProps {
   editing: string | null;
   initialData: AssumptionEditDraft;
   properties: Record<string, unknown>[];
-  getOuterFormValues: (name: string) => object[];
+  getOuterFormValues: UseFormGetValues<FormValues>;
   onCancelEditMode: () => void;
   onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';

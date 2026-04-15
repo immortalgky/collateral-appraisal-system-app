@@ -19,7 +19,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.increaseRate ?? []).map((val, idx) => {
               return (
@@ -29,7 +29,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total Food and Beverage per Room per Day</span>
             </td>
@@ -41,7 +41,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total</span>
             </td>

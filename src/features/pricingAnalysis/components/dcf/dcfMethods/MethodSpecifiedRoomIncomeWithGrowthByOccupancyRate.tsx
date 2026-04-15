@@ -22,7 +22,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -32,7 +32,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Income Adjusted by Growth Rate</td>
             {(method.detail?.roomIncomeAdjustedValuedByGrowthRates ?? []).map((val, idx) => {
               return (
@@ -42,7 +42,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Occupancy Rate</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -67,7 +67,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Room Income</span>
               <span>({method.detail?.saleableArea ?? 0} rooms)</span>

@@ -36,7 +36,8 @@ export function buildStaticCalculationDerivedRules(
               deps: [`${name}.assumptions`],
               compute: ({ getValues }) => {
                 const assumptions = getValues(`${name}.assumptions`) ?? [];
-                return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+                const validAssumptions = assumptions.filter(a => a !== null && a !== undefined);
+                return validAssumptions.reduce((prev: number, curr: DCFAssumption) => {
                   return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
                 }, 0);
               },
@@ -74,7 +75,8 @@ export function buildStaticCalculationDerivedRules(
                 deps: [`${name}.assumptions`],
                 compute: ({ getValues }) => {
                   const assumptions = getValues(`${name}.assumptions`) ?? [];
-                  return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+                  const validAssumptions = assumptions.filter(a => a !== null && a !== undefined);
+                  return validAssumptions.reduce((prev: number, curr: DCFAssumption) => {
                     return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
                   }, 0);
                 },
@@ -118,7 +120,8 @@ export function buildStaticCalculationDerivedRules(
                 deps: [`${name}.assumptions`],
                 compute: ({ getValues }) => {
                   const assumptions = getValues(`${name}.assumptions`) ?? [];
-                  return assumptions.reduce((prev: number, curr: DCFAssumption) => {
+                  const validAssumptions = assumptions.filter(a => a !== null && a !== undefined);
+                  return validAssumptions.reduce((prev: number, curr: DCFAssumption) => {
                     return prev + toNumber(curr.totalAssumptionValues?.[yearIdx] ?? 0);
                   }, 0);
                 },
