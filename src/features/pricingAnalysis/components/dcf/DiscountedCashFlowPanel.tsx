@@ -10,8 +10,8 @@ import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { dcfTemplateList, dcfTemplateQueries } from '../../data/dcfTemplates';
-import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
 import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBestUsed';
+import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -57,6 +57,7 @@ export function DiscountedCashFlowPanel({
   const templateDetailQuery = dcfTemplateQueries.find(t => t.id === selectedTemplateId)?.data; // replace by query template detail by template id function.
 
   const handleOnGenerate = async () => {
+    console.log('generate');
     const nextTemplate = templateDetailQuery as DCFTemplateType | undefined;
     if (!nextTemplate) return;
 

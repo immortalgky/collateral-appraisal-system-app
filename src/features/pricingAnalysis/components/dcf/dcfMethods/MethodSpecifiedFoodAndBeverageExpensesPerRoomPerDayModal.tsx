@@ -25,7 +25,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
             inputType={'number'}
-            number={{ decimalPlaces: 2, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
+            number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
         <span className={''}>% every</span>

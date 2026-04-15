@@ -11,6 +11,7 @@ const DCFMethodForm = z.object({
 });
 
 const DCFAssumptionForm = z.object({
+  templateId: z.string().nullable().optional(),
   id: z.string().nullable().optional(),
   assumptionType: z.string(),
   assumptionName: z.string(),
@@ -21,6 +22,7 @@ const DCFAssumptionForm = z.object({
 });
 
 const DCFCategoryForm = z.object({
+  templateId: z.string().nullable().optional(),
   id: z.string().nullable().optional(),
   categoryType: z.string(),
   categoryName: z.string(),
@@ -31,6 +33,7 @@ const DCFCategoryForm = z.object({
 });
 
 const DCFSectionForm = z.object({
+  templateId: z.string().nullable().optional(),
   id: z.string().nullable().optional(),
   sectionType: z.string(), // income, expense, dcf_final, direct_final
   sectionName: z.string(),

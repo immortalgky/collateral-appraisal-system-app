@@ -97,7 +97,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
   return (
     <div className="flex flex-col gap-2">
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
-        <ScrollableTableContainer className="flex-1 min-h-0 max-h-[274px]">
+        <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
           <table className={'table table-sm'}>
             <thead>
               <tr>
@@ -142,6 +142,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${index}.roomTypeOther`}
                             inputType="text"
+                            text={{ maxLength: 50 }}
                           />
                         )}
                         <button
@@ -158,12 +159,14 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
                       <RHFInputCell
                         fieldName={`${name}.roomDetails.${index}.roomIncome`}
                         inputType="number"
+                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell
                         fieldName={`${name}.roomDetails.${index}.saleableArea`}
                         inputType="number"
+                        number={{ decimalPlaces: 5, maxIntegerDigits: 6, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -249,7 +252,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Room Income</span>
-          <div className={'w-24'}>
+          <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumRoomIncomePerYear`}
               inputType={'display'}
@@ -262,18 +265,39 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
         </div>
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Total Number of Saleable Area</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.totalSaleableArea`} inputType={'number'} />
+          <div className={'w-56'}>
+            <RHFInputCell
+              fieldName={`${name}.totalSaleableArea`}
+              inputType={'number'}
+              number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+            />
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
           <span className={'w-56'}>Increase Rate</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
+          <div className={'w-56'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRatePct`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 3,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={''}>every</span>
-          <div className={'w-24'}>
-            <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.increaseRateYrs`}
+              inputType={'number'}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: 100,
+                allowNegative: false,
+              }}
+            />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>

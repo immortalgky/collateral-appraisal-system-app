@@ -2,13 +2,15 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../../types/dcf';
 import { assumptionParams } from '../../../data/dcfParameters';
+import type { UseFormGetValues } from 'react-hook-form';
+import type { FormValues } from '@/features/appraisal/components/tables/bType';
 
 export function MethodProportionModal({
   name,
   getOuterFormValues,
 }: {
   name: string;
-  getOuterFormValues: (name: string) => object;
+  getOuterFormValues: UseFormGetValues<FormValues>;
 }) {
   const sections = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
@@ -48,7 +50,12 @@ export function MethodProportionModal({
       <div className="flex flex-row gap-1.5 items-center">
         <span className={''}>% of</span>
         <div className="w-64">
-          <RHFInputCell fieldName={`${name}.refTargetId`} inputType={'select'} options={options} />
+          <RHFInputCell
+            fieldName={`${name}.refTarget.clientId`}
+            inputType={'select'}
+            options={options}
+            dropdown={{ showValue: false }}
+          />
         </div>
       </div>
     </div>

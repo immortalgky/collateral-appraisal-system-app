@@ -1,4 +1,4 @@
-import type { DCFSection } from "../../types/dcf";
+import type { DCFSection } from '../../types/dcf';
 
 export function resolveRefTarget(
   sections: DCFSection[],

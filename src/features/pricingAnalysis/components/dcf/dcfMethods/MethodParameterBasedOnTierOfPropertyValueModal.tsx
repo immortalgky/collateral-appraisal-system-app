@@ -1,13 +1,14 @@
 import {
   getPropertyTaxAmount,
   getPropertyTaxRate,
+  toFixed2,
   toNumber,
 } from '@features/pricingAnalysis/domain/calculation.ts';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { ScrollableTableContainer } from '@features/pricingAnalysis/components/ScrollableTableContainer.tsx';
 import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { useMemo } from 'react';
-import type { UseFormGetValues } from 'react-hook-form';
+import { useFormContext, useWatch, type UseFormGetValues } from 'react-hook-form';
 import type { FormValues } from '@/features/appraisal/components/tables/bType';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
 
@@ -111,18 +112,35 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
       <div className="flex flex-row gap-1.5 items-center">
         <span className={'w-80'}>Government land prices increase by</span>
         <div className="w-44">
-          <RHFInputCell fieldName={`${name}.increaseRatePct`} inputType={'number'} />
+          <RHFInputCell
+            fieldName={`${name}.increaseRatePct`}
+            inputType={'number'}
+            number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
+          />
         </div>
         <span className={''}>% every</span>
         <div className="w-24">
-          <RHFInputCell fieldName={`${name}.increaseRateYrs`} inputType={'number'} />
+          <RHFInputCell
+            fieldName={`${name}.increaseRateYrs`}
+            inputType={'number'}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 3, allowNegative: false }}
+          />
         </div>
         <span className={''}>year(s)</span>
       </div>
       <div className="flex flex-row gap-1.5">
         <span className={'w-80'}>Start in</span>
         <div className={'w-44'}>
-          <RHFInputCell fieldName={`${name}.startIn`} inputType={'number'} />
+          <RHFInputCell
+            fieldName={`${name}.startIn`}
+            inputType={'number'}
+            number={{
+              decimalPlaces: 0,
+              maxIntegerDigits: 3,
+              maxValue: totalNumberOfYears,
+              allowNegative: false,
+            }}
+          />
         </div>
       </div>
 
@@ -156,14 +174,24 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 return (
                   <>
                     <tr>
-                      <td className="border-b border-r border-gray-300 px-1.5 py-2">
-                        {t.minValue}
+                      <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
+                        {t.minValue != undefined || t.minValue != null
+                          ? Number(t.minValue).toLocaleString()
+                          : '-'}
                       </td>
-                      <td className="border-b border-r border-gray-300 px-1.5 py-2">
-                        {t.maxValue}
+                      <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
+                        {t.maxValue != undefined || t.maxValue != null
+                          ? Number(t.maxValue).toLocaleString()
+                          : '-'}
                       </td>
-                      <td className="border-b border-r border-gray-300 px-1.5 py-2">{t.taxRate}</td>
-                      <td className="border-b border-gray-300 px-1.5 py-2">{/* tax ceiling */}</td>
+                      <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
+                        {toFixed2(t.taxRate * 100)}
+                      </td>
+                      <td className="border-b border-gray-300 px-1.5 py-2 text-right">
+                        {t.maxValue
+                          ? Number((t.maxValue - t.minValue) * t.taxRate).toLocaleString()
+                          : '-'}
+                      </td>
                     </tr>
                   </>
                 );
@@ -193,7 +221,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
               <tr>
                 <td>(1) Government land prices increase by 10% every 4 years</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-                  <td key={idx}>
+                  <td key={idx} className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.propertyTax.landPrices.${idx}`}
                       inputType="display"
@@ -207,15 +235,15 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
               <tr>
                 <td>(2) Government building prices</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-                  <td key={idx}>
-                    <span>{buildingGovPrice}</span>
+                  <td key={idx} className="text-right">
+                    <span>{buildingGovPrice ? buildingGovPrice.toLocaleString() : 0}</span>
                   </td>
                 ))}
               </tr>
               <tr>
                 <td>(1+2) Total price of government property</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-                  <td key={idx}>
+                  <td key={idx} className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.propertyTax.totalPropertyPrice.${idx}`}
                       inputType="display"
@@ -229,7 +257,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
               <tr>
                 <td>Property tax</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-                  <td key={idx}>
+                  <td key={idx} className="text-right">
                     <div className="flex flex-row justify-between items-center">
                       <RHFInputCell
                         fieldName={`${name}.propertyTax.totalPropertyTax.${idx}`}
@@ -243,7 +271,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                         inputType="display"
                         accessor={({ value }) => (
                           <span className="text-right">
-                            ({value ? value.toLocaleString() : 0} %)
+                            ({value ? (Number(value) * 100).toLocaleString() : 0} %)
                           </span>
                         )}
                       />

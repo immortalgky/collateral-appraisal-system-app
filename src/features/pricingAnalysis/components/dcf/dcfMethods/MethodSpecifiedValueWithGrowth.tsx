@@ -25,15 +25,40 @@ export function MethodSpecifiedValueWithGrowth({
                 <div className="flex flex-row gap-1.5 items-center">
                   <span>1st year amt</span>
                   <div className="w-32">
-                    <RHFInputCell fieldName={`${name}.detail.firstYearAmt`} inputType="number" />
+                    <RHFInputCell
+                      fieldName={`${name}.detail.firstYearAmt`}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 2,
+                        maxIntegerDigits: 15,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                   <span>growth</span>
                   <div className="w-20">
-                    <RHFInputCell fieldName={`${name}.detail.increaseRatePct`} inputType="number" />
+                    <RHFInputCell
+                      fieldName={`${name}.detail.increaseRatePct`}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 2,
+                        maxIntegerDigits: 3,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                   <span>% every</span>
                   <div className="w-20">
-                    <RHFInputCell fieldName={`${name}.detail.increaseRateYrs`} inputType="number" />
+                    <RHFInputCell
+                      fieldName={`${name}.detail.increaseRateYrs`}
+                      inputType="number"
+                      number={{
+                        decimalPlaces: 0,
+                        maxIntegerDigits: 3,
+                        maxValue: 100,
+                        allowNegative: false,
+                      }}
+                    />
                   </div>
                   <span>year(s)</span>
                 </div>

@@ -164,7 +164,7 @@ export function DiscountedCashFlowHighestBestUsed() {
         </span>
         <span className="font-medium text-gray-800">
           <RHFInputCell
-            fieldName={'AppraisalPrice'}
+            fieldName={'appraisalPrice'}
             inputType="display"
             accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
           />
