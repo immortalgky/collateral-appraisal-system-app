@@ -5,16 +5,18 @@ interface MethodPositionBasedSalaryCalculationProps {
   expanded: boolean;
   method: MethodPositionBasedSalaryCalculationWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodPositionBasedSalaryCalculation({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodPositionBasedSalaryCalculationProps) {
   return (
     expanded && (
       <>
-        <tr>
+        <tr className={clsx('group transition-colors')}>
           <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
           {(method.detail?.increaseRate ?? []).map((val, idx) => {
             return (
@@ -24,7 +26,7 @@ export function MethodPositionBasedSalaryCalculation({
             );
           })}
         </tr>
-        <tr>
+        <tr className={clsx('group transition-colors')}>
           <td className={clsx(baseStyles.rowHeader)}>
             <span>Total</span>
           </td>

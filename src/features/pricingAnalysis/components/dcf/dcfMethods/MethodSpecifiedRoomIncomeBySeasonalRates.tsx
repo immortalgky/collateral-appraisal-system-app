@@ -8,6 +8,7 @@ interface MethodSpecifiedRoomIncomeBySeasonalRatesProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomeBySeasonalRatesWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRoomIncomeBySeasonalRates({
   name,
@@ -15,12 +16,13 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomeBySeasonalRatesProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Saleable Area</span>
               <RHFInputCell
@@ -37,7 +39,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
                 <span>Occupancy Rate - 1st year amt</span>
@@ -51,6 +53,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% growth</span>
@@ -64,6 +67,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -77,6 +81,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>
@@ -96,6 +101,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                           maxValue: 100,
                           allowNegative: false,
                         }}
+                        disabled={isReadOnly}
                       />
                     </div>
                   </div>
@@ -103,7 +109,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Total Number of Saleable Area</td>
             {(method.detail?.totalSaleableAreaDeductByOccRate ?? []).map((val, idx) => {
               return (
@@ -113,7 +119,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -123,7 +129,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Average Daily Rate (ADR)</td>
             {(method.detail?.avgDailyRate ?? []).map((val, idx) => {
               return (
@@ -133,7 +139,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total Room Income</span>
             </td>

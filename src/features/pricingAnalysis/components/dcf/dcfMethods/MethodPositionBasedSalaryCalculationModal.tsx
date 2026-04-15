@@ -10,10 +10,12 @@ import { jobPositionParameters } from '@/features/pricingAnalysis/data/dcfParame
 interface MethodPositionBasedSalaryCalculationModalProps {
   name: string;
   getOuterFormValues: (name: string) => object;
+  isReadOnly: boolean;
 }
 export function MethodPositionBasedSalaryCalculationModal({
   name,
   getOuterFormValues,
+  isReadOnly,
 }: MethodPositionBasedSalaryCalculationModalProps) {
   const { getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.jobPositionDetails` });
@@ -134,22 +136,26 @@ export function MethodPositionBasedSalaryCalculationModal({
                               value: p.code,
                               label: p.description,
                             }))}
+                            disabled={isReadOnly}
                           />
                           {String(jobPosition) === '99' && (
                             <RHFInputCell
                               fieldName={`${name}.jobPositionDetails.${index}.jobPositionOther`}
                               inputType="text"
                               text={{ maxLength: 50 }}
+                              disabled={isReadOnly}
                             />
                           )}
-                          <button
-                            type="button"
-                            onClick={() => handleOnRemove(index)}
-                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                            title="Delete"
-                          >
-                            <Icon style="solid" name="trash" className="size-1" />
-                          </button>
+                          {!isReadOnly && (
+                            <button
+                              type="button"
+                              onClick={() => handleOnRemove(index)}
+                              className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                              title="Delete"
+                            >
+                              <Icon style="solid" name="trash" className="size-1" />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -157,6 +163,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           fieldName={`${name}.jobPositionDetails.${index}.salaryBahtPerPersonPerMonth`}
                           inputType="number"
                           number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                          disabled={isReadOnly}
                         />
                       </td>
                       <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -164,6 +171,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           fieldName={`${name}.jobPositionDetails.${index}.numberOfEmployees`}
                           inputType="number"
                           number={{ decimalPlaces: 0, maxIntegerDigits: 4, allowNegative: false }}
+                          disabled={isReadOnly}
                         />
                       </td>
                       <td className="px-1.5 py-1.5 border-b border-gray-300">
@@ -182,20 +190,22 @@ export function MethodPositionBasedSalaryCalculationModal({
                     </tr>
                   );
                 })}
-                <tr>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => handleOnAdd()}
-                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                    >
-                      + Add Job Position
-                    </button>
-                  </td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
+                {!isReadOnly && (
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => handleOnAdd()}
+                        className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                      >
+                        + Add Job Position
+                      </button>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                )}
                 <tr>
                   <td className="sticky bottom-0 px-1.5 bg-white">Total</td>
                   <td className="sticky bottom-0 px-1.5 bg-white">
@@ -239,7 +249,7 @@ export function MethodPositionBasedSalaryCalculationModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Salary</span>
+          <span className={'w-80'}>Total Salary</span>
           <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumTotalSalaryPerYear`}
@@ -252,7 +262,7 @@ export function MethodPositionBasedSalaryCalculationModal({
           <span>Baht / Year</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-80'}>Increase Rate</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -262,6 +272,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                 maxIntegerDigits: 3,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>% every</span>
@@ -275,6 +286,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={'w-44'}>year(s)</span>

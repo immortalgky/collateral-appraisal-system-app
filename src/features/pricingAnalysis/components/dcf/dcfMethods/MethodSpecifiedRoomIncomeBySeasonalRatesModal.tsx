@@ -21,23 +21,6 @@ type RoomIncomeRow = {
   seasons: SeasonRateInput[];
 };
 
-interface MethodSpecifiedRoomIncomeBySeasonalRatesModal {
-  // modal
-  seasonCount: number;
-  seasonDetails: {
-    seasonName: string;
-    numberOfMonths: number;
-    description: string;
-  };
-  roomDetails: RoomIncomeRow[];
-  avgTotalRoomIncomePerDay: number[]; // one season => sum total room income per day / sum saleable area
-  avgTotalRoomIncomePerSeason: number[]; // one season => avgTotalRoomIncomePerDay * number of months * 30
-  avgRoomRate: number; // sum(avgTotalRoomIncomePerSeason) / sum(number of month * 30)
-  totalSaleableArea: number;
-  increaseRatePct: number;
-  increaseRateYrs: number;
-}
-
 export function calculateRoomIncomePerDay(input?: SeasonRateInput): number {
   const roomIncome = Number(input?.roomIncome) || 0;
   const saleableArea = Number(input?.saleableArea) || 0;
@@ -86,10 +69,17 @@ function resizeRowSeasons(row: RoomIncomeRow, seasonCount: number): RoomIncomeRo
   };
 }
 
-export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: string }) {
+interface MethodSpecifiedRoomIncomeBySeasonalRatesModalProps {
+  name: string;
+  isReadOnly: boolean;
+}
+export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
+  name,
+  isReadOnly,
+}: MethodSpecifiedRoomIncomeBySeasonalRatesModalProps) {
   const { control, getValues, setValue } = useFormContext();
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: `${name}.roomDetails`,
   });
@@ -169,7 +159,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-3">
-        <div className="w-44">
+        <div className="w-80">
           <span>Number of seasons</span>
         </div>
         <div className="w-56">
@@ -181,6 +171,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
               return v;
             }}
             number={{ decimalPlaces: 0, maxIntegerDigits: 1, allowNegative: false }}
+            disabled={isReadOnly}
           />
         </div>
       </div>
@@ -197,7 +188,10 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                   <th
                     key={seasonIndex}
                     colSpan={3}
-                    className={clsx('border-b border-gray-300', seasonCount > 1 ? 'border-r' : 0)}
+                    className={clsx(
+                      'border-b border-gray-300',
+                      seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
+                    )}
                   >
                     <div className="flex flex-col gap-2 p-1.5">
                       <div className="flex flex-row items-center">
@@ -206,6 +200,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           fieldName={`${name}.seasonDetails.${seasonIndex}.seasonName`}
                           inputType="text"
                           text={{ maxLength: 50 }}
+                          disabled={isReadOnly}
                         />
                       </div>
                       <div className="flex flex-row items-center">
@@ -219,6 +214,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                             maxValue: 12,
                             allowNegative: false,
                           }}
+                          disabled={isReadOnly}
                         />
                       </div>
                       <div className="flex flex-row items-center">
@@ -227,6 +223,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           fieldName={`${name}.seasonDetails.${seasonIndex}.description`}
                           inputType="text"
                           text={{ maxLength: 100 }}
+                          disabled={isReadOnly}
                         />
                       </div>
                     </div>
@@ -241,7 +238,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                     <th
                       className={clsx(
                         'border-b border-gray-300 text-right',
-                        seasonCount > 1 ? 'border-r' : 0,
+                        seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
                       )}
                     >
                       Total / Day
@@ -265,22 +262,26 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                             value: p.code,
                             label: p.description,
                           }))}
+                          disabled={isReadOnly}
                         />
                         {String(roomType) === '99' && (
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${rowIndex}.roomTypeOther`}
                             inputType="text"
                             text={{ maxLength: 50 }}
+                            disabled={isReadOnly}
                           />
                         )}
-                        <button
-                          type="button"
-                          onClick={() => remove(rowIndex)}
-                          className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-1" />
-                        </button>
+                        {!isReadOnly && (
+                          <button
+                            type="button"
+                            onClick={() => remove(rowIndex)}
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-1" />
+                          </button>
+                        )}
                       </div>
                     </td>
 
@@ -288,7 +289,6 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                       const cell = rows[rowIndex]?.seasons?.[seasonIndex];
                       const total =
                         (Number(cell?.roomIncome) || 0) * (Number(cell?.saleableArea) || 0);
-                      console.log(rows, cell, total);
 
                       return (
                         <Fragment key={`${field.id}-${seasonIndex}`}>
@@ -301,6 +301,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                                 maxIntegerDigits: 15,
                                 allowNegative: false,
                               }}
+                              disabled={isReadOnly}
                             />
                           </td>
                           <td className="border-b border-gray-300 p-1">
@@ -312,12 +313,13 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                                 maxIntegerDigits: 6,
                                 allowNegative: false,
                               }}
+                              disabled={isReadOnly}
                             />
                           </td>
                           <td
                             className={clsx(
                               'border-b border-gray-300 text-sm text-right',
-                              seasonCount > 1 ? 'border-r' : 0,
+                              seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
                             )}
                           >
                             {Number(total.toFixed(2)).toLocaleString()}
@@ -328,31 +330,33 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                   </tr>
                 );
               })}
-              <tr>
-                <td className={clsx('border-b border-r border-gray-300 p-1')}>
-                  <button
-                    type="button"
-                    onClick={() => append(createEmptyRow(seasonCount))}
-                    className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                  >
-                    + Add Room Type
-                  </button>
-                </td>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                  return (
-                    <Fragment key={`${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1"></td>
-                      <td className="border-b border-gray-300 p-1"></td>
-                      <td
-                        className={clsx(
-                          'border-b border-gray-300 p-1',
-                          seasonCount > 1 ? 'border-r' : '',
-                        )}
-                      ></td>
-                    </Fragment>
-                  );
-                })}
-              </tr>
+              {!isReadOnly && (
+                <tr>
+                  <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                    <button
+                      type="button"
+                      onClick={() => append(createEmptyRow(seasonCount))}
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                    >
+                      + Add Room Type
+                    </button>
+                  </td>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                    return (
+                      <Fragment key={`${seasonIndex}`}>
+                        <td className="border-b border-gray-300 p-1"></td>
+                        <td className="border-b border-gray-300 p-1"></td>
+                        <td
+                          className={clsx(
+                            'border-b border-gray-300 p-1',
+                            seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
+                          )}
+                        ></td>
+                      </Fragment>
+                    );
+                  })}
+                </tr>
+              )}
             </tbody>
 
             <tfoot>
@@ -370,7 +374,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                       <td
                         className={clsx(
                           'border-b border-gray-300 text-right',
-                          seasonCount > 1 ? 'border-r' : 0,
+                          seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
                         )}
                       >
                         {Number(totals.totalRoomIncomePerDay.toFixed(2)).toLocaleString()}
@@ -391,7 +395,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                       <td
                         className={clsx(
                           'border-b border-gray-300 text-right text-sm',
-                          seasonCount > 1 ? 'border-r' : 0,
+                          seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
                         )}
                       >
                         {toNumber(avg).toLocaleString() ?? 0}
@@ -413,7 +417,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                       <td
                         className={clsx(
                           'border-b border-gray-300 text-right',
-                          seasonCount > 1 ? 'border-r' : 0,
+                          seasonIndex !== seasonCount - 1 ? 'border-r' : 0,
                         )}
                       >
                         {toNumber(avgPerSeason).toLocaleString() ?? 0}
@@ -428,7 +432,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Average Room Rate</span>
+          <span className={'w-80'}>Average Room Rate</span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRoomRate`}
@@ -440,17 +444,18 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
           </div>
         </div>
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Number of Saleable Area</span>
+          <span className={'w-80'}>Total Number of Saleable Area</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}
               inputType={'number'}
               number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+              disabled={isReadOnly}
             />
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-80'}>Increase Rate</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -460,6 +465,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 maxIntegerDigits: 3,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>every</span>
@@ -473,12 +479,13 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Occupancy Rate - First Year</span>
+          <span className={'w-80'}>Occupancy Rate - First Year</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRateFirstYearPct`}
@@ -489,6 +496,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>% with growth</span>
@@ -502,6 +510,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>% every</span>
@@ -515,6 +524,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                 maxValue: 100,
                 allowNegative: false,
               }}
+              disabled={isReadOnly}
             />
           </div>
           <span className={''}>year(s)</span>

@@ -45,6 +45,7 @@ const DCFSectionForm = z.object({
 
 export const DCFForm = z.object({
   id: z.string().nullable().optional(),
+  collateralType: z.string(),
   templateCode: z.string(),
   totalNumberOfYears: z.number(),
   totalNumberOfDayInYear: z.number(),
@@ -53,6 +54,8 @@ export const DCFForm = z.object({
   sections: z.array(DCFSectionForm),
   finalValue: z.number(),
   finalValueRounded: z.number(),
+  appraisalPrice: z.number(),
+  appraisalPriceRounded: z.number(),
 });
 
 export type YearlyValueFormType = z.infer<typeof YearlyValue>;

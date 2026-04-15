@@ -2,6 +2,7 @@ import type { DCFTemplateType } from '../types/dcf';
 
 export const dcfTestTemplate: DCFTemplateType = {
   id: 'dcf-000',
+  collateralType: 'L',
   templateCode: 'dcf-test',
   templateName: 'dcf-test',
   totalNumberOfYears: 6,
@@ -314,7 +315,8 @@ export const dcfTestTemplate: DCFTemplateType = {
 
 export const dcfHotelTemplate: DCFTemplateType = {
   id: 'dcf-001',
-  templateCode: 'dcf-hotel',
+  collateralType: 'L',
+  templateCode: 'dcf-001',
   templateName: 'dcf-hotel',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -660,7 +662,8 @@ export const dcfHotelTemplate: DCFTemplateType = {
 
 export const dcfApartmentTemplate: DCFTemplateType = {
   id: 'dcf-002',
-  templateCode: 'dcf-apartment',
+  collateralType: 'L',
+  templateCode: 'dcf-002',
   templateName: 'dcf-apartment',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -975,7 +978,8 @@ export const dcfApartmentTemplate: DCFTemplateType = {
 
 export const dcfOfficeTemplate: DCFTemplateType = {
   id: 'dcf-003',
-  templateCode: 'dcf-office',
+  collateralType: 'L',
+  templateCode: 'dcf-003',
   templateName: 'dcf-office',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -1206,8 +1210,9 @@ export const dcfOfficeTemplate: DCFTemplateType = {
 };
 
 export const dcfDepartmentStoreTemplate: DCFTemplateType = {
-  id: 'dcf-001',
-  templateCode: 'dcf-department-store',
+  id: 'dcf-004',
+  collateralType: 'L',
+  templateCode: 'dcf-004',
   templateName: 'dcf-department-store',
   totalNumberOfYears: 6,
   totalNumberOfDayInYear: 365,
@@ -1474,8 +1479,9 @@ export const dcfDepartmentStoreTemplate: DCFTemplateType = {
 };
 
 export const directApartmentTemplate: DCFTemplateType = {
-  id: 'dcf-005',
-  templateCode: 'direct-apartment',
+  id: 'direct-000',
+  collateralType: 'L',
+  templateCode: 'direct-000',
   templateName: 'direct-apartment',
   totalNumberOfYears: 1,
   totalNumberOfDayInYear: 365,
@@ -1689,7 +1695,8 @@ export const directApartmentTemplate: DCFTemplateType = {
           templateId: '6a2d8f1c-7b43-4d95-a2e7-6f3b1c4d9014',
           categoryType: 'gop',
           categoryName: 'Gross Operating Profit (GOP)',
-          identifier: 'gop',
+          identifier: 'positive',
+          displaySeq: 3,
         },
         {
           id: '00000000-0000-0000-0001-000000000002',
@@ -1779,6 +1786,7 @@ export const directApartmentTemplate: DCFTemplateType = {
       ],
     },
     {
+      clientId: '6e132f1c-7b43-4d95-a2e7-6f3b1c4d9014',
       sectionType: 'summaryDirect',
       sectionName: 'Summary',
       identifier: 'empty',
@@ -1793,14 +1801,56 @@ export const dcfTemplateQueries = [
   { id: 'dcf-002', data: dcfApartmentTemplate },
   { id: 'dcf-003', data: dcfOfficeTemplate },
   { id: 'dcf-004', data: dcfDepartmentStoreTemplate },
-  { id: 'dcf-005', data: directApartmentTemplate },
+  { id: 'direct-000', data: directApartmentTemplate },
 ];
 
 export const dcfTemplateList = [
-  { templateCode: 'dcf-00', templateName: 'Test', id: 'dcf-000' },
-  { templateCode: 'dcf-01', templateName: 'DCF - Hotel', id: 'dcf-001' },
-  { templateCode: 'dcf-02', templateName: 'DCF - Apartment', id: 'dcf-002' },
-  { templateCode: 'dcf-03', templateName: 'DCF - Office', id: 'dcf-003' },
-  { templateCode: 'dcf-04', templateName: 'DCF - Department Store', id: 'dcf-004' },
-  { templateCode: 'direct-00', templateName: 'Direct - Apartment', id: 'dcf-005' },
+  {
+    id: 'dcf-000',
+    templateCode: 'dcf-000',
+    templateName: 'Test',
+    propertyType: 'L',
+    description: '',
+    isActive: true,
+  },
+  {
+    id: 'dcf-001',
+    templateCode: 'dcf-001',
+    templateName: 'DCF - Hotel',
+    propertyType: 'L',
+    description: '',
+    isActive: true,
+  },
+  {
+    id: 'dcf-002',
+    templateCode: 'dcf-002',
+    templateName: 'DCF - Apartment',
+    propertyType: 'L',
+    description: '',
+    isActive: true,
+  },
+  {
+    id: 'dcf-003',
+    templateCode: 'dcf-003',
+    templateName: 'DCF - Office',
+    propertyType: 'L',
+    description: '',
+    isActive: true,
+  },
+  {
+    id: 'dcf-004',
+    templateCode: 'dcf-004',
+    templateName: 'DCF - Department Store',
+    propertyType: 'L',
+    description: '',
+    isActive: true,
+  },
+  {
+    id: 'direct-000',
+    templateCode: 'direct-000',
+    templateName: 'Direct - Apartment',
+    propertyType: 'L',
+    description: '',
+    isActive: true,
+  },
 ];

@@ -7,18 +7,20 @@ interface MethodSpecifiedEnergyCostIndexProps {
   expanded: boolean;
   method: MethodSpecifiedEnergyCostIndexWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedEnergyCostIndex({
   name,
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedEnergyCostIndexProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
                 <span>Increase Rate - 1st year amt</span>
@@ -26,11 +28,8 @@ export function MethodSpecifiedEnergyCostIndex({
                   <RHFInputCell
                     fieldName={`${name}.detail.energyCostIndex`}
                     inputType="number"
-                    number={{
-                      decimalPlaces: 2,
-                      maxIntegerDigits: 15,
-                      allowNegative: false,
-                    }}
+                    number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>growth</span>
@@ -43,6 +42,7 @@ export function MethodSpecifiedEnergyCostIndex({
                       maxIntegerDigits: 3,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -56,6 +56,7 @@ export function MethodSpecifiedEnergyCostIndex({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>
@@ -69,7 +70,7 @@ export function MethodSpecifiedEnergyCostIndex({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Enegy Cost Index</span>
             </td>
@@ -81,7 +82,7 @@ export function MethodSpecifiedEnergyCostIndex({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total Energy Cost</span>
             </td>

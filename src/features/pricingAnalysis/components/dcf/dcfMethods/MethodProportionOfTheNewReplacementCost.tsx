@@ -7,6 +7,7 @@ interface MethodProportionOfTheNewReplacementCostProps {
   totalNumberOfYears: number;
   method: MethodProportionOfTheNewReplacementCostWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodProportionOfTheNewReplacementCost({
   name = '',
@@ -14,12 +15,13 @@ export function MethodProportionOfTheNewReplacementCost({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodProportionOfTheNewReplacementCostProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>New Replacement Cost</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -35,7 +37,7 @@ export function MethodProportionOfTheNewReplacementCost({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -51,7 +53,7 @@ export function MethodProportionOfTheNewReplacementCost({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Total</td>
             {(method.detail?.proportionOfNewReplacementCosts ?? []).map((val, idx) => {
               return (

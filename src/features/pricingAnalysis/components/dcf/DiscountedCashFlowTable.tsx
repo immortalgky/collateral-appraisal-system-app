@@ -84,11 +84,13 @@ const getIconSection = (identifier: string) => {
 interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
   properties: Record<string, unknown>[];
+  isReadOnly: boolean;
 }
 
 export function DiscountedCashFlowTable({
   totalNumberOfYears,
   properties,
+  isReadOnly,
 }: DiscountedCashFlowTableProps) {
   const { control } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
@@ -106,7 +108,7 @@ export function DiscountedCashFlowTable({
   // section rules build only once
   const calculateStaticCalculationDerivedRules = useMemo(() => {
     return buildStaticCalculationDerivedRules(sections, totalNumberOfYears);
-  }, [templateCode]);
+  }, [sections, totalNumberOfYears]);
 
   useDerivedFields({ rules: calculateStaticCalculationDerivedRules, ctx: { sections } });
 
@@ -177,6 +179,7 @@ export function DiscountedCashFlowTable({
                         maxValue: 370,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                 </div>
@@ -204,6 +207,7 @@ export function DiscountedCashFlowTable({
                   color={getSectionColor(section.sectionType)}
                   totalNumberOfYears={totalNumberOfYears}
                   icon={getIconSection(section.identifier)}
+                  isReadOnly={isReadOnly}
                 />
               );
             })}

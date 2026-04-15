@@ -7,18 +7,20 @@ interface MethodParameterBasedOnTierOfPrpertyValueProps {
   totalNumberOfYears: number;
   method: MethodParameterBasedOnTierOfPropertyValueWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodParameterBasedOnTierOfPropertyValue({
   expanded,
   method,
   totalNumberOfYears,
   baseStyles,
+  isReadOnly,
 }: MethodParameterBasedOnTierOfPrpertyValueProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total</span>
             </td>

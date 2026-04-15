@@ -4,7 +4,7 @@ import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
 import { useEffect, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
-import type { DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
+import type { DCF, DCFSection, DCFTemplateType } from '@features/pricingAnalysis/types/dcf.ts';
 import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
@@ -12,6 +12,11 @@ import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { dcfTemplateList, dcfTemplateQueries } from '../../data/dcfTemplates';
 import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBestUsed';
 import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
+import { restoreDiscountedCashFlowFromSavedData } from '@features/pricingAnalysis/adapters/restoreDiscountedCashFlowFromSavedData.ts';
+import toast from 'react-hot-toast';
+import { mapDCFFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapDCFormToSubmitSchema.ts';
+import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext.tsx';
+import { DiscountedCashFlowSummaryAssumption } from '@features/pricingAnalysis/components/dcf/DiscountedCashFlowSummaryAssumption.tsx';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -22,6 +27,8 @@ interface DiscountedCashFlowPanelProps {
     methodType?: string;
   };
   properties: Record<string, unknown>[] | undefined;
+  savedCalculation: DCF;
+  savedComparativeAnalysisTemplateId: string;
   templateList: unknown;
   onCalculationSave: (payload: {
     approachType: string;
@@ -34,10 +41,14 @@ interface DiscountedCashFlowPanelProps {
 export function DiscountedCashFlowPanel({
   activeMethod,
   properties,
+  savedCalculation,
+  savedComparativeAnalysisTemplateId,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
+  const isReadOnly = usePageReadOnly();
+  const { methodId, methodType } = activeMethod ?? {};
   const methods = useForm<DCFFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(DCFForm),
@@ -46,9 +57,11 @@ export function DiscountedCashFlowPanel({
 
   const { handleSubmit, reset, getValues, setValue, control } = methods;
 
+  const [collateralType, setCollateralType] = useState<string>('');
   const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [pricingTemplate, setPricingTemplate] = useState<DCFTemplateType | undefined>();
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
+  const [showAssumptionSummary, setShowAssumptionSummary] = useState(false);
 
   const templateList = dcfTemplateList; // mock data
   const selectedTemplateId = (templateList ?? []).find(
@@ -56,25 +69,64 @@ export function DiscountedCashFlowPanel({
   )?.id;
   const templateDetailQuery = dcfTemplateQueries.find(t => t.id === selectedTemplateId)?.data; // replace by query template detail by template id function.
 
+  const handleOnSelectCollateralType = (collateralType: string) => {
+    setCollateralType(collateralType);
+    setSelectedTemplateCode('');
+    setValue('templateCode', null, { shouldDirty: true });
+  };
+
   const handleOnGenerate = async () => {
-    console.log('generate');
     const nextTemplate = templateDetailQuery as DCFTemplateType | undefined;
     if (!nextTemplate) return;
 
     initializeDiscountedCashFlowForm(nextTemplate, reset);
+    setPricingTemplate(nextTemplate);
     setIsGenerated(true);
   };
 
   const handleOnSelectTemplate = (templateCode: string) => {
     setSelectedTemplateCode(templateCode);
-    setPricingTemplate(templateCode);
     setValue('templateCode', templateCode);
   };
 
-  // restore
-  useEffect(() => {}, []);
+  const handleOnShowAssumptionSummary = () => {
+    setShowAssumptionSummary(!showAssumptionSummary);
+  };
 
-  const isLoading = !isGenerated;
+  // restore
+  useEffect(() => {
+    if (isGenerated) return;
+
+    if (!methodId || !methodType || !properties) return;
+
+    // 1) restore saved data
+    if (!!savedCalculation) {
+      restoreDiscountedCashFlowFromSavedData({ savedCalculation, reset });
+      setIsGenerated(true);
+    }
+
+    // 2) restore selected template
+    if (pricingTemplate) return;
+
+    if (!!savedComparativeAnalysisTemplateId) {
+      const savedTemplate = (templateList ?? []).find(
+        t => t.id === savedComparativeAnalysisTemplateId,
+      );
+      if (savedTemplate) {
+        if (savedTemplate.propertyType) {
+          setCollateralType(savedTemplate.propertyType);
+          setValue('collateralType', savedTemplate.propertyType);
+        }
+        if (savedTemplate.templateCode) {
+          setSelectedTemplateCode(savedTemplate.templateCode);
+          setValue('templateCode', savedTemplate.templateCode);
+        }
+      }
+      setIsGenerated(true);
+    }
+  }, [savedCalculation, reset, isGenerated, methodId, methodType, properties]);
+
+  const isLoading = !isGenerated || !properties;
 
   // reset handler
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
@@ -86,7 +138,34 @@ export function DiscountedCashFlowPanel({
   };
 
   const handleOnSubmit = () => {
-    console.log(getValues());
+    if (!activeMethod?.pricingAnalysisId || !methodId) {
+      toast.error('Pricing analysis ID or method ID not found!');
+      return;
+    }
+
+    const dcfForm = getValues();
+    console.log(dcfForm);
+
+    try {
+      const appraisalValue = dcfForm.appraisalPriceRounded ?? null;
+      const request = mapDCFFormToSubmitSchema({ DCFForm: dcfForm });
+      // await saveMutation.mutateAsync({
+      //   id: activeMethod.pricingAnalysisId,
+      //   methodId,
+      //   request,
+      // });
+      if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
+        onCalculationSave({
+          approachType: activeMethod.approachType,
+          methodType: activeMethod.methodType,
+          appraisalValue,
+        });
+      }
+      toast.success('Saved!');
+      reset(dcfForm);
+    } catch {
+      toast.error('Failed to save comparative analysis');
+    }
   };
 
   return (
@@ -104,15 +183,20 @@ export function DiscountedCashFlowPanel({
           methodName={'Income'}
           onGenerate={handleOnGenerate}
           collateralType={{
-            onSelectCollateralType: () => null,
-            value: '',
+            fieldName: 'collateralType',
+            onSelectCollateralType: handleOnSelectCollateralType,
+            value: collateralType,
             options: COLLATERAL_TYPE,
           }}
           template={{
             fieldName: 'templateCode',
             onSelectTemplate: handleOnSelectTemplate,
             value: selectedTemplateCode,
-            options: dcfTemplateList.map(t => ({ value: t.templateCode, label: t.templateName })),
+            options: dcfTemplateList.map(t => ({
+              value: t.templateCode,
+              label: t.templateName,
+              id: t.id,
+            })),
           }}
         />
 
@@ -121,9 +205,17 @@ export function DiscountedCashFlowPanel({
             <DiscountedCashFlowTable
               totalNumberOfYears={getValues('totalNumberOfYears')}
               properties={properties}
+              isReadOnly={isReadOnly}
             />
 
-            <DiscountedCashFlowHighestBestUsed />
+            <DiscountedCashFlowSummaryAssumption
+              properties={properties}
+              getValues={getValues}
+              showAssumptionSummary={showAssumptionSummary}
+              onShowAssumptionSummary={handleOnShowAssumptionSummary}
+            />
+
+            <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
 
             {/* footer save, reset, cancel */}
             <MethodFooterActions

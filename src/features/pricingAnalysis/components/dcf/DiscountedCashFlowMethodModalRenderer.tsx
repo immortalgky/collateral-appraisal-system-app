@@ -20,14 +20,16 @@ interface DiscountedCashFlowModalRendererProps {
   methodType: string;
   properties: Record<string, unknown>[];
   getOuterFormValues: UseFormGetValues<FormValues>;
+  isReadOnly: boolean;
 }
 export function DiscountedCashFlowModalRenderer({
   name,
   methodType,
   properties,
   getOuterFormValues,
+  isReadOnly,
 }: DiscountedCashFlowModalRendererProps) {
-  const props = { name, properties, getOuterFormValues };
+  const props = { name, properties, getOuterFormValues, isReadOnly };
 
   switch (methodType) {
     case 'specifiedRoomIncomePerDay': {
@@ -60,8 +62,6 @@ export function DiscountedCashFlowModalRenderer({
     }
     case 'specifiedValueWithGrowth':
       return <MethodSpecifiedValueWithGrowthModal {...props} />;
-    case 'grossOperatingProfit':
-      return <></>;
     default: {
       return <></>;
     }

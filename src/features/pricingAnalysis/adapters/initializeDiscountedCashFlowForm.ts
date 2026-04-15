@@ -46,7 +46,7 @@ function buildMethod(method: DCFMethod, templateIdMap: TemplateToClientIdMap): D
       detail: {
         proportionPct: method.detail?.proportionPct ?? 0,
         refTarget: {
-          kind: method.detail?.refTarget?.kind ?? 'assumption',
+          kind: method.detail?.refTarget?.kind ?? null,
           templateId: method.detail?.refTarget?.templateId ?? null,
           clientId: `${method.detail?.refTarget.kind}:${resolveClientId(templateIdMap, method.detail?.refTarget?.templateId)}`,
           dbId: null,
@@ -67,6 +67,7 @@ function buildDCFInitialValues(template: DCFTemplateType): DCFFormType {
 
   return {
     clientId: getNewId(),
+    collateralType: template.collateralType,
     templateCode: template.templateCode,
     templateName: template.templateName,
     totalNumberOfYears: template.totalNumberOfYears,

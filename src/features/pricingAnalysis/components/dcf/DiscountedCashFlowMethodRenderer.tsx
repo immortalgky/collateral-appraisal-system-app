@@ -1,7 +1,6 @@
 import type { DCFAssumption, DCFMethod } from '../../types/dcf';
 import { MethodProportion } from './dcfMethods/MethodProportion';
 import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoomIncomePerDay';
-import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { MethodSpecifiedValueWithGrowth } from './dcfMethods/MethodSpecifiedValueWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowth } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate';
@@ -14,6 +13,7 @@ import { MethodProportionOfTheNewReplacementCost } from './dcfMethods/MethodProp
 import { MethodSpecifiedEnergyCostIndex } from './dcfMethods/MethodSpecifiedEnergyCostIndex';
 import { MethodSpecifiedRoomIncomeBySeasonalRates } from './dcfMethods/MethodSpecifiedRoomIncomeBySeasonalRates';
 import { MethodParameterBasedOnTierOfPropertyValue } from './dcfMethods/MethodParameterBasedOnTierOfPropertyValue';
+import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
 
 interface DiscountedCashFlowMethodRendererProps {
   name: string;
@@ -22,6 +22,7 @@ interface DiscountedCashFlowMethodRendererProps {
   assumption: DCFAssumption;
   method: DCFMethod;
   totalNumberOfYear: number;
+  isReadOnly: boolean;
 }
 export function DiscountedCashFlowMethodRenderer({
   name,
@@ -30,6 +31,7 @@ export function DiscountedCashFlowMethodRenderer({
   assumption,
   method,
   totalNumberOfYear,
+  isReadOnly,
 }: DiscountedCashFlowMethodRendererProps) {
   const props = {
     name: name,
@@ -41,9 +43,12 @@ export function DiscountedCashFlowMethodRenderer({
     assumptionName: assumption.assumptionName,
     assumptionType: assumption.assumptionType,
     baseStyles: {
-      rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300',
-      rowBody: 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300',
+      rowHeader:
+        'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300 group-hover:border-primary/50 group-hover:border-dashed group-hover:border-b-2',
+      rowBody:
+        'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300 group-hover:border-primary/50 group-hover:border-dashed group-hover:border-b-2',
     },
+    isReadOnly: isReadOnly,
   };
 
   const systemMethodType = mapDCFMethodCodeToSystemType(method.methodType);

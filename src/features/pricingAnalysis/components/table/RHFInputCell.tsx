@@ -110,6 +110,7 @@ export const RHFInputCell = ({
         options={options ?? []}
         showValue={dropdown?.showValue ?? true}
         error={error?.message}
+        disabled={disabled}
       />
     );
   }
@@ -124,6 +125,7 @@ export const RHFInputCell = ({
           const next = onUserChange ? onUserChange(e as any) : e;
           field.onChange(next);
         }}
+        disabled={disabled}
       ></Toggle>
     );
   }
@@ -141,6 +143,7 @@ export const RHFInputCell = ({
         label={text?.label ?? ''}
         error={error?.message}
         maxLength={text?.maxLength}
+        disabled={disabled}
       />
     );
   }

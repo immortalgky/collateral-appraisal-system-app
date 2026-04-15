@@ -7,17 +7,19 @@ interface MethodSpecifiedRentalIncomePerMonthProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRentalIncomePerMonthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRentalIncomePerMonth({
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRentalIncomePerMonthProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -27,7 +29,7 @@ export function MethodSpecifiedRentalIncomePerMonth({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Room Income</span>
               <span>({method.detail?.sumSaleableArea ?? 0} rooms)</span>

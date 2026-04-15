@@ -1,18 +1,20 @@
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import {
   assumptionParams,
   mappingAssumptionMethodParams,
   methodParams,
 } from '../../data/dcfParameters';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, type UseFormGetValues, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
-import type { DCFMethod, DCFSection } from '../../types/dcf';
-import { buildDiscountedCashFlowCategoryOptions } from '../../adapters/buildDiscountedCashFlowCategoryOptions';
-import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
+import { type DCFMethod, type DCFSection } from '../../types/dcf';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
+import { mapDCFMethodCodeToSystemType } from '@features/pricingAnalysis/domain/dcf/mapDCFFMethodCodeToSystemType.ts';
+import { Icon } from '@shared/components';
+import { createDefaultMethod } from '@features/pricingAnalysis/domain/dcf/createEmptyMethodDetail.ts';
+import type { FormValues } from '@features/appraisal/components/tables/bType.tsx';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -28,10 +30,11 @@ interface DiscountedCashFlowMethodModalProps {
   editing: string | null;
   initialData: AssumptionEditDraft;
   properties: Record<string, unknown>[];
-  getOuterFormValues: (name: string) => object[];
+  getOuterFormValues: UseFormGetValues<FormValues>;
   onCancelEditMode: () => void;
   onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  isReadOnly: boolean;
 }
 export function DiscountedCashFlowMethodModal({
   editing,
@@ -41,13 +44,14 @@ export function DiscountedCashFlowMethodModal({
   onCancelEditMode,
   onSaveEditMode,
   size,
+  isReadOnly,
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
     shouldUnregister: true,
   });
 
-  const { handleSubmit, reset, getValues, control } = methods;
+  const { handleSubmit, reset, setValue, getValues, control } = methods;
 
   const methodType = useWatch({
     control,
@@ -67,14 +71,14 @@ export function DiscountedCashFlowMethodModal({
   const handleMethodTypeChange = useCallback(
     (nextMethodType: string) => {
       const currentValues = getValues();
+      const currentMethodId = currentValues.method?.id;
 
       reset({
         ...currentValues,
-        method: {
-          ...currentValues.method,
-          methodType: nextMethodType as AssumptionEditDraft['method']['methodType'],
-          detail: undefined,
-        },
+        method: createDefaultMethod(
+          nextMethodType as AssumptionEditDraft['method']['methodType'],
+          currentMethodId,
+        ),
       });
     },
     [getValues, reset],
@@ -109,16 +113,17 @@ export function DiscountedCashFlowMethodModal({
   );
 
   // const categoryOptions = buildDiscountedCashFlowCategoryOptions(currentSection?.categories ?? []);
-  const assumptions = getDCFFilteredAssumptions(getOuterFormValues).map(a => a.assumption);
+  const assumptions = getDCFFilteredAssumptions(sections).map(a => a.assumption);
 
   const filteredAssumptionOptions = useMemo(() => {
     return assumptionParams
       .filter(
         p =>
-          !assumptions.some(
+          (!assumptions.some(
             a => a.assumptionType === p.code && a.assumptionType !== initialData.assumptionType,
           ) &&
-          (currentSection?.sectionType === p.sectionType || p.sectionType === 'any'),
+            currentSection?.sectionType === p.sectionType) ||
+          p.sectionType === 'any',
       )
       .map(a => ({ value: a.code, label: a.description }));
   }, [assumptionType, assumptions]);
@@ -151,12 +156,25 @@ export function DiscountedCashFlowMethodModal({
         method: {
           ...currentValues.method,
           methodType: null,
-          detail: undefined,
+          detail: null,
         },
       });
     },
     [getValues, reset],
   );
+
+  const handleOnClearMethod = () => {
+    const currValues = getValues();
+    const currentMethodType = currValues.method?.methodType;
+    const currentMethodId = currValues.method?.id;
+
+    if (!currentMethodType) return;
+
+    reset({
+      ...currValues,
+      method: createDefaultMethod(currentMethodType, currentMethodId),
+    });
+  };
 
   return (
     <Modal
@@ -198,11 +216,12 @@ export function DiscountedCashFlowMethodModal({
                   inputType="select"
                   options={filteredAssumptionOptions}
                   onSelectChange={handleAssumptionTypeChange}
+                  disabled={isReadOnly}
                 />
               </div>
               {assumptionType === 'M99' && (
                 <div className="flex">
-                  <RHFInputCell fieldName="assumptionName" inputType="text" />
+                  <RHFInputCell fieldName="assumptionName" inputType="text" disabled={isReadOnly} />
                 </div>
               )}
             </div>
@@ -215,6 +234,7 @@ export function DiscountedCashFlowMethodModal({
                   inputType="select"
                   options={filteredMethodOptions}
                   onSelectChange={handleMethodTypeChange}
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -227,22 +247,39 @@ export function DiscountedCashFlowMethodModal({
               methodType={systemMethodType}
               properties={properties}
               getOuterFormValues={getOuterFormValues}
+              isReadOnly={isReadOnly}
             />
           )}
 
           <div className="flex items-center justify-between mt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onCancelEditMode();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" size="sm">
-              Save
-            </Button>
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onCancelEditMode();
+                }}
+              >
+                Cancel
+              </Button>
+
+              {!isReadOnly && (
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleOnClearMethod}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <Icon name="arrow-rotate-left" style="solid" className="size-4 mr-2" />
+                  Clear
+                </Button>
+              )}
+            </div>
+            {!isReadOnly && (
+              <Button type="submit" variant="primary" size="sm">
+                Save
+              </Button>
+            )}
           </div>
         </form>
       </FormProvider>

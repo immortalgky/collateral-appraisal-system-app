@@ -7,18 +7,20 @@ interface MethodSpecifiedValueWithGrowthProps {
   expanded: boolean;
   method: MethodSpecifiedValueWithGrowthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedValueWithGrowth({
   name,
   expanded,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedValueWithGrowthProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row justify-between items-center gap-3">
                 <span>Increase Rate</span>
@@ -33,6 +35,7 @@ export function MethodSpecifiedValueWithGrowth({
                         maxIntegerDigits: 15,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>growth</span>
@@ -45,6 +48,7 @@ export function MethodSpecifiedValueWithGrowth({
                         maxIntegerDigits: 3,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>% every</span>
@@ -58,6 +62,7 @@ export function MethodSpecifiedValueWithGrowth({
                         maxValue: 100,
                         allowNegative: false,
                       }}
+                      disabled={isReadOnly}
                     />
                   </div>
                   <span>year(s)</span>
@@ -72,7 +77,7 @@ export function MethodSpecifiedValueWithGrowth({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Total</td>
             {(method.totalMethodValues ?? []).map((val, idx) => {
               return (

@@ -16,11 +16,11 @@ export const mapMethodCodeToValue = [
   // general
   { code: '13', value: 'proportion' },
   { code: '14', value: 'specifiedValueWithGrowth' },
-  // GOP
-  { code: '15', value: 'grossOperatingProfit' },
 ];
 
 export function mapDCFMethodCodeToSystemType(methodCode: string) {
+  if (!methodCode) return null;
+
   const mapping = new Map(mapMethodCodeToValue.map(c => [c.code, c.value]));
   return mapping.get(methodCode) ?? null;
 }

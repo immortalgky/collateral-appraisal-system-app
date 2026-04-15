@@ -8,6 +8,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeterProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRentalIncomePerSquareMeterWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly: boolean;
 }
 export function MethodSpecifiedRentalIncomePerSquareMeter({
   name,
@@ -15,12 +16,13 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRentalIncomePerSquareMeterProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Saleable Area</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -34,7 +36,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
                 <span>Occupancy Rate - 1st year amt</span>
@@ -48,6 +50,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% growth</span>
@@ -61,6 +64,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>% every</span>
@@ -74,6 +78,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                       maxValue: 100,
                       allowNegative: false,
                     }}
+                    disabled={isReadOnly}
                   />
                 </div>
                 <span>year(s)</span>
@@ -94,6 +99,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                           minValue: 0,
                           allowNegative: false,
                         }}
+                        disabled={isReadOnly}
                       />
                     </div>
                   </div>
@@ -101,7 +107,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Total Number of Saleable Area</td>
             {(method.detail?.totalSaleableAreaDeductByOccRate ?? []).map((val, idx) => {
               return (
@@ -111,7 +117,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.rentalRateIncrease ?? []).map((val, idx) => {
               return (
@@ -123,7 +129,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>Average Rental Rate</td>
             {(method.detail?.avgRentalRate ?? []).map((val, idx) => {
               return (
@@ -133,7 +139,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
               );
             })}
           </tr>
-          <tr>
+          <tr className={clsx('group transition-colors')}>
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total Rental Income</span>
             </td>
