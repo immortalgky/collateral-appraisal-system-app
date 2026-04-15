@@ -1,19 +1,20 @@
 import { useEffect, useRef } from 'react';
-import { HubConnectionBuilder, LogLevel, HubConnectionState } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { signalrLogger } from '@shared/utils/signalrLogger';
 import { getAccessToken } from '@shared/api/axiosInstance';
 
 export interface PoolTaskUpdateEvent {
-  Type: 'PoolTaskLocked' | 'PoolTaskUnlocked' | 'PoolTaskClaimed';
-  TaskId: string;
-  LockedBy?: string;
-  ReleasedBy?: string;
-  ClaimedBy?: string;
-  PoolGroup: string;
-  Timestamp: string;
+  type: 'PoolTaskLocked' | 'PoolTaskUnlocked' | 'PoolTaskClaimed';
+  taskId: string;
+  lockedBy?: string;
+  releasedBy?: string;
+  claimedBy?: string;
+  poolGroup: string;
+  timestamp: string;
 }
 
 interface UseWorkflowHubOptions {
-  poolGroup: string | null;
+  poolGroups: string[];
   onPoolTaskUpdate: (event: PoolTaskUpdateEvent) => void;
 }
 
@@ -22,14 +23,19 @@ const getHubUrl = () => {
   return apiUrl.replace(/\/api\/?$/, '') + '/workflowHub';
 };
 
-export function useWorkflowHub({ poolGroup, onPoolTaskUpdate }: UseWorkflowHubOptions) {
-  const connectionRef = useRef<ReturnType<typeof HubConnectionBuilder.prototype.build> | null>(null);
+export function useWorkflowHub({ poolGroups, onPoolTaskUpdate }: UseWorkflowHubOptions) {
+  const connectionRef = useRef<ReturnType<typeof HubConnectionBuilder.prototype.build> | null>(
+    null,
+  );
   // Keep latest callback in a ref so the effect closure stays stable
   const callbackRef = useRef(onPoolTaskUpdate);
   callbackRef.current = onPoolTaskUpdate;
 
+  // Stable key so the effect only re-runs when the set of groups actually changes
+  const groupKey = poolGroups.slice().sort().join(',');
+
   useEffect(() => {
-    if (!poolGroup) return;
+    if (poolGroups.length === 0) return;
 
     const token = getAccessToken();
     if (!token) return;
@@ -39,7 +45,7 @@ export function useWorkflowHub({ poolGroup, onPoolTaskUpdate }: UseWorkflowHubOp
         accessTokenFactory: () => getAccessToken() ?? '',
       })
       .withAutomaticReconnect()
-      .configureLogging(LogLevel.Warning)
+      .configureLogging(signalrLogger)
       .build();
 
     connectionRef.current = connection;
@@ -48,23 +54,28 @@ export function useWorkflowHub({ poolGroup, onPoolTaskUpdate }: UseWorkflowHubOp
       callbackRef.current(event);
     });
 
+    let cancelled = false;
+
     connection
       .start()
       .then(() => {
-        console.log('[WorkflowHub] SignalR connected');
-        return connection.invoke('JoinPoolGroup', poolGroup);
+        if (cancelled) return;
+        console.log('[WorkflowHub] SignalR connected, joining pools:', poolGroups);
+        return Promise.all(poolGroups.map(g => connection.invoke('JoinPoolGroup', g)));
       })
       .catch(err => {
-        console.error('[WorkflowHub] SignalR connection failed:', err);
+        if (!cancelled) console.error('[WorkflowHub] SignalR connection failed:', err);
       });
 
     return () => {
+      cancelled = true;
       if (connection.state !== HubConnectionState.Disconnected) {
-        connection
-          .invoke('LeavePoolGroup', poolGroup)
-          .catch(() => {})
-          .finally(() => connection.stop());
+        Promise.all(
+          poolGroups.map(g => connection.invoke('LeavePoolGroup', g).catch(() => {})),
+        ).finally(() => connection.stop());
       }
     };
-  }, [poolGroup]);
+    // groupKey is a stable derived string — safe to use instead of the array reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupKey]);
 }

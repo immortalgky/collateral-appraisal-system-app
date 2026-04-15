@@ -39,6 +39,7 @@ import MarketComparableTemplateDetailPage from '@features/templateManagement/pag
 import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
+import ActivityTrackingPage from '@/features/appraisal/pages/ActivityTrackingPage';
 import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
 import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
 import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
@@ -58,6 +59,7 @@ import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
+import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
 import BlockCondoPage from '@/features/blockCondo/pages/BlockCondoPage';
 import ModelDetailPage from '@/features/blockCondo/pages/ModelDetailPage';
 import TowerDetailPage from '@/features/blockCondo/pages/TowerDetailPage';
@@ -600,6 +602,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'activity-tracking',
+        element: <ActivityTrackingPage />,
+      },
+      {
         path: 'groups/:groupId/pricing-analysis',
         element: (
           <AppraisalReadOnlyWrapper pageName="Property Information">
@@ -620,6 +626,12 @@ export const router = createBrowserRouter([
         element: <Appraisal360Page />,
       },
     ],
+  },
+  // Task Opening Gate — runs before TaskLayout, no sidebar
+  {
+    path: 'tasks/:taskId/opening',
+    element: <ProtectedRoute component={<OpeningTaskPage />} />,
+    errorElement: <ErrorPage />,
   },
   // Task Routes (separate layout with ownership validation)
   {
@@ -962,6 +974,10 @@ export const router = createBrowserRouter([
             <DecisionSummaryPage />
           </AppraisalReadOnlyWrapper>
         ),
+      },
+      {
+        path: 'activity-tracking',
+        element: <ActivityTrackingPage />,
       },
       {
         path: 'groups/:groupId/pricing-analysis',

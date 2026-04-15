@@ -19,7 +19,7 @@ interface ApprovalListSectionProps {
 }
 
 /** Client-derived status from quorum/majority/route_back — backend does not emit a status string. */
-type DerivedStatus = 'APPROVED' | 'RETURNED' | 'PENDING';
+type DerivedStatus = 'Approved' | 'Returned' | 'Pending';
 
 const TIER_LABELS: Record<number, string> = {
   1: 'Tier 1',
@@ -41,9 +41,9 @@ const tierBadge = (tier: number | null, committeeCode: string | null): string =>
 };
 
 const deriveStatus = (data: GetApprovalListResponse): DerivedStatus => {
-  if (data.members.some(m => m.vote === 'route_back')) return 'RETURNED';
-  if (data.quorumMet && data.majorityMet) return 'APPROVED';
-  return 'PENDING';
+  if (data.members.some(m => m.vote === 'route_back')) return 'Returned';
+  if (data.quorumMet && data.majorityMet) return 'Approved';
+  return 'Pending';
 };
 
 const conditionLabel = (condition: ApprovalCondition): string => {
@@ -91,7 +91,7 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
   const status = deriveStatus(data);
   const members: ApprovalMember[] = data.members;
   const currentUser = members.find(m => m.isCurrentUser);
-  const canVote = status === 'PENDING' && currentUser != null && currentUser.status !== 'Voted';
+  const canVote = status === 'Pending' && currentUser != null && currentUser.status !== 'Voted';
 
   return (
     <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
@@ -126,7 +126,7 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
         </div>
 
         {/* Status banner */}
-        {status === 'APPROVED' && (
+        {status === 'Approved' && (
           <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
             <Icon name="circle-check" style="solid" className="w-5 h-5 text-emerald-500 shrink-0" />
             <p className="text-sm font-medium text-emerald-700">
@@ -134,7 +134,7 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
             </p>
           </div>
         )}
-        {status === 'RETURNED' && (
+        {status === 'Returned' && (
           <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
             <Icon name="rotate-left" style="solid" className="w-5 h-5 text-amber-500 shrink-0" />
             <p className="text-sm font-medium text-amber-700">

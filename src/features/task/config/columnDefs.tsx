@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { format, differenceInDays, isPast } from 'date-fns';
+import { differenceInDays, format, isPast } from 'date-fns';
 import type { Task } from '../types';
 import Badge from '@/shared/components/Badge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
@@ -35,14 +35,21 @@ function avatarColor(name: string): string {
 }
 
 function initials(name: string): string {
-  return name.split(/\s+/).map(n => n[0] ?? '').join('').slice(0, 2).toUpperCase();
+  return name
+    .split(/\s+/)
+    .map(n => n[0] ?? '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function PersonCell({ name }: { name: string | null | undefined }) {
   if (!name) return <>-</>;
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <span className={`inline-flex items-center justify-center size-6 rounded-full text-[10px] font-bold flex-shrink-0 ${avatarColor(name)}`}>
+      <span
+        className={`inline-flex items-center justify-center size-6 rounded-full text-[10px] font-bold flex-shrink-0 ${avatarColor(name)}`}
+      >
         {initials(name)}
       </span>
       <span className="truncate text-sm text-gray-700">{name}</span>
@@ -54,10 +61,16 @@ function MovementCell({ value }: { value: string | null | undefined }) {
   if (!value) return <>-</>;
   const isForward = value.toLowerCase() === 'forward';
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-      isForward ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-    }`}>
-      <Icon style="solid" name={isForward ? 'arrow-right' : 'arrow-rotate-left'} className="size-2.5" />
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+        isForward ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+      }`}
+    >
+      <Icon
+        style="solid"
+        name={isForward ? 'arrow-right' : 'arrow-rotate-left'}
+        className="size-2.5"
+      />
       {value}
     </span>
   );
@@ -70,31 +83,41 @@ function DueDateCell({ dateString }: { dateString: string | null | undefined }) 
     const days = differenceInDays(date, new Date());
     const overdue = isPast(date);
     const formatted = format(date, 'dd/MM/yyyy');
-    if (overdue) return (
-      <span className="inline-flex items-center gap-1 text-red-600 font-medium text-sm">
-        <Icon style="solid" name="circle-exclamation" className="size-3 flex-shrink-0" />
-        {formatted}
-      </span>
-    );
-    if (days <= 3) return (
-      <span className="inline-flex items-center gap-1 text-amber-600 font-medium text-sm">
-        <Icon style="solid" name="clock" className="size-3 flex-shrink-0" />
-        {formatted}
-      </span>
-    );
+    if (overdue)
+      return (
+        <span className="inline-flex items-center gap-1 text-red-600 font-medium text-sm">
+          <Icon style="solid" name="circle-exclamation" className="size-3 flex-shrink-0" />
+          {formatted}
+        </span>
+      );
+    if (days <= 3)
+      return (
+        <span className="inline-flex items-center gap-1 text-amber-600 font-medium text-sm">
+          <Icon style="solid" name="clock" className="size-3 flex-shrink-0" />
+          {formatted}
+        </span>
+      );
     return <>{formatted}</>;
   } catch {
     return <>{dateString}</>;
   }
 }
 
-function HoursCell({ hours, type }: { hours: number | null | undefined; type: 'elapsed' | 'remaining' }) {
+function HoursCell({
+  hours,
+  type,
+}: {
+  hours: number | null | undefined;
+  type: 'elapsed' | 'remaining';
+}) {
   if (hours == null) return <>-</>;
   let cls = 'text-gray-600';
   let label = `${hours}h`;
   if (type === 'remaining') {
-    if (hours < 0) { cls = 'text-red-600 font-medium'; label = `${Math.abs(hours)}h late`; }
-    else if (hours <= 24) cls = 'text-amber-600 font-medium';
+    if (hours < 0) {
+      cls = 'text-red-600 font-medium';
+      label = `${Math.abs(hours)}h late`;
+    } else if (hours <= 24) cls = 'text-amber-600 font-medium';
     else cls = 'text-emerald-600';
   } else {
     if (hours > 72) cls = 'text-red-600 font-medium';
@@ -159,113 +182,125 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     label: 'Appraisal Number',
     sortField: 'appraisalNumber',
     sticky: true,
-    render: (task) => (
-      <Link
-        to={`/tasks/${task.taskId}`}
-        onClick={(e) => e.stopPropagation()}
-        className="font-medium text-primary hover:underline"
-      >
-        {task.appraisalNumber ?? '-'}
-      </Link>
-    ),
+    render: task => {
+      const display = task.appraisalNumber ?? task.requestNumber;
+      const isReq = !task.appraisalNumber && !!task.requestNumber;
+      return (
+        <Link
+          to={`/tasks/${task.id}/opening`}
+          onClick={e => e.stopPropagation()}
+          className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+        >
+          {display ?? '-'}
+          {isReq && (
+            <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+              REQ
+            </span>
+          )}
+        </Link>
+      );
+    },
   },
   customerName: {
     label: 'Customer Name',
     sortField: 'customerName',
-    render: (task) => task.customerName ?? '-',
+    render: task => task.customerName ?? '-',
   },
   taskType: {
     label: 'Task Type',
     sortField: 'taskType',
-    render: (task) => task.taskDescription || task.taskType || '-',
+    render: task => task.taskDescription || task.taskType || '-',
   },
   purpose: {
     label: 'Purpose',
     sortField: 'purpose',
-    render: (task) => <ParameterDisplay group="AppraisalPurpose" code={task.purpose} />,
+    render: task => <ParameterDisplay group="AppraisalPurpose" code={task.purpose} />,
   },
   propertyType: {
     label: 'Property Type',
     sortField: 'propertyType',
-    render: (task) => <ParameterDisplay group="PropertyType" code={task.propertyType} />,
+    render: task => <ParameterDisplay group="PropertyType" code={task.propertyType} />,
   },
   status: {
     label: 'Status',
     tdClassName: 'px-3 py-2.5',
-    render: (task) => <Badge type="status" value={task.status} size="sm" />,
+    render: task => <Badge type="status" value={task.status} size="sm" />,
   },
   appointmentDateTime: {
     label: 'Appointment Date',
     sortField: 'appointmentDateTime',
-    render: (task) => <AppointmentCell dateString={task.appointmentDateTime} />,
+    render: task => <AppointmentCell dateString={task.appointmentDateTime} />,
   },
   requestedAt: {
     label: 'Requested At',
     sortField: 'RequestedAt',
-    render: (task) => formatDate(task.requestedAt),
+    render: task => formatDate(task.requestedAt),
   },
   requestedBy: {
     label: 'Requested By',
-    render: (task) => <PersonCell name={task.requestedByName ?? task.requestedBy} />,
+    render: task => <PersonCell name={task.requestedByName ?? task.requestedBy} />,
   },
   reportReceivedAt: {
     label: 'Report Received At',
     sortField: 'ReportReceivedAt',
-    render: (task) => formatDate(task.reportReceivedAt),
+    render: task => formatDate(task.reportReceivedAt),
   },
   requestReceivedDate: {
     label: 'Request Received Date',
     sortField: 'requestReceivedDate',
-    render: (task) => <AppointmentCell dateString={task.requestReceivedDate} />,
+    render: task => <AppointmentCell dateString={task.requestReceivedDate} />,
   },
   internalFollowupStaff: {
     label: 'Internal Followup Staff',
-    render: (task) => <PersonCell name={task.internalFollowupStaff} />,
+    render: task => <PersonCell name={task.internalFollowupStaff} />,
   },
   appraiser: {
     label: 'Appraiser',
-    render: (task) => task.appraiser ? (
-      <div className="flex items-center gap-2 min-w-0">
-        <Icon style="regular" name="building" className="size-3.5 text-gray-400 flex-shrink-0" />
-        <span className="truncate text-sm text-gray-700">{task.appraiser}</span>
-      </div>
-    ) : '-',
+    render: task =>
+      task.appraiser ? (
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon style="regular" name="building" className="size-3.5 text-gray-400 flex-shrink-0" />
+          <span className="truncate text-sm text-gray-700">{task.appraiser}</span>
+        </div>
+      ) : (
+        '-'
+      ),
   },
   assignedDate: {
     label: 'Assigned Date',
     sortField: 'assignedDate',
-    render: (task) => <AppointmentCell dateString={task.assignedDate} />,
+    render: task => <AppointmentCell dateString={task.assignedDate} />,
   },
   movement: {
     label: 'Movement',
     sortField: 'movement',
-    render: (task) => <MovementCell value={task.movement} />,
+    render: task => <MovementCell value={task.movement} />,
   },
   dueAt: {
     label: 'SLA Due',
     sortField: 'dueAt',
-    render: (task) => <DueDateCell dateString={task.dueAt} />,
+    render: task => <DueDateCell dateString={task.dueAt} />,
   },
   elapsedHours: {
     label: 'Elapsed (hrs)',
     sortField: 'elapsedHours',
-    render: (task) => <HoursCell hours={task.elapsedHours} type="elapsed" />,
+    render: task => <HoursCell hours={task.elapsedHours} type="elapsed" />,
   },
   remainingHours: {
     label: 'Remaining (hrs)',
     sortField: 'remainingHours',
-    render: (task) => <HoursCell hours={task.remainingHours} type="remaining" />,
+    render: task => <HoursCell hours={task.remainingHours} type="remaining" />,
   },
   slaStatus: {
     label: 'SLA Status',
     tdClassName: 'px-3 py-2.5',
-    render: (task) => <Badge type="status" value={task.slaStatus} size="sm" />,
+    render: task => <Badge type="status" value={task.slaStatus} size="sm" />,
   },
   priority: {
     label: 'Priority',
     sortField: 'priority',
     tdClassName: 'px-3 py-2.5',
-    render: (task) => <Badge type="priority" value={task.priority} size="sm" />,
+    render: task => <Badge type="priority" value={task.priority} size="sm" />,
   },
 };
 

@@ -50,7 +50,10 @@ function TaskListingPage() {
   const debouncedPoolSearch = useDebounce(poolSearch, 400);
   const [poolFilters, setPoolFilters] = useState<TaskFilterParams>({});
   const [poolFilterDialogOpen, setPoolFilterDialogOpen] = useState(false);
-  const poolFilterChips = Object.entries(poolFilters).filter(([, v]) => !!v) as [keyof TaskFilterParams, string][];
+  const poolFilterChips = Object.entries(poolFilters).filter(([, v]) => !!v) as [
+    keyof TaskFilterParams,
+    string,
+  ][];
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupByField>('status');
@@ -64,7 +67,10 @@ function TaskListingPage() {
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [filters, setFilters] = useState<TaskFilterParams>({});
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    visible: false, x: 0, y: 0, taskId: null,
+    visible: false,
+    x: 0,
+    y: 0,
+    taskId: null,
   });
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
@@ -78,25 +84,39 @@ function TaskListingPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  useEffect(() => { setPageNumber(0); }, [sortField, sortDirection, debouncedSearch, filters]);
+  useEffect(() => {
+    setPageNumber(0);
+  }, [sortField, sortDirection, debouncedSearch, filters]);
 
   const listRequestParams = {
-    pageNumber, pageSize,
+    pageNumber,
+    pageSize,
     search: debouncedSearch || undefined,
     sortBy: sortField ?? undefined,
     sortDir: sortDirection,
     ...filters,
   };
 
-  const { data: listData, isLoading: isListLoading, isError: isListError, error: listError } =
-    useGetTasks(listRequestParams);
-  const { data: kanbanTasks, isLoading: isKanbanLoading, isError: isKanbanError, error: kanbanError } =
-    useGetTasksForKanban({ search: debouncedSearch || undefined });
+  const {
+    data: listData,
+    isLoading: isListLoading,
+    isError: isListError,
+    error: listError,
+  } = useGetTasks(listRequestParams);
+  const {
+    data: kanbanTasks,
+    isLoading: isKanbanLoading,
+    isError: isKanbanError,
+    error: kanbanError,
+  } = useGetTasksForKanban({ search: debouncedSearch || undefined });
 
   const [minLoadingDone, setMinLoadingDone] = useState(true);
   useEffect(() => {
     const loading = viewMode === 'list' ? isListLoading : isKanbanLoading;
-    if (loading) { setMinLoadingDone(false); setTimeout(() => setMinLoadingDone(true), 400); }
+    if (loading) {
+      setMinLoadingDone(false);
+      setTimeout(() => setMinLoadingDone(true), 400);
+    }
   }, [isListLoading, isKanbanLoading, viewMode]);
 
   const isLoading = (viewMode === 'list' ? isListLoading : isKanbanLoading) || !minLoadingDone;
@@ -108,23 +128,44 @@ function TaskListingPage() {
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [keyof TaskFilterParams, string][];
+  const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
+    keyof TaskFilterParams,
+    string,
+  ][];
   const hasFilters = !!searchTerm || activeFilterChips.length > 0;
 
   const removeFilter = (key: keyof TaskFilterParams) => {
-    setFilters(prev => { const next = { ...prev }; delete next[key]; return next; });
+    setFilters(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
-      if (sortDirection === 'asc') { setSortDirection('desc'); }
-      else { setSortField(null); setSortDirection('asc'); }
-    } else { setSortField(field); setSortDirection('asc'); }
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
   };
 
   const SortIcon = ({ field }: { field: string }) => {
-    if (sortField !== field) return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
-    return <Icon style="solid" name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'} className="size-2.5 text-primary" />;
+    if (sortField !== field)
+      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+    return (
+      <Icon
+        style="solid"
+        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
+        className="size-2.5 text-primary"
+      />
+    );
   };
 
   if (isError) {
@@ -143,7 +184,6 @@ function TaskListingPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
-
       {/* ── Page header ── */}
       <div className="shrink-0 mb-3">
         <div className="flex items-center gap-3">
@@ -154,7 +194,9 @@ function TaskListingPage() {
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">Manage and track your assigned appraisal tasks</p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Manage and track your assigned appraisal tasks
+        </p>
       </div>
 
       {/* ── Toolbar: tabs + controls ── */}
@@ -169,9 +211,13 @@ function TaskListingPage() {
           <Icon style="solid" name="user" className="size-3" />
           My
           {!isListLoading && totalCount > 0 && (
-            <span className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
-              activeTab === 'personal' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
-            }`}>
+            <span
+              className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
+                activeTab === 'personal'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
               {totalCount}
             </span>
           )}
@@ -199,7 +245,11 @@ function TaskListingPage() {
         {activeTab === 'pool' && (
           <>
             <div className="relative w-56 mb-2">
-              <Icon style="solid" name="magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" />
+              <Icon
+                style="solid"
+                name="magnifying-glass"
+                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+              />
               <input
                 type="text"
                 placeholder="Search tasks..."
@@ -208,7 +258,10 @@ function TaskListingPage() {
                 className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
               />
               {poolSearch && (
-                <button onClick={() => setPoolSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <button
+                  onClick={() => setPoolSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
                   <Icon style="solid" name="xmark" className="size-3.5" />
                 </button>
               )}
@@ -238,9 +291,17 @@ function TaskListingPage() {
             {/* Search */}
             <div className="relative w-56 mb-2">
               {!isSearchPending && isListLoading && !!debouncedSearch ? (
-                <Icon style="solid" name="spinner" className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin pointer-events-none" />
+                <Icon
+                  style="solid"
+                  name="spinner"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin pointer-events-none"
+                />
               ) : (
-                <Icon style="solid" name="magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none" />
+                <Icon
+                  style="solid"
+                  name="magnifying-glass"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+                />
               )}
               <input
                 type="text"
@@ -250,7 +311,10 @@ function TaskListingPage() {
                 className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
               />
               {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
                   <Icon style="solid" name="xmark" className="size-3.5" />
                 </button>
               )}
@@ -297,7 +361,11 @@ function TaskListingPage() {
                   onChange={e => setGroupBy(e.target.value as GroupByField)}
                   className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
                 >
-                  {groupByOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {groupByOptions.map(o => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
@@ -308,7 +376,9 @@ function TaskListingPage() {
                 onClick={() => setViewMode('list')}
                 title="List view"
                 className={`flex items-center justify-center size-8 rounded-md transition-all ${
-                  viewMode === 'list' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'
+                  viewMode === 'list'
+                    ? 'bg-white shadow-sm text-primary'
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <Icon style="solid" name="list" className="size-3.5" />
@@ -317,7 +387,9 @@ function TaskListingPage() {
                 onClick={() => setViewMode('grid')}
                 title="Board view"
                 className={`flex items-center justify-center size-8 rounded-md transition-all ${
-                  viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'
+                  viewMode === 'grid'
+                    ? 'bg-white shadow-sm text-primary'
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <Icon style="solid" name="grid-2" className="size-3.5" />
@@ -339,14 +411,31 @@ function TaskListingPage() {
           {poolFilterChips.length > 0 && (
             <div className="shrink-0 flex items-center gap-1.5 flex-wrap mb-3">
               {poolFilterChips.map(([key, value]) => (
-                <span key={key} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium">
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+                >
                   <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
-                  <button onClick={() => setPoolFilters(prev => { const n = { ...prev }; delete n[key]; return n; })} className="hover:text-primary/60 ml-0.5">
+                  <button
+                    onClick={() =>
+                      setPoolFilters(prev => {
+                        const n = { ...prev };
+                        delete n[key];
+                        return n;
+                      })
+                    }
+                    className="hover:text-primary/60 ml-0.5"
+                  >
                     <Icon style="solid" name="xmark" className="size-2.5" />
                   </button>
                 </span>
               ))}
-              <button onClick={() => setPoolFilters({})} className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2">Clear all</button>
+              <button
+                onClick={() => setPoolFilters({})}
+                className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+              >
+                Clear all
+              </button>
             </div>
           )}
           <PoolTaskListPage externalSearch={debouncedPoolSearch} externalFilters={poolFilters} />
@@ -356,7 +445,6 @@ function TaskListingPage() {
       {/* ── Personal tab ── */}
       {activeTab === 'personal' && (
         <>
-
           {/* Active filter chips */}
           {activeFilterChips.length > 0 && (
             <div className="shrink-0 flex items-center gap-1.5 flex-wrap mb-3">
@@ -366,7 +454,10 @@ function TaskListingPage() {
                   className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
                 >
                   <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
-                  <button onClick={() => removeFilter(key)} className="hover:text-primary/60 ml-0.5">
+                  <button
+                    onClick={() => removeFilter(key)}
+                    className="hover:text-primary/60 ml-0.5"
+                  >
                     <Icon style="solid" name="xmark" className="size-2.5" />
                   </button>
                 </span>
@@ -394,10 +485,11 @@ function TaskListingPage() {
                 <table className="w-full min-w-max text-sm">
                   <thead className="sticky top-0 z-20">
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      {visibleColumns.map((key) => {
+                      {visibleColumns.map(key => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
-                        const base = 'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                        const base =
+                          'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
                         const thClass = col.sticky
                           ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                           : col.sortField
@@ -414,7 +506,9 @@ function TaskListingPage() {
                                 {col.label}
                                 <SortIcon field={col.sortField} />
                               </div>
-                            ) : col.label}
+                            ) : (
+                              col.label
+                            )}
                           </th>
                         );
                       })}
@@ -423,7 +517,10 @@ function TaskListingPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {isLoading ? (
-                      <TableRowSkeleton columns={visibleColumns.map(() => ({ width: 'w-24' }))} rows={8} />
+                      <TableRowSkeleton
+                        columns={visibleColumns.map(() => ({ width: 'w-24' }))}
+                        rows={8}
+                      />
                     ) : listTasks.length === 0 ? (
                       <tr>
                         <td colSpan={visibleColumns.length + 1} className="py-24">
@@ -436,12 +533,17 @@ function TaskListingPage() {
                                 {hasFilters ? 'No matching tasks' : 'All clear'}
                               </p>
                               <p className="text-xs text-gray-400 mt-1">
-                                {hasFilters ? 'Try adjusting your search or filters.' : 'You have no tasks assigned right now.'}
+                                {hasFilters
+                                  ? 'Try adjusting your search or filters.'
+                                  : 'You have no tasks assigned right now.'}
                               </p>
                             </div>
                             {hasFilters && (
                               <button
-                                onClick={() => { setSearchTerm(''); setFilters({}); }}
+                                onClick={() => {
+                                  setSearchTerm('');
+                                  setFilters({});
+                                }}
                                 className="text-xs text-primary hover:underline font-medium"
                               >
                                 Clear filters
@@ -454,25 +556,32 @@ function TaskListingPage() {
                       listTasks.map(task => (
                         <tr
                           key={task.id}
-                          onDoubleClick={() => navigate(`/tasks/${task.taskId}`)}
+                          onDoubleClick={() => navigate(`/tasks/${task.id}/opening`)}
                           onContextMenu={e => {
                             e.preventDefault();
-                            setContextMenu({ visible: true, x: e.clientX, y: e.clientY, taskId: task.taskId });
+                            setContextMenu({
+                              visible: true,
+                              x: e.clientX,
+                              y: e.clientY,
+                              taskId: task.id,
+                            });
                           }}
                           className="group hover:bg-gray-50 cursor-default transition-colors"
                         >
-                          {visibleColumns.map((key) => {
+                          {visibleColumns.map(key => {
                             const col = columnDefs[key];
                             return (
                               <td
-                              key={key}
-                              className={col.sticky
-                                ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                                : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')}
-                              onClick={col.sticky ? e => e.stopPropagation() : undefined}
-                            >
-                              {col.render(task)}
-                            </td>
+                                key={key}
+                                className={
+                                  col.sticky
+                                    ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
+                                    : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')
+                                }
+                                onClick={col.sticky ? e => e.stopPropagation() : undefined}
+                              >
+                                {col.render(task)}
+                              </td>
                             );
                           })}
                           <td className="px-4 py-3 w-8">
@@ -495,7 +604,10 @@ function TaskListingPage() {
                 totalCount={totalCount}
                 pageSize={pageSize}
                 onPageChange={setPageNumber}
-                onPageSizeChange={size => { setPageSize(size); setPageNumber(0); }}
+                onPageSizeChange={size => {
+                  setPageSize(size);
+                  setPageNumber(0);
+                }}
               />
             </div>
           ) : (
@@ -512,16 +624,23 @@ function TaskListingPage() {
               style={{ top: contextMenu.y, left: contextMenu.x }}
             >
               <button
-                onClick={() => { navigate(`/tasks/${contextMenu.taskId}`); setContextMenu(p => ({ ...p, visible: false })); }}
+                onClick={() => {
+                  navigate(`/tasks/${contextMenu.taskId}/opening`);
+                  setContextMenu(p => ({ ...p, visible: false }));
+                }}
                 className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
                 style={{ width: 'calc(100% - 8px)' }}
               >
-                <Icon style="regular" name="arrow-up-right-from-square" className="size-3.5 text-gray-400" />
+                <Icon
+                  style="regular"
+                  name="arrow-up-right-from-square"
+                  className="size-3.5 text-gray-400"
+                />
                 Open task
               </button>
               <button
                 onClick={() => {
-                  const task = listTasks.find(t => t.taskId === contextMenu.taskId);
+                  const task = listTasks.find(t => t.id === contextMenu.taskId);
                   if (task?.appraisalNumber) navigator.clipboard.writeText(task.appraisalNumber);
                   setContextMenu(p => ({ ...p, visible: false }));
                 }}

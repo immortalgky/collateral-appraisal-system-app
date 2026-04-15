@@ -11,13 +11,13 @@ type ProgressItem = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: '#3b82f6',
-  NEW: '#06b6d4',
-  SUBMITTED: '#f97316',
-  ASSIGNED: '#a855f7',
-  IN_PROGRESS: '#ef4444',
-  COMPLETED: '#22c55e',
-  CANCELLED: '#6b7280',
+  Draft: '#3b82f6',
+  New: '#06b6d4',
+  Submitted: '#f97316',
+  Assigned: '#a855f7',
+  InProgress: '#ef4444',
+  Completed: '#22c55e',
+  Cancelled: '#6b7280',
 };
 
 function ProgressSummaryWidget() {

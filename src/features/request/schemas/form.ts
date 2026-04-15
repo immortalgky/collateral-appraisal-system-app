@@ -171,7 +171,7 @@ export { RequestTitleDto };
 export const createRequestFormDefault: createRequestFormType = {
   purpose: '',
   channel: 'MANUAL',
-  priority: 'NORMAL',
+  priority: 'Normal',
   isPma: false,
   // TODO: Replace with actual logged-in user when login is implemented
   creator: {

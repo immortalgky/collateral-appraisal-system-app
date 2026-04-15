@@ -186,9 +186,13 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
  * POST /tasks/{id}/lock → 200 { lockedBy, lockedAt } | 409 { message }
  */
 export const useLockTask = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (taskId: string) =>
       axios.post<{ lockedBy: string; lockedAt: string }>(`/tasks/${taskId}/lock`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+    },
   });
 };
 
@@ -242,6 +246,36 @@ export const useClaimTask = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+    },
+  });
+};
+
+export interface OpenTaskResult {
+  isSuccess: boolean;
+  errorMessage?: string;
+  appraisalId?: string;
+  workflowInstanceId?: string;
+  taskName?: string;
+}
+
+/**
+ * Open and auto-start a task (validates ownership, transitions Not Started → In Progress)
+ * POST /tasks/{id}/open → 200 { isSuccess, appraisalId, workflowInstanceId, taskName }
+ */
+export const useOpenTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (taskId: string): Promise<OpenTaskResult> => {
+      const { data } = await axios.post(`/tasks/${taskId}/open`);
+      return data.result ?? data;
+    },
+    onSuccess: (result) => {
+      if (result.isSuccess) {
+        // Task status changed (Not Started → In Progress) — invalidate both lists
+        // so they reflect the new status when the user navigates back
+        queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+      }
     },
   });
 };

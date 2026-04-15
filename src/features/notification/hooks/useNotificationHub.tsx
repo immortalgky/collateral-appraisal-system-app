@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { HubConnectionBuilder, LogLevel, HubConnectionState } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { signalrLogger } from '@shared/utils/signalrLogger';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationStore } from '../store';
@@ -8,10 +9,10 @@ import { followupKeys } from '@/features/document-followup/api/followup';
 import type { Notification } from '../types';
 
 const FOLLOWUP_NOTIFICATION_TYPES = new Set([
-  'DOCUMENT_FOLLOWUP_RAISED',
-  'DOCUMENT_FOLLOWUP_RESOLVED',
-  'DOCUMENT_FOLLOWUP_CANCELLED',
-  'DOCUMENT_LINE_ITEM_DECLINED',
+  'DocumentFollowupRaised',
+  'DocumentFollowupResolved',
+  'DocumentFollowupCancelled',
+  'DocumentLineItemDeclined',
 ]);
 
 const getHubUrl = () => {
@@ -33,7 +34,7 @@ export function useNotificationHub() {
         accessTokenFactory: () => getAccessToken() ?? '',
       })
       .withAutomaticReconnect()
-      .configureLogging(LogLevel.Warning)
+      .configureLogging(signalrLogger)
       .build();
 
     connectionRef.current = connection;
@@ -66,20 +67,25 @@ export function useNotificationHub() {
         // is raised (DocumentFollowupRaised). The other three types (Resolved,
         // Cancelled, LineItemDeclined) are directed at the checker and only
         // need the followup queries above to update the banner.
-        if (notification.type === 'DOCUMENT_FOLLOWUP_RAISED') {
+        if (notification.type === 'DocumentFollowupRaised') {
           queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
           queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
         }
       }
     });
 
+    let cancelled = false;
+
     connection.start()
-      .then(() => console.log('[NotificationHub] SignalR connected'))
+      .then(() => {
+        if (!cancelled) console.log('[NotificationHub] SignalR connected');
+      })
       .catch(err => {
-        console.error('[NotificationHub] SignalR connection failed:', err);
+        if (!cancelled) console.error('[NotificationHub] SignalR connection failed:', err);
       });
 
     return () => {
+      cancelled = true;
       if (connection.state !== HubConnectionState.Disconnected) {
         connection.stop();
       }

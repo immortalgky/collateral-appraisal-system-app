@@ -64,6 +64,7 @@ export const useGetUsers = (params: GetUsersParams = {}) => {
         params: {
           Search: params.search || undefined,
           Scope: params.scope || undefined,
+          role: params.role || undefined,
           PageNumber: params.pageNumber ?? 1,
           PageSize: params.pageSize ?? 20,
         },

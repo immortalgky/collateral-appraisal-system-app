@@ -36,7 +36,7 @@ export type AssignmentStrategy =
   (typeof AssignmentStrategy)[keyof typeof AssignmentStrategy];
 
 export const VersionStatus = {
-  DRAFT: 'DRAFT',
+  DRAFT: 'Draft',
   PUBLISHED: 'Published',
   DEPRECATED: 'Deprecated',
   ARCHIVED: 'Archived',

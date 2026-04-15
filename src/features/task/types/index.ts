@@ -1,10 +1,10 @@
 // Task status types (for badges)
 export const TaskStatus = {
-  DRAFT: 'DRAFT',
-  PENDING: 'PENDING',
-  IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED',
+  DRAFT: 'Draft',
+  PENDING: 'Pending',
+  IN_PROGRESS: 'InProgress',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled',
 } as const;
 
 export type TaskStatusType = (typeof TaskStatus)[keyof typeof TaskStatus];
@@ -44,6 +44,8 @@ export const TaskType = {
   NEW_APPRAISAL: 'New Appraisal',
   REVIEW: 'Review',
   REVISION: 'Revision',
+  APPRAISAL_INITIATION: 'appraisalInitiation',
+  INITIATION_CHECK: 'InitiationCheck',
 } as const;
 
 export type TaskTypeType = (typeof TaskType)[keyof typeof TaskType];
@@ -88,10 +90,12 @@ export type MovementType = (typeof Movement)[keyof typeof Movement];
 // Main Task interface - matches API TaskItemType (TaskDto) from v1.ts
 export interface Task {
   id: string;
-  taskId: string;
+  appraisalId: string;
+  requestId: string;
   workflowInstanceId: string;
   activityId: string;
   appraisalNumber: string | null;
+  requestNumber: string | null;
   customerName: string | null;
   taskType: string | null;
   taskDescription: string | null;
@@ -119,7 +123,7 @@ export interface Task {
   // Pool task / lock fields
   workingBy: string | null;
   lockedAt: string | null;
-  assignedType: string | null;  // "1" = USER, "2" = GROUP
+  assignedType: string | null; // "1" = USER, "2" = GROUP
   pendingTaskStatus: string | null;
 }
 

@@ -7,9 +7,27 @@
  * independently of the shared OpenAPI bundle.
  */
 
-export type MeetingStatus = 'DRAFT' | 'SCHEDULED' | 'ENDED' | 'CANCELLED';
+export type MeetingStatus = 'Draft' | 'Scheduled' | 'Ended' | 'Cancelled';
 
 export type MeetingQueueItemStatus = 'Queued' | 'Assigned' | 'Released';
+
+export type MeetingItemKind = 'Decision' | 'Acknowledgement';
+
+export type ItemDecision = 'Pending' | 'Released' | 'RoutedBack';
+
+export type AcknowledgementGroup = 'Group1' | 'UrgentGroup2';
+
+export type AppraisalType = 'New' | 'ReAppraisal' | 'Progressive' | 'PreAppraisal';
+
+export type CommitteeMemberPosition =
+  | 'Chairman'
+  | 'Director'
+  | 'Secretary'
+  | 'UW'
+  | 'Risk'
+  | 'Appraisal'
+  | 'Credit'
+  | 'Member';
 
 /** Item in the queue of tier-3 appraisals awaiting a meeting. */
 export interface MeetingQueueItemDto {
@@ -24,12 +42,26 @@ export interface MeetingQueueItemDto {
   enqueuedAt: string;
 }
 
+/** A snapshot member belonging to a specific meeting. */
+export interface MeetingMemberDto {
+  id: string;
+  userId: string;
+  memberName: string;
+  position: CommitteeMemberPosition;
+  sourceCommitteeMemberId: string | null;
+  addedAt: string;
+}
+
 /** Row in the paginated meeting list. */
 export interface MeetingListItemDto {
   id: string;
   title: string;
   status: MeetingStatus;
-  scheduledAt: string | null;
+  meetingNo: string | null;
+  startAt: string | null;
+  endAt: string | null;
+  invitationSentAt: string | null;
+  cutOffAt: string | null;
   location: string | null;
   itemCount: number;
 }
@@ -40,9 +72,23 @@ export interface MeetingItemDto {
   appraisalId: string;
   appraisalNo: string | null;
   facilityLimit: number;
-  workflowInstanceId: string;
-  activityId: string;
+  workflowInstanceId: string | null;
+  activityId: string | null;
+  kind: MeetingItemKind;
+  appraisalType: AppraisalType | null;
+  acknowledgementGroup: AcknowledgementGroup | null;
+  itemDecision: ItemDecision;
+  decisionAt: string | null;
+  decisionBy: string | null;
+  decisionReason: string | null;
   addedAt: string;
+}
+
+/** Groups items by AppraisalType (Decision) or AcknowledgementGroup (Acknowledgement). */
+export interface MeetingItemGroupDto {
+  /** AppraisalType value for Decision groups; AcknowledgementGroup value for Ack groups. */
+  group: string;
+  items: MeetingItemDto[];
 }
 
 /** Full meeting detail returned from `GET /meetings/{id}`. */
@@ -50,13 +96,27 @@ export interface MeetingDetailDto {
   id: string;
   title: string;
   status: MeetingStatus;
-  scheduledAt: string | null;
+  meetingNo: string | null;
+  startAt: string | null;
+  endAt: string | null;
+  fromText: string | null;
+  toText: string | null;
+  agendaCertifyMinutes: string | null;
+  agendaChairmanInformed: string | null;
+  agendaOthers: string | null;
+  cutOffAt: string | null;
+  invitationSentAt: string | null;
   location: string | null;
   notes: string | null;
   cancelReason: string | null;
   endedAt: string | null;
   cancelledAt: string | null;
-  items: MeetingItemDto[];
+  members: MeetingMemberDto[];
+  /** Matches backend `MeetingItemsGroupedDto` — nested under `items`. */
+  items: {
+    decisionItems: MeetingItemGroupDto[];
+    acknowledgementItems: MeetingItemGroupDto[];
+  };
 }
 
 /** Project-wide pagination envelope (matches backend `PaginatedResult<T>`). */
@@ -72,6 +132,10 @@ export interface PaginatedResult<T> {
 export interface CreateMeetingRequest {
   title: string;
   notes: string | null;
+  committeeId?: string;
+  startAt?: string;
+  endAt?: string;
+  location?: string;
 }
 
 export interface CreateMeetingResponse {
@@ -84,12 +148,52 @@ export interface UpdateMeetingRequest {
   title: string;
   location: string | null;
   notes: string | null;
+  startAt?: string;
+  endAt?: string;
 }
 
-export interface ScheduleMeetingRequest {
-  /** ISO datetime — must be in the future. */
-  scheduledAt: string;
-  location: string | null;
+export interface BulkCreateMeetingsRequest {
+  /** ISO datetime strings — one Draft meeting is created per date. */
+  dates: string[];
+  defaultTitle?: string;
+}
+
+export interface BulkCreateMeetingsResponse {
+  meetingIds: string[];
+}
+
+/** No body — meeting id supplied via route param. */
+export interface CutOffMeetingRequest {}
+
+export interface SendInvitationResponse {
+  meetingId: string;
+  meetingNo: string;
+  invitationSentAt: string;
+}
+
+/** No body — appraisal id supplied via route param. */
+export interface ReleaseItemRequest {}
+
+export interface RouteBackItemRequest {
+  reason: string;
+}
+
+export interface AddMeetingMemberRequest {
+  userId: string;
+  memberName: string;
+  position: CommitteeMemberPosition;
+}
+
+export interface UpdateMeetingMemberPositionRequest {
+  position: CommitteeMemberPosition;
+}
+
+export interface UpdateMeetingAgendaRequest {
+  fromText?: string | null;
+  toText?: string | null;
+  agendaCertifyMinutes?: string | null;
+  agendaChairmanInformed?: string | null;
+  agendaOthers?: string | null;
 }
 
 export interface AddMeetingItemsRequest {
@@ -97,8 +201,16 @@ export interface AddMeetingItemsRequest {
   queueItemIds: string[];
 }
 
+export interface CreateAcknowledgementQueueItemRequest {
+  appraisalId: string;
+  appraisalNo?: string | null;
+  appraisalDecisionId: string;
+  committeeId: string;
+  committeeCode: string;
+}
+
 export interface CancelMeetingRequest {
-  reason: string | null;
+  reason: string;
 }
 
 // ==================== Query params ====================

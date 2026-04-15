@@ -239,6 +239,7 @@ export interface AdminUserListResult {
 export interface GetUsersParams {
   search?: string;
   scope?: 'Bank' | 'Company';
+  role?: string;
   pageNumber?: number;
   pageSize?: number;
 }

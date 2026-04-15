@@ -54,6 +54,11 @@ export async function cancelLineItem(
   );
 }
 
+/** POST /workflows/document-followups/{id}/submit */
+export async function submitDocumentFollowup(followupId: string): Promise<void> {
+  await axios.post(`/workflows/document-followups/${followupId}/submit`);
+}
+
 /** POST /workflows/document-followups/{id}/line-items/{lineItemId}/decline */
 export async function declineLineItem(
   followupId: string,

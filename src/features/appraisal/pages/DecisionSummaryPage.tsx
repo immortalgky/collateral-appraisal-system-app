@@ -204,62 +204,72 @@ const DecisionSummaryPage = () => {
     }
   }, [mapDataToForm, reset]);
 
-  const onSubmit = (formData: DecisionSummaryFormType) => {
-    if (!appraisalId) return;
-
-    const canComplete = isTaskOwner && workflowInstanceId && activityId && selectedDecision;
-
-    saveSummary(
-      { appraisalId, body: formData },
+  const doCompleteActivity = () => {
+    completeActivity.mutate(
       {
-        onSuccess: () => {
-          if (canComplete) {
-            completeActivity.mutate(
-              {
-                workflowInstanceId: workflowInstanceId!,
-                activityId: activityId!,
-                input: {
-                  decisionTaken: selectedDecision!,
-                  comments,
-                  // For appraisal-initiation: refresh routing variables after maker edits
-                  ...(activityId === 'appraisal-initiation' && {
-                    isPma,
-                    facilityLimit,
-                    priority: appraisal?.priority ?? 'normal',
-                    hasAppraisalBook,
-                  }),
-                },
-              },
-              {
-                onSuccess: (result) => {
-                  setIsConfirmOpen(false);
-                  if (result.validationErrors && result.validationErrors.length > 0) {
-                    result.validationErrors.forEach(err => toast.error(err));
-                    return;
-                  }
-                  toast.success('Decision submitted successfully');
-                  navigate('/tasks');
-                },
-                onError: (error: any) => {
-                  setIsConfirmOpen(false);
-                  const message = error?.response?.data?.detail || error?.message || 'Failed to submit decision';
-                  toast.error(message);
-                },
-              },
-            );
-          } else {
-            setIsConfirmOpen(false);
-            toast.success('Decision summary saved successfully');
+        workflowInstanceId: workflowInstanceId!,
+        activityId: activityId!,
+        input: {
+          decisionTaken: selectedDecision!,
+          comments,
+          // For appraisal-initiation: refresh routing variables after maker edits
+          ...(activityId === 'appraisal-initiation' && {
+            isPma,
+            facilityLimit,
+            priority: appraisal?.priority ?? 'normal',
+            hasAppraisalBook,
+          }),
+        },
+      },
+      {
+        onSuccess: (result) => {
+          setIsConfirmOpen(false);
+          if (result.validationErrors && result.validationErrors.length > 0) {
+            result.validationErrors.forEach(err => toast.error(err));
+            return;
           }
+          toast.success('Decision submitted successfully');
+          navigate('/tasks');
         },
         onError: (error: any) => {
           setIsConfirmOpen(false);
-          toast.error(
-            error.apiError?.detail || 'Failed to save decision summary. Please try again.',
-          );
+          const message = error?.response?.data?.detail || error?.message || 'Failed to submit decision';
+          toast.error(message);
         },
       },
     );
+  };
+
+  const onSubmit = (formData: DecisionSummaryFormType) => {
+    const canComplete = isTaskOwner && workflowInstanceId && activityId && selectedDecision;
+
+    if (appraisalId) {
+      // Normal path: save summary first, then optionally complete activity
+      saveSummary(
+        { appraisalId, body: formData },
+        {
+          onSuccess: () => {
+            if (canComplete) {
+              doCompleteActivity();
+            } else {
+              setIsConfirmOpen(false);
+              toast.success('Decision summary saved successfully');
+            }
+          },
+          onError: (error: any) => {
+            setIsConfirmOpen(false);
+            toast.error(
+              error.apiError?.detail || 'Failed to save decision summary. Please try again.',
+            );
+          },
+        },
+      );
+    } else {
+      // No appraisal yet: skip summary save, complete activity directly
+      if (canComplete) {
+        doCompleteActivity();
+      }
+    }
   };
 
   const handleCancel = () => {
@@ -282,7 +292,7 @@ const DecisionSummaryPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (appraisalId && isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -421,7 +431,7 @@ const DecisionSummaryPage = () => {
                   )}
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" type="submit" disabled={!isDirty || isSaving}>
+                  <Button variant="outline" type="submit" disabled={!appraisalId || !isDirty || isSaving}>
                     <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
                     Save
                   </Button>

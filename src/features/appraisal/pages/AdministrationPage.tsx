@@ -208,8 +208,8 @@ const AdministrationPage = () => {
           data.assignmentMethod === 'quotation'
             ? 'Quotation'
             : data.assignmentType === 'internal'
-              ? 'INTERNAL'
-              : 'EXTERNAL',
+              ? 'Internal'
+              : 'External',
         assigneeUserId: data.assignmentType === 'internal' ? data.staffId : null,
         assigneeCompanyId: data.assignmentType === 'external' ? data.companyId : null,
         assignmentMethod: data.assignmentMethod,

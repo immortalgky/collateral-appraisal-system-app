@@ -4,23 +4,48 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useHasPermission } from '@/shared/hooks/useHasPermission';
+import { MEETING_PERMISSIONS } from '../constants';
 
 import { useGetMeetingDetail } from '../api/meetings';
-import MeetingStatusBadge from '../components/MeetingStatusBadge';
-import MeetingItemsTable from '../components/MeetingItemsTable';
-import MeetingFormDialog from '../components/MeetingFormDialog';
-import ScheduleMeetingDialog from '../components/ScheduleMeetingDialog';
-import CancelMeetingDialog from '../components/CancelMeetingDialog';
-import EndMeetingDialog from '../components/EndMeetingDialog';
 import AddItemsDialog from '../components/AddItemsDialog';
+import AgendaForm from '../components/AgendaForm';
+import CancelMeetingDialog from '../components/CancelMeetingDialog';
+import CutOffReviewDialog from '../components/CutOffReviewDialog';
+import EndMeetingDialog from '../components/EndMeetingDialog';
+import MeetingFormDialog from '../components/MeetingFormDialog';
+import MeetingItemsGrouped from '../components/MeetingItemsGrouped';
+import MeetingMembersTable from '../components/MeetingMembersTable';
+import MeetingNoBadge from '../components/MeetingNoBadge';
+import MeetingStatusBadge from '../components/MeetingStatusBadge';
+import SendInvitationDialog from '../components/SendInvitationDialog';
+
+// ── Formatting helpers ────────────────────────────────────────────────────────
+
+const formatDateTime = (iso: string | null): string => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 const MeetingDetailPage = () => {
   const navigate = useNavigate();
   const { meetingId } = useParams<{ meetingId: string }>();
   const { data: meeting, isLoading } = useGetMeetingDetail(meetingId);
 
+  const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
+  const hasSecretary = useHasPermission(MEETING_PERMISSIONS.SECRETARY);
+
   const editDialog = useDisclosure();
-  const scheduleDialog = useDisclosure();
+  const cutOffDialog = useDisclosure();
+  const sendInvitationDialog = useDisclosure();
   const cancelDialog = useDisclosure();
   const endDialog = useDisclosure();
   const addItemsDialog = useDisclosure();
@@ -33,12 +58,18 @@ const MeetingDetailPage = () => {
     );
   }
 
-  const isDraft = meeting.status === 'DRAFT';
-  const isScheduled = meeting.status === 'SCHEDULED';
-  const isEnded = meeting.status === 'ENDED';
-  const isCancelled = meeting.status === 'CANCELLED';
+  const isDraft = meeting.status === 'Draft';
+  const isScheduled = meeting.status === 'Scheduled';
+  const isEnded = meeting.status === 'Ended';
+  const isCancelled = meeting.status === 'Cancelled';
   const isEditable = isDraft || isScheduled;
-  const canSchedule = isDraft && meeting.items.length > 0;
+  const hasCutOff = meeting.cutOffAt != null;
+  const hasInvitation = meeting.invitationSentAt != null;
+
+  // Total item count across both groups
+  const totalDecision = meeting.items.decisionItems.reduce((s, g) => s + g.items.length, 0);
+  const totalAck = meeting.items.acknowledgementItems.reduce((s, g) => s + g.items.length, 0);
+  const totalItems = totalDecision + totalAck;
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4 overflow-y-auto pb-6">
@@ -50,38 +81,45 @@ const MeetingDetailPage = () => {
             Back
           </Button>
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <MeetingNoBadge meetingNo={meeting.meetingNo} />
               <h2 className="text-base font-semibold text-gray-900">{meeting.title}</h2>
-              <MeetingStatusBadge status={meeting.status} />
+              <MeetingStatusBadge meeting={meeting} />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action bar — gated by status + flags + MEETING_ADMIN permission */}
+        {hasAdmin && (
+        <div className="flex items-center gap-2 shrink-0">
           {isEditable && (
             <Button variant="ghost" size="sm" type="button" onClick={editDialog.onOpen}>
               <Icon name="pen" style="solid" className="size-3.5 mr-1.5" />
               Edit
             </Button>
           )}
-          {isDraft && (
-            <Button
-              size="sm"
-              type="button"
-              onClick={scheduleDialog.onOpen}
-              disabled={!canSchedule}
-              title={!canSchedule ? 'Add at least one appraisal before scheduling' : undefined}
-            >
-              <Icon name="calendar" style="solid" className="size-3.5 mr-1.5" />
-              Schedule
+
+          {isDraft && !hasCutOff && (
+            <Button size="sm" type="button" onClick={cutOffDialog.onOpen}>
+              <Icon name="scissors" style="solid" className="size-3.5 mr-1.5" />
+              Cut Off
             </Button>
           )}
+
+          {isDraft && hasCutOff && !hasInvitation && (
+            <Button size="sm" type="button" onClick={sendInvitationDialog.onOpen}>
+              <Icon name="envelope" style="solid" className="size-3.5 mr-1.5" />
+              Send Invitation
+            </Button>
+          )}
+
           {isScheduled && (
             <Button size="sm" type="button" onClick={endDialog.onOpen}>
               <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
               End Meeting
             </Button>
           )}
+
           {isEditable && (
             <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
               <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
@@ -89,24 +127,17 @@ const MeetingDetailPage = () => {
             </Button>
           )}
         </div>
+        )}
       </div>
 
-      {/* Banners */}
+      {/* Status banners */}
       {isEnded && (
         <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
           <Icon name="circle-check" style="solid" className="w-5 h-5 text-emerald-500 shrink-0" />
           <p className="text-sm font-medium text-emerald-700">
-            Released for voting
-            {meeting.endedAt
-              ? ` on ${new Date(meeting.endedAt).toLocaleString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}`
-              : ''}
-            . Items removed from the queue and sent to committee voting.
+            Meeting ended
+            {meeting.endedAt ? ` on ${formatDateTime(meeting.endedAt)}` : ''}.
+            Secretary can now Release or Route Back each decision item.
           </p>
         </div>
       )}
@@ -128,43 +159,87 @@ const MeetingDetailPage = () => {
         </div>
       )}
 
-      {/* Metadata card */}
-      <FormCard title="Meeting Details" icon="circle-info" iconColor="blue">
+      {/* Meeting Schedule */}
+      <FormCard title="Meeting Schedule" icon="calendar" iconColor="blue">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase">Scheduled</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {meeting.scheduledAt
-                ? new Date(meeting.scheduledAt).toLocaleString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                : '—'}
-            </dd>
+            <dt className="text-xs font-medium text-gray-500 uppercase">Start</dt>
+            <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.startAt)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-gray-500 uppercase">End</dt>
+            <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.endAt)}</dd>
           </div>
           <div>
             <dt className="text-xs font-medium text-gray-500 uppercase">Location</dt>
             <dd className="mt-1 text-sm text-gray-900">{meeting.location ?? '—'}</dd>
           </div>
-          <div className="sm:col-span-2">
-            <dt className="text-xs font-medium text-gray-500 uppercase">Notes</dt>
-            <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
-              {meeting.notes ?? '—'}
-            </dd>
-          </div>
+          {meeting.fromText && (
+            <div>
+              <dt className="text-xs font-medium text-gray-500 uppercase">From</dt>
+              <dd className="mt-1 text-sm text-gray-900">{meeting.fromText}</dd>
+            </div>
+          )}
+          {meeting.toText && (
+            <div>
+              <dt className="text-xs font-medium text-gray-500 uppercase">To</dt>
+              <dd className="mt-1 text-sm text-gray-900">{meeting.toText}</dd>
+            </div>
+          )}
+          {meeting.cutOffAt && (
+            <div>
+              <dt className="text-xs font-medium text-gray-500 uppercase">Cut-Off At</dt>
+              <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.cutOffAt)}</dd>
+            </div>
+          )}
+          {meeting.invitationSentAt && (
+            <div>
+              <dt className="text-xs font-medium text-gray-500 uppercase">Invitation Sent</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {formatDateTime(meeting.invitationSentAt)}
+              </dd>
+            </div>
+          )}
+          {meeting.notes && (
+            <div className="sm:col-span-2">
+              <dt className="text-xs font-medium text-gray-500 uppercase">Notes</dt>
+              <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{meeting.notes}</dd>
+            </div>
+          )}
         </dl>
+      </FormCard>
+
+      {/* Committee / Members */}
+      <FormCard title="Committee Members" icon="users" iconColor="purple">
+        <MeetingMembersTable
+          meetingId={meeting.id}
+          members={meeting.members}
+          editable={hasAdmin && isEditable}
+        />
+      </FormCard>
+
+      {/* Agenda */}
+      <FormCard title="Agenda" icon="list-check" iconColor="amber">
+        <AgendaForm
+          meetingId={meeting.id}
+          initialValues={{
+            fromText: meeting.fromText,
+            toText: meeting.toText,
+            agendaCertifyMinutes: meeting.agendaCertifyMinutes,
+            agendaChairmanInformed: meeting.agendaChairmanInformed,
+            agendaOthers: meeting.agendaOthers,
+          }}
+          editable={hasAdmin && isEditable}
+        />
       </FormCard>
 
       {/* Items */}
       <FormCard
-        title={`Appraisals (${meeting.items.length})`}
+        title={`Appraisals (${totalItems})`}
         icon="folder-open"
         iconColor="emerald"
         rightIcon={
-          isEditable ? (
+          hasAdmin && isEditable ? (
             <Button size="sm" type="button" onClick={addItemsDialog.onOpen}>
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
               Add Appraisals
@@ -172,10 +247,9 @@ const MeetingDetailPage = () => {
           ) : undefined
         }
       >
-        <MeetingItemsTable
-          meetingId={meeting.id}
-          meetingStatus={meeting.status}
-          items={meeting.items}
+        <MeetingItemsGrouped
+          meeting={meeting}
+          canReleaseItems={hasSecretary && isEnded}
         />
       </FormCard>
 
@@ -188,25 +262,36 @@ const MeetingDetailPage = () => {
           title: meeting.title,
           location: meeting.location ?? '',
           notes: meeting.notes ?? '',
+          startAt: meeting.startAt ?? '',
+          endAt: meeting.endAt ?? '',
         }}
       />
-      <ScheduleMeetingDialog
-        isOpen={scheduleDialog.isOpen}
-        onClose={scheduleDialog.onClose}
+
+      <CutOffReviewDialog
+        isOpen={cutOffDialog.isOpen}
+        onClose={cutOffDialog.onClose}
         meetingId={meeting.id}
-        defaultLocation={meeting.location}
       />
+
+      <SendInvitationDialog
+        isOpen={sendInvitationDialog.isOpen}
+        onClose={sendInvitationDialog.onClose}
+        meetingId={meeting.id}
+      />
+
       <CancelMeetingDialog
         isOpen={cancelDialog.isOpen}
         onClose={cancelDialog.onClose}
         meetingId={meeting.id}
       />
+
       <EndMeetingDialog
         isOpen={endDialog.isOpen}
         onClose={endDialog.onClose}
         meetingId={meeting.id}
-        itemCount={meeting.items.length}
+        itemCount={totalItems}
       />
+
       <AddItemsDialog
         isOpen={addItemsDialog.isOpen}
         onClose={addItemsDialog.onClose}
