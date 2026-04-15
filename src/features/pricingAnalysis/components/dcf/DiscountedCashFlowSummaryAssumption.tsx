@@ -46,7 +46,7 @@ export function DiscountedCashFlowSummaryAssumption({
         title={`Assumption Summary`}
         size="3xl"
       >
-        <div className={'overflow-auto max-h-[800px] flex flex-col gap-2'}>
+        <div className={'overflow-auto max-h-[600px] flex flex-col gap-2'}>
           {(sections ?? []).map((section: DCFSection, sectionIdx) => {
             if (section.sectionType === 'income' || section.sectionType === 'expenses') {
               return (

@@ -108,7 +108,7 @@ export function DiscountedCashFlowTable({
   // section rules build only once
   const calculateStaticCalculationDerivedRules = useMemo(() => {
     return buildStaticCalculationDerivedRules(sections, totalNumberOfYears);
-  }, [templateCode]);
+  }, [sections, totalNumberOfYears]);
 
   useDerivedFields({ rules: calculateStaticCalculationDerivedRules, ctx: { sections } });
 
