@@ -2,7 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, useController, useWatch } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
-import { ProfitRentFormSchema, profitRentFormDefaults, type ProfitRentFormType } from '../schemas/profitRentForm';
+import {
+  ProfitRentFormSchema,
+  profitRentFormDefaults,
+  type ProfitRentFormType,
+} from '../schemas/profitRentForm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/shared/components';
 import { NumberInput, Toggle } from '@/shared/components/inputs';
@@ -122,7 +126,11 @@ export function ProfitRentPanel({
 
   const growthRateType = watch('growthRateType');
 
-  const { fields: growthPeriodFields, append: appendPeriod, remove: removePeriod } = useFieldArray({
+  const {
+    fields: growthPeriodFields,
+    append: appendPeriod,
+    remove: removePeriod,
+  } = useFieldArray({
     control,
     name: 'growthPeriods' as any,
   });
@@ -144,7 +152,7 @@ export function ProfitRentPanel({
       if (savedData?.analysis?.calculationDetails?.length) {
         const details = savedData.analysis.calculationDetails;
         const result: ProfitRentTableResult = {
-          rows: details.map((d) => ({
+          rows: details.map(d => ({
             year: d.year,
             numberOfMonths: d.numberOfMonths,
             contractStart: '',
@@ -178,58 +186,65 @@ export function ProfitRentPanel({
   const getValuesRef = useRef(getValues);
   getValuesRef.current = getValues;
 
-  const handleGenerate = useCallback((preserveEstimate = false) => {
-    const data = getValuesRef.current();
-    const appraisalDateStr = appointment?.appointmentDateTime;
-    const contractRows = rentalScheduleData?.rows ?? [];
+  const handleGenerate = useCallback(
+    (preserveEstimate = false) => {
+      const data = getValuesRef.current();
+      const appraisalDateStr = appointment?.appointmentDateTime;
+      const contractRows = rentalScheduleData?.rows ?? [];
 
-    const appraisalSchedule = appraisalDateStr
-      ? computeProfitRentSchedule(contractRows, appraisalDateStr)
-      : [];
+      const appraisalSchedule = appraisalDateStr
+        ? computeProfitRentSchedule(contractRows, appraisalDateStr)
+        : [];
 
-    if (appraisalSchedule.length === 0) return;
+      if (appraisalSchedule.length === 0) return;
 
-    // Save current values before regeneration
-    const savedEstimate = preserveEstimate ? data.estimatePriceRounded : undefined;
-    const savedBuildingRounded = preserveEstimate ? data.appraisalPriceWithBuildingRounded : undefined;
+      // Save current values before regeneration
+      const savedEstimate = preserveEstimate ? data.estimatePriceRounded : undefined;
+      const savedBuildingRounded = preserveEstimate
+        ? data.appraisalPriceWithBuildingRounded
+        : undefined;
 
-    const result = generateProfitRentTable({
-      appraisalSchedule,
-      landAreaSqWa,
-      marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
-      growthRateType: data.growthRateType ?? 'Frequency',
-      growthRatePercent: data.growthRatePercent ?? 0,
-      growthIntervalYears: data.growthIntervalYears ?? 1,
-      growthPeriods: (data.growthPeriods ?? []) as any,
-      discountRate: data.discountRate ?? 0,
-    });
+      const result = generateProfitRentTable({
+        appraisalSchedule,
+        landAreaSqWa,
+        marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
+        growthRateType: data.growthRateType ?? 'Frequency',
+        growthRatePercent: data.growthRatePercent ?? 0,
+        growthIntervalYears: data.growthIntervalYears ?? 1,
+        growthPeriods: (data.growthPeriods ?? []) as any,
+        discountRate: data.discountRate ?? 0,
+      });
 
-    setTableResult(result);
-    tableResultRef.current = result;
+      setTableResult(result);
+      tableResultRef.current = result;
 
-    if (preserveEstimate) {
-      // Restore saved values after regeneration
-      if (savedEstimate != null && savedEstimate !== 0) {
-        setValue('estimatePriceRounded', savedEstimate, { shouldDirty: false });
+      if (preserveEstimate) {
+        // Restore saved values after regeneration
+        if (savedEstimate != null && savedEstimate !== 0) {
+          setValue('estimatePriceRounded', savedEstimate, { shouldDirty: false });
+        }
+        if (savedBuildingRounded != null && savedBuildingRounded !== 0) {
+          setValue('appraisalPriceWithBuildingRounded', savedBuildingRounded, {
+            shouldDirty: false,
+          });
+        }
+      } else {
+        setValue('estimatePriceRounded', result.finalValueRounded);
       }
-      if (savedBuildingRounded != null && savedBuildingRounded !== 0) {
-        setValue('appraisalPriceWithBuildingRounded', savedBuildingRounded, { shouldDirty: false });
-      }
-    } else {
-      setValue('estimatePriceRounded', result.finalValueRounded);
-    }
-  }, [appointment, rentalScheduleData, landAreaSqWa, setValue]);
+    },
+    [appointment, rentalScheduleData, landAreaSqWa, setValue],
+  );
 
   // Recalculate table once rental schedule is available (fixes dates, numberOfMonths, etc.)
   const hasRecalculated = useRef(false);
   useEffect(() => {
     if (hasRecalculated.current) return;
-    if (!tableResult || !rentalScheduleData?.rows?.length || !appointment?.appointmentDateTime) return;
+    if (!tableResult || !rentalScheduleData?.rows?.length || !appointment?.appointmentDateTime)
+      return;
     if (tableResult.rows[0]?.contractStart) return;
     hasRecalculated.current = true;
     handleGenerate(true);
   }, [tableResult, rentalScheduleData, appointment, handleGenerate]);
-
 
   // Auto-generate on first visit when no saved data but all dependencies are ready
   const hasAutoGenerated = useRef(false);
@@ -250,7 +265,13 @@ export function ProfitRentPanel({
   // Auto-recalculate when inline inputs change
   const watchedInputs = useWatch({
     control,
-    name: ['marketRentalFeePerSqWa', 'growthRateType', 'growthRatePercent', 'growthIntervalYears', 'discountRate'],
+    name: [
+      'marketRentalFeePerSqWa',
+      'growthRateType',
+      'growthRatePercent',
+      'growthIntervalYears',
+      'discountRate',
+    ],
   });
   const watchedGrowthPeriods = useWatch({ control, name: 'growthPeriods' });
   const prevWatchKey = useRef<string | null>(null);
@@ -267,27 +288,30 @@ export function ProfitRentPanel({
   }, [isDirty, watchedInputs, watchedGrowthPeriods, tableResult, handleGenerate]);
 
   // Sensitivity: recalculate final value with a different discount rate (C3 fix: no getValues in deps)
-  const calcSensitivity = useCallback((rate: number): number | null => {
-    const data = getValuesRef.current();
-    const appraisalDateStr = appointment?.appointmentDateTime;
-    const contractRows = rentalScheduleData?.rows ?? [];
-    const appraisalSchedule = appraisalDateStr
-      ? computeProfitRentSchedule(contractRows, appraisalDateStr)
-      : [];
-    if (appraisalSchedule.length === 0) return null;
+  const calcSensitivity = useCallback(
+    (rate: number): number | null => {
+      const data = getValuesRef.current();
+      const appraisalDateStr = appointment?.appointmentDateTime;
+      const contractRows = rentalScheduleData?.rows ?? [];
+      const appraisalSchedule = appraisalDateStr
+        ? computeProfitRentSchedule(contractRows, appraisalDateStr)
+        : [];
+      if (appraisalSchedule.length === 0) return null;
 
-    const result = generateProfitRentTable({
-      appraisalSchedule,
-      landAreaSqWa,
-      marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
-      growthRateType: data.growthRateType ?? 'Frequency',
-      growthRatePercent: data.growthRatePercent ?? 0,
-      growthIntervalYears: data.growthIntervalYears ?? 1,
-      growthPeriods: (data.growthPeriods ?? []) as any,
-      discountRate: rate,
-    });
-    return result.finalValueRounded;
-  }, [appointment, rentalScheduleData, landAreaSqWa]);
+      const result = generateProfitRentTable({
+        appraisalSchedule,
+        landAreaSqWa,
+        marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
+        growthRateType: data.growthRateType ?? 'Frequency',
+        growthRatePercent: data.growthRatePercent ?? 0,
+        growthIntervalYears: data.growthIntervalYears ?? 1,
+        growthPeriods: (data.growthPeriods ?? []) as any,
+        discountRate: rate,
+      });
+      return result.finalValueRounded;
+    },
+    [appointment, rentalScheduleData, landAreaSqWa],
+  );
 
   const handleOnSubmit = async () => {
     if (!pricingAnalysisId || !methodId) return;
@@ -322,15 +346,19 @@ export function ProfitRentPanel({
       // Hydrate form with backend-computed building cost values
       if (result.totalBuildingCost != null) {
         setValue('totalBuildingCost', result.totalBuildingCost, { shouldDirty: false });
-        setValue('appraisalPriceWithBuilding', result.appraisalPriceWithBuilding, { shouldDirty: false });
-        setValue('appraisalPriceWithBuildingRounded', result.appraisalPriceWithBuildingRounded, { shouldDirty: false });
+        setValue('appraisalPriceWithBuilding', result.appraisalPriceWithBuilding, {
+          shouldDirty: false,
+        });
+        setValue('appraisalPriceWithBuildingRounded', result.appraisalPriceWithBuildingRounded, {
+          shouldDirty: false,
+        });
       }
 
       // Propagate building-inclusive price when building cost is included
       const appraisalValue =
         data.includeBuildingCost && result.appraisalPriceWithBuildingRounded
           ? result.appraisalPriceWithBuildingRounded
-          : data.estimatePriceRounded ?? result.finalValueRounded;
+          : (data.estimatePriceRounded ?? result.finalValueRounded);
 
       if (activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
@@ -408,7 +436,8 @@ export function ProfitRentPanel({
           toNum(row['area']) * toNum(row['pricePerSqMBeforeDepreciation']);
         const periods: unknown[] = (row['depreciationPeriods'] as unknown[]) ?? [];
         const priceDepreciation = periods.reduce(
-          (acc: number, b: unknown) => acc + toNum((b as Record<string, unknown>).priceDepreciation),
+          (acc: number, b: unknown) =>
+            acc + toNum((b as Record<string, unknown>).priceDepreciation),
           0,
         );
         grandTotal += priceBeforeDepreciation - priceDepreciation;
@@ -453,7 +482,7 @@ export function ProfitRentPanel({
   return (
     <FormProvider methods={methods as any} schema={ProfitRentFormSchema as any}>
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
@@ -473,9 +502,13 @@ export function ProfitRentPanel({
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">Appraisal Date</div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
+                  Appraisal Date
+                </div>
                 <div className="text-sm font-medium text-gray-900">
-                  {appointment?.appointmentDateTime ? formatDateOnly(appointment.appointmentDateTime) : '-'}
+                  {appointment?.appointmentDateTime
+                    ? formatDateOnly(appointment.appointmentDateTime)
+                    : '-'}
                 </div>
               </div>
             </div>
@@ -484,7 +517,9 @@ export function ProfitRentPanel({
               <div>
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide">Lease Start</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {leaseAgreement?.leaseStartDate ? formatDateOnly(leaseAgreement.leaseStartDate) : '-'}
+                  {leaseAgreement?.leaseStartDate
+                    ? formatDateOnly(leaseAgreement.leaseStartDate)
+                    : '-'}
                 </div>
               </div>
             </div>
@@ -522,9 +557,14 @@ export function ProfitRentPanel({
           <div className="grid grid-cols-4 gap-3">
             {/* Land Area — read-only */}
             <div className="rounded-md bg-gray-50 px-3 py-2">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Land Area</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                Land Area
+              </div>
               <div className="flex items-baseline gap-1">
-                <Icon name="ruler-combined" className="size-3 text-gray-400 shrink-0 relative top-0.5" />
+                <Icon
+                  name="ruler-combined"
+                  className="size-3 text-gray-400 shrink-0 relative top-0.5"
+                />
                 <span className="text-sm font-semibold text-gray-900">{fmt(landAreaSqWa)}</span>
                 <span className="text-[10px] text-gray-500">Sq. Wa</span>
               </div>
@@ -541,9 +581,11 @@ export function ProfitRentPanel({
                     name={marketFeeField.name}
                     ref={marketFeeField.ref}
                     value={marketFeeField.value}
-                    onChange={(e) => marketFeeField.onChange(e.target.value)}
+                    onChange={e => marketFeeField.onChange(e.target.value)}
                     onBlur={marketFeeField.onBlur}
                     decimalPlaces={2}
+                    maxIntegerDigits={15}
+                    required={true}
                   />
                 </div>
                 <span className="text-[10px] text-gray-500">Baht/Sq.Wa/Mo</span>
@@ -552,7 +594,9 @@ export function ProfitRentPanel({
 
             {/* Monthly Total — computed */}
             <div className="rounded-md bg-primary/5 border border-primary/10 px-3 py-2">
-              <div className="text-[10px] text-primary/60 uppercase tracking-wide mb-0.5">Monthly Total</div>
+              <div className="text-[10px] text-primary/60 uppercase tracking-wide mb-0.5">
+                Monthly Total
+              </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-sm font-semibold text-primary">
                   {fmt((marketFeeField.value ?? 0) * landAreaSqWa)}
@@ -570,8 +614,11 @@ export function ProfitRentPanel({
                 <NumberInput
                   name="discountRate"
                   value={watch('discountRate')}
-                  onChange={(e) => setValue('discountRate', e.target.value ?? 0, { shouldDirty: true })}
+                  onChange={e =>
+                    setValue('discountRate', e.target.value ?? 0, { shouldDirty: true })
+                  }
                   decimalPlaces={2}
+                  maxIntegerDigits={3}
                   rightIcon={<span className="text-xs text-gray-400">%</span>}
                 />
               </div>
@@ -587,7 +634,9 @@ export function ProfitRentPanel({
               label="Market Rental Fee Increase"
               options={['Frequency', 'Period']}
               checked={growthRateType === 'Period'}
-              onChange={(checked) => setValue('growthRateType', checked ? 'Period' : 'Frequency', { shouldDirty: true })}
+              onChange={checked =>
+                setValue('growthRateType', checked ? 'Period' : 'Frequency', { shouldDirty: true })
+              }
               size="sm"
             />
 
@@ -599,9 +648,10 @@ export function ProfitRentPanel({
                     name={growthPercentField.name}
                     ref={growthPercentField.ref}
                     value={growthPercentField.value}
-                    onChange={(e) => growthPercentField.onChange(e.target.value)}
+                    onChange={e => growthPercentField.onChange(e.target.value)}
                     onBlur={growthPercentField.onBlur}
                     decimalPlaces={2}
+                    maxIntegerDigits={3}
                     rightIcon={<span className="text-xs text-gray-400">%</span>}
                   />
                 </div>
@@ -612,9 +662,10 @@ export function ProfitRentPanel({
                     name={intervalField.name}
                     ref={intervalField.ref}
                     value={intervalField.value}
-                    onChange={(e) => intervalField.onChange(e.target.value)}
+                    onChange={e => intervalField.onChange(e.target.value)}
                     onBlur={intervalField.onBlur}
                     decimalPlaces={0}
+                    maxIntegerDigits={3}
                     rightIcon={<span className="text-xs text-gray-400">Year</span>}
                   />
                 </div>
@@ -631,17 +682,34 @@ export function ProfitRentPanel({
                   <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-end">
                     <NumberInput
                       value={watch(`growthPeriods.${index}.fromYear` as any)}
-                      onChange={(e) => setValue(`growthPeriods.${index}.fromYear` as any, e.target.value ?? 0, { shouldDirty: true })}
+                      onChange={e =>
+                        setValue(`growthPeriods.${index}.fromYear` as any, e.target.value ?? 0, {
+                          shouldDirty: true,
+                        })
+                      }
+                      maxIntegerDigits={3}
                       decimalPlaces={0}
                     />
                     <NumberInput
                       value={watch(`growthPeriods.${index}.toYear` as any)}
-                      onChange={(e) => setValue(`growthPeriods.${index}.toYear` as any, e.target.value ?? 0, { shouldDirty: true })}
+                      onChange={e =>
+                        setValue(`growthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
+                          shouldDirty: true,
+                        })
+                      }
                       decimalPlaces={0}
+                      maxIntegerDigits={3}
                     />
                     <NumberInput
                       value={watch(`growthPeriods.${index}.growthRatePercent` as any)}
-                      onChange={(e) => setValue(`growthPeriods.${index}.growthRatePercent` as any, e.target.value ?? 0, { shouldDirty: true })}
+                      onChange={e =>
+                        setValue(
+                          `growthPeriods.${index}.growthRatePercent` as any,
+                          e.target.value ?? 0,
+                          { shouldDirty: true },
+                        )
+                      }
+                      maxIntegerDigits={3}
                       decimalPlaces={2}
                       rightIcon={<span className="text-xs text-gray-400">%</span>}
                     />
@@ -670,26 +738,44 @@ export function ProfitRentPanel({
         {/* KPI Summary */}
         {tableResult && tableResult.rows.length > 0 && (
           <KpiSummaryStrip
-            cards={[
-              { label: 'Total Market Rental', value: tableResult.totalMarketRentalFee, icon: 'chart-bar', color: 'blue' },
-              { label: 'Total Contract Rental', value: tableResult.totalContractRentalFee, icon: 'file-contract', color: 'gray' },
-              { label: 'Total Returns', value: tableResult.totalReturnsFromLease, icon: 'arrow-trend-up', color: 'amber' },
-              { label: 'Present Value', value: tableResult.totalPresentValue, icon: 'circle-check', color: 'green', primary: true },
-            ] satisfies KpiCard[]}
+            cards={
+              [
+                {
+                  label: 'Total Market Rental',
+                  value: tableResult.totalMarketRentalFee,
+                  icon: 'chart-bar',
+                  color: 'blue',
+                },
+                {
+                  label: 'Total Contract Rental',
+                  value: tableResult.totalContractRentalFee,
+                  icon: 'file-contract',
+                  color: 'gray',
+                },
+                {
+                  label: 'Total Returns',
+                  value: tableResult.totalReturnsFromLease,
+                  icon: 'arrow-trend-up',
+                  color: 'amber',
+                },
+                {
+                  label: 'Present Value',
+                  value: tableResult.totalPresentValue,
+                  icon: 'circle-check',
+                  color: 'green',
+                  primary: true,
+                },
+              ] satisfies KpiCard[]
+            }
           />
         )}
 
         {/* Chart */}
-        {tableResult && tableResult.rows.length > 0 && (
-          <ProfitRentChart result={tableResult} />
-        )}
+        {tableResult && tableResult.rows.length > 0 && <ProfitRentChart result={tableResult} />}
 
         {/* Sensitivity */}
         {tableResult && tableResult.rows.length > 0 && (
-          <SensitivityStrip
-            currentRate={discountRateValue}
-            calculateFinalValue={calcSensitivity}
-          />
+          <SensitivityStrip currentRate={discountRateValue} calculateFinalValue={calcSensitivity} />
         )}
 
         {/* Calculation Table */}
@@ -715,9 +801,7 @@ export function ProfitRentPanel({
             options={['No', 'Yes']}
             size="sm"
             checked={isBuildingCostIncluded}
-            onChange={(checked) =>
-              setValue('includeBuildingCost', checked, { shouldDirty: true })
-            }
+            onChange={checked => setValue('includeBuildingCost', checked, { shouldDirty: true })}
           />
 
           {isBuildingCostIncluded && (
@@ -729,31 +813,37 @@ export function ProfitRentPanel({
               <div className="text-sm divide-y divide-gray-100">
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-gray-600">Estimate Price (from PV)</span>
-                  <span className="text-xs font-medium text-gray-800 tabular-nums">{fmt(Number(estimatePrice) || 0)}</span>
+                  <span className="text-xs font-medium text-gray-800 tabular-nums">
+                    {fmt(Number(estimatePrice) || 0)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-gray-600">
                     <span className="font-bold mr-1">+</span>
                     Building Cost (after depre.)
                   </span>
-                  <span className="text-xs font-medium text-gray-800 tabular-nums">{fmt(Number(watch('totalBuildingCost')) || 0)}</span>
+                  <span className="text-xs font-medium text-gray-800 tabular-nums">
+                    {fmt(Number(watch('totalBuildingCost')) || 0)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-gray-700 font-medium">
                     <span className="font-bold mr-1">=</span>
                     Appraisal Price w/ Building
                   </span>
-                  <span className="text-xs font-semibold text-gray-900 tabular-nums">{fmt(Number(watch('appraisalPriceWithBuilding')) || 0)}</span>
+                  <span className="text-xs font-semibold text-gray-900 tabular-nums">
+                    {fmt(Number(watch('appraisalPriceWithBuilding')) || 0)}
+                  </span>
                 </div>
                 {/* Appraisal Price */}
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-xs font-semibold text-gray-900">
-                    Appraisal Price
-                  </span>
+                  <span className="text-xs font-semibold text-gray-900">Appraisal Price</span>
                   <div className="flex items-center gap-2">
                     {(() => {
                       const rounded = Number(watch('appraisalPriceWithBuildingRounded')) || 0;
-                      const computed = roundToThousand(Number(watch('appraisalPriceWithBuilding')) || 0);
+                      const computed = roundToThousand(
+                        Number(watch('appraisalPriceWithBuilding')) || 0,
+                      );
                       const diff = rounded - computed;
                       if (diff === 0) return null;
                       const pct = computed !== 0 ? ((diff / computed) * 100).toFixed(1) : '0.0';
@@ -765,7 +855,8 @@ export function ProfitRentPanel({
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} shrink-0`}
                         >
                           <Icon name={icon} style="solid" className="size-2.5" />
-                          {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}{pct}%)
+                          {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}
+                          {pct}%)
                         </span>
                       );
                     })()}
@@ -773,11 +864,16 @@ export function ProfitRentPanel({
                       <NumberInput
                         name="appraisalPriceWithBuildingRounded"
                         value={watch('appraisalPriceWithBuildingRounded') ?? 0}
-                        onChange={(e) =>
-                          setValue('appraisalPriceWithBuildingRounded', Number(e.target.value) || 0, {
-                            shouldDirty: true,
-                          })
+                        onChange={e =>
+                          setValue(
+                            'appraisalPriceWithBuildingRounded',
+                            Number(e.target.value) || 0,
+                            {
+                              shouldDirty: true,
+                            },
+                          )
                         }
+                        maxIntegerDigits={15}
                         decimalPlaces={2}
                         className="!font-bold !text-right !text-sm !text-green-700"
                       />
@@ -794,12 +890,12 @@ export function ProfitRentPanel({
           <div className="text-sm divide-y divide-gray-100 border-t border-gray-200">
             <div className="flex items-center justify-between py-1.5">
               <span className="text-xs text-gray-600">Estimate Price (from PV)</span>
-              <span className="text-xs font-medium text-gray-800 tabular-nums">{fmt(tableResult?.finalValueRounded ?? 0)}</span>
+              <span className="text-xs font-medium text-gray-800 tabular-nums">
+                {fmt(tableResult?.finalValueRounded ?? 0)}
+              </span>
             </div>
             <div className="flex items-center justify-between py-2">
-              <span className="text-xs font-semibold text-gray-900 shrink-0">
-                Appraisal Price
-              </span>
+              <span className="text-xs font-semibold text-gray-900 shrink-0">Appraisal Price</span>
               <div className="flex items-center gap-2">
                 {(() => {
                   const rounded = Number(estimateField.value) || 0;
@@ -815,7 +911,8 @@ export function ProfitRentPanel({
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} shrink-0`}
                     >
                       <Icon name={icon} style="solid" className="size-2.5" />
-                      {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}{pct}%)
+                      {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}
+                      {pct}%)
                     </span>
                   );
                 })()}
@@ -824,7 +921,7 @@ export function ProfitRentPanel({
                     name={estimateField.name}
                     ref={estimateField.ref}
                     value={estimateField.value}
-                    onChange={(e) => estimateField.onChange(e.target.value)}
+                    onChange={e => estimateField.onChange(e.target.value)}
                     onBlur={estimateField.onBlur}
                     decimalPlaces={2}
                     className="!font-bold !text-right !text-sm !text-green-700"
@@ -943,38 +1040,68 @@ function ProfitRentTable({
         </tr>
       </thead>
       <tbody onMouseLeave={() => onColHover(null)}>
-        {tableResult.rows.map((row) => (
+        {tableResult.rows.map(row => (
           <tr key={row.year} className="hover:bg-gray-50/50">
-            <td className={tdCls(0)} {...cellProps(0)}>{row.year.toFixed(1)}</td>
-            <td className={tdCls(1)} {...cellProps(1)}>{row.contractStart ? formatDateOnly(row.contractStart) : '-'}</td>
-            <td className={tdCls(2)} {...cellProps(2)}>{row.contractEnd ? formatDateOnly(row.contractEnd) : '-'}</td>
-            <td className={tdCls(3)} {...cellProps(3)}>{row.numberOfMonths.toFixed(1)}</td>
+            <td className={tdCls(0)} {...cellProps(0)}>
+              {row.year.toFixed(1)}
+            </td>
+            <td className={tdCls(1)} {...cellProps(1)}>
+              {row.contractStart ? formatDateOnly(row.contractStart) : '-'}
+            </td>
+            <td className={tdCls(2)} {...cellProps(2)}>
+              {row.contractEnd ? formatDateOnly(row.contractEnd) : '-'}
+            </td>
+            <td className={tdCls(3)} {...cellProps(3)}>
+              {row.numberOfMonths.toFixed(1)}
+            </td>
             <td className={tdCls(4)} {...cellProps(4)}>
               <div>{fmt(row.marketRentalFeePerSqWa)}</div>
               {row.marketRentalFeeGrowthPercent > 0 && (
                 <div className="text-[9px] text-gray-400">+{row.marketRentalFeeGrowthPercent}%</div>
               )}
             </td>
-            <td className={tdCls(5)} {...cellProps(5)}>{fmt(row.marketRentalFeePerMonth)}</td>
-            <td className={tdCls(6)} {...cellProps(6)}>{fmt(row.marketRentalFeePerYear)}</td>
-            <td className={tdCls(7)} {...cellProps(7)}>{fmt(row.contractRentalFeePerYear)}</td>
-            <td className={tdCls(8)} {...cellProps(8)}>{fmt(row.returnsFromLease)}</td>
-            <td className={tdCls(9)} {...cellProps(9)}>{discountRateValue.toFixed(2)} %</td>
-            <td className={tdCls(10)} {...cellProps(10)}>{fmt(row.presentValue)}</td>
+            <td className={tdCls(5)} {...cellProps(5)}>
+              {fmt(row.marketRentalFeePerMonth)}
+            </td>
+            <td className={tdCls(6)} {...cellProps(6)}>
+              {fmt(row.marketRentalFeePerYear)}
+            </td>
+            <td className={tdCls(7)} {...cellProps(7)}>
+              {fmt(row.contractRentalFeePerYear)}
+            </td>
+            <td className={tdCls(8)} {...cellProps(8)}>
+              {fmt(row.returnsFromLease)}
+            </td>
+            <td className={tdCls(9)} {...cellProps(9)}>
+              {discountRateValue.toFixed(2)} %
+            </td>
+            <td className={tdCls(10)} {...cellProps(10)}>
+              {fmt(row.presentValue)}
+            </td>
           </tr>
         ))}
       </tbody>
       <tfoot className="sticky bottom-0 z-20">
         <tr className="bg-gray-100 font-semibold border-t-2 border-gray-300">
-          <td className={`sticky left-0 z-30 ${totalBg} px-3 py-2 text-gray-800`} colSpan={3}>Total</td>
+          <td className={`sticky left-0 z-30 ${totalBg} px-3 py-2 text-gray-800`} colSpan={3}>
+            Total
+          </td>
           <td className={`${totalBg} ${totalTdCls(3)}`} {...cellProps(3)}></td>
           <td className={`${totalBg} ${totalTdCls(4)}`} {...cellProps(4)}></td>
           <td className={`${totalBg} ${totalTdCls(5)}`} {...cellProps(5)}></td>
-          <td className={`${totalBg} ${totalTdCls(6)}`} {...cellProps(6)}>{fmt(tableResult.totalMarketRentalFee)}</td>
-          <td className={`${totalBg} ${totalTdCls(7)}`} {...cellProps(7)}>{fmt(tableResult.totalContractRentalFee)}</td>
-          <td className={`${totalBg} ${totalTdCls(8)}`} {...cellProps(8)}>{fmt(tableResult.totalReturnsFromLease)}</td>
+          <td className={`${totalBg} ${totalTdCls(6)}`} {...cellProps(6)}>
+            {fmt(tableResult.totalMarketRentalFee)}
+          </td>
+          <td className={`${totalBg} ${totalTdCls(7)}`} {...cellProps(7)}>
+            {fmt(tableResult.totalContractRentalFee)}
+          </td>
+          <td className={`${totalBg} ${totalTdCls(8)}`} {...cellProps(8)}>
+            {fmt(tableResult.totalReturnsFromLease)}
+          </td>
           <td className={`${totalBg} ${totalTdCls(9)}`} {...cellProps(9)}></td>
-          <td className={`${totalBg} ${totalTdCls(10)}`} {...cellProps(10)}>{fmt(tableResult.totalPresentValue)}</td>
+          <td className={`${totalBg} ${totalTdCls(10)}`} {...cellProps(10)}>
+            {fmt(tableResult.totalPresentValue)}
+          </td>
         </tr>
       </tfoot>
     </>
@@ -986,7 +1113,7 @@ function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string
   const [expanded, setExpanded] = useState(false);
 
   // Compute summary per building
-  const summaries = buildingCost.map((building) => {
+  const summaries = buildingCost.map(building => {
     const rows: unknown[] = (building.depreciationDetails as unknown[]) ?? [];
     let totalArea = 0;
     let totalBefore = 0;
@@ -1025,16 +1152,18 @@ function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string
       >
         <div className="flex items-center gap-2">
           <Icon name="building" className="size-3.5 text-gray-500" />
-          <span className="text-xs font-semibold text-gray-700">
-            Building Cost Summary
-          </span>
+          <span className="text-xs font-semibold text-gray-700">Building Cost Summary</span>
           <span className="text-[10px] text-gray-400">
             ({summaries.reduce((s, b) => s + b.itemCount, 0)} items)
           </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-gray-600 tabular-nums">
-            After Depre. {grandAfter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            After Depre.{' '}
+            {grandAfter.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </span>
           <Icon
             name="chevron-down"
@@ -1056,12 +1185,27 @@ function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string
             </div>
           </div>
           {summaries.map((s, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-1.5 text-xs border-b border-gray-50 last:border-b-0">
+            <div
+              key={i}
+              className="flex items-center justify-between px-4 py-1.5 text-xs border-b border-gray-50 last:border-b-0"
+            >
               <span className="text-gray-600">{s.name}</span>
               <div className="flex gap-6 tabular-nums">
-                <span className="text-gray-400 w-20 text-right">{s.totalArea.toLocaleString()} m²</span>
-                <span className="text-gray-500 w-28 text-right">{s.totalBefore.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                <span className="text-gray-700 font-medium w-28 text-right">{s.totalAfter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-gray-400 w-20 text-right">
+                  {s.totalArea.toLocaleString()} m²
+                </span>
+                <span className="text-gray-500 w-28 text-right">
+                  {s.totalBefore.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+                <span className="text-gray-700 font-medium w-28 text-right">
+                  {s.totalAfter.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
               </div>
             </div>
           ))}
@@ -1166,7 +1310,10 @@ function TableSkeleton() {
         </div>
       ))}
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className={`h-9 flex items-center px-3 border-t border-gray-200 ${i >= 1 ? 'bg-green-50' : 'bg-gray-50'}`}>
+        <div
+          key={i}
+          className={`h-9 flex items-center px-3 border-t border-gray-200 ${i >= 1 ? 'bg-green-50' : 'bg-gray-50'}`}
+        >
           <div className="bg-gray-300 rounded h-3 w-40" />
           <div className="ml-auto bg-gray-300 rounded h-3 w-20" />
         </div>
