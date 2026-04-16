@@ -149,8 +149,8 @@ export interface GetPoolTasksParams {
   sortDir?: 'asc' | 'desc';
   appraisalNumber?: string;
   customerName?: string;
-  taskStatus?: string;
-  taskType?: string;
+  status?: string;
+  dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
   activityId?: string;
@@ -181,17 +181,19 @@ export interface GetTasksParams {
   // Advanced filter params
   appraisalNumber?: string;
   customerName?: string;
-  taskStatus?: string;
-  taskType?: string;
+  dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
 }
 
+export type TaskDateType = 'assigned' | 'appointment' | 'requested';
+
 export interface TaskFilterParams {
   appraisalNumber?: string;
   customerName?: string;
-  taskStatus?: string;
-  taskType?: string;
+  status?: string;
+  activityId?: string;
+  dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
 }

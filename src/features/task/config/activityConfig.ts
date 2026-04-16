@@ -1,5 +1,3 @@
-import { ALL_COLUMNS } from './columnDefs';
-
 export interface ActivityConfig {
   activityId: string;
   title: string;
@@ -107,6 +105,3 @@ export const ACTIVITY_IDS = Object.keys(ACTIVITY_CONFIG_MAP);
 export function getActivityConfig(activityId: string): ActivityConfig | undefined {
   return ACTIVITY_CONFIG_MAP[activityId];
 }
-
-// Re-export for consumers that previously imported columns from here
-export { ALL_COLUMNS };

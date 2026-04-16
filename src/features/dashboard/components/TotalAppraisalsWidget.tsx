@@ -54,8 +54,16 @@ function TotalAppraisalsWidget() {
     }));
   }, [thisYearData, lastYearData]);
 
-  const maxValue = Math.max(...data.flatMap((d) => [d.thisYear, d.lastYear]));
-  const totalAppraisals = data[data.length - 1].thisYear;
+  const maxValue = Math.max(1, ...data.flatMap((d) => [d.thisYear, d.lastYear]));
+  const totalAppraisals = data.reduce((sum, d) => sum + d.thisYear, 0);
+  const lastYearTotal = data.reduce((sum, d) => sum + d.lastYear, 0);
+
+  // YoY % change vs last year (same year-to-date window)
+  const yoyDelta = lastYearTotal > 0
+    ? ((totalAppraisals - lastYearTotal) / lastYearTotal) * 100
+    : 0;
+  const yoyIsUp = yoyDelta >= 0;
+  const yoyLabel = `${Math.abs(yoyDelta).toFixed(1)}%`;
 
   // Calculate SVG path for line chart
   const chartWidth = 500;
@@ -118,9 +126,11 @@ function TotalAppraisalsWidget() {
               <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Appraisals</p>
               <p className="text-4xl font-bold text-gray-800">{totalAppraisals.toLocaleString()}</p>
             </div>
-            <div className="flex items-center gap-1 text-emerald-500 text-sm font-medium mb-1">
-              <Icon name="arrow-up" style="solid" className="size-3" />
-              <span>12.5%</span>
+            <div
+              className={`flex items-center gap-1 text-sm font-medium mb-1 ${yoyIsUp ? 'text-emerald-500' : 'text-red-500'}`}
+            >
+              <Icon name={yoyIsUp ? 'arrow-up' : 'arrow-down'} style="solid" className="size-3" />
+              <span>{yoyLabel}</span>
             </div>
           </div>
 

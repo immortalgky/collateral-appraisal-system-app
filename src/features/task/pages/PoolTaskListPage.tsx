@@ -30,8 +30,9 @@ const POOL_COLUMNS = [
 const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
   customerName: 'Customer',
-  taskStatus: 'Task Status',
-  taskType: 'Task Type',
+  status: 'Request Status',
+  activityId: 'Task Type',
+  dateType: 'Date Type',
   dateFrom: 'From',
   dateTo: 'To',
 };
@@ -392,7 +393,8 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                   const isActive = sortField === col.sortField;
                   const base =
                     'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
-                  const thClass = col.sticky
+                  const isSticky = key === 'appraisalNumber';
+                  const thClass = isSticky
                     ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                     : col.sortField
                       ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
@@ -465,7 +467,8 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                     >
                       {POOL_COLUMNS.map(key => {
                         const col = columnDefs[key];
-                        const tdClass = col.sticky
+                        const isSticky = key === 'appraisalNumber';
+                        const tdClass = isSticky
                           ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                           : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm');
                         return (

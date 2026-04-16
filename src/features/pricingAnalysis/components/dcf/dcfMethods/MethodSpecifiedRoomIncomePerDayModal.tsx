@@ -231,11 +231,13 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '' }: { name: string
         </div>
         <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Total Number of Saleable Area</span>
-          <div className={'w-44'}>
+          <div className={'w-44 text-right'}>
             <RHFInputCell
-              fieldName={`${name}.totalSaleableArea`}
-              inputType={'number'}
-              number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+              fieldName={`${name}.sumSaleableArea`}
+              inputType={'display'}
+              accessor={({ value }) => (
+                <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+              )}
             />
           </div>
         </div>

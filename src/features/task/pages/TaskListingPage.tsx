@@ -8,7 +8,7 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
-import { columnDefs } from '../config/columnDefs';
+import { columnDefs, DEFAULT_CONFIG } from '../config/columnDefs';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -34,16 +34,17 @@ const groupByOptions: { value: GroupByField; label: string }[] = [
 const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
   customerName: 'Customer',
-  taskStatus: 'Task Status',
-  taskType: 'Task Type',
+  status: 'Request Status',
+  activityId: 'Task Type',
+  dateType: 'Date Type',
   dateFrom: 'From',
   dateTo: 'To',
 };
 
 function TaskListingPage() {
   const navigate = useNavigate();
-  const { visibleColumns, orderedColumns, hidden, toggleColumn, reorderColumns, resetToDefault } =
-    useColumnVisibility('task-columns-all');
+  const { visibleColumns, orderedColumns, hidden, alwaysVisible, toggleColumn, reorderColumns, resetToDefault } =
+    useColumnVisibility('task-columns-all', DEFAULT_CONFIG);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
   const [poolSearch, setPoolSearch] = useState('');
@@ -345,6 +346,7 @@ function TaskListingPage() {
                 <ColumnVisibilityDropdown
                   orderedColumns={orderedColumns}
                   hidden={hidden}
+                  alwaysVisible={alwaysVisible}
                   onToggle={toggleColumn}
                   onReorder={reorderColumns}
                   onReset={resetToDefault}
@@ -488,9 +490,10 @@ function TaskListingPage() {
                       {visibleColumns.map(key => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
+                        const isSticky = key === DEFAULT_CONFIG.stickyColumn;
                         const base =
                           'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
-                        const thClass = col.sticky
+                        const thClass = isSticky
                           ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                           : col.sortField
                             ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
@@ -570,15 +573,16 @@ function TaskListingPage() {
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
+                            const isSticky = key === DEFAULT_CONFIG.stickyColumn;
                             return (
                               <td
                                 key={key}
                                 className={
-                                  col.sticky
+                                  isSticky
                                     ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
                                     : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')
                                 }
-                                onClick={col.sticky ? e => e.stopPropagation() : undefined}
+                                onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >
                                 {col.render(task)}
                               </td>

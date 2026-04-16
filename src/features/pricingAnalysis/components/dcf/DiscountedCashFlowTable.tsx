@@ -4,10 +4,6 @@ import { RHFInputCell } from '../table/RHFInputCell';
 import { DiscountedCashFlowSectionRenderer } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowSectionRenderer';
 import type { DCFSection } from '../../types/dcf';
 import { ScrollableTableContainer } from '../ScrollableTableContainer';
-import {
-  buildCalculateTotalAssumptionDerivedRules,
-  buildStaticCalculationDerivedRules,
-} from '../../adapters/buildDiscountedCashFlowDerivedRules';
 import { useMemo } from 'react';
 import { useDerivedFields } from '../../adapters/useDerivedFieldArray';
 import { buildMethodCalculationRules } from '../../domain/dcf/useCalculations';
@@ -96,26 +92,6 @@ export function DiscountedCashFlowTable({
   const sections = useMemo(() => {
     return watchSections ?? [];
   }, [watchSections]);
-
-  const watchTemplateCode = useWatch({ control, name: 'templateCode' });
-
-  const templateCode = useMemo(() => {
-    return watchTemplateCode ?? [];
-  }, [watchTemplateCode]);
-
-  // section rules build only once
-  const calculateStaticCalculationDerivedRules = useMemo(() => {
-    return buildStaticCalculationDerivedRules(sections, totalNumberOfYears);
-  }, [templateCode]);
-
-  useDerivedFields({ rules: calculateStaticCalculationDerivedRules, ctx: { sections } });
-
-  // assumption rules which will be update due to assumption change; add, remove
-  const calculateTotalAssumptionDerivedRules = useMemo(() => {
-    return buildCalculateTotalAssumptionDerivedRules(sections, totalNumberOfYears);
-  }, [sections, totalNumberOfYears]);
-
-  useDerivedFields({ rules: calculateTotalAssumptionDerivedRules });
 
   const methodCalculationRules = useMemo(() => {
     return buildMethodCalculationRules(sections, totalNumberOfYears);

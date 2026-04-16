@@ -1,6 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import type { GetPoolTasksParams, GetTasksParams, PoolTaskListResponse, Task, TaskListResponse } from './types';
+import type {
+  GetPoolTasksParams,
+  GetTasksParams,
+  PoolTaskListResponse,
+  Task,
+  TaskDateType,
+  TaskListResponse,
+} from './types';
+
+/** Maps a (dateType, dateFrom, dateTo) tuple onto the backend's Pascal-cased query params. */
+function toDateQueryParams(dateType: TaskDateType | undefined, from?: string, to?: string) {
+  if (!from && !to) return {};
+  const pairs: Record<TaskDateType, [string, string]> = {
+    assigned: ['DateFrom', 'DateTo'],
+    appointment: ['AppointmentDateFrom', 'AppointmentDateTo'],
+    requested: ['RequestedAtFrom', 'RequestedAtTo'],
+  };
+  const [fromKey, toKey] = pairs[dateType ?? 'assigned'];
+  return {
+    ...(from && { [fromKey]: from }),
+    ...(to && { [toKey]: to }),
+  };
+}
 
 /**
  * Hook for fetching a paginated list of tasks for the current user
@@ -19,8 +41,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     sortDir,
     appraisalNumber,
     customerName,
-    taskStatus,
-    taskType,
+    dateType,
     dateFrom,
     dateTo,
   } = params;
@@ -39,8 +60,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
       ...(sortDir && { sortDir }),
       ...(appraisalNumber && { appraisalNumber }),
       ...(customerName && { customerName }),
-      ...(taskStatus && { taskStatus }),
-      ...(taskType && { taskType }),
+      ...(dateType && { dateType }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
     },
@@ -62,10 +82,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
           ...(sortDir && { SortDir: sortDir }),
           ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
           ...(customerName && { CustomerName: customerName }),
-          ...(taskStatus && { TaskStatus: taskStatus }),
-          ...(taskType && { TaskType: taskType }),
-          ...(dateFrom && { DateFrom: dateFrom }),
-          ...(dateTo && { DateTo: dateTo }),
+          ...toDateQueryParams(dateType, dateFrom, dateTo),
         },
       });
 
@@ -131,8 +148,8 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
     sortDir,
     appraisalNumber,
     customerName,
-    taskStatus,
-    taskType,
+    status,
+    dateType,
     dateFrom,
     dateTo,
     activityId,
@@ -148,8 +165,8 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
       ...(sortDir && { sortDir }),
       ...(appraisalNumber && { appraisalNumber }),
       ...(customerName && { customerName }),
-      ...(taskStatus && { taskStatus }),
-      ...(taskType && { taskType }),
+      ...(status && { status }),
+      ...(dateType && { dateType }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
       ...(activityId && { activityId }),
@@ -168,10 +185,8 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
           ...(sortDir && { SortDir: sortDir }),
           ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
           ...(customerName && { CustomerName: customerName }),
-          ...(taskStatus && { TaskStatus: taskStatus }),
-          ...(taskType && { TaskType: taskType }),
-          ...(dateFrom && { DateFrom: dateFrom }),
-          ...(dateTo && { DateTo: dateTo }),
+          ...(status && { Status: status }),
+          ...toDateQueryParams(dateType, dateFrom, dateTo),
           ...(activityId && { ActivityId: activityId }),
         },
       });

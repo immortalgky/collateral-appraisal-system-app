@@ -16,7 +16,7 @@ import { FormProvider, FormFields, type FormField } from '@/shared/components/fo
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
-import { useCompleteActivity } from '../api/workflow';
+import { useCompleteActivity, useGetActivityActions } from '../api/workflow';
 import {
   decisionSummaryFormDefaults,
   decisionSummaryFormSchema,
@@ -154,6 +154,7 @@ const DecisionSummaryPage = () => {
   // Decision state (lifted from DecisionSection)
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
   const [comments, setComments] = useState('');
+  const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   // Routing variables from context (for appraisal-initiation refresh)
@@ -166,6 +167,15 @@ const DecisionSummaryPage = () => {
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
   const { mutate: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
   const completeActivity = useCompleteActivity();
+  const { data: actionsData } = useGetActivityActions(workflowInstanceId, activityId);
+
+  const selectedAction = useMemo(
+    () => (actionsData?.actions ?? []).find(a => a.value === selectedDecision) ?? null,
+    [actionsData, selectedDecision],
+  );
+
+  const isManualAssignment =
+    selectedAction?.assignmentMode === 'manual' && !!selectedAction.targetActivityId;
 
   // Form setup
   const mapDataToForm = useMemo(() => {
@@ -205,6 +215,12 @@ const DecisionSummaryPage = () => {
   }, [mapDataToForm, reset]);
 
   const doCompleteActivity = () => {
+    const targetId = selectedAction?.targetActivityId;
+    const overrides =
+      isManualAssignment && selectedAssigneeUserId && targetId
+        ? { [targetId]: { runtimeAssignee: selectedAssigneeUserId } }
+        : undefined;
+
     completeActivity.mutate(
       {
         workflowInstanceId: workflowInstanceId!,
@@ -220,6 +236,7 @@ const DecisionSummaryPage = () => {
             hasAppraisalBook,
           }),
         },
+        nextAssignmentOverrides: overrides,
       },
       {
         onSuccess: (result) => {
@@ -242,6 +259,21 @@ const DecisionSummaryPage = () => {
 
   const onSubmit = (formData: DecisionSummaryFormType) => {
     const canComplete = isTaskOwner && workflowInstanceId && activityId && selectedDecision;
+
+    // Guard: if this user is the task owner, ensure actions have loaded and the picked
+    // decision resolves to a known action — otherwise a manual-mode action could silently
+    // submit as system mode while the actions API is still in flight.
+    if (canComplete && (!actionsData || !selectedAction)) {
+      setIsConfirmOpen(false);
+      toast.error('Loading decision options, please try again in a moment.');
+      return;
+    }
+
+    if (isManualAssignment && !selectedAssigneeUserId) {
+      setIsConfirmOpen(false);
+      toast.error('Please select the next assignee before submitting.');
+      return;
+    }
 
     if (appraisalId) {
       // Normal path: save summary first, then optionally complete activity
@@ -410,6 +442,8 @@ const DecisionSummaryPage = () => {
                 onDecisionChange={setSelectedDecision}
                 comments={comments}
                 onCommentsChange={setComments}
+                selectedAssigneeUserId={selectedAssigneeUserId}
+                onAssigneeChange={setSelectedAssigneeUserId}
               />
             </div>
           </div>
@@ -437,7 +471,13 @@ const DecisionSummaryPage = () => {
                   </Button>
                   <Button
                     type="button"
-                    disabled={isSaving || completeActivity.isPending || (isTaskOwner && !selectedDecision)}
+                    disabled={
+                      isSaving ||
+                      completeActivity.isPending ||
+                      (isTaskOwner && !selectedDecision) ||
+                      (isTaskOwner && !!selectedDecision && !selectedAction) ||
+                      (isTaskOwner && isManualAssignment && !selectedAssigneeUserId)
+                    }
                     onClick={() => setIsConfirmOpen(true)}
                   >
                     <Icon style="solid" name="paper-plane" className="size-4 mr-2" />

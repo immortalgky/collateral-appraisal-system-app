@@ -1,5 +1,5 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useNavigate } from 'react-router-dom';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from '@shared/components/Icon';
 import clsx from 'clsx';
@@ -97,6 +97,7 @@ export const PropertyTypeDropdown = ({
 }: PropertyTypeDropdownProps) => {
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
+  const layoutBasePath = useBasePath();
   const propertyBasePath = usePropertyBasePath();
 
   const handleSelect = (propertyType: (typeof PROPERTY_TYPES)[number]) => {
@@ -105,9 +106,8 @@ export const PropertyTypeDropdown = ({
     }
 
     if (!disableDefaultNavigation && propertyType.route) {
-      // Navigate to the create page under appraisal context
       const targetPath = appraisalId
-        ? `/appraisals/${appraisalId}/${propertyBasePath}/${propertyType.route}/new`
+        ? `${layoutBasePath}/${propertyBasePath}/${propertyType.route}/new`
         : `/${propertyType.route}-detail`;
 
       navigate(`${targetPath}?groupId=${groupId}&type=${encodeURIComponent(propertyType.type)}`);

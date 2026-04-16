@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useNavigate } from 'react-router-dom';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import { PropertyCardContent } from './PropertyCardContent';
@@ -20,7 +20,8 @@ interface PropertyCardProps {
 export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: PropertyCardProps) => {
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
-  const basePath = usePropertyBasePath();
+  const layoutBasePath = useBasePath();
+  const propertyBasePath = usePropertyBasePath();
 
   const sortableData = useMemo(
     () => ({ type: 'property' as const, property, groupId }),
@@ -50,7 +51,7 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
       navigate(
-        `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+        `${layoutBasePath}/${propertyBasePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
       );
     }
   };

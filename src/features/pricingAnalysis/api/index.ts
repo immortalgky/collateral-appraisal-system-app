@@ -673,6 +673,143 @@ export function useSaveProfitRentAnalysis() {
   });
 }
 
+// ==================== Income Analysis Hooks ====================
+
+import type {
+  IncomeAnalysisDto,
+  PricingTemplateSummaryDto,
+  PricingTemplateDto,
+  SaveIncomeAnalysisRequest,
+} from '../types/income';
+
+/**
+ * List pricing templates (income approach)
+ * GET /pricing-templates?activeOnly={bool}
+ */
+export function useGetPricingTemplates(activeOnly = true) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.pricingTemplates(activeOnly),
+    queryFn: async (): Promise<PricingTemplateSummaryDto[]> => {
+      const { data } = await axios.get(`/pricing-templates`, {
+        params: { activeOnly },
+      });
+      return data as PricingTemplateSummaryDto[];
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Fetch full template tree by code
+ * GET /pricing-templates/{code}
+ */
+export function useGetPricingTemplateByCode(code: string | undefined) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.pricingTemplateByCode(code ?? ''),
+    queryFn: async (): Promise<PricingTemplateDto> => {
+      const { data } = await axios.get(`/pricing-templates/${code}`);
+      return data as PricingTemplateDto;
+    },
+    enabled: !!code,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Fetch saved income analysis for a method.
+ * Returns undefined when no analysis has been saved yet (404 → undefined, not an error).
+ * GET /pricing-analysis/{paId}/methods/{mid}/income-analysis
+ */
+export function useGetIncomeAnalysis(
+  pricingAnalysisId: string | undefined,
+  methodId: string | undefined,
+) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.incomeAnalysis(pricingAnalysisId ?? '', methodId ?? ''),
+    queryFn: async (): Promise<IncomeAnalysisDto | undefined> => {
+      const response = await axios.get(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis`,
+        { validateStatus: status => status === 200 || status === 404 },
+      );
+      if (response.status === 404) return undefined;
+      // The endpoint returns GetIncomeAnalysisResponse { analysis } — unwrap it
+      const body = response.data;
+      return (body.analysis ?? body) as IncomeAnalysisDto;
+    },
+    enabled: !!pricingAnalysisId && !!methodId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * Save income analysis (full-replace upsert)
+ * PUT /pricing-analysis/{paId}/methods/{mid}/income-analysis
+ */
+export function useSaveIncomeAnalysis() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: SaveIncomeAnalysisRequest;
+    }): Promise<IncomeAnalysisDto> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis`,
+        request,
+      );
+      // SaveIncomeAnalysisResponse wraps the dto in { analysis }
+      return (response.analysis ?? response) as IncomeAnalysisDto;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.incomeAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
+  });
+}
+
+/**
+ * Preview income analysis — runs server calc without persisting.
+ * POST /pricing-analysis/{paId}/methods/{mid}/income-analysis:preview
+ */
+export function usePreviewIncomeAnalysis() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: SaveIncomeAnalysisRequest;
+    }): Promise<IncomeAnalysisDto> => {
+      const { data } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis:preview`,
+        request,
+      );
+      return (data.analysis ?? data) as IncomeAnalysisDto;
+    },
+    // No cache invalidation — preview is stateless
+  });
+}
+
 // ==================== Template & Factor Hooks ====================
 
 /**

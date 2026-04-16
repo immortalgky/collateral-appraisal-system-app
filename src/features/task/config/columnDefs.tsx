@@ -146,6 +146,7 @@ function AppointmentCell({ dateString }: { dateString: string | null | undefined
 
 export type ColumnKey =
   | 'appraisalNumber'
+  | 'requestNumber'
   | 'customerName'
   | 'taskType'
   | 'purpose'
@@ -170,8 +171,6 @@ export type ColumnDef = {
   label: string;
   /** Backend sort field name. Omit to make the column non-sortable. */
   sortField?: string;
-  /** True for the leftmost sticky column (appraisalNumber). */
-  sticky?: boolean;
   /** td className override. Defaults to 'px-3 py-2.5 text-gray-600' when not set. */
   tdClassName?: string;
   render: (task: Task) => ReactNode;
@@ -181,7 +180,6 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   appraisalNumber: {
     label: 'Appraisal Number',
     sortField: 'appraisalNumber',
-    sticky: true,
     render: task => {
       const display = task.appraisalNumber ?? task.requestNumber;
       const isReq = !task.appraisalNumber && !!task.requestNumber;
@@ -200,6 +198,19 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
         </Link>
       );
     },
+  },
+  requestNumber: {
+    label: 'Request Number',
+    sortField: 'requestNumber',
+    render: task => (
+      <Link
+        to={`/tasks/${task.id}/opening`}
+        onClick={e => e.stopPropagation()}
+        className="font-medium text-primary hover:underline"
+      >
+        {task.requestNumber ?? '-'}
+      </Link>
+    ),
   },
   customerName: {
     label: 'Customer Name',
@@ -304,11 +315,18 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   },
 };
 
-/** Columns that are always visible and cannot be toggled off by the user. */
-export const ALWAYS_VISIBLE_COLUMNS: ColumnKey[] = ['appraisalNumber'];
+// ── Activity column config ─────────────────────────────────────────────────
 
-/** All columns in display order — used by TaskListingPage (shows everything). */
-export const ALL_COLUMNS: ColumnKey[] = [
+export type ActivityColumnConfig = {
+  /** Columns in display order, default visible set. */
+  columns: ColumnKey[];
+  /** The single left-pinned column (cannot be hidden). */
+  stickyColumn: ColumnKey;
+  /** Additional columns the user cannot toggle off. Sticky is always implicitly always-visible. */
+  alwaysVisible?: ColumnKey[];
+};
+
+const DEFAULT_COLUMNS: ColumnKey[] = [
   'appraisalNumber',
   'customerName',
   'taskType',
@@ -330,3 +348,24 @@ export const ALL_COLUMNS: ColumnKey[] = [
   'slaStatus',
   'priority',
 ];
+
+const DEFAULT_CONFIG: ActivityColumnConfig = {
+  columns: DEFAULT_COLUMNS,
+  stickyColumn: 'appraisalNumber',
+};
+
+const INITIATION_CONFIG: ActivityColumnConfig = {
+  columns: ['requestNumber', ...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],
+  stickyColumn: 'requestNumber',
+};
+
+const ACTIVITY_COLUMN_CONFIG: Record<string, ActivityColumnConfig> = {
+  'appraisal-initiation': INITIATION_CONFIG,
+  'appraisal-initiation-check': INITIATION_CONFIG,
+};
+
+export function getActivityColumnConfig(activityId: string): ActivityColumnConfig {
+  return ACTIVITY_COLUMN_CONFIG[activityId] ?? DEFAULT_CONFIG;
+}
+
+export { DEFAULT_CONFIG, DEFAULT_COLUMNS };

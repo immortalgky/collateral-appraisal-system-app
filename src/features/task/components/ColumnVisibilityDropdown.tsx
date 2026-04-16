@@ -13,13 +13,14 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ALWAYS_VISIBLE_COLUMNS, columnDefs } from '../config/columnDefs';
+import { columnDefs } from '../config/columnDefs';
 import type { ColumnKey } from '../config/columnDefs';
 import Icon from '@/shared/components/Icon';
 
 interface ColumnVisibilityDropdownProps {
   orderedColumns: ColumnKey[];
   hidden: Set<ColumnKey>;
+  alwaysVisible: Set<ColumnKey>;
   onToggle: (key: ColumnKey) => void;
   onReorder: (activeId: ColumnKey, overId: ColumnKey) => void;
   onReset: () => void;
@@ -113,11 +114,11 @@ function SortableColumnRow({
 export function ColumnVisibilityDropdown({
   orderedColumns,
   hidden,
+  alwaysVisible,
   onToggle,
   onReorder,
   onReset,
 }: ColumnVisibilityDropdownProps) {
-  const hasChanges = hidden.size > 0 || orderedColumns.some((k, i) => k !== orderedColumns[i]);
   const hiddenCount = hidden.size;
 
   const sensors = useSensors(
@@ -180,7 +181,7 @@ export function ColumnVisibilityDropdown({
                   key={key}
                   columnKey={key}
                   isVisible={!hidden.has(key)}
-                  alwaysVisible={(ALWAYS_VISIBLE_COLUMNS as string[]).includes(key)}
+                  alwaysVisible={alwaysVisible.has(key)}
                   onToggle={onToggle}
                 />
               ))}

@@ -1,9 +1,6 @@
-import { useState } from 'react';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
 import { useTaskSummary } from '../api';
-
-type Period = 'calendar' | 'A' | 'M' | 'W' | 'D';
 
 type TaskGaugeProps = {
   label: string;
@@ -24,18 +21,8 @@ function TaskGauge({ label, count, icon, iconColor, bgColor, strokeColor, percen
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center gap-3 hover:shadow-md transition-shadow">
       <p className="text-sm font-medium text-gray-600">{label}</p>
       <div className="relative w-32 h-32">
-        {/* SVG Circle Gauge */}
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          {/* Background circle */}
-          <circle
-            cx="60"
-            cy="60"
-            r={radius}
-            fill="none"
-            stroke="#f3f4f6"
-            strokeWidth="10"
-          />
-          {/* Progress circle */}
+          <circle cx="60" cy="60" r={radius} fill="none" stroke="#f3f4f6" strokeWidth="10" />
           <circle
             cx="60"
             cy="60"
@@ -49,7 +36,6 @@ function TaskGauge({ label, count, icon, iconColor, bgColor, strokeColor, percen
             className="transition-all duration-500 ease-out"
           />
         </svg>
-        {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className={`p-2 rounded-full ${bgColor} mb-1`}>
             <Icon name={icon} style="solid" className={`size-5 ${iconColor}`} />
@@ -62,120 +48,58 @@ function TaskGauge({ label, count, icon, iconColor, bgColor, strokeColor, percen
   );
 }
 
-type TaskSummaryWidgetProps = {
-  data?: {
-    notStarted: number;
-    inProgress: number;
-    overdue: number;
-    completed: number;
-  };
-};
+function TaskSummaryWidget() {
+  const { data } = useTaskSummary();
 
-const PERIOD_MAP: Record<Period, string> = {
-  calendar: 'yearly',
-  A: 'yearly',
-  M: 'monthly',
-  W: 'monthly',
-  D: 'daily',
-};
-
-function TaskSummaryWidget({ data }: TaskSummaryWidgetProps) {
-  const [period, setPeriod] = useState<Period>('A');
-
-  const { data: apiData } = useTaskSummary(PERIOD_MAP[period]);
-
-  // Aggregate API items into totals, fall back to prop data or zeros
-  const taskData = (() => {
-    if (data) return data;
-    if (apiData?.items && apiData.items.length > 0) {
-      return apiData.items.reduce(
-        (acc, item) => ({
-          notStarted: acc.notStarted + item.notStarted,
-          inProgress: acc.inProgress + item.inProgress,
-          overdue: acc.overdue + item.overdue,
-          completed: acc.completed + item.completed,
-        }),
-        { notStarted: 0, inProgress: 0, overdue: 0, completed: 0 }
-      );
-    }
-    return { notStarted: 0, inProgress: 0, overdue: 0, completed: 0 };
-  })();
-
-  const total = taskData.notStarted + taskData.inProgress + taskData.overdue + taskData.completed;
-
-  const periods: { key: Period; label: string; icon?: string }[] = [
-    { key: 'calendar', label: '', icon: 'calendar' },
-    { key: 'A', label: 'A' },
-    { key: 'M', label: 'M' },
-    { key: 'W', label: 'W' },
-    { key: 'D', label: 'D' },
-  ];
+  const notStarted = data?.notStarted ?? 0;
+  const inProgress = data?.inProgress ?? 0;
+  const overdue = data?.overdue ?? 0;
+  const completed = data?.completedThisWeek ?? 0;
+  const total = notStarted + inProgress + overdue + completed;
 
   return (
     <WidgetWrapper id="task-summary">
       <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-800">Task Summary</h3>
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-            {periods.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPeriod(p.key)}
-                className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${
-                  period === p.key
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                {p.icon ? (
-                  <Icon name={p.icon} style="regular" className="size-4" />
-                ) : (
-                  <span className="text-sm font-medium">{p.label}</span>
-                )}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {/* Task gauges */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <TaskGauge
             label="Not Started"
-            count={taskData.notStarted}
+            count={notStarted}
             icon="loader"
             iconColor="text-blue-500"
             bgColor="bg-blue-50"
             strokeColor="#3b82f6"
-            percentage={total > 0 ? (taskData.notStarted / total) * 100 : 0}
+            percentage={total > 0 ? (notStarted / total) * 100 : 0}
           />
           <TaskGauge
             label="In Progress"
-            count={taskData.inProgress}
+            count={inProgress}
             icon="hourglass-start"
             iconColor="text-amber-500"
             bgColor="bg-amber-50"
             strokeColor="#f59e0b"
-            percentage={total > 0 ? (taskData.inProgress / total) * 100 : 0}
+            percentage={total > 0 ? (inProgress / total) * 100 : 0}
           />
           <TaskGauge
             label="Overdue"
-            count={taskData.overdue}
+            count={overdue}
             icon="bell"
             iconColor="text-red-500"
             bgColor="bg-red-50"
             strokeColor="#ef4444"
-            percentage={total > 0 ? (taskData.overdue / total) * 100 : 0}
+            percentage={total > 0 ? (overdue / total) * 100 : 0}
           />
           <TaskGauge
             label="Completed"
-            count={taskData.completed}
+            count={completed}
             icon="circle-check"
             iconColor="text-emerald-500"
             bgColor="bg-emerald-50"
             strokeColor="#10b981"
-            percentage={total > 0 ? (taskData.completed / total) * 100 : 0}
+            percentage={total > 0 ? (completed / total) * 100 : 0}
           />
         </div>
       </div>

@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PoolTaskListPage from '../pages/PoolTaskListPage';
 import { useGetTasks, useGetTasksForKanban } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
-import { columnDefs } from '../config/columnDefs';
+import { columnDefs, getActivityColumnConfig } from '../config/columnDefs';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
@@ -33,8 +33,9 @@ interface ActivityTaskTableProps {
 const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
   customerName: 'Customer',
-  taskStatus: 'Task Status',
-  taskType: 'Task Type',
+  status: 'Request Status',
+  activityId: 'Task Type',
+  dateType: 'Date Type',
   dateFrom: 'From',
   dateTo: 'To',
 };
@@ -71,8 +72,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     string,
   ][];
 
-  const { visibleColumns, orderedColumns, hidden, toggleColumn, reorderColumns, resetToDefault } =
-    useColumnVisibility('task-columns-' + activityId);
+  const columnConfig = useMemo(() => getActivityColumnConfig(activityId), [activityId]);
+
+  const { visibleColumns, orderedColumns, hidden, alwaysVisible, toggleColumn, reorderColumns, resetToDefault } =
+    useColumnVisibility('task-columns-' + activityId, columnConfig);
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupByField>('status');
@@ -350,6 +353,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                 <ColumnVisibilityDropdown
                   orderedColumns={orderedColumns}
                   hidden={hidden}
+                  alwaysVisible={alwaysVisible}
                   onToggle={toggleColumn}
                   onReorder={reorderColumns}
                   onReset={resetToDefault}
@@ -497,7 +501,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                       {visibleColumns.map(key => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
-                        const thClass = col.sticky
+                        const isSticky = key === columnConfig.stickyColumn;
+                        const thClass = isSticky
                           ? stickyThBase
                           : col.sortField
                             ? `${sortableThBase} ${isActive ? 'text-primary' : ''}`
@@ -577,13 +582,14 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
+                            const isSticky = key === columnConfig.stickyColumn;
                             return (
                               <td
                                 key={key}
                                 className={
-                                  col.sticky ? stickyTdClass : (col.tdClassName ?? defaultTdClass)
+                                  isSticky ? stickyTdClass : (col.tdClassName ?? defaultTdClass)
                                 }
-                                onClick={col.sticky ? e => e.stopPropagation() : undefined}
+                                onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >
                                 {col.render(task)}
                               </td>

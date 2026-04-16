@@ -1,11 +1,3 @@
-export const categoryParams = [
-  { code: '01', description: 'Operating Income' },
-  { code: '02', description: 'Gross Income' },
-  { code: '03', description: 'Direct Operating Expenses' },
-  { code: '04', description: 'Administrative and Management Expenses' },
-  { code: '05', description: 'Fixed Charges' },
-];
-
 export const assumptionParams = [
   // income
   { code: 'I00', description: 'Room Income', sectionType: 'income' },

@@ -39,6 +39,9 @@ function resolveClientId(
 
 function buildMethod(method: DCFMethod, templateIdMap: TemplateToClientIdMap): DCFMethod {
   if (method.methodType === '13') {
+    const kind = method.detail?.refTarget?.kind ?? 'assumption';
+    const templateId = method.detail?.refTarget?.templateId ?? null;
+    const resolved = resolveClientId(templateIdMap, templateId);
     return {
       clientId: getNewId(),
       methodType: '13',
@@ -46,9 +49,11 @@ function buildMethod(method: DCFMethod, templateIdMap: TemplateToClientIdMap): D
       detail: {
         proportionPct: method.detail?.proportionPct ?? 0,
         refTarget: {
-          kind: method.detail?.refTarget?.kind ?? 'assumption',
-          templateId: method.detail?.refTarget?.templateId ?? null,
-          clientId: `${method.detail?.refTarget.kind}:${resolveClientId(templateIdMap, method.detail?.refTarget?.templateId)}`,
+          kind,
+          templateId,
+          // Empty target picker label until user picks one — backend will reject save
+          // if proportionPct > 0 with unresolved ref, but this lets template generation succeed.
+          clientId: resolved ? `${kind}:${resolved}` : null,
           dbId: null,
         },
       },

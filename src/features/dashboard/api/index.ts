@@ -1,3 +1,3 @@
 export { dashboardApi } from './dashboardApi';
-export { useTaskSummary, useAppraisalCounts, useRequestStatusSummary, useTeamWorkload, useRecentTasks, useCompanyAppraisalSummary, dashboardKeys } from './hooks';
+export { useTaskSummary, useAppraisalCounts, useAppraisalStatusSummary, useTeamWorkload, useCompanyAppraisalSummary, useReminders, useCalendarEvents, useNotes, useCreateNote, useUpdateNote, useDeleteNote, dashboardKeys } from './hooks';
 export type * from './types';
