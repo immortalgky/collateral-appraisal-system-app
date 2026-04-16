@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { DiscountedCashFlowMethodRenderer } from './DiscountedCashFlowMethodRenderer';
 import { RHFInputCell } from '../table/RHFInputCell';
 import type { DCFAssumption } from '../../types/dcf';
-import { assumptionParams, methodParams } from '../../data/dcfParameters';
+import { methodParams } from '../../data/dcfParameters';
 
 interface DiscountedCashFlowAssumptionProps {
   name: string;
@@ -48,22 +48,16 @@ export function DiscountedCashFlowAssumption({
                 )}
               />
               <RHFInputCell
-                fieldName={`${name}.assumptionType`}
+                fieldName={`${name}.assumptionName`}
                 inputType="display"
-                accessor={({ value, getValues }) => (
-                  <span
-                    className="truncate"
-                    title={
-                      getValues(`${name}.assumptionName`)
-                        ? getValues(`${name}.assumptionName`)
-                        : assumptionParams.find(p => p.code === value)?.description
-                    }
-                  >
-                    {getValues(`${name}.assumptionName`)
-                      ? getValues(`${name}.assumptionName`)
-                      : assumptionParams.find(p => p.code === value)?.description}
-                  </span>
-                )}
+                accessor={({ value }) => {
+                  const label = typeof value === 'string' ? value : '';
+                  return (
+                    <span className="truncate" title={label}>
+                      {label}
+                    </span>
+                  );
+                }}
               />
             </button>
             <div className="flex gap-1.5 items-center justify-end">

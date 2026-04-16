@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { SearchCategory } from '@shared/types/search';
 import Icon from '@/shared/components/Icon';
@@ -7,6 +7,7 @@ import { useFullSearchQuery } from '../api/search';
 import { tabConfigs } from '../components/search/tabConfigs';
 import SearchFilterBar from '../components/search/SearchFilterBar';
 import SearchResultsTable from '../components/search/SearchResultsTable';
+import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
 
 // Keys that are not filters
 const NON_FILTER_KEYS = new Set(['tab', 'q', 'page', 'pageSize']);
@@ -57,6 +58,7 @@ function AppraisalSearchPage() {
   const [pageNumber, setPageNumber] = useState(init.page);
   const [pageSize, setPageSize] = useState(init.pageSize);
   const [filters, setFilters] = useState<Record<string, string>>(init.filters);
+  const [selectedAppraisalId, setSelectedAppraisalId] = useState<string | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -200,6 +202,7 @@ function AppraisalSearchPage() {
               columns={currentTabConfig.columns}
               items={items}
               isLoading={isLoading}
+              onAppraisalClick={setSelectedAppraisalId}
             />
 
             {/* Pagination */}
@@ -217,6 +220,11 @@ function AppraisalSearchPage() {
           </div>
         </>
       )}
+
+      <ActivityTrackingSlideOver
+        appraisalId={selectedAppraisalId}
+        onClose={() => setSelectedAppraisalId(null)}
+      />
     </div>
   );
 }

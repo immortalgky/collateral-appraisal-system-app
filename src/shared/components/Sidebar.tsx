@@ -5,17 +5,17 @@ import { useUIStore } from '../store';
 import Icon from './Icon';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
-import type { NavItem } from '@shared/config/navigation';
+import type { NavItem } from '@shared/config/navigationTypes';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
 
-const TASK_ACTIVITY_PREFIX = '/tasks/activity/';
+const TASK_LIST_PATH = '/tasks';
 
-/** Extract activityId from a nav item href like `/tasks/activity/<id>`. */
+/** Extract activityId from a nav item href like `/tasks?activityId=<id>`. */
 function getTaskActivityId(href: string): string | null {
-  if (!href.startsWith(TASK_ACTIVITY_PREFIX)) return null;
-  const rest = href.slice(TASK_ACTIVITY_PREFIX.length);
-  // Guard against trailing segments / query strings.
-  return rest.split(/[/?#]/)[0] || null;
+  const qIndex = href.indexOf('?');
+  if (qIndex === -1) return null;
+  const params = new URLSearchParams(href.slice(qIndex + 1));
+  return params.get('activityId');
 }
 
 type SidebarProps = {
@@ -34,7 +34,10 @@ function MenuItem({
 }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const isActive = location.pathname === item.href;
+  const [hrefPath, hrefSearch = ''] = item.href.split('?');
+  const isActive =
+    location.pathname === hrefPath &&
+    location.search === (hrefSearch ? `?${hrefSearch}` : '');
   const hasChildren = item.children && item.children.length > 0;
   const iconStyle = (item.iconStyle || 'solid') as
     | 'solid'
@@ -87,7 +90,10 @@ function MenuItem({
       );
     }
 
-    const isChildActive = item.children?.some(child => location.pathname === child.href);
+    const isChildActive = item.children?.some(child => {
+      const [cPath, cSearch = ''] = child.href.split('?');
+      return location.pathname === cPath && location.search === (cSearch ? `?${cSearch}` : '');
+    });
 
     return (
       <li>
@@ -175,6 +181,7 @@ function MenuItem({
   }
 
   const taskActivityId = isChild ? getTaskActivityId(item.href) : null;
+  const isTaskListChild = isChild && item.href.startsWith(TASK_LIST_PATH);
 
   return (
     <li>
@@ -207,7 +214,7 @@ function MenuItem({
         <span className={clsx('text-sm font-medium text-gray-700', isChild && 'text-sm')}>
           {item.name}
         </span>
-        {taskActivityId && <TaskCountBadge activityId={taskActivityId} />}
+        {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
       </Link>
     </li>
   );
@@ -274,7 +281,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 
               <ul className="flex flex-col gap-1">
                 {navigation.map(item => (
-                  <MenuItem key={item.href} item={item} />
+                  <MenuItem key={item.itemKey || item.href} item={item} />
                 ))}
               </ul>
 
@@ -368,7 +375,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
 
           <ul className="flex flex-col gap-1">
             {navigation.map(item => (
-              <MenuItem key={item.href} item={item} collapsed={sidebarCollapsed} />
+              <MenuItem key={item.itemKey || item.href} item={item} collapsed={sidebarCollapsed} />
             ))}
           </ul>
 

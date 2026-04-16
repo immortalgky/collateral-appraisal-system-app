@@ -1,23 +1,37 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useBreadcrumbStore } from '@shared/store';
-import { mainNavigation, type NavItem } from '@shared/config/navigation';
+import { useMenuStore } from '@features/menuManagement/store';
+import { resolveLabel } from '@features/menuManagement/utils/label';
+import { useTranslation } from 'react-i18next';
+import type { NavItem } from '@shared/config/navigationTypes';
+import type { MenuTreeNode } from '@features/menuManagement/types';
 
-// Build a flat map of all routes from navigation config
+/** Recursively flatten a MenuTreeNode tree into a path→NavItem map */
 function buildRouteMap(
-  items: NavItem[],
+  nodes: MenuTreeNode[],
+  lang: string,
   map: Map<string, NavItem> = new Map(),
 ): Map<string, NavItem> {
-  for (const item of items) {
-    map.set(item.href, item);
-    if (item.children) {
-      buildRouteMap(item.children, map);
+  for (const node of nodes) {
+    if (node.path) {
+      map.set(node.path, {
+        itemKey: node.itemKey,
+        name: resolveLabel(node.labels, lang),
+        href: node.path,
+        icon: node.iconName,
+        iconStyle: node.iconStyle,
+        iconColor: node.iconColor ?? undefined,
+        canView: true,
+        canEdit: node.canEdit,
+      });
+    }
+    if (node.children?.length) {
+      buildRouteMap(node.children, lang, map);
     }
   }
   return map;
 }
-
-const routeMap = buildRouteMap(mainNavigation);
 
 /**
  * Hook to automatically track breadcrumb based on navigation
@@ -30,9 +44,13 @@ export function useBreadcrumb(customLabel?: string, customIcon?: string) {
   const push = useBreadcrumbStore(state => state.push);
   const reset = useBreadcrumbStore(state => state.reset);
   const setItems = useBreadcrumbStore(state => state.setItems);
+  const main = useMenuStore(state => state.main);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
 
   useEffect(() => {
     const path = location.pathname;
+    const routeMap = buildRouteMap(main, lang);
     const navItem = routeMap.get(path);
     const icon = customIcon || navItem?.icon;
 
@@ -43,7 +61,6 @@ export function useBreadcrumb(customLabel?: string, customIcon?: string) {
     }
 
     // If navigating to a sidebar menu item, reset and show only that item
-    // This prevents stacking when clicking different menu items
     if (navItem) {
       const label = customLabel || navItem.name;
       setItems([{ label, href: path, icon }]);
@@ -51,15 +68,11 @@ export function useBreadcrumb(customLabel?: string, customIcon?: string) {
     }
 
     // For pages not in navigation (detail pages, etc.):
-    // Only push/update when we have a valid customLabel
-    // This prevents showing requestId before requestNumber loads
     if (customLabel) {
-      // Get current items directly from store to avoid stale closure
       const currentItems = useBreadcrumbStore.getState().items;
       const existingIndex = currentItems.findIndex(i => i.href === path);
 
       if (existingIndex !== -1) {
-        // Only update if label actually changed
         if (currentItems[existingIndex].label !== customLabel) {
           const updatedItems = [...currentItems];
           updatedItems[existingIndex] = { label: customLabel, href: path, icon };
@@ -69,14 +82,13 @@ export function useBreadcrumb(customLabel?: string, customIcon?: string) {
         push({ label: customLabel, href: path, icon });
       }
     }
-  }, [location.pathname, customLabel, customIcon, push, reset, setItems]);
+  }, [location.pathname, customLabel, customIcon, push, reset, setItems, main, lang]);
 
   return { items };
 }
 
 /**
  * Hook to set breadcrumb items manually
- * Useful for pages with dynamic content or nested routes
  */
 export function useSetBreadcrumb() {
   const { setItems, push, pop, reset, items } = useBreadcrumbStore();

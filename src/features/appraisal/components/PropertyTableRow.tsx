@@ -1,6 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useNavigate } from 'react-router-dom';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
@@ -33,13 +33,14 @@ export const PropertyTableRow = ({
 }: PropertyTableRowProps) => {
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
-  const basePath = usePropertyBasePath();
+  const layoutBasePath = useBasePath();
+  const propertyBasePath = usePropertyBasePath();
 
   const handleClick = () => {
     const routeSegment = getRouteSegment(property.type);
     if (appraisalId) {
       navigate(
-        `/appraisals/${appraisalId}/${basePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
+        `${layoutBasePath}/${propertyBasePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
       );
     }
   };

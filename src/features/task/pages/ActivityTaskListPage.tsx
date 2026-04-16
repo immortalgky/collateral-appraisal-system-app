@@ -1,9 +1,10 @@
-import { useParams, Navigate } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { ActivityTaskTable } from '../components/ActivityTaskTable';
 import { getActivityConfig } from '../config/activityConfig';
 
 function ActivityTaskListPage() {
-  const { activityId } = useParams<{ activityId: string }>();
+  const [searchParams] = useSearchParams();
+  const activityId = searchParams.get('activityId') ?? undefined;
 
   if (!activityId) return <Navigate to="/tasks" replace />;
 
@@ -16,7 +17,6 @@ function ActivityTaskListPage() {
       activityId={config.activityId}
       title={config.title}
       description={config.description}
-      columns={config.columns}
     />
   );
 }

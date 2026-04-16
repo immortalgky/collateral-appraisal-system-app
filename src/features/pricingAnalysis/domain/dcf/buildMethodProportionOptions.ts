@@ -1,5 +1,3 @@
-import { assumptionParams } from '../../data/dcfParameters';
-
 type SelectOption = {
   value: string;
   label: string;
@@ -22,15 +20,9 @@ export function buildMethodProportionOptions(params: {
       value: `category:${category.clientId}`,
       label: `Total - ${category.categoryName}`,
     })),
-    ...params.assumptions.map(item => {
-      return {
-        value: `assumption:${item.assumption.clientId}`,
-        label: `${item.section.sectionName} - ${
-          item.assumption.assumptionName
-            ? item.assumption.assumptionName
-            : assumptionParams.find(p => p.code === item.assumption.assumptionType)?.description
-        }`,
-      };
-    }),
+    ...params.assumptions.map(item => ({
+      value: `assumption:${item.assumption.clientId}`,
+      label: `${item.section.sectionName} - ${item.assumption.assumptionName ?? ''}`,
+    })),
   ];
 }

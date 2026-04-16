@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { HubConnectionBuilder, LogLevel, HubConnectionState } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { signalrLogger } from '@shared/utils/signalrLogger';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationStore } from '../store';
@@ -33,7 +34,7 @@ export function useNotificationHub() {
         accessTokenFactory: () => getAccessToken() ?? '',
       })
       .withAutomaticReconnect()
-      .configureLogging(LogLevel.Warning)
+      .configureLogging(signalrLogger)
       .build();
 
     connectionRef.current = connection;
@@ -73,13 +74,18 @@ export function useNotificationHub() {
       }
     });
 
+    let cancelled = false;
+
     connection.start()
-      .then(() => console.log('[NotificationHub] SignalR connected'))
+      .then(() => {
+        if (!cancelled) console.log('[NotificationHub] SignalR connected');
+      })
       .catch(err => {
-        console.error('[NotificationHub] SignalR connection failed:', err);
+        if (!cancelled) console.error('[NotificationHub] SignalR connection failed:', err);
       });
 
     return () => {
+      cancelled = true;
       if (connection.state !== HubConnectionState.Disconnected) {
         connection.stop();
       }

@@ -1,24 +1,130 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Modal from '@/shared/components/Modal';
 import Pagination from '@/shared/components/Pagination';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useHasPermission } from '@/shared/hooks/useHasPermission';
 
-import { useGetMeetingQueue, useAddMeetingItems, useCreateMeeting } from '../api/meetings';
+import { useGetMeetingQueue, useAddMeetingItems, useCreateMeeting, useGetMeetings } from '../api/meetings';
 import MeetingFormDialog from '../components/MeetingFormDialog';
-import toast from 'react-hot-toast';
+import { MEETING_PERMISSIONS } from '../constants';
+
+// ── Add to Existing Meeting picker (MVP: inline <select>) ─────────────────────
+
+interface AddToExistingMeetingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedCount: number;
+  onConfirm: (meetingId: string) => void;
+  isBusy: boolean;
+}
+
+const AddToExistingMeetingModal = ({
+  isOpen,
+  onClose,
+  selectedCount,
+  onConfirm,
+  isBusy,
+}: AddToExistingMeetingModalProps) => {
+  const [pickedId, setPickedId] = useState('');
+
+  // Fetch Draft and Scheduled meetings to allow selection.
+  // This modal is only rendered when the parent page has already confirmed the user is MeetingAdmin.
+  const { data: draftData } = useGetMeetings({ status: 'Draft', pageSize: 100 });
+  const { data: scheduledData } = useGetMeetings({ status: 'Scheduled', pageSize: 100 });
+
+  const openMeetings = [
+    ...(draftData?.items ?? []),
+    ...(scheduledData?.items ?? []),
+  ];
+
+  const handleClose = () => {
+    if (!isBusy) {
+      setPickedId('');
+      onClose();
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!pickedId) {
+      toast.error('Select a meeting first');
+      return;
+    }
+    onConfirm(pickedId);
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={handleClose} title="Add to Existing Meeting" size="sm">
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          Select an open (Draft or Scheduled) meeting to add the{' '}
+          <strong>{selectedCount}</strong> selected appraisal{selectedCount === 1 ? '' : 's'} to.
+        </p>
+
+        {openMeetings.length === 0 ? (
+          <p className="text-sm text-gray-500 italic py-2">
+            No open meetings available. Create a new meeting first.
+          </p>
+        ) : (
+          // TODO: replace with a richer meeting picker when design spec is finalised
+          <select
+            value={pickedId}
+            onChange={e => setPickedId(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">— Select meeting —</option>
+            {openMeetings.map(m => (
+              <option key={m.id} value={m.id}>
+                {m.title} [{m.status}]
+                {m.startAt
+                  ? ` — ${new Date(m.startAt).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}`
+                  : ''}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="ghost" type="button" onClick={handleClose} disabled={isBusy}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!pickedId || isBusy || openMeetings.length === 0}
+          >
+            {isBusy ? 'Adding...' : 'Add to Meeting'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 const MeetingQueuePage = () => {
   const navigate = useNavigate();
+  const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const newMeetingDialog = useDisclosure();
+  const existingMeetingDialog = useDisclosure();
 
   const { data, isLoading } = useGetMeetingQueue({
     status: 'Queued',
@@ -77,10 +183,34 @@ const MeetingQueuePage = () => {
     );
   };
 
+  /**
+   * "Add to existing meeting" flow:
+   * User picks an open meeting → we add the selected queue items directly.
+   */
+  const handleAddToExisting = (meetingId: string) => {
+    if (selected.size === 0) return;
+    addItems.mutate(
+      { id: meetingId, body: { queueItemIds: Array.from(selected) } },
+      {
+        onSuccess: () => {
+          toast.success(`Added ${selected.size} appraisal${selected.size === 1 ? '' : 's'}`);
+          setSelected(new Set());
+          existingMeetingDialog.onClose();
+          navigate(`/meetings/${meetingId}`);
+        },
+        onError: (error: unknown) => {
+          const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
+          toast.error(detail || 'Failed to add items to meeting');
+        },
+      },
+    );
+  };
+
   const isBusy = createMeeting.isPending || addItems.isPending;
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
+      {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
@@ -98,13 +228,27 @@ const MeetingQueuePage = () => {
             <Icon name="list" style="solid" className="size-3.5 mr-1.5" />
             All Meetings
           </Button>
-          <Button size="sm" disabled={selected.size === 0 || isBusy} onClick={onOpen}>
-            <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-            Add to New Meeting{selected.size > 0 ? ` (${selected.size})` : ''}
-          </Button>
+          {hasAdmin && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={selected.size === 0 || isBusy}
+              onClick={existingMeetingDialog.onOpen}
+            >
+              <Icon name="arrow-right-to-bracket" style="solid" className="size-3.5 mr-1.5" />
+              Add to Existing{selected.size > 0 ? ` (${selected.size})` : ''}
+            </Button>
+          )}
+          {hasAdmin && (
+            <Button size="sm" disabled={selected.size === 0 || isBusy} onClick={newMeetingDialog.onOpen}>
+              <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
+              Add to New Meeting{selected.size > 0 ? ` (${selected.size})` : ''}
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Table */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-sm">
@@ -202,7 +346,20 @@ const MeetingQueuePage = () => {
         )}
       </div>
 
-      <MeetingFormDialog isOpen={isOpen} onClose={onClose} onSuccess={handleNewMeetingCreated} />
+      {/* Dialogs */}
+      <MeetingFormDialog
+        isOpen={newMeetingDialog.isOpen}
+        onClose={newMeetingDialog.onClose}
+        onSuccess={handleNewMeetingCreated}
+      />
+
+      <AddToExistingMeetingModal
+        isOpen={existingMeetingDialog.isOpen}
+        onClose={existingMeetingDialog.onClose}
+        selectedCount={selected.size}
+        onConfirm={handleAddToExisting}
+        isBusy={addItems.isPending}
+      />
     </div>
   );
 };

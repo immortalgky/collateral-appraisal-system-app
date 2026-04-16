@@ -21,10 +21,11 @@ const CancelMeetingDialog = ({ isOpen, onClose, meetingId }: CancelMeetingDialog
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<CancelMeetingFormValues>({
     resolver: zodResolver(cancelMeetingSchema),
     defaultValues: { reason: '' },
+    mode: 'onChange',
   });
 
   useEffect(() => {
@@ -39,7 +40,7 @@ const CancelMeetingDialog = ({ isOpen, onClose, meetingId }: CancelMeetingDialog
     cancelMeeting.mutate(
       {
         id: meetingId,
-        body: { reason: values.reason?.trim() ? values.reason.trim() : null },
+        body: { reason: values.reason.trim() },
       },
       {
         onSuccess: () => {
@@ -64,14 +65,14 @@ const CancelMeetingDialog = ({ isOpen, onClose, meetingId }: CancelMeetingDialog
 
         <div>
           <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 mb-1">
-            Reason
+            Reason <span className="text-red-500">*</span>
           </label>
           <textarea
             id="cancel-reason"
             rows={3}
             {...register('reason')}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Optional"
+            placeholder="Why is this meeting being cancelled?"
           />
           {errors.reason && <p className="mt-1 text-xs text-red-600">{errors.reason.message}</p>}
         </div>
@@ -85,7 +86,11 @@ const CancelMeetingDialog = ({ isOpen, onClose, meetingId }: CancelMeetingDialog
           >
             Keep Meeting
           </Button>
-          <Button variant="danger" type="submit" disabled={cancelMeeting.isPending}>
+          <Button
+            variant="danger"
+            type="submit"
+            disabled={!isValid || cancelMeeting.isPending}
+          >
             {cancelMeeting.isPending ? 'Cancelling...' : 'Cancel Meeting'}
           </Button>
         </div>

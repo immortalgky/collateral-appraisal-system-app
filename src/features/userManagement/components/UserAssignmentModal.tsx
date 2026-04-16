@@ -1,17 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
-import type { RoleUser } from '../types';
+import { useGetUsers } from '../api/users';
+import type { RoleUser, RoleScope } from '../types';
 
 interface UserAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (userIds: string[]) => void;
   currentUsers: RoleUser[];
-  /** All available users to pick from. Parent fetches and passes these. */
-  availableUsers: RoleUser[];
-  isLoadingUsers: boolean;
+  scope: RoleScope;
   isSaving: boolean;
   title?: string;
 }
@@ -21,8 +20,7 @@ const UserAssignmentModal = ({
   onClose,
   onSave,
   currentUsers,
-  availableUsers,
-  isLoadingUsers,
+  scope,
   isSaving,
   title = 'Assign Users',
 }: UserAssignmentModalProps) => {
@@ -31,22 +29,27 @@ const UserAssignmentModal = ({
     () => new Set(currentUsers.map(u => u.id)),
   );
 
-  // Sync selection when modal re-opens with fresh currentUsers
-  const handleOpen = () => {
-    setSelected(new Set(currentUsers.map(u => u.id)));
-    setSearch('');
-  };
+  // Reset to current users each time the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelected(new Set(currentUsers.map(u => u.id)));
+      setSearch('');
+    }
+  }, [isOpen]);
+
+  const { data, isLoading } = useGetUsers({ scope, pageSize: 200 });
+  const allUsers = data?.items ?? [];
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return availableUsers;
-    return availableUsers.filter(
+    if (!q) return allUsers;
+    return allUsers.filter(
       u =>
         `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
-        (u.email || '').toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q),
+        (u.email ?? '').toLowerCase().includes(q) ||
+        (u.userName ?? '').toLowerCase().includes(q),
     );
-  }, [availableUsers, search]);
+  }, [allUsers, search]);
 
   const toggle = (id: string) => {
     setSelected(prev => {
@@ -61,15 +64,17 @@ const UserAssignmentModal = ({
     onSave(Array.from(selected));
   };
 
+  const getDisplayName = (firstName: string, lastName: string, userName: string) =>
+    `${firstName} ${lastName}`.trim() || userName;
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={title}
       size="md"
-      key={isOpen ? 'open' : 'closed'}
     >
-      <div className="flex flex-col gap-4 p-6" onLoad={handleOpen}>
+      <div className="flex flex-col gap-4 p-6">
         {/* Search */}
         <div className="relative">
           <Icon
@@ -86,13 +91,41 @@ const UserAssignmentModal = ({
           />
         </div>
 
+        {/* Selected user badges */}
+        {selected.size > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from(selected).map(id => {
+              const u = allUsers.find(u => u.id === id);
+              const label = u
+                ? getDisplayName(u.firstName, u.lastName, u.userName)
+                : id;
+              return (
+                <span
+                  key={id}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                >
+                  {label}
+                  <button
+                    type="button"
+                    onClick={() => toggle(id)}
+                    className="hover:text-primary/70 leading-none"
+                    aria-label={`Remove ${label}`}
+                  >
+                    <Icon name="xmark" style="solid" className="size-3" />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         <div className="text-xs text-gray-400">
           {selected.size} user{selected.size !== 1 ? 's' : ''} selected
         </div>
 
         {/* User list */}
         <div className="max-h-80 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
-          {isLoadingUsers ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
               <Icon name="spinner" style="solid" className="size-4 animate-spin mr-2" />
               Loading users...
@@ -112,7 +145,9 @@ const UserAssignmentModal = ({
                   className="rounded border-gray-300 text-primary focus:ring-primary/30"
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-gray-800 truncate">{`${u.firstName} ${u.lastName}`.trim() || u.username}</div>
+                  <div className="text-sm font-medium text-gray-800 truncate">
+                    {getDisplayName(u.firstName, u.lastName, u.userName)}
+                  </div>
                   <div className="text-xs text-gray-400 truncate">{u.email}</div>
                 </div>
               </label>
