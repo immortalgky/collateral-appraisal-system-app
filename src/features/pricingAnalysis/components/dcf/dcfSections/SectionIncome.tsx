@@ -10,6 +10,7 @@ interface SectionIncomeProps {
   totalNumberOfYears: number;
   icon: string;
   color: SectionColor;
+  isReadOnly?: boolean;
 }
 
 export function SectionIncome({
@@ -19,6 +20,7 @@ export function SectionIncome({
   totalNumberOfYears,
   icon,
   color,
+  isReadOnly,
 }: SectionIncomeProps) {
   return (
     <DynamicSection
@@ -38,6 +40,7 @@ export function SectionIncome({
             category={category}
             totalNumberOfYears={totalNumberOfYears}
             color={color}
+            isReadOnly={isReadOnly}
           />
         );
       })}

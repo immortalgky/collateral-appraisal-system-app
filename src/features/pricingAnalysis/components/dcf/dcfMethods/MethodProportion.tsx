@@ -11,6 +11,7 @@ interface MethodProportionProps {
   method: MethodProportionWrapper;
   assumptionType: string;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 export function MethodProportion({
   name,
@@ -18,6 +19,7 @@ export function MethodProportion({
   method,
   assumptionType,
   baseStyles,
+  isReadOnly,
 }: MethodProportionProps) {
   const { getValues } = useFormContext();
   const sections = (getValues('sections') ?? []).filter(
@@ -38,7 +40,7 @@ export function MethodProportion({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-3 items-center justify-between">
                 <span>Total</span>
@@ -47,6 +49,7 @@ export function MethodProportion({
                     <RHFInputCell
                       fieldName={`${name}.detail.proportionPct`}
                       inputType="number"
+                      disabled={isReadOnly}
                       number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
                     />
                   </div>

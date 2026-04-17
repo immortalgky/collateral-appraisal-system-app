@@ -20,7 +20,8 @@ export const mapMethodCodeToValue = [
   { code: '15', value: 'grossOperatingProfit' },
 ];
 
-export function mapDCFMethodCodeToSystemType(methodCode: string) {
+export function mapDCFMethodCodeToSystemType(methodCode: string | null | undefined) {
+  if (!methodCode) return null;
   const mapping = new Map(mapMethodCodeToValue.map(c => [c.code, c.value]));
   return mapping.get(methodCode) ?? null;
 }

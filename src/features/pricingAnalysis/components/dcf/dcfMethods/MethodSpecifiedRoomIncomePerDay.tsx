@@ -8,6 +8,7 @@ interface MethodSpecifiedRoomIncomePerDayProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomePerDayWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 export function MethodSpecifiedRoomIncomePerDay({
   name,
@@ -15,12 +16,13 @@ export function MethodSpecifiedRoomIncomePerDay({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomePerDayProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Saleable Area</span>
               <RHFInputCell
@@ -37,7 +39,7 @@ export function MethodSpecifiedRoomIncomePerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
                 <span>Occupancy Rate - 1st year amt</span>
@@ -45,6 +47,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateFirstYearPct`}
                     inputType="number"
+                    disabled={isReadOnly}
                     number={{
                       decimalPlaces: 2,
                       maxIntegerDigits: 3,
@@ -58,6 +61,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRatePct`}
                     inputType="number"
+                    disabled={isReadOnly}
                     number={{
                       decimalPlaces: 2,
                       maxIntegerDigits: 3,
@@ -71,6 +75,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateYrs`}
                     inputType="number"
+                    disabled={isReadOnly}
                     number={{
                       decimalPlaces: 0,
                       maxIntegerDigits: 3,
@@ -90,6 +95,7 @@ export function MethodSpecifiedRoomIncomePerDay({
                       <RHFInputCell
                         fieldName={`${name}.detail.occupancyRate.${idx}`}
                         inputType="number"
+                        disabled={isReadOnly}
                         number={{
                           decimalPlaces: 2,
                           maxIntegerDigits: 3,
@@ -103,7 +109,7 @@ export function MethodSpecifiedRoomIncomePerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Total Number of Saleable Area</td>
             {(method.detail?.totalSaleableAreaDeductByOccRate ?? []).map((val, idx) => {
               return (
@@ -113,7 +119,7 @@ export function MethodSpecifiedRoomIncomePerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -123,7 +129,7 @@ export function MethodSpecifiedRoomIncomePerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Average Daily Rate (ADR)</td>
             {(method.detail?.avgDailyRate ?? []).map((val, idx) => {
               return (
@@ -133,7 +139,7 @@ export function MethodSpecifiedRoomIncomePerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Total Room Income</span>
             </td>

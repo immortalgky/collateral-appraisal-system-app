@@ -7,9 +7,11 @@ import type { FormValues } from '@/features/appraisal/components/tables/bType';
 export function MethodProportionModal({
   name,
   getOuterFormValues,
+  isReadOnly,
 }: {
   name: string;
   getOuterFormValues: UseFormGetValues<FormValues>;
+  isReadOnly?: boolean;
 }) {
   const sections = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
@@ -44,7 +46,7 @@ export function MethodProportionModal({
     <div className="flex flex-row gap-1.5 items-center">
       <span className={'w-44'}>Proportions</span>
       <div className={'w-44'}>
-        <RHFInputCell fieldName={`${name}.proportionPct`} inputType={'number'} />
+        <RHFInputCell fieldName={`${name}.proportionPct`} inputType={'number'} disabled={isReadOnly} />
       </div>
       <div className="flex flex-row gap-1.5 items-center">
         <span className={''}>% of</span>

@@ -13,6 +13,7 @@ interface DiscountedCashFlowAssumptionProps {
   editing: string | null;
   onOpenEditMode: (assumptionType: string) => void;
   onRemoveAssumption: () => void;
+  isReadOnly?: boolean;
 }
 
 export function DiscountedCashFlowAssumption({
@@ -22,6 +23,7 @@ export function DiscountedCashFlowAssumption({
   editing,
   onOpenEditMode,
   onRemoveAssumption,
+  isReadOnly,
 }: DiscountedCashFlowAssumptionProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -74,22 +76,26 @@ export function DiscountedCashFlowAssumption({
                     </span>
                   )}
                 />
-                <button
-                  type="button"
-                  className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
-                  onClick={() => {
-                    onOpenEditMode(assumption.clientId);
-                  }}
-                >
-                  <Icon name="pencil" style="regular" className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
-                  onClick={onRemoveAssumption}
-                >
-                  <Icon name="trash" style="regular" className="size-4" />
-                </button>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
+                    onClick={() => {
+                      onOpenEditMode(assumption.clientId);
+                    }}
+                  >
+                    <Icon name="pencil" style="regular" className="size-4" />
+                  </button>
+                )}
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
+                    onClick={onRemoveAssumption}
+                  >
+                    <Icon name="trash" style="regular" className="size-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -123,6 +129,7 @@ export function DiscountedCashFlowAssumption({
         assumption={assumption}
         method={assumption.method}
         totalNumberOfYear={totalNumberOfYears}
+        isReadOnly={isReadOnly}
       />
     </>
   );

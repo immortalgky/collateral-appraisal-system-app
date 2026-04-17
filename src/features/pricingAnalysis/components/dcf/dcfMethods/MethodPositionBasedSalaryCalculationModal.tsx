@@ -10,10 +10,12 @@ import { jobPositionParameters } from '@/features/pricingAnalysis/data/dcfParame
 interface MethodPositionBasedSalaryCalculationModalProps {
   name: string;
   getOuterFormValues: (name: string) => object;
+  isReadOnly?: boolean;
 }
 export function MethodPositionBasedSalaryCalculationModal({
   name,
   getOuterFormValues,
+  isReadOnly,
 }: MethodPositionBasedSalaryCalculationModalProps) {
   const { getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.jobPositionDetails` });
@@ -130,6 +132,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           <RHFInputCell
                             fieldName={`${name}.jobPositionDetails.${index}.jobPosition`}
                             inputType="select"
+                            disabled={isReadOnly}
                             options={jobPositionParameters.map(p => ({
                               value: p.code,
                               label: p.description,
@@ -139,23 +142,27 @@ export function MethodPositionBasedSalaryCalculationModal({
                             <RHFInputCell
                               fieldName={`${name}.jobPositionDetails.${index}.jobPositionOther`}
                               inputType="text"
+                              disabled={isReadOnly}
                               text={{ maxLength: 50 }}
                             />
                           )}
-                          <button
-                            type="button"
-                            onClick={() => handleOnRemove(index)}
-                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                            title="Delete"
-                          >
-                            <Icon style="solid" name="trash" className="size-1" />
-                          </button>
+                          {!isReadOnly && (
+                            <button
+                              type="button"
+                              onClick={() => handleOnRemove(index)}
+                              className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                              title="Delete"
+                            >
+                              <Icon style="solid" name="trash" className="size-1" />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-1.5 py-1.5 border-b border-gray-300">
                         <RHFInputCell
                           fieldName={`${name}.jobPositionDetails.${index}.salaryBahtPerPersonPerMonth`}
                           inputType="number"
+                          disabled={isReadOnly}
                           number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                         />
                       </td>
@@ -163,6 +170,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                         <RHFInputCell
                           fieldName={`${name}.jobPositionDetails.${index}.numberOfEmployees`}
                           inputType="number"
+                          disabled={isReadOnly}
                           number={{ decimalPlaces: 0, maxIntegerDigits: 4, allowNegative: false }}
                         />
                       </td>
@@ -182,20 +190,22 @@ export function MethodPositionBasedSalaryCalculationModal({
                     </tr>
                   );
                 })}
-                <tr>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => handleOnAdd()}
-                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                    >
-                      + Add Job Position
-                    </button>
-                  </td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
+                {!isReadOnly && (
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => handleOnAdd()}
+                        className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                      >
+                        + Add Job Position
+                      </button>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                )}
                 <tr>
                   <td className="sticky bottom-0 px-1.5 bg-white">Total</td>
                   <td className="sticky bottom-0 px-1.5 bg-white">
@@ -257,6 +267,7 @@ export function MethodPositionBasedSalaryCalculationModal({
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 2,
                 maxIntegerDigits: 3,
@@ -269,6 +280,7 @@ export function MethodPositionBasedSalaryCalculationModal({
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,

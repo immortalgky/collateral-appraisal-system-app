@@ -7,6 +7,7 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDayProps {
   totalNumberOfYears: number;
   method: MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
   expanded,
@@ -17,7 +18,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -27,7 +28,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Room Income</span>
               <span>({method.detail?.sumSaleableArea ?? 0} rooms)</span>

@@ -45,6 +45,7 @@ import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLease
 import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
 import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
+import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
 import {
   ReadOnlyPageWrapper,
@@ -106,7 +107,12 @@ export const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
-      // Appraisal Search
+      // Appraisal List (enhanced search with filters, smart views, export)
+      {
+        path: 'appraisals/list',
+        element: <AppraisalListPage />,
+      },
+      // Appraisal Search (global cross-entity search)
       {
         path: 'appraisals/search',
         element: <AppraisalSearchPage />,

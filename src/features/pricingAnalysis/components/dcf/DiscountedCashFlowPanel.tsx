@@ -9,12 +9,14 @@ import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants.ts';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBestUsed';
+import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext.tsx';
 import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
 import { pricingTemplateDtoToDcfTemplate } from '../../adapters/pricingTemplateDtoToDcfTemplate';
 import { useGetPricingTemplates, useGetPricingTemplateByCode, useSaveIncomeAnalysis, useGetIncomeAnalysis, usePreviewIncomeAnalysis } from '../../api';
 import { mapDCFFormToSaveRequest } from '../../mappers/formToSaveRequest';
 import { mapIncomeAnalysisToDCFForm } from '../../mappers/analysisToForm';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { DiscountedCashFlowSummaryAssumption } from './DiscountedCashFlowSummaryAssumption';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -41,6 +43,7 @@ export function DiscountedCashFlowPanel({
   onCalculationMethodDirty: _onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
+  const isReadOnly = usePageReadOnly();
   const methods = useForm<DCFFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(DCFForm),
@@ -52,6 +55,7 @@ export function DiscountedCashFlowPanel({
   const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showAssumptionSummary, setShowAssumptionSummary] = useState(false);
 
   const { data: pricingTemplates = [] } = useGetPricingTemplates(true);
   const { data: templateDto } = useGetPricingTemplateByCode(selectedTemplateCode || undefined);
@@ -271,9 +275,17 @@ export function DiscountedCashFlowPanel({
             <DiscountedCashFlowTable
               totalNumberOfYears={getValues('totalNumberOfYears')}
               properties={properties ?? []}
+              isReadOnly={isReadOnly}
             />
 
-            <DiscountedCashFlowHighestBestUsed />
+            <DiscountedCashFlowSummaryAssumption
+              properties={properties ?? []}
+              getValues={getValues}
+              showAssumptionSummary={showAssumptionSummary}
+              onShowAssumptionSummary={() => setShowAssumptionSummary(!showAssumptionSummary)}
+            />
+
+            <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
 
             {saveError && (
               <p className="text-sm text-red-600 px-1">{saveError}</p>

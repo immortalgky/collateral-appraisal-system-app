@@ -6,16 +6,8 @@ import FormCard from '@/shared/components/sections/FormCard';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import Textarea from '@/shared/components/inputs/Textarea';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import {
-  useWorkflowInstanceId,
-  useActivityId,
-  useIsTaskOwner,
-} from '@/features/appraisal/context/AppraisalContext';
-import {
-  useGetActivityActions,
-  useGetTaskHistory,
-  type TaskHistoryItem,
-} from '@/features/appraisal/api/workflow';
+import { useActivityId, useIsTaskOwner, useWorkflowInstanceId, } from '@/features/appraisal/context/AppraisalContext';
+import { type TaskHistoryItem, useGetActivityActions, useGetTaskHistory, } from '@/features/appraisal/api/workflow';
 import { useGetEligibleStaff } from '@/features/appraisal/api/administration';
 import { RaiseFollowupDialog } from '@/features/document-followup/components/RaiseFollowupDialog';
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
@@ -88,7 +80,7 @@ const DecisionSection = ({
   );
 
   const isManualAssignment =
-    selectedAction?.assignmentMode === 'manual' && !!selectedAction.targetActivityId;
+    selectedAction?.assignmentMode === 'user' && !!selectedAction.targetActivityId;
 
   const { data: eligibleStaff, isLoading: isStaffLoading } = useGetEligibleStaff(
     workflowInstanceId,
@@ -125,7 +117,11 @@ const DecisionSection = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 mb-5 px-3 py-2.5 rounded-lg bg-gradient-to-r from-cyan-50 to-transparent border border-cyan-100">
               <div className="w-7 h-7 rounded-md bg-cyan-100 flex items-center justify-center shrink-0">
-                <Icon name="clock-rotate-left" style="solid" className="w-3.5 h-3.5 text-cyan-600" />
+                <Icon
+                  name="clock-rotate-left"
+                  style="solid"
+                  className="w-3.5 h-3.5 text-cyan-600"
+                />
               </div>
               <h3 className="text-sm font-semibold text-gray-800">Activity Tracking</h3>
             </div>
@@ -160,7 +156,11 @@ const DecisionSection = ({
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Decision</label>
                   {selectedDecision ? (
-                    <Badge type="vote" value={badgeMap[selectedDecision] ?? selectedDecision} size="md" />
+                    <Badge
+                      type="vote"
+                      value={badgeMap[selectedDecision] ?? selectedDecision}
+                      size="md"
+                    />
                   ) : (
                     <span className="text-sm text-gray-400">No decision made</span>
                   )}
@@ -188,7 +188,7 @@ const DecisionSection = ({
                         required
                         options={decisionOptions}
                         value={selectedDecision ?? undefined}
-                        onChange={(value) => {
+                        onChange={value => {
                           // Clear stale assignee when decision changes — target activity may differ
                           onAssigneeChange(null);
                           onDecisionChange(value);
@@ -197,13 +197,17 @@ const DecisionSection = ({
                       />
                       {selectedDecision && (
                         <div className="mt-2">
-                          <Badge type="vote" value={badgeMap[selectedDecision] ?? selectedDecision} size="sm" />
+                          <Badge
+                            type="vote"
+                            value={badgeMap[selectedDecision] ?? selectedDecision}
+                            size="sm"
+                          />
                         </div>
                       )}
                     </div>
 
-                    {isManualAssignment && (
-                      isStaffLoading ? (
+                    {isManualAssignment &&
+                      (isStaffLoading ? (
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
                           Loading assignees...
@@ -217,13 +221,12 @@ const DecisionSection = ({
                           onChange={onAssigneeChange}
                           placeholder="Select an assignee..."
                         />
-                      )
-                    )}
+                      ))}
 
                     <Textarea
                       label="Comments"
                       value={comments}
-                      onChange={(e) => onCommentsChange(e.target.value)}
+                      onChange={e => onCommentsChange(e.target.value)}
                       placeholder="Enter your comments or reason for this decision..."
                     />
 

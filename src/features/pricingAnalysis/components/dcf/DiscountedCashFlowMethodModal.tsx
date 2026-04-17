@@ -10,6 +10,7 @@ import {
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
+import { createDefaultMethod } from '../../domain/dcf/createEmptyMethodDetail';
 import { buildDiscountedCashFlowCategoryOptions } from '../../adapters/buildDiscountedCashFlowCategoryOptions';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
@@ -32,6 +33,7 @@ interface DiscountedCashFlowMethodModalProps {
   onCancelEditMode: () => void;
   onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  isReadOnly?: boolean;
 }
 export function DiscountedCashFlowMethodModal({
   editing,
@@ -41,6 +43,7 @@ export function DiscountedCashFlowMethodModal({
   onCancelEditMode,
   onSaveEditMode,
   size,
+  isReadOnly,
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
@@ -68,13 +71,12 @@ export function DiscountedCashFlowMethodModal({
     (nextMethodType: string) => {
       const currentValues = getValues();
 
+      const newMethod = createDefaultMethod(
+        nextMethodType as AssumptionEditDraft['method']['methodType'],
+      );
       reset({
         ...currentValues,
-        method: {
-          ...currentValues.method,
-          methodType: nextMethodType as AssumptionEditDraft['method']['methodType'],
-          detail: undefined,
-        },
+        method: newMethod,
       });
     },
     [getValues, reset],
@@ -227,6 +229,7 @@ export function DiscountedCashFlowMethodModal({
               methodType={systemMethodType}
               properties={properties}
               getOuterFormValues={getOuterFormValues}
+              isReadOnly={isReadOnly}
             />
           )}
 
@@ -240,7 +243,7 @@ export function DiscountedCashFlowMethodModal({
             >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" size="sm">
+            <Button type="submit" variant="primary" size="sm" disabled={isReadOnly}>
               Save
             </Button>
           </div>

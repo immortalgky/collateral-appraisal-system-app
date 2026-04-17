@@ -86,7 +86,7 @@ function resizeRowSeasons(row: RoomIncomeRow, seasonCount: number): RoomIncomeRo
   };
 }
 
-export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: string }) {
+export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name, isReadOnly }: { name: string; isReadOnly?: boolean }) {
   const { control, getValues, setValue } = useFormContext();
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -176,6 +176,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
           <RHFInputCell
             fieldName="seasonCount"
             inputType="number"
+            disabled={isReadOnly}
             onUserChange={v => {
               if (v) handleSeasonCountChange(v);
               return v;
@@ -205,6 +206,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.seasonName`}
                           inputType="text"
+                          disabled={isReadOnly}
                           text={{ maxLength: 50 }}
                         />
                       </div>
@@ -213,6 +215,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.numberOfMonths`}
                           inputType="number"
+                          disabled={isReadOnly}
                           number={{
                             decimalPlaces: 0,
                             maxIntegerDigits: 2,
@@ -226,6 +229,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.description`}
                           inputType="text"
+                          disabled={isReadOnly}
                           text={{ maxLength: 100 }}
                         />
                       </div>
@@ -261,6 +265,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${rowIndex}.roomType`}
                           inputType="select"
+                          disabled={isReadOnly}
                           options={roomTypeParameters.map(p => ({
                             value: p.code,
                             label: p.description,
@@ -270,17 +275,20 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${rowIndex}.roomTypeOther`}
                             inputType="text"
+                            disabled={isReadOnly}
                             text={{ maxLength: 50 }}
                           />
                         )}
-                        <button
-                          type="button"
-                          onClick={() => remove(rowIndex)}
-                          className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                          title="Delete"
-                        >
-                          <Icon style="solid" name="trash" className="size-1" />
-                        </button>
+                        {!isReadOnly && (
+                          <button
+                            type="button"
+                            onClick={() => remove(rowIndex)}
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            title="Delete"
+                          >
+                            <Icon style="solid" name="trash" className="size-1" />
+                          </button>
+                        )}
                       </div>
                     </td>
 
@@ -296,6 +304,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
                               inputType="number"
+                              disabled={isReadOnly}
                               number={{
                                 decimalPlaces: 2,
                                 maxIntegerDigits: 15,
@@ -307,6 +316,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.saleableArea`}
                               inputType="number"
+                              disabled={isReadOnly}
                               number={{
                                 decimalPlaces: 0,
                                 maxIntegerDigits: 6,
@@ -328,6 +338,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                   </tr>
                 );
               })}
+              {!isReadOnly && (
               <tr>
                 <td className={clsx('border-b border-r border-gray-300 p-1')}>
                   <button
@@ -353,6 +364,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
                   );
                 })}
               </tr>
+              )}
             </tbody>
 
             <tfoot>
@@ -445,6 +457,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
             />
           </div>
@@ -455,6 +468,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 2,
                 maxIntegerDigits: 3,
@@ -467,6 +481,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,
@@ -483,6 +498,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
             <RHFInputCell
               fieldName={`${name}.occupancyRateFirstYearPct`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 2,
                 maxIntegerDigits: 3,
@@ -496,6 +512,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
             <RHFInputCell
               fieldName={`${name}.occupancyRatePct`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 2,
                 maxIntegerDigits: 3,
@@ -509,6 +526,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name }: { name: 
             <RHFInputCell
               fieldName={`${name}.occupancyRateYrs`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,

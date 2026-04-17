@@ -90,19 +90,17 @@ function ReminderWidget() {
                   </div>
 
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                    {item.appraisalNumber && (
+                      <span className="text-xs font-semibold text-blue-600">
+                        {item.appraisalNumber}
+                      </span>
+                    )}
                     <span className="text-sm font-medium text-gray-800 truncate">
                       {item.title}
                     </span>
-                    <div className="flex items-center gap-2">
-                      {item.appraisalNumber && (
-                        <span className="text-xs font-medium text-blue-600">
-                          {item.appraisalNumber}
-                        </span>
-                      )}
-                      {dueLabel && (
-                        <span className="text-xs text-gray-400">{dueLabel}</span>
-                      )}
-                    </div>
+                    {dueLabel && (
+                      <span className="text-xs text-gray-400">{dueLabel}</span>
+                    )}
                   </div>
 
                   {item.overdue && (

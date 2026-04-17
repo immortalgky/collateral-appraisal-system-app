@@ -10,10 +10,12 @@ import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameter
 interface MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps {
   name: string;
   getOuterFormValues: (name: string) => object;
+  isReadOnly?: boolean;
 }
 export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   name,
   getOuterFormValues,
+  isReadOnly,
 }: MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps) {
   const { getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
@@ -143,6 +145,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${index}.roomType`}
                             inputType="select"
+                            disabled={isReadOnly}
                             options={roomTypeParameters.map(p => ({
                               value: p.code,
                               label: p.description,
@@ -152,23 +155,27 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${index}.roomTypeOther`}
                               inputType="text"
+                              disabled={isReadOnly}
                               text={{ maxLength: 50 }}
                             />
                           )}
-                          <button
-                            type="button"
-                            onClick={() => handleOnRemove(index)}
-                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                            title="Delete"
-                          >
-                            <Icon style="solid" name="trash" className="size-1" />
-                          </button>
+                          {!isReadOnly && (
+                            <button
+                              type="button"
+                              onClick={() => handleOnRemove(index)}
+                              className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                              title="Delete"
+                            >
+                              <Icon style="solid" name="trash" className="size-1" />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-1.5 py-1.5 border-b border-gray-300">
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${index}.roomExpensePerDay`}
                           inputType="number"
+                          disabled={isReadOnly}
                           number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                         />
                       </td>
@@ -176,6 +183,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${index}.saleableArea`}
                           inputType="number"
+                          disabled={isReadOnly}
                           number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
                         />
                       </td>
@@ -208,20 +216,22 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                     </tr>
                   );
                 })}
-                <tr>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => handleOnAdd()}
-                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                    >
-                      + Add Room
-                    </button>
-                  </td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
+                {!isReadOnly && (
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => handleOnAdd()}
+                        className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                      >
+                        + Add Room
+                      </button>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                )}
                 <tr>
                   <td className="sticky bottom-0 px-1.5 bg-white"></td>
                   <td className="sticky bottom-0 px-1.5 bg-white"></td>
@@ -284,6 +294,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 2,
                 maxIntegerDigits: 3,
@@ -296,6 +307,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
               inputType={'number'}
+              disabled={isReadOnly}
               number={{
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,

@@ -31,3 +31,10 @@ dist-ssr
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Claude Code local tooling state
+.claude/agents/
+.claude/plans/
+.claude/tasks/
+.claude/worktrees/
+.claude/settings.local.json

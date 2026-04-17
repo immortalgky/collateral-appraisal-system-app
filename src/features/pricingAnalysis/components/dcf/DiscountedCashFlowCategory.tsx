@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
@@ -7,6 +7,7 @@ import { useFormContext } from 'react-hook-form';
 import { type DCFAssumption, type DCFCategory, type DCFSection } from '../../types/dcf';
 import { DiscountedCashFlowMethodModal } from './DiscountedCashFlowMethodModal';
 import { useAssumptionManagement } from '../../domain/dcf/useAssumptionManagement';
+import { useAssumptionEditor } from '../../domain/dcf/useAssumptionEditor';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
@@ -16,6 +17,7 @@ interface DiscountedCashFlowCategoryProps {
   totalNumberOfYears: number;
   color: SectionColor;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 
 export function DiscountedCashFlowCategory({
@@ -26,43 +28,22 @@ export function DiscountedCashFlowCategory({
   totalNumberOfYears,
   color,
   baseStyles,
+  isReadOnly,
 }: DiscountedCashFlowCategoryProps) {
   const { getValues, setValue, control } = useFormContext();
 
   const {
     fields,
     editing,
+    activeAssumption,
     handleOnAddAssumption,
     handleOnRemoveAssumption,
     handleOnOpenEditMode,
     handleOnCancelEditMode,
     handleOnSaveEditMode,
-  } = useAssumptionManagement(name, getValues, setValue, control);
+  } = useAssumptionManagement({ name, getValues, setValue, control });
 
-  const activeAssumption = fields
-    .map((_, idx) => getValues(`${name}.assumptions.${idx}`) as DCFAssumption)
-    .find(a => a?.clientId === editing);
-
-  const modalInitialData = useMemo(() => {
-    if (!activeAssumption) return null;
-
-    return {
-      targetSectionClientId: section.clientId,
-      targetCategoryClientId: category.clientId,
-      targetAssumptionClientId: activeAssumption.clientId,
-      assumptionType: activeAssumption.assumptionType ?? null,
-      assumptionName: activeAssumption.assumptionName ?? null,
-      displayName: activeAssumption.assumptionName ?? null,
-      method: activeAssumption.method ?? null,
-    };
-  }, [
-    section.clientId,
-    category.clientId,
-    activeAssumption?.clientId,
-    activeAssumption?.assumptionType,
-    activeAssumption?.assumptionName,
-    activeAssumption?.method,
-  ]);
+  const { modalInitialData } = useAssumptionEditor({ section, category, activeAssumption });
 
   const [isExpanded, setExpanded] = useState(true);
 
@@ -130,6 +111,7 @@ export function DiscountedCashFlowCategory({
                   totalNumberOfYears={totalNumberOfYears}
                   onOpenEditMode={handleOnOpenEditMode}
                   onRemoveAssumption={() => handleOnRemoveAssumption(idx)}
+                  isReadOnly={isReadOnly}
                 />
               </Fragment>
             );
@@ -144,25 +126,28 @@ export function DiscountedCashFlowCategory({
               onCancelEditMode={handleOnCancelEditMode}
               onSaveEditMode={handleOnSaveEditMode}
               size="2xl"
+              isReadOnly={isReadOnly}
             />
           )}
 
-          <tr>
-            <td className={clsx(baseStyles.rowHeader)}>
-              <div className="flex flex-row items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleOnAddAssumption}
-                  className="px-1.5 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                >
-                  + Add Assumption
-                </button>
-              </div>
-            </td>
-            {Array.from({ length: totalNumberOfYears }, (_, index) => (
-              <td key={index} className={clsx(baseStyles.rowBody)} />
-            ))}
-          </tr>
+          {!isReadOnly && (
+            <tr>
+              <td className={clsx(baseStyles.rowHeader)}>
+                <div className="flex flex-row items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleOnAddAssumption}
+                    className="px-1.5 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                  >
+                    + Add Assumption
+                  </button>
+                </div>
+              </td>
+              {Array.from({ length: totalNumberOfYears }, (_, index) => (
+                <td key={index} className={clsx(baseStyles.rowBody)} />
+              ))}
+            </tr>
+          )}
         </>
       )}
     </>

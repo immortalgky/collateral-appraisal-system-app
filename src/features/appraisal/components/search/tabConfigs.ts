@@ -146,3 +146,85 @@ const propertiesTab: TabConfig = {
 };
 
 export const tabConfigs: TabConfig[] = [requestsTab, customersTab, propertiesTab];
+
+// ── Enhanced Appraisal Search Config (for AppraisalListPage) ──
+
+export interface AppraisalColumnDef {
+  key: string;
+  label: string;
+  sortable?: boolean;
+}
+
+export const appraisalFilters: FilterField[] = [
+  {
+    key: 'status',
+    label: 'Status',
+    type: 'select',
+    placeholder: 'All statuses',
+    options: [
+      { value: 'Pending', label: 'Pending' },
+      { value: 'Assigned', label: 'Assigned' },
+      { value: 'InProgress', label: 'In Progress' },
+      { value: 'UnderReview', label: 'Under Review' },
+      { value: 'Completed', label: 'Completed' },
+      { value: 'Cancelled', label: 'Cancelled' },
+    ],
+  },
+  {
+    key: 'priority',
+    label: 'Priority',
+    type: 'select',
+    placeholder: 'All priorities',
+    options: [
+      { value: 'Normal', label: 'Normal' },
+      { value: 'High', label: 'High' },
+    ],
+  },
+  {
+    key: 'slaStatus',
+    label: 'SLA Status',
+    type: 'select',
+    placeholder: 'All SLA',
+    options: [
+      { value: 'OnTrack', label: 'On Track' },
+      { value: 'AtRisk', label: 'At Risk' },
+      { value: 'Breached', label: 'Breached' },
+    ],
+  },
+  {
+    key: 'appraisalType',
+    label: 'Type',
+    type: 'select',
+    placeholder: 'All types',
+    options: [
+      { value: 'New', label: 'New' },
+      { value: 'Revaluation', label: 'Revaluation' },
+    ],
+  },
+  {
+    key: 'assignmentType',
+    label: 'Assignment',
+    type: 'select',
+    placeholder: 'All assignments',
+    options: [
+      { value: 'Internal', label: 'Internal' },
+      { value: 'External', label: 'External' },
+    ],
+  },
+  { key: 'province', label: 'Province', type: 'text', placeholder: 'Province...' },
+  { key: 'createdFrom', label: 'Created From', type: 'date' },
+  { key: 'createdTo', label: 'Created To', type: 'date' },
+  { key: 'slaDueDateFrom', label: 'SLA Due From', type: 'date' },
+  { key: 'slaDueDateTo', label: 'SLA Due To', type: 'date' },
+];
+
+export const appraisalColumns: AppraisalColumnDef[] = [
+  { key: 'appraisalNumber', label: 'Appraisal No.', sortable: true },
+  { key: 'customerName', label: 'Customer', sortable: true },
+  { key: 'status', label: 'Status', sortable: true },
+  { key: 'priority', label: 'Priority', sortable: true },
+  { key: 'slaStatus', label: 'SLA', sortable: true },
+  { key: 'province', label: 'Province', sortable: true },
+  { key: 'assignmentType', label: 'Assignment', sortable: true },
+  { key: 'createdAt', label: 'Created', sortable: true },
+];

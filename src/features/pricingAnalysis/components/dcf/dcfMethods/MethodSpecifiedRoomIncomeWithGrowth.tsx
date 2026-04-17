@@ -7,6 +7,7 @@ interface MethodSpecifiedRoomIncomeWithGrowthProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomeWithGrowthWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 export function MethodSpecifiedRoomIncomeWithGrowth({
   expanded,
@@ -17,7 +18,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -27,7 +28,7 @@ export function MethodSpecifiedRoomIncomeWithGrowth({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Room Income</span>
               <span>({method.detail?.saleableArea ?? 0} rooms)</span>
