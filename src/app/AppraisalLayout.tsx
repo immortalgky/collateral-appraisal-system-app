@@ -19,35 +19,29 @@ import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useUIStore } from '@shared/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
 
-const SEARCH_READONLY_KEY = 'searchReadOnly';
+const RETURN_PATH_KEY = 'appraisalReturnPath';
 
-function getSearchReadOnly(appraisalId: string, locationState: any) {
-  const fromLocationState = locationState?.fromSearch === true;
-  const returnPath = (locationState?.returnPath as string) ?? '/tasks';
-
-  if (fromLocationState) {
-    // Fresh navigation from search — persist to sessionStorage
-    sessionStorage.setItem(
-      SEARCH_READONLY_KEY,
-      JSON.stringify({ appraisalId, returnPath }),
-    );
-    return { active: true, returnPath };
+/**
+ * Resolve the return path for the Exit button.
+ * Priority: location.state (fresh entry) → sessionStorage (internal navigation) → fallback.
+ * Persists to sessionStorage so sidebar navigation doesn't lose the original returnPath.
+ */
+function resolveReturnPath(appraisalId: string, locationState: unknown): string {
+  const fromState = (locationState as any)?.returnPath as string | undefined;
+  if (fromState) {
+    sessionStorage.setItem(RETURN_PATH_KEY, JSON.stringify({ appraisalId, returnPath: fromState }));
+    return fromState;
   }
-
-  // Check sessionStorage (page refresh case)
   try {
-    const stored = sessionStorage.getItem(SEARCH_READONLY_KEY);
+    const stored = sessionStorage.getItem(RETURN_PATH_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.appraisalId?.toLowerCase() === appraisalId?.toLowerCase()) {
-        return { active: true, returnPath: parsed.returnPath ?? '/tasks' };
+        return parsed.returnPath ?? '/appraisals/search';
       }
     }
-  } catch {
-    /* ignore parse errors */
-  }
-
-  return { active: false, returnPath: '/tasks' };
+  } catch { /* ignore */ }
+  return '/appraisals/search';
 }
 
 const userNavigation = [
@@ -65,6 +59,7 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   administration: { label: 'Administration', icon: 'user-tie' },
   appointment: { label: 'Appointment & Fee', icon: 'calendar-check' },
   summary: { label: 'Summary & Decision', icon: 'clipboard-check' },
+  'activity-tracking': { label: 'Activity Tracking', icon: 'diagram-project' },
   property: { label: 'Property Information', icon: 'buildings' },
   'property-pma': { label: 'Property Information (PMA)', icon: 'buildings' },
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
@@ -108,12 +103,11 @@ function AppraisalLayout() {
   });
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
 
-  // Derive search read-only from location state (fresh navigation from search)
-  // or sessionStorage (internal navigation / page refresh within the same appraisal).
-  // Using useMemo ensures it stays consistent across all navigations without
-  // relying on React state that could desync from sessionStorage.
-  const searchReadOnly = useMemo(
-    () => getSearchReadOnly(appraisalId!, location.state),
+  // /appraisals/:appraisalId/* is always read-only — editable work happens under /tasks/:taskId/*.
+  // Persist returnPath in sessionStorage so internal sidebar navigation doesn't lose it.
+  const returnPath = useMemo(
+    () => resolveReturnPath(appraisalId!, location.state),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [appraisalId, location.state],
   );
 
@@ -131,9 +125,7 @@ function AppraisalLayout() {
   const breadcrumbItems = useMemo(() => {
     const appraisalNo = appraisalData?.appraisalNumber || appraisalData?.id || appraisalId;
     const items = [
-      searchReadOnly.active
-        ? { label: 'Appraisal Search', href: searchReadOnly.returnPath, icon: 'magnifying-glass' }
-        : { label: 'Task', href: '/tasks', icon: 'list-check' },
+      { label: 'Appraisal Search', href: returnPath, icon: 'magnifying-glass' },
       { label: appraisalNo || '...', href: `/appraisals/${appraisalId}`, icon: 'file-certificate' },
     ];
 
@@ -198,7 +190,7 @@ function AppraisalLayout() {
     }
 
     return items;
-  }, [appraisalData, appraisalId, location.pathname, searchReadOnly]);
+  }, [appraisalData, appraisalId, location.pathname, returnPath]);
 
   // If no appraisalId, this shouldn't render
   if (!appraisalId) {
@@ -283,18 +275,17 @@ function AppraisalLayout() {
         <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
 
         <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
-          {searchReadOnly.active && (
-            <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0">
+          <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0">
               <div className="flex items-center gap-2">
                 <Icon name="lock" style="solid" className="size-3.5 text-amber-600" />
                 <span className="text-sm font-medium text-amber-700">Read-Only Mode</span>
-                <span className="text-sm text-amber-600">— Opened from search</span>
+                <span className="text-sm text-amber-600">— View Only</span>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  sessionStorage.removeItem(SEARCH_READONLY_KEY);
-                  navigate(searchReadOnly.returnPath);
+                  sessionStorage.removeItem(RETURN_PATH_KEY);
+                  navigate(returnPath);
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
               >
@@ -302,10 +293,9 @@ function AppraisalLayout() {
                 Exit
               </button>
             </div>
-          )}
           <Navbar userNavigation={userNavigation} />
 
-          <PageReadOnlyContext.Provider value={searchReadOnly.active}>
+          <PageReadOnlyContext.Provider value={true}>
           <div className="flex-1 flex min-h-0">
             {/* Main Content */}
             <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0">

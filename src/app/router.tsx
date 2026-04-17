@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
 import HomePage from '../features/dashboard/pages/HomePage';
@@ -14,6 +14,12 @@ import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
 import ActivityTaskListPage from '@/features/task/pages/ActivityTaskListPage';
+
+function TaskPageDispatcher() {
+  const [searchParams] = useSearchParams();
+  const activityId = searchParams.get('activityId');
+  return activityId ? <ActivityTaskListPage /> : <TaskListingPage />;
+}
 import NotificationPage from '@/features/notification/pages/NotificationPage';
 import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
 import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
@@ -33,6 +39,7 @@ import MarketComparableTemplateDetailPage from '@features/templateManagement/pag
 import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
 import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
 import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
+import ActivityTrackingPage from '@/features/appraisal/pages/ActivityTrackingPage';
 import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
 import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
 import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
@@ -52,6 +59,7 @@ import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
+import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
 import BlockCondoPage from '@/features/blockCondo/pages/BlockCondoPage';
 import ModelDetailPage from '@/features/blockCondo/pages/ModelDetailPage';
 import TowerDetailPage from '@/features/blockCondo/pages/TowerDetailPage';
@@ -61,6 +69,8 @@ import MeetingListPage from '@/features/meeting/pages/MeetingListPage';
 import MeetingQueuePage from '@/features/meeting/pages/MeetingQueuePage';
 import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
+import MenuListPage from '@features/menuManagement/pages/MenuListPage';
+import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -123,8 +133,7 @@ export const router = createBrowserRouter([
       {
         path: 'tasks',
         children: [
-          { index: true, element: <TaskListingPage /> },
-          { path: 'activity/:activityId', element: <ActivityTaskListPage /> },
+          { index: true, element: <TaskPageDispatcher /> },
         ],
       },
       // Meeting Routes (tier-3 approval gate)
@@ -202,6 +211,16 @@ export const router = createBrowserRouter([
           { path: 'roles', element: <RoleListPage /> },
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
+          // Menu management — gated by MENU_MANAGE permission
+          {
+            path: 'menus',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="MENU_MANAGE" />,
+            children: [
+              { index: true, element: <MenuListPage /> },
+              { path: 'new', element: <MenuEditPage /> },
+              { path: ':menuId', element: <MenuEditPage /> },
+            ],
+          },
         ],
       },
       // Template Management Routes
@@ -583,6 +602,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'activity-tracking',
+        element: <ActivityTrackingPage />,
+      },
+      {
         path: 'groups/:groupId/pricing-analysis',
         element: (
           <AppraisalReadOnlyWrapper pageName="Property Information">
@@ -603,6 +626,12 @@ export const router = createBrowserRouter([
         element: <Appraisal360Page />,
       },
     ],
+  },
+  // Task Opening Gate — runs before TaskLayout, no sidebar
+  {
+    path: 'tasks/:taskId/opening',
+    element: <ProtectedRoute component={<OpeningTaskPage />} />,
+    errorElement: <ErrorPage />,
   },
   // Task Routes (separate layout with ownership validation)
   {
@@ -945,6 +974,10 @@ export const router = createBrowserRouter([
             <DecisionSummaryPage />
           </AppraisalReadOnlyWrapper>
         ),
+      },
+      {
+        path: 'activity-tracking',
+        element: <ActivityTrackingPage />,
       },
       {
         path: 'groups/:groupId/pricing-analysis',

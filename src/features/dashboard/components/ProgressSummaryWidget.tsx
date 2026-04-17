@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
-import { useRequestStatusSummary } from '../api';
+import { useAppraisalStatusSummary } from '../api';
 
 type ProgressItem = {
   label: string;
@@ -10,38 +10,47 @@ type ProgressItem = {
   percentage: string;
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: '#3b82f6',
-  NEW: '#06b6d4',
-  SUBMITTED: '#f97316',
-  ASSIGNED: '#a855f7',
-  INPROGRESS: '#ef4444',
-  COMPLETED: '#22c55e',
-  CANCELLED: '#6b7280',
+const STATUS_ORDER = ['Pending', 'InProgress', 'UnderReview', 'Completed', 'Cancelled'] as const;
+
+const STATUS_LABELS: Record<(typeof STATUS_ORDER)[number], string> = {
+  Pending: 'Pending',
+  InProgress: 'In Progress',
+  UnderReview: 'Under Review',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+};
+
+const STATUS_COLORS: Record<(typeof STATUS_ORDER)[number], string> = {
+  Pending: '#6b7280',
+  InProgress: '#3b82f6',
+  UnderReview: '#f59e0b',
+  Completed: '#10b981',
+  Cancelled: '#ef4444',
 };
 
 function ProgressSummaryWidget() {
-  const { data: apiData } = useRequestStatusSummary();
+  const { data: apiData } = useAppraisalStatusSummary();
 
   const { data, total } = useMemo(() => {
-    if (apiData?.items && apiData.items.length > 0) {
-      const items: ProgressItem[] = apiData.items.map((item) => ({
-        label: item.status,
-        value: item.count,
-        color: STATUS_COLORS[item.status] || '#6b7280',
-        percentage: '0%',
-      }));
-      const sum = items.reduce((s, i) => s + i.value, 0);
-      return {
-        data: items.map((i) => ({
-          ...i,
-          percentage: sum > 0 ? `${((i.value / sum) * 100).toFixed(2)}%` : '0%',
-        })),
-        total: sum,
-      };
+    const counts = new Map<string, number>();
+    for (const item of apiData?.items ?? []) {
+      counts.set(item.status, item.count);
     }
-    // Fallback empty state
-    return { data: [] as ProgressItem[], total: 0 };
+    // Always render the 5 canonical statuses in fixed order, filling 0 when missing.
+    const items: ProgressItem[] = STATUS_ORDER.map((status) => ({
+      label: STATUS_LABELS[status],
+      value: counts.get(status) ?? 0,
+      color: STATUS_COLORS[status],
+      percentage: '0%',
+    }));
+    const sum = items.reduce((s, i) => s + i.value, 0);
+    return {
+      data: items.map((i) => ({
+        ...i,
+        percentage: sum > 0 ? `${((i.value / sum) * 100).toFixed(1)}%` : '0%',
+      })),
+      total: sum,
+    };
   }, [apiData]);
 
   // Calculate donut chart segments
@@ -51,7 +60,7 @@ function ProgressSummaryWidget() {
 
   let accumulatedOffset = 0;
   const segments = data.map((item) => {
-    const percentage = item.value / total;
+    const percentage = total > 0 ? item.value / total : 0;
     const strokeDasharray = `${circumference * percentage} ${circumference * (1 - percentage)}`;
     const strokeDashoffset = -accumulatedOffset;
     accumulatedOffset += circumference * percentage;
@@ -64,8 +73,7 @@ function ProgressSummaryWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-800">Pending Appraisal Request Progress Summary</h3>
-            <span className="text-xs text-gray-400">13 total</span>
+            <h3 className="font-semibold text-gray-800">Appraisal Progress Summary</h3>
           </div>
           <button
             type="button"
@@ -77,42 +85,54 @@ function ProgressSummaryWidget() {
 
         <div className="p-6">
           <div className="flex items-center gap-8">
-            {/* Donut Chart */}
+            {/* Donut Chart — renders a gray ring when total is 0 */}
             <div className="relative shrink-0">
               <svg width="200" height="200" viewBox="0 0 200 200">
-                {segments.map((segment, index) => (
+                {total === 0 ? (
                   <circle
-                    key={index}
                     cx="100"
                     cy="100"
                     r={radius}
                     fill="none"
-                    stroke={segment.color}
+                    stroke="#f3f4f6"
                     strokeWidth={strokeWidth}
-                    strokeDasharray={segment.strokeDasharray}
-                    strokeDashoffset={segment.strokeDashoffset}
-                    transform="rotate(-90 100 100)"
-                    className="transition-all duration-500"
                   />
-                ))}
+                ) : (
+                  segments.map((segment, index) => (
+                    <circle
+                      key={index}
+                      cx="100"
+                      cy="100"
+                      r={radius}
+                      fill="none"
+                      stroke={segment.color}
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={segment.strokeDasharray}
+                      strokeDashoffset={segment.strokeDashoffset}
+                      transform="rotate(-90 100 100)"
+                      className="transition-all duration-500"
+                    />
+                  ))
+                )}
               </svg>
               {/* Center text */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-3xl font-bold text-gray-800">{total.toLocaleString()}</span>
-                <span className="text-xs text-gray-400">Total requests</span>
+                <span className="text-xs text-gray-400">Total</span>
               </div>
             </div>
 
-            {/* Legend */}
+            {/* Legend — always shows all 5 statuses in fixed order */}
             <div className="flex-1 grid grid-cols-1 gap-2">
               {data.map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                     <span className="text-sm text-gray-600 truncate">{item.label}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-800">{item.percentage}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs text-gray-400 tabular-nums">{item.value}</span>
+                    <span className="text-sm font-medium text-gray-800 tabular-nums">{item.percentage}</span>
                   </div>
                 </div>
               ))}

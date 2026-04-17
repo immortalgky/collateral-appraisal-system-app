@@ -37,7 +37,7 @@ export interface UpdatePermissionRequest {
 export type RoleScope = 'Bank' | 'Company';
 
 export interface RolePermission {
-  permissionId: string;
+  id: string;
   permissionCode: string;
   description: string;
 }
@@ -239,6 +239,7 @@ export interface AdminUserListResult {
 export interface GetUsersParams {
   search?: string;
   scope?: 'Bank' | 'Company';
+  role?: string;
   pageNumber?: number;
   pageSize?: number;
 }

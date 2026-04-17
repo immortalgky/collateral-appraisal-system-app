@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
@@ -22,14 +22,16 @@ const PermissionAssignmentModal = ({
 }: PermissionAssignmentModalProps) => {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(currentPermissions.map(p => p.permissionId)),
+    () => new Set(currentPermissions.map(p => p.id)),
   );
 
-  // Reset selection when modal opens with new permissions
-  const handleOpen = () => {
-    setSelected(new Set(currentPermissions.map(p => p.permissionId)));
-    setSearch('');
-  };
+  // Reset to current permissions each time the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelected(new Set(currentPermissions.map(p => p.id)));
+      setSearch('');
+    }
+  }, [isOpen]);
 
   // Fetch all permissions (large page size — permissions are not expected to be huge)
   const { data, isLoading } = useGetPermissions({ pageSize: 200 });
@@ -75,9 +77,8 @@ const PermissionAssignmentModal = ({
       onClose={onClose}
       title="Assign Permissions"
       size="lg"
-      key={isOpen ? 'open' : 'closed'}
     >
-      <div className="flex flex-col gap-4 p-6" onLoad={handleOpen}>
+      <div className="flex flex-col gap-4 p-6">
         {/* Search */}
         <div className="relative">
           <Icon
@@ -93,6 +94,32 @@ const PermissionAssignmentModal = ({
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
+
+        {/* Selected permission badges */}
+        {selected.size > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from(selected).map(id => {
+              const perm = allPermissions.find(p => p.id === id);
+              const label = perm?.displayName ?? id;
+              return (
+                <span
+                  key={id}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                >
+                  {label}
+                  <button
+                    type="button"
+                    onClick={() => toggle(id)}
+                    className="hover:text-primary/70 leading-none"
+                    aria-label={`Remove ${label}`}
+                  >
+                    <Icon name="xmark" style="solid" className="size-3" />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
 
         <div className="text-xs text-gray-400">
           {selected.size} permission{selected.size !== 1 ? 's' : ''} selected

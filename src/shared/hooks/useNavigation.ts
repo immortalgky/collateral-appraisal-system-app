@@ -1,72 +1,95 @@
 import { useMemo } from 'react';
-import { useAuthStore } from '@features/auth/store';
-import { getNavigationByRoles, type NavItem, type UserRole } from '@shared/config/navigation';
+import { useTranslation } from 'react-i18next';
+import { useMenuStore } from '@features/menuManagement/store';
+import { resolveLabel } from '@features/menuManagement/utils/label';
+import { appraisalMenuConditions } from '@shared/config/appraisalMenuConditions';
+import { isTerminalStatus } from '@shared/config/navigationTypes';
+import type { NavItem, NavItemWithAccess, NavContext } from '@shared/config/navigationTypes';
+import type { MenuTreeNode } from '@features/menuManagement/types';
+
+/** Interpolate :basePath and :requestId placeholders in a path string */
+function interpolatePath(path: string | null, basePath: string, requestId?: string): string {
+  if (!path) return '#';
+  return path.replace(':basePath', basePath).replace(':requestId', requestId ?? '');
+}
+
+/** Recursively convert a MenuTreeNode tree into NavItem[] */
+function toNavItems(nodes: MenuTreeNode[], lang: string): NavItem[] {
+  return nodes.map(node => ({
+    itemKey: node.itemKey,
+    name: resolveLabel(node.labels, lang),
+    href: node.path ?? '#',
+    icon: node.iconName,
+    iconStyle: node.iconStyle,
+    iconColor: node.iconColor ?? undefined,
+    canView: true, // backend already filtered for visibility
+    canEdit: node.canEdit,
+    children: node.children.length > 0 ? toNavItems(node.children, lang) : undefined,
+  }));
+}
 
 /**
- * Default role set used when no user is present.
- * In dev, this mirrors the default dev user so menus render; in production,
- * ProtectedRoute redirects unauthenticated users before this fallback is hit.
- */
-const DEFAULT_ROLES: UserRole[] = [];
-
-/**
- * Hook to get navigation items filtered by the current user's role set
- * @returns Filtered navigation items based on the user's roles
+ * Hook that returns the Main navigation tree, resolved to the current language.
+ * Reads from useMenuStore (populated by MenuInitializer after login).
  */
 export function useNavigation(): NavItem[] {
-  const user = useAuthStore(state => state.user);
-  const roles = user?.roles ?? DEFAULT_ROLES;
-  return useMemo(() => getNavigationByRoles(roles), [roles]);
+  const main = useMenuStore(state => state.main);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
+
+  return useMemo(() => toNavItems(main, lang), [main, lang]);
 }
 
 /**
- * Hook to get the current user's roles
- * @returns Current user's roles (a user may hold multiple roles)
+ * Hook that returns the Appraisal navigation tree filtered by code-side conditions,
+ * with :basePath/:requestId placeholders interpolated.
+ *
+ * Applies:
+ * 1. appraisalMenuConditions[itemKey].showWhen(ctx) — hide items that don't match context
+ * 2. isTerminalStatus(ctx.status) — force canEdit = false for terminal statuses
+ * 3. appraisalMenuConditions[itemKey].forceReadOnly(ctx) — per-item forced read-only
  */
-export function useCurrentRoles(): UserRole[] {
-  const user = useAuthStore(state => state.user);
-  return user?.roles ?? DEFAULT_ROLES;
-}
+export function useAppraisalNavigation(
+  context: NavContext & { basePath?: string; requestId?: string },
+): NavItemWithAccess[] {
+  const appraisal = useMenuStore(state => state.appraisal);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
+  const { basePath = '', requestId, isPma, isBlockCondo, status } = context;
+  const terminalStatus = isTerminalStatus(status);
 
-/**
- * Hook to check if the current user has a specific role
- * @param role - Role to check
- * @returns True if the user has the specified role
- */
-export function useHasRole(role: UserRole): boolean {
-  const currentRoles = useCurrentRoles();
-  return currentRoles.includes(role);
-}
+  return useMemo(() => {
+    const processNode = (node: MenuTreeNode): NavItemWithAccess | null => {
+      const condition = appraisalMenuConditions[node.itemKey];
 
-/**
- * Hook to check if the current user has any of the specified roles
- * @param roles - Roles to check
- * @returns True if the user has any of the specified roles
- */
-export function useHasAnyRole(roles: UserRole[]): boolean {
-  const currentRoles = useCurrentRoles();
-  return roles.some(r => currentRoles.includes(r));
-}
+      // Apply showWhen predicate
+      if (condition?.showWhen && !condition.showWhen({ isPma, isBlockCondo, status })) {
+        return null;
+      }
 
-/**
- * Hook to check if a user can access a specific route
- * @param allowedRoles - Roles allowed to access the route
- * @param deniedRoles - Roles explicitly denied access
- * @returns True if the user can access the route
- */
-export function useCanAccess(allowedRoles?: UserRole[], deniedRoles?: UserRole[]): boolean {
-  const currentRoles = useCurrentRoles();
+      // Determine canEdit — terminal status or per-item forceReadOnly override backend value
+      const forceRO = condition?.forceReadOnly?.({ isPma, isBlockCondo, status }) ?? false;
+      const canEdit = !terminalStatus && !forceRO && node.canEdit;
 
-  // Check if any of the user's roles is explicitly denied
-  if (deniedRoles && deniedRoles.some(r => currentRoles.includes(r))) {
-    return false;
-  }
+      const href = interpolatePath(node.path, basePath, requestId);
 
-  // If no allowedRoles specified, allow all
-  if (!allowedRoles || allowedRoles.length === 0) {
-    return true;
-  }
+      const children = node.children
+        .map(processNode)
+        .filter((c): c is NavItemWithAccess => c !== null);
 
-  // Grant access if any of the user's roles is in allowedRoles
-  return allowedRoles.some(r => currentRoles.includes(r));
+      return {
+        itemKey: node.itemKey,
+        name: resolveLabel(node.labels, lang),
+        href,
+        icon: node.iconName,
+        iconStyle: node.iconStyle,
+        iconColor: node.iconColor ?? undefined,
+        canView: true,
+        canEdit,
+        children: children.length > 0 ? children : undefined,
+      };
+    };
+
+    return appraisal.map(processNode).filter((n): n is NavItemWithAccess => n !== null);
+  }, [appraisal, lang, basePath, requestId, isPma, isBlockCondo, status, terminalStatus]);
 }

@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useFieldArray, useController, useWatch } from 'react-hook-form';
+import { useController, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import {
-  ProfitRentFormSchema,
   profitRentFormDefaults,
+  ProfitRentFormSchema,
   type ProfitRentFormType,
 } from '../schemas/profitRentForm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,11 +13,10 @@ import { NumberInput, Toggle } from '@/shared/components/inputs';
 import { initializeProfitRentForm } from '../adapters/initializeProfitRentForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useGetProfitRentAnalysis, useSaveProfitRentAnalysis } from '../api';
-import { useResetMethod } from '../api';
+import { useGetProfitRentAnalysis, useResetMethod, useSaveProfitRentAnalysis } from '../api';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 import type { SaveProfitRentAnalysisRequest } from '../types/profitRent';
-import { useGetRentalSchedule, useGetLeaseAgreement } from '@/features/appraisal/api/property';
+import { useGetLeaseAgreement, useGetRentalSchedule } from '@/features/appraisal/api/property';
 import { typeToDetailEndpoint } from '@/features/appraisal/utils/propertyTypeConfig';
 import axios from '@shared/api/axiosInstance';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
@@ -25,18 +24,18 @@ import { useGetAppointment } from '@/features/appraisal/api/appointment';
 import toast from 'react-hot-toast';
 import { LeaseholdRentalInfoModal } from './LeaseholdRentalInfoModal';
 import { BuildingCostTable } from './BuildingCostTable';
-import { KpiSummaryStrip, type KpiCard } from './KpiSummaryStrip';
+import { type KpiCard, KpiSummaryStrip } from './KpiSummaryStrip';
 import { ProfitRentChart } from './ProfitRentChart';
 import { SensitivityStrip } from './SensitivityStrip';
 import { RemarkSection } from './RemarkSection';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { LeaseTimelineBar } from './LeaseTimelineBar';
 import {
-  generateProfitRentTable,
   computeProfitRentSchedule,
+  generateProfitRentTable,
   type ProfitRentTableResult,
 } from '../domain/calculateProfitRent';
-import { formatDateOnly, fmt, toNum } from '../domain/formatters';
+import { fmt, formatDateOnly, toNum } from '../domain/formatters';
 import { roundToThousand } from '../domain/calculation';
 
 interface ProfitRentPanelProps {
@@ -107,7 +106,6 @@ export function ProfitRentPanel({
   const { data: rentalScheduleData } = useGetRentalSchedule(appraisalId ?? '', firstPropertyId);
   const { data: leaseAgreement } = useGetLeaseAgreement(appraisalId ?? '', firstPropertyId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const methods = useForm<ProfitRentFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(ProfitRentFormSchema) as any,

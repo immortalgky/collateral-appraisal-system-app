@@ -9,9 +9,10 @@ interface SearchResultsTableProps {
   columns: ColumnDef[];
   items: SearchResultItem[];
   isLoading: boolean;
+  onAppraisalClick?: (appraisalId: string) => void;
 }
 
-function SearchResultsTable({ columns, items, isLoading }: SearchResultsTableProps) {
+function SearchResultsTable({ columns, items, isLoading, onAppraisalClick }: SearchResultsTableProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,8 +33,16 @@ function SearchResultsTable({ columns, items, isLoading }: SearchResultsTablePro
   };
 
   const handleRowClick = (item: SearchResultItem) => {
+    if (item.category === 'requests' && onAppraisalClick) {
+      onAppraisalClick(item.id);
+      return;
+    }
     const returnPath = location.pathname + location.search;
-    navigate(item.navigateTo, { state: { fromSearch: true, returnPath } });
+    const destination =
+      item.category === 'requests'
+        ? `${item.navigateTo.replace(/\/+$/, '')}/activity-tracking`
+        : item.navigateTo;
+    navigate(destination, { state: { fromSearch: true, returnPath } });
   };
 
   return (

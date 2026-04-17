@@ -15,4 +15,8 @@ export const pricingAnalysisKeys = {
     ['price-analysis', pricingAnalysisId, 'leasehold-analysis', methodId] as const,
   profitRentAnalysis: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'profit-rent-analysis', methodId] as const,
+  pricingTemplates: (activeOnly: boolean) => ['pricing-templates', activeOnly] as const,
+  pricingTemplateByCode: (code: string) => ['pricing-templates', code] as const,
+  incomeAnalysis: (pricingAnalysisId: string, methodId: string) =>
+    ['price-analysis', pricingAnalysisId, 'income-analysis', methodId] as const,
 };

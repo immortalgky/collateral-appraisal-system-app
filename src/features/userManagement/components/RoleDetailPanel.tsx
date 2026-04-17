@@ -116,7 +116,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
   if (!role) return null;
 
   return (
-    <div className="flex flex-col gap-4 p-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-4 p-6">
 
       {/* General Section */}
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -134,7 +134,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             Edit
           </button>
         </div>
-        <div className="px-4 py-3 space-y-2">
+        <div className="px-4 py-4 space-y-2">
           <div>
             <div className="text-xs text-gray-400 mb-0.5">Name</div>
             <div className="text-sm font-medium text-gray-900">{role.name}</div>
@@ -180,7 +180,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             <div className="px-4 py-4 text-sm text-gray-400 text-center">No permissions assigned</div>
           ) : (
             role.permissions.map(p => (
-              <div key={p.permissionId} className="px-4 py-2.5">
+              <div key={p.id} className="px-4 py-2.5">
                 <code className="text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">{p.permissionCode}</code>
                 {p.description && (
                   <div className="text-xs text-gray-400 mt-0.5">{p.description}</div>
@@ -189,6 +189,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             ))
           )}
         </div>
+        <div className="h-2" />
       </section>
 
       {/* Users Section */}
@@ -232,6 +233,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             })
           )}
         </div>
+        <div className="h-2" />
       </section>
 
       {/* Security Section */}
@@ -240,7 +242,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
           <Icon name="triangle-exclamation" style="solid" className="size-4 text-danger" />
           <span className="text-sm font-semibold text-gray-800">Security</span>
         </div>
-        <div className="px-4 py-3">
+        <div className="px-4 py-4">
           <p className="text-xs text-gray-500 mb-3">
             Deleting this role will remove it from all assigned users. This action cannot be undone.
           </p>
@@ -310,8 +312,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
         onClose={() => setShowUserModal(false)}
         onSave={handleSaveUsers}
         currentUsers={roleUsers}
-        availableUsers={roleUsers}
-        isLoadingUsers={isLoadingUsers}
+        scope={role.scope}
         isSaving={updateUsers.isPending}
       />
 

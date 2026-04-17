@@ -16,6 +16,7 @@ import {
   useGetTaskHistory,
   type TaskHistoryItem,
 } from '@/features/appraisal/api/workflow';
+import { useGetEligibleStaff } from '@/features/appraisal/api/administration';
 import { RaiseFollowupDialog } from '@/features/document-followup/components/RaiseFollowupDialog';
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 
@@ -43,6 +44,8 @@ interface DecisionSectionProps {
   onDecisionChange: (value: string | null) => void;
   comments: string;
   onCommentsChange: (value: string) => void;
+  selectedAssigneeUserId: string | null;
+  onAssigneeChange: (userId: string | null) => void;
 }
 
 const DecisionSection = ({
@@ -50,6 +53,8 @@ const DecisionSection = ({
   onDecisionChange,
   comments,
   onCommentsChange,
+  selectedAssigneeUserId,
+  onAssigneeChange,
 }: DecisionSectionProps) => {
   const isPageReadOnly = usePageReadOnly();
   const isTaskOwner = useIsTaskOwner();
@@ -75,6 +80,20 @@ const DecisionSection = ({
         .sort((a, b) => new Date(a.assignedAt).getTime() - new Date(b.assignedAt).getTime())
         .map(mapHistoryItemToStep),
     [taskHistoryData],
+  );
+
+  const selectedAction = useMemo(
+    () => (actionsData?.actions ?? []).find(a => a.value === selectedDecision) ?? null,
+    [actionsData, selectedDecision],
+  );
+
+  const isManualAssignment =
+    selectedAction?.assignmentMode === 'manual' && !!selectedAction.targetActivityId;
+
+  const { data: eligibleStaff, isLoading: isStaffLoading } = useGetEligibleStaff(
+    workflowInstanceId,
+    selectedAction?.targetActivityId ?? '',
+    isManualAssignment,
   );
 
   // Build dropdown options from API actions
@@ -169,7 +188,11 @@ const DecisionSection = ({
                         required
                         options={decisionOptions}
                         value={selectedDecision ?? undefined}
-                        onChange={onDecisionChange}
+                        onChange={(value) => {
+                          // Clear stale assignee when decision changes — target activity may differ
+                          onAssigneeChange(null);
+                          onDecisionChange(value);
+                        }}
                         placeholder="Please select a decision..."
                       />
                       {selectedDecision && (
@@ -178,6 +201,24 @@ const DecisionSection = ({
                         </div>
                       )}
                     </div>
+
+                    {isManualAssignment && (
+                      isStaffLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
+                          Loading assignees...
+                        </div>
+                      ) : (
+                        <Dropdown
+                          label="Assign Next To"
+                          required
+                          options={(eligibleStaff ?? []).map(s => ({ value: s.id, label: s.name }))}
+                          value={selectedAssigneeUserId ?? undefined}
+                          onChange={onAssigneeChange}
+                          placeholder="Select an assignee..."
+                        />
+                      )
+                    )}
 
                     <Textarea
                       label="Comments"

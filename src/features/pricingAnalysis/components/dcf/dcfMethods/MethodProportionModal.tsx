@@ -1,7 +1,6 @@
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../../types/dcf';
-import { assumptionParams } from '../../../data/dcfParameters';
 import type { UseFormGetValues } from 'react-hook-form';
 import type { FormValues } from '@/features/appraisal/components/tables/bType';
 
@@ -37,7 +36,7 @@ export function MethodProportionModal({
     })),
     ...assumptions.map(a => ({
       value: `assumption:${a.assumption.clientId}`,
-      label: `${a.section.sectionName} - ${a.assumption.assumptionName ? a.assumption.assumptionName : assumptionParams.find(p => p.code === a.assumption.assumptionType)?.description}`,
+      label: `${a.section.sectionName} - ${a.assumption.assumptionName ?? ''}`,
     })),
   ];
 

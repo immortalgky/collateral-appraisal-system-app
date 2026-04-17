@@ -8,7 +8,7 @@ interface SlideOverPanelProps {
   onClose: () => void;
   title: string;
   subtitle?: string;
-  width?: 'md' | 'lg' | 'xl';
+  width?: 'md' | 'lg' | 'xl' | '2xl';
   children: ReactNode;
 }
 
@@ -16,6 +16,7 @@ const widthClasses = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-[70vw]',
 };
 
 const SlideOverPanel = ({
@@ -23,7 +24,7 @@ const SlideOverPanel = ({
   onClose,
   title,
   subtitle,
-  width = 'lg',
+  width = 'lg' as const,
   children,
 }: SlideOverPanelProps) => {
   return (

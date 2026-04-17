@@ -81,9 +81,13 @@ function ExternalTaskSummaryWidget() {
                 </div>
 
                 {/* X-axis labels */}
-                <div className="flex justify-between mt-3">
+                <div className="flex justify-between gap-2 mt-3">
                   {data.map((item) => (
-                    <div key={item.name} className="flex-1 text-center">
+                    <div
+                      key={item.name}
+                      className="flex-1 min-w-0 text-center"
+                      title={item.name}
+                    >
                       <span className="text-xs text-gray-400 truncate block">{item.name}</span>
                     </div>
                   ))}

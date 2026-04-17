@@ -168,7 +168,7 @@ const RoleListPage = () => {
         </div>
 
         {/* Right panel — role detail */}
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm min-h-0 overflow-hidden">
+        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm min-h-0 overflow-y-auto">
           {selectedRoleId ? (
             <RoleDetailPanel
               key={selectedRoleId}

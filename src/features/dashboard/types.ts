@@ -127,17 +127,6 @@ export type TaskSummaryData = {
   completed: number;
 };
 
-export type RecentTask = {
-  id: string;
-  reportNo: string;
-  customerName: string;
-  taskType: string;
-  taskDescription: string;
-  purpose: string;
-  status: 'pending' | 'draft' | 'completed';
-  requestDate: string;
-};
-
 export type Reminder = {
   id: string;
   title: string;

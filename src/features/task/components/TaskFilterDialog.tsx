@@ -1,20 +1,69 @@
-import { useEffect, useState } from 'react';
-import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
-import type { TaskFilterParams } from '../types';
+import { useEffect, useState, type SelectHTMLAttributes } from 'react';
+import clsx from 'clsx';
+import Modal from '@/shared/components/Modal';
+import Button from '@/shared/components/Button';
+import Icon from '@/shared/components/Icon';
+import { TextInput, DateInput } from '@/shared/components/inputs';
+import type { TaskDateType, TaskFilterParams } from '../types';
+import { ACTIVITY_IDS, getActivityConfig } from '../config/activityConfig';
 
-const TASK_STATUS_OPTIONS = [
-  { value: 'Assigned', label: 'Assigned' },
+const REQUEST_STATUS_OPTIONS = [
+  { value: 'Pending', label: 'Pending' },
   { value: 'InProgress', label: 'In Progress' },
+  { value: 'UnderReview', label: 'Under Review' },
   { value: 'Completed', label: 'Completed' },
+  { value: 'Cancelled', label: 'Cancelled' },
 ];
 
-const TASK_TYPE_OPTIONS = [
-  { value: 'Pending Check', label: 'Pending Check' },
-  { value: 'Pending Assign', label: 'Pending Assign' },
-  { value: 'Pending Appointment', label: 'Pending Appointment' },
-  { value: 'Pending Appraisal', label: 'Pending Appraisal' },
-  { value: 'Pending Check Appraisal Book', label: 'Pending Check Appraisal Book' },
+const TASK_TYPE_OPTIONS = ACTIVITY_IDS.map(id => ({
+  value: id,
+  label: getActivityConfig(id)?.title ?? id,
+}));
+
+const DATE_TYPE_OPTIONS: { value: TaskDateType; label: string }[] = [
+  { value: 'assigned', label: 'Assign Date' },
+  { value: 'appointment', label: 'Appointment Date' },
+  { value: 'requested', label: 'Requested At' },
 ];
+
+interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
+  label: string;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  onChange: (value: string | undefined) => void;
+  value: string | undefined;
+}
+
+function SelectField({ label, options, placeholder = 'Please select', value, onChange, ...rest }: SelectFieldProps) {
+  return (
+    <div className="w-full">
+      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+      <div className="relative">
+        <select
+          {...rest}
+          value={value ?? ''}
+          onChange={e => onChange(e.target.value || undefined)}
+          className={clsx(
+            'block w-full appearance-none px-3 py-2 pr-9 border rounded-lg text-sm transition-colors duration-200',
+            'border-gray-200 bg-white hover:border-gray-300',
+            'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+            !value && 'text-gray-400',
+          )}
+        >
+          <option value="">{placeholder}</option>
+          {options.map(o => (
+            <option key={o.value} value={o.value} className="text-gray-900">
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+          <Icon style="regular" name="chevron-down" className="size-3.5" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface TaskFilterDialogProps {
   open: boolean;
@@ -26,7 +75,6 @@ interface TaskFilterDialogProps {
 export function TaskFilterDialog({ open, initialValues, onApply, onClose }: TaskFilterDialogProps) {
   const [values, setValues] = useState<TaskFilterParams>(initialValues);
 
-  // Sync local state when dialog opens
   useEffect(() => {
     if (open) setValues(initialValues);
   }, [open, initialValues]);
@@ -38,121 +86,111 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
     onClose();
   };
 
-  const inputClass =
-    'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none';
-  const labelClass = 'block text-xs font-medium text-gray-600 mb-1';
+  const hasDateRange = !!values.dateFrom || !!values.dateTo || !!values.dateType;
+  const selectedDateTypeLabel = DATE_TYPE_OPTIONS.find(o => o.value === values.dateType)?.label;
 
   return (
-    <Dialog open={open} onClose={onClose} className="relative z-50">
-      <DialogBackdrop className="fixed inset-0 bg-black/30" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-lg bg-white rounded-xl shadow-xl p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-5">Filter</h2>
+    <Modal isOpen={open} onClose={onClose} title="Filter" size="lg">
+      <div className="space-y-5">
+        <section className="grid grid-cols-2 gap-x-4 gap-y-4">
+          <TextInput
+            label="Appraisal Report No."
+            placeholder="Enter report no."
+            value={values.appraisalNumber ?? ''}
+            onChange={e =>
+              setValues(v => ({ ...v, appraisalNumber: e.target.value || undefined }))
+            }
+          />
+          <TextInput
+            label="Customer Name"
+            placeholder="Enter customer name"
+            value={values.customerName ?? ''}
+            onChange={e =>
+              setValues(v => ({ ...v, customerName: e.target.value || undefined }))
+            }
+          />
+          <SelectField
+            label="Appraisal Request Status"
+            options={REQUEST_STATUS_OPTIONS}
+            value={values.status}
+            onChange={status => setValues(v => ({ ...v, status }))}
+          />
+          <SelectField
+            label="Task Type"
+            options={TASK_TYPE_OPTIONS}
+            value={values.activityId}
+            onChange={activityId => setValues(v => ({ ...v, activityId }))}
+          />
+        </section>
 
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-            {/* Appraisal Report No */}
-            <div>
-              <label className={labelClass}>Appraisal Report No.</label>
-              <input
-                type="text"
-                className={inputClass}
-                placeholder="Enter report no."
-                value={values.appraisalNumber ?? ''}
-                onChange={e => setValues(v => ({ ...v, appraisalNumber: e.target.value || undefined }))}
-              />
-            </div>
+        <div className="border-t border-gray-100" />
 
-            {/* Customer Name */}
-            <div>
-              <label className={labelClass}>Customer Name</label>
-              <input
-                type="text"
-                className={inputClass}
-                placeholder="Enter customer name"
-                value={values.customerName ?? ''}
-                onChange={e => setValues(v => ({ ...v, customerName: e.target.value || undefined }))}
-              />
-            </div>
-
-            {/* Request Status */}
-            <div>
-              <label className={labelClass}>Appraisal Request Status</label>
-              <select
-                className={inputClass}
-                value={values.taskStatus ?? ''}
-                onChange={e => setValues(v => ({ ...v, taskStatus: e.target.value || undefined }))}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              Date Range
+              {selectedDateTypeLabel && (
+                <span className="ml-2 normal-case tracking-normal text-gray-400 font-normal">
+                  · {selectedDateTypeLabel}
+                </span>
+              )}
+            </h3>
+            {hasDateRange && (
+              <button
+                type="button"
+                onClick={() =>
+                  setValues(v => ({
+                    ...v,
+                    dateType: undefined,
+                    dateFrom: undefined,
+                    dateTo: undefined,
+                  }))
+                }
+                className="text-xs text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
               >
-                <option value="">Please Select</option>
-                {TASK_STATUS_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Task Type */}
+                <Icon style="regular" name="xmark" className="size-3" />
+                Clear dates
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+            <SelectField
+              label="Date Type"
+              options={DATE_TYPE_OPTIONS}
+              value={values.dateType}
+              onChange={dateType =>
+                setValues(v => ({ ...v, dateType: dateType as TaskDateType | undefined }))
+              }
+            />
             <div>
-              <label className={labelClass}>Task Type</label>
-              <select
-                className={inputClass}
-                value={values.taskType ?? ''}
-                onChange={e => setValues(v => ({ ...v, taskType: e.target.value || undefined }))}
-              >
-                <option value="">Please Select</option>
-                {TASK_TYPE_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date From */}
-            <div>
-              <label className={labelClass}>Function Date From</label>
-              <input
-                type="date"
-                className={inputClass}
-                value={values.dateFrom ?? ''}
-                onChange={e => setValues(v => ({ ...v, dateFrom: e.target.value || undefined }))}
+              <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+              <DateInput
+                value={values.dateFrom ?? null}
+                onChange={val => setValues(v => ({ ...v, dateFrom: val ?? undefined }))}
               />
             </div>
-
-            {/* Date To */}
             <div>
-              <label className={labelClass}>To</label>
-              <input
-                type="date"
-                className={inputClass}
-                value={values.dateTo ?? ''}
-                onChange={e => setValues(v => ({ ...v, dateTo: e.target.value || undefined }))}
+              <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+              <DateInput
+                value={values.dateTo ?? null}
+                onChange={val => setValues(v => ({ ...v, dateTo: val ?? undefined }))}
               />
             </div>
           </div>
+        </section>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Clear
-            </button>
-            <button
-              type="button"
-              onClick={handleApply}
-              className="px-4 py-2 text-sm text-white bg-primary rounded-lg hover:bg-primary/90"
-            >
-              Apply
-            </button>
-          </div>
-        </DialogPanel>
+        <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleClear}>
+            Clear
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleApply}>
+            Apply
+          </Button>
+        </div>
       </div>
-    </Dialog>
+    </Modal>
   );
 }

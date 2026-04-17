@@ -44,6 +44,8 @@ export const TaskType = {
   NEW_APPRAISAL: 'New Appraisal',
   REVIEW: 'Review',
   REVISION: 'Revision',
+  APPRAISAL_INITIATION: 'appraisalInitiation',
+  INITIATION_CHECK: 'InitiationCheck',
 } as const;
 
 export type TaskTypeType = (typeof TaskType)[keyof typeof TaskType];
@@ -88,10 +90,12 @@ export type MovementType = (typeof Movement)[keyof typeof Movement];
 // Main Task interface - matches API TaskItemType (TaskDto) from v1.ts
 export interface Task {
   id: string;
-  taskId: string;
+  appraisalId: string;
+  requestId: string;
   workflowInstanceId: string;
   activityId: string;
   appraisalNumber: string | null;
+  requestNumber: string | null;
   customerName: string | null;
   taskType: string | null;
   taskDescription: string | null;
@@ -110,10 +114,46 @@ export interface Task {
   remainingHours: number | null;
   // New fields added to backend DTO
   requestedBy: string | null;
+  requestedByName: string | null;
   requestReceivedDate: string | null;
   internalFollowupStaff: string | null;
   appraiser: string | null;
   assignedDate: string | null;
+  reportReceivedAt: string | null;
+  // Pool task / lock fields
+  workingBy: string | null;
+  lockedAt: string | null;
+  assignedType: string | null; // "1" = USER, "2" = GROUP
+  pendingTaskStatus: string | null;
+}
+
+// Pool task — same as Task but assignedType is always present
+export interface PoolTask extends Task {
+  assignedType: string;
+}
+
+// Paginated response for pool tasks
+export interface PoolTaskListResponse {
+  items: PoolTask[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+// Query params for pool task listing
+export interface GetPoolTasksParams {
+  pageNumber?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  appraisalNumber?: string;
+  customerName?: string;
+  status?: string;
+  dateType?: TaskDateType;
+  dateFrom?: string;
+  dateTo?: string;
+  activityId?: string;
 }
 
 // Grouping options for Kanban view
@@ -131,6 +171,7 @@ export interface TaskListResponse {
 export interface GetTasksParams {
   pageNumber?: number;
   pageSize?: number;
+  search?: string;
   taskName?: string;
   status?: string;
   priority?: string;
@@ -140,17 +181,19 @@ export interface GetTasksParams {
   // Advanced filter params
   appraisalNumber?: string;
   customerName?: string;
-  taskStatus?: string;
-  taskType?: string;
+  dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
 }
 
+export type TaskDateType = 'assigned' | 'appointment' | 'requested';
+
 export interface TaskFilterParams {
   appraisalNumber?: string;
   customerName?: string;
-  taskStatus?: string;
-  taskType?: string;
+  status?: string;
+  activityId?: string;
+  dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
 }
