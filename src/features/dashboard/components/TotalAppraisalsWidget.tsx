@@ -135,48 +135,68 @@ function TotalAppraisalsWidget() {
           </div>
 
           {/* Chart */}
-          <div className="relative">
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-32">
-              <defs>
-                <linearGradient id="thisYearGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
+          <div>
+            {/* Chart area: SVG stretches to fill container; dots are HTML overlays so they stay circular */}
+            <div className="relative h-32">
+              <svg
+                viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                preserveAspectRatio="none"
+                className="absolute inset-0 h-full w-full"
+              >
+                <defs>
+                  <linearGradient id="thisYearGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
 
-              {/* Area fill */}
-              <path d={thisYearAreaPath} fill="url(#thisYearGradient)" />
+                {/* Area fill */}
+                <path d={thisYearAreaPath} fill="url(#thisYearGradient)" />
 
-              {/* Last year line */}
-              <path
-                d={lastYearPath}
-                fill="none"
-                stroke="#f59e0b"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                {/* Last year line */}
+                <path
+                  d={lastYearPath}
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
 
-              {/* This year line */}
-              <path
-                d={thisYearPath}
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                {/* This year line */}
+                <path
+                  d={thisYearPath}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
 
-              {/* Data points for this year */}
+              {/* Data points for this year — HTML overlay so dots stay circular under non-uniform SVG scaling */}
               {data.map((d, i) => (
-                <circle key={i} cx={getX(i)} cy={getY(d.thisYear)} r="4" fill="#3b82f6" />
+                <div
+                  key={i}
+                  className="pointer-events-none absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500"
+                  style={{
+                    left: `${(i / (data.length - 1)) * 100}%`,
+                    top: `${(getY(d.thisYear) / chartHeight) * 100}%`,
+                  }}
+                />
               ))}
-            </svg>
+            </div>
 
-            {/* X-axis labels */}
-            <div className="flex justify-between mt-2 px-1">
-              {data.map((d) => (
-                <span key={d.month} className="text-xs text-gray-400">
+            {/* X-axis labels — absolute positioning keeps each label center aligned with its dot */}
+            <div className="relative mt-2 h-4">
+              {data.map((d, i) => (
+                <span
+                  key={d.month}
+                  className="absolute -translate-x-1/2 text-xs text-gray-400"
+                  style={{ left: `${(i / (data.length - 1)) * 100}%` }}
+                >
                   {d.month}
                 </span>
               ))}

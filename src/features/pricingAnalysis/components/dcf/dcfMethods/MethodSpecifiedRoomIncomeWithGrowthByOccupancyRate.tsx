@@ -8,6 +8,7 @@ interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps {
   totalNumberOfYears: number;
   method: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
   name = '',
@@ -15,12 +16,13 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
   totalNumberOfYears,
   method,
   baseStyles,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps) {
   return (
     <>
       {expanded && (
         <>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
@@ -30,7 +32,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Income Adjusted by Growth Rate</td>
             {(method.detail?.roomIncomeAdjustedValuedByGrowthRates ?? []).map((val, idx) => {
               return (
@@ -40,7 +42,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Occupancy Rate</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
@@ -50,6 +52,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
                       <RHFInputCell
                         fieldName={`${name}.detail.occupancyRate.${idx}`}
                         inputType="number"
+                        disabled={isReadOnly}
                         number={{
                           decimalPlaces: 2,
                           maxIntegerDigits: 3,
@@ -64,7 +67,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
               );
             })}
           </tr>
-          <tr>
+          <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>
               <span>Room Income</span>
               <span>({method.detail?.saleableArea ?? 0} rooms)</span>

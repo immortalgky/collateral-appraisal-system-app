@@ -5,6 +5,7 @@ interface MethodPositionBasedSalaryCalculationProps {
   expanded: boolean;
   method: MethodPositionBasedSalaryCalculationWrapper;
   baseStyles: { rowHeader: string; rowBody: string };
+  isReadOnly?: boolean;
 }
 export function MethodPositionBasedSalaryCalculation({
   expanded,
@@ -14,7 +15,7 @@ export function MethodPositionBasedSalaryCalculation({
   return (
     expanded && (
       <>
-        <tr>
+        <tr className="group transition-colors">
           <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
           {(method.detail?.increaseRate ?? []).map((val, idx) => {
             return (
@@ -24,7 +25,7 @@ export function MethodPositionBasedSalaryCalculation({
             );
           })}
         </tr>
-        <tr>
+        <tr className="group transition-colors">
           <td className={clsx(baseStyles.rowHeader)}>
             <span>Total</span>
           </td>

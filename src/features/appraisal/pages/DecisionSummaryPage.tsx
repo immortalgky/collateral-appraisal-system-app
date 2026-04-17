@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppraisalId, useWorkflowInstanceId, useActivityId, useIsTaskOwner, useAppraisalIsPma, useAppraisalFacilityLimit, useAppraisalHasAppraisalBook, useAppraisalContext } from '@/features/appraisal/context/AppraisalContext';
 import { useForm } from 'react-hook-form';
@@ -13,6 +13,7 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
+import { FormReadOnlyContext } from '@/shared/components/form/context';
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
@@ -141,6 +142,56 @@ const additionalAssumptionsFields: FormField[] = [
   },
 ];
 
+// ==================== Section Visibility Config ====================
+
+type SectionKey =
+  | 'decisionApproach'
+  | 'priceSummary'
+  | 'priceVerification'
+  | 'governmentPrice'
+  | 'condition'
+  | 'remark'
+  | 'appraiserOpinion'
+  | 'committeeOpinion'
+  | 'reviewPrices'
+  | 'additionalAssumptions'
+  | 'committeeApproval';
+
+interface ActivitySectionConfig {
+  sections: SectionKey[];
+  readOnly?: boolean;
+  editableSections?: SectionKey[];
+}
+
+const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
+  'appraisal-initiation-check': { sections: [] },
+  'appraisal-initiation':       { sections: [] },
+  'appraisal-assignment':        { sections: [] },
+  'ext-appraisal-assignment':    { sections: [] },
+  'ext-appraisal-execution':     { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'] },
+  'ext-appraisal-check':         { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'], readOnly: true },
+  'ext-appraisal-verification':  { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'], readOnly: true },
+  'appraisal-book-verification': { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true, editableSections: ['reviewPrices'] },
+  'int-appraisal-execution':     { sections: ['decisionApproach', 'priceSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'additionalAssumptions'] },
+  'int-appraisal-check':         { sections: ['decisionApproach', 'priceSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'additionalAssumptions'], readOnly: true },
+  'int-appraisal-verification':  { sections: ['decisionApproach', 'priceSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'additionalAssumptions'], readOnly: true },
+  'pending-approval':            { sections: ['committeeApproval'] },
+};
+
+/** Wraps children with FormReadOnlyContext override when forceReadOnly is true */
+const SectionReadOnlyWrap = ({
+  forceReadOnly,
+  children,
+}: {
+  forceReadOnly: boolean;
+  children: ReactNode;
+}) =>
+  forceReadOnly ? (
+    <FormReadOnlyContext.Provider value={true}>{children}</FormReadOnlyContext.Provider>
+  ) : (
+    <>{children}</>
+  );
+
 // ==================== Page Component ====================
 
 const DecisionSummaryPage = () => {
@@ -150,6 +201,18 @@ const DecisionSummaryPage = () => {
   const workflowInstanceId = useWorkflowInstanceId();
   const activityId = useActivityId();
   const isTaskOwner = useIsTaskOwner();
+
+  // Section visibility by activity
+  const sectionConfig = activityId
+    ? ACTIVITY_SECTION_CONFIG[activityId] ?? { sections: [] }
+    : null; // null = no activityId = show all sections
+  const showSection = (key: SectionKey) =>
+    sectionConfig === null || sectionConfig.sections.includes(key);
+  const isActivityReadOnly = sectionConfig?.readOnly ?? false;
+  const shouldForceReadOnly = (key: SectionKey) =>
+    !isReadOnly && isActivityReadOnly && !sectionConfig?.editableSections?.includes(key);
+  const hasEditableSections =
+    sectionConfig === null ? false : !sectionConfig.readOnly || (sectionConfig.editableSections?.length ?? 0) > 0;
 
   // Decision state (lifted from DecisionSection)
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
@@ -175,7 +238,7 @@ const DecisionSummaryPage = () => {
   );
 
   const isManualAssignment =
-    selectedAction?.assignmentMode === 'manual' && !!selectedAction.targetActivityId;
+    selectedAction?.assignmentMode === 'user' && !!selectedAction.targetActivityId;
 
   // Form setup
   const mapDataToForm = useMemo(() => {
@@ -339,102 +402,138 @@ const DecisionSummaryPage = () => {
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">
               {/* 1. Decision Approach */}
-              <FormCard title="Decision Approach" icon="table-cells" iconColor="teal">
-                {data?.approachMatrix && data.approachMatrix.length > 0 ? (
-                  <ApproachMatrixTable groups={data.approachMatrix} />
-                ) : (
-                  <p className="text-sm text-gray-500">No approach data available.</p>
-                )}
-              </FormCard>
+              {showSection('decisionApproach') && (
+                <FormCard title="Decision Approach" icon="table-cells" iconColor="teal">
+                  {data?.approachMatrix && data.approachMatrix.length > 0 ? (
+                    <ApproachMatrixTable groups={data.approachMatrix} />
+                  ) : (
+                    <p className="text-sm text-gray-500">No approach data available.</p>
+                  )}
+                </FormCard>
+              )}
 
-              {/* 3. Total Appraisal Price / Force Selling Price / Building Insurance */}
-              <FormCard title="Appraisal Price Summary" icon="coins" iconColor="amber">
-                <div className="grid grid-cols-3 gap-6">
-                  <ReadOnlyField label="Total Appraisal Price" value={data?.totalAppraisalPrice} />
-                  <ReadOnlyField label="Force Selling Price" value={data?.forceSellingPrice} />
-                  <ReadOnlyField label="Building Insurance" value={data?.buildingInsurance} />
-                </div>
-              </FormCard>
+              {/* 2. Appraisal Price Summary */}
+              {showSection('priceSummary') && (
+                <FormCard title="Appraisal Price Summary" icon="coins" iconColor="amber">
+                  <div className="grid grid-cols-3 gap-6">
+                    <ReadOnlyField label="Total Appraisal Price" value={data?.totalAppraisalPrice} />
+                    <ReadOnlyField label="Force Selling Price" value={data?.forceSellingPrice} />
+                    <ReadOnlyField label="Building Insurance" value={data?.buildingInsurance} />
+                  </div>
+                </FormCard>
+              )}
 
-              {/* 4. Price Verification */}
-              <FormCard title="Price Verification" icon="badge-check" iconColor="emerald">
-                <FormFields fields={priceVerificationFields} />
-              </FormCard>
+              {/* 3. Price Verification */}
+              {showSection('priceVerification') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceVerification')}>
+                  <FormCard title="Price Verification" icon="badge-check" iconColor="emerald">
+                    <FormFields fields={priceVerificationFields} />
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 5. Government Appraisal Price */}
-              <FormCard
-                title={`Government Appraisal Price${data?.governmentPrices ? ` (${data.governmentPrices.length})` : ''}`}
-                icon="landmark"
-                iconColor="teal"
-              >
-                {data?.governmentPrices && data.governmentPrices.length > 0 ? (
-                  <GovernmentPriceTable
-                    rows={data.governmentPrices}
-                    totalArea={data.governmentPriceTotalArea ?? 0}
-                    avgPerSqWa={data.governmentPriceAvgPerSqWa ?? 0}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-500">No government price data available.</p>
-                )}
-              </FormCard>
+              {/* 4. Government Appraisal Price */}
+              {showSection('governmentPrice') && (
+                <FormCard
+                  title={`Government Appraisal Price${data?.governmentPrices ? ` (${data.governmentPrices.length})` : ''}`}
+                  icon="landmark"
+                  iconColor="teal"
+                >
+                  {data?.governmentPrices && data.governmentPrices.length > 0 ? (
+                    <GovernmentPriceTable
+                      rows={data.governmentPrices}
+                      totalArea={data.governmentPriceTotalArea ?? 0}
+                      avgPerSqWa={data.governmentPriceAvgPerSqWa ?? 0}
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-500">No government price data available.</p>
+                  )}
+                </FormCard>
+              )}
 
-              {/* 6. Condition */}
-              <FormCard title="Condition" icon="clipboard-list" iconColor="blue">
-                <div className="space-y-4">
-                  <FormFields fields={conditionFields} />
-                </div>
-              </FormCard>
+              {/* 5. Condition */}
+              {showSection('condition') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('condition')}>
+                  <FormCard title="Condition" icon="clipboard-list" iconColor="blue">
+                    <div className="space-y-4">
+                      <FormFields fields={conditionFields} />
+                    </div>
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 7. Remark */}
-              <FormCard title="Remark" icon="message-lines" iconColor="purple">
-                <div className="space-y-4">
-                  <FormFields fields={remarkFields} />
-                </div>
-              </FormCard>
+              {/* 6. Remark */}
+              {showSection('remark') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('remark')}>
+                  <FormCard title="Remark" icon="message-lines" iconColor="purple">
+                    <div className="space-y-4">
+                      <FormFields fields={remarkFields} />
+                    </div>
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 8. Summary of Appraiser Opinions */}
-              <FormCard title="Summary of Appraiser Opinions" icon="user-pen" iconColor="cyan">
-                <div className="space-y-4">
-                  <FormFields fields={appraiserOpinionFields} />
-                </div>
-              </FormCard>
+              {/* 7. Summary of Appraiser Opinions */}
+              {showSection('appraiserOpinion') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('appraiserOpinion')}>
+                  <FormCard title="Summary of Appraiser Opinions" icon="user-pen" iconColor="cyan">
+                    <div className="space-y-4">
+                      <FormFields fields={appraiserOpinionFields} />
+                    </div>
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 9. Summary of Appraisal Price Committee Opinions */}
-              <FormCard
-                title="Summary of Appraisal Price Committee Opinions"
-                icon="users"
-                iconColor="orange"
-              >
-                <div className="space-y-4">
-                  <FormFields fields={committeeOpinionFields} />
-                </div>
-              </FormCard>
+              {/* 8. Summary of Appraisal Price Committee Opinions */}
+              {showSection('committeeOpinion') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('committeeOpinion')}>
+                  <FormCard
+                    title="Summary of Appraisal Price Committee Opinions"
+                    icon="users"
+                    iconColor="orange"
+                  >
+                    <div className="space-y-4">
+                      <FormFields fields={committeeOpinionFields} />
+                    </div>
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 10. Review Prices */}
-              <FormCard title="Review Prices" icon="magnifying-glass-dollar" iconColor="amber">
-                <div className="grid grid-cols-3 gap-6">
-                  <FormFields fields={reviewPriceFields} />
-                  <ReadOnlyField
-                    label="Force Selling Price (Review)"
-                    value={data?.forceSellingPriceReview}
-                  />
-                  <ReadOnlyField
-                    label="Building Insurance (Review)"
-                    value={data?.buildingInsuranceReview}
-                  />
-                </div>
-              </FormCard>
+              {/* 9. Review Prices */}
+              {showSection('reviewPrices') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('reviewPrices')}>
+                  <FormCard title="Review Prices" icon="magnifying-glass-dollar" iconColor="amber">
+                    <div className="grid grid-cols-3 gap-6">
+                      <FormFields fields={reviewPriceFields} />
+                      <ReadOnlyField
+                        label="Force Selling Price (Review)"
+                        value={data?.forceSellingPriceReview}
+                      />
+                      <ReadOnlyField
+                        label="Building Insurance (Review)"
+                        value={data?.buildingInsuranceReview}
+                      />
+                    </div>
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 11. Additional / Special Assumptions */}
-              <FormCard title="Additional / Special Assumptions" icon="lightbulb" iconColor="amber">
-                <FormFields fields={additionalAssumptionsFields} />
-              </FormCard>
+              {/* 10. Additional / Special Assumptions */}
+              {showSection('additionalAssumptions') && (
+                <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('additionalAssumptions')}>
+                  <FormCard title="Additional / Special Assumptions" icon="lightbulb" iconColor="amber">
+                    <FormFields fields={additionalAssumptionsFields} />
+                  </FormCard>
+                </SectionReadOnlyWrap>
+              )}
 
-              {/* 12. Committee Approval */}
-              <ApprovalListSection
-                workflowInstanceId={workflowInstanceId}
-                activityId={activityId}
-              />
+              {/* 11. Committee Approval */}
+              {showSection('committeeApproval') && (
+                <ApprovalListSection
+                  workflowInstanceId={workflowInstanceId}
+                  activityId={activityId}
+                />
+              )}
 
               {/* 13. Decision */}
               <DecisionSection
@@ -465,10 +564,12 @@ const DecisionSummaryPage = () => {
                   )}
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" type="submit" disabled={!appraisalId || !isDirty || isSaving}>
-                    <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                    Save
-                  </Button>
+                  {hasEditableSections && (
+                    <Button variant="outline" type="submit" disabled={!appraisalId || !isDirty || isSaving}>
+                      <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
+                      Save
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     disabled={

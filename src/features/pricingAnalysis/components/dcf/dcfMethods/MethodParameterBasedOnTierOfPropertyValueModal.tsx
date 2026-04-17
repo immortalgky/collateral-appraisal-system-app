@@ -16,10 +16,12 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   name,
   properties,
   getOuterFormValues,
+  isReadOnly,
 }: {
   name: string;
   properties: Record<string, unknown>[];
   getOuterFormValues: UseFormGetValues<FormValues>;
+  isReadOnly?: boolean;
 }) {
   const landGovPrice = (properties ?? [])
     .filter(p => p.propertyType === 'L')
@@ -115,6 +117,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
@@ -123,6 +126,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
@@ -134,6 +138,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
           <RHFInputCell
             fieldName={`${name}.startIn`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{
               decimalPlaces: 0,
               maxIntegerDigits: 3,

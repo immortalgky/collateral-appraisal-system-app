@@ -7,7 +7,11 @@ import { floorToThousands } from '../../domain/calculation';
 import { useEffect, useRef } from 'react';
 import { shouldAutoDefault } from '../../domain/shouldAutoDefault';
 
-export function DiscountedCashFlowHighestBestUsed() {
+interface DiscountedCashFlowHighestBestUsedProps {
+  isReadOnly?: boolean;
+}
+
+export function DiscountedCashFlowHighestBestUsed({ isReadOnly }: DiscountedCashFlowHighestBestUsedProps) {
   const { control, getValues, setValue } = useFormContext();
   const isHighestBestUsed = useWatch({ control, name: 'isHighestBestUsed' });
 
@@ -67,6 +71,7 @@ export function DiscountedCashFlowHighestBestUsed() {
         <RHFInputCell
           fieldName={'isHighestBestUsed'}
           inputType="toggle"
+          disabled={isReadOnly}
           toggle={{ checked: isHighestBestUsed, options: ['No', 'Yes'] }}
           onUserChange={e => {
             if (!e) {
@@ -91,6 +96,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                 <RHFInputCell
                   fieldName={'highestBestUsed.areaRai'}
                   inputType="number"
+                  disabled={isReadOnly}
                   number={{
                     label: 'Rai',
                     decimalPlaces: 0,
@@ -103,6 +109,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                 <RHFInputCell
                   fieldName={'highestBestUsed.areaNgan'}
                   inputType="number"
+                  disabled={isReadOnly}
                   number={{
                     label: 'Ngan',
                     decimalPlaces: 0,
@@ -116,6 +123,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                 <RHFInputCell
                   fieldName={'highestBestUsed.areaWa'}
                   inputType="number"
+                  disabled={isReadOnly}
                   number={{
                     label: 'Wa',
                     decimalPlaces: 2,
@@ -138,6 +146,7 @@ export function DiscountedCashFlowHighestBestUsed() {
                 <RHFInputCell
                   fieldName={'highestBestUsed.pricePerSqWa'}
                   inputType="number"
+                  disabled={isReadOnly}
                   number={{
                     label: 'Price/ Sq.Wa',
                     decimalPlaces: 2,
@@ -179,6 +188,7 @@ export function DiscountedCashFlowHighestBestUsed() {
           <RHFInputCell
             fieldName={'appraisalPriceRounded'}
             inputType="number"
+            disabled={isReadOnly}
             number={{
               decimalPlaces: 2,
               maxIntegerDigits: 15,

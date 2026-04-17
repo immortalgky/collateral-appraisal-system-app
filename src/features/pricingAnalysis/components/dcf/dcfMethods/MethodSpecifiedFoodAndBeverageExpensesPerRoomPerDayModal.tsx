@@ -2,9 +2,11 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayPropsModalProps {
   name: string;
+  isReadOnly?: boolean;
 }
 export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
   name,
+  isReadOnly,
 }: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayPropsModalProps) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -14,6 +16,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
           <RHFInputCell
             fieldName={`${name}.firstYearAmt`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
           />
         </div>
@@ -25,6 +28,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
@@ -33,6 +37,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>

@@ -80,11 +80,13 @@ const getIconSection = (identifier: string) => {
 interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
   properties: Record<string, unknown>[];
+  isReadOnly?: boolean;
 }
 
 export function DiscountedCashFlowTable({
   totalNumberOfYears,
   properties,
+  isReadOnly,
 }: DiscountedCashFlowTableProps) {
   const { control } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
@@ -147,6 +149,7 @@ export function DiscountedCashFlowTable({
                     <RHFInputCell
                       fieldName="totalNumberOfDayInYear"
                       inputType="number"
+                      disabled={isReadOnly}
                       number={{
                         decimalPlaces: 0,
                         maxIntegerDigits: 3,
@@ -180,6 +183,7 @@ export function DiscountedCashFlowTable({
                   color={getSectionColor(section.sectionType)}
                   totalNumberOfYears={totalNumberOfYears}
                   icon={getIconSection(section.identifier)}
+                  isReadOnly={isReadOnly}
                 />
               );
             })}

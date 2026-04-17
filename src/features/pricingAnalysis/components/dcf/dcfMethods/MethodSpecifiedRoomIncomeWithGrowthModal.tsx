@@ -2,9 +2,11 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedRoomIncomeWithGrowthModalProps {
   name: string;
+  isReadOnly?: boolean;
 }
 export function MethodSpecifiedRoomIncomeWithGrowthModal({
   name,
+  isReadOnly,
 }: MethodSpecifiedRoomIncomeWithGrowthModalProps) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -14,6 +16,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           <RHFInputCell
             fieldName={`${name}.saleableArea`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
           />
         </div>
@@ -24,6 +27,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           <RHFInputCell
             fieldName={`${name}.totalNumberOfSaleableArea`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
           />
         </div>
@@ -32,6 +36,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           <RHFInputCell
             fieldName={`${name}.remark`}
             inputType={'text'}
+            disabled={isReadOnly}
             text={{ maxLength: 4000 }}
           />
         </div>
@@ -42,6 +47,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           <RHFInputCell
             fieldName={`${name}.firstYearAmt`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
           />
         </div>
@@ -53,6 +59,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
@@ -61,6 +68,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
             inputType={'number'}
+            disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>

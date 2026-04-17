@@ -1,8 +1,6 @@
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
-import Button from '@/shared/components/Button';
 import FormCard from '@/shared/components/sections/FormCard';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MeetingChip from '@/features/meeting/components/MeetingChip';
 
 import {
@@ -11,7 +9,6 @@ import {
   type ApprovalMember,
   type GetApprovalListResponse,
 } from '../../api/decisionSummary';
-import VoteDialog from './VoteDialog';
 
 interface ApprovalListSectionProps {
   workflowInstanceId: string | undefined;
@@ -60,7 +57,6 @@ const conditionLabel = (condition: ApprovalCondition): string => {
 
 const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSectionProps) => {
   const { data, isLoading } = useGetApprovalList(workflowInstanceId, activityId);
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   if (!workflowInstanceId || !activityId) {
     // No active approval activity for this appraisal — committee-review step hasn't been reached.
@@ -90,9 +86,6 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
 
   const status = deriveStatus(data);
   const members: ApprovalMember[] = data.members;
-  const currentUser = members.find(m => m.isCurrentUser);
-  const canVote = status === 'Pending' && currentUser != null && currentUser.status !== 'Voted';
-
   return (
     <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
       <div className="space-y-4">
@@ -117,12 +110,6 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
               />
             )}
           </div>
-          {canVote && (
-            <Button type="button" size="sm" onClick={onOpen}>
-              <Icon name="check-to-slot" style="solid" className="size-4 mr-2" />
-              Submit Vote
-            </Button>
-          )}
         </div>
 
         {/* Status banner */}
@@ -245,13 +232,6 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
         )}
       </div>
 
-      {/* Vote Dialog */}
-      <VoteDialog
-        isOpen={isOpen}
-        onClose={onClose}
-        workflowInstanceId={workflowInstanceId}
-        activityId={activityId}
-      />
     </FormCard>
   );
 };
