@@ -366,6 +366,11 @@ export function ProfitRentPanel({
         });
       }
       toast.success('Saved!');
+
+      isInitialized.current = false;
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
+      });
     } catch {
       toast.error('Failed to save');
     }
