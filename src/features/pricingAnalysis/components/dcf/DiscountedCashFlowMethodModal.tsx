@@ -2,11 +2,8 @@ import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import {
-  assumptionParams,
-  mappingAssumptionMethodParams,
-  methodParams,
-} from '../../data/dcfParameters';
+import { methodParams } from '../../data/dcfParameters';
+import { useGetPricingParameters } from '../../api';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
@@ -47,10 +44,13 @@ export function DiscountedCashFlowMethodModal({
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
-    shouldUnregister: true,
   });
 
-  const { handleSubmit, reset, getValues, control } = methods;
+  const { handleSubmit, reset, getValues, control, register, setValue } = methods;
+
+  const { data: pricingParams } = useGetPricingParameters();
+  const assumptionTypeCatalog = pricingParams?.assumptionTypes ?? [];
+  const assumptionMethodMatrix = pricingParams?.assumptionMethodMatrix ?? [];
 
   const methodType = useWatch({
     control,
@@ -82,10 +82,14 @@ export function DiscountedCashFlowMethodModal({
     [getValues, reset],
   );
 
+  // Reset form only when the edit target switches. initialData is recomputed on every
+  // parent render (new object reference), so including it in the deps would wipe the
+  // modal's in-flight state (e.g. after the user picks an assumption type).
   useEffect(() => {
     if (!editing) return;
     reset(initialData);
-  }, [editing, initialData, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing, reset]);
 
   const onSubmit = useCallback(
     (data: AssumptionEditDraft) => {
@@ -114,7 +118,7 @@ export function DiscountedCashFlowMethodModal({
   const assumptions = getDCFFilteredAssumptions(getOuterFormValues).map(a => a.assumption);
 
   const filteredAssumptionOptions = useMemo(() => {
-    return assumptionParams
+    return assumptionTypeCatalog
       .filter(
         p =>
           !assumptions.some(
@@ -122,42 +126,40 @@ export function DiscountedCashFlowMethodModal({
           ) &&
           (currentSection?.sectionType === p.sectionType || p.sectionType === 'any'),
       )
-      .map(a => ({ value: a.code, label: a.description }));
-  }, [assumptionType, assumptions]);
+      .map(a => ({ value: a.code, label: a.name }));
+  }, [assumptionTypeCatalog, assumptions, currentSection?.sectionType, initialData.assumptionType]);
 
   const filteredMethodOptions = useMemo(() => {
     if (!assumptionType) return [];
 
-    const mapping = mappingAssumptionMethodParams.find(
-      item => item.assumptionCode === assumptionType,
-    );
+    const mapping = assumptionMethodMatrix.find(item => item.assumptionType === assumptionType);
 
     if (!mapping) return [];
 
     return methodParams
-      .filter(method => mapping.methods.includes(method.code))
+      .filter(method => mapping.allowedMethodCodes.includes(method.code))
       .map(method => ({
         value: method.code,
         label: method.description,
       }));
-  }, [assumptionType]);
+  }, [assumptionType, assumptionMethodMatrix]);
 
   const handleAssumptionTypeChange = useCallback(
     (nextAssumptionType: string) => {
-      const currentValues = getValues();
+      setValue('assumptionType', nextAssumptionType, { shouldDirty: true });
 
-      reset({
-        ...currentValues,
-        assumptionType: nextAssumptionType,
-        assumptionName: nextAssumptionType === 'M99' ? currentValues.assumptionName : null,
-        method: {
-          ...currentValues.method,
-          methodType: null,
-          detail: undefined,
-        },
+      const resolvedName =
+        nextAssumptionType === 'M99'
+          ? getValues('assumptionName')
+          : (assumptionTypeCatalog.find(p => p.code === nextAssumptionType)?.name ?? null);
+      setValue('assumptionName', resolvedName, { shouldDirty: true });
+
+      setValue('method.methodType', null as unknown as AssumptionEditDraft['method']['methodType'], {
+        shouldDirty: true,
       });
+      setValue('method.detail', undefined, { shouldDirty: true });
     },
-    [getValues, reset],
+    [setValue, getValues, assumptionTypeCatalog],
   );
 
   return (
@@ -202,10 +204,14 @@ export function DiscountedCashFlowMethodModal({
                   onSelectChange={handleAssumptionTypeChange}
                 />
               </div>
-              {assumptionType === 'M99' && (
+              {assumptionType === 'M99' ? (
                 <div className="flex">
                   <RHFInputCell fieldName="assumptionName" inputType="text" />
                 </div>
+              ) : (
+                // Keep assumptionName registered so reset() values survive handleSubmit
+                // (useForm is shouldUnregister: true; unrendered fields are dropped).
+                <input type="hidden" {...register('assumptionName')} />
               )}
             </div>
 

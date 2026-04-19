@@ -1,4 +1,13 @@
-export type WidgetType = 'task-summary' | 'recent-task' | 'calendar' | 'reminders' | 'notes' | 'total-appraisals' | 'progress-summary' | 'team-workload' | 'external-task-summary';
+export type WidgetType =
+  | 'task-summary'
+  | 'recent-task'
+  | 'calendar'
+  | 'reminders'
+  | 'notes'
+  | 'total-appraisals'
+  | 'progress-summary'
+  | 'team-workload'
+  | 'external-task-summary';
 
 // Column spans in a 12-column grid
 export type ColumnSpan = 3 | 4 | 6 | 8 | 12;
@@ -24,6 +33,7 @@ export type Widget = {
   order: number;
   visible: boolean;
   position: WidgetPosition; // Current position (main or sidebar)
+  settings?: Record<string, unknown>; // Per-widget persisted settings (period, filters, etc.)
 };
 
 // Helper to check if a widget type can be placed in sidebar
@@ -82,7 +92,7 @@ export const WIDGET_CONFIGS: Record<WidgetType, WidgetConfig> = {
     maxCols: 12,
     defaultCols: 6,
   },
-  'calendar': {
+  calendar: {
     type: 'calendar',
     title: 'Calendar',
     description: 'Mini calendar view',
@@ -90,7 +100,7 @@ export const WIDGET_CONFIGS: Record<WidgetType, WidgetConfig> = {
     maxCols: 6,
     defaultCols: 3,
   },
-  'reminders': {
+  reminders: {
     type: 'reminders',
     title: 'Reminders',
     description: 'Upcoming reminders and alerts',
@@ -98,7 +108,7 @@ export const WIDGET_CONFIGS: Record<WidgetType, WidgetConfig> = {
     maxCols: 6,
     defaultCols: 3,
   },
-  'notes': {
+  notes: {
     type: 'notes',
     title: 'Notes',
     description: 'Personal notes',
@@ -142,15 +152,43 @@ export type Note = {
 };
 
 export const DEFAULT_WIDGETS: Widget[] = [
-  { id: 'total-appraisals', type: 'total-appraisals', cols: 6, order: 1, visible: true, position: 'main' },
+  {
+    id: 'total-appraisals',
+    type: 'total-appraisals',
+    cols: 6,
+    order: 1,
+    visible: true,
+    position: 'main',
+  },
   { id: 'calendar', type: 'calendar', cols: 3, order: 2, visible: true, position: 'sidebar' },
   { id: 'reminders', type: 'reminders', cols: 3, order: 3, visible: true, position: 'sidebar' },
   { id: 'task-summary', type: 'task-summary', cols: 12, order: 4, visible: true, position: 'main' },
-  { id: 'progress-summary', type: 'progress-summary', cols: 6, order: 5, visible: true, position: 'main' },
-  { id: 'team-workload', type: 'team-workload', cols: 6, order: 6, visible: true, position: 'main' },
+  {
+    id: 'progress-summary',
+    type: 'progress-summary',
+    cols: 6,
+    order: 5,
+    visible: true,
+    position: 'main',
+  },
+  {
+    id: 'team-workload',
+    type: 'team-workload',
+    cols: 6,
+    order: 6,
+    visible: true,
+    position: 'main',
+  },
   { id: 'recent-task', type: 'recent-task', cols: 12, order: 7, visible: true, position: 'main' },
   { id: 'notes', type: 'notes', cols: 3, order: 8, visible: true, position: 'sidebar' },
-  { id: 'external-task-summary', type: 'external-task-summary', cols: 6, order: 9, visible: false, position: 'main' },
+  {
+    id: 'external-task-summary',
+    type: 'external-task-summary',
+    cols: 6,
+    order: 9,
+    visible: false,
+    position: 'main',
+  },
 ];
 
 export const AVAILABLE_WIDGETS = Object.values(WIDGET_CONFIGS);

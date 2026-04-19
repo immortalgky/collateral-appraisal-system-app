@@ -74,3 +74,33 @@ export interface ReorderItem {
   parentId: string | null;
   sortOrder: number;
 }
+
+/** GET /admin/activities response row. */
+export interface ActivitySummary {
+  activityId: string;
+  label: string;
+}
+
+/**
+ * GET /admin/activity-menu-overrides/{activityId} row.
+ * `hasOverride=false` means the backend is falling back to role-based behavior
+ * for this menu item — the IsVisible/CanEdit fields carry the defaults (true/false).
+ */
+export interface ActivityOverrideRow {
+  menuItemId: string;
+  itemKey: string;
+  label: string;
+  isVisible: boolean;
+  canEdit: boolean;
+  hasOverride: boolean;
+}
+
+export interface ActivityOverridesResponse {
+  activityId: string;
+  rows: ActivityOverrideRow[];
+}
+
+/** PUT /admin/activity-menu-overrides/{activityId} body. */
+export interface UpdateActivityOverridesRequest {
+  rows: Array<{ menuItemId: string; isVisible: boolean; canEdit: boolean }>;
+}

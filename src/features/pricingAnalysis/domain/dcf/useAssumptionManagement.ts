@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFieldArray, type Control } from 'react-hook-form';
 import { getNewId } from '../getNewId';
 import { editAssumption } from './editAssumption';
@@ -27,6 +27,7 @@ export function useAssumptionManagement({
   });
 
   const [editing, setEditing] = useState<string | null>(null);
+  const pendingNewClientIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setValue(`${name}.assumptions`, getValues(`${name}.assumptions`), {
@@ -49,6 +50,7 @@ export function useAssumptionManagement({
       displaySeq: fields.length,
       method: createDefaultMethod('13'),
     });
+    pendingNewClientIdRef.current = newAssumptionId;
     setEditing(newAssumptionId);
   }, [append, fields.length]);
 
@@ -70,14 +72,27 @@ export function useAssumptionManagement({
     activeAssumption,
     handleOnAddAssumption,
     handleOnRemoveAssumption,
-    handleOnOpenEditMode: setEditing,
-    handleOnCancelEditMode: () => setEditing(null),
+    handleOnOpenEditMode: (clientId: string) => {
+      pendingNewClientIdRef.current = null;
+      setEditing(clientId);
+    },
+    handleOnCancelEditMode: () => {
+      const pendingId = pendingNewClientIdRef.current;
+      if (pendingId) {
+        const assumptions = getValues(`${name}.assumptions`) as DCFAssumption[] | undefined;
+        const idx = assumptions?.findIndex(a => a.clientId === pendingId) ?? -1;
+        if (idx >= 0) remove(idx);
+        pendingNewClientIdRef.current = null;
+      }
+      setEditing(null);
+    },
     handleOnSaveEditMode: (draft: Parameters<typeof editAssumption>[1]) => {
       const nextSections = editAssumption(getValues('sections'), draft);
       setValue('sections', nextSections, {
         shouldDirty: false,
         shouldValidate: true,
       });
+      pendingNewClientIdRef.current = null;
     },
   };
 }

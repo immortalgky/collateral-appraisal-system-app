@@ -212,6 +212,7 @@ export const appraisalFilters: FilterField[] = [
     ],
   },
   { key: 'province', label: 'Province', type: 'text', placeholder: 'Province...' },
+  { key: 'assigneeCompanyId', label: 'Company', type: 'text', placeholder: 'Company id...' },
   { key: 'createdFrom', label: 'Created From', type: 'date' },
   { key: 'createdTo', label: 'Created To', type: 'date' },
   { key: 'slaDueDateFrom', label: 'SLA Due From', type: 'date' },

@@ -10,6 +10,12 @@
     color-scheme: light;
 }
 
+/* Workflow edge dash animation */
+@keyframes dashdraw {
+    from { stroke-dashoffset: 10; }
+    to { stroke-dashoffset: 0; }
+}
+
 /* Additional global styles */
 html {
     scroll-behavior: smooth;

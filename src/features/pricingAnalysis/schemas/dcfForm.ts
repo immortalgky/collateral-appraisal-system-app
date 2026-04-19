@@ -60,6 +60,15 @@ const DCFSectionForm = z.object({
   categories: z.array(DCFCategoryForm),
 }).passthrough();
 
+const HighestBestUsedForm = z.object({
+  areaRai: z.number().nullable().optional(),
+  areaNgan: z.number().nullable().optional(),
+  areaWa: z.number().nullable().optional(),
+  pricePerSqWa: z.number().nullable().optional(),
+  totalWa: z.number().nullable().optional(),
+  totalValue: z.number().nullable().optional(),
+});
+
 export const DCFForm = z.object({
   id: z.string().nullable().optional(),
   templateCode: z.string(),
@@ -71,6 +80,12 @@ export const DCFForm = z.object({
   sections: z.array(DCFSectionForm),
   finalValue: z.number(),
   finalValueRounded: z.number(),
+  finalValueAdjust: z.number().nullable().optional(),
+  isHighestBestUsed: z.boolean().optional(),
+  highestBestUsed: HighestBestUsedForm.optional(),
+  appraisalPrice: z.number().nullable().optional(),
+  appraisalPriceRounded: z.number().nullable().optional(),
+  appraisalPriceDifferentiate: z.number().nullable().optional(),
 });
 
 export type DCFMethodFormType = z.infer<typeof DCFMethodForm>;

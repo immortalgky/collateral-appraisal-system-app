@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Icon from '@/shared/components/Icon';
@@ -61,8 +62,8 @@ export function RaiseFollowupDialog({
 
   if (!isOpen) return null;
 
-  return (
-    <dialog className="modal modal-open z-[60]">
+  return createPortal(
+    <div className="modal modal-open z-[60]" role="dialog" aria-modal="true">
       <div className="modal-box bg-white rounded-2xl shadow-xl max-w-2xl w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -204,6 +205,7 @@ export function RaiseFollowupDialog({
       <div className="modal-backdrop bg-black/40" onClick={handleClose}>
         <button type="button">close</button>
       </div>
-    </dialog>
+    </div>,
+    document.body,
   );
 }

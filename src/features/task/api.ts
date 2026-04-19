@@ -41,13 +41,20 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     sortDir,
     appraisalNumber,
     customerName,
+    pendingTaskStatus,
+    slaStatus,
+    assigneeUserId,
     dateType,
     dateFrom,
     dateTo,
   } = params;
 
+  // When drilldown targets another user, switch to the all-tasks endpoint.
+  // `/tasks/me` is hardcoded to the current user, `/tasks` accepts `AssigneeUserId`.
+  const endpoint = assigneeUserId ? '/tasks' : '/tasks/me';
+
   const queryKey = [
-    'my-tasks',
+    endpoint === '/tasks' ? 'all-tasks' : 'my-tasks',
     {
       pageNumber,
       pageSize,
@@ -60,6 +67,9 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
       ...(sortDir && { sortDir }),
       ...(appraisalNumber && { appraisalNumber }),
       ...(customerName && { customerName }),
+      ...(pendingTaskStatus && { pendingTaskStatus }),
+      ...(slaStatus && { slaStatus }),
+      ...(assigneeUserId && { assigneeUserId }),
       ...(dateType && { dateType }),
       ...(dateFrom && { dateFrom }),
       ...(dateTo && { dateTo }),
@@ -69,7 +79,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
   return useQuery({
     queryKey,
     queryFn: async (): Promise<TaskListResponse> => {
-      const { data } = await axios.get('/tasks/me', {
+      const { data } = await axios.get(endpoint, {
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
@@ -82,6 +92,11 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
           ...(sortDir && { SortDir: sortDir }),
           ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
           ...(customerName && { CustomerName: customerName }),
+          // Backend accepts `taskStatus` which maps to PendingTaskStatus column.
+          ...(pendingTaskStatus && { TaskStatus: pendingTaskStatus }),
+          // SlaStatus support — backend may not yet accept this; plan step pending.
+          ...(slaStatus && { SlaStatus: slaStatus }),
+          ...(assigneeUserId && { AssigneeUserId: assigneeUserId }),
           ...toDateQueryParams(dateType, dateFrom, dateTo),
         },
       });
@@ -284,7 +299,7 @@ export const useOpenTask = () => {
       const { data } = await axios.post(`/tasks/${taskId}/open`);
       return data.result ?? data;
     },
-    onSuccess: (result) => {
+    onSuccess: result => {
       if (result.isSuccess) {
         // Task status changed (Not Started → In Progress) — invalidate both lists
         // so they reflect the new status when the user navigates back

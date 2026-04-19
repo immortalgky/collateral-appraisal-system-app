@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '../../table/RHFInputCell';
+import { roundToThousand } from '../../../domain/calculation';
 
 interface SectionSummaryDCFProps {
   name: string;
@@ -67,7 +68,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
         <td className={clsx(rowHeaderStyle)}>
           <div className="flex flex-row justify-between items-center">
             <div>Terminal Revenue (Capitalization Rate)</div>
-            <div className="w-16 text-sm flex flex-row gap-1 justitfy-end items-center">
+            <div className="w-28 text-sm flex flex-row gap-1 justitfy-end items-center">
               <RHFInputCell
                 fieldName="capitalizeRate"
                 inputType="number"
@@ -117,7 +118,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
         <td className={clsx(rowHeaderStyle)}>
           <div className="flex flex-row justify-between items-center">
             <div>Discount Rate</div>
-            <div className="w-16 flex flex-row gap-1 justitfy-end items-center">
+            <div className="w-28 flex flex-row gap-1 justitfy-end items-center">
               <RHFInputCell
                 fieldName="discountedRate"
                 inputType="number"
@@ -184,20 +185,13 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
           if (idx === 0) {
             return (
               <td key={idx} className={clsx(rowBodyStyle)}>
-                <div className="flex flex-row justify-end items-center">
-                  <div className="w-28">
-                    <RHFInputCell
-                      fieldName={'finalValueRounded'}
-                      inputType="number"
-                      disabled={isReadOnly}
-                      number={{
-                        decimalPlaces: 2,
-                        maxIntegerDigits: 15,
-                        allowNegative: false,
-                      }}
-                    />
-                  </div>
-                </div>
+                <RHFInputCell
+                  fieldName={'finalValue'}
+                  inputType="display"
+                  accessor={({ value }) => (
+                    <span>{value ? roundToThousand(Number(value)).toLocaleString() : 0}</span>
+                  )}
+                />
               </td>
             );
           }

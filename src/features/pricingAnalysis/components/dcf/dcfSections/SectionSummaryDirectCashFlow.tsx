@@ -1,9 +1,6 @@
 import clsx from 'clsx';
 import { RHFInputCell } from '../../table/RHFInputCell';
-import { useFormContext } from 'react-hook-form';
-import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
-import type { DCFSection } from '../../../types/dcf';
-import { toNumber } from '../../../domain/calculation';
+import { roundToThousand } from '../../../domain/calculation';
 
 interface SectionSummaryDirectCashFlowProps {
   name: string;
@@ -89,20 +86,13 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
           if (idx === 0) {
             return (
               <td key={idx} className={clsx(rowBodyStyle)}>
-                <div className="flex flex-row justify-end items-center">
-                  <div className="w-28">
-                    <RHFInputCell
-                      fieldName={`finalValueRounded`}
-                      inputType="number"
-                      disabled={isReadOnly}
-                      number={{
-                        decimalPlaces: 2,
-                        maxIntegerDigits: 15,
-                        allowNegative: false,
-                      }}
-                    />
-                  </div>
-                </div>
+                <RHFInputCell
+                  fieldName={`${name}.presentValue`}
+                  inputType="display"
+                  accessor={({ value }) => (
+                    <span>{value ? roundToThousand(Number(value)).toLocaleString() : 0}</span>
+                  )}
+                />
               </td>
             );
           }

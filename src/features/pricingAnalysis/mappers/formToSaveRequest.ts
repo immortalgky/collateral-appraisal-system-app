@@ -115,6 +115,18 @@ export function mapDCFFormToSaveRequest(form: DCFFormType): SaveIncomeAnalysisRe
       clientId: section.clientId ?? undefined,
     } satisfies IncomeSectionInput));
 
+  // Runtime form carries HBU fields outside the Zod schema — cast to read them.
+  const hbuForm = form as unknown as {
+    isHighestBestUsed?: boolean;
+    highestBestUsed?: {
+      areaRai?: number | null;
+      areaNgan?: number | null;
+      areaWa?: number | null;
+      pricePerSqWa?: number | null;
+    } | null;
+    appraisalPriceRounded?: number | null;
+  };
+
   return {
     templateCode: form.templateCode,
     templateName: form.templateName ?? form.templateCode,
@@ -122,9 +134,15 @@ export function mapDCFFormToSaveRequest(form: DCFFormType): SaveIncomeAnalysisRe
     totalNumberOfDayInYear: form.totalNumberOfDayInYear,
     capitalizeRate: form.capitalizeRate,
     discountedRate: form.discountedRate,
-    // Forward finalValueRounded so user manual overrides persist; backend treats
-    // 0 or null as "no override" and recomputes from finalValue.
-    finalValueRounded: form.finalValueRounded ?? null,
+    finalValueAdjust: form.finalValueAdjust ?? null,
+    isHighestBestUsed: hbuForm.isHighestBestUsed ?? true,
+    highestBestUsed: {
+      areaRai: hbuForm.highestBestUsed?.areaRai ?? null,
+      areaNgan: hbuForm.highestBestUsed?.areaNgan ?? null,
+      areaWa: hbuForm.highestBestUsed?.areaWa ?? null,
+      pricePerSqWa: hbuForm.highestBestUsed?.pricePerSqWa ?? null,
+    },
+    appraisalPriceRounded: hbuForm.appraisalPriceRounded ?? null,
     sections: inputSections,
   };
 }

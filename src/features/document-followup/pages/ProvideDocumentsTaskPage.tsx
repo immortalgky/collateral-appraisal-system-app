@@ -17,6 +17,10 @@ import { useGetFollowupByWorkflowInstance } from '../hooks/useGetFollowupByWorkf
 import { useSubmitDocumentFollowup } from '../hooks/useSubmitDocumentFollowup';
 import { useDeclineLineItem } from '../hooks/useDeclineLineItem';
 import { LineItemStatusBadge } from '../components/LineItemStatusBadge';
+import {
+  UploadLineItemDialog,
+  type StagedAttachment,
+} from '../components/UploadLineItemDialog';
 import { declineLineItemSchema, type DeclineLineItemFormValues } from '../schemas/followup';
 import type { FollowupLineItem } from '../types/followup';
 
@@ -222,8 +226,23 @@ function ProvideDocumentsTaskPage() {
   const submitFollowup = useSubmitDocumentFollowup();
 
   const [decliningItem, setDecliningItem] = useState<FollowupLineItem | null>(null);
+  const [uploadingItem, setUploadingItem] = useState<FollowupLineItem | null>(null);
   const [showBulkDecline, setShowBulkDecline] = useState(false);
   const [isConfirmSubmitOpen, setIsConfirmSubmitOpen] = useState(false);
+
+  // Per-line-item staged attachments. Purely local — only POSTed on Submit Response.
+  // Replacing or removing is cheap; nothing is sent to the backend until submit.
+  const [stagedByLineItem, setStagedByLineItem] = useState<Record<string, StagedAttachment>>({});
+  const handleStaged = (attachment: StagedAttachment) => {
+    setStagedByLineItem(prev => ({ ...prev, [attachment.lineItemId]: attachment }));
+  };
+  const handleUnstage = (lineItemId: string) => {
+    setStagedByLineItem(prev => {
+      const next = { ...prev };
+      delete next[lineItemId];
+      return next;
+    });
+  };
 
   const formatDate = (d: string) => {
     try {
@@ -235,27 +254,38 @@ function ProvideDocumentsTaskPage() {
 
   const handleSubmitResponse = () => {
     if (!followup) return;
-    submitFollowup.mutate(followup.id, {
-      onSuccess: () => {
-        setIsConfirmSubmitOpen(false);
-        toast.success('Response submitted successfully');
-        navigate('/tasks?activityId=provide-additional-documents');
-      },
-      onError: (error: unknown) => {
-        setIsConfirmSubmitOpen(false);
-        const status = (error as { response?: { status?: number } })?.response?.status;
-        if (status === 409) {
-          toast.error('This followup has already been submitted.');
+    const attachments = Object.values(stagedByLineItem).map(s => ({
+      lineItemId: s.lineItemId,
+      documentId: s.documentId,
+      documentType: s.documentType,
+      fileName: s.fileName,
+      attachToRequest: s.attachToRequest,
+      titleId: s.titleId ?? null,
+    }));
+    submitFollowup.mutate(
+      { followupId: followup.id, attachments },
+      {
+        onSuccess: () => {
+          setIsConfirmSubmitOpen(false);
+          toast.success('Response submitted successfully');
           navigate('/tasks?activityId=provide-additional-documents');
-        } else if (status === 400) {
-          toast.error('All items must be provided or declined before submitting.');
-        } else {
-          const apiError = error as { response?: { data?: { detail?: string } }; message?: string };
-          const message = apiError?.response?.data?.detail ?? apiError?.message ?? 'Failed to submit response';
-          toast.error(message);
-        }
+        },
+        onError: (error: unknown) => {
+          setIsConfirmSubmitOpen(false);
+          const status = (error as { response?: { status?: number } })?.response?.status;
+          if (status === 409) {
+            toast.error('This followup has already been submitted.');
+            navigate('/tasks?activityId=provide-additional-documents');
+          } else if (status === 400) {
+            toast.error('All items must be provided or declined before submitting.');
+          } else {
+            const apiError = error as { response?: { data?: { detail?: string } }; message?: string };
+            const message = apiError?.response?.data?.detail ?? apiError?.message ?? 'Failed to submit response';
+            toast.error(message);
+          }
+        },
       },
-    });
+    );
   };
 
   if (isLoading) {
@@ -281,8 +311,11 @@ function ProvideDocumentsTaskPage() {
 
   const pendingItems = followup.lineItems.filter(i => i.status === 'Pending');
   const resolvedItems = followup.lineItems.filter(i => i.status !== 'Pending');
-  const allResolved = pendingItems.length === 0;
-  const canSubmit = isTaskOwner && allResolved && followup.status !== 'Cancelled';
+  // Every pending item is "handled" when it has a staged file (queued for attach on submit).
+  // Declined items are already non-pending, so this only scopes over Pending rows.
+  const allPendingStaged = pendingItems.every(i => !!stagedByLineItem[i.id]);
+  const canSubmit =
+    isTaskOwner && allPendingStaged && followup.status !== 'Cancelled';
 
   // Back-link to parent appraisal
   const parentAppraisalHref = followup.parentAppraisalId
@@ -361,26 +394,62 @@ function ProvideDocumentsTaskPage() {
                     <LineItemStatusBadge status={item.status} />
                   </div>
 
-                  {isTaskOwner && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-100 text-xs text-blue-700">
-                        <Icon name="upload" style="solid" className="size-3.5" />
-                        Upload via the Document Checklist below, tagging it as{' '}
-                        <span className="font-semibold">
-                          {getDocumentTypeName(documentTypes, item.documentType)}
-                        </span>
-                        . It will auto-resolve this item.
+                  {isTaskOwner && (() => {
+                    const staged = stagedByLineItem[item.id];
+                    if (staged) {
+                      return (
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-xs text-green-800">
+                            <Icon name="check" style="solid" className="size-3.5 text-green-600" />
+                            <span className="truncate">
+                              <span className="font-semibold">{staged.fileName}</span>{' '}
+                              <span className="text-green-600/80">· {staged.targetLabel}</span>
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setUploadingItem(item)}
+                            className="px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-colors"
+                          >
+                            Replace
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUnstage(item.id)}
+                            className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setUploadingItem(item)}
+                          disabled={!followup.requestId}
+                          title={
+                            followup.requestId
+                              ? undefined
+                              : 'Request context not available — cannot upload.'
+                          }
+                          className="flex-1 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/80 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Icon name="upload" style="solid" className="size-3.5" />
+                          Upload
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDecliningItem(item)}
+                          className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors flex items-center gap-1.5"
+                        >
+                          <Icon name="hand" style="solid" className="size-3.5" />
+                          Decline
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setDecliningItem(item)}
-                        className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors flex items-center gap-1.5"
-                      >
-                        <Icon name="hand" style="solid" className="size-3.5" />
-                        Decline
-                      </button>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -434,8 +503,16 @@ function ProvideDocumentsTaskPage() {
           </div>
         )}
 
-        {/* All resolved state */}
-        {allResolved && followup.status !== 'Cancelled' && (
+        {/* Ready-to-submit state */}
+        {allPendingStaged && pendingItems.length > 0 && followup.status !== 'Cancelled' && (
+          <div className="flex items-center gap-3 mt-4 p-3 rounded-xl bg-green-50 border border-green-100">
+            <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
+            <p className="text-sm text-green-700 font-medium">
+              All pending requests have a file staged. Submit Response to send them.
+            </p>
+          </div>
+        )}
+        {pendingItems.length === 0 && followup.status !== 'Cancelled' && (
           <div className="flex items-center gap-3 mt-4 p-3 rounded-xl bg-green-50 border border-green-100">
             <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
             <p className="text-sm text-green-700 font-medium">
@@ -459,23 +536,35 @@ function ProvideDocumentsTaskPage() {
               <Icon name="paper-plane" style="solid" className="size-4" />
               Submit Response
             </button>
-            {!allResolved && (
+            {!allPendingStaged && pendingItems.length > 0 && (
               <p className="ml-4 self-center text-xs text-gray-400">
-                Resolve all pending items to enable submit.
+                Stage a file (or decline) for every pending item to enable submit.
               </p>
             )}
           </div>
         )}
       </FormCard>
 
-      {/* Inline Document Checklist */}
+      {/* Inline Document Checklist — read-only reference of currently-attached documents. */}
       <FormCard title="Document Checklist" icon="folder-open" iconColor="blue">
         <p className="text-xs text-gray-500 mb-4">
-          Upload documents here. Uploading a document matching a requested type will automatically
-          resolve the corresponding request above.
+          Read-only view of documents already attached to the request. Staged files above are
+          attached atomically when you click Submit Response.
         </p>
         <DocumentChecklistTab />
       </FormCard>
+
+      {/* Upload dialog (per line item) */}
+      {uploadingItem && followup && followup.requestId && (
+        <UploadLineItemDialog
+          key={uploadingItem.id}
+          isOpen
+          onClose={() => setUploadingItem(null)}
+          requestId={followup.requestId}
+          lineItem={uploadingItem}
+          onStaged={handleStaged}
+        />
+      )}
 
       {/* Decline modal (single item) */}
       {decliningItem && followup && (

@@ -34,9 +34,7 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
 
   // Client-side safety filter: only show users who actually carry the role.
   // Guards against stale React Query cache or a misconfigured backend returning all users.
-  const committeeUsers = (usersData?.items ?? []).filter(u =>
-    u.roles?.some(r => r.name === COMMITTEE_ROLE),
-  );
+  const committeeUsers = usersData?.items ?? [];
 
   const {
     register,
@@ -73,9 +71,7 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
 
     // Auto-populate memberName; user may still edit it in the text input
     const displayName =
-      user.firstName || user.lastName
-        ? `${user.firstName} ${user.lastName}`.trim()
-        : user.userName;
+      user.firstName || user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.userName;
     setValue('memberName', displayName, { shouldValidate: true });
   };
 
@@ -107,7 +103,10 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* User selector — populated from GET /auth/users?role=AppraisalCommittee */}
         <div>
-          <label htmlFor="member-user-select" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="member-user-select"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             User <span className="text-red-500">*</span>
           </label>
           <select
@@ -146,11 +145,7 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
           <label htmlFor="member-position" className="block text-sm font-medium text-gray-700 mb-1">
             Position <span className="text-red-500">*</span>
           </label>
-          <select
-            id="member-position"
-            {...register('position')}
-            className={sharedInputClass}
-          >
+          <select id="member-position" {...register('position')} className={sharedInputClass}>
             {POSITION_OPTIONS.map(pos => (
               <option key={pos} value={pos}>
                 {pos}

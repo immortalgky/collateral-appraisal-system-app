@@ -23,12 +23,23 @@ export function nodeToActivity(node: Node<ActivityNodeData>): Activity {
 }
 
 export function edgeToTransition(edge: Edge): Transition {
+  const props: Record<string, unknown> = {
+    ...((edge.data?.properties as Record<string, unknown>) ?? {}),
+  };
+  // Persist the resolved handle so manual connections round-trip correctly.
+  // Namespaced with `_ui` prefix to signal it is UI-only metadata, not part of
+  // the authoritative backend schema.
+  if (edge.sourceHandle) {
+    props._uiSourceHandle = edge.sourceHandle;
+  }
+  // Strip any legacy unnamespaced key from prior saves to keep the JSON clean.
+  delete props.sourceHandle;
   return {
     id: edge.id,
     from: edge.source,
     to: edge.target,
     condition: (edge.data?.condition as string) ?? null,
-    properties: (edge.data?.properties as Record<string, unknown>) ?? {},
+    properties: props,
     type: (edge.data?.type as TransitionType) ?? 'Normal',
   };
 }

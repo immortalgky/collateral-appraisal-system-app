@@ -11,6 +11,13 @@ import { ForkForm } from './ForkForm';
 import { JoinForm } from './JoinForm';
 import { DynamicPropertyForm } from './DynamicPropertyForm';
 import { TransitionForm } from './TransitionForm';
+import { ApprovalForm } from './ApprovalForm';
+import { MeetingForm } from './MeetingForm';
+import { AwaitSignalForm } from './AwaitSignalForm';
+import { InternalFollowupSelectionForm } from './InternalFollowupSelectionForm';
+import { RequestSubmissionActivityForm } from './RequestSubmissionActivityForm';
+import { AdminReviewActivityForm } from './AdminReviewActivityForm';
+import { TimerForm } from './TimerForm';
 
 export function PropertyPanel() {
   const selectedNodeId = useWorkflowStore((s) => s.selectedNodeId);
@@ -109,6 +116,21 @@ function renderFormForType(data: ActivityNodeData) {
       return <ForkForm nodeId={data.id} />;
     case 'JoinActivity':
       return <JoinForm nodeId={data.id} />;
+    // Phase 2 — new activity forms
+    case 'ApprovalActivity':
+      return <ApprovalForm nodeId={data.id} />;
+    case 'MeetingActivity':
+      return <MeetingForm nodeId={data.id} />;
+    case 'AwaitSignalActivity':
+      return <AwaitSignalForm nodeId={data.id} />;
+    case 'InternalFollowupSelectionActivity':
+      return <InternalFollowupSelectionForm nodeId={data.id} />;
+    case 'RequestSubmissionActivity':
+      return <RequestSubmissionActivityForm nodeId={data.id} />;
+    case 'AdminReviewActivity':
+      return <AdminReviewActivityForm nodeId={data.id} />;
+    case 'TimerActivity':
+      return <TimerForm nodeId={data.id} />;
     default:
       return <DynamicPropertyForm nodeId={data.id} />;
   }

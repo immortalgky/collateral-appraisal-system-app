@@ -1,7 +1,16 @@
 import { Dropdown, NumberInput, TextInput, Toggle, type ListBoxItem } from '@/shared/components';
 import clsx from 'clsx';
+import { createContext, useContext } from 'react';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 import TDropdown from './TDropdown';
+
+// When true, every RHFInputCell inside this subtree renders plain text instead
+// of an input control. Used by the "View Assumption Summary" modal so the
+// existing method-modal layouts can be reused as a read-only summary without
+// duplicating structure or passing isReadOnly props through every component.
+const DisplayOnlyContext = createContext(false);
+
+export const DisplayOnlyProvider = DisplayOnlyContext.Provider;
 
 export function toNumber(v: any): number | null {
   if (v == null) return null;
@@ -69,6 +78,30 @@ export const RHFInputCell = ({
     fieldState: { error },
   } = useController({ control, name: fieldName });
   const formState = useFormState({ control });
+
+  const displayOnly = useContext(DisplayOnlyContext);
+  if (displayOnly && inputType !== 'display') {
+    const raw = field.value;
+    let rendered: React.ReactNode;
+    if (inputType === 'number') {
+      const n = toNumber(raw);
+      rendered = n == null
+        ? '—'
+        : n.toLocaleString(undefined, {
+            maximumFractionDigits: number?.decimalPlaces ?? 4,
+            minimumFractionDigits: number?.decimalPlaces ?? 0,
+          });
+    } else if (inputType === 'select') {
+      const match = (options ?? []).find(o => o.value === raw);
+      rendered = match?.label ?? (raw ? String(raw) : '—');
+    } else if (inputType === 'toggle') {
+      const opts: [string, string] = toggle?.options ?? ['No', 'Yes'];
+      rendered = raw ? opts[1] : opts[0];
+    } else {
+      rendered = raw == null || raw === '' ? '—' : String(raw);
+    }
+    return <span className="text-xs text-gray-800">{rendered}</span>;
+  }
 
   if (inputType === 'number') {
     return (

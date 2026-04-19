@@ -21,22 +21,50 @@ export const dashboardApi = {
     const params = new URLSearchParams({ period });
     if (from) params.set('from', from);
     if (to) params.set('to', to);
-    const { data } = await axios.get<AppraisalCountsResponse>(`/dashboard/appraisal-counts?${params}`);
+    const { data } = await axios.get<AppraisalCountsResponse>(
+      `/dashboard/appraisal-counts?${params}`,
+    );
     return data;
   },
 
-  getAppraisalStatusSummary: async () => {
-    const { data } = await axios.get<AppraisalStatusSummaryResponse>('/dashboard/appraisal-status-summary');
+  getAppraisalStatusSummary: async (filters?: {
+    from?: string;
+    to?: string;
+    assigneeId?: string;
+    bankingSegment?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.from) params.set('from', filters.from);
+    if (filters?.to) params.set('to', filters.to);
+    if (filters?.assigneeId) params.set('assigneeId', filters.assigneeId);
+    if (filters?.bankingSegment) params.set('bankingSegment', filters.bankingSegment);
+    const qs = params.toString();
+    const url = qs
+      ? `/dashboard/appraisal-status-summary?${qs}`
+      : '/dashboard/appraisal-status-summary';
+    const { data } = await axios.get<AppraisalStatusSummaryResponse>(url);
     return data;
   },
 
-  getTeamWorkload: async () => {
-    const { data } = await axios.get<TeamWorkloadResponse>('/dashboard/team-workload');
+  getTeamWorkload: async (filters?: { from?: string; to?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.from) params.set('from', filters.from);
+    if (filters?.to) params.set('to', filters.to);
+    const qs = params.toString();
+    const url = qs ? `/dashboard/team-workload?${qs}` : '/dashboard/team-workload';
+    const { data } = await axios.get<TeamWorkloadResponse>(url);
     return data;
   },
 
-  getCompanyAppraisalSummary: async () => {
-    const { data } = await axios.get<CompanyAppraisalSummaryResponse>('/dashboard/company-appraisal-summary');
+  getCompanyAppraisalSummary: async (filters?: { from?: string; to?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.from) params.set('from', filters.from);
+    if (filters?.to) params.set('to', filters.to);
+    const qs = params.toString();
+    const url = qs
+      ? `/dashboard/company-appraisal-summary?${qs}`
+      : '/dashboard/company-appraisal-summary';
+    const { data } = await axios.get<CompanyAppraisalSummaryResponse>(url);
     return data;
   },
 

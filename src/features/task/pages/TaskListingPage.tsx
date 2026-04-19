@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGetTasks, useGetTasksForKanban } from '../api';
-import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
+import type {
+  GroupByField,
+  Task,
+  TaskFilterParams,
+  TaskDateType,
+  TaskListResponse,
+} from '../types';
 import PoolTaskListPage from './PoolTaskListPage';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
@@ -35,16 +41,64 @@ const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
   customerName: 'Customer',
   status: 'Request Status',
+  pendingTaskStatus: 'Task Status',
+  slaStatus: 'SLA',
+  assigneeUserId: 'Assignee',
   activityId: 'Task Type',
   dateType: 'Date Type',
   dateFrom: 'From',
   dateTo: 'To',
 };
 
+const TASK_FILTER_KEYS: (keyof TaskFilterParams)[] = [
+  'appraisalNumber',
+  'customerName',
+  'status',
+  'pendingTaskStatus',
+  'slaStatus',
+  'assigneeUserId',
+  'activityId',
+  'dateType',
+  'dateFrom',
+  'dateTo',
+];
+
+const readFiltersFromSearchParams = (sp: URLSearchParams): TaskFilterParams => {
+  const out: TaskFilterParams = {};
+  for (const key of TASK_FILTER_KEYS) {
+    const v = sp.get(key);
+    if (v) {
+      if (key === 'dateType') {
+        if (v === 'assigned' || v === 'appointment' || v === 'requested') {
+          out.dateType = v as TaskDateType;
+        }
+      } else {
+        (out as Record<string, string>)[key] = v;
+      }
+    }
+  }
+  return out;
+};
+
 function TaskListingPage() {
   const navigate = useNavigate();
-  const { visibleColumns, orderedColumns, hidden, alwaysVisible, toggleColumn, reorderColumns, resetToDefault } =
-    useColumnVisibility('task-columns-all', DEFAULT_CONFIG);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Hydrate from URL on mount
+  const initRef = useRef({
+    filters: readFiltersFromSearchParams(searchParams),
+    search: searchParams.get('search') ?? '',
+  });
+
+  const {
+    visibleColumns,
+    orderedColumns,
+    hidden,
+    alwaysVisible,
+    toggleColumn,
+    reorderColumns,
+    resetToDefault,
+  } = useColumnVisibility('task-columns-all', DEFAULT_CONFIG);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
   const [poolSearch, setPoolSearch] = useState('');
@@ -60,13 +114,13 @@ function TaskListingPage() {
   const [groupBy, setGroupBy] = useState<GroupByField>('status');
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initRef.current.search);
   const debouncedSearch = useDebounce(searchTerm, 400);
   const isSearchPending = searchTerm !== debouncedSearch;
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<TaskFilterParams>({});
+  const [filters, setFilters] = useState<TaskFilterParams>(initRef.current.filters);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
     x: 0,
@@ -88,6 +142,22 @@ function TaskListingPage() {
   useEffect(() => {
     setPageNumber(0);
   }, [sortField, sortDirection, debouncedSearch, filters]);
+
+  // Sync filters + search back to the URL so drilldowns and shareable links work.
+  // Only runs on the personal tab — pool tab owns its own local filter state.
+  useEffect(() => {
+    if (activeTab !== 'personal') return;
+    const next = new URLSearchParams();
+    if (debouncedSearch) next.set('search', debouncedSearch);
+    for (const key of TASK_FILTER_KEYS) {
+      const v = filters[key];
+      if (v) next.set(key, String(v));
+    }
+    // Only write when the string actually differs — avoids an endless loop.
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [activeTab, debouncedSearch, filters, searchParams, setSearchParams]);
 
   const listRequestParams = {
     pageNumber,

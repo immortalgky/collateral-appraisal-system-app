@@ -2,7 +2,6 @@ import type { SectionColor } from '@/features/pricingAnalysis/components/dcf/Dis
 import { type ReactNode } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@shared/components';
-import { RHFInputCell } from '../../table/RHFInputCell';
 import type { DCFSection } from '../../../types/dcf';
 
 interface SectionHeaderProps {
@@ -13,23 +12,25 @@ interface SectionHeaderProps {
 }
 function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeaderProps) {
   return (
-    <tr>
-      <td colSpan={totalNumberOfYears + 1} className={clsx('border-b border-gray-300', color.bg)}>
-        <div className={clsx('flex items-center gap-2.5 px-1 py-1.5')}>
-          <div className={clsx('w-1 h-10 rounded-lg', color.bgAccent)}></div>
+    <tr className={color.bg}>
+      <td className={clsx('border-b border-gray-200', color.bg)}>
+        <div className={clsx('flex items-center gap-2 px-1 py-0.5')}>
           <div
             className={clsx(
-              'flex items-center justify-center w-8 h-8 rounded-md text-xl',
+              'flex items-center justify-center w-5 h-5 rounded-md',
               color.bgAccent,
             )}
           >
-            <Icon name={icon} style="solid" className={clsx('size-4 shrink-0', color.textLight)} />
+            <Icon name={icon} style="solid" className={clsx('size-3 shrink-0', color.textLight)} />
           </div>
-          <span className={clsx('text-sm font-bold tracking-wide uppercase', color.textAccent)}>
+          <span className={clsx('text-xs font-bold tracking-wide uppercase', color.textAccent)}>
             {title}
           </span>
         </div>
       </td>
+      {Array.from({ length: totalNumberOfYears }, (_, index) => (
+        <td key={index} className={clsx('border-b border-gray-200', color.bg)} />
+      ))}
     </tr>
   );
 }
@@ -44,10 +45,10 @@ interface SectionTotalRowProps {
 function SectionTotalRow({ totalSectionValues, label, color }: SectionTotalRowProps) {
   return (
     <tr className={color.bg}>
-      <td className={clsx('border-b border-gray-300', color.bg)}>
-        <div className={clsx('flex items-center gap-2.5 px-1 py-1.5')}>
-          <div className={clsx('w-1 h-5 rounded-lg', color.bgAccent)}></div>
-          <span className={clsx('text-sm font-bold tracking-wide uppercase', color.textAccent)}>
+      <td className={clsx('border-b border-gray-200', color.bg)}>
+        <div className={clsx('flex items-center gap-2 px-1 py-0.5')}>
+          <div className={clsx('w-0.5 h-3 rounded', color.bgAccent)}></div>
+          <span className={clsx('text-[11px] font-bold tracking-wide uppercase', color.textAccent)}>
             {label}
           </span>
         </div>
@@ -57,7 +58,7 @@ function SectionTotalRow({ totalSectionValues, label, color }: SectionTotalRowPr
           <td
             key={index}
             className={clsx(
-              'border-b border-gray-300 font-medium text-right text-sm px-1.5 py-1.5',
+              'border-b border-gray-200 font-medium text-right text-xs px-1 py-0.5',
               color.bg,
               color.textAccent,
             )}

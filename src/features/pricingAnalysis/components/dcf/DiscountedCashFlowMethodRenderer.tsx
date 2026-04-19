@@ -44,8 +44,8 @@ export function DiscountedCashFlowMethodRenderer({
     assumptionType: assumption.assumptionType,
     isReadOnly: isReadOnly,
     baseStyles: {
-      rowHeader: 'pl-24 px-1.5 h-12 text-sm text-gray-500 border-b border-gray-300',
-      rowBody: 'px-1.5 h-12 text-sm text-right text-gray-500 border-b border-gray-300',
+      rowHeader: 'pl-24 px-1 h-9 text-xs text-gray-500 border-b border-gray-300',
+      rowBody: 'px-1 h-9 text-xs text-right text-gray-500 border-b border-gray-300',
     },
   };
 

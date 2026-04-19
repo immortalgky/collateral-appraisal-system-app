@@ -3,7 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { RHFInputCell } from '../table/RHFInputCell';
 import { DiscountedCashFlowSectionRenderer } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowSectionRenderer';
 import type { DCFSection } from '../../types/dcf';
-import { ScrollableTableContainer } from '../ScrollableTableContainer';
+import { StickyLabelTable } from '../layout/StickyLabelTable';
 import { useMemo } from 'react';
 import { useDerivedFields } from '../../adapters/useDerivedFieldArray';
 import { buildMethodCalculationRules } from '../../domain/dcf/useCalculations';
@@ -139,11 +139,11 @@ export function DiscountedCashFlowTable({
 
   return (
     <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
-      <ScrollableTableContainer className="flex-1 min-h-0">
+      <StickyLabelTable className="flex-1 min-h-0">
         <table className="table table-xs min-w-max border-separate border-spacing-0">
           <thead className="bg-neutral-50">
             <tr className="bg-white">
-              <td className="flex-1 text-sm px-1.5 py-1.5 font-medium whitespace-nowrap border-b border-gray-300">
+              <td className="flex-1 text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300">
                 <div className="flex flex-col justify-end items-end">
                   <div className="w-16">
                     <RHFInputCell
@@ -164,7 +164,7 @@ export function DiscountedCashFlowTable({
                 <th
                   key={i}
                   className={clsx(
-                    'text-right text-sm px-1.5 py-1.5 font-medium whitespace-nowrap border-b border-gray-300',
+                    'text-right text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300 min-w-[120px]',
                   )}
                 >
                   Year {i + 1}
@@ -189,7 +189,7 @@ export function DiscountedCashFlowTable({
             })}
           </tbody>
         </table>
-      </ScrollableTableContainer>
+      </StickyLabelTable>
     </div>
   );
 }

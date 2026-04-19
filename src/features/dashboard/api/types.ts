@@ -31,6 +31,7 @@ export type TeamWorkloadItem = {
   notStarted: number;
   inProgress: number;
   completed: number;
+  overdue: number;
 };
 
 export type TeamWorkloadResponse = {
@@ -72,6 +73,9 @@ export type CalendarItem = {
   time: string | null;
   linkEntityType: CalendarLinkEntityType;
   linkEntityId: string;
+  // When the event is tied to an appraisal task, carries the human-readable
+  // appraisal number (e.g. "APP-2026-0123"). Null for standalone meetings.
+  appraisalNumber: string | null;
 };
 
 export type CalendarDay = {

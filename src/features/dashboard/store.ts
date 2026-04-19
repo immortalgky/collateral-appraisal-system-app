@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DEFAULT_WIDGETS, WIDGET_CONFIGS, canPlaceInSidebar, type Widget, type WidgetType, type ColumnSpan, type WidgetPosition } from './types';
+import {
+  DEFAULT_WIDGETS,
+  WIDGET_CONFIGS,
+  canPlaceInSidebar,
+  type Widget,
+  type WidgetType,
+  type ColumnSpan,
+  type WidgetPosition,
+} from './types';
 
 type DashboardStore = {
   widgets: Widget[];
@@ -11,31 +19,33 @@ type DashboardStore = {
   reorderWidgets: (activeId: string, overId: string) => void;
   resizeWidget: (id: string, cols: ColumnSpan) => void;
   moveWidget: (id: string, position: WidgetPosition) => void;
+  updateWidgetSettings: (id: string, partial: Record<string, unknown>) => void;
   resetWidgets: () => void;
 };
 
 // Merge persisted widgets with DEFAULT_WIDGETS to include any new widgets
 const mergeWidgets = (persistedWidgets: Widget[]): Widget[] => {
-  const existingIds = new Set(persistedWidgets.map((w) => w.id));
-  const newWidgets = DEFAULT_WIDGETS.filter((w) => !existingIds.has(w.id));
-  // Ensure all widgets have position field
-  const updatedWidgets = persistedWidgets.map((w) => ({
+  const existingIds = new Set(persistedWidgets.map(w => w.id));
+  const newWidgets = DEFAULT_WIDGETS.filter(w => !existingIds.has(w.id));
+  // Ensure all widgets have position and settings fields
+  const updatedWidgets = persistedWidgets.map(w => ({
     ...w,
     position: w.position || (canPlaceInSidebar(w.type) ? 'sidebar' : 'main'),
+    settings: w.settings ?? {},
   })) as Widget[];
   return [...updatedWidgets, ...newWidgets];
 };
 
 export const useDashboardStore = create<DashboardStore>()(
   persist(
-    (set) => ({
+    set => ({
       widgets: DEFAULT_WIDGETS,
       isEditMode: false,
-      setEditMode: (mode) => set({ isEditMode: mode }),
+      setEditMode: mode => set({ isEditMode: mode }),
 
       addWidget: (type, position) =>
-        set((state) => {
-          const existingWidget = state.widgets.find((w) => w.type === type);
+        set(state => {
+          const existingWidget = state.widgets.find(w => w.type === type);
           if (existingWidget) {
             // Determine position - use provided, or default based on minCols
             const targetPosition = position || (canPlaceInSidebar(type) ? 'sidebar' : 'main');
@@ -46,30 +56,34 @@ export const useDashboardStore = create<DashboardStore>()(
             }
 
             // Get the highest order number and add widget at the end
-            const maxOrder = Math.max(...state.widgets.filter((w) => w.visible).map((w) => w.order), 0);
+            const maxOrder = Math.max(...state.widgets.filter(w => w.visible).map(w => w.order), 0);
             const config = WIDGET_CONFIGS[type];
             return {
-              widgets: state.widgets.map((w) =>
+              widgets: state.widgets.map(w =>
                 w.type === type
-                  ? { ...w, visible: true, order: maxOrder + 1, cols: config.defaultCols, position: targetPosition }
-                  : w
+                  ? {
+                      ...w,
+                      visible: true,
+                      order: maxOrder + 1,
+                      cols: config.defaultCols,
+                      position: targetPosition,
+                    }
+                  : w,
               ),
             };
           }
           return state;
         }),
 
-      removeWidget: (id) =>
-        set((state) => ({
-          widgets: state.widgets.map((w) =>
-            w.id === id ? { ...w, visible: false } : w
-          ),
+      removeWidget: id =>
+        set(state => ({
+          widgets: state.widgets.map(w => (w.id === id ? { ...w, visible: false } : w)),
         })),
 
       reorderWidgets: (activeId, overId) =>
-        set((state) => {
-          const activeWidget = state.widgets.find((w) => w.id === activeId);
-          const overWidget = state.widgets.find((w) => w.id === overId);
+        set(state => {
+          const activeWidget = state.widgets.find(w => w.id === activeId);
+          const overWidget = state.widgets.find(w => w.id === overId);
 
           if (!activeWidget || !overWidget) return state;
 
@@ -77,11 +91,11 @@ export const useDashboardStore = create<DashboardStore>()(
           if (activeWidget.position !== overWidget.position) return state;
 
           const positionWidgets = state.widgets
-            .filter((w) => w.visible && w.position === activeWidget.position)
+            .filter(w => w.visible && w.position === activeWidget.position)
             .sort((a, b) => a.order - b.order);
 
-          const activeIndex = positionWidgets.findIndex((w) => w.id === activeId);
-          const overIndex = positionWidgets.findIndex((w) => w.id === overId);
+          const activeIndex = positionWidgets.findIndex(w => w.id === activeId);
+          const overIndex = positionWidgets.findIndex(w => w.id === overId);
 
           if (activeIndex === -1 || overIndex === -1) return state;
 
@@ -97,7 +111,7 @@ export const useDashboardStore = create<DashboardStore>()(
           });
 
           return {
-            widgets: state.widgets.map((w) => ({
+            widgets: state.widgets.map(w => ({
               ...w,
               order: updatedOrders.get(w.id) ?? w.order,
             })),
@@ -105,24 +119,25 @@ export const useDashboardStore = create<DashboardStore>()(
         }),
 
       resizeWidget: (id, cols) =>
-        set((state) => {
-          const widget = state.widgets.find((w) => w.id === id);
+        set(state => {
+          const widget = state.widgets.find(w => w.id === id);
           if (!widget) return state;
 
           const config = WIDGET_CONFIGS[widget.type];
           // Clamp cols to min/max
-          const clampedCols = Math.max(config.minCols, Math.min(config.maxCols, cols)) as ColumnSpan;
+          const clampedCols = Math.max(
+            config.minCols,
+            Math.min(config.maxCols, cols),
+          ) as ColumnSpan;
 
           return {
-            widgets: state.widgets.map((w) =>
-              w.id === id ? { ...w, cols: clampedCols } : w
-            ),
+            widgets: state.widgets.map(w => (w.id === id ? { ...w, cols: clampedCols } : w)),
           };
         }),
 
       moveWidget: (id, position) =>
-        set((state) => {
-          const widget = state.widgets.find((w) => w.id === id);
+        set(state => {
+          const widget = state.widgets.find(w => w.id === id);
           if (!widget) return state;
 
           // Validate: can't move large widgets to sidebar
@@ -132,22 +147,29 @@ export const useDashboardStore = create<DashboardStore>()(
 
           // Get max order in target position
           const maxOrder = Math.max(
-            ...state.widgets.filter((w) => w.visible && w.position === position).map((w) => w.order),
-            0
+            ...state.widgets.filter(w => w.visible && w.position === position).map(w => w.order),
+            0,
           );
 
           return {
-            widgets: state.widgets.map((w) =>
-              w.id === id ? { ...w, position, order: maxOrder + 1 } : w
+            widgets: state.widgets.map(w =>
+              w.id === id ? { ...w, position, order: maxOrder + 1 } : w,
             ),
           };
         }),
+
+      updateWidgetSettings: (id, partial) =>
+        set(state => ({
+          widgets: state.widgets.map(w =>
+            w.id === id ? { ...w, settings: { ...(w.settings ?? {}), ...partial } } : w,
+          ),
+        })),
 
       resetWidgets: () => set({ widgets: DEFAULT_WIDGETS }),
     }),
     {
       name: 'dashboard-widgets',
-      version: 6, // Bump version for position field
+      version: 7, // v7: added per-widget settings field
       migrate: (persistedState, version) => {
         const state = persistedState as DashboardStore;
         if (version < 6) {
@@ -155,6 +177,13 @@ export const useDashboardStore = create<DashboardStore>()(
           return {
             ...state,
             widgets: DEFAULT_WIDGETS,
+          };
+        }
+        if (version < 7) {
+          // Initialise empty settings on every widget, preserve everything else
+          return {
+            ...state,
+            widgets: (state.widgets ?? []).map(w => ({ ...w, settings: w.settings ?? {} })),
           };
         }
         return state;
@@ -167,6 +196,6 @@ export const useDashboardStore = create<DashboardStore>()(
           widgets: mergeWidgets(persisted.widgets || []),
         };
       },
-    }
-  )
+    },
+  ),
 );

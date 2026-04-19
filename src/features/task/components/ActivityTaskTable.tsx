@@ -34,6 +34,9 @@ const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
   customerName: 'Customer',
   status: 'Request Status',
+  pendingTaskStatus: 'Task Status',
+  slaStatus: 'SLA',
+  assigneeUserId: 'Assignee',
   activityId: 'Task Type',
   dateType: 'Date Type',
   dateFrom: 'From',
@@ -74,8 +77,15 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
   const columnConfig = useMemo(() => getActivityColumnConfig(activityId), [activityId]);
 
-  const { visibleColumns, orderedColumns, hidden, alwaysVisible, toggleColumn, reorderColumns, resetToDefault } =
-    useColumnVisibility('task-columns-' + activityId, columnConfig);
+  const {
+    visibleColumns,
+    orderedColumns,
+    hidden,
+    alwaysVisible,
+    toggleColumn,
+    reorderColumns,
+    resetToDefault,
+  } = useColumnVisibility('task-columns-' + activityId, columnConfig);
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupByField>('status');

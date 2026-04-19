@@ -49,13 +49,12 @@ export function DiscountedCashFlowCategory({
 
   return (
     <>
-      <tr onClick={() => setExpanded(!isExpanded)} data-category={{ category: category }}>
-        <td
-          className={clsx(
-            baseStyles.rowHeader,
-            isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
-          )}
-        >
+      <tr
+        onClick={() => setExpanded(!isExpanded)}
+        data-category={{ category: category }}
+        className="cursor-pointer hover:bg-gray-50/60"
+      >
+        <td className={clsx(baseStyles.rowHeader)}>
           <div className="flex flex-row items-center gap-1.5">
             <Icon
               name="chevron-down"
@@ -68,10 +67,9 @@ export function DiscountedCashFlowCategory({
             {category?.categoryName ?? ''}
             <span
               className={clsx(
-                'flex items-center justify-center text-sm',
+                'inline-flex items-center justify-center min-w-5 h-4 px-1 rounded text-[10px] font-semibold',
                 color.textAccent,
                 color.bg,
-                'rounded-full w-6 h-6',
               )}
             >
               {fields.length}
@@ -79,13 +77,7 @@ export function DiscountedCashFlowCategory({
           </div>
         </td>
         {Array.from({ length: totalNumberOfYears }, (_, index) => (
-          <td
-            key={index}
-            className={clsx(
-              baseStyles.rowBody,
-              isExpanded ? 'bg-gray-50 transition-colors duration-300' : '',
-            )}
-          >
+          <td key={index} className={clsx(baseStyles.rowBody)}>
             <span>
               {category.totalCategoryValues?.[index]
                 ? category.totalCategoryValues?.[index].toLocaleString()
@@ -132,19 +124,20 @@ export function DiscountedCashFlowCategory({
 
           {!isReadOnly && (
             <tr>
-              <td className={clsx(baseStyles.rowHeader)}>
-                <div className="flex flex-row items-center gap-1.5">
+              <td className="border-b border-gray-200 bg-white">
+                <div className="flex flex-row items-center pl-10 px-1 py-0.5">
                   <button
                     type="button"
                     onClick={handleOnAddAssumption}
-                    className="px-1.5 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] text-primary rounded-md border border-dashed border-primary/40 hover:bg-primary/10 cursor-pointer"
                   >
-                    + Add Assumption
+                    <Icon name="plus" style="solid" className="size-2.5" />
+                    Add assumption
                   </button>
                 </div>
               </td>
               {Array.from({ length: totalNumberOfYears }, (_, index) => (
-                <td key={index} className={clsx(baseStyles.rowBody)} />
+                <td key={index} className="border-b border-gray-200 bg-white" />
               ))}
             </tr>
           )}
