@@ -10,7 +10,7 @@ export const startPropertiesSchema = z.object({}).passthrough();
 export const taskPropertiesSchema = z
   .object({
     activityName: z.string().min(1, 'Activity name is required'),
-    assigneeRole: z.string().min(1, 'Assignee role is required'),
+    assigneeRole: z.string().optional(),
     assigneeGroup: z.string().min(1, 'Assignee group is required'),
     assignmentStrategies: z.string(),
     initialAssignmentStrategies: z.array(z.string()),
@@ -146,12 +146,7 @@ export const switchFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
   expression: z.string().min(1, 'Expression is required'),
-  cases: z.array(
-    z.object({
-      key: z.string().min(1, 'Case name is required'),
-      value: z.string().min(1, 'Case condition is required'),
-    }),
-  ),
+  cases: z.array(z.string().min(1, 'Case value is required')),
 });
 
 export const forkFormSchema = z.object({
@@ -182,6 +177,67 @@ export const transitionFormSchema = z.object({
   condition: z.string().nullable(),
 });
 
+// Phase 2 form schemas
+
+export const approvalFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  memberSourceType: z.string().min(1, 'Member source type is required'),
+  quorumType: z.enum(['count', 'percent']),
+  quorumValue: z.coerce.number().min(1),
+  majorityType: z.enum(['count', 'percent']),
+  majorityValue: z.coerce.number().min(1),
+  voteOptions: z.array(z.string().min(1)),
+  decisionConditions: z.array(z.object({ key: z.string(), value: z.string() })),
+  timeoutDuration: z.string().min(1, 'Timeout is required'),
+});
+
+export const meetingFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  meetingName: z.string(),
+  notes: z.string(),
+});
+
+export const awaitSignalFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  signalName: z.string().min(1, 'Signal name is required'),
+  correlationKey: z.string().min(1, 'Correlation key is required'),
+  completionVariable: z.string(),
+});
+
+export const internalFollowupSelectionFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+});
+
+export const requestSubmissionActivityFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  propertyType: z.string().min(1, 'Property type is required'),
+  propertyAddress: z.string().min(1, 'Property address is required'),
+  estimatedValue: z.coerce.number().min(0),
+  purpose: z.string().min(1, 'Purpose is required'),
+  requestorId: z.string(),
+});
+
+export const adminReviewActivityFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  reviewDeadline: z.string(),
+  autoApprovalThreshold: z.coerce.number().min(0),
+});
+
+export const timerFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string(),
+  duration: z.string().min(1, 'Duration is required'),
+  scheduledTime: z.string(),
+  timerName: z.string(),
+  allowEarlyCancellation: z.boolean(),
+});
+
 export type StartFormValues = z.infer<typeof startFormSchema>;
 export type TaskFormValues = z.infer<typeof taskFormSchema>;
 export type RoutingFormValues = z.infer<typeof routingFormSchema>;
@@ -193,3 +249,10 @@ export type ForkFormValues = z.infer<typeof forkFormSchema>;
 export type JoinFormValues = z.infer<typeof joinFormSchema>;
 export type DynamicPropertyFormValues = z.infer<typeof dynamicPropertyFormSchema>;
 export type TransitionFormValues = z.infer<typeof transitionFormSchema>;
+export type ApprovalFormValues = z.infer<typeof approvalFormSchema>;
+export type MeetingFormValues = z.infer<typeof meetingFormSchema>;
+export type AwaitSignalFormValues = z.infer<typeof awaitSignalFormSchema>;
+export type InternalFollowupSelectionFormValues = z.infer<typeof internalFollowupSelectionFormSchema>;
+export type RequestSubmissionActivityFormValues = z.infer<typeof requestSubmissionActivityFormSchema>;
+export type AdminReviewActivityFormValues = z.infer<typeof adminReviewActivityFormSchema>;
+export type TimerFormValues = z.infer<typeof timerFormSchema>;

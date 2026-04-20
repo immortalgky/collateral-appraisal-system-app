@@ -1,10 +1,11 @@
 import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, type DropdownProps } from 'react-day-picker';
 import { format, formatISO, isValid, parse, setHours, setMinutes } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
 import { buildDisabledMatcher, validateDateConstraints } from './dateConstraints';
+import { ScrollableSelect } from './ScrollableSelect';
 
 interface DateTimePickerInputProps {
   label?: string;
@@ -31,6 +32,81 @@ interface DateTimePickerInputProps {
 }
 
 const DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
+  const v = i.toString().padStart(2, '0');
+  return { value: v, label: v };
+});
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => {
+  const v = i.toString().padStart(2, '0');
+  return { value: v, label: v };
+});
+
+interface TimeInput24Props {
+  value: string;
+  onChange: (next: string) => void;
+  id?: string;
+  className?: string;
+}
+
+// Custom 24-hour time input — renders identically on every OS/browser locale.
+// Native <input type="time"> follows OS locale (AM/PM on en-US, 24hr on en-GB).
+// Opens upward because the time footer sits at the bottom of the calendar popover.
+function TimeInput24({ value, onChange, id, className }: TimeInput24Props) {
+  const [rawHours, rawMinutes] = (value || '00:00').split(':');
+  const hours = (rawHours ?? '00').padStart(2, '0');
+  const minutes = (rawMinutes ?? '00').padStart(2, '0');
+
+  return (
+    <div className={clsx('flex items-center gap-1', className)}>
+      <ScrollableSelect
+        id={id}
+        ariaLabel="Hours"
+        value={hours}
+        options={HOUR_OPTIONS}
+        onChange={next => onChange(`${next}:${minutes}`)}
+        placement="top"
+        maxHeightClass="max-h-40"
+      />
+      <span className="text-gray-500">:</span>
+      <ScrollableSelect
+        ariaLabel="Minutes"
+        value={minutes}
+        options={MINUTE_OPTIONS}
+        onChange={next => onChange(`${hours}:${next}`)}
+        placement="top"
+        maxHeightClass="max-h-40"
+      />
+    </div>
+  );
+}
+
+// Custom react-day-picker Dropdown — replaces native <select> so the year/month
+// list is scrollable with a fixed max height. Uses the ghost variant so both
+// Month and Year render as matching caption-style labels.
+function CompactRdpDropdown(props: DropdownProps) {
+  const { options = [], value, onChange, 'aria-label': ariaLabel } = props;
+  return (
+    <ScrollableSelect
+      ariaLabel={ariaLabel}
+      variant="ghost"
+      value={String(value ?? '')}
+      options={options.map(o => ({
+        value: String(o.value),
+        label: o.label,
+        disabled: o.disabled,
+      }))}
+      onChange={next => {
+        if (!onChange) return;
+        const synthetic = {
+          target: { value: next },
+        } as React.ChangeEvent<HTMLSelectElement>;
+        onChange(synthetic);
+      }}
+      maxHeightClass="max-h-48"
+    />
+  );
+}
 
 const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProps>(
   (
@@ -214,8 +290,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       }
     };
 
-    const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newTime = e.target.value;
+    const handleTimeChange = (newTime: string) => {
       setTimeValue(newTime);
 
       if (selectedDate) {
@@ -316,9 +391,25 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
               'absolute z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200',
               position === 'bottom' ? 'mt-1' : 'bottom-full mb-1',
             )}
+            style={
+              {
+                // Compact react-day-picker (defaults are 44px cells / rem-based fonts)
+                '--rdp-day-width': '1.75rem',
+                '--rdp-day-height': '1.75rem',
+                '--rdp-day_button-width': '1.75rem',
+                '--rdp-day_button-height': '1.75rem',
+                '--rdp-day_button-border-radius': '0.25rem',
+                '--rdp-weekday-padding': '0',
+                '--rdp-nav_button-width': '1.5rem',
+                '--rdp-nav_button-height': '1.5rem',
+                '--rdp-month_caption-font': '600 0.8125rem/1 inherit',
+                '--rdp-weekday-opacity': '0.6',
+                '--rdp-font-family': 'inherit',
+              } as React.CSSProperties
+            }
           >
             <DayPicker
-              className="react-day-picker p-3"
+              className="react-day-picker p-2 text-xs"
               captionLayout="dropdown"
               mode="single"
               navLayout="around"
@@ -330,29 +421,32 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
               reverseYears
               endMonth={new Date(new Date().getFullYear() + 100, 12, 0)}
               disabled={disabledMatcher}
+              components={{ Dropdown: CompactRdpDropdown }}
             />
 
-            {/* Time Picker */}
-            <div className="px-3 pb-3 border-t border-gray-200 pt-3">
+            {/* Time + Done footer */}
+            <div className="px-2 pb-2 pt-2 border-t border-gray-200">
               <div className="flex items-center gap-2">
-                <label htmlFor={`${inputId}-time`} className="text-xs font-medium text-gray-700">
-                  Time:
+                <label
+                  htmlFor={`${inputId}-time`}
+                  className="text-xs font-medium text-gray-700"
+                >
+                  Time
                 </label>
-                <input
+                <TimeInput24
                   id={`${inputId}-time`}
-                  type="time"
                   value={timeValue}
                   onChange={handleTimeChange}
-                  className="flex-1 px-2 py-1 border border-gray-200 rounded text-sm focus:ring-2 focus:ring-gray-200 focus:border-gray-400"
+                  className="flex-1"
                 />
+                <button
+                  type="button"
+                  onClick={handleDone}
+                  className="px-3 py-1 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Done
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleDone}
-                className="w-full mt-2 px-3 py-1.5 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Done
-              </button>
             </div>
           </div>
         )}

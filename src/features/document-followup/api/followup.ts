@@ -7,6 +7,7 @@ import type {
   FollowupSummary,
   RaiseFollowupRequest,
   RaiseFollowupResponse,
+  SubmitDocumentFollowupRequest,
 } from '../types/followup';
 
 // ----- Query key factory -----
@@ -55,8 +56,14 @@ export async function cancelLineItem(
 }
 
 /** POST /workflows/document-followups/{id}/submit */
-export async function submitDocumentFollowup(followupId: string): Promise<void> {
-  await axios.post(`/workflows/document-followups/${followupId}/submit`);
+export async function submitDocumentFollowup(
+  followupId: string,
+  body: SubmitDocumentFollowupRequest,
+): Promise<void> {
+  await axios.post(
+    `/workflows/document-followups/${followupId}/submit`,
+    body,
+  );
 }
 
 /** POST /workflows/document-followups/{id}/line-items/{lineItemId}/decline */

@@ -181,6 +181,9 @@ export interface GetTasksParams {
   // Advanced filter params
   appraisalNumber?: string;
   customerName?: string;
+  pendingTaskStatus?: string;
+  slaStatus?: string;
+  assigneeUserId?: string;
   dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
@@ -192,6 +195,9 @@ export interface TaskFilterParams {
   appraisalNumber?: string;
   customerName?: string;
   status?: string;
+  pendingTaskStatus?: string;
+  slaStatus?: string;
+  assigneeUserId?: string;
   activityId?: string;
   dateType?: TaskDateType;
   dateFrom?: string;

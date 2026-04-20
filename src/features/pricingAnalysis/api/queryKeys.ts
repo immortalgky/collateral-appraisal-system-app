@@ -19,4 +19,5 @@ export const pricingAnalysisKeys = {
   pricingTemplateByCode: (code: string) => ['pricing-templates', code] as const,
   incomeAnalysis: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'income-analysis', methodId] as const,
+  pricingParameters: () => ['pricing-parameters'] as const,
 };

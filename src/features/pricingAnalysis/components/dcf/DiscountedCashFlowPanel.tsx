@@ -16,7 +16,15 @@ import { useGetPricingTemplates, useGetPricingTemplateByCode, useSaveIncomeAnaly
 import { mapDCFFormToSaveRequest } from '../../mappers/formToSaveRequest';
 import { mapIncomeAnalysisToDCFForm } from '../../mappers/analysisToForm';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import { DiscountedCashFlowSummaryAssumption } from './DiscountedCashFlowSummaryAssumption';
+import {
+  DiscountedCashFlowSummaryAssumption,
+  ViewAssumptionSummaryButton,
+} from './DiscountedCashFlowSummaryAssumption';
+import { KpiDashboard } from '../viz/KpiDashboard';
+import { CashflowTimelineChart } from '../viz/CashflowTimelineChart';
+import { SensitivityStrip } from '../SensitivityStrip';
+import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
+import toast from 'react-hot-toast';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -123,6 +131,20 @@ export function DiscountedCashFlowPanel({
     // Guard: need at least templateCode to build a valid request.
     if (!currentValues.templateCode) return;
 
+    // Skip preview while an "Add assumption" modal is open: the pending row is
+    // appended with assumptionType=null and only gets a real type after the
+    // modal saves. Check the raw form state because the mapper coerces null
+    // to '' and keeps rows with methodType set.
+    const hasPendingNewAssumption = (currentValues.sections ?? []).some(
+      (s: { categories?: { assumptions?: { assumptionType?: unknown }[] }[] }) =>
+        (s.categories ?? []).some(c =>
+          (c.assumptions ?? []).some(
+            a => a.assumptionType == null || a.assumptionType === '',
+          ),
+        ),
+    );
+    if (hasPendingNewAssumption) return;
+
     let request: ReturnType<typeof mapDCFFormToSaveRequest>;
     try {
       request = mapDCFFormToSaveRequest(currentValues);
@@ -228,11 +250,14 @@ export function DiscountedCashFlowPanel({
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
-          appraisalValue: result.finalValueRounded ?? 0,
+          appraisalValue: result.appraisalPriceRounded ?? result.finalValueRounded ?? 0,
         });
       }
+      toast.success('Saved!');
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Save failed');
+      const message = err instanceof Error ? err.message : 'Save failed';
+      setSaveError(message);
+      toast.error(`Failed to save: ${message}`);
     }
   });
 
@@ -269,14 +294,33 @@ export function DiscountedCashFlowPanel({
 
         {!isLoading && (
           <div className="flex flex-col gap-4 mt-4">
-            {previewMutation.isPending && (
-              <span className="text-xs text-gray-400 px-1">Computing…</span>
-            )}
-            <DiscountedCashFlowTable
-              totalNumberOfYears={getValues('totalNumberOfYears')}
-              properties={properties ?? []}
-              isReadOnly={isReadOnly}
-            />
+            {isGenerated && <DCFVisualizationSection />}
+
+            <div className="flex justify-end">
+              <ViewAssumptionSummaryButton onClick={() => setShowAssumptionSummary(true)} />
+            </div>
+            <div className="relative">
+              <div
+                className={
+                  previewMutation.isPending
+                    ? 'opacity-50 pointer-events-none transition-opacity duration-200'
+                    : 'transition-opacity duration-200'
+                }
+                aria-busy={previewMutation.isPending}
+              >
+                <DiscountedCashFlowTable
+                  totalNumberOfYears={getValues('totalNumberOfYears')}
+                  properties={properties ?? []}
+                  isReadOnly={isReadOnly}
+                />
+              </div>
+              {previewMutation.isPending && (
+                <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-md">
+                  <span className="size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                  Calculating…
+                </div>
+              )}
+            </div>
 
             <DiscountedCashFlowSummaryAssumption
               properties={properties ?? []}
@@ -284,7 +328,6 @@ export function DiscountedCashFlowPanel({
               showAssumptionSummary={showAssumptionSummary}
               onShowAssumptionSummary={() => setShowAssumptionSummary(!showAssumptionSummary)}
             />
-
             <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
 
             {saveError && (
@@ -309,5 +352,53 @@ export function DiscountedCashFlowPanel({
         />
       </form>
     </FormProvider>
+  );
+}
+
+// Inner component — must be rendered inside FormProvider so useFormContext works.
+function DCFVisualizationSection() {
+  const {
+    cashflowData,
+    primaryKpi,
+    secondaryKpis,
+    discountRate,
+    capitalizeRate,
+  } = useIncomeScenarioResults();
+
+  return (
+    <div className="flex flex-col gap-4">
+      <KpiDashboard primary={primaryKpi} secondary={secondaryKpis} />
+
+      {cashflowData.length > 0 && (
+        <CashflowTimelineChart
+          data={cashflowData}
+          discountRate={discountRate / 100}
+          capitalizeRate={capitalizeRate / 100}
+        />
+      )}
+
+      <SensitivityStrip
+        currentRate={discountRate}
+        calculateFinalValue={(rate) => {
+          // Recompute the DCF PV at the candidate discount rate using the
+          // per-year cashflows the backend produced for the current scenario:
+          //   PV(r) = Σ_{i=0..N-2} (grossRevenue[i] + terminalRevenue[i]) / (1+r)^(i+1)
+          // The terminal value depends on capRate (not discount rate), so it's
+          // carried in cashflowData[i].terminalRevenue at the appropriate year.
+          // Direct-cap scenarios (length < 2) are not discount-rate sensitive.
+          const years = cashflowData.length;
+          if (years < 2) return null;
+          const r = rate / 100;
+          if (r < 0) return null;
+          let pv = 0;
+          for (let i = 0; i < years - 1; i++) {
+            const gr = cashflowData[i]?.noi ?? 0;
+            const term = cashflowData[i]?.terminalRevenue ?? 0;
+            pv += (gr + term) / Math.pow(1 + r, i + 1);
+          }
+          return pv;
+        }}
+      />
+    </div>
   );
 }

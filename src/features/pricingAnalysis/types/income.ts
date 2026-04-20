@@ -104,6 +104,13 @@ export interface IncomeSummaryDto {
   presentValue: number[];
 }
 
+export interface HighestBestUsedDto {
+  areaRai: number | null;
+  areaNgan: number | null;
+  areaWa: number | null;
+  pricePerSqWa: number | null;
+}
+
 export interface IncomeAnalysisDto {
   id: string;
   pricingAnalysisMethodId: string;
@@ -115,6 +122,10 @@ export interface IncomeAnalysisDto {
   discountedRate: number;
   finalValue: number | null;
   finalValueRounded: number | null;
+  finalValueAdjust: number | null;
+  isHighestBestUsed: boolean;
+  highestBestUsed: HighestBestUsedDto;
+  appraisalPriceRounded: number | null;
   sections: IncomeSectionDto[];
   summary: IncomeSummaryDto;
 }
@@ -149,6 +160,13 @@ export interface IncomeSectionInput {
   clientId?: string;
 }
 
+export interface HighestBestUsedInput {
+  areaRai: number | null;
+  areaNgan: number | null;
+  areaWa: number | null;
+  pricePerSqWa: number | null;
+}
+
 export interface SaveIncomeAnalysisRequest {
   templateCode: string;
   templateName: string;
@@ -157,6 +175,8 @@ export interface SaveIncomeAnalysisRequest {
   capitalizeRate: number;
   discountedRate: number;
   sections: IncomeSectionInput[];
-  // User-overridden rounded value. Omit or pass null/0 to let backend recompute.
-  finalValueRounded?: number | null;
+  finalValueAdjust?: number | null;
+  isHighestBestUsed?: boolean;
+  highestBestUsed?: HighestBestUsedInput | null;
+  appraisalPriceRounded?: number | null;
 }

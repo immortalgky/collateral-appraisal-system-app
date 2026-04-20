@@ -10,6 +10,14 @@ export const ActivityType = {
   JOIN: 'JoinActivity',
   REQUEST_SUBMISSION: 'RequestSubmission',
   ADMIN_REVIEW: 'AdminReview',
+  // Phase 2 — new activity types
+  APPROVAL: 'ApprovalActivity',
+  MEETING: 'MeetingActivity',
+  AWAIT_SIGNAL: 'AwaitSignalActivity',
+  INTERNAL_FOLLOWUP_SELECTION: 'InternalFollowupSelectionActivity',
+  REQUEST_SUBMISSION_ACTIVITY: 'RequestSubmissionActivity',
+  ADMIN_REVIEW_ACTIVITY: 'AdminReviewActivity',
+  TIMER: 'TimerActivity',
 } as const;
 
 export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType];
@@ -57,7 +65,7 @@ export interface StartProperties {
 
 export interface TaskProperties {
   activityName: string;
-  assigneeRole: string;
+  assigneeRole?: string;
   assigneeGroup: string;
   assignmentStrategies: string;
   initialAssignmentStrategies: string[];
@@ -82,7 +90,7 @@ export interface IfElseProperties {
 
 export interface SwitchProperties {
   expression: string;
-  cases: Record<string, string>;
+  cases: string[];
 }
 
 export interface ForkProperties {
@@ -107,6 +115,52 @@ export interface GenericProperties {
   [key: string]: unknown;
 }
 
+// Phase 2 — new activity property interfaces
+
+export interface ApprovalProperties {
+  memberSource: { type: string; parameters: Record<string, unknown> };
+  quorum: { type: 'count' | 'percent'; value: number };
+  majority: { type: 'count' | 'percent'; value: number };
+  voteOptions: string[];
+  decisionConditions: Record<string, string>;
+  timeoutDuration: string;
+}
+
+export interface MeetingProperties {
+  meetingName: string;
+  notes: string;
+}
+
+export interface AwaitSignalProperties {
+  signalName: string;
+  correlationKey: string;
+  completionVariable: string;
+}
+
+export interface InternalFollowupSelectionProperties {
+  [key: string]: unknown;
+}
+
+export interface RequestSubmissionActivityProperties {
+  propertyType: string;
+  propertyAddress: string;
+  estimatedValue: number;
+  purpose: string;
+  requestorId: string;
+}
+
+export interface AdminReviewActivityProperties {
+  reviewDeadline: string;
+  autoApprovalThreshold: number;
+}
+
+export interface TimerProperties {
+  duration: string;
+  scheduledTime: string;
+  timerName: string;
+  allowEarlyCancellation: boolean;
+}
+
 export type ActivityProperties =
   | StartProperties
   | TaskProperties
@@ -117,6 +171,13 @@ export type ActivityProperties =
   | ForkProperties
   | JoinProperties
   | EndProperties
+  | ApprovalProperties
+  | MeetingProperties
+  | AwaitSignalProperties
+  | InternalFollowupSelectionProperties
+  | RequestSubmissionActivityProperties
+  | AdminReviewActivityProperties
+  | TimerProperties
   | GenericProperties;
 
 export interface Activity {
@@ -324,7 +385,7 @@ export function createDefaultIfElseProperties(): IfElseProperties {
 export function createDefaultSwitchProperties(): SwitchProperties {
   return {
     expression: '',
-    cases: {},
+    cases: [],
   };
 }
 
@@ -352,6 +413,58 @@ export function createDefaultEndProperties(): EndProperties {
   };
 }
 
+export function createDefaultApprovalProperties(): ApprovalProperties {
+  return {
+    memberSource: { type: 'inline', parameters: {} },
+    quorum: { type: 'count', value: 1 },
+    majority: { type: 'count', value: 1 },
+    voteOptions: ['approve', 'reject', 'route_back'],
+    decisionConditions: {},
+    timeoutDuration: 'PT72H',
+  };
+}
+
+export function createDefaultMeetingProperties(): MeetingProperties {
+  return {
+    meetingName: '',
+    notes: '',
+  };
+}
+
+export function createDefaultAwaitSignalProperties(): AwaitSignalProperties {
+  return {
+    signalName: '',
+    correlationKey: '',
+    completionVariable: '',
+  };
+}
+
+export function createDefaultRequestSubmissionActivityProperties(): RequestSubmissionActivityProperties {
+  return {
+    propertyType: '',
+    propertyAddress: '',
+    estimatedValue: 0,
+    purpose: '',
+    requestorId: '',
+  };
+}
+
+export function createDefaultAdminReviewActivityProperties(): AdminReviewActivityProperties {
+  return {
+    reviewDeadline: '',
+    autoApprovalThreshold: 0,
+  };
+}
+
+export function createDefaultTimerProperties(): TimerProperties {
+  return {
+    duration: 'PT24H',
+    scheduledTime: '',
+    timerName: '',
+    allowEarlyCancellation: false,
+  };
+}
+
 export function createDefaultPropertiesForType(
   type: ActivityType | string,
 ): ActivityProperties {
@@ -374,6 +487,20 @@ export function createDefaultPropertiesForType(
       return createDefaultJoinProperties();
     case ActivityType.END:
       return createDefaultEndProperties();
+    case ActivityType.APPROVAL:
+      return createDefaultApprovalProperties();
+    case ActivityType.MEETING:
+      return createDefaultMeetingProperties();
+    case ActivityType.AWAIT_SIGNAL:
+      return createDefaultAwaitSignalProperties();
+    case ActivityType.INTERNAL_FOLLOWUP_SELECTION:
+      return {};
+    case ActivityType.REQUEST_SUBMISSION_ACTIVITY:
+      return createDefaultRequestSubmissionActivityProperties();
+    case ActivityType.ADMIN_REVIEW_ACTIVITY:
+      return createDefaultAdminReviewActivityProperties();
+    case ActivityType.TIMER:
+      return createDefaultTimerProperties();
     default:
       return {};
   }

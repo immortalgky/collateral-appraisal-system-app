@@ -29,17 +29,17 @@ export function DiscountedCashFlowAssumption({
 
   return (
     <>
-      <tr>
-        <td className="bg-white border-b border-gray-300">
+      <tr className="group">
+        <td className="bg-white border-b border-gray-200">
           <div
             className={clsx(
-              'text-sm text-right bg-white flex flex-row items-center justify-between px-1 py-1.5 pl-15 gap-8',
+              'text-xs text-right bg-white flex flex-row items-center justify-between px-1 py-0.5 pl-10 gap-4',
             )}
           >
             <button
               type="button"
               onClick={() => setExpanded(!expanded)}
-              className="flex flex-row gap-1.5 cursor-pointer"
+              className="flex flex-row gap-1.5 items-center cursor-pointer"
             >
               <Icon
                 name="chevron-down"
@@ -62,41 +62,41 @@ export function DiscountedCashFlowAssumption({
                 }}
               />
             </button>
-            <div className="flex gap-1.5 items-center justify-end">
-              <div className="flex gap-1.5 items-center max-w-72">
-                <RHFInputCell
-                  fieldName={`${name}.method.methodType`}
-                  inputType="display"
-                  accessor={({ value }) => (
-                    <span
-                      className="truncate"
-                      title={methodParams.find(p => p.code === value)?.description ?? ''}
-                    >
-                      {methodParams.find(p => p.code === value)?.description ?? ''}
+            <div className="flex gap-1 items-center justify-end">
+              <RHFInputCell
+                fieldName={`${name}.method.methodType`}
+                inputType="display"
+                accessor={({ value }) => {
+                  const desc = methodParams.find(p => p.code === value)?.description ?? '';
+                  return (
+                    <span className="truncate text-[11px] text-gray-500" title={desc}>
+                      {desc}
                     </span>
-                  )}
-                />
-                {!isReadOnly && (
+                  );
+                }}
+              />
+              {!isReadOnly && (
+                <div className="flex gap-0.5 items-center">
                   <button
                     type="button"
-                    className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-primary text-primary rounded-lg hover:bg-primary/10 duration-200 transition-all cursor-pointer font-medium"
+                    className="size-6 rounded-md inline-flex items-center justify-center text-gray-500 hover:text-primary hover:bg-primary/10 cursor-pointer"
                     onClick={() => {
                       onOpenEditMode(assumption.clientId);
                     }}
+                    aria-label="Edit assumption"
                   >
-                    <Icon name="pencil" style="regular" className="size-4" />
+                    <Icon name="pencil" style="regular" className="size-3.5" />
                   </button>
-                )}
-                {!isReadOnly && (
                   <button
                     type="button"
-                    className="flex justify-center items-center gap-2 p-1.5 border border-dashed border-danger text-danger rounded-lg hover:bg-danger/10 duration-200 transition-all cursor-pointer font-medium"
+                    className="size-6 rounded-md inline-flex items-center justify-center text-gray-500 hover:text-danger hover:bg-danger/10 cursor-pointer"
                     onClick={onRemoveAssumption}
+                    aria-label="Delete assumption"
                   >
-                    <Icon name="trash" style="regular" className="size-4" />
+                    <Icon name="trash" style="regular" className="size-3.5" />
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </td>
@@ -105,8 +105,7 @@ export function DiscountedCashFlowAssumption({
             <td
               key={index}
               className={clsx(
-                'px-1.5 py-1.5 text-right border-b border-gray-300 text-sm',
-                // color.badge,
+                'px-1 py-0.5 text-right border-b border-gray-200 text-xs',
                 'bg-white',
               )}
             >

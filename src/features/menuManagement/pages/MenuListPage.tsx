@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
 import { MenuTreeTable } from '../components/MenuTreeTable';
+import { ActivityOverridesPanel } from '../components/ActivityOverridesPanel';
 import { useMenuList } from '../hooks/useMenuList';
 import type { MenuScope } from '../types';
 
-const SCOPES: MenuScope[] = ['Main', 'Appraisal'];
+type Tab = MenuScope | 'Activities';
+const TABS: Tab[] = ['Main', 'Appraisal', 'Activities'];
 
 /**
  * Admin page listing all menu items for a given scope.
@@ -13,8 +15,9 @@ const SCOPES: MenuScope[] = ['Main', 'Appraisal'];
  * Requires MENU_MANAGE permission (enforced in router via RoleProtectedRoute).
  */
 export default function MenuListPage() {
-  const [scope, setScope] = useState<MenuScope>('Main');
-  const { data: items, isLoading, isError, refetch } = useMenuList(scope);
+  const [tab, setTab] = useState<Tab>('Main');
+  const scopeForQuery: MenuScope = tab === 'Activities' ? 'Main' : tab;
+  const { data: items, isLoading, isError, refetch } = useMenuList(scopeForQuery);
 
   return (
     <div className="space-y-6">
@@ -23,67 +26,77 @@ export default function MenuListPage() {
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Menu Management</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Manage navigation menu items. Drag to reorder.
+            {tab === 'Activities'
+              ? 'Configure per-activity overrides on top of role-based menu permissions.'
+              : 'Manage navigation menu items. Drag to reorder.'}
           </p>
         </div>
-        <Link
-          to="/admin/menus/new"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Icon name="plus" style="solid" className="size-4" />
-          New Item
-        </Link>
+        {tab !== 'Activities' && (
+          <Link
+            to="/admin/menus/new"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Icon name="plus" style="solid" className="size-4" />
+            New Item
+          </Link>
+        )}
       </div>
 
-      {/* Scope switcher */}
+      {/* Tabs */}
       <div className="flex gap-2 border-b border-gray-200">
-        {SCOPES.map(s => (
+        {TABS.map(t => (
           <button
-            key={s}
+            key={t}
             type="button"
-            onClick={() => setScope(s)}
+            onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              scope === s
+              tab === t
                 ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {s}
+            {t}
           </button>
         ))}
       </div>
 
       {/* Content */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
-        </div>
-      )}
+      {tab === 'Activities' ? (
+        <ActivityOverridesPanel />
+      ) : (
+        <>
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
+            </div>
+          )}
 
-      {isError && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Icon name="triangle-exclamation" style="solid" className="size-10 text-red-400" />
-          <p className="text-sm text-gray-500">Failed to load menu items</p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="text-sm text-primary hover:underline"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+          {isError && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Icon name="triangle-exclamation" style="solid" className="size-10 text-red-400" />
+              <p className="text-sm text-gray-500">Failed to load menu items</p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="text-sm text-primary hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-      {!isLoading &&
-        !isError &&
-        items &&
-        (items.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-sm">
-            No menu items found for {scope} scope.
-          </div>
-        ) : (
-          <MenuTreeTable key={scope} items={items} onReordered={() => refetch()} />
-        ))}
+          {!isLoading &&
+            !isError &&
+            items &&
+            (items.length === 0 ? (
+              <div className="text-center py-16 text-gray-400 text-sm">
+                No menu items found for {tab} scope.
+              </div>
+            ) : (
+              <MenuTreeTable key={tab} items={items} onReordered={() => refetch()} />
+            ))}
+        </>
+      )}
     </div>
   );
 }

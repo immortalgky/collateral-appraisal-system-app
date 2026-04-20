@@ -88,3 +88,16 @@ export interface CancelLineItemRequest {
 export interface DeclineLineItemRequest {
   reason: string;
 }
+
+export interface SubmitFollowupAttachmentInput {
+  lineItemId: string;
+  documentId: string;
+  documentType: string;
+  fileName: string;
+  attachToRequest: boolean;
+  titleId?: string | null;
+}
+
+export interface SubmitDocumentFollowupRequest {
+  attachments: SubmitFollowupAttachmentInput[];
+}

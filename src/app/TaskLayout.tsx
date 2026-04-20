@@ -10,6 +10,7 @@ import { useParametersQuery } from '@shared/api/parameters';
 import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
+import { ActivityMenuSync } from '@features/menuManagement/ActivityMenuSync';
 import { useGetAppraisalById } from '@features/appraisal/api/appraisal';
 import { useGetRequestById } from '@features/request/api/requests';
 import type { TaskDetailResult } from '@features/appraisal/api/workflow';
@@ -363,6 +364,7 @@ function TaskLayout() {
     <AppraisalProvider value={contextValue}>
       <ParameterLoader />
       <AddressLoader />
+      <ActivityMenuSync activityId={taskData?.activityId} />
       <div className="h-screen flex flex-col">
         <MobileAppraisalSidebar appraisalId={appraisalId ?? taskId!} logo={Logo} />
         <AppraisalSidebar appraisalId={appraisalId ?? taskId!} logo={Logo} />

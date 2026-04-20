@@ -30,8 +30,8 @@ export function DiscountedCashFlowCategoryRenderer({
     color: color,
     isReadOnly: isReadOnly,
     baseStyles: {
-      rowHeader: 'pl-8 px-1 py-1.5 h-12 text-sm border-b border-gray-300',
-      rowBody: 'pl-8 px-1.5 py-1.5 h-12 text-sm text-right border-b border-gray-300',
+      rowHeader: 'pl-8 px-1 py-1 h-9 text-xs border-b border-gray-300',
+      rowBody: 'pl-8 px-1 py-1 h-9 text-xs text-right border-b border-gray-300',
     },
   };
   switch (category.categoryType) {

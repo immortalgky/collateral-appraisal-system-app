@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
 import { switchFormSchema, type SwitchFormValues } from '../../schemas';
@@ -18,41 +18,45 @@ export function SwitchForm({ nodeId }: Props) {
   const data = node?.data as ActivityNodeData | undefined;
   const props = data?.properties as SwitchProperties | undefined;
 
-  const casesArray = Object.entries(props?.cases ?? {}).map(([key, value]) => ({ key, value }));
-
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<SwitchFormValues>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<SwitchFormValues>({
     resolver: zodResolver(switchFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
       expression: props?.expression ?? '',
-      cases: casesArray.length > 0 ? casesArray : [],
+      cases: props?.cases ?? [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'cases' });
+  const cases = watch('cases') ?? [];
 
   useEffect(() => {
     if (data) {
-      const ca = Object.entries(props?.cases ?? {}).map(([key, value]) => ({ key, value }));
       reset({
         name: data.name,
         description: data.description,
         expression: props?.expression ?? '',
-        cases: ca.length > 0 ? ca : [],
+        cases: props?.cases ?? [],
       });
     }
   }, [nodeId, data, reset]);
 
   const onSubmit = (values: SwitchFormValues) => {
-    const casesObj: Record<string, string> = {};
-    values.cases.forEach((c) => { casesObj[c.key] = c.value; });
-
     updateActivityData(nodeId, {
       name: values.name,
       description: values.description,
-      properties: { ...props, expression: values.expression, cases: casesObj },
+      properties: { ...props, expression: values.expression, cases: values.cases },
     });
+  };
+
+  const appendCase = () => {
+    setValue('cases', [...cases, ''], { shouldDirty: true });
+  };
+
+  const removeCase = (index: number) => {
+    const next = cases.filter((_, i) => i !== index);
+    setValue('cases', next, { shouldDirty: true });
+    handleSubmit(onSubmit)();
   };
 
   if (!data) return null;
@@ -74,21 +78,37 @@ export function SwitchForm({ nodeId }: Props) {
 
       <div className="form-control">
         <label className="label"><span className="label-text text-xs font-medium">Expression</span></label>
-        <input {...register('expression')} className="input input-bordered input-sm w-full font-mono text-xs" placeholder="e.g. decision" />
+        <input {...register('expression')} className="input input-bordered input-sm w-full font-mono text-xs" placeholder="e.g. facilityLimit" />
         {errors.expression && <label className="label"><span className="label-text-alt text-error">{errors.expression.message}</span></label>}
       </div>
 
       <div className="divider text-xs">Cases</div>
+      <p className="-mt-2 text-[11px] text-base-content/60">
+        Each case becomes a labeled output handle. A <code>default</code> handle is always added for unmatched values.
+      </p>
 
-      {fields.map((field, index) => (
-        <div key={field.id} className="flex gap-2">
-          <input {...register(`cases.${index}.key`)} className="input input-bordered input-sm flex-1" placeholder="Case name" />
-          <input {...register(`cases.${index}.value`)} className="input input-bordered input-sm flex-1" placeholder="Condition" />
-          <button type="button" onClick={() => { remove(index); handleSubmit(onSubmit)(); }} className="btn btn-ghost btn-sm text-error">x</button>
+      {cases.map((_, index) => (
+        <div key={index} className="flex gap-2">
+          <input
+            {...register(`cases.${index}` as const)}
+            className="input input-bordered input-sm flex-1 font-mono text-xs"
+            placeholder="e.g. > 30000000"
+          />
+          <button
+            type="button"
+            onClick={() => removeCase(index)}
+            className="btn btn-ghost btn-sm text-error"
+          >
+            x
+          </button>
         </div>
       ))}
 
-      <button type="button" onClick={() => append({ key: '', value: '' })} className="btn btn-ghost btn-sm">
+      <button
+        type="button"
+        onClick={appendCase}
+        className="btn btn-ghost btn-sm"
+      >
         + Add Case
       </button>
     </form>

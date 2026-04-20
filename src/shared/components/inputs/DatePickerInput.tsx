@@ -1,10 +1,35 @@
 import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, type DropdownProps } from 'react-day-picker';
 import { format, formatISO, isValid, parse } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
 import { buildDisabledMatcher, validateDateConstraints } from './dateConstraints';
+import { ScrollableSelect } from './ScrollableSelect';
+
+function CompactRdpDropdown(props: DropdownProps) {
+  const { options = [], value, onChange, 'aria-label': ariaLabel } = props;
+  return (
+    <ScrollableSelect
+      ariaLabel={ariaLabel}
+      variant="ghost"
+      value={String(value ?? '')}
+      options={options.map(o => ({
+        value: String(o.value),
+        label: o.label,
+        disabled: o.disabled,
+      }))}
+      onChange={next => {
+        if (!onChange) return;
+        const synthetic = {
+          target: { value: next },
+        } as React.ChangeEvent<HTMLSelectElement>;
+        onChange(synthetic);
+      }}
+      maxHeightClass="max-h-48"
+    />
+  );
+}
 
 interface DatePickerInputProps {
   label?: string;
@@ -289,9 +314,24 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
               'absolute z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200',
               position === 'bottom' ? 'mt-1' : 'bottom-full mb-1',
             )}
+            style={
+              {
+                '--rdp-day-width': '1.75rem',
+                '--rdp-day-height': '1.75rem',
+                '--rdp-day_button-width': '1.75rem',
+                '--rdp-day_button-height': '1.75rem',
+                '--rdp-day_button-border-radius': '0.25rem',
+                '--rdp-weekday-padding': '0',
+                '--rdp-nav_button-width': '1.5rem',
+                '--rdp-nav_button-height': '1.5rem',
+                '--rdp-month_caption-font': '600 0.8125rem/1 inherit',
+                '--rdp-weekday-opacity': '0.6',
+                '--rdp-font-family': 'inherit',
+              } as React.CSSProperties
+            }
           >
             <DayPicker
-              className="react-day-picker p-3"
+              className="react-day-picker p-2 text-xs"
               captionLayout="dropdown"
               mode="single"
               navLayout="around"
@@ -303,6 +343,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
               reverseYears
               endMonth={new Date(new Date().getFullYear() + 100, 12, 0)}
               disabled={disabledMatcher}
+              components={{ Dropdown: CompactRdpDropdown }}
             />
           </div>
         )}

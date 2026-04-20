@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -46,8 +47,8 @@ function CancelReasonModal({
 
   if (!isOpen) return null;
 
-  return (
-    <dialog className="modal modal-open z-[70]">
+  return createPortal(
+    <div className="modal modal-open z-[70]" role="dialog" aria-modal="true">
       <div className="modal-box bg-white rounded-2xl shadow-xl max-w-sm">
         <div className="flex flex-col">
           <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mb-4 mx-auto">
@@ -98,7 +99,8 @@ function CancelReasonModal({
       <div className="modal-backdrop bg-black/40" onClick={handleClose}>
         <button type="button">close</button>
       </div>
-    </dialog>
+    </div>,
+    document.body,
   );
 }
 
@@ -109,11 +111,11 @@ function CancelReasonModal({
 function FollowupDetail({
   followupId,
   raisingTaskId,
-  currentUserId,
+  currentUsername,
 }: {
   followupId: string;
   raisingTaskId: string;
-  currentUserId: string | undefined;
+  currentUsername: string | undefined;
 }) {
   const { data: followup, isLoading } = useGetFollowupById(followupId);
   const { data: documentTypes = [] } = useGetDocumentTypes();
@@ -135,7 +137,11 @@ function FollowupDetail({
   if (!followup) return null;
 
   // Only the user who raised the followup can cancel it or its line items.
-  const isRaisingUser = !!currentUserId && currentUserId === followup.raisedBy.userId;
+  // Backend stores RaisingUserId as the username, and the DTO's raisedBy.userId carries
+  // that same value — compare against the current user's username, not their GUID id.
+  const isRaisingUser =
+    !!currentUsername &&
+    currentUsername.toLowerCase() === followup.raisedBy.userId?.toLowerCase();
 
   const formatDate = (d: string) => {
     try {
@@ -271,8 +277,9 @@ function FollowupDetail({
 export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
   const { data: followups = [], isLoading } = useOpenFollowupsForTask(raisingTaskId);
   const [expanded, setExpanded] = useState(true);
-  // Granular selector — avoids re-renders on unrelated auth store changes
-  const currentUserId = useAuthStore(s => s.user?.id);
+  // Granular selector — avoids re-renders on unrelated auth store changes.
+  // We compare by username because the backend stores/returns the raising user as username.
+  const currentUsername = useAuthStore(s => s.user?.username);
 
   if (isLoading) return null;
 
@@ -316,7 +323,7 @@ export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
               key={f.id}
               followupId={f.id}
               raisingTaskId={raisingTaskId}
-              currentUserId={currentUserId}
+              currentUsername={currentUsername}
             />
           ))}
         </div>

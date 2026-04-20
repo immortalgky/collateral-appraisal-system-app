@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
 import HomePage from '../features/dashboard/pages/HomePage';
+import CalendarPage from '../features/dashboard/pages/CalendarPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import CallbackPage from '@features/auth/pages/CallbackPage.tsx';
 import RequestListingPage from '@/features/request/pages/RequestListingPage';
@@ -112,6 +113,11 @@ export const router = createBrowserRouter([
         path: 'appraisals/list',
         element: <AppraisalListPage />,
       },
+      // Full calendar view (month grid + agenda)
+      {
+        path: 'calendar',
+        element: <CalendarPage />,
+      },
       // Appraisal Search (global cross-entity search)
       {
         path: 'appraisals/search',
@@ -138,9 +144,7 @@ export const router = createBrowserRouter([
       // Task Routes
       {
         path: 'tasks',
-        children: [
-          { index: true, element: <TaskPageDispatcher /> },
-        ],
+        children: [{ index: true, element: <TaskPageDispatcher /> }],
       },
       // Meeting Routes (tier-3 approval gate)
       {

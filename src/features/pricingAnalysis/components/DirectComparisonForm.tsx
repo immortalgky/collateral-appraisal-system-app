@@ -1,21 +1,15 @@
+import { useFormContext, useWatch } from 'react-hook-form';
+import { useMemo } from 'react';
 import { directComparisonPath } from '../adapters/directComparisonFieldPath';
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { DirectComparisonScoringSection } from './DirectComparisonScoringSection';
 import { SurveySelectionSection } from '@features/pricingAnalysis/components/SurveySelectionSection.tsx';
 import { DirectComparisonAdjustAppraisalPriceSection } from '@features/pricingAnalysis/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
-
-/**
- * NOTE:
- *
- * Workflow:
- * (1) System retrive method value from database to check whether has value or not
- * (1.1) In case that has value
- * - System can show retrieved value.
- * (1.2) In case that has no value
- * - System can initial value to prepared stages before user take action.
- *
- *
- */
+import { CollapsibleFormSection } from './layout/CollapsibleFormSection';
+import { KpiDashboard } from './viz/KpiDashboard';
+import { ComparablePositionChart } from './viz/ComparablePositionChart';
+import type { KpiItem } from './viz/KpiDashboard';
+import type { ComparablePoint } from './viz/ComparablePositionChart';
 
 interface DirectComparisonProps {
   isCostApproach: boolean;
@@ -58,32 +52,34 @@ export const DirectComparisonForm = ({
           />
           {comparativeMarketSurveys.length > 0 && (
             <>
-              <div>
-                <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
-                  <h3 className="text-base font-semibold text-gray-800">
-                    Calculation of Appraisal Value
-                  </h3>
-                </div>
-                <div className="px-4">
-                  <DirectComparisonScoringSection
-                    property={property}
-                    template={template}
-                    comparativeSurveys={comparativeMarketSurveys}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
-                  <h3 className="text-base font-semibold text-gray-800">Adjust Final Value</h3>
-                </div>
-                <div className="px-4">
-                  <DirectComparisonAdjustAppraisalPriceSection
-                    property={property}
-                    buildingCost={buildingCost}
-                    isCostApproach={isCostApproach}
-                  />
-                </div>
-              </div>
+              <DirectComparisonVizSection
+                comparativeMarketSurveys={comparativeMarketSurveys}
+                property={property}
+              />
+
+              <CollapsibleFormSection
+                title="Calculation of Appraisal Value"
+                icon="calculator"
+                defaultOpen
+              >
+                <DirectComparisonScoringSection
+                  property={property}
+                  template={template}
+                  comparativeSurveys={comparativeMarketSurveys}
+                />
+              </CollapsibleFormSection>
+
+              <CollapsibleFormSection
+                title="Adjust Final Value"
+                icon="badge-dollar"
+                defaultOpen
+              >
+                <DirectComparisonAdjustAppraisalPriceSection
+                  property={property}
+                  buildingCost={buildingCost}
+                  isCostApproach={isCostApproach}
+                />
+              </CollapsibleFormSection>
             </>
           )}
         </div>
@@ -91,3 +87,74 @@ export const DirectComparisonForm = ({
     </div>
   );
 };
+
+function DirectComparisonVizSection({
+  comparativeMarketSurveys,
+  property,
+}: {
+  comparativeMarketSurveys: MarketComparableDetailType[];
+  property: Record<string, unknown>;
+}) {
+  const { control } = useFormContext();
+  const finalValue = useWatch({ control, name: 'directComparisonFinalValue.finalValue' });
+  const finalValueRounded = useWatch({ control, name: 'directComparisonFinalValue.finalValueRounded' });
+  const appraisalPrice = useWatch({ control, name: 'directComparisonAppraisalPrice.appraisalPriceRounded' });
+
+  const toKpiValue = (n: number | null | undefined): number | null =>
+    n != null && Number.isFinite(n) ? n : null;
+
+  const primaryKpi: KpiItem = useMemo(() => ({
+    label: 'Final Value',
+    value: toKpiValue(Number(finalValueRounded)) ?? toKpiValue(Number(finalValue)),
+    icon: 'badge-dollar',
+    color: 'green',
+  }), [finalValue, finalValueRounded]);
+
+  const secondaryKpis: KpiItem[] = useMemo(() => [
+    {
+      label: 'Appraisal Price',
+      value: toKpiValue(Number(appraisalPrice)),
+      icon: 'chart-line-up',
+      color: 'blue',
+    },
+    {
+      label: 'Comparables',
+      value: comparativeMarketSurveys.length > 0 ? comparativeMarketSurveys.length : null,
+      icon: 'house-building',
+      color: 'gray',
+    },
+  ], [appraisalPrice, comparativeMarketSurveys.length]);
+
+  const chartPoints: ComparablePoint[] = useMemo(() => {
+    const subjectArea = Number(property?.landArea ?? property?.usableArea ?? 0);
+    const subjectPrice = subjectArea > 0 && Number(appraisalPrice)
+      ? Number(appraisalPrice) / subjectArea
+      : 0;
+
+    const points: ComparablePoint[] = comparativeMarketSurveys.map((s) => ({
+      name: String(s.projectName ?? s.id ?? 'Comp'),
+      pricePerSqm: Number(s.offeringPrice ?? 0),
+      adjustmentScore: 0,
+    }));
+
+    if (subjectPrice > 0) {
+      points.push({
+        name: 'Subject',
+        pricePerSqm: subjectPrice,
+        adjustmentScore: 0,
+        isSubject: true,
+      });
+    }
+
+    return points;
+  }, [comparativeMarketSurveys, property, appraisalPrice]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <KpiDashboard primary={primaryKpi} secondary={secondaryKpis} />
+      {chartPoints.length > 1 && (
+        <ComparablePositionChart points={chartPoints} title="Comparable Position" />
+      )}
+    </div>
+  );
+}
