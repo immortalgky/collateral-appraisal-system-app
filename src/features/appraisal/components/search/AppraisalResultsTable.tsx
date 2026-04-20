@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
+import { formatDate } from '@/shared/utils/dateUtils';
+import { useAddressStore } from '@/shared/store';
 
 interface AppraisalResultsTableProps {
   columns: AppraisalColumnDef[];
@@ -23,11 +26,32 @@ function AppraisalResultsTable({
   onSort,
   onRowClick,
 }: AppraisalResultsTableProps) {
+  const titleAddresses = useAddressStore(s => s.titleAddresses);
+  const dopaAddresses = useAddressStore(s => s.dopaAddresses);
+
+  const provinceCodeToName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const addr of [...titleAddresses, ...dopaAddresses]) {
+      if (!map.has(addr.provinceCode)) {
+        map.set(addr.provinceCode, addr.provinceName);
+      }
+    }
+    return map;
+  }, [titleAddresses, dopaAddresses]);
+
   const getCellValue = (item: AppraisalDto, key: string): string => {
     const val = item[key as keyof AppraisalDto];
-    if (val === null || val === undefined) return '-';
-    if (key === 'createdAt' || key === 'assignedDate' || key === 'appointmentDateTime') {
+    if (val === null || val === undefined || val === '') return '—';
+    if (key === 'appointmentDateTime' || key === 'createdAt') {
+      const d = new Date(val as string);
+      if (isNaN(d.getTime())) return '—';
+      return formatDate(d, 'dd/MM/yyyy HH:mm');
+    }
+    if (key === 'assignedDate') {
       return new Date(val as string).toLocaleDateString();
+    }
+    if (key === 'province') {
+      return provinceCodeToName.get(val as string) ?? String(val);
     }
     return String(val);
   };

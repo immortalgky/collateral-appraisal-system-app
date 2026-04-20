@@ -4,6 +4,8 @@ import type {
   AddressStore,
   BreadcrumbItem,
   BreadcrumbStore,
+  CompanyItem,
+  CompanyStore,
   LoadingStore,
   LocaleStore,
   ParameterStore,
@@ -95,5 +97,13 @@ export const useLocaleStore = create<LocaleStore>(set => ({
   language: 'en',
   setLocale: (country: string, language: string) =>
     set({ country: country.toLowerCase(), language: language.toLowerCase() }),
+}));
+
+export const useCompanyStore = create<CompanyStore>(set => ({
+  companies: [],
+  isLoading: false,
+  isLoaded: false,
+  setCompanies: (companies: CompanyItem[]) => set({ companies, isLoaded: true, isLoading: false }),
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
 }));
 

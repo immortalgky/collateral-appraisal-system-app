@@ -20,6 +20,7 @@ import {
 } from '@/features/request/api';
 import { useGetAppointment } from '../api/appointment';
 import { useGetAppraisalFees } from '../api/fee';
+import { useGetWorkflowProgress } from '../api/workflow';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import Avatar from '@/shared/components/Avatar';
@@ -46,6 +47,15 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
   const { data: requestData } = useGetRequestById(requestId);
   const { data: appointment = null } = useGetAppointment(appraisalId ?? '');
   const { data: fees = [] } = useGetAppraisalFees(appraisalId ?? '');
+  const { data: workflowProgress } = useGetWorkflowProgress(appraisalId);
+
+  // Current activity = the pending entry in the activity log (fallback: last entry)
+  const currentActivityName = useMemo(() => {
+    const log = workflowProgress?.activityLog;
+    if (!log || log.length === 0) return null;
+    const pending = log.find(a => a.status === 'Pending');
+    return (pending ?? log[log.length - 1]).activityName;
+  }, [workflowProgress]);
 
   // Derive fee summary (first fee record)
   const feeSummary = useMemo(() => {
@@ -175,6 +185,7 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        hour12: false,
       });
     } catch {
       return dateTime;
@@ -294,6 +305,12 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   value={<Badge type="status" value={appraisal.status || 'draft'} />}
                 />
                 <InfoRow
+                  icon="money-bill-wave"
+                  label="Facility Limit"
+                  value={formatCurrency(appraisal.facilityLimit)}
+                  muted={appraisal.facilityLimit == null}
+                />
+                <InfoRow
                   icon="baht-sign"
                   label="Selling Price"
                   value={formatCurrency((requestData as any)?.detail?.loanDetail?.totalSellingPrice)}
@@ -318,12 +335,6 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   muted={!provinceName}
                 />
                 <InfoRow
-                  icon="calendar"
-                  label="Requested At"
-                  value={formatDateTime((requestData as any)?.requestedAt)}
-                  muted={!(requestData as any)?.requestedAt}
-                />
-                <InfoRow
                   icon="flag"
                   label="Priority"
                   value={<Badge type="priority" value={appraisal.priority || 'normal'} />}
@@ -337,15 +348,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
               <div className="mt-2">
                 <InfoRow
                   icon="diagram-project"
-                  label="Type"
-                  value={
-                    appraisal.appraisalType ? (
-                      <ParameterDisplay group="AppraisalType" code={appraisal.appraisalType} />
-                    ) : (
-                      'Not set'
-                    )
-                  }
-                  muted={!appraisal.appraisalType}
+                  label="Current Activity"
+                  value={currentActivityName || 'Not set'}
+                  muted={!currentActivityName}
                 />
               </div>
             </div>
@@ -355,7 +360,11 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
               <SidebarLabel>Requestor</SidebarLabel>
               <div className="mt-2">
                 <PersonRow
-                  label="Requested by"
+                  label={
+                    requestData?.requestedAt
+                      ? `Requested · ${formatDateTime(requestData.requestedAt)}`
+                      : 'Requested'
+                  }
                   name={requestData?.requestor?.username || 'Not set'}
                   avatar={null}
                 />

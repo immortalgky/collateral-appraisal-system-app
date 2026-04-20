@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Icon from '../Icon';
 import Avatar from '../Avatar';
 
@@ -8,9 +9,18 @@ interface PersonRowProps {
   isMe?: boolean;
   onClick?: () => void;
   editable?: boolean;
+  trailing?: ReactNode;
 }
 
-const PersonRow = ({ label, name, avatar, isMe, onClick, editable }: PersonRowProps) => {
+const PersonRow = ({
+  label,
+  name,
+  avatar,
+  isMe,
+  onClick,
+  editable,
+  trailing,
+}: PersonRowProps) => {
   const content = (
     <>
       <Avatar src={avatar} name={name !== 'Not set' ? name : '?'} size="sm" />
@@ -21,6 +31,7 @@ const PersonRow = ({ label, name, avatar, isMe, onClick, editable }: PersonRowPr
         </div>
         <div className="text-xs text-gray-500">{label}</div>
       </div>
+      {trailing && <div className="text-xs text-gray-500 shrink-0">{trailing}</div>}
       {editable && (
         <Icon
           name="pen"

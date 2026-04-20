@@ -85,6 +85,7 @@ export interface TaskHistoryItem {
   assignedAt: string;
   completedAt: string | null;
   actionTaken: string | null;
+  movement: string | null;
   remark: string | null;
 }
 

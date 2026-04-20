@@ -3,7 +3,7 @@ import type { SearchCategory } from '@shared/types/search';
 export interface FilterField {
   key: string;
   label: string;
-  type: 'text' | 'select' | 'date';
+  type: 'text' | 'select' | 'date' | 'province-autocomplete' | 'company-autocomplete';
   options?: { value: string; label: string }[];
   placeholder?: string;
 }
@@ -211,8 +211,8 @@ export const appraisalFilters: FilterField[] = [
       { value: 'External', label: 'External' },
     ],
   },
-  { key: 'province', label: 'Province', type: 'text', placeholder: 'Province...' },
-  { key: 'assigneeCompanyId', label: 'Company', type: 'text', placeholder: 'Company id...' },
+  { key: 'province', label: 'Province', type: 'province-autocomplete', placeholder: 'All provinces' },
+  { key: 'assigneeCompanyId', label: 'Company', type: 'company-autocomplete', placeholder: 'Search company...' },
   { key: 'createdFrom', label: 'Created From', type: 'date' },
   { key: 'createdTo', label: 'Created To', type: 'date' },
   { key: 'slaDueDateFrom', label: 'SLA Due From', type: 'date' },
@@ -227,5 +227,7 @@ export const appraisalColumns: AppraisalColumnDef[] = [
   { key: 'slaStatus', label: 'SLA', sortable: true },
   { key: 'province', label: 'Province', sortable: true },
   { key: 'assignmentType', label: 'Assignment', sortable: true },
+  { key: 'companyName', label: 'Company', sortable: false },
+  { key: 'appointmentDateTime', label: 'Appointment', sortable: true },
   { key: 'createdAt', label: 'Created', sortable: true },
 ];

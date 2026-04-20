@@ -21,7 +21,7 @@ export const decisionSummaryFormSchema = z.object({
 export type DecisionSummaryFormType = z.infer<typeof decisionSummaryFormSchema>;
 
 export const decisionSummaryFormDefaults: DecisionSummaryFormType = {
-  isPriceVerified: null,
+  isPriceVerified: true,
   conditionType: null,
   condition: null,
   remarkType: null,

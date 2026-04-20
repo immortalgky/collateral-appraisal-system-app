@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
@@ -11,14 +12,31 @@ export interface ActivityStep {
   startedAt: string | null;
   completedAt: string | null;
   status: 'completed' | 'in_progress' | 'pending';
+  movement: string | null;
   remark: string | null;
 }
+
+/** Return true if this step represents a backward movement (send-back / reject) */
+const isBackward = (movement: string | null | undefined): boolean => {
+  if (!movement) return false;
+  const v = movement.toLowerCase();
+  return v === 'b' || v === 'backward';
+};
+
+/** Return true if this step represents a forward movement */
+const isForward = (movement: string | null | undefined): boolean => {
+  if (!movement) return false;
+  const v = movement.toLowerCase();
+  return v === 'f' || v === 'forward';
+};
 
 interface ActivityTrackingTimelineProps {
   activities: ActivityStep[];
 }
 
-/** Format an ISO datetime string to "DD/MM/YYYY HH:mm" */
+const COLLAPSE_THRESHOLD = 3;
+
+/** Format an ISO datetime string to "DD/MM/YYYY HH:mm" (used for hover tooltips) */
 const formatDateTime = (iso: string): string => {
   const d = new Date(iso);
   return d.toLocaleString('en-GB', {
@@ -48,6 +66,12 @@ const statusConfig = {
     lineBorder: 'border-emerald-200',
     lineStyle: 'border-solid',
   },
+  completed_backward: {
+    dotBg: 'bg-rose-500',
+    ringBg: '',
+    lineBorder: 'border-rose-200',
+    lineStyle: 'border-solid',
+  },
   in_progress: {
     dotBg: 'bg-cyan-500',
     ringBg: 'ring-4 ring-cyan-500/20 animate-pulse',
@@ -69,6 +93,27 @@ const statusToBadge: Record<ActivityStep['status'], string> = {
 };
 
 const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const { visibleActivities, hiddenCount } = useMemo(() => {
+    const completedCount = activities.filter(a => a.status === 'completed').length;
+    if (expanded || completedCount <= COLLAPSE_THRESHOLD) {
+      return { visibleActivities: activities, hiddenCount: 0 };
+    }
+    // Keep the most recent N completed steps + every non-completed step, preserving
+    // original order.
+    const completedToHide = completedCount - COLLAPSE_THRESHOLD;
+    let skipped = 0;
+    const kept = activities.filter(a => {
+      if (a.status === 'completed' && skipped < completedToHide) {
+        skipped += 1;
+        return false;
+      }
+      return true;
+    });
+    return { visibleActivities: kept, hiddenCount: completedToHide };
+  }, [activities, expanded]);
+
   if (!activities || activities.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-2">
@@ -80,11 +125,40 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
     );
   }
 
+  const completedCount = activities.filter(a => a.status === 'completed').length;
+  const hasCollapseToggle = completedCount > COLLAPSE_THRESHOLD;
+
   return (
     <div className="relative">
-      {activities.map((step, index) => {
-        const isLast = index === activities.length - 1;
-        const config = statusConfig[step.status];
+      {hasCollapseToggle && (
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 mb-3"
+        >
+          <Icon name={expanded ? 'chevron-up' : 'chevron-down'} style="solid" className="w-3 h-3" />
+          {expanded
+            ? 'Hide earlier steps'
+            : `Show ${hiddenCount} earlier ${hiddenCount === 1 ? 'step' : 'steps'}`}
+        </button>
+      )}
+
+      {visibleActivities.map((step, index) => {
+        const isLast = index === visibleActivities.length - 1;
+        // Movement drives the color (F = green, B = red). In-progress always shows
+        // its active cyan style regardless of movement. Missing movement falls back
+        // to the status-based config (pending = gray, completed = green).
+        let configKey: keyof typeof statusConfig;
+        if (step.status === 'in_progress') {
+          configKey = 'in_progress';
+        } else if (isBackward(step.movement)) {
+          configKey = 'completed_backward';
+        } else if (isForward(step.movement)) {
+          configKey = 'completed';
+        } else {
+          configKey = step.status;
+        }
+        const config = statusConfig[configKey];
 
         return (
           <div key={`${step.stepName}-${index}`} className="relative flex gap-4">
@@ -169,6 +243,7 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
           </div>
         );
       })}
+
     </div>
   );
 };
