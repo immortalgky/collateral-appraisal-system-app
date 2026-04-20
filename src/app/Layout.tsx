@@ -8,6 +8,7 @@ import Icon from '@shared/components/Icon';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
 import { useAddressesQuery } from '@shared/api/addresses';
+import { useCompaniesQuery } from '@shared/api/companies';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
@@ -88,6 +89,14 @@ function AddressLoader() {
   return null;
 }
 
+/**
+ * Non-rendering component that loads all companies once into the Zustand store.
+ */
+function CompanyLoader() {
+  useCompaniesQuery();
+  return null;
+}
+
 function Layout() {
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
@@ -107,6 +116,7 @@ function Layout() {
     >
       <ParameterLoader />
       <AddressLoader />
+      <CompanyLoader />
       <div className="h-screen flex flex-col">
         <MobileSidebar navigation={navigation} logo={Logo} />
         <Sidebar navigation={navigation} logo={Logo} />

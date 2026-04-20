@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
-import FormCard from '@/shared/components/sections/FormCard';
+import GroupCard from '@/shared/components/sections/GroupCard';
+import InlineSubSection from '@/shared/components/sections/InlineSubSection';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import Textarea from '@/shared/components/inputs/Textarea';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -26,6 +27,7 @@ const mapHistoryItemToStep = (item: TaskHistoryItem): ActivityStep => ({
   startedAt: item.assignedAt,
   completedAt: item.completedAt,
   status: item.completedAt ? 'completed' : 'in_progress',
+  movement: item.movement,
   remark: item.remark,
 });
 
@@ -111,20 +113,10 @@ const DecisionSection = ({
       {/* Open followup banner — shown when there is an active document request */}
       {taskId && <OpenFollowupBanner raisingTaskId={taskId} />}
 
-      <FormCard title="Decision" icon="gavel" iconColor="rose">
+      <GroupCard title="Decision" icon="gavel" iconColor="rose">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-0 lg:gap-6">
           {/* Left: Activity Tracking */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 mb-5 px-3 py-2.5 rounded-lg bg-gradient-to-r from-cyan-50 to-transparent border border-cyan-100">
-              <div className="w-7 h-7 rounded-md bg-cyan-100 flex items-center justify-center shrink-0">
-                <Icon
-                  name="clock-rotate-left"
-                  style="solid"
-                  className="w-3.5 h-3.5 text-cyan-600"
-                />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-800">Activity Tracking</h3>
-            </div>
+          <InlineSubSection title="Activity Tracking" className="min-w-0">
             {isHistoryLoading ? (
               <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
                 <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
@@ -133,23 +125,18 @@ const DecisionSection = ({
             ) : (
               <ActivityTrackingTimeline activities={activitySteps} />
             )}
-          </div>
+          </InlineSubSection>
 
           {/* Vertical divider (lg+) / Horizontal divider (mobile) */}
-          <div className="hidden lg:block w-px bg-gray-100" />
-          <div className="lg:hidden my-6 h-px bg-gray-100" />
+          <div className="hidden lg:block w-px bg-gray-200" />
+          <div className="lg:hidden my-6 h-px bg-gray-200" />
 
           {/* Right: Decision Form */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 mb-5 px-3 py-2.5 rounded-lg bg-gradient-to-r from-rose-50 to-transparent border border-rose-100">
-              <div className="w-7 h-7 rounded-md bg-rose-100 flex items-center justify-center shrink-0">
-                <Icon name="gavel" style="solid" className="w-3.5 h-3.5 text-rose-600" />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-800">
-                Decision <span className="text-danger text-xs">*</span>
-              </h3>
-            </div>
-
+          <InlineSubSection
+            title="Decision"
+            className="min-w-0"
+            rightSlot={<span className="text-danger">*</span>}
+          >
             {isReadOnly ? (
               // Read-only view
               <div className="space-y-4">
@@ -247,9 +234,9 @@ const DecisionSection = ({
                 )}
               </div>
             )}
-          </div>
+          </InlineSubSection>
         </div>
-      </FormCard>
+      </GroupCard>
 
       {/* Raise followup dialog */}
       {canRaiseFollowup && workflowInstanceId && taskId && (

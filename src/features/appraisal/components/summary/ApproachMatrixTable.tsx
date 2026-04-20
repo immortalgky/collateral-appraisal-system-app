@@ -36,28 +36,28 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
   );
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto border border-gray-200 rounded-sm">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-teal-600 text-white">
-            <th className="px-4 py-3 text-left font-medium rounded-tl-lg">Group</th>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Group</th>
             {APPROACH_COLUMNS.map(col => (
-              <th key={col.key} className="px-4 py-3 text-right font-medium">
-                <div className="flex items-center justify-end gap-2">
+              <th key={col.key} className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+                <div className="flex items-center justify-end gap-1.5">
                   {selectedApproaches.has(col.key) && (
                     <Icon
                       name="circle-check"
                       style="solid"
-                      className="w-4 h-4 text-white shrink-0"
+                      className="w-3.5 h-3.5 text-teal-600 shrink-0"
                     />
                   )}
                   {col.label}
                 </div>
               </th>
             ))}
-            <th className="px-4 py-3 text-right font-medium">Summary</th>
+            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Summary</th>
             {onGroupClick && (
-              <th className="px-4 py-3 text-center font-medium rounded-tr-lg w-10" />
+              <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600 w-10" />
             )}
           </tr>
         </thead>
@@ -65,17 +65,17 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
           {sortedGroups.map(group => (
             <tr
               key={group.groupNumber}
-              className={onGroupClick ? 'group hover:bg-teal-50/50 cursor-pointer transition-colors' : 'hover:bg-gray-50'}
+              className={onGroupClick ? 'group hover:bg-gray-50 cursor-pointer transition-colors' : 'hover:bg-gray-50'}
               onClick={() => onGroupClick?.(group.propertyGroupId)}
             >
-              <td className="px-4 py-3 font-medium text-gray-900">
+              <td className="px-3 py-2 font-medium text-gray-900">
                 {group.groupNumber}
               </td>
               {APPROACH_COLUMNS.map(col => {
                 const approach = group.approaches?.find(a => a.approachType === col.key);
 
                 return (
-                  <td key={col.key} className="px-4 py-3 text-right text-gray-700">
+                  <td key={col.key} className="px-3 py-2 text-right text-gray-700">
                     {approach?.approachValue != null ? (
                       <span className={approach.isSelected ? 'font-semibold' : ''}>
                         {formatNumber(approach.approachValue, 2)}
@@ -86,23 +86,23 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
                   </td>
                 );
               })}
-              <td className="px-4 py-3 text-right font-medium text-gray-900">
+              <td className="px-3 py-2 text-right font-medium text-gray-900">
                 {group.groupSummaryValue != null ? formatNumber(group.groupSummaryValue, 2) : '-'}
               </td>
               {onGroupClick && (
-                <td className="px-4 py-3 text-center">
-                  <Icon name="chevron-right" style="solid" className="w-3.5 h-3.5 text-gray-400 group-hover:text-teal-600 transition-colors" />
+                <td className="px-3 py-2 text-center">
+                  <Icon name="chevron-right" style="solid" className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
                 </td>
               )}
             </tr>
           ))}
         </tbody>
         <tfoot>
-          <tr className="bg-teal-50 font-semibold border-t-2 border-teal-200">
-            <td className="px-4 py-3 text-gray-900 rounded-bl-lg" colSpan={APPROACH_COLUMNS.length + 1}>
+          <tr className="bg-gray-50 border-t border-gray-200 font-semibold">
+            <td className="px-3 py-2 text-gray-900" colSpan={APPROACH_COLUMNS.length + 1}>
               Total
             </td>
-            <td className="px-4 py-3 text-right text-teal-700 rounded-br-lg" colSpan={onGroupClick ? 2 : 1}>
+            <td className="px-3 py-2 text-right text-gray-900" colSpan={onGroupClick ? 2 : 1}>
               {formatNumber(totalSummary, 2)}
             </td>
           </tr>

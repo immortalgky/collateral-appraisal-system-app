@@ -67,6 +67,33 @@ const formatFileSize = (bytes: number | null | undefined): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const formatUploadDate = (iso: string | null | undefined): string => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return '';
+  }
+};
+
+const getCollateralTypeIcon = (code: string | null | undefined): string => {
+  switch (code) {
+    case 'L': return 'mountain-sun';
+    case 'B': return 'building';
+    case 'LB': return 'city';
+    case 'U': return 'building-user';
+    case 'VEH': return 'car';
+    case 'MAC': return 'gear';
+    case 'LSL': return 'file-contract';
+    case 'LS': return 'file-signature';
+    case 'LSB': return 'file-signature';
+    case 'LSU': return 'file-contract';
+    case 'VES': return 'ship';
+    default: return 'folder';
+  }
+};
+
 // Status Badge Component
 const StatusBadge = ({ hasFile }: { hasFile: boolean }) => (
   <span
@@ -687,68 +714,99 @@ export const DocumentChecklistTab = () => {
         {/* Document Sections */}
         <div className="divide-y divide-gray-100">
           {requestDocsData?.sections.map((section, sectionIdx) => {
-            const sectionLabel =
-              section.titleIdentifier ?? section.collateralType ?? `Section ${sectionIdx + 1}`;
+            const label =
+              section.sectionLabel ?? section.collateralTypeName ?? `Section ${sectionIdx + 1}`;
             return (
               <div key={section.titleId ?? `section-${sectionIdx}`}>
-                {/* Section Header */}
-                <div className="px-6 py-3 bg-gray-50/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">{sectionLabel}</span>
-                    <span className="text-xs text-gray-400">
+                {/* Section Sub-Header */}
+                <div className="px-6 py-3.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon
+                      name={getCollateralTypeIcon(section.collateralType)}
+                      className="text-gray-500 flex-shrink-0"
+                    />
+                    <h4 className="text-sm font-semibold text-gray-800 truncate">{label}</h4>
+                    <span className="text-xs text-gray-400 flex-shrink-0">
                       ({section.uploadedDocuments}/{section.totalDocuments} uploaded)
                     </span>
+                  </div>
+                  <div className="w-28 flex-shrink-0">
+                    <ProgressBar
+                      uploaded={section.uploadedDocuments}
+                      total={section.totalDocuments}
+                    />
                   </div>
                 </div>
 
                 {/* Section Documents */}
                 {section.documents.map(doc => {
+                  const hasFile = !!doc.fileName;
                   const fileIcon = getFileIcon(doc.fileName);
+                  const name = doc.documentTypeName ?? doc.documentType ?? 'Document';
+                  const metaParts = (
+                    [
+                      doc.fileName,
+                      doc.uploadedByName ? `Uploaded by ${doc.uploadedByName}` : null,
+                      formatUploadDate(doc.uploadedAt) || null,
+                    ] as (string | null)[]
+                  ).filter((v): v is string => v !== null && v !== '');
+
                   return (
                     <div
                       key={doc.id}
-                      className="px-6 py-4 hover:bg-gray-50/50 transition-colors grid grid-cols-[200px_1fr_100px_80px] gap-4 items-center"
+                      className={clsx(
+                        'px-6 py-3.5 flex items-start gap-3 transition-colors',
+                        hasFile ? 'hover:bg-gray-50/60' : 'bg-gray-50/30 opacity-80',
+                      )}
                     >
-                      {/* Document Type & Status */}
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm font-medium text-gray-900">
-                          {doc.documentType}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <StatusBadge hasFile={!!doc.fileName} />
-                          {doc.isRequired && (
-                            <span className="text-xs text-red-500 font-medium">Required</span>
+                      {/* Leading file icon */}
+                      <div
+                        className={clsx(
+                          'mt-0.5 flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center',
+                          hasFile
+                            ? 'bg-gray-100'
+                            : 'bg-gray-50 border border-dashed border-gray-200',
+                        )}
+                      >
+                        <Icon
+                          name={hasFile ? fileIcon.name : 'file'}
+                          className={clsx(
+                            'text-base',
+                            hasFile ? fileIcon.color : 'text-gray-300',
                           )}
-                        </div>
+                        />
                       </div>
 
-                      {/* File Info */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        {doc.fileName ? (
-                          <>
-                            <div className={clsx('flex-shrink-0', fileIcon.color)}>
-                              <Icon name={fileIcon.name} className="text-lg" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm text-gray-900 truncate">{doc.fileName}</p>
-                            </div>
-                          </>
+                      {/* Primary / secondary text */}
+                      <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                        <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                        {hasFile ? (
+                          <p className="text-xs text-gray-500 truncate">
+                            {metaParts.join(' · ')}
+                          </p>
                         ) : (
-                          <span className="text-sm text-gray-400 italic">No file uploaded</span>
+                          <p className="text-xs text-gray-400 italic">No file uploaded</p>
+                        )}
+                        {doc.notes && (
+                          <p className="text-xs text-gray-500 italic mt-0.5 flex items-start gap-1">
+                            <Icon
+                              name="note-sticky"
+                              className="text-gray-400 mt-0.5 flex-shrink-0"
+                            />
+                            <span className="truncate">{doc.notes}</span>
+                          </p>
                         )}
                       </div>
 
-                      {/* Notes */}
-                      <div
-                        className="text-sm text-gray-500 truncate"
-                        title={doc.notes || undefined}
-                      >
-                        {doc.notes || '-'}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex justify-end">
-                        {doc.fileName && (
+                      {/* Trailing cluster */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {doc.isRequired && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-600 bg-red-50 rounded">
+                            Required
+                          </span>
+                        )}
+                        <StatusBadge hasFile={hasFile} />
+                        {hasFile && (
                           <ActionDropdown
                             onView={() => handleViewDocument(doc)}
                             isEditable={false}

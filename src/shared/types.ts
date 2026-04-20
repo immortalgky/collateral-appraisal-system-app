@@ -57,3 +57,16 @@ export type LocaleStore = {
   setLocale: (country: string, language: string) => void;
 };
 
+export type CompanyItem = {
+  id: string;
+  companyName: string;
+};
+
+export type CompanyStore = {
+  companies: CompanyItem[];
+  isLoading: boolean;
+  isLoaded: boolean;
+  setCompanies: (companies: CompanyItem[]) => void;
+  setLoading: (loading: boolean) => void;
+};
+

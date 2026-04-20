@@ -1,5 +1,7 @@
 import type { FilterField } from './tabConfigs';
 import Icon from '@/shared/components/Icon';
+import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
+import CompanyAutocomplete from './CompanyAutocomplete';
 
 interface SearchFilterBarProps {
   filters: FilterField[];
@@ -52,6 +54,24 @@ function SearchFilterBar({ filters, values, onChange, onClear }: SearchFilterBar
                 onChange={e => onChange(filter.key, e.target.value)}
                 placeholder={filter.placeholder || filter.label}
                 className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white max-w-[200px]"
+              />
+            );
+          case 'province-autocomplete':
+            return (
+              <ProvinceAutocomplete
+                key={filter.key}
+                value={values[filter.key] || ''}
+                onChange={v => onChange(filter.key, v)}
+                placeholder={filter.placeholder}
+              />
+            );
+          case 'company-autocomplete':
+            return (
+              <CompanyAutocomplete
+                key={filter.key}
+                value={values[filter.key] || ''}
+                onChange={v => onChange(filter.key, v)}
+                placeholder={filter.placeholder}
               />
             );
           default:

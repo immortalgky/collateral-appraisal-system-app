@@ -40,7 +40,7 @@ export const useGetUserById = (userId: string | null) => {
  */
 export const useGetCompanyById = (companyId: string | null) => {
   return useQuery({
-    queryKey: ['companies', companyId],
+    queryKey: ['companies', 'by-id', companyId],
     queryFn: async (): Promise<ExternalCompany> => {
       const { data } = await axios.get(`/companies/${companyId}`);
       const company = data.company ?? data;
@@ -56,6 +56,7 @@ export const useGetCompanyById = (companyId: string | null) => {
       };
     },
     enabled: !!companyId,
+    staleTime: 30_000,
   });
 };
 
