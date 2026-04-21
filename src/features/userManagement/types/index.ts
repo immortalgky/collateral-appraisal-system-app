@@ -256,6 +256,10 @@ export interface UpdateUserRolesRequest {
   roleNames: string[];
 }
 
+export interface UpdateUserGroupsRequest {
+  groupIds: string[];
+}
+
 export interface CreateUserRequest {
   username: string;
   password: string;

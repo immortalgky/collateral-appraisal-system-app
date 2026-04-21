@@ -10,6 +10,7 @@ import type {
   ChangePasswordRequest,
   AdminUpdateUserRequest,
   UpdateUserRolesRequest,
+  UpdateUserGroupsRequest,
   CreateUserRequest,
   CreateUserResponse,
 } from '../types';
@@ -131,6 +132,20 @@ export const useUpdateUserRoles = () => {
   return useMutation({
     mutationFn: async ({ id, ...body }: UpdateUserRolesRequest & { id: string }) => {
       const { data } = await axios.put(`/auth/users/${id}/roles`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+    },
+  });
+};
+
+/** Admin: update user groups */
+export const useUpdateUserGroups = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: UpdateUserGroupsRequest & { id: string }) => {
+      const { data } = await axios.put(`/auth/users/${id}/groups`, body);
       return data;
     },
     onSuccess: (_data, variables) => {
