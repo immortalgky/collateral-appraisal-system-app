@@ -154,9 +154,13 @@ export function DiscountedCashFlowMethodModal({
           : (assumptionTypeCatalog.find(p => p.code === nextAssumptionType)?.name ?? null);
       setValue('assumptionName', resolvedName, { shouldDirty: true });
 
-      setValue('method.methodType', null as unknown as AssumptionEditDraft['method']['methodType'], {
-        shouldDirty: true,
-      });
+      setValue(
+        'method.methodType',
+        null as unknown as AssumptionEditDraft['method']['methodType'],
+        {
+          shouldDirty: true,
+        },
+      );
       setValue('method.detail', undefined, { shouldDirty: true });
     },
     [setValue, getValues, assumptionTypeCatalog],
@@ -235,6 +239,7 @@ export function DiscountedCashFlowMethodModal({
               methodType={systemMethodType}
               properties={properties}
               getOuterFormValues={getOuterFormValues}
+              initialData={initialData}
               isReadOnly={isReadOnly}
             />
           )}

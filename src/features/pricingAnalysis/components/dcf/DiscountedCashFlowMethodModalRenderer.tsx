@@ -14,12 +14,14 @@ import { MethodSpecifiedRoomIncomeWithGrowthModal } from './dcfMethods/MethodSpe
 import { MethodSpecifiedValueWithGrowthModal } from './dcfMethods/MethodSpecifiedValueWithGrowthModal';
 import type { UseFormGetValues } from 'react-hook-form';
 import type { FormValues } from '@features/appraisal/components/tables/bType.tsx';
+import type { AssumptionEditDraft } from './DiscountedCashFlowMethodModal';
 
 interface DiscountedCashFlowModalRendererProps {
   name: string;
   methodType: string;
   properties: Record<string, unknown>[];
   getOuterFormValues: UseFormGetValues<FormValues>;
+  initialData: AssumptionEditDraft;
   isReadOnly?: boolean;
 }
 export function DiscountedCashFlowModalRenderer({
@@ -27,9 +29,10 @@ export function DiscountedCashFlowModalRenderer({
   methodType,
   properties,
   getOuterFormValues,
+  initialData,
   isReadOnly,
 }: DiscountedCashFlowModalRendererProps) {
-  const props = { name, properties, getOuterFormValues, isReadOnly };
+  const props = { name, properties, getOuterFormValues, isReadOnly, initialData };
 
   switch (methodType) {
     case 'specifiedRoomIncomePerDay': {
@@ -62,8 +65,6 @@ export function DiscountedCashFlowModalRenderer({
     }
     case 'specifiedValueWithGrowth':
       return <MethodSpecifiedValueWithGrowthModal {...props} />;
-    case 'grossOperatingProfit':
-      return <></>;
     default: {
       return <></>;
     }
