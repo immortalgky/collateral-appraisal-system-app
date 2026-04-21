@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 import { useAppraisalReadOnly } from '@/features/appraisal/context/AppraisalContext';
 
 export const PageReadOnlyContext = createContext<boolean>(false);
@@ -9,11 +9,7 @@ export function usePageReadOnly(): boolean {
 
 /** For search /view routes — always read-only */
 export function ReadOnlyPageWrapper({ children }: { children: ReactNode }) {
-  return (
-    <PageReadOnlyContext.Provider value={true}>
-      {children}
-    </PageReadOnlyContext.Provider>
-  );
+  return <PageReadOnlyContext.Provider value={true}>{children}</PageReadOnlyContext.Provider>;
 }
 
 /** For appraisal routes — computed from status + role, merged with parent (search-readonly) */

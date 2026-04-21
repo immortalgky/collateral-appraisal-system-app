@@ -35,8 +35,4 @@ export const appraisalMenuConditions: Record<string, AppraisalMenuCondition> = {
   'appraisal.360': {
     forceReadOnly: () => true,
   },
-  // Request Information — always read-only in appraisal context
-  'appraisal.request': {
-    forceReadOnly: () => true,
-  },
 };
