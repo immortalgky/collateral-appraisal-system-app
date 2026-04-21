@@ -5,8 +5,9 @@ import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
 import { Skeleton } from '@shared/components/Skeleton';
-import { useGetUserById, useAdminUpdateUser, useUpdateUserRoles, useResetPassword } from '../api/users';
+import { useGetUserById, useAdminUpdateUser, useUpdateUserRoles, useUpdateUserGroups, useResetPassword } from '../api/users';
 import { useGetRoles } from '../api/roles';
+import { useGetGroups } from '../api/groups';
 import ChangePasswordModal from './ChangePasswordModal';
 import type { AdminUpdateUserRequest } from '../types';
 
@@ -18,6 +19,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   const { data: user, isLoading } = useGetUserById(userId);
   const updateUser = useAdminUpdateUser();
   const updateRoles = useUpdateUserRoles();
+  const updateGroups = useUpdateUserGroups();
 
   // General edit modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -111,6 +113,34 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   const toggleRole = (roleName: string) => {
     setSelectedRoleNames(prev =>
       prev.includes(roleName) ? prev.filter(r => r !== roleName) : [...prev, roleName],
+    );
+  };
+
+  // Group assignment modal
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+
+  const { data: groupsData } = useGetGroups({ pageSize: 200 });
+  const allGroups = groupsData?.items ?? [];
+
+  const handleOpenGroups = () => {
+    setSelectedGroupIds((user?.groups ?? []).map(g => g.id));
+    setShowGroupModal(true);
+  };
+
+  const handleSaveGroups = () => {
+    updateGroups.mutate(
+      { id: userId, groupIds: selectedGroupIds },
+      {
+        onSuccess: () => { toast.success('Groups updated'); setShowGroupModal(false); },
+        onError: () => toast.error('Failed to update groups'),
+      },
+    );
+  };
+
+  const toggleGroup = (groupId: string) => {
+    setSelectedGroupIds(prev =>
+      prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId],
     );
   };
 
@@ -219,14 +249,24 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         </div>
       </section>
 
-      {/* Groups Section (read-only) */}
+      {/* Groups Section */}
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-          <Icon name="users-rectangle" style="solid" className="size-4 text-amber-500" />
-          <span className="text-sm font-semibold text-gray-800">Groups</span>
-          <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
-            {user.groups?.length ?? 0}
-          </span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <Icon name="users-rectangle" style="solid" className="size-4 text-amber-500" />
+            <span className="text-sm font-semibold text-gray-800">Groups</span>
+            <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+              {user.groups?.length ?? 0}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenGroups}
+            className="text-xs text-primary hover:underline flex items-center gap-1"
+          >
+            <Icon name="pen-to-square" style="regular" className="size-3.5" />
+            Edit
+          </button>
         </div>
         <div className="px-4 py-3">
           {!user.groups || user.groups.length === 0 ? (
@@ -352,6 +392,38 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowRoleModal(false)}>Cancel</Button>
           <Button variant="primary" size="sm" isLoading={updateRoles.isPending} onClick={handleSaveRoles}>
+            Save
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Group Assignment Modal */}
+      <Modal isOpen={showGroupModal} onClose={() => setShowGroupModal(false)} title="Edit Groups" size="md">
+        <div className="p-6">
+          <p className="text-xs text-gray-500 mb-3">Select groups to assign to this user.</p>
+          <div className="max-h-64 overflow-y-auto divide-y divide-gray-50 border border-gray-200 rounded-lg">
+            {allGroups.map(group => (
+              <label
+                key={group.id}
+                className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedGroupIds.includes(group.id)}
+                  onChange={() => toggleGroup(group.id)}
+                  className="rounded border-gray-300 text-primary focus:ring-primary/20"
+                />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-gray-800">{group.name}</div>
+                  <div className="text-xs text-gray-400">{group.scope}</div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 px-6 pb-6">
+          <Button variant="ghost" size="sm" onClick={() => setShowGroupModal(false)}>Cancel</Button>
+          <Button variant="primary" size="sm" isLoading={updateGroups.isPending} onClick={handleSaveGroups}>
             Save
           </Button>
         </div>

@@ -179,7 +179,7 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
             group.users.map(u => (
               <div key={u.userId} className="px-4 py-2.5 flex items-center gap-2">
                 <div className="size-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-500 shrink-0">
-                  {(u.firstName || u.userName)[0]?.toUpperCase()}
+                  {(u.firstName || u.userName || '?')[0]?.toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">
