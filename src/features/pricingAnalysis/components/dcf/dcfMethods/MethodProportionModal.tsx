@@ -40,7 +40,7 @@ export function MethodProportionModal({
       label: `Total - ${c.categoryName}`,
     })),
     ...assumptions
-      .filter(a => a.assumption.clientId != initialData.targetAssumptionClientId)
+      .filter(a => a.assumption.clientId != initialData?.targetAssumptionClientId)
       .map(a => ({
         value: `assumption:${a.assumption.clientId}`,
         label: `${a.section.sectionName} - ${a.assumption.assumptionName ?? ''}`,
