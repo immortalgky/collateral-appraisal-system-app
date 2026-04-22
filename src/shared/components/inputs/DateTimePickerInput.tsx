@@ -138,7 +138,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
-    const [timeValue, setTimeValue] = useState('09:00');
+    const [timeValue, setTimeValue] = useState('00:00');
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
     const [constraintError, setConstraintError] = useState<string | null>(null);
 
@@ -427,10 +427,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             {/* Time + Done footer */}
             <div className="px-2 pb-2 pt-2 border-t border-gray-200">
               <div className="flex items-center gap-2">
-                <label
-                  htmlFor={`${inputId}-time`}
-                  className="text-xs font-medium text-gray-700"
-                >
+                <label htmlFor={`${inputId}-time`} className="text-xs font-medium text-gray-700">
                   Time
                 </label>
                 <TimeInput24

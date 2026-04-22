@@ -52,6 +52,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       onBlur,
       onKeyDown,
       placeholder,
+      min,
       ...props
     },
     ref,
@@ -66,6 +67,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
     const maxValue =
       typeof max === 'number' ? max : max != null ? parseFloat(String(max)) : undefined;
+    const minValue =
+      typeof min === 'number' ? min : min != null ? parseFloat(String(min)) : undefined;
 
     // Combine refs
     const setRefs = (element: HTMLInputElement | null) => {
@@ -180,6 +183,11 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           newValue = maxValue;
         }
 
+        // Clamp to min limit
+        if (minValue != null && newValue < minValue) {
+          newValue = minValue;
+        }
+
         const formatted = formatNumber(newValue);
         setDisplayValue(formatted);
 
@@ -221,6 +229,12 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         if (maxValue != null) {
           const candidateNum = parseFloat(cleaned);
           if (!isNaN(candidateNum) && candidateNum > maxValue) return;
+        }
+
+        // Enforce min value
+        if (minValue != null) {
+          const candidateNum = parseFloat(cleaned);
+          if (!isNaN(candidateNum) && candidateNum < minValue) return;
         }
 
         // Count commas before cursor in old value

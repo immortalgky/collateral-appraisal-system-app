@@ -313,7 +313,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="baht-sign"
                   label="Selling Price"
-                  value={formatCurrency((requestData as any)?.detail?.loanDetail?.totalSellingPrice)}
+                  value={formatCurrency(
+                    (requestData as any)?.detail?.loanDetail?.totalSellingPrice,
+                  )}
                   muted={(requestData as any)?.detail?.loanDetail?.totalSellingPrice == null}
                 />
                 <InfoRow
@@ -337,7 +339,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="flag"
                   label="Priority"
-                  value={<Badge type="priority" value={appraisal.priority || 'normal'} />}
+                  value={
+                    <Badge type="priority" value={(requestData as any)?.priority || 'normal'} />
+                  }
                 />
               </div>
             </div>
@@ -459,7 +463,10 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 // Skeleton loading - alternating left/right bubbles
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className={clsx('flex', i % 2 === 0 ? 'justify-end' : 'justify-start')}>
+                    <div
+                      key={i}
+                      className={clsx('flex', i % 2 === 0 ? 'justify-end' : 'justify-start')}
+                    >
                       {i % 2 !== 0 && (
                         <div className="flex items-start gap-2 max-w-[80%]">
                           <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 animate-pulse" />
@@ -541,7 +548,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                                 <div className="bg-primary text-white rounded-2xl rounded-tr-sm px-3 py-2 min-w-0 overflow-hidden">
                                   <p className="text-xs break-words break-all">{comment.comment}</p>
                                   {comment.lastModifiedAt && (
-                                    <span className="text-[10px] text-white/70 italic">(edited)</span>
+                                    <span className="text-[10px] text-white/70 italic">
+                                      (edited)
+                                    </span>
                                   )}
                                 </div>
                                 {/* Hover actions - appear to the left of bubble */}
@@ -567,7 +576,9 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                                 )}
                               </div>
                             )}
-                            <p className="text-[10px] text-gray-400 mt-0.5 text-right">{timeDisplay}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 text-right">
+                              {timeDisplay}
+                            </p>
                           </div>
                         ) : (
                           // Others' comment - left-aligned, gray bubble with avatar

@@ -5,9 +5,10 @@ import { useFormContext } from 'react-hook-form';
 
 interface DopaAdressFormProps {
   index: number;
+  isReadOnly: boolean;
 }
 
-const DopaAddressForm = ({ index }: DopaAdressFormProps) => {
+const DopaAddressForm = ({ index, isReadOnly }: DopaAdressFormProps) => {
   const { getValues, setValue } = useFormContext();
 
   const prefix = `titles.${index}.dopaAddress`;
@@ -30,7 +31,12 @@ const DopaAddressForm = ({ index }: DopaAdressFormProps) => {
 
   return (
     <>
-      <TitleInformationHeader title="DOPA address" onCopy={handleCopy} className="col-span-6" />
+      <TitleInformationHeader
+        title="DOPA address"
+        onCopy={handleCopy}
+        isReadOnly={isReadOnly}
+        className="col-span-6"
+      />
       <FormFields fields={dopaAddressFields} namePrefix={'titles'} index={index} />
     </>
   );
