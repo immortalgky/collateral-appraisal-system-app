@@ -147,6 +147,19 @@ export function DiscountedCashFlowTable({
                 <div className="flex flex-col justify-end items-end">
                   <div className="w-16">
                     <RHFInputCell
+                      fieldName="totalNumberOfYears"
+                      inputType="number"
+                      disabled={isReadOnly}
+                      number={{
+                        decimalPlaces: 0,
+                        maxIntegerDigits: 2,
+                        maxValue: 99,
+                        allowNegative: false,
+                      }}
+                    />
+                  </div>
+                  <div className="w-16">
+                    <RHFInputCell
                       fieldName="totalNumberOfDayInYear"
                       inputType="number"
                       disabled={isReadOnly}

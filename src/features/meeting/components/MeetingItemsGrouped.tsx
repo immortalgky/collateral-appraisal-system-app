@@ -258,13 +258,13 @@ const MeetingItemsGrouped = ({ meeting, canReleaseItems }: MeetingItemsGroupedPr
   const totalDecision = [...decisionByGroup.values()].reduce((s, arr) => s + arr.length, 0);
   const totalAck = [...ackByGroup.values()].reduce((s, arr) => s + arr.length, 0);
 
+  console.log(decisionByGroup);
+
   return (
     <div className="space-y-6">
       {/* Decision section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-gray-700">
-          Decision Items ({totalDecision})
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700">Decision Items ({totalDecision})</h3>
         {DECISION_GROUP_ORDER.map(type => (
           <DecisionGroupTable
             key={type}
@@ -282,14 +282,8 @@ const MeetingItemsGrouped = ({ meeting, canReleaseItems }: MeetingItemsGroupedPr
           <h3 className="text-sm font-semibold text-gray-700">
             Acknowledgement Items ({totalAck})
           </h3>
-          <AckGroupCard
-            label="Group 1 (Sub-Committee)"
-            items={ackByGroup.get('Group1') ?? []}
-          />
-          <AckGroupCard
-            label="Urgent Group 2"
-            items={ackByGroup.get('UrgentGroup2') ?? []}
-          />
+          <AckGroupCard label="Group 1 (Sub-Committee)" items={ackByGroup.get('Group1') ?? []} />
+          <AckGroupCard label="Urgent Group 2" items={ackByGroup.get('UrgentGroup2') ?? []} />
         </div>
       )}
 
