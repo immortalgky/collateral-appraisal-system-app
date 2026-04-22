@@ -12,7 +12,11 @@ import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import TitleDocumentAddressForm from './TitleDocumentAddressForm';
 import DopaAddressForm from './DopaAddressForm';
-import { requestTitleDefault, RequestTitleDto, type RequestTitleDtoType, } from '@/features/request/schemas/form';
+import {
+  requestTitleDefault,
+  RequestTitleDto,
+  type RequestTitleDtoType,
+} from '@/features/request/schemas/form';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 import clsx from 'clsx';
 import { useTitleLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
@@ -327,8 +331,8 @@ const TitleInformationForm = () => {
               <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
                 <FormFields fields={titleInfoFields} namePrefix="titles" index={editIndex} />
                 <TitleForm index={editIndex} currentFormType={currentFormType} />
-                <TitleDocumentAddressForm index={editIndex} />
-                <DopaAddressForm index={editIndex} />
+                <TitleDocumentAddressForm index={editIndex} isReadOnly={isReadOnly} />
+                <DopaAddressForm index={editIndex} isReadOnly={isReadOnly} />
               </div>
             </div>
           </div>
@@ -457,9 +461,10 @@ const TitleTableView = ({
 
     // Title info (land types + condo)
     if (['L', 'LB', 'LSL', 'LS', 'LSB', 'B', 'U'].includes(type)) {
-      const titleStr = title?.titleType || title?.titleNumber
-        ? `${title?.titleType ? `${title.titleType}: ` : ''}${title?.titleNumber || ''}`
-        : null;
+      const titleStr =
+        title?.titleType || title?.titleNumber
+          ? `${title?.titleType ? `${title.titleType}: ` : ''}${title?.titleNumber || ''}`
+          : null;
       if (titleStr) details.push({ label: 'Title', value: titleStr });
     }
 
@@ -477,7 +482,10 @@ const TitleTableView = ({
     if (['L', 'LB', 'LSL', 'LS', 'LSB'].includes(type)) {
       const hasArea = title?.areaRai || title?.areaNgan || title?.areaSquareWa;
       if (hasArea) {
-        details.push({ label: 'Area', value: `${title?.areaRai || 0}-${title?.areaNgan || 0}-${title?.areaSquareWa || 0}` });
+        details.push({
+          label: 'Area',
+          value: `${title?.areaRai || 0}-${title?.areaNgan || 0}-${title?.areaSquareWa || 0}`,
+        });
       }
     }
 
@@ -489,20 +497,27 @@ const TitleTableView = ({
     // Condo-specific
     if (type === 'U') {
       if (title?.condoName) details.push({ label: 'Condo', value: title.condoName });
-      const room = [title?.roomNumber && `Room ${title.roomNumber}`, title?.floorNumber && `Floor ${title.floorNumber}`].filter(Boolean).join(', ');
+      const room = [
+        title?.roomNumber && `Room ${title.roomNumber}`,
+        title?.floorNumber && `Floor ${title.floorNumber}`,
+      ]
+        .filter(Boolean)
+        .join(', ');
       if (room) details.push({ label: 'Unit', value: room });
     }
 
     // Vehicle-specific
     if (type === 'VEH') {
-      if (title?.licensePlateNumber) details.push({ label: 'License Plate', value: title.licensePlateNumber });
+      if (title?.licensePlateNumber)
+        details.push({ label: 'License Plate', value: title.licensePlateNumber });
       if (title?.vehicleType) details.push({ label: 'Vehicle Type', value: title.vehicleType });
     }
 
     // Machine-specific
     if (type === 'MAC') {
       if (title?.machineType) details.push({ label: 'Machine Type', value: title.machineType });
-      if (title?.numberOfMachine) details.push({ label: 'Qty', value: String(title.numberOfMachine) });
+      if (title?.numberOfMachine)
+        details.push({ label: 'Qty', value: String(title.numberOfMachine) });
     }
 
     // Owner
@@ -523,7 +538,9 @@ const TitleTableView = ({
             key={index}
             className={clsx(
               'group relative rounded-xl border bg-white shadow-sm hover:shadow-md cursor-pointer transition-all duration-200',
-              isComplete ? 'border-gray-200 hover:border-primary/30' : 'border-amber-200 hover:border-amber-300',
+              isComplete
+                ? 'border-gray-200 hover:border-primary/30'
+                : 'border-amber-200 hover:border-amber-300',
             )}
             onClick={() => onSelect(index)}
           >
@@ -538,10 +555,12 @@ const TitleTableView = ({
             <div className="flex items-center gap-4 pl-5 pr-4 py-3.5">
               {/* Left: Type badge */}
               <div className="flex items-center gap-3 shrink-0">
-                <div className={clsx(
-                  'w-10 h-10 rounded-xl flex items-center justify-center',
-                  'bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-primary/10',
-                )}>
+                <div
+                  className={clsx(
+                    'w-10 h-10 rounded-xl flex items-center justify-center',
+                    'bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-primary/10',
+                  )}
+                >
                   <Icon
                     style="solid"
                     name={getCollateralTypeIcon(title?.collateralType)}
@@ -584,11 +603,7 @@ const TitleTableView = ({
                         : 'bg-amber-50 text-amber-600 ring-1 ring-amber-200',
                     )}
                   >
-                    <Icon
-                      style="solid"
-                      name="file-lines"
-                      className="size-3"
-                    />
+                    <Icon style="solid" name="file-lines" className="size-3" />
                     {docStats.completed}/{docStats.total}
                   </div>
                 )}

@@ -239,9 +239,15 @@ function RequestPage() {
     });
   };
 
-  const handleDuplicate = () => {
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+
+  const handleConfirmDuplicate = () => {
     const currentData = getValues();
     navigate('/requests/new', { state: { duplicateData: currentData } });
+    setIsDuplicateDialogOpen(false);
+  };
+  const handleDuplicate = () => {
+    setIsDuplicateDialogOpen(true);
   };
 
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
@@ -650,6 +656,17 @@ function RequestPage() {
           />
         )}
       </FormProvider>
+
+      <ConfirmDialog
+        isOpen={isDuplicateDialogOpen}
+        onClose={() => setIsDuplicateDialogOpen(false)}
+        onConfirm={handleConfirmDuplicate}
+        title="Copy Request"
+        message="Are you sure you want to copy this request?"
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant="info"
+      />
     </div>
   );
 }

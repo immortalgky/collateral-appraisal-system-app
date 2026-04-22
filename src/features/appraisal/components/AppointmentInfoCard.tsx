@@ -98,7 +98,7 @@ export default function AppointmentInfoCard({
             {/* Location */}
             <div className="flex items-center gap-2">
               <Icon name="location-dot" style="light" className="w-5 h-5 text-gray-800" />
-              <span className="text-xs text-gray-800">
+              <span className="text-xs text-gray-800 truncate max-w-lg">
                 {appointment.locationDetail || 'Location not specified'}
               </span>
             </div>
