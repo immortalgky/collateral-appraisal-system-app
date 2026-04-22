@@ -7,11 +7,11 @@ const toNumberArray = (arr: number[] | null | undefined): number[] =>
 export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType {
   // Build id-sets for every node level so M13 can validate its refTarget on restore.
   const sectionIds = new Set(dto.sections.map(s => s.id.toLowerCase()));
-  const categoryIds = new Set(
-    dto.sections.flatMap(s => s.categories.map(c => c.id.toLowerCase())),
-  );
+  const categoryIds = new Set(dto.sections.flatMap(s => s.categories.map(c => c.id.toLowerCase())));
   const assumptionIds = new Set(
-    dto.sections.flatMap(s => s.categories.flatMap(c => c.assumptions.map(a => a.id.toLowerCase()))),
+    dto.sections.flatMap(s =>
+      s.categories.flatMap(c => c.assumptions.map(a => a.id.toLowerCase())),
+    ),
   );
 
   const regularSections = dto.sections.map(section => ({
@@ -44,13 +44,13 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
             refTarget?: { kind?: string; clientId?: string | null; dbId?: string | null };
           };
           const rawDbId = d.refTarget?.dbId?.toLowerCase() ?? null;
-          const refDbId = rawDbId && rawDbId !== '00000000-0000-0000-0000-000000000000'
-            ? rawDbId
-            : null;
+          const refDbId =
+            rawDbId && rawDbId !== '00000000-0000-0000-0000-000000000000' ? rawDbId : null;
 
           // Resolve the id-set for this ref's kind to detect dangling refs.
           const kind = d.refTarget?.kind ?? 'assumption';
-          const idSet = kind === 'section' ? sectionIds : kind === 'category' ? categoryIds : assumptionIds;
+          const idSet =
+            kind === 'section' ? sectionIds : kind === 'category' ? categoryIds : assumptionIds;
           const isStillValid = refDbId !== null && idSet.has(refDbId);
 
           detail = {
@@ -85,7 +85,9 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
 
   // Synthesize the summary section so SectionSummaryDCF renders server-computed arrays.
   // Backend does not persist a summary section row — dto.sections only has income/expense sections.
-  const summarySectionType = dto.templateCode.startsWith('direct-') ? 'summaryDirect' : 'summaryDCF';
+  const summarySectionType = dto.templateCode.startsWith('direct-')
+    ? 'summaryDirect'
+    : 'summaryDCF';
   const summarySection = {
     clientId: `summary-${dto.id}`,
     dbId: dto.id,

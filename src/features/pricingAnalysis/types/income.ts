@@ -168,6 +168,8 @@ export interface HighestBestUsedInput {
 }
 
 export interface SaveIncomeAnalysisRequest {
+  appraisalId: string;
+  propertyId: string;
   templateCode: string;
   templateName: string;
   totalNumberOfYears: number;

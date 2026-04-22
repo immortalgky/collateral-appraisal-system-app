@@ -76,17 +76,12 @@ export function DiscountedCashFlowPanel({
   const { data: pricingTemplates = [] } = useGetPricingTemplates(true);
   const { data: templateDto } = useGetPricingTemplateByCode(selectedTemplateCode || undefined);
 
-  // 1: get appointment date
-  const appraisalId = useAppraisalId();
-  const { data: appointment } = useGetAppointment(appraisalId ?? '');
-  // 2: check agreement in property
-  // const {
-  //   data: rentalInfoData,
-  //   isLoading: isRentalInfoDataLoading,
-  //   isError: isRentalInfoDataError,
-  //   error: rentalInfoError,
-  // } = useGetRentalInfo(appraisalId, );
-  console.log(properties);
+  const appraisalId = useAppraisalId() ?? '';
+  const propertyId =
+    ((properties ?? []).find(p => ['LS', 'LSL', 'LSB'].includes(p.propertyType))
+      ?.propertyId as string) ??
+    properties?.[0].propertyId ??
+    '';
 
   const saveMutation = useSaveIncomeAnalysis();
   const previewMutation = usePreviewIncomeAnalysis();
@@ -152,7 +147,8 @@ export function DiscountedCashFlowPanel({
   // Fire preview whenever debounced watched fields change, but only after Generate/restore.
   useEffect(() => {
     if (!isGenerated) return;
-    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId) return;
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId)
+      return;
 
     const currentValues = methods.getValues();
     // Guard: need at least templateCode to build a valid request.
@@ -217,6 +213,8 @@ export function DiscountedCashFlowPanel({
       {
         pricingAnalysisId: activeMethod.pricingAnalysisId,
         methodId: activeMethod.methodId,
+        appraisalId: appraisalId,
+        propertyId: propertyId,
         request,
       },
       {
@@ -261,13 +259,16 @@ export function DiscountedCashFlowPanel({
   };
 
   const handleOnSubmit = handleSubmit(async (values: DCFFormType) => {
-    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId) return;
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId)
+      return;
     setSaveError(null);
     try {
       const request = mapDCFFormToSaveRequest(values);
       const result = await saveMutation.mutateAsync({
         pricingAnalysisId: activeMethod.pricingAnalysisId,
         methodId: activeMethod.methodId,
+        appraisalId,
+        propertyId,
         request,
       });
       reset(mapIncomeAnalysisToDCFForm(result));

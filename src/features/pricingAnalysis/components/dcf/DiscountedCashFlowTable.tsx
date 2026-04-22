@@ -144,7 +144,7 @@ export function DiscountedCashFlowTable({
           <thead className="bg-neutral-50">
             <tr className="bg-white">
               <td className="flex-1 text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300">
-                <div className="flex flex-col justify-end items-end">
+                <div className="flex flex-row justify-end items-center gap-1.5">
                   <div className="w-16">
                     <RHFInputCell
                       fieldName="totalNumberOfYears"
@@ -158,6 +158,7 @@ export function DiscountedCashFlowTable({
                       }}
                     />
                   </div>
+                  <span>Years</span>
                   <div className="w-16">
                     <RHFInputCell
                       fieldName="totalNumberOfDayInYear"
@@ -171,6 +172,7 @@ export function DiscountedCashFlowTable({
                       }}
                     />
                   </div>
+                  <span>Days in a year</span>
                 </div>
               </td>
               {Array.from({ length: totalNumberOfYears }, (_, i) => (
