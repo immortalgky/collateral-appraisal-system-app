@@ -242,19 +242,20 @@ export const appointmentAndFeeFields: FormField[] = [
     required: true,
   },
   {
-    type: 'text-input',
-    label: 'Fee Remark',
-    name: 'detail.fee.feeNotes',
-    wrapperClassName: 'col-span-1',
-    requiredWhen: { field: 'detail.fee.feePaymentType', is: '99' },
-  },
-  {
     type: 'number-input',
     label: 'Bank Absorb Amount',
     name: 'detail.fee.absorbedAmount',
     wrapperClassName: 'col-span-1',
     maxIntegerDigits: 15,
     requiredWhen: { field: 'detail.fee.feePaymentType', is: BANK_ABSORB, operator: 'in' },
+    showWhen: { field: 'detail.fee.feePaymentType', is: [...BANK_ABSORB, '99'], operator: 'in' },
+  },
+  {
+    type: 'textarea',
+    label: 'Fee Remark',
+    name: 'detail.fee.feeNotes',
+    wrapperClassName: 'col-span-2',
+    requiredWhen: { field: 'detail.fee.feePaymentType', is: '99' },
   },
   {
     type: 'datetime-input',
