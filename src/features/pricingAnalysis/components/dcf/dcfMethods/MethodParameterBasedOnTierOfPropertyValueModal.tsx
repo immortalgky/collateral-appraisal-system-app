@@ -8,8 +8,7 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import { ScrollableTableContainer } from '@features/pricingAnalysis/components/ScrollableTableContainer.tsx';
 import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { useMemo } from 'react';
-import { useFormContext, useWatch, type UseFormGetValues } from 'react-hook-form';
-import type { FormValues } from '@/features/appraisal/components/tables/bType';
+import { type UseFormGetValues } from 'react-hook-form';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
 
 export function MethodParameterBasedOnTierOfPropertyValueModal({
@@ -20,7 +19,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
 }: {
   name: string;
   properties: Record<string, unknown>[];
-  getOuterFormValues: UseFormGetValues<FormValues>;
+  getOuterFormValues: UseFormGetValues<any>;
   isReadOnly?: boolean;
 }) {
   const landGovPrice = (properties ?? [])
@@ -147,6 +146,23 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             }}
           />
         </div>
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-56'}>Start In</span>
+        <div className={'w-44'}>
+          <RHFInputCell
+            fieldName={`${name}.startIn`}
+            inputType={'number'}
+            disabled={isReadOnly}
+            number={{
+              decimalPlaces: 2,
+              maxIntegerDigits: 3,
+              maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
+              allowNegative: false,
+            }}
+          />
+        </div>
+        <span className={''}>year(s)</span>
       </div>
 
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">

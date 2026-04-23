@@ -1,12 +1,15 @@
+import type { UseFormGetValues } from 'react-hook-form';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedRoomIncomeWithGrowthModalProps {
   name: string;
   isReadOnly?: boolean;
+  getOuterFormValues: UseFormGetValues<any>;
 }
 export function MethodSpecifiedRoomIncomeWithGrowthModal({
   name,
   isReadOnly,
+  getOuterFormValues,
 }: MethodSpecifiedRoomIncomeWithGrowthModalProps) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -70,6 +73,23 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
             inputType={'number'}
             disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
+          />
+        </div>
+        <span className={''}>year(s)</span>
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-56'}>Start In</span>
+        <div className={'w-44'}>
+          <RHFInputCell
+            fieldName={`${name}.startIn`}
+            inputType={'number'}
+            disabled={isReadOnly}
+            number={{
+              decimalPlaces: 2,
+              maxIntegerDigits: 3,
+              maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
+              allowNegative: false,
+            }}
           />
         </div>
         <span className={''}>year(s)</span>

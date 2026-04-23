@@ -62,8 +62,6 @@ export function DiscountedCashFlowModalRenderer({
     }
     case 'specifiedValueWithGrowth':
       return <MethodSpecifiedValueWithGrowthModal {...props} />;
-    case 'grossOperatingProfit':
-      return <></>;
     default: {
       return <></>;
     }
