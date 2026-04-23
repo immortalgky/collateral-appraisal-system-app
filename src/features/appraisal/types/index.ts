@@ -26,6 +26,8 @@ export interface PropertyItem {
   photos?: PropertyPhoto[];
   address: string;
   area: string;
+  latitude?: number;
+  longitude?: number;
   priceRange: string;
   location: string;
   sequenceNumber?: number;
