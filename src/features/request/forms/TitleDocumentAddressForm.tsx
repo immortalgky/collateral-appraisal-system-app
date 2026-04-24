@@ -5,9 +5,10 @@ import { useFormContext } from 'react-hook-form';
 
 interface TitleDocumentAdressFormProps {
   index: number;
+  isReadOnly: boolean;
 }
 
-const TitleDocumentAddressForm = ({ index }: TitleDocumentAdressFormProps) => {
+const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressFormProps) => {
   const { getValues, setValue } = useFormContext();
 
   const prefix = `titles.${index}.titleAddress`;
@@ -33,6 +34,7 @@ const TitleDocumentAddressForm = ({ index }: TitleDocumentAdressFormProps) => {
       <TitleInformationHeader
         title="Title document address"
         onCopy={handleCopy}
+        isReadOnly={isReadOnly}
         className="col-span-6"
       />
       <FormFields fields={titleAddressFields} namePrefix={'titles'} index={index} />

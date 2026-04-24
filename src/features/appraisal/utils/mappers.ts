@@ -265,7 +265,7 @@ export const mapCondoPropertyResponseToForm = (
     upperFloorMaterialTypeOther: response.upperFloorMaterialTypeOther ?? '',
     bathroomFloorMaterialType: response.bathroomFloorMaterialType ?? '',
     bathroomFloorMaterialTypeOther: response.bathroomFloorMaterialTypeOther ?? '',
-    roofType: response.roofType ?? '',
+    roofType: response.roofType ?? [],
     roofTypeOther: response.roofTypeOther ?? '',
 
     areaDetails: response.areaDetails ?? [],
@@ -652,7 +652,8 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
     staffId: response.assigneeUserId ?? null,
     companyId: response.assigneeCompanyId ?? null,
     followupStaffId: response.internalAppraiserId ?? null,
-    followupStaffMethod: (response.internalFollowupAssignmentMethod?.toLowerCase() ?? (response.internalAppraiserId ? 'manual' : 'manual')) as 'manual' | 'roundrobin',
+    followupStaffMethod: (response.internalFollowupAssignmentMethod?.toLowerCase() ??
+      (response.internalAppraiserId ? 'manual' : 'manual')) as 'manual' | 'roundrobin',
     selectedStaff: null as null,
     selectedCompany: null as null,
     selectedFollowupStaff: null as null,
