@@ -230,6 +230,8 @@ export const contactFields: FormField[] = [
 // Uses full dotted paths — no namePrefix at render time.
 // =============================================================================
 
+const BANK_ABSORB = ['04'];
+
 export const appointmentAndFeeFields: FormField[] = [
   {
     type: 'dropdown',
@@ -240,17 +242,20 @@ export const appointmentAndFeeFields: FormField[] = [
     required: true,
   },
   {
-    type: 'text-input',
-    label: 'Fee Remark',
-    name: 'detail.fee.feeNotes',
-    wrapperClassName: 'col-span-1',
-  },
-  {
     type: 'number-input',
     label: 'Bank Absorb Amount',
     name: 'detail.fee.absorbedAmount',
     wrapperClassName: 'col-span-1',
     maxIntegerDigits: 15,
+    requiredWhen: { field: 'detail.fee.feePaymentType', is: BANK_ABSORB, operator: 'in' },
+    showWhen: { field: 'detail.fee.feePaymentType', is: [...BANK_ABSORB, '99'], operator: 'in' },
+  },
+  {
+    type: 'textarea',
+    label: 'Fee Remark',
+    name: 'detail.fee.feeNotes',
+    wrapperClassName: 'col-span-2',
+    requiredWhen: { field: 'detail.fee.feePaymentType', is: '99' },
   },
   {
     type: 'datetime-input',
@@ -267,7 +272,7 @@ export const appointmentAndFeeFields: FormField[] = [
     name: 'detail.appointment.appointmentLocation',
     wrapperClassName: 'col-span-2',
     required: true,
-    maxLength: 200,
+    maxLength: 4000,
     showCharCount: true,
   },
 ];
@@ -313,6 +318,7 @@ export const propertiesFieldConfig: FieldArrayField = {
       name: 'buildingType',
       label: 'Building Type',
       group: 'BuildingType',
+      required: true,
     },
     {
       type: 'number-input',
@@ -369,7 +375,7 @@ export const titleLandFields: FormField[] = [
     label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
-    maxLength: 40,
+    maxLength: 200,
     requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
   },
   {
@@ -479,6 +485,15 @@ export const titleBuildingFields: FormField[] = [
     },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
+  },
+  {
+    type: 'text-input',
+    label: 'Owner',
+    name: 'ownerName',
+    wrapperClassName: 'col-span-3',
+    maxLength: 100,
+    requiredWhen: { field: 'collateralType', is: ['B'], operator: 'in' },
+    showWhen: { field: 'collateralType', is: ['B'], operator: 'in' },
   },
   {
     type: 'number-input',

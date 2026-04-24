@@ -272,7 +272,7 @@ export const landFillField: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Soil Level',
+    label: 'Soil Level ( cm )',
     name: 'soilLevel',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
@@ -2284,7 +2284,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     required: true,
-    maxLength: 40,
+    maxLength: 200,
   },
   {
     name: 'bookNumber',

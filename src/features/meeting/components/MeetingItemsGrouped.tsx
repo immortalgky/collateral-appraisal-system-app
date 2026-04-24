@@ -283,6 +283,8 @@ const MeetingItemsGrouped = ({ meeting, canReleaseItems }: MeetingItemsGroupedPr
   const totalDecision = [...decisionByGroup.values()].reduce((s, arr) => s + arr.length, 0);
   const totalAck = [...ackByGroup.values()].reduce((s, arr) => s + arr.length, 0);
 
+  console.log(decisionByGroup);
+
   return (
     <div className="space-y-6">
       {/* Decision section */}

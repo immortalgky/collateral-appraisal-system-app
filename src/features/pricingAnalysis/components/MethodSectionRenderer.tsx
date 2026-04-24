@@ -44,6 +44,7 @@ export function MethodSectionRenderer({
     : serverData.marketSurveyDetails;
 
   const panelProps = {
+    appraisalId: appraisalId,
     activeMethod: state.activeMethod,
     properties: serverData.properties,
     marketSurveys: filteredMarketSurveys,

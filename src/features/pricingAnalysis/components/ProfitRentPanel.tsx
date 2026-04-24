@@ -2,7 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useController, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
-import { profitRentFormDefaults, ProfitRentFormSchema, type ProfitRentFormType, } from '../schemas/profitRentForm';
+import {
+  profitRentFormDefaults,
+  ProfitRentFormSchema,
+  type ProfitRentFormType,
+} from '../schemas/profitRentForm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/shared/components';
 import { NumberInput, Toggle } from '@/shared/components/inputs';
@@ -362,6 +366,11 @@ export function ProfitRentPanel({
         });
       }
       toast.success('Saved!');
+
+      isInitialized.current = false;
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
+      });
     } catch {
       toast.error('Failed to save');
     }
@@ -578,6 +587,8 @@ export function ProfitRentPanel({
                     onChange={e => marketFeeField.onChange(e.target.value)}
                     onBlur={marketFeeField.onBlur}
                     decimalPlaces={2}
+                    maxIntegerDigits={15}
+                    required={true}
                   />
                 </div>
                 <span className="text-[10px] text-gray-500">Baht/Sq.Wa/Mo</span>
@@ -610,6 +621,7 @@ export function ProfitRentPanel({
                     setValue('discountRate', e.target.value ?? 0, { shouldDirty: true })
                   }
                   decimalPlaces={2}
+                  maxIntegerDigits={3}
                   rightIcon={<span className="text-xs text-gray-400">%</span>}
                 />
               </div>
@@ -642,6 +654,7 @@ export function ProfitRentPanel({
                     onChange={e => growthPercentField.onChange(e.target.value)}
                     onBlur={growthPercentField.onBlur}
                     decimalPlaces={2}
+                    maxIntegerDigits={3}
                     rightIcon={<span className="text-xs text-gray-400">%</span>}
                   />
                 </div>
@@ -655,6 +668,7 @@ export function ProfitRentPanel({
                     onChange={e => intervalField.onChange(e.target.value)}
                     onBlur={intervalField.onBlur}
                     decimalPlaces={0}
+                    maxIntegerDigits={3}
                     rightIcon={<span className="text-xs text-gray-400">Year</span>}
                   />
                 </div>
@@ -676,6 +690,7 @@ export function ProfitRentPanel({
                           shouldDirty: true,
                         })
                       }
+                      maxIntegerDigits={3}
                       decimalPlaces={0}
                     />
                     <NumberInput
@@ -686,6 +701,7 @@ export function ProfitRentPanel({
                         })
                       }
                       decimalPlaces={0}
+                      maxIntegerDigits={3}
                     />
                     <NumberInput
                       value={watch(`growthPeriods.${index}.growthRatePercent` as any)}
@@ -696,6 +712,7 @@ export function ProfitRentPanel({
                           { shouldDirty: true },
                         )
                       }
+                      maxIntegerDigits={3}
                       decimalPlaces={2}
                       rightIcon={<span className="text-xs text-gray-400">%</span>}
                     />
@@ -859,6 +876,7 @@ export function ProfitRentPanel({
                             },
                           )
                         }
+                        maxIntegerDigits={15}
                         decimalPlaces={2}
                         className="!font-bold !text-right !text-sm !text-green-700"
                       />

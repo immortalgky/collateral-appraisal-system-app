@@ -100,8 +100,7 @@ export function useGetPricingParameters() {
         assumptionTypes: (data.assumptionTypes ?? []).map(a => ({
           code: a.code,
           name: a.name,
-          sectionType:
-            a.category === 'income' || a.category === 'expenses' ? a.category : 'any',
+          sectionType: a.category === 'income' || a.category === 'expenses' ? a.category : 'any',
           displaySeq: a.displaySeq,
         })),
         assumptionMethodMatrix: data.assumptionMethodMatrix ?? [],
@@ -124,9 +123,7 @@ export function useCreatePricingAnalysis() {
     }: {
       groupId: string;
     }): Promise<{ id: string; status: string }> => {
-      const { data: response } = await axios.post(
-        `/property-groups/${groupId}/pricing-analysis`,
-      );
+      const { data: response } = await axios.post(`/property-groups/${groupId}/pricing-analysis`);
       return response;
     },
   });
@@ -532,7 +529,10 @@ export interface SaveMachineCostItemsResponse {
  * Fetch saved machine cost items for a method
  * GET /pricing-analysis/{id}/methods/{methodId}/machine-cost-items
  */
-export function useGetMachineCostItems(pricingAnalysisId: string | undefined, methodId: string | undefined) {
+export function useGetMachineCostItems(
+  pricingAnalysisId: string | undefined,
+  methodId: string | undefined,
+) {
   return useQuery({
     queryKey: pricingAnalysisKeys.machineCostItems(pricingAnalysisId ?? '', methodId ?? ''),
     queryFn: async (): Promise<GetMachineCostItemsResponse> => {
@@ -575,7 +575,10 @@ export function useSaveMachineCostItems() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.machineCostItems(variables.pricingAnalysisId, variables.methodId),
+        queryKey: pricingAnalysisKeys.machineCostItems(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
       });
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
@@ -808,12 +811,17 @@ export function useSaveIncomeAnalysis() {
     mutationFn: async ({
       pricingAnalysisId,
       methodId,
+      appraisalId,
+      propertyId,
       request,
     }: {
       pricingAnalysisId: string;
       methodId: string;
+      appraisalId: string;
+      propertyId: string;
       request: SaveIncomeAnalysisRequest;
     }): Promise<IncomeAnalysisDto> => {
+      request = { ...request, appraisalId, propertyId };
       const { data: response } = await axios.put(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis`,
         request,
@@ -844,12 +852,17 @@ export function usePreviewIncomeAnalysis() {
     mutationFn: async ({
       pricingAnalysisId,
       methodId,
+      appraisalId,
+      propertyId,
       request,
     }: {
       pricingAnalysisId: string;
       methodId: string;
+      appraisalId: string;
+      propertyId: string;
       request: SaveIncomeAnalysisRequest;
     }): Promise<IncomeAnalysisDto> => {
+      request = { ...request, appraisalId, propertyId };
       const { data } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis:preview`,
         request,

@@ -15,7 +15,12 @@ const InfoRow = ({ icon, label, value, muted }: InfoRowProps) => (
       <Icon style="regular" name={icon} className="size-3.5 text-gray-400" />
       {label}
     </div>
-    <span className={clsx('text-xs font-medium', muted ? 'text-gray-400' : 'text-gray-700')}>
+    <span
+      className={clsx(
+        'text-xs font-medium max-w-[50%] truncate text-right',
+        muted ? 'text-gray-400' : 'text-gray-700',
+      )}
+    >
       {value}
     </span>
   </div>
