@@ -184,12 +184,12 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-3">
-        <div className="w-44">
+        <div className="w-56">
           <span>Number of seasons</span>
         </div>
         <div className="w-56">
           <RHFInputCell
-            fieldName="seasonCount"
+            fieldName={`${name}.seasonCount`}
             inputType="number"
             disabled={isReadOnly}
             onUserChange={v => {
