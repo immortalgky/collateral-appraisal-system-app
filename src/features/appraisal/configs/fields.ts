@@ -712,9 +712,10 @@ export const otherInformationField: FormField[] = [
     maxIntegerDigits: 5,
   },
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     label: 'Has Building',
     name: 'hasBuilding',
+    options: ['No', 'Yes'],
     wrapperClassName: 'col-span-12',
   },
   {
