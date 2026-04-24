@@ -63,15 +63,16 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
       return;
     }
 
-    const user = committeeUsers.find(u => u.userName === selectedUserName);
+    const user = committeeUsers.find(u => `${u.firstName} ${u.lastName}` === selectedUserName);
     if (!user) return;
-
+    console.log(user);
+    console.log(user.username);
     // userId stores the userName string (matches CommitteeMember.UserId convention)
-    setValue('userId', user.userName, { shouldValidate: true });
+    setValue('userId', user.username, { shouldValidate: true });
 
     // Auto-populate memberName; user may still edit it in the text input
     const displayName =
-      user.firstName || user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.userName;
+      user.firstName || user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.username;
     setValue('memberName', displayName, { shouldValidate: true });
   };
 
@@ -124,10 +125,10 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
                   : 'Select a user'}
             </option>
             {committeeUsers.map(user => (
-              <option key={user.id} value={user.userName}>
+              <option key={user.id} value={user.username}>
                 {user.firstName || user.lastName
                   ? `${user.firstName} ${user.lastName}`.trim()
-                  : user.userName}
+                  : user.username}
               </option>
             ))}
           </select>

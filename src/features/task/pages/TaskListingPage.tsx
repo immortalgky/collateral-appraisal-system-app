@@ -196,6 +196,7 @@ function TaskListingPage() {
 
   const paginatedResult: TaskListResponse | undefined = listData;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
+
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -211,6 +212,15 @@ function TaskListingPage() {
       delete next[key];
       return next;
     });
+  };
+
+  /**
+   * Route a task row click.
+   * v5: All task types — including quotation tasks — go through the standard
+   * /tasks/:taskId/opening gate. TaskIndexRedirect handles the per-activityId redirect.
+   */
+  const handleTaskClick = (task: Task) => {
+    navigate(`/tasks/${task.id}/opening`);
   };
 
   const handleSort = (field: string) => {
@@ -629,7 +639,7 @@ function TaskListingPage() {
                       listTasks.map(task => (
                         <tr
                           key={task.id}
-                          onDoubleClick={() => navigate(`/tasks/${task.id}/opening`)}
+                          onDoubleClick={() => handleTaskClick(task)}
                           onContextMenu={e => {
                             e.preventDefault();
                             setContextMenu({
@@ -699,7 +709,8 @@ function TaskListingPage() {
             >
               <button
                 onClick={() => {
-                  navigate(`/tasks/${contextMenu.taskId}/opening`);
+                  const task = listTasks.find(t => t.id === contextMenu.taskId);
+                  if (task) handleTaskClick(task);
                   setContextMenu(p => ({ ...p, visible: false }));
                 }}
                 className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"

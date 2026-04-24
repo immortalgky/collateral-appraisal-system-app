@@ -16,7 +16,8 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 
-import { useCreateAssignment, useGetAssignment, useGetCompanyById, useGetUserById, useGetEligibleStaff, useGetEligibleCompanies } from '../api/administration';
+import { useCreateAssignment, useGetAssignment, useGetCompanyById, useGetUserById, useGetEligibleStaff, useGetEligibleCompanies, useGetAppraisalQuotations } from '../api/administration';
+import { useGetQuotationById } from '@/features/quotation/api/quotation';
 import { useCompleteActivity } from '../api/workflow';
 import { assignmentFormDefaults, assignmentFormSchema, type AssignmentFormType, } from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
@@ -26,8 +27,7 @@ import SearchCompanyModal from '../components/SearchCompanyModal';
 import StaffDisplay from '../components/StaffDisplay';
 import CompanyDisplay from '../components/CompanyDisplay';
 import QuotationSection from '../components/QuotationSection';
-import AddToQuotationModal from '../components/AddToQuotationModal';
-import CreateQuotationModal from '../components/CreateQuotationModal';
+import QuotationEntryModal from '../components/QuotationEntryModal';
 import { useAuthStore } from '@features/auth/store.ts';
 import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.ts';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -98,6 +98,29 @@ const AdministrationPage = () => {
     assignmentType === 'external',
   );
 
+  // Always fetch all quotations for this appraisal (used for both the quotation section and the lock check)
+  const { data: appraisalQuotations = [] } = useGetAppraisalQuotations(appraisalId ?? null);
+
+  // v2: compute lock state — assignment is locked when a non-terminal quotation owns this appraisal
+  const NON_TERMINAL_STATUSES = ['Draft', 'Sent', 'UnderAdminReview', 'PendingRmSelection', 'WinnerTentative', 'Negotiating'];
+  const activeNonTerminalQuotation = appraisalQuotations.find(
+    q => NON_TERMINAL_STATUSES.includes(q.status),
+  ) ?? null;
+  const isLockedByQuotation = !!activeNonTerminalQuotation;
+
+  // When quotation method is selected, fetch the linked quotation detail to derive winner for Route-External
+  const activeQuotationId = appraisalQuotations[0]?.id ?? null;
+  const { data: quotationDetail } = useGetQuotationById(
+    assignmentMethod === 'quotation' ? activeQuotationId : null,
+  );
+  const isQuotationFinalized = quotationDetail?.status === 'Finalized';
+  const quotationWinner =
+    isQuotationFinalized && quotationDetail
+      ? (quotationDetail.companyQuotations ?? []).find(
+          cq => cq.id === quotationDetail.tentativeWinnerQuotationId,
+        ) ?? null
+      : null;
+
   // Modal states
   const {
     isOpen: isStaffModalOpen,
@@ -112,15 +135,9 @@ const AdministrationPage = () => {
   } = useDisclosure();
 
   const {
-    isOpen: isAddToQuotationModalOpen,
-    onOpen: openAddToQuotationModal,
-    onClose: closeAddToQuotationModal,
-  } = useDisclosure();
-
-  const {
-    isOpen: isCreateQuotationModalOpen,
-    onOpen: openCreateQuotationModal,
-    onClose: closeCreateQuotationModal,
+    isOpen: isQuotationEntryModalOpen,
+    onOpen: openQuotationEntryModal,
+    onClose: closeQuotationEntryModal,
   } = useDisclosure();
 
   const {
@@ -201,6 +218,20 @@ const AdministrationPage = () => {
   const onSubmit = (data: AssignmentFormType) => {
     if (!appraisalId) return;
 
+    // Guard: assignment is locked while an active quotation owns this appraisal
+    if (isLockedByQuotation) {
+      toast.error(
+        `Assignment locked — appraisal is in Quotation #${activeNonTerminalQuotation?.quotationNumber ?? ''} (${activeNonTerminalQuotation?.status ?? ''}). Cancel the quotation or remove this appraisal from it to change.`,
+      );
+      return;
+    }
+
+    // Guard: quotation method requires a finalized quotation with a winner
+    if (data.assignmentMethod === 'quotation' && (!isQuotationFinalized || !quotationWinner)) {
+      toast.error('The quotation must be finalized with a winner before routing externally.');
+      return;
+    }
+
     createAssignment(
       {
         appraisalId: appraisalId ?? '',
@@ -230,6 +261,12 @@ const AdministrationPage = () => {
               decisionTaken,
               assignmentMethod: data.assignmentMethod,
             };
+
+            // For quotation method with a finalized winner, inject the winner's companyId
+            if (data.assignmentMethod === 'quotation' && isQuotationFinalized && quotationWinner) {
+              input.assignmentMethod = 'Quotation';
+              input.assignedCompanyId = quotationWinner.companyId;
+            }
 
             // For external manual, include company selection data
             if (data.assignmentType === 'external' && data.assignmentMethod === 'manual' && data.selectedCompany) {
@@ -305,6 +342,29 @@ const AdministrationPage = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="flex flex-col gap-6 pb-6 pr-4">
+            {/* Assignment lock banner — shown when a non-terminal quotation owns this appraisal */}
+            {isLockedByQuotation && activeNonTerminalQuotation && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
+                <Icon name="lock" style="solid" className="size-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-amber-800">Assignment locked</p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    This appraisal is in Quotation{' '}
+                    <strong>#{activeNonTerminalQuotation.quotationNumber}</strong>{' '}
+                    ({activeNonTerminalQuotation.status}). Cancel the quotation or remove this
+                    appraisal from it to change.
+                  </p>
+                </div>
+                <a
+                  href="#quotation-section"
+                  className="shrink-0 flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                >
+                  Open quotation
+                  <Icon name="arrow-down" style="solid" className="size-3" />
+                </a>
+              </div>
+            )}
+
             {/* Assignment Type Card */}
             <FormCard
               title="Assignment Type"
@@ -320,7 +380,7 @@ const AdministrationPage = () => {
                     value={field.value}
                     onChange={(value: string) => handleAssignmentTypeChange(value, field.onChange)}
                     className="flex flex-row gap-4"
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isLockedByQuotation}
                   >
                     {[
                       {
@@ -469,7 +529,7 @@ const AdministrationPage = () => {
                         value={field.value}
                         onChange={field.onChange}
                         className={clsx('grid gap-3', isExternal ? 'grid-cols-3' : 'grid-cols-2')}
-                        disabled={isReadOnly}
+                        disabled={isReadOnly || isLockedByQuotation}
                       >
                         {options.map(option => (
                           <HeadlessRadioGroup.Option
@@ -553,7 +613,7 @@ const AdministrationPage = () => {
                     <StaffDisplay
                       staff={selectedStaff}
                       onClear={
-                        isReadOnly
+                        isReadOnly || isLockedByQuotation
                           ? undefined
                           : () => {
                               setValue('selectedStaff', null, { shouldDirty: true });
@@ -562,7 +622,7 @@ const AdministrationPage = () => {
                       }
                     />
                   ) : (
-                    !isReadOnly && (
+                    !isReadOnly && !isLockedByQuotation && (
                       <button
                         type="button"
                         onClick={openStaffModal}
@@ -595,7 +655,7 @@ const AdministrationPage = () => {
                     <CompanyDisplay
                       company={selectedCompany}
                       onClear={
-                        isReadOnly
+                        isReadOnly || isLockedByQuotation
                           ? undefined
                           : () => {
                               setValue('selectedCompany', null, { shouldDirty: true });
@@ -604,7 +664,7 @@ const AdministrationPage = () => {
                       }
                     />
                   ) : (
-                    !isReadOnly && (
+                    !isReadOnly && !isLockedByQuotation && (
                       <button
                         type="button"
                         onClick={openCompanyModal}
@@ -684,7 +744,7 @@ const AdministrationPage = () => {
                         value={field.value}
                         onChange={(value: 'manual' | 'roundrobin') => handleFollowupMethodChange(value)}
                         className="grid grid-cols-2 gap-3 mb-4"
-                        disabled={isReadOnly}
+                        disabled={isReadOnly || isLockedByQuotation}
                       >
                         {[
                           {
@@ -782,7 +842,7 @@ const AdministrationPage = () => {
                         <StaffDisplay
                           staff={selectedFollowupStaff}
                           onClear={
-                            isReadOnly
+                            isReadOnly || isLockedByQuotation
                               ? undefined
                               : () => {
                                   setValue('selectedFollowupStaff', null, { shouldDirty: true });
@@ -792,7 +852,7 @@ const AdministrationPage = () => {
                           variant="purple"
                         />
                       ) : (
-                        !isReadOnly && (
+                        !isReadOnly && !isLockedByQuotation && (
                           <button
                             type="button"
                             onClick={openFollowupStaffModal}
@@ -866,13 +926,15 @@ const AdministrationPage = () => {
             {/*  </FormCard>*/}
             {/*)}*/}
 
-            {/* Quotation Section - Show when quotation method is selected */}
-            {assignmentMethod === 'quotation' && (
-              <QuotationSection
-                appraisalId={appraisalId ?? ''}
-                onAddToExisting={openAddToQuotationModal}
-                onCreateNew={openCreateQuotationModal}
-              />
+            {/* Quotation Section - visible when quotation method is selected OR when a
+                non-terminal quotation already owns this appraisal (refresh case). */}
+            {(assignmentMethod === 'quotation' || isLockedByQuotation) && (
+              <div id="quotation-section">
+                <QuotationSection
+                  appraisalId={appraisalId ?? ''}
+                  onCreateNew={openQuotationEntryModal}
+                />
+              </div>
             )}
           </div>
         </div>
@@ -894,7 +956,7 @@ const AdministrationPage = () => {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button type="submit" disabled={isCreating || isCompleting}>
+                <Button type="submit" disabled={isCreating || isCompleting || isLockedByQuotation}>
                   {isCreating || isCompleting ? (
                     <>
                       <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
@@ -936,15 +998,15 @@ const AdministrationPage = () => {
             onSelect={handleCompanySelect}
             eligibleCompanies={eligibleCompanies}
           />
-          <AddToQuotationModal
-            isOpen={isAddToQuotationModalOpen}
-            onClose={closeAddToQuotationModal}
+          <QuotationEntryModal
+            isOpen={isQuotationEntryModalOpen}
+            onClose={closeQuotationEntryModal}
             appraisalId={appraisalId ?? ''}
-          />
-          <CreateQuotationModal
-            isOpen={isCreateQuotationModalOpen}
-            onClose={closeCreateQuotationModal}
-            appraisalId={appraisalId ?? ''}
+            requestId={requestId}
+            workflowInstanceId={workflowInstanceId ?? undefined}
+            bankingSegment={bankingSegment}
+            appraisalNumber={(requestData as any)?.appraisalNumber ?? ''}
+            propertyType={(requestData as any)?.detail?.propertyType ?? ''}
           />
         </>
       )}

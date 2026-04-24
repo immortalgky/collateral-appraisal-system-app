@@ -213,7 +213,7 @@ export interface ChangePasswordRequest {
 
 export interface AdminUserListItem {
   id: string;
-  userName: string;
+  username: string;
   email: string;
   firstName: string;
   lastName: string;

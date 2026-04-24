@@ -1,4 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 import axios from '@shared/api/axiosInstance';
 import type {
   CreateUploadSessionResponse,
@@ -107,5 +108,66 @@ export const useDownloadDocument = () => {
 
       return { blob: response.data, fileName };
     },
+  });
+};
+
+// ─── v7: GET /requests/{requestId}/documents ─────────────────────────────────
+
+const RequestDocumentItemSchema = z.object({
+  id: z.string(),
+  documentId: z.string().nullable().optional(),
+  documentType: z.string().nullable().optional(),
+  documentTypeName: z.string().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  filePath: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  isRequired: z.boolean().optional(),
+  uploadedBy: z.string().nullable().optional(),
+  uploadedByName: z.string().nullable().optional(),
+  uploadedAt: z.string().nullable().optional(),
+});
+
+export const RequestDocumentSectionSchema = z.object({
+  titleId: z.string().nullable().optional(),
+  titleIdentifier: z.string().nullable().optional(),
+  collateralType: z.string().nullable().optional(),
+  collateralTypeName: z.string().nullable().optional(),
+  sectionLabel: z.string(),
+  totalDocuments: z.number().int(),
+  uploadedDocuments: z.number().int(),
+  documents: z.array(RequestDocumentItemSchema),
+});
+
+export const RequestDocumentsResponseSchema = z.object({
+  totalDocuments: z.number().int(),
+  totalUploaded: z.number().int(),
+  sections: z.array(RequestDocumentSectionSchema),
+});
+
+export type RequestDocumentItem = z.infer<typeof RequestDocumentItemSchema>;
+export type RequestDocumentSection = z.infer<typeof RequestDocumentSectionSchema>;
+export type RequestDocumentsResponse = z.infer<typeof RequestDocumentsResponseSchema>;
+
+export const requestDocumentKeys = {
+  all: ['request-documents'] as const,
+  byRequest: (requestId: string) => [...requestDocumentKeys.all, requestId] as const,
+};
+
+/**
+ * Fetch all document sections for a given request.
+ * First section (titleId === null) = "Application Documents" (request-level).
+ * Subsequent sections = per-title collateral documents.
+ *
+ * Used by the Share Documents step in the Send Quotation flow (v7).
+ */
+export const useGetRequestDocuments = (requestId: string | undefined) => {
+  return useQuery({
+    queryKey: requestDocumentKeys.byRequest(requestId ?? ''),
+    queryFn: async (): Promise<RequestDocumentsResponse> => {
+      const { data } = await axios.get(`/requests/${requestId}/documents`);
+      return RequestDocumentsResponseSchema.parse(data);
+    },
+    enabled: !!requestId,
+    staleTime: 30_000,
   });
 };

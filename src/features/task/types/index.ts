@@ -90,6 +90,12 @@ export type MovementType = (typeof Movement)[keyof typeof Movement];
 // Main Task interface - matches API TaskItemType (TaskDto) from v1.ts
 export interface Task {
   id: string;
+  /**
+   * For virtual quotation tasks (taskType='Quotation') the backend sets
+   * WorkflowInstanceId = Guid.Empty and puts the QuotationRequestId here.
+   * Regular workflow tasks leave this null.
+   */
+  taskId: string | null;
   appraisalId: string;
   requestId: string;
   workflowInstanceId: string;

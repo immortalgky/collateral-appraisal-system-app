@@ -32,14 +32,14 @@ const AddToExistingMeetingModal = ({
 }: AddToExistingMeetingModalProps) => {
   const [pickedId, setPickedId] = useState('');
 
-  // Fetch Draft and Scheduled meetings to allow selection.
+  // Fetch New and InvitationSent meetings to allow selection.
   // This modal is only rendered when the parent page has already confirmed the user is MeetingAdmin.
-  const { data: draftData } = useGetMeetings({ status: 'Draft', pageSize: 100 });
-  const { data: scheduledData } = useGetMeetings({ status: 'Scheduled', pageSize: 100 });
+  const { data: newData } = useGetMeetings({ status: 'New', pageSize: 100 });
+  const { data: invitationSentData } = useGetMeetings({ status: 'InvitationSent', pageSize: 100 });
 
   const openMeetings = [
-    ...(draftData?.items ?? []),
-    ...(scheduledData?.items ?? []),
+    ...(newData?.items ?? []),
+    ...(invitationSentData?.items ?? []),
   ];
 
   const handleClose = () => {
@@ -61,7 +61,7 @@ const AddToExistingMeetingModal = ({
     <Modal isOpen={isOpen} onClose={handleClose} title="Add to Existing Meeting" size="sm">
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Select an open (Draft or Scheduled) meeting to add the{' '}
+          Select an open (New or Invitation Sent) meeting to add the{' '}
           <strong>{selectedCount}</strong> selected appraisal{selectedCount === 1 ? '' : 's'} to.
         </p>
 

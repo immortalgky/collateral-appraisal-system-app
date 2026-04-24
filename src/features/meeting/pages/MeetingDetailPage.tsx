@@ -5,14 +5,20 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useHasPermission } from '@/shared/hooks/useHasPermission';
-import { MEETING_PERMISSIONS } from '../constants';
+import {
+  CANCEL_ELIGIBLE,
+  CUT_OFF_ELIGIBLE,
+  EDIT_ELIGIBLE,
+  ITEM_ACTION_ELIGIBLE,
+  MEETING_PERMISSIONS,
+  RESEND_INVITATION_ELIGIBLE,
+} from '../constants';
 
 import { useGetMeetingDetail } from '../api/meetings';
 import AddItemsDialog from '../components/AddItemsDialog';
 import AgendaForm from '../components/AgendaForm';
 import CancelMeetingDialog from '../components/CancelMeetingDialog';
 import CutOffReviewDialog from '../components/CutOffReviewDialog';
-import EndMeetingDialog from '../components/EndMeetingDialog';
 import MeetingFormDialog from '../components/MeetingFormDialog';
 import MeetingItemsGrouped from '../components/MeetingItemsGrouped';
 import MeetingMembersTable from '../components/MeetingMembersTable';
@@ -46,8 +52,8 @@ const MeetingDetailPage = () => {
   const editDialog = useDisclosure();
   const cutOffDialog = useDisclosure();
   const sendInvitationDialog = useDisclosure();
+  const resendInvitationDialog = useDisclosure();
   const cancelDialog = useDisclosure();
-  const endDialog = useDisclosure();
   const addItemsDialog = useDisclosure();
 
   if (isLoading || !meeting) {
@@ -58,15 +64,14 @@ const MeetingDetailPage = () => {
     );
   }
 
-  const isDraft = meeting.status === 'Draft';
-  const isScheduled = meeting.status === 'Scheduled';
-  const isEnded = meeting.status === 'Ended';
-  const isCancelled = meeting.status === 'Cancelled';
-  const isEditable = isDraft || isScheduled;
-  const hasCutOff = meeting.cutOffAt != null;
-  const hasInvitation = meeting.invitationSentAt != null;
+  const { status } = meeting;
+  const isEditable = EDIT_ELIGIBLE.has(status);
+  const isNew = status === 'New';
+  const isEnded = status === 'Ended';
+  const isCancelled = status === 'Cancelled';
+  const isRoutedBack = status === 'RoutedBack';
+  const isInProgress = status === 'InProgress';
 
-  // Total item count across both groups
   const totalDecision = meeting.items.decisionItems.reduce((s, g) => s + g.items.length, 0);
   const totalAck = meeting.items.acknowledgementItems.reduce((s, g) => s + g.items.length, 0);
   const totalItems = totalDecision + totalAck;
@@ -84,49 +89,54 @@ const MeetingDetailPage = () => {
             <div className="flex items-center gap-3 flex-wrap">
               <MeetingNoBadge meetingNo={meeting.meetingNo} />
               <h2 className="text-base font-semibold text-gray-900">{meeting.title}</h2>
-              <MeetingStatusBadge meeting={meeting} />
+              <MeetingStatusBadge status={meeting.status} />
             </div>
           </div>
         </div>
 
-        {/* Action bar — gated by status + flags + MEETING_ADMIN permission */}
+        {/* Action bar — gated by status + MEETING_ADMIN permission */}
         {hasAdmin && (
-        <div className="flex items-center gap-2 shrink-0">
-          {isEditable && (
-            <Button variant="ghost" size="sm" type="button" onClick={editDialog.onOpen}>
-              <Icon name="pen" style="solid" className="size-3.5 mr-1.5" />
-              Edit
-            </Button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {isEditable && (
+              <Button variant="ghost" size="sm" type="button" onClick={editDialog.onOpen}>
+                <Icon name="pen" style="solid" className="size-3.5 mr-1.5" />
+                Edit
+              </Button>
+            )}
 
-          {isDraft && !hasCutOff && (
-            <Button size="sm" type="button" onClick={cutOffDialog.onOpen}>
-              <Icon name="scissors" style="solid" className="size-3.5 mr-1.5" />
-              Cut Off
-            </Button>
-          )}
+            {CUT_OFF_ELIGIBLE.has(status) && (
+              <Button size="sm" type="button" onClick={cutOffDialog.onOpen}>
+                <Icon name="scissors" style="solid" className="size-3.5 mr-1.5" />
+                Cut Off
+              </Button>
+            )}
 
-          {isDraft && hasCutOff && !hasInvitation && (
-            <Button size="sm" type="button" onClick={sendInvitationDialog.onOpen}>
-              <Icon name="envelope" style="solid" className="size-3.5 mr-1.5" />
-              Send Invitation
-            </Button>
-          )}
+            {isNew && totalItems > 0 && (
+              <Button size="sm" type="button" onClick={sendInvitationDialog.onOpen}>
+                <Icon name="envelope" style="solid" className="size-3.5 mr-1.5" />
+                Send Invitation
+              </Button>
+            )}
 
-          {isScheduled && (
-            <Button size="sm" type="button" onClick={endDialog.onOpen}>
-              <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
-              End Meeting
-            </Button>
-          )}
+            {RESEND_INVITATION_ELIGIBLE.has(status) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={resendInvitationDialog.onOpen}
+              >
+                <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
+                Resend Invitation
+              </Button>
+            )}
 
-          {isEditable && (
-            <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
-              <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-              Cancel
-            </Button>
-          )}
-        </div>
+            {CANCEL_ELIGIBLE.has(status) && (
+              <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
+                <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
+                Cancel
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -137,7 +147,30 @@ const MeetingDetailPage = () => {
           <p className="text-sm font-medium text-emerald-700">
             Meeting ended
             {meeting.endedAt ? ` on ${formatDateTime(meeting.endedAt)}` : ''}.
-            Secretary can now Release or Route Back each decision item.
+          </p>
+        </div>
+      )}
+      {isInProgress && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <Icon
+            name="circle-play"
+            style="solid"
+            className="w-5 h-5 text-blue-500 shrink-0"
+          />
+          <p className="text-sm font-medium text-blue-700">
+            Meeting is in progress. Release decision items to approval, or route them back to staff.
+          </p>
+        </div>
+      )}
+      {isRoutedBack && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <Icon
+            name="arrow-rotate-left"
+            style="solid"
+            className="w-5 h-5 text-amber-500 shrink-0"
+          />
+          <p className="text-sm font-medium text-amber-700">
+            One or more items have been routed back. Release all decision items to close the meeting.
           </p>
         </div>
       )}
@@ -249,7 +282,7 @@ const MeetingDetailPage = () => {
       >
         <MeetingItemsGrouped
           meeting={meeting}
-          canReleaseItems={hasSecretary && isEnded}
+          canReleaseItems={hasSecretary && ITEM_ACTION_ELIGIBLE.has(status)}
         />
       </FormCard>
 
@@ -277,19 +310,21 @@ const MeetingDetailPage = () => {
         isOpen={sendInvitationDialog.isOpen}
         onClose={sendInvitationDialog.onClose}
         meetingId={meeting.id}
+        meetingNo={meeting.meetingNo}
+      />
+
+      <SendInvitationDialog
+        isOpen={resendInvitationDialog.isOpen}
+        onClose={resendInvitationDialog.onClose}
+        meetingId={meeting.id}
+        meetingNo={meeting.meetingNo}
+        isResend
       />
 
       <CancelMeetingDialog
         isOpen={cancelDialog.isOpen}
         onClose={cancelDialog.onClose}
         meetingId={meeting.id}
-      />
-
-      <EndMeetingDialog
-        isOpen={endDialog.isOpen}
-        onClose={endDialog.onClose}
-        meetingId={meeting.id}
-        itemCount={totalItems}
       />
 
       <AddItemsDialog

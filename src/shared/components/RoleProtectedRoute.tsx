@@ -21,13 +21,11 @@ const RoleProtectedRoute = ({
   fallbackPath = '/',
 }: RoleProtectedRouteProps) => {
   const user = useAuthStore(s => s.user);
-
   const hasAccess = (() => {
     if (!user) return false;
     if (requiredPermission && user.permissions?.includes(requiredPermission)) return true;
     return user.roles?.some(role => allowedRoles.includes(role)) ?? false;
   })();
-
   if (!hasAccess) {
     return <Navigate to={fallbackPath} replace />;
   }

@@ -39,8 +39,12 @@ const notesField = z
   .optional()
   .or(z.literal(''));
 
-const startAtField = z.string().datetime({ offset: true, message: 'Start date is required' });
-const endAtField = z.string().datetime({ offset: true, message: 'End date is required' });
+const startAtField = z
+  .string()
+  .datetime({ local: true, offset: true, message: 'Start date is required' });
+const endAtField = z
+  .string()
+  .datetime({ local: true, offset: true, message: 'End date is required' });
 
 // ==================== Meeting form schemas (split create vs update) ====================
 
@@ -86,7 +90,7 @@ export type UpdateMeetingFormValues = z.infer<typeof updateMeetingFormSchema>;
 
 export const bulkCreateMeetingsSchema = z.object({
   dates: z
-    .array(z.string().datetime({ offset: true }))
+    .array(z.string().datetime({ local: true, offset: true }))
     .min(1, 'Pick at least one date'),
   defaultTitle: z.string().max(200).optional(),
 });
