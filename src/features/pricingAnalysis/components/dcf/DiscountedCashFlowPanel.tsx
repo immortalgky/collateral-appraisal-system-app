@@ -12,7 +12,13 @@ import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBe
 import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext.tsx';
 import { initializeDiscountedCashFlowForm } from '../../adapters/initializeDiscountedCashFlowForm';
 import { pricingTemplateDtoToDcfTemplate } from '../../adapters/pricingTemplateDtoToDcfTemplate';
-import { useGetPricingTemplates, useGetPricingTemplateByCode, useSaveIncomeAnalysis, useGetIncomeAnalysis, usePreviewIncomeAnalysis } from '../../api';
+import {
+  useGetPricingTemplates,
+  useGetPricingTemplateByCode,
+  useSaveIncomeAnalysis,
+  useGetIncomeAnalysis,
+  usePreviewIncomeAnalysis,
+} from '../../api';
 import { mapDCFFormToSaveRequest } from '../../mappers/formToSaveRequest';
 import { mapIncomeAnalysisToDCFForm } from '../../mappers/analysisToForm';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -25,6 +31,8 @@ import { CashflowTimelineChart } from '../viz/CashflowTimelineChart';
 import { SensitivityStrip } from '../SensitivityStrip';
 import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
 import toast from 'react-hot-toast';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useGetAppointment } from '@/features/appraisal/api';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -67,6 +75,14 @@ export function DiscountedCashFlowPanel({
 
   const { data: pricingTemplates = [] } = useGetPricingTemplates(true);
   const { data: templateDto } = useGetPricingTemplateByCode(selectedTemplateCode || undefined);
+
+  const appraisalId = useAppraisalId() ?? '';
+  const propertyId =
+    ((properties ?? []).find(p => ['LS', 'LSL', 'LSB'].includes(p.propertyType))
+      ?.propertyId as string) ??
+    properties?.[0].propertyId ??
+    '';
+
   const saveMutation = useSaveIncomeAnalysis();
   const previewMutation = usePreviewIncomeAnalysis();
 
@@ -74,8 +90,14 @@ export function DiscountedCashFlowPanel({
   const watchedSections = useWatch({ control: methods.control, name: 'sections' });
   const watchedCapitalizeRate = useWatch({ control: methods.control, name: 'capitalizeRate' });
   const watchedDiscountedRate = useWatch({ control: methods.control, name: 'discountedRate' });
-  const watchedTotalNumberOfYears = useWatch({ control: methods.control, name: 'totalNumberOfYears' });
-  const watchedTotalNumberOfDayInYear = useWatch({ control: methods.control, name: 'totalNumberOfDayInYear' });
+  const watchedTotalNumberOfYears = useWatch({
+    control: methods.control,
+    name: 'totalNumberOfYears',
+  });
+  const watchedTotalNumberOfDayInYear = useWatch({
+    control: methods.control,
+    name: 'totalNumberOfDayInYear',
+  });
 
   // Debounce the full watched state so preview fires ~400ms after the last edit.
   const debouncedSections = useDebounce(watchedSections, 400);
@@ -125,7 +147,8 @@ export function DiscountedCashFlowPanel({
   // Fire preview whenever debounced watched fields change, but only after Generate/restore.
   useEffect(() => {
     if (!isGenerated) return;
-    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId) return;
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId)
+      return;
 
     const currentValues = methods.getValues();
     // Guard: need at least templateCode to build a valid request.
@@ -138,9 +161,7 @@ export function DiscountedCashFlowPanel({
     const hasPendingNewAssumption = (currentValues.sections ?? []).some(
       (s: { categories?: { assumptions?: { assumptionType?: unknown }[] }[] }) =>
         (s.categories ?? []).some(c =>
-          (c.assumptions ?? []).some(
-            a => a.assumptionType == null || a.assumptionType === '',
-          ),
+          (c.assumptions ?? []).some(a => a.assumptionType == null || a.assumptionType === ''),
         ),
     );
     if (hasPendingNewAssumption) return;
@@ -192,10 +213,12 @@ export function DiscountedCashFlowPanel({
       {
         pricingAnalysisId: activeMethod.pricingAnalysisId,
         methodId: activeMethod.methodId,
+        appraisalId: appraisalId,
+        propertyId: propertyId,
         request,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: response => {
           // Discard if a newer preview has already been fired, or if the user
           // switched to a different Income method while this request was in-flight.
           if (requestId !== latestPreviewRequestIdRef.current) return;
@@ -208,12 +231,12 @@ export function DiscountedCashFlowPanel({
             keepErrors: true,
           });
         },
-        onError: (err) => {
+        onError: err => {
           setSaveError(err instanceof Error ? `Preview failed: ${err.message}` : 'Preview failed');
         },
       },
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isGenerated,
     debouncedSections,
@@ -236,13 +259,16 @@ export function DiscountedCashFlowPanel({
   };
 
   const handleOnSubmit = handleSubmit(async (values: DCFFormType) => {
-    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId) return;
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId)
+      return;
     setSaveError(null);
     try {
       const request = mapDCFFormToSaveRequest(values);
       const result = await saveMutation.mutateAsync({
         pricingAnalysisId: activeMethod.pricingAnalysisId,
         methodId: activeMethod.methodId,
+        appraisalId,
+        propertyId,
         request,
       });
       reset(mapIncomeAnalysisToDCFForm(result));
@@ -330,9 +356,7 @@ export function DiscountedCashFlowPanel({
             />
             <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
 
-            {saveError && (
-              <p className="text-sm text-red-600 px-1">{saveError}</p>
-            )}
+            {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}
 
             {/* footer save, reset, cancel */}
             <MethodFooterActions
@@ -357,13 +381,8 @@ export function DiscountedCashFlowPanel({
 
 // Inner component — must be rendered inside FormProvider so useFormContext works.
 function DCFVisualizationSection() {
-  const {
-    cashflowData,
-    primaryKpi,
-    secondaryKpis,
-    discountRate,
-    capitalizeRate,
-  } = useIncomeScenarioResults();
+  const { cashflowData, primaryKpi, secondaryKpis, discountRate, capitalizeRate } =
+    useIncomeScenarioResults();
 
   return (
     <div className="flex flex-col gap-4">
@@ -379,7 +398,7 @@ function DCFVisualizationSection() {
 
       <SensitivityStrip
         currentRate={discountRate}
-        calculateFinalValue={(rate) => {
+        calculateFinalValue={rate => {
           // Recompute the DCF PV at the candidate discount rate using the
           // per-year cashflows the backend produced for the current scenario:
           //   PV(r) = Σ_{i=0..N-2} (grossRevenue[i] + terminalRevenue[i]) / (1+r)^(i+1)

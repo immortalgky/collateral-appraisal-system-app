@@ -220,4 +220,7 @@ const typeToDetailEndpoint: Record<string, string> = {
   U: 'condo-detail',
   LB: 'land-and-building-detail',
   B: 'building-detail',
+  LS: 'lease-agreement-land-building-detail',
+  LSL: 'lease-agreement-land-detail',
+  LSB: 'lease-agreement-building-detail',
 };
