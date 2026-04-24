@@ -41,8 +41,7 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     isThumbnail: p.isThumbnail,
     mappingId: p.mappingId ?? undefined,
   }));
-  const thumbnailId =
-    photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;
+  const thumbnailId = photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;
 
   const isMachine = item.propertyType === 'MAC';
 
@@ -54,9 +53,9 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
       : undefined,
     photos,
     address: item.propertyName || '-',
-    area: isMachine
-      ? (item.dimension || '-')
-      : formatArea(item.area, item.propertyType ?? undefined),
+    area: isMachine ? item.dimension || '-' : formatArea(item.area, item.propertyType ?? undefined),
+    latitude: item.latitude ?? undefined,
+    longitude: item.longitude ?? undefined,
     priceRange: '-',
     location: item.location || '-',
     sequenceNumber: item.sequenceInGroup ?? undefined,
@@ -84,10 +83,7 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
     error: groupsError,
   } = useGetPropertyGroups(appraisalId);
 
-  const groupIds = useMemo(
-    () => groupsData?.groups?.map(g => g.id) ?? [],
-    [groupsData],
-  );
+  const groupIds = useMemo(() => groupsData?.groups?.map(g => g.id) ?? [], [groupsData]);
 
   // Step 2: For each group, fetch group detail (includes property summary fields)
   const groupDetailQueries = useQueries({
