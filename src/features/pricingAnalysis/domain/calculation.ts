@@ -200,18 +200,53 @@ export function formatFixed2(value: Numberish): string {
   return toFixed2(value).toFixed(2);
 }
 
+/**
+ * Returns the marginal tax rate for the highest bracket reached by the given property value.
+ *
+ * This reflects the rate applied to the topmost portion of the value,
+ * not the effective (average) rate across all brackets.
+ *
+ * @param totalGovPrice - The government-assessed value of the property (in THB)
+ * @returns The marginal tax rate (e.g. 0.005 for 0.5%) of the matched bracket,
+ *          or the base rate if the value is zero or below
+ *
+ * @example
+ * getPropertyTaxRate(100_000_000) // => 0.004 (falls in 50M–200M bracket)
+ * getPropertyTaxRate(300_000_000) // => 0.005 (falls in 200M–1B bracket)
+ */
 export function getPropertyTaxRate(totalGovPrice: number): number {
-  const matchedRange = propertyTaxRanges.find(
-    range =>
-      totalGovPrice >= range.minValue &&
-      (range.maxValue === null || totalGovPrice <= range.maxValue),
-  );
+  const matchedRange = [...propertyTaxRanges]
+    .reverse()
+    .find(range => totalGovPrice > range.minValue);
 
-  return matchedRange?.taxRate ?? 0;
+  return matchedRange?.taxRate ?? propertyTaxRanges[0].taxRate;
 }
 
+/**
+ * Calculates the total property tax using a progressive (tiered) tax structure.
+ *
+ * Each bracket is taxed only on the portion of the value that falls within it,
+ * similar to income tax brackets. The results from all brackets are summed
+ * to produce the final tax amount.
+ *
+ * @param totalGovPrice - The government-assessed value of the property (in THB)
+ * @returns The total tax amount (in THB) across all applicable brackets
+ *
+ * @example
+ * getPropertyTaxAmount(100_000_000)
+ * // Bracket 1 (0–50M):    50,000,000 × 0.003 = 150,000
+ * // Bracket 2 (50M–200M): 50,000,000 × 0.004 = 200,000
+ * // Total: 350,000
+ */
 export function getPropertyTaxAmount(totalGovPrice: number): number {
-  return totalGovPrice * getPropertyTaxRate(totalGovPrice);
+  return propertyTaxRanges.reduce((sum, range) => {
+    if (totalGovPrice <= range.minValue) return sum;
+
+    const upperBound = range.maxValue ?? totalGovPrice;
+    const taxableInThisBracket = Math.min(totalGovPrice, upperBound) - range.minValue;
+
+    return sum + taxableInThisBracket * range.taxRate;
+  }, 0);
 }
 
 export function floorToThousands(num) {
