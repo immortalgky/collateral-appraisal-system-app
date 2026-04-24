@@ -1,5 +1,5 @@
 import { RouterProvider } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster, ToastBar } from 'react-hot-toast';
 import { router } from './router';
 import { MenuInitializer } from '@features/menuManagement/MenuInitializer';
 
@@ -22,7 +22,27 @@ function App() {
           success: { duration: 3000, iconTheme: { primary: '#10b981', secondary: '#fff' } },
           error: { duration: 4000, iconTheme: { primary: '#ef4444', secondary: '#fff' } },
         }}
-      />
+      >
+        {(t) => (
+          <ToastBar toast={t}>
+            {({ icon, message }) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== 'loading' && (
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    aria-label="Dismiss"
+                    className="ml-2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
     </>
   );
 }

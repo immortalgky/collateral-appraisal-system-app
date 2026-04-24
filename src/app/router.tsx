@@ -70,9 +70,15 @@ import VillageModelDetailPage from '@/features/blockVillage/pages/ModelDetailPag
 import MeetingListPage from '@/features/meeting/pages/MeetingListPage';
 import MeetingQueuePage from '@/features/meeting/pages/MeetingQueuePage';
 import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
+import CommitteeAdminPage from '@/features/committee/pages/CommitteeAdminPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
 import MenuListPage from '@features/menuManagement/pages/MenuListPage';
 import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
+import QuotationSelectionPage from '@/features/quotation/pages/QuotationSelectionPage';
+import ExtCompanyInvitationListPage from '@/features/quotation/pages/ExtCompanyInvitationListPage';
+import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompanySubmitQuotationPage';
+import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
+import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -221,6 +227,7 @@ export const router = createBrowserRouter([
           { path: 'roles', element: <RoleListPage /> },
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
+          { path: 'committees', element: <CommitteeAdminPage /> },
           // Menu management — gated by MENU_MANAGE permission
           {
             path: 'menus',
@@ -258,10 +265,28 @@ export const router = createBrowserRouter([
         path: 'dev/property-information',
         element: <PropertyInformationPage />,
       },
-      // {
-      //   path: 'dev/land-detail',
-      //   element: <LandDetailPage />,
-      // },
+      // ─── Quotation Routes ────────────────────────────────────────────────
+      // RequestMaker / Admin selection page
+      {
+        path: 'quotations',
+        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin']} />,
+        children: [
+          { path: ':id', element: <QuotationSelectionPage /> },
+          {
+            path: ':quotationRequestId/companies/:companyQuotationId',
+            element: <AdminCompanyQuotationDetailPage />,
+          },
+        ],
+      },
+      // ExtCompany portal
+      {
+        path: 'ext/quotations',
+        element: <RoleProtectedRoute allowedRoles={['ExtAdmin', 'ExtAppraisalChecker']} />,
+        children: [
+          { index: true, element: <ExtCompanyInvitationListPage /> },
+          { path: ':id', element: <ExtCompanySubmitQuotationPage /> },
+        ],
+      },
       // Catch-all route for 404 pages
       {
         path: '*',
@@ -1013,6 +1038,17 @@ export const router = createBrowserRouter([
         path: 'provide-documents',
         element: <ProvideDocumentsTaskPage />,
       },
+      // ─── Quotation task sub-routes ────────────────────────────────────────
+      // ext-collect-submissions: ExtCompany submits their bid
+      { path: 'quotation/submit', element: <ExtCompanySubmitQuotationPage /> },
+      // ext-respond-negotiation: ExtCompany responds to a negotiation round
+      { path: 'quotation/respond-negotiation', element: <ExtCompanySubmitQuotationPage /> },
+      // rm-pick-winner: RM selects the tentative winner from the shortlist
+      { path: 'quotation/pick-winner', element: <QuotationSelectionPage /> },
+      // admin-review-submissions: Admin reviews bids and builds shortlist
+      { path: 'quotation/review', element: <AdminQuotationTaskPage /> },
+      // admin-finalize: Admin finalizes the quotation with the winner
+      { path: 'quotation/finalize', element: <AdminQuotationTaskPage /> },
     ],
   },
 ]);

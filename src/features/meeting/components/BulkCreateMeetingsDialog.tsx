@@ -70,7 +70,7 @@ const BulkCreateMeetingsDialog = ({
     <Modal isOpen={isOpen} onClose={handleClose} title="Bulk Create Meetings" size="lg">
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Select one or more dates. A Draft meeting will be created for each selected date. Members
+          Select one or more dates. A New meeting will be created for each selected date. Members
           can be added to each meeting afterwards.
         </p>
 

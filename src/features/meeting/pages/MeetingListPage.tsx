@@ -6,7 +6,14 @@ import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useHasPermission } from '@/shared/hooks/useHasPermission';
-import { MEETING_PERMISSIONS } from '../constants';
+import {
+  CANCEL_ELIGIBLE,
+  CUT_OFF_ELIGIBLE,
+  MEETING_PERMISSIONS,
+  MEETING_STATUS_LABELS,
+  MEETING_STATUS_OPTIONS,
+  RESEND_INVITATION_ELIGIBLE,
+} from '../constants';
 
 import { useGetMeetings } from '../api/meetings';
 import type { MeetingListItemDto, MeetingStatus } from '../api/types';
@@ -30,8 +37,6 @@ const formatDateTime = (iso: string | null): string => {
     minute: '2-digit',
   });
 };
-
-const STATUS_OPTIONS: MeetingStatus[] = ['Draft', 'Scheduled', 'Ended', 'Cancelled'];
 
 // ── Row action menu ───────────────────────────────────────────────────────────
 
@@ -67,7 +72,6 @@ const RowActionsMenu = ({ actions }: RowActionsMenuProps) => {
 
       {open && (
         <>
-          {/* backdrop to close on outside click */}
           <div
             className="fixed inset-0 z-20"
             onClick={e => {
@@ -108,6 +112,7 @@ interface MeetingRowProps {
   onNavigate: (id: string) => void;
   onCutOff: (meeting: MeetingListItemDto) => void;
   onSendInvitation: (meeting: MeetingListItemDto) => void;
+  onResendInvitation: (meeting: MeetingListItemDto) => void;
   onCancel: (meeting: MeetingListItemDto) => void;
 }
 
@@ -117,25 +122,19 @@ const MeetingRow = ({
   onNavigate,
   onCutOff,
   onSendInvitation,
+  onResendInvitation,
   onCancel,
 }: MeetingRowProps) => {
-  const isDraft = meeting.status === 'Draft';
-  const isScheduled = meeting.status === 'Scheduled';
-  const isEnded = meeting.status === 'Ended';
-  const isCancelled = meeting.status === 'Cancelled';
-  const hasCutOff = meeting.cutOffAt != null;
-  const hasInvitation = meeting.invitationSentAt != null;
+  const { status } = meeting;
+  const isNew = status === 'New';
 
   const actions: RowAction[] = [];
 
-  // Edit is intentionally omitted from the list — opening the detail page is
-  // the correct entry point for editing (full DTO available there).
-
-  if (isAdmin && isDraft && !hasCutOff) {
+  if (isAdmin && CUT_OFF_ELIGIBLE.has(status)) {
     actions.push({ label: 'Cut Off', icon: 'scissors', onClick: () => onCutOff(meeting) });
   }
 
-  if (isAdmin && isDraft && hasCutOff && !hasInvitation) {
+  if (isAdmin && isNew && meeting.itemCount > 0) {
     actions.push({
       label: 'Send Invitation',
       icon: 'envelope',
@@ -143,20 +142,15 @@ const MeetingRow = ({
     });
   }
 
-  if (isAdmin && isScheduled && hasInvitation) {
+  if (isAdmin && RESEND_INVITATION_ELIGIBLE.has(status)) {
     actions.push({
-      label: 'Send Invitation',
-      icon: 'envelope',
-      onClick: () => onSendInvitation(meeting),
+      label: 'Resend Invitation',
+      icon: 'paper-plane',
+      onClick: () => onResendInvitation(meeting),
     });
   }
 
-  // View is visible to any authenticated user
-  if (isEnded || isCancelled) {
-    actions.push({ label: 'View', icon: 'eye', onClick: () => onNavigate(meeting.id) });
-  }
-
-  if (isAdmin && (isDraft || isScheduled)) {
+  if (isAdmin && CANCEL_ELIGIBLE.has(status)) {
     actions.push({
       label: 'Cancel',
       icon: 'xmark',
@@ -176,7 +170,7 @@ const MeetingRow = ({
       </td>
       <td className="px-4 py-3 text-gray-900 font-medium">{meeting.title}</td>
       <td className="px-4 py-3">
-        <MeetingStatusBadge meeting={meeting} />
+        <MeetingStatusBadge status={meeting.status} />
       </td>
       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDateTime(meeting.startAt)}</td>
       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDateTime(meeting.endAt)}</td>
@@ -201,10 +195,10 @@ const MeetingListPage = () => {
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
-  // Dialog states
   const newMeetingDialog = useDisclosure();
   const bulkCreateDialog = useDisclosure();
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingListItemDto | null>(null);
+  const [isResend, setIsResend] = useState(false);
   const cutOffDialog = useDisclosure();
   const sendInvitationDialog = useDisclosure();
   const cancelDialog = useDisclosure();
@@ -226,6 +220,13 @@ const MeetingListPage = () => {
 
   const handleSendInvitation = (meeting: MeetingListItemDto) => {
     setSelectedMeeting(meeting);
+    setIsResend(false);
+    sendInvitationDialog.onOpen();
+  };
+
+  const handleResendInvitation = (meeting: MeetingListItemDto) => {
+    setSelectedMeeting(meeting);
+    setIsResend(true);
     sendInvitationDialog.onOpen();
   };
 
@@ -280,9 +281,9 @@ const MeetingListPage = () => {
           className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-32"
         >
           <option value="">All Status</option>
-          {STATUS_OPTIONS.map(status => (
+          {MEETING_STATUS_OPTIONS.map(status => (
             <option key={status} value={status}>
-              {status}
+              {MEETING_STATUS_LABELS[status]}
             </option>
           ))}
         </select>
@@ -336,6 +337,7 @@ const MeetingListPage = () => {
                     onNavigate={id => navigate(`/meetings/${id}`)}
                     onCutOff={handleCutOff}
                     onSendInvitation={handleSendInvitation}
+                    onResendInvitation={handleResendInvitation}
                     onCancel={handleCancel}
                   />
                 ))
@@ -388,8 +390,11 @@ const MeetingListPage = () => {
             onClose={() => {
               sendInvitationDialog.onClose();
               setSelectedMeeting(null);
+              setIsResend(false);
             }}
             meetingId={selectedMeeting.id}
+            meetingNo={selectedMeeting.meetingNo}
+            isResend={isResend}
           />
 
           <CancelMeetingDialog

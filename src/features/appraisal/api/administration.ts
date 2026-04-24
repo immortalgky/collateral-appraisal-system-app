@@ -2,12 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AssignAppraisalRequestType, AssignAppraisalResponseType } from '@shared/schemas/v1';
 import type {
-  AddToQuotationRequest,
-  CreateQuotationRequest,
   CurrentAssignment,
   ExternalCompany,
   InternalStaff,
   Quotation,
+  StartQuotationFromTaskRequest,
 } from '../types/administration';
 
 
@@ -161,10 +160,15 @@ export const useGetEligibleCompanies = (
 /**
  * Get quotations that include this appraisal
  * GET /quotations?AppraisalId={appraisalId}
+ *
+ * Key: ['quotations', 'list', { appraisalId }] — placed under the shared
+ * `quotationKeys.lists()` prefix so Finalize/Cancel/Send/etc. mutations that
+ * invalidate `['quotations', 'list']` also refresh this query (otherwise
+ * AdministrationPage stays locked after status transitions).
  */
 export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = true) => {
   return useQuery({
-    queryKey: ['quotations', { appraisalId }],
+    queryKey: ['quotations', 'list', { appraisalId }],
     queryFn: async (): Promise<Quotation[]> => {
       const { data } = await axios.get('/quotations', {
         params: { AppraisalId: appraisalId, PageNumber: 0, PageSize: 100 },
@@ -176,59 +180,19 @@ export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = 
   });
 };
 
-/**
- * Get pending quotations (status = 'Pending') for adding appraisals
- * GET /quotations?Status=Pending
- */
-export const useGetPendingQuotations = (_companyId: string | null, enabled = true) => {
-  return useQuery({
-    queryKey: ['quotations', 'pending'],
-    queryFn: async (): Promise<Quotation[]> => {
-      const { data } = await axios.get('/quotations', {
-        params: { Status: 'Pending', PageNumber: 0, PageSize: 100 },
-      });
-      const result = data.quotations ?? data;
-      return result.items ?? [];
-    },
-    enabled,
-  });
-};
 
 /**
- * Create a new quotation
- * POST /quotations
+ * Start a new IBG quotation linked to the current admin workflow task.
+ * POST /quotations/start-from-task
+ * Replaces the old POST /quotations stub; does NOT complete the admin task.
  */
 export const useCreateQuotation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreateQuotationRequest): Promise<{ id: string }> => {
-      const { data } = await axios.post('/quotations', request);
+    mutationFn: async (request: StartQuotationFromTaskRequest): Promise<{ quotationRequestId: string }> => {
+      const { data } = await axios.post('/quotations/start-from-task', request);
       return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotations'] });
-    },
-  });
-};
-
-/**
- * Add appraisal to existing quotation
- * POST /quotations/{quotationId}/appraisals
- */
-export const useAddToQuotation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (_request: AddToQuotationRequest): Promise<{ success: boolean }> => {
-      // TODO: Replace with real API call
-      // const { data } = await axios.post(
-      //   `/quotations/${request.quotationId}/appraisals`,
-      //   { appraisalId: request.appraisalId }
-      // );
-
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });

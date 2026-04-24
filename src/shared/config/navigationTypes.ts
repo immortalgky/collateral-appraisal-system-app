@@ -43,6 +43,7 @@ export type UserRole =
   | 'Admin'
   | 'IntAdmin'
   | 'ExtAdmin'
+  | 'RM'
   | 'RequestMaker'
   | 'RequestChecker'
   | 'IntAppraisalStaff'

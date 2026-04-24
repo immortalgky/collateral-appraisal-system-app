@@ -97,21 +97,23 @@ export interface AssignmentFormData {
   remarks: string;
 }
 
-
 /**
- * Quotation status
+ * Quotation status — matches backend PascalCase values exactly.
+ * Old lowercase values ('draft', 'pending', etc.) have been removed; they came from the mock era.
  */
 export type QuotationStatus =
-  | 'draft'
-  | 'pending'
-  | 'quoted'
-  | 'approved'
-  | 'rejected'
-  | 'expired';
+  | 'Draft'
+  | 'Sent'
+  | 'UnderAdminReview'
+  | 'PendingRmSelection'
+  | 'WinnerTentative'
+  | 'Negotiating'
+  | 'Finalized'
+  | 'Cancelled';
 
 /**
  * Quotation record for listing
- * Matches QuotationDto from API
+ * Matches QuotationDto from API (GET /quotations)
  */
 export interface Quotation {
   id: string;
@@ -123,6 +125,13 @@ export interface Quotation {
   totalAppraisals: number;
   totalCompaniesInvited: number;
   totalQuotationsReceived: number;
+  // Extended fields present on detail GET but also available on list
+  rmUserId?: string;
+  submissionsClosedAt?: string;
+  shortlistSentToRmAt?: string;
+  tentativeWinnerQuotationId?: string;
+  tentativelySelectedAt?: string;
+  tentativelySelectedByRole?: string;
 }
 
 /**
@@ -139,9 +148,40 @@ export interface CreateQuotationRequest {
 }
 
 /**
- * API request payload for adding to existing quotation
+ * API request for starting a quotation from a workflow task (new IBG flow).
+ * POST /quotations/start-from-task
+ * Note: requestedBy, requestedByName, and rmUserId are derived server-side from JWT claims.
  */
-export interface AddToQuotationRequest {
+export interface StartQuotationFromTaskRequest {
   appraisalId: string;
-  quotationId: string;
+  requestId: string;
+  workflowInstanceId: string;
+  /**
+   * Optional. Was originally the Guid of the WorkflowActivityExecution for audit-tracking
+   * when the system used to auto-complete the task. Now unused (admin completes the task
+   * manually), so the frontend doesn't have a stable value to send.
+   */
+  taskExecutionId?: string | null;
+  dueDate: string;
+  bankingSegment: string;
+  invitedCompanyIds: string[];
+  appraisalNumber: string;
+  propertyType: string;
+  propertyLocation?: string | null;
+  estimatedValue?: number | null;
+  specialRequirements?: string | null;
+  /**
+   * v2: If provided, adds the appraisalId to this existing Draft instead of creating a new one.
+   */
+  existingQuotationRequestId?: string | null;
 }
+
+/**
+ * Quotation that contains a specific appraisal (for the "active quotation" guard).
+ */
+export interface AppraisalActiveQuotation {
+  id: string;
+  quotationNumber: string;
+  status: string;
+}
+

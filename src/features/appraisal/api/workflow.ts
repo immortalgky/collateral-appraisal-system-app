@@ -40,6 +40,11 @@ export interface TaskDetailResult {
   taskId: string;
   requestId: string;
   appraisalId: string | null;
+  /**
+   * Populated only for quotation-workflow tasks (non-null when the task wraps a quotation).
+   * Use this — not taskId — as the quotation route identifier.
+   */
+  quotationRequestId: string | null;
   workflowInstanceId: string;
   activityId: string;
   assigneeUserId: string;

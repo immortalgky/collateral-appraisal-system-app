@@ -17,6 +17,11 @@ export interface User {
    */
   roles: UserRole[];
   permissions: string[];
+  /**
+   * Company ID for ExtAdmin users. Sourced from the `company_id` JWT claim.
+   * Only populated when the user belongs to an external company.
+   */
+  companyId?: string;
 }
 
 export interface LoginCredentials {

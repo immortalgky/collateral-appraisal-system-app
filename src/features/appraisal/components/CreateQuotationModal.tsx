@@ -1,47 +1,67 @@
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
+import toast from 'react-hot-toast';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
-import type { ExternalCompany } from '../types/administration';
 
 interface CreateQuotationModalProps {
   isOpen: boolean;
   onClose: () => void;
   appraisalId: string;
+  requestId?: string;
+  workflowInstanceId?: string;
+  bankingSegment?: string;
+  appraisalNumber?: string;
+  propertyType?: string;
   onSuccess?: () => void;
+  /** Optional slot rendered at the top of the modal body (used by QuotationEntryModal to inject the tab bar). */
+  headerSlot?: ReactNode;
+}
+
+interface SelectedCompany {
+  id: string;
+  companyName: string;
 }
 
 const CreateQuotationModal = ({
   isOpen,
   onClose,
-  appraisalId: _appraisalId,
+  appraisalId,
+  requestId,
+  workflowInstanceId,
+  bankingSegment,
+  appraisalNumber,
+  propertyType,
   onSuccess,
+  headerSlot,
 }: CreateQuotationModalProps) => {
-  const [selectedCompanies, setSelectedCompanies] = useState<ExternalCompany[]>([]);
+  const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
 
-  const { data: allCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
-    undefined,
+  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
+    bankingSegment,
     isOpen,
+  );
+
+  // Map raw company data to the SelectedCompany shape
+  const allCompanies: SelectedCompany[] = useMemo(
+    () => (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.companyName })),
+    [rawCompanies],
   );
 
   const companyList = useMemo(() => {
     if (!allCompanies) return [];
     if (!searchQuery.trim()) return allCompanies;
     const query = searchQuery.toLowerCase();
-    return allCompanies.filter(
-      c =>
-        c.companyName.toLowerCase().includes(query) ||
-        c.registrationNo.toLowerCase().includes(query) ||
-        c.contactPerson.toLowerCase().includes(query),
-    );
+    return allCompanies.filter(c => c.companyName.toLowerCase().includes(query));
   }, [allCompanies, searchQuery]);
-  const { mutate: createQuotation, isPending } = useCreateQuotation();
+
+  const { mutate: startQuotation, isPending } = useCreateQuotation();
 
   const handleClose = () => {
     setSelectedCompanies([]);
@@ -51,13 +71,10 @@ const CreateQuotationModal = ({
     onClose();
   };
 
-  const handleToggleCompany = (company: ExternalCompany) => {
+  const handleToggleCompany = (company: SelectedCompany) => {
     setSelectedCompanies(prev => {
       const isSelected = prev.some(c => c.id === company.id);
-      if (isSelected) {
-        return prev.filter(c => c.id !== company.id);
-      }
-      return [...prev, company];
+      return isSelected ? prev.filter(c => c.id !== company.id) : [...prev, company];
     });
   };
 
@@ -67,51 +84,46 @@ const CreateQuotationModal = ({
 
   const handleSubmit = () => {
     if (selectedCompanies.length === 0 || !cutOffDateTime) return;
+    if (!appraisalId || !requestId || !workflowInstanceId) {
+      toast.error('Task context is missing. Please reopen the task and try again.');
+      return;
+    }
 
-    createQuotation(
+    // taskExecutionId is the workflow activityId (e.g. "appraisal-assignment"),
+    // not a Guid — backend accepts it as optional since the original auto-complete
+    // callback path was removed. We omit it rather than sending an invalid Guid.
+    startQuotation(
       {
-        quotationNumber: `QUO-${Date.now()}`,
+        appraisalId,
+        requestId,
+        workflowInstanceId,
+        taskExecutionId: null,
         dueDate: cutOffDateTime,
-        requestedBy: '00000000-0000-0000-0000-000000000000',
-        requestedByName: 'Current User',
-        description: remarks || null,
-        specialRequirements: null,
+        bankingSegment: bankingSegment ?? '',
+        invitedCompanyIds: selectedCompanies.map(c => c.id),
+        appraisalNumber: appraisalNumber ?? '',
+        propertyType: propertyType ?? '',
+        specialRequirements: remarks || null,
       },
       {
         onSuccess: () => {
+          toast.success('Quotation started — companies have been invited');
           handleClose();
           onSuccess?.();
         },
-      }
-    );
-  };
-
-  const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-    return (
-      <div className="flex items-center gap-0.5">
-        {[...Array(fullStars)].map((_, i) => (
-          <Icon key={`full-${i}`} name="star" style="solid" className="w-3 h-3 text-amber-400" />
-        ))}
-        {hasHalfStar && (
-          <Icon name="star-half-stroke" style="solid" className="w-3 h-3 text-amber-400" />
-        )}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Icon key={`empty-${i}`} name="star" style="regular" className="w-3 h-3 text-gray-300" />
-        ))}
-        <span className="text-xs text-gray-500 ml-1">({rating.toFixed(1)})</span>
-      </div>
+        onError: (err: any) => {
+          toast.error(err?.apiError?.detail ?? 'Failed to start quotation');
+        },
+      },
     );
   };
 
   const isCompanySelected = (companyId: string) => selectedCompanies.some(c => c.id === companyId);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create New Quotation" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Request Quotation" size="lg">
       <div className="flex flex-col gap-5">
+        {headerSlot}
         {/* Selected Companies Display */}
         {selectedCompanies.length > 0 && (
           <div>
@@ -144,11 +156,13 @@ const CreateQuotationModal = ({
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Select External Companies <span className="text-danger">*</span>
           </label>
-          <p className="text-xs text-gray-500 mb-2">
-            Select one or more companies to send quotation requests
-          </p>
+          {bankingSegment && (
+            <p className="text-xs text-purple-600 mb-1.5 flex items-center gap-1">
+              <Icon name="circle-info" style="solid" className="size-3.5" />
+              Showing companies eligible for <strong>{bankingSegment}</strong> segment
+            </p>
+          )}
 
-          {/* Company search */}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="p-2 border-b border-gray-100">
               <div className="relative">
@@ -174,7 +188,7 @@ const CreateQuotationModal = ({
                 </div>
               ) : companyList.length === 0 ? (
                 <div className="px-4 py-6 text-center text-gray-500 text-sm">
-                  No companies found
+                  {bankingSegment ? 'No eligible companies for this segment' : 'No companies found'}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -187,33 +201,25 @@ const CreateQuotationModal = ({
                         onClick={() => handleToggleCompany(company)}
                         className={clsx(
                           'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                          isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50'
+                          isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
                         )}
                       >
-                        {/* Checkbox */}
                         <div
                           className={clsx(
                             'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                            isSelected
-                              ? 'bg-purple-500 border-purple-500'
-                              : 'border-gray-300 bg-white'
+                            isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white',
                           )}
                         >
                           {isSelected && (
                             <Icon name="check" style="solid" className="size-3 text-white" />
                           )}
                         </div>
-
-                        {/* Company Info */}
                         <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
                           <Icon name="building" style="solid" className="size-4 text-purple-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900 truncate">
                             {company.companyName}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {renderStars(company.rating)}
                           </div>
                         </div>
                       </button>
@@ -240,12 +246,12 @@ const CreateQuotationModal = ({
         {/* Remarks */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Remarks <span className="text-xs text-gray-400">(optional)</span>
+            Special Requirements <span className="text-xs text-gray-400">(optional)</span>
           </label>
           <textarea
             value={remarks}
             onChange={e => setRemarks(e.target.value)}
-            placeholder="Add any special instructions or notes for the quotation..."
+            placeholder="Add any special instructions or requirements..."
             rows={3}
             maxLength={500}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
@@ -253,20 +259,16 @@ const CreateQuotationModal = ({
           <p className="text-xs text-gray-400 mt-1 text-right">{remarks.length}/500</p>
         </div>
 
-        {/* Info Box */}
-        <div className="bg-purple-50 rounded-lg p-3">
-          <div className="flex items-start gap-2">
-            <Icon name="circle-info" style="solid" className="size-4 text-purple-500 mt-0.5" />
-            <div className="text-sm text-purple-700">
-              <p className="font-medium mb-1">Note</p>
-              <ul className="text-xs space-y-1 list-disc list-inside">
-                <li>This appraisal will be included in the quotation request</li>
-                <li>All selected companies will receive this quotation request</li>
-                <li>You can add more appraisals to this quotation before sending</li>
-              </ul>
-            </div>
+        {/* Context warning if required fields are missing */}
+        {(!requestId || !workflowInstanceId) && (
+          <div className="bg-amber-50 rounded-lg p-3 flex items-start gap-2">
+            <Icon name="triangle-exclamation" style="solid" className="size-4 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700">
+              This quotation must be started from an active admin workflow task. Make sure you have
+              opened this page from the task list.
+            </p>
           </div>
-        </div>
+        )}
 
         {/* Footer */}
         <div className="flex justify-end gap-3 pt-2">
@@ -276,21 +278,16 @@ const CreateQuotationModal = ({
           <Button
             onClick={handleSubmit}
             disabled={selectedCompanies.length === 0 || !cutOffDateTime || isPending}
-            className={clsx(
-              selectedCompanies.length > 0 && cutOffDateTime && !isPending
-                ? 'bg-purple-600 hover:bg-purple-700'
-                : ''
-            )}
           >
             {isPending ? (
               <>
                 <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                Creating...
+                Starting...
               </>
             ) : (
               <>
                 <Icon name="file-circle-plus" style="solid" className="size-4 mr-2" />
-                Create Quotation
+                Start Quotation
               </>
             )}
           </Button>

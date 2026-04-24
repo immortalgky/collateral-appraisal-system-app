@@ -1,6 +1,4 @@
 import { Link } from 'react-router-dom';
-
-import Badge from '@/shared/components/Badge';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
@@ -19,7 +17,9 @@ interface MeetingItemsGroupedProps {
 }
 
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+    value,
+  );
 
 // ── Decision badge ────────────────────────────────────────────────────────────
 
@@ -55,12 +55,24 @@ const ItemActions = ({ meetingId, item, canReleaseItems }: ItemActionsProps) => 
 
   return (
     <>
-      <div className="flex items-center gap-1.5">
-        <Button variant="ghost" size="xs" type="button" onClick={releaseDialog.onOpen}>
+      <div className="flex justify-center items-center gap-1.5">
+        <Button
+          className="text-green-600"
+          variant="ghost"
+          size="xs"
+          type="button"
+          onClick={releaseDialog.onOpen}
+        >
           <Icon name="check" style="solid" className="size-3 mr-1" />
           Release
         </Button>
-        <Button variant="ghost" size="xs" type="button" onClick={routeBackDialog.onOpen}>
+        <Button
+          className="text-red-600"
+          variant="ghost"
+          size="xs"
+          type="button"
+          onClick={routeBackDialog.onOpen}
+        >
           <Icon name="arrow-rotate-left" style="solid" className="size-3 mr-1" />
           Route Back
         </Button>
@@ -71,14 +83,14 @@ const ItemActions = ({ meetingId, item, canReleaseItems }: ItemActionsProps) => 
         onClose={releaseDialog.onClose}
         meetingId={meetingId}
         appraisalId={item.appraisalId}
-        appraisalNo={item.appraisalNo}
+        appraisalNo={item.appraisalNumber}
       />
       <RouteBackItemDialog
         isOpen={routeBackDialog.isOpen}
         onClose={routeBackDialog.onClose}
         meetingId={meetingId}
         appraisalId={item.appraisalId}
-        appraisalNo={item.appraisalNo}
+        appraisalNo={item.appraisalNumber}
       />
     </>
   );
@@ -114,16 +126,22 @@ const DecisionGroupTable = ({
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Appraisal #
-            </th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-              Facility Limit
+            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+              No
             </th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Added
+              Appraisal Number
+            </th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+              Customer Name
+            </th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+              Appraisal Staff
             </th>
             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+              Appraisal Value
+            </th>
+            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
               Decision
             </th>
           </tr>
@@ -131,15 +149,18 @@ const DecisionGroupTable = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {items.length === 0 ? (
             <tr>
-              <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-400 italic">
+              <td colSpan={6} className="px-4 py-4 text-center text-sm text-gray-400 italic">
                 No items
               </td>
             </tr>
           ) : (
-            items.map(item => {
-              const label = item.appraisalNo ?? item.appraisalId.slice(0, 8);
+            items.map((item, index) => {
+              const label = item.appraisalNumber ?? item.appraisalId.slice(0, 8);
               return (
                 <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-700 text-center whitespace-nowrap">
+                    {index + 1}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
                     <Link
                       to={`/appraisals/${item.appraisalId}/summary`}
@@ -148,16 +169,16 @@ const DecisionGroupTable = ({
                       {label}
                     </Link>
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap">
+                    {item.customerName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap">
+                    {item.appraisalStaff}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
-                    {formatCurrency(item.facilityLimit)}
+                    {formatCurrency(item.appraisedValue ?? 0)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                    {new Date(item.addedAt).toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </td>
+
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <ItemActions
                       meetingId={meetingId}
@@ -192,25 +213,31 @@ const AckGroupCard = ({ label, items }: AckGroupCardProps) => (
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                Appraisal #
-              </th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                Facility Limit
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                No
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                Group
+                Appraisal Number
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                Customer Name
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                Appraisal Staff
               </th>
               <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                Status
+                Appraisal Value
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {items.map(item => {
-              const appraisalLabel = item.appraisalNo ?? item.appraisalId.slice(0, 8);
+            {items.map((item, index) => {
+              const appraisalLabel = item.appraisalNumber ?? item.appraisalId.slice(0, 8);
               return (
                 <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-500 text-center whitespace-nowrap">
+                    {index + 1}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
                     <Link
                       to={`/appraisals/${item.appraisalId}/summary`}
@@ -219,16 +246,14 @@ const AckGroupCard = ({ label, items }: AckGroupCardProps) => (
                       {appraisalLabel}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
-                    {formatCurrency(item.facilityLimit)}
+                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                    {item.customerName}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                    {item.acknowledgementGroup ?? '—'}
+                    {item.appraisalStaff}
                   </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <Badge variant="info" size="xs" type="status" value="inprogress">
-                      Acknowledgement
-                    </Badge>
+                  <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
+                    {formatCurrency(item.appraisedValue ?? 0)}
                   </td>
                 </tr>
               );
@@ -262,9 +287,7 @@ const MeetingItemsGrouped = ({ meeting, canReleaseItems }: MeetingItemsGroupedPr
     <div className="space-y-6">
       {/* Decision section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-gray-700">
-          Decision Items ({totalDecision})
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700">Decision Items ({totalDecision})</h3>
         {DECISION_GROUP_ORDER.map(type => (
           <DecisionGroupTable
             key={type}
@@ -283,13 +306,10 @@ const MeetingItemsGrouped = ({ meeting, canReleaseItems }: MeetingItemsGroupedPr
             Acknowledgement Items ({totalAck})
           </h3>
           <AckGroupCard
-            label="Group 1 (Sub-Committee)"
-            items={ackByGroup.get('Group1') ?? []}
+            label="Acknowledge for Urgent Approval (Group 2)"
+            items={ackByGroup.get('2') ?? []}
           />
-          <AckGroupCard
-            label="Urgent Group 2"
-            items={ackByGroup.get('UrgentGroup2') ?? []}
-          />
+          <AckGroupCard label="Acknowledge (Group 1)" items={ackByGroup.get('1') ?? []} />
         </div>
       )}
 

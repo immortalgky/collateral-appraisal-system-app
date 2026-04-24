@@ -185,22 +185,6 @@ export const useCancelMeeting = () => {
   });
 };
 
-/** POST /meetings/{id}/end */
-export const useEndMeeting = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id }: { id: string }) => {
-      await axios.post(`/meetings/${id}/end`);
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: meetingKeys.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: meetingKeys.queueAll });
-      queryClient.invalidateQueries({ queryKey: meetingKeys.all });
-    },
-  });
-};
-
 /** POST /meetings/bulk */
 export const useBulkCreateMeetings = () => {
   const queryClient = useQueryClient();
@@ -259,6 +243,7 @@ export const useReleaseMeetingItem = () => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.detail(variables.meetingId) });
+      queryClient.invalidateQueries({ queryKey: meetingKeys.all });
     },
   });
 };
@@ -281,6 +266,7 @@ export const useRouteBackMeetingItem = () => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.detail(variables.meetingId) });
+      queryClient.invalidateQueries({ queryKey: meetingKeys.all });
     },
   });
 };

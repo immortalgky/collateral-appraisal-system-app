@@ -7,7 +7,15 @@
  * independently of the shared OpenAPI bundle.
  */
 
-export type MeetingStatus = 'Draft' | 'Scheduled' | 'Ended' | 'Cancelled';
+export type MeetingStatus =
+  | 'New'
+  | 'InvitationSent'
+  | 'InProgress'
+  | 'RoutedBack'
+  | 'Ended'
+  | 'Cancelled';
+
+export type CommitteeMemberAttendance = 'Always' | 'Odd' | 'Even';
 
 export type MeetingQueueItemStatus = 'Queued' | 'Assigned' | 'Released';
 
@@ -57,7 +65,7 @@ export interface MeetingListItemDto {
   id: string;
   title: string;
   status: MeetingStatus;
-  meetingNo: string | null;
+  meetingNo: string;
   startAt: string | null;
   endAt: string | null;
   invitationSentAt: string | null;
@@ -70,7 +78,7 @@ export interface MeetingListItemDto {
 export interface MeetingItemDto {
   id: string;
   appraisalId: string;
-  appraisalNo: string | null;
+  appraisalNumber: string | null;
   facilityLimit: number;
   workflowInstanceId: string | null;
   activityId: string | null;
@@ -82,6 +90,9 @@ export interface MeetingItemDto {
   decisionBy: string | null;
   decisionReason: string | null;
   addedAt: string;
+  customerName: string;
+  appraisalStaff: string;
+  appraisedValue: number | null;
 }
 
 /** Groups items by AppraisalType (Decision) or AcknowledgementGroup (Acknowledgement). */
@@ -96,7 +107,7 @@ export interface MeetingDetailDto {
   id: string;
   title: string;
   status: MeetingStatus;
-  meetingNo: string | null;
+  meetingNo: string;
   startAt: string | null;
   endAt: string | null;
   fromText: string | null;
@@ -141,6 +152,7 @@ export interface CreateMeetingRequest {
 export interface CreateMeetingResponse {
   id: string;
   title: string;
+  meetingNo: string;
   status: MeetingStatus;
 }
 

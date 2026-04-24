@@ -7,20 +7,14 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import {
   createMeetingFormSchema,
-  updateMeetingFormSchema,
   type CreateMeetingFormValues,
+  updateMeetingFormSchema,
   type UpdateMeetingFormValues,
 } from '../schemas/meeting';
 import { useCreateMeeting, useUpdateMeeting } from '../api/meetings';
+import DateTimePickerInput from '@shared/components/inputs/DateTimePickerInput.tsx';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const pad = (n: number) => String(n).padStart(2, '0');
-
-/** Format a Date as a datetime-local input value ("YYYY-MM-DDTHH:mm"). */
-const toLocalInputValue = (date: Date): string =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-  `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
 /** Sensible defaults: today at 09:00 / 17:00 as local times. */
 const todayAt = (hour: number): Date => {
@@ -28,12 +22,6 @@ const todayAt = (hour: number): Date => {
   d.setHours(hour, 0, 0, 0);
   return d;
 };
-
-/**
- * Convert a datetime-local string ("2024-01-15T09:00") to a full ISO string.
- * The input is treated as local time; toISOString() gives UTC.
- */
-const localInputToIso = (value: string): string => new Date(value).toISOString();
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,41 +54,6 @@ const buildUpdateDefaults = (): UpdateMeetingFormValues => ({
 
 const sharedInputClass =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
-
-// ── Date input helper ─────────────────────────────────────────────────────────
-// Wraps a datetime-local <input> that feeds ISO strings to react-hook-form.
-
-interface DateTimeInputProps {
-  id: string;
-  label: string;
-  required?: boolean;
-  value: string; // ISO string stored in form
-  onChange: (iso: string) => void;
-  error?: string;
-}
-
-const DateTimeInput = ({ id, label, required, value, onChange, error }: DateTimeInputProps) => {
-  // Convert ISO → local input value for display
-  const displayValue = value ? toLocalInputValue(new Date(value)) : '';
-
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        id={id}
-        type="datetime-local"
-        value={displayValue}
-        onChange={e => {
-          onChange(e.target.value ? localInputToIso(e.target.value) : '');
-        }}
-        className={sharedInputClass}
-      />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </div>
-  );
-};
 
 // ── Create sub-form ───────────────────────────────────────────────────────────
 
@@ -137,7 +90,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
       },
       {
         onSuccess: data => {
-          toast.success('Meeting created');
+          toast.success(`Meeting ${data.meetingNo} created`);
           onSuccess?.(data.id);
           onClose();
         },
@@ -168,30 +121,23 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
 
       {/* Start / End */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <DateTimeInput
-          id="meeting-startAt"
+        <DateTimePickerInput
           label="Start"
           required
           value={startAtValue}
-          onChange={iso => setValue('startAt', iso, { shouldValidate: true })}
-          error={errors.startAt?.message}
+          onChange={iso => setValue('startAt', iso ?? '', { shouldValidate: true })}
         />
-        <DateTimeInput
-          id="meeting-endAt"
+        <DateTimePickerInput
           label="End"
           required
           value={endAtValue}
-          onChange={iso => setValue('endAt', iso, { shouldValidate: true })}
-          error={errors.endAt?.message}
+          onChange={iso => setValue('endAt', iso ?? '', { shouldValidate: true })}
         />
       </div>
 
       {/* Location */}
       <div>
-        <label
-          htmlFor="meeting-location"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor="meeting-location" className="block text-sm font-medium text-gray-700 mb-1">
           Location
         </label>
         <input
@@ -201,9 +147,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
           className={sharedInputClass}
           placeholder="Optional"
         />
-        {errors.location && (
-          <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>
-        )}
+        {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
       </div>
 
       {/* Notes */}
@@ -222,12 +166,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button
-          variant="ghost"
-          type="button"
-          onClick={onClose}
-          disabled={createMeeting.isPending}
-        >
+        <Button variant="ghost" type="button" onClick={onClose} disabled={createMeeting.isPending}>
           Cancel
         </Button>
         <Button type="submit" disabled={createMeeting.isPending}>
@@ -314,30 +253,25 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
 
       {/* Start / End */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <DateTimeInput
-          id="meeting-startAt"
+        <DateTimePickerInput
           label="Start"
           required
           value={startAtValue}
-          onChange={iso => setValue('startAt', iso, { shouldValidate: true })}
+          onChange={iso => setValue('startAt', iso ?? '', { shouldValidate: true })}
           error={errors.startAt?.message}
         />
-        <DateTimeInput
-          id="meeting-endAt"
+        <DateTimePickerInput
           label="End"
           required
           value={endAtValue}
-          onChange={iso => setValue('endAt', iso, { shouldValidate: true })}
+          onChange={iso => setValue('endAt', iso ?? '', { shouldValidate: true })}
           error={errors.endAt?.message}
         />
       </div>
 
       {/* Location */}
       <div>
-        <label
-          htmlFor="meeting-location"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor="meeting-location" className="block text-sm font-medium text-gray-700 mb-1">
           Location
         </label>
         <input
@@ -347,9 +281,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           className={sharedInputClass}
           placeholder="Optional"
         />
-        {errors.location && (
-          <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>
-        )}
+        {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
       </div>
 
       {/* Notes */}
@@ -368,12 +300,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button
-          variant="ghost"
-          type="button"
-          onClick={onClose}
-          disabled={updateMeeting.isPending}
-        >
+        <Button variant="ghost" type="button" onClick={onClose} disabled={updateMeeting.isPending}>
           Cancel
         </Button>
         <Button type="submit" disabled={updateMeeting.isPending}>

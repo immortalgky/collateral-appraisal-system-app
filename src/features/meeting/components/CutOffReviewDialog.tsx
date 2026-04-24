@@ -30,7 +30,7 @@ const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffRev
       { id: meetingId },
       {
         onSuccess: () => {
-          toast.success('Cut-off completed — agenda snapshot frozen');
+          toast.success('Cut-off completed — new queued items added to this meeting');
           onSuccess?.();
           onClose();
         },
@@ -46,8 +46,8 @@ const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffRev
     <Modal isOpen={isOpen} onClose={handleClose} title="Confirm Cut-Off" size="md">
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Cut-off freezes the agenda snapshot. All queued items below will be included in this
-          meeting. This cannot be undone before Send Invitation.
+          Pulls any newly queued items into this meeting. Items already on the meeting are
+          skipped. You may run cut-off again after sending the invitation if new items arrive.
         </p>
 
         {/* Queued items preview */}

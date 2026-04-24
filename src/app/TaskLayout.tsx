@@ -474,6 +474,24 @@ export const TaskIndexRedirect = () => {
   // Use requestId from appraisal when available, fall back to task's own requestId
   const requestId = appraisalData?.requestId ?? taskData?.requestId;
 
+  // Quotation tasks — redirect to the appropriate quotation sub-route.
+  // Must be checked BEFORE the provide-additional-documents branch and the request fallback.
+  if (taskData?.activityId === 'ext-collect-submissions') {
+    return <Navigate to={`/tasks/${taskId}/quotation/submit`} replace />;
+  }
+  if (taskData?.activityId === 'ext-respond-negotiation') {
+    return <Navigate to={`/tasks/${taskId}/quotation/respond-negotiation`} replace />;
+  }
+  if (taskData?.activityId === 'rm-pick-winner') {
+    return <Navigate to={`/tasks/${taskId}/quotation/pick-winner`} replace />;
+  }
+  if (taskData?.activityId === 'admin-review-submissions') {
+    return <Navigate to={`/tasks/${taskId}/quotation/review`} replace />;
+  }
+  if (taskData?.activityId === 'admin-finalize') {
+    return <Navigate to={`/tasks/${taskId}/quotation/finalize`} replace />;
+  }
+
   // Followup task lands on the provide-documents page
   if (taskData?.activityId === 'provide-additional-documents') {
     return <Navigate to={`/tasks/${taskId}/provide-documents`} replace />;
