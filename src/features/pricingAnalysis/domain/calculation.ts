@@ -252,3 +252,32 @@ export function getPropertyTaxAmount(totalGovPrice: number): number {
 export function floorToThousands(num) {
   return Math.floor(num / 1000) * 1000;
 }
+
+/**
+ * Shifts all elements in the source array to the right by the specified number of positions,
+ * filling the vacated positions on the left with zeros and truncating elements that overflow
+ * beyond the array's original length.
+ * @param source - The source number array to shift.
+ * @param shift - The number of positions to shift elements to the right.
+ * @returns A new number array of the same length as source, with elements shifted right.
+ * @example
+ * shiftRight([1, 2, 3, 4, 5, 6], 3) // [0, 0, 0, 1, 2, 3]
+ */
+export function shiftRight(source: number[], shift: number): number[] {
+  // Case 1: shift is zero or negative, return source as-is
+  if (shift <= 0) return source;
+
+  // Case 2: source is null, undefined, or empty, return an empty array
+  if (!source || source.length === 0) return [];
+
+  // Case 3: shift exceeds or equals the source length, return an all-zero array
+  if (shift >= source.length) return new Array(source.length).fill(0);
+
+  // Case 4: shift is within the source length range, perform the shift
+  const result = new Array(source.length).fill(0);
+  source.slice(0, source.length - shift).forEach((val, i) => {
+    result[i + shift] = val;
+  });
+
+  return result;
+}

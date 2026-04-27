@@ -1,6 +1,7 @@
 import {
   getPropertyTaxAmount,
   getPropertyTaxRate,
+  toDecimal,
   toFixed2,
   toNumber,
 } from '@features/pricingAnalysis/domain/calculation.ts';
@@ -23,12 +24,14 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   isReadOnly?: boolean;
 }) {
   const landGovPrice = (properties ?? [])
-    .filter(p => p.propertyType === 'L')
+    .filter(p => p.propertyType === 'L' || p.propertyType === 'LSL' || p.propertyType === 'LS')
     .flatMap((p: any) => p.titles ?? [])
     .reduce((sum, curr) => sum + toNumber(curr.governmentPrice ?? 0), 0);
 
   const buildingGovPrice = (properties ?? [])
-    .filter((p: any) => p.propertyType === 'B')
+    .filter(
+      (p: any) => p.propertyType === 'B' || p.propertyType === 'LSB' || p.propertyType === 'LS',
+    )
     .flatMap((p: any) => p.depreciationDetails ?? [])
     .filter((d: any) => d.isBuilding)
     .reduce((sum: number, d: any) => sum + toNumber(d.priceAfterDepreciation ?? 0), 0);
@@ -72,8 +75,11 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
         targetPath: `${name}.propertyTax.totalPropertyTax.${idx}`,
         deps: [`${name}.propertyTax.totalPropertyPrice.${idx}`],
         compute: ({ getValues }) => {
-          return getPropertyTaxAmount(
-            toNumber(getValues(`${name}.propertyTax.totalPropertyPrice.${idx}`)),
+          return toDecimal(
+            getPropertyTaxAmount(
+              toNumber(getValues(`${name}.propertyTax.totalPropertyPrice.${idx}`)),
+            ),
+            0,
           );
         },
       },
@@ -147,23 +153,6 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
           />
         </div>
       </div>
-      <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
-        <div className={'w-44'}>
-          <RHFInputCell
-            fieldName={`${name}.startIn`}
-            inputType={'number'}
-            disabled={isReadOnly}
-            number={{
-              decimalPlaces: 2,
-              maxIntegerDigits: 3,
-              maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
-              allowNegative: false,
-            }}
-          />
-        </div>
-        <span className={''}>year(s)</span>
-      </div>
 
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer className="flex-1 min-h-0">
@@ -197,12 +186,12 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                     <tr>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
                         {t.minValue != undefined || t.minValue != null
-                          ? Number(t.minValue).toLocaleString()
+                          ? toNumber(t.minValue).toLocaleString()
                           : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
                         {t.maxValue != undefined || t.maxValue != null
-                          ? Number(t.maxValue).toLocaleString()
+                          ? toNumber(t.maxValue).toLocaleString()
                           : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
@@ -210,7 +199,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                       </td>
                       <td className="border-b border-gray-300 px-1.5 py-2 text-right">
                         {t.maxValue
-                          ? Number((t.maxValue - t.minValue) * t.taxRate).toLocaleString()
+                          ? toDecimal((t.maxValue - t.minValue) * t.taxRate, 0).toLocaleString()
                           : '-'}
                       </td>
                     </tr>

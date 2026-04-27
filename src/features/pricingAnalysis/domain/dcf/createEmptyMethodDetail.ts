@@ -31,6 +31,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           avgDailyRate: [],
           roomIncome: [],
           totalMethodValues: [],
+          startIn: 1,
         },
       };
     case '02':
@@ -55,6 +56,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           roomRateIncrease: [],
           avgDailyRate: [],
           roomIncome: [],
+          startIn: 1,
         },
       };
     case '03':
@@ -72,6 +74,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           roomRateIncrease: [],
           roomIncome: [],
           totalMethodValues: [],
+          startIn: 1,
         },
       };
     case '04':
@@ -93,6 +96,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           roomRateIncrease: [],
           roomIncomeAdjustedValuedByGrowthRates: [],
           roomIncome: [],
+          startIn: 1,
         },
       };
     case '05':
@@ -110,6 +114,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           increaseRateYrs: 0,
           roomRateIncrease: [],
           roomIncome: [],
+          startIn: 1,
         },
       };
     case '06':
@@ -136,6 +141,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           avgRentalRate: [],
           totalRentalIncome: [],
           totalMethodValues: [],
+          startIn: 1,
         },
       };
     case '07':
@@ -154,6 +160,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           roomRateIncrease: [],
           roomExpense: [],
           totalMethodValues: [],
+          startIn: 1,
         },
       };
     case '08':
@@ -168,6 +175,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           increaseRate: [],
           totalFoodAndBeveragePerRoomPerDay: [],
           totalFoodAndBeveragePerRoomPerYear: [],
+          startIn: 1,
         },
       };
     case '09':
@@ -183,6 +191,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           increaseRateYrs: 0,
           increaseRate: [],
           totalPositionBasedSalaryPerYear: [],
+          startIn: 1,
         },
       };
     case '10':
@@ -190,7 +199,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         id,
         methodType: '10',
         totalMethodValues: [],
-        detail: {},
+        detail: { startIn: 1 },
       };
     case '11':
       return {
@@ -204,6 +213,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           increaseRate: [],
           energyCostIndexIncrease: [],
           totalEnegyCost: [],
+          startIn: 1,
         },
       };
     case '12':
@@ -216,6 +226,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           newReplacementCost: 0,
           proportionOfNewReplacementCosts: [],
           totalMethodValues: [],
+          startIn: 1,
         },
       };
     case '13':
@@ -226,6 +237,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         detail: {
           proportionPct: 0,
           refTarget: { kind: 'assumption' },
+          startIn: 1,
         },
       };
     case '14':
@@ -237,6 +249,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           firstYearAmt: 0,
           increaseRatePct: 0,
           increaseRateYrs: 0,
+          startIn: 1,
         },
       };
     case '15':
@@ -244,7 +257,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         id,
         methodType: '15',
         totalMethodValues: [],
-        detail: {},
+        detail: { startIn: 1 },
       };
     default: {
       const _exhaustive: never = methodType;

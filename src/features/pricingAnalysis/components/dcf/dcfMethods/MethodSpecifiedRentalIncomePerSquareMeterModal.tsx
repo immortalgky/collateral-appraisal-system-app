@@ -2,7 +2,7 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useFieldArray, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
 
@@ -58,7 +58,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
           const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumRentalPrice = areaDetail.reduce((prev, curr) => {
+          const sumRentalPrice = (areaDetail ?? []).reduce((prev, curr) => {
             const currRentalPrice = curr.rentalPrice ? toNumber(curr.rentalPrice) : 0;
             return prev + currRentalPrice;
           }, 0);
@@ -394,7 +394,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               inputType={'number'}
               disabled={isReadOnly}
               number={{
-                decimalPlaces: 2,
+                decimalPlaces: 0,
                 maxIntegerDigits: 3,
                 maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
                 allowNegative: false,

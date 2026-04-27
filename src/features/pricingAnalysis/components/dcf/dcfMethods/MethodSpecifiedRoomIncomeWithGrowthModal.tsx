@@ -85,7 +85,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
             inputType={'number'}
             disabled={isReadOnly}
             number={{
-              decimalPlaces: 2,
+              decimalPlaces: 0,
               maxIntegerDigits: 3,
               maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
               allowNegative: false,

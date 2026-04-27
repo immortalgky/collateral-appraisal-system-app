@@ -42,6 +42,7 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
           const d = detail as {
             proportionPct?: number;
             refTarget?: { kind?: string; clientId?: string | null; dbId?: string | null };
+            startIn: number;
           };
           const rawDbId = d.refTarget?.dbId?.toLowerCase() ?? null;
           const refDbId =
@@ -52,7 +53,7 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
           const idSet =
             kind === 'section' ? sectionIds : kind === 'category' ? categoryIds : assumptionIds;
           const isStillValid = refDbId !== null && idSet.has(refDbId);
-
+          console.log(d);
           detail = {
             ...d,
             refTarget: {
@@ -60,6 +61,7 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
               clientId: isStillValid ? `${kind}:${refDbId}` : null,
               dbId: isStillValid ? refDbId : null,
             },
+            startIn: d.startIn,
           };
         }
 

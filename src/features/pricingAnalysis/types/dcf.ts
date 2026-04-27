@@ -21,6 +21,7 @@ interface MethodSpecifiedRoomIncomePerDay {
   occupancyRateFirstYearPct: number; // collect to db
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   saleableArea: number[];
@@ -64,6 +65,7 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
   occupancyRateFirstYearPct: number; // collect to db
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   saleableArea: number[];
@@ -82,6 +84,7 @@ interface MethodSpecifiedRoomIncomeWithGrowth {
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   roomRateIncrease: number[];
@@ -100,6 +103,7 @@ interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
   occupancyRateFirstYearPct: number; // collect to db
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   occupancyRate: number[]; // collect to db
@@ -117,13 +121,14 @@ interface MethodSpecifiedRentalIncomePerMonth {
     saleableArea: number; // collect to db
     totalRoomIncomePerMonth: number;
     totalRoomIncomePerYear: number;
-  };
+  }[];
   sumSaleableArea: number;
   sumRoomIncomePerMonth: number;
   sumRoomIncomePerYear: number;
   totalSaleableArea: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   roomRateIncrease: number[];
@@ -138,7 +143,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
     saleableArea: number; // collect to db
     totalRentalIncomePerMonth: number;
     totalRentalIncomePerYear: number;
-  };
+  }[];
   sumRentalPrice: number;
   sumSaleableArea: number;
   sumTotalRentalIncomePerMonth: number;
@@ -150,6 +155,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
   occupancyRateFirstYearPct: number; // collect to db
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   occupancyRate: number[]; // collect to db
@@ -176,6 +182,7 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   sumTotalRoomExpensePerYear: number;
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   saleableArea: number[];
@@ -188,6 +195,7 @@ interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   increaseRate: number[];
@@ -208,6 +216,7 @@ interface MethodPositionBasedSalaryCalculation {
   sumTotalSalaryPerYear: number;
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   increaseRate: number[];
@@ -224,7 +233,7 @@ interface MethodParameterBasedOnTierOfPropertyValue {
   };
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
-  startIn: number; // collect to db
+  startIn: number;
 
   // table
   totalMethodValues: number[];
@@ -235,6 +244,7 @@ interface MethodSpecifiedEnergyCostIndex {
   energyCostIndex: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   increaseRate: number[];
@@ -247,6 +257,7 @@ interface MethodProportionOfTheNewReplacementCost {
   proportionPct: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   newReplacementCost: number;
@@ -265,6 +276,7 @@ interface MethodProportion {
   // modal
   proportionPct: number; // collect to db
   refTarget: RefTarget; // collect to db
+  startIn: number;
 }
 
 interface MethodSpecifiedValueWithGrowth {
@@ -272,6 +284,7 @@ interface MethodSpecifiedValueWithGrowth {
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
+  startIn: number;
 
   // table
   increaseRates: number[];
