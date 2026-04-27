@@ -10,6 +10,7 @@ import type { MenuTreeNode } from '@features/menuManagement/types';
 /** Interpolate :basePath and :requestId placeholders in a path string */
 function interpolatePath(path: string | null, basePath: string, requestId?: string): string {
   if (!path) return '#';
+  if (!basePath) return '#';
   return path.replace(':basePath', basePath).replace(':requestId', requestId ?? '');
 }
 

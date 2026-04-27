@@ -62,11 +62,9 @@ import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
 import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
-import BlockCondoPage from '@/features/blockCondo/pages/BlockCondoPage';
-import ModelDetailPage from '@/features/blockCondo/pages/ModelDetailPage';
-import TowerDetailPage from '@/features/blockCondo/pages/TowerDetailPage';
-import BlockVillagePage from '@/features/blockVillage/pages/BlockVillagePage';
-import VillageModelDetailPage from '@/features/blockVillage/pages/ModelDetailPage';
+import BlockProjectPage from '@/features/blockProject/pages/BlockProjectPage';
+import ModelDetailPage from '@/features/blockProject/pages/ModelDetailPage';
+import TowerDetailPage from '@/features/blockProject/pages/TowerDetailPage';
 import MeetingListPage from '@/features/meeting/pages/MeetingListPage';
 import MeetingQueuePage from '@/features/meeting/pages/MeetingQueuePage';
 import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
@@ -553,7 +551,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockCondoPage />
+                <BlockProjectPage projectType="Condo" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -561,7 +559,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage />
+                <ModelDetailPage projectType="Condo" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -569,7 +567,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage />
+                <ModelDetailPage projectType="Condo" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -598,7 +596,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockVillagePage />
+                <BlockProjectPage projectType="LandAndBuilding" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -606,7 +604,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <VillageModelDetailPage />
+                <ModelDetailPage projectType="LandAndBuilding" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -614,7 +612,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <VillageModelDetailPage />
+                <ModelDetailPage projectType="LandAndBuilding" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -927,7 +925,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockCondoPage />
+                <BlockProjectPage projectType="Condo" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -935,7 +933,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage />
+                <ModelDetailPage projectType="Condo" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -943,7 +941,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage />
+                <ModelDetailPage projectType="Condo" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -972,7 +970,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockVillagePage />
+                <BlockProjectPage projectType="LandAndBuilding" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -980,7 +978,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <VillageModelDetailPage />
+                <ModelDetailPage projectType="LandAndBuilding" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -988,7 +986,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <VillageModelDetailPage />
+                <ModelDetailPage projectType="LandAndBuilding" />
               </AppraisalReadOnlyWrapper>
             ),
           },

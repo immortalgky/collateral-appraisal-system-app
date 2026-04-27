@@ -2,6 +2,7 @@ import type { AppraisalSummaryDto } from '../schemas/quotation';
 
 interface AppraisalReportListingTableProps {
   appraisals: AppraisalSummaryDto[];
+  rmUserName?: string | null;
 }
 
 /**
@@ -9,7 +10,7 @@ interface AppraisalReportListingTableProps {
  * Shown at the top of the admin QuotationSelectionPage.
  * Fields not present on AppraisalSummaryDto render as "—".
  */
-const AppraisalReportListingTable = ({ appraisals }: AppraisalReportListingTableProps) => {
+const AppraisalReportListingTable = ({ appraisals, rmUserName }: AppraisalReportListingTableProps) => {
   if (appraisals.length === 0) {
     return (
       <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -59,21 +60,17 @@ const AppraisalReportListingTable = ({ appraisals }: AppraisalReportListingTable
                     {ap.appraisalNumber ?? '—'}
                   </span>
                 </td>
-                {/* customerName not in AppraisalSummaryDto — TODO: extend DTO when backend exposes it */}
                 <td className="px-4 py-3">
-                  <span className="text-sm text-gray-600">—</span>
+                  <span className="text-sm text-gray-600">{ap.customerName ?? '—'}</span>
                 </td>
-                {/* collateralDetail: address is the closest proxy available on the DTO */}
                 <td className="px-4 py-3">
-                  <span className="text-sm text-gray-600">{ap.address ?? '—'}</span>
+                  <span className="text-sm text-gray-600">{ap.propertyType ?? '—'}</span>
                 </td>
-                {/* ao (account officer) not in AppraisalSummaryDto — TODO: extend DTO when backend exposes it */}
                 <td className="px-4 py-3">
-                  <span className="text-sm text-gray-600">—</span>
+                  <span className="text-sm text-gray-600">{rmUserName ?? '—'}</span>
                 </td>
-                {/* maxAppraisalDuration not in AppraisalSummaryDto — TODO: extend DTO when backend exposes it */}
                 <td className="px-4 py-3 text-center">
-                  <span className="text-sm text-gray-600">—</span>
+                  <span className="text-sm text-gray-600">{ap.maxAppraisalDays ?? '—'}</span>
                 </td>
               </tr>
             ))}

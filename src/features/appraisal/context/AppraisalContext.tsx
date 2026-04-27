@@ -207,7 +207,9 @@ export function useAppraisalId(): string | undefined {
  */
 export function useBasePath(): string {
   const context = useContext(AppraisalContext);
-  return context?.appraisal?.basePath ?? `/appraisals/${context?.appraisal?.appraisalId ?? ''}`;
+  if (context?.appraisal?.basePath) return context.appraisal.basePath;
+  const id = context?.appraisal?.appraisalId;
+  return id ? `/appraisals/${id}` : '';
 }
 
 /**

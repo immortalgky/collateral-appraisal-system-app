@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
+  EditDraftQuotationBody,
   QuotationActivityLogRow,
   QuotationDraftSummaryDto,
   QuotationRequestDetailDto,
@@ -228,7 +229,6 @@ export const useOpenNegotiation = (quotationId: string) => {
   return useMutation({
     mutationFn: async (payload: {
       companyQuotationId: string;
-      proposedPrice: number;
       message: string;
     }) => {
       const { data } = await axios.post(`/quotations/${quotationId}/negotiations/open`, payload);
@@ -252,6 +252,7 @@ export const useRespondNegotiation = (quotationId: string) => {
       verb: 'Accept' | 'Counter' | 'Reject';
       counterPrice?: number | null;
       message?: string | null;
+      items?: { appraisalId: string; negotiatedDiscount: number | null }[];
     }) => {
       const { negotiationId, ...body } = payload;
       const { data } = await axios.post(
@@ -294,7 +295,6 @@ export const useFinalizeQuotation = (quotationId: string) => {
   return useMutation({
     mutationFn: async (payload: {
       companyQuotationId: string;
-      finalPrice: number;
       reason?: string | null;
     }) => {
       const { data } = await axios.post(`/quotations/${quotationId}/finalize`, payload);
@@ -338,13 +338,13 @@ export const useSubmitQuotation = (quotationId: string) => {
         quotationRequestItemId: string;
         appraisalId: string;
         itemNumber: number;
-        quotedPrice: number;
         estimatedDays: number;
-        // Optional fee-breakdown fields — included when the Checker submits the final quotation.
+        // Fee-breakdown fields — backend derives the net price (legacy QuotedPrice) from these.
         feeAmount?: number | null;
         discount?: number | null;
         negotiatedDiscount?: number | null;
         vatPercent?: number | null;
+        itemNotes?: string | null;
       }>;
       validUntil?: string | null;
       proposedStartDate?: string | null;
@@ -544,13 +544,45 @@ export const useSubmitDraftToChecker = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
-      // The workflow consumer that reassigns the PendingTask from ExtAdmin →
-      // ExtAppraisalChecker runs asynchronously after the HTTP commit. Fire a
-      // delayed invalidation so the task list reflects the reassignment once the
-      // consumer has had time to finish, without requiring the user to refresh.
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      }, 1500);
+      // The page chains advanceWorkflowStage('SubmitToChecker') after this hook resolves;
+      // useTakeWorkflowAction's onSuccess invalidates ['my-tasks']. No delayed retry needed.
+    },
+  });
+};
+
+// ─── Workflow stage action ───────────────────────────────────────────────────
+
+/**
+ * Posts a stage action on the per-company fan-out PendingTask without needing to
+ * resolve the task id first. The backend looks up the PendingTask via
+ * (workflowInstanceId, activityId, companyId) and dispatches the action through
+ * AdvanceFanOutStageCommand.
+ *
+ * Used by the ext-company quotation flow so each user button (Submit to Checker,
+ * Submit, Decline, Return to Maker) can chain its data-update call with the
+ * workflow stage advancement in one click.
+ */
+export interface TakeWorkflowActionInput {
+  workflowInstanceId: string;
+  activityId: string; // e.g. "ext-collect-submissions"
+  companyId: string;
+  actionValue: string; // matches `actions[].value` in the workflow JSON for the current stage
+  additionalInput?: Record<string, unknown>;
+}
+
+export const useTakeWorkflowAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: TakeWorkflowActionInput) => {
+      const { workflowInstanceId, activityId, companyId, actionValue, additionalInput } = input;
+      const url = `/workflows/${workflowInstanceId}/activities/${activityId}/companies/${companyId}/actions/${encodeURIComponent(actionValue)}`;
+      const { data } = await axios.post(url, { additionalInput: additionalInput ?? null });
+      return data as { isSuccess: boolean; stageAdvanced: boolean; nextStage?: string | null };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
   });
 };
@@ -570,6 +602,28 @@ export const useGetQuotationActivityLog = (quotationId: string, enabled = true) 
     },
     enabled: enabled && !!quotationId,
     staleTime: 15_000,
+  });
+};
+
+// ─── PATCH /quotations/{id}/draft (Admin — edit due date + companies) ────────
+
+/**
+ * Update an existing Draft quotation's due date and invited companies.
+ * Backend rejects if status is not Draft, due date is in the past, or
+ * companyIds is empty. Returns { quotationRequestId }.
+ */
+export const useEditDraftQuotation = (quotationId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: EditDraftQuotationBody): Promise<{ quotationRequestId: string }> => {
+      const { data } = await axios.patch(`/quotations/${quotationId}/draft`, body);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+    },
   });
 };
 

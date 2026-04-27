@@ -4,6 +4,7 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
+import NumberInput from '@/shared/components/inputs/NumberInput';
 import toast from 'react-hot-toast';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
 
@@ -19,6 +20,9 @@ interface CreateQuotationModalProps {
   onSuccess?: () => void;
   /** Optional slot rendered at the top of the modal body (used by QuotationEntryModal to inject the tab bar). */
   headerSlot?: ReactNode;
+  assignmentType?: string | null;
+  assignmentMethod?: string | null;
+  internalFollowupAssignmentMethod?: string | null;
 }
 
 interface SelectedCompany {
@@ -37,10 +41,14 @@ const CreateQuotationModal = ({
   propertyType,
   onSuccess,
   headerSlot,
+  assignmentType,
+  assignmentMethod,
+  internalFollowupAssignmentMethod,
 }: CreateQuotationModalProps) => {
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
+  const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
   const [remarks, setRemarks] = useState('');
 
   const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
@@ -67,6 +75,7 @@ const CreateQuotationModal = ({
     setSelectedCompanies([]);
     setSearchQuery('');
     setCutOffDateTime(null);
+    setMaxAppraisalDays(null);
     setRemarks('');
     onClose();
   };
@@ -104,6 +113,10 @@ const CreateQuotationModal = ({
         appraisalNumber: appraisalNumber ?? '',
         propertyType: propertyType ?? '',
         specialRequirements: remarks || null,
+        maxAppraisalDays: maxAppraisalDays ?? null,
+        assignmentType: assignmentType ?? null,
+        assignmentMethod: assignmentMethod ?? null,
+        internalFollowupAssignmentMethod: internalFollowupAssignmentMethod ?? null,
       },
       {
         onSuccess: () => {
@@ -240,6 +253,21 @@ const CreateQuotationModal = ({
             placeholder="dd/mm/yyyy hh:mm"
             value={cutOffDateTime}
             onChange={setCutOffDateTime}
+          />
+        </div>
+
+        {/* Max Appraisal Duration — admin-set cap, companies must not exceed this on Submit */}
+        <div>
+          <NumberInput
+            label="Max Duration (days)"
+            helperText="Maximum duration you allow the appraiser to complete this appraisal. Companies' estimated mandays must not exceed this value."
+            placeholder="e.g. 7"
+            value={maxAppraisalDays}
+            decimalPlaces={0}
+            thousandSeparator={false}
+            maxIntegerDigits={3}
+            min={1}
+            onChange={e => setMaxAppraisalDays(e.target.value)}
           />
         </div>
 

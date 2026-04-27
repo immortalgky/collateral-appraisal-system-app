@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
@@ -11,6 +12,7 @@ import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
 import { ActivityMenuSync } from '@features/menuManagement/ActivityMenuSync';
+import { useMenuStore } from '@features/menuManagement/store';
 import { useGetAppraisalById } from '@features/appraisal/api/appraisal';
 import { useGetRequestById } from '@features/request/api/requests';
 import type { TaskDetailResult } from '@features/appraisal/api/workflow';
@@ -144,7 +146,15 @@ function TaskLayout() {
   const requestId = appraisalData?.requestId ?? taskData?.requestId;
   const { data: requestData } = useGetRequestById(requestId);
 
-  const isLoading = isTaskLoading || (!!appraisalId && isAppraisalLoading);
+  const isMenuLoaded = useMenuStore(s => s.isLoaded);
+  const activeActivityId = useMenuStore(s => s.activeActivityId);
+  const expectedActivityId = taskData?.activityId ?? null;
+  const isMenuSynced = isMenuLoaded && activeActivityId === expectedActivityId;
+
+  const isLoading =
+    isTaskLoading ||
+    (!!appraisalId && isAppraisalLoading) ||
+    (!!taskData && !isMenuSynced);
 
   // Pool task lock awareness
   const isPoolTask = taskData?.assignedType === '2';
@@ -295,12 +305,13 @@ function TaskLayout() {
 
   if (!taskId) return null;
 
-  // Loading state
+  let body: ReactNode;
+
   if (isLoading) {
-    return (
+    body = (
       <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar appraisalId={appraisalId ?? taskId} logo={Logo} />
-        <AppraisalSidebar appraisalId={appraisalId ?? taskId} logo={Logo} />
+        <MobileAppraisalSidebar logo={Logo} loading />
+        <AppraisalSidebar logo={Logo} loading />
         <div
           className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}
         >
@@ -313,14 +324,11 @@ function TaskLayout() {
         </div>
       </div>
     );
-  }
-
-  // Task error: 403 (not owner) or 404 (not found)
-  if (isTaskError) {
+  } else if (isTaskError) {
     const status = (taskError as any)?.response?.status;
     const is403 = status === 403;
 
-    return (
+    body = (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
         <Icon
           style="solid"
@@ -341,11 +349,8 @@ function TaskLayout() {
         </Button>
       </div>
     );
-  }
-
-  // Appraisal fetch error (only relevant when appraisalId is present; without it the query is disabled)
-  if (appraisalId && isAppraisalError) {
-    return (
+  } else if (appraisalId && isAppraisalError) {
+    body = (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
         <Icon style="solid" name="triangle-exclamation" className="size-16 text-red-500" />
         <h2 className="mt-4 text-xl font-semibold text-gray-900">Failed to load appraisal</h2>
@@ -358,16 +363,11 @@ function TaskLayout() {
         </Button>
       </div>
     );
-  }
-
-  return (
-    <AppraisalProvider value={contextValue}>
-      <ParameterLoader />
-      <AddressLoader />
-      <ActivityMenuSync activityId={taskData?.activityId} />
+  } else {
+    body = (
       <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar appraisalId={appraisalId ?? taskId!} logo={Logo} />
-        <AppraisalSidebar appraisalId={appraisalId ?? taskId!} logo={Logo} />
+        <MobileAppraisalSidebar logo={Logo} />
+        <AppraisalSidebar logo={Logo} />
 
         <div
           className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}
@@ -457,6 +457,15 @@ function TaskLayout() {
 
         <LoadingOverlay />
       </div>
+    );
+  }
+
+  return (
+    <AppraisalProvider value={contextValue}>
+      <ActivityMenuSync activityId={taskData?.activityId} />
+      <ParameterLoader />
+      <AddressLoader />
+      {body}
     </AppraisalProvider>
   );
 }

@@ -17,6 +17,7 @@ export function useSubmitDocumentFollowup() {
       queryClient.invalidateQueries({ queryKey: followupKeys.all });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
     onError: () => {
       // Handled at call site

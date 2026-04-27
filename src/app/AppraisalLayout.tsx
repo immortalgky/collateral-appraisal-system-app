@@ -17,6 +17,7 @@ import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useUIStore } from '@shared/store';
+import { useMenuStore } from '@features/menuManagement/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
 
 const RETURN_PATH_KEY = 'appraisalReturnPath';
@@ -121,6 +122,9 @@ function AppraisalLayout() {
 
   const { data: requestData } = useGetRequestById(appraisalData?.requestId);
 
+  const isMenuLoaded = useMenuStore(s => s.isLoaded);
+  const activeActivityId = useMenuStore(s => s.activeActivityId);
+
   // Build breadcrumb items based on the current route
   const breadcrumbItems = useMemo(() => {
     const appraisalNo = appraisalData?.appraisalNumber || appraisalData?.id || appraisalId;
@@ -222,47 +226,54 @@ function AppraisalLayout() {
     [appraisalData, appraisalId, isAppraisalLoading, isAppraisalError, appraisalError, requestData],
   );
 
+  const isMenuSettledForReadOnly = isMenuLoaded && activeActivityId === null;
+  const isPageLoading = isAppraisalLoading || !isMenuSettledForReadOnly;
+
   // Show loading skeleton while fetching appraisal data
-  if (isAppraisalLoading) {
+  if (isPageLoading) {
     return (
-      <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
-          <Navbar userNavigation={userNavigation} />
-          <main className="py-4 flex-1 flex flex-col min-h-0">
-            <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
-              <DetailPageSkeleton contentSections={2} />
-            </div>
-          </main>
+      <AppraisalProvider value={contextValue}>
+        <div className="h-screen flex flex-col">
+          <MobileAppraisalSidebar logo={Logo} loading />
+          <AppraisalSidebar logo={Logo} loading />
+          <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
+            <Navbar userNavigation={userNavigation} />
+            <main className="py-4 flex-1 flex flex-col min-h-0">
+              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
+                <DetailPageSkeleton contentSections={2} />
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
+      </AppraisalProvider>
     );
   }
 
   // Show error state if appraisal fetch failed
   if (isAppraisalError) {
     return (
-      <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
-          <Navbar userNavigation={userNavigation} />
-          <main className="py-4 flex-1 flex flex-col min-h-0">
-            <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col items-center justify-center min-h-0">
-              <Icon style="solid" name="triangle-exclamation" className="size-16 text-red-500" />
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">Failed to load appraisal</h2>
-              <p className="mt-2 text-gray-500">
-                {(appraisalError as Error)?.message || 'Unknown error'}
-              </p>
-              <Button className="mt-4" onClick={() => window.location.reload()}>
-                <Icon style="solid" name="rotate-right" className="size-4 mr-2" />
-                Retry
-              </Button>
-            </div>
-          </main>
+      <AppraisalProvider value={contextValue}>
+        <div className="h-screen flex flex-col">
+          <MobileAppraisalSidebar logo={Logo} loading />
+          <AppraisalSidebar logo={Logo} loading />
+          <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
+            <Navbar userNavigation={userNavigation} />
+            <main className="py-4 flex-1 flex flex-col min-h-0">
+              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col items-center justify-center min-h-0">
+                <Icon style="solid" name="triangle-exclamation" className="size-16 text-red-500" />
+                <h2 className="mt-4 text-xl font-semibold text-gray-900">Failed to load appraisal</h2>
+                <p className="mt-2 text-gray-500">
+                  {(appraisalError as Error)?.message || 'Unknown error'}
+                </p>
+                <Button className="mt-4" onClick={() => window.location.reload()}>
+                  <Icon style="solid" name="rotate-right" className="size-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
+      </AppraisalProvider>
     );
   }
 
@@ -271,8 +282,8 @@ function AppraisalLayout() {
       <ParameterLoader />
       <AddressLoader />
       <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar appraisalId={appraisalId} logo={Logo} />
-        <AppraisalSidebar appraisalId={appraisalId} logo={Logo} />
+        <MobileAppraisalSidebar logo={Logo} />
+        <AppraisalSidebar logo={Logo} />
 
         <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
           <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0">

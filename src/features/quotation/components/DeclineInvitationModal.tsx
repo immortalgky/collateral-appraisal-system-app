@@ -12,12 +12,12 @@ interface DeclineInvitationModalProps {
   onSuccess?: () => void;
   quotationId: string;
   companyId: string;
-  /** 'decline' = first-time decline; 'withdraw' = already submitted, withdrawing bid */
+  /** 'decline' = first-time decline; 'withdraw' = already submitted, now pulling out of the quotation */
   mode?: 'decline' | 'withdraw';
 }
 
 /**
- * Modal for ExtCompany to decline an invitation or withdraw a submitted bid.
+ * Modal for ExtCompany to decline an invitation or pull out after submitting.
  * Calls POST /quotations/{id}/companies/{companyId}/decline.
  */
 const DeclineInvitationModal = ({
@@ -44,7 +44,7 @@ const DeclineInvitationModal = ({
         onSuccess: () => {
           toast.success(
             mode === 'withdraw'
-              ? 'Bid withdrawn successfully'
+              ? 'You have opted out of this quotation'
               : 'Invitation declined successfully',
           );
           onSuccess?.();
@@ -64,7 +64,7 @@ const DeclineInvitationModal = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isWithdraw ? 'Withdraw Bid' : 'Decline Invitation'}
+      title={isWithdraw ? 'Opt Out of Quotation' : 'Decline Invitation'}
       size="sm"
     >
       <div className="flex flex-col gap-4">
@@ -83,8 +83,8 @@ const DeclineInvitationModal = ({
           />
           <p className={`text-sm ${isWithdraw ? 'text-orange-700' : 'text-red-700'}`}>
             {isWithdraw
-              ? 'Your submitted bid will be withdrawn and you will no longer be considered for this quotation.'
-              : 'You are declining this invitation. The bank will be notified and you will not be able to submit a bid for this quotation.'}
+              ? 'You will no longer participate in this quotation. Any information you submitted will be retracted and will not be considered.'
+              : 'You are declining this invitation. The bank will be notified and you will not be able to participate in this quotation.'}
           </p>
         </div>
 
@@ -100,7 +100,7 @@ const DeclineInvitationModal = ({
             maxLength={500}
             placeholder={
               isWithdraw
-                ? 'Please explain why you are withdrawing your bid...'
+                ? 'Please explain why you no longer want to participate in this quotation...'
                 : 'Please explain why you are declining this invitation...'
             }
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none resize-none"
@@ -121,12 +121,12 @@ const DeclineInvitationModal = ({
             {isPending ? (
               <>
                 <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                {isWithdraw ? 'Withdrawing...' : 'Declining...'}
+                {isWithdraw ? 'Opting out...' : 'Declining...'}
               </>
             ) : (
               <>
                 <Icon name={isWithdraw ? 'arrow-rotate-left' : 'ban'} style="solid" className="size-4 mr-2" />
-                {isWithdraw ? 'Withdraw Bid' : 'Decline Invitation'}
+                {isWithdraw ? 'Opt Out' : 'Decline Invitation'}
               </>
             )}
           </Button>

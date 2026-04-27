@@ -276,9 +276,35 @@ export const useClaimTask = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
   });
 };
+
+export interface ActivityTaskCount {
+  activityId: string;
+  myCount: number;
+  poolCount: number;
+}
+
+/**
+ * Per-activity My/Pool counts for the current user. Single round-trip used by
+ * the sidebar task badges and the activity-page Pool tab badge.
+ * GET /tasks/counts → { result: ActivityTaskCount[] }
+ *
+ * Activities with zero in both buckets are omitted by the backend, so consumers
+ * must default to 0 when an activityId is missing from the map.
+ */
+export const useGetTaskCounts = () =>
+  useQuery({
+    queryKey: ['task-counts'],
+    queryFn: async (): Promise<Map<string, ActivityTaskCount>> => {
+      const { data } = await axios.get('/tasks/counts');
+      const rows: ActivityTaskCount[] = data.result ?? data ?? [];
+      return new Map(rows.map(r => [r.activityId, r]));
+    },
+    staleTime: 30 * 1000,
+  });
 
 export interface OpenTaskResult {
   isSuccess: boolean;
@@ -305,6 +331,7 @@ export const useOpenTask = () => {
         // so they reflect the new status when the user navigates back
         queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }
     },
   });

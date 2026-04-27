@@ -55,8 +55,6 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
     quotation.status === 'Negotiating' &&
     winner.negotiations?.some(n => !n.verb && !n.respondedAt);
 
-  const effectivePrice = winner.currentNegotiatedPrice ?? winner.totalQuotedPrice;
-
   const formatCurrency = (v?: number | null) =>
     v != null ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v) : '—';
 
@@ -219,10 +217,10 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                     <div className="rounded-lg border border-gray-200 p-3 text-sm">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-gray-700">
-                          Admin proposed {formatCurrency(neg.proposedPrice)}
+                          {neg.initiatedByUserName ?? neg.initiatedBy ?? 'Admin'}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {new Date(neg.createdAt).toLocaleString('th-TH')}
+                          {neg.initiatedAt ? new Date(neg.initiatedAt).toLocaleString('th-TH') : ''}
                         </span>
                       </div>
                       {neg.message && (
@@ -281,7 +279,8 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
         quotationId={quotation.id}
         companyQuotationId={winner.id}
         companyName={winner.companyName}
-        suggestedPrice={effectivePrice}
+        winnerItems={winner.items ?? []}
+        appraisals={quotation.appraisals ?? []}
       />
     </>
   );

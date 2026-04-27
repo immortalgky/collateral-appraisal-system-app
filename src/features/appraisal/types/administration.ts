@@ -171,9 +171,20 @@ export interface StartQuotationFromTaskRequest {
   estimatedValue?: number | null;
   specialRequirements?: string | null;
   /**
+   * Optional admin-set cap for the appraisal's duration (days). Per-appraisal, read-only
+   * on the company side. Company's Estimated Mandays must not exceed this on Submit.
+   */
+  maxAppraisalDays?: number | null;
+  /**
    * v2: If provided, adds the appraisalId to this existing Draft instead of creating a new one.
    */
   existingQuotationRequestId?: string | null;
+  /** Pre-registers the assignment type chosen by the admin (e.g. 'External', 'Internal'). */
+  assignmentType?: string | null;
+  /** Pre-registers the assignment method chosen by the admin (e.g. 'Quotation', 'Direct'). */
+  assignmentMethod?: string | null;
+  /** Pre-registers the internal follow-up method (e.g. 'roundrobin', 'manual'). */
+  internalFollowupAssignmentMethod?: string | null;
 }
 
 /**

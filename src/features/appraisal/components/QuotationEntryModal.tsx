@@ -21,6 +21,9 @@ interface QuotationEntryModalProps {
   appraisalNumber?: string;
   propertyType?: string;
   onSuccess?: () => void;
+  assignmentType?: string | null;
+  assignmentMethod?: string | null;
+  internalFollowupAssignmentMethod?: string | null;
 }
 
 /**
@@ -38,6 +41,9 @@ const QuotationEntryModal = ({
   appraisalNumber,
   propertyType,
   onSuccess,
+  assignmentType,
+  assignmentMethod,
+  internalFollowupAssignmentMethod,
 }: QuotationEntryModalProps) => {
   const [activeTab, setActiveTab] = useState<Tab>('new');
   const [selectedDraft, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
@@ -194,6 +200,9 @@ const QuotationEntryModal = ({
           bankingSegment={bankingSegment}
           appraisalNumber={appraisalNumber}
           propertyType={propertyType}
+          assignmentType={assignmentType}
+          assignmentMethod={assignmentMethod}
+          internalFollowupAssignmentMethod={internalFollowupAssignmentMethod}
           onSuccess={() => {
             handleClose();
             onSuccess?.();

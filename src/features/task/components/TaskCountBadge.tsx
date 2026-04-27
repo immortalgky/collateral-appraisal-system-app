@@ -1,4 +1,4 @@
-import { useGetTasks } from '../api';
+import { useGetTaskCounts } from '../api';
 
 interface TaskCountBadgeProps {
   /** Activity id from the task workflow (e.g. 'appraisal-initiation-check'). Omit for total count. */
@@ -8,24 +8,37 @@ interface TaskCountBadgeProps {
 /**
  * Inline count pill for the sidebar Task menu children.
  *
- * Reuses the existing `useGetTasks` hook with `pageSize=1` so each badge only
- * pays for the `count` field — full lists are still cached separately by
- * activity pages (different query key, different page size). Renders nothing
- * while loading, on error, or when count is zero, so the menu stays uncluttered.
- * When `activityId` is omitted the badge shows the total task count for the user.
+ * Reads from the shared `useGetTaskCounts` cache so every sidebar badge — and
+ * the activity-page Pool badge — share a single round-trip to `/tasks/counts`.
+ * When `activityId` is provided, shows that activity's My + Pool total; when
+ * omitted, sums every activity. Renders nothing while loading or when count is
+ * zero so the menu stays uncluttered.
  */
 export function TaskCountBadge({ activityId }: TaskCountBadgeProps) {
-  const { data } = useGetTasks({ activityId, pageNumber: 0, pageSize: 1 });
-  const count = data?.count ?? 0;
+  const { data: counts } = useGetTaskCounts();
+
+  let count = 0;
+  if (counts) {
+    if (activityId) {
+      const row = counts.get(activityId);
+      count = (row?.myCount ?? 0) + (row?.poolCount ?? 0);
+    } else {
+      for (const row of counts.values()) count += row.myCount + row.poolCount;
+    }
+  }
 
   if (count <= 0) return null;
 
   const display = count > 99 ? '99+' : String(count);
 
+  const ariaLabel = activityId
+    ? `${count} pending tasks (private + pool)`
+    : `${count} pending tasks across all activities`;
+
   return (
     <span
       className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold leading-none"
-      aria-label={`${count} pending tasks`}
+      aria-label={ariaLabel}
     >
       {display}
     </span>
