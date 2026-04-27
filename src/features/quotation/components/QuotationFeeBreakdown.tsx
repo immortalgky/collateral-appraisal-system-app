@@ -1,5 +1,6 @@
-import type { Control, UseFormRegister } from 'react-hook-form';
-import { useWatch } from 'react-hook-form';
+import type { Control } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
+import NumberInput from '@/shared/components/inputs/NumberInput';
 import type { SubmitQuotationFormValues } from '../schemas/quotation';
 
 const THB = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' });
@@ -14,7 +15,12 @@ export function roundHalfAwayFromZero(value: number, decimals: number): number {
 
 /**
  * Derive the three computed fee values for a single appraisal item.
- * Returns NaN when inputs are incomplete so callers can render '—'.
+ *
+ * Only `feeAmount` is truly required — when it's missing or not a finite number,
+ * all three results are NaN so callers can render '—'. Missing discount /
+ * negotiatedDiscount / vatPercent are treated as 0 so the net total always
+ * reflects what the user can see on screen (e.g. a disabled VAT field whose
+ * form value momentarily hasn't flushed from reset).
  */
 export function deriveFeeTotals(
   feeAmount: number | undefined,
@@ -22,10 +28,19 @@ export function deriveFeeTotals(
   negotiatedDiscount: number | null | undefined,
   vatPercent: number | undefined,
 ): { feeAfterDiscount: number; vatAmount: number; netAmount: number } {
-  const fa = feeAmount ?? NaN;
-  const d = discount ?? NaN;
-  const nd = negotiatedDiscount ?? 0;
-  const vat = vatPercent ?? NaN;
+  const fa = Number(feeAmount);
+  if (!Number.isFinite(fa)) {
+    return { feeAfterDiscount: NaN, vatAmount: NaN, netAmount: NaN };
+  }
+
+  const toNum = (v: number | null | undefined): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const d = toNum(discount);
+  const nd = toNum(negotiatedDiscount);
+  const vat = toNum(vatPercent);
 
   const feeAfterDiscount = fa - d - nd;
   const vatAmount = roundHalfAwayFromZero((feeAfterDiscount * vat) / 100, 2);
@@ -34,16 +49,14 @@ export function deriveFeeTotals(
   return { feeAfterDiscount, vatAmount, netAmount };
 }
 
-const inputCls =
-  'w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none disabled:bg-gray-50 disabled:text-gray-500';
-
 interface QuotationFeeBreakdownProps {
   control: Control<SubmitQuotationFormValues>;
-  register: UseFormRegister<SubmitQuotationFormValues>;
   /** Zero-based index into `items` array. */
   index: number;
   /** When true, all inputs are disabled (read-only display mode). */
   readOnly?: boolean;
+  /** When false, Discount (Negotiate) is disabled — it only applies during an open negotiation round. */
+  isNegotiating?: boolean;
 }
 
 /**
@@ -55,16 +68,16 @@ interface QuotationFeeBreakdownProps {
  */
 const QuotationFeeBreakdown = ({
   control,
-  register,
   index,
   readOnly = false,
+  isNegotiating = false,
 }: QuotationFeeBreakdownProps) => {
   const feeAmount = useWatch({ control, name: `items.${index}.feeAmount` });
   const discount = useWatch({ control, name: `items.${index}.discount` });
   const negotiatedDiscount = useWatch({ control, name: `items.${index}.negotiatedDiscount` });
   const vatPercent = useWatch({ control, name: `items.${index}.vatPercent` });
 
-  const { feeAfterDiscount, netAmount } = deriveFeeTotals(
+  const { feeAfterDiscount, vatAmount, netAmount } = deriveFeeTotals(
     feeAmount,
     discount,
     negotiatedDiscount,
@@ -83,16 +96,19 @@ const QuotationFeeBreakdown = ({
         <label htmlFor={`fee-amount-${index}`} className="text-sm text-gray-600">
           Fee Amount (THB)
         </label>
-        <input
-          id={`fee-amount-${index}`}
-          type="number"
-          step="0.01"
-          min="0"
-          disabled={readOnly}
-          aria-label="Fee Amount"
-          className={inputCls}
-          placeholder="0.00"
-          {...register(`items.${index}.feeAmount`, { valueAsNumber: true })}
+        <Controller
+          control={control}
+          name={`items.${index}.feeAmount`}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              id={`fee-amount-${index}`}
+              aria-label="Fee Amount"
+              disabled={readOnly}
+              decimalPlaces={2}
+              min={0}
+            />
+          )}
         />
       </div>
 
@@ -101,16 +117,19 @@ const QuotationFeeBreakdown = ({
         <label htmlFor={`discount-${index}`} className="text-sm text-gray-600">
           Discount (THB)
         </label>
-        <input
-          id={`discount-${index}`}
-          type="number"
-          step="0.01"
-          min="0"
-          disabled={readOnly}
-          aria-label="Discount"
-          className={inputCls}
-          placeholder="0.00"
-          {...register(`items.${index}.discount`, { valueAsNumber: true })}
+        <Controller
+          control={control}
+          name={`items.${index}.discount`}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              id={`discount-${index}`}
+              aria-label="Discount"
+              disabled={readOnly}
+              decimalPlaces={2}
+              min={0}
+            />
+          )}
         />
       </div>
 
@@ -119,58 +138,73 @@ const QuotationFeeBreakdown = ({
         <label htmlFor={`neg-discount-${index}`} className="text-sm text-gray-600">
           Discount (Negotiate)
         </label>
-        <input
-          id={`neg-discount-${index}`}
-          type="number"
-          step="0.01"
-          min="0"
-          disabled={readOnly}
-          aria-label="Negotiated Discount"
-          className={inputCls}
-          placeholder="0.00"
-          {...register(`items.${index}.negotiatedDiscount`, { valueAsNumber: true })}
+        <Controller
+          control={control}
+          name={`items.${index}.negotiatedDiscount`}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              id={`neg-discount-${index}`}
+              aria-label="Negotiated Discount"
+              disabled={!isNegotiating}
+              title={!isNegotiating ? 'Only editable during a negotiation round' : undefined}
+              decimalPlaces={2}
+              min={0}
+            />
+          )}
         />
       </div>
 
-      {/* Computed: Fee After Discount */}
-      <div
-        className={`grid grid-cols-2 gap-3 items-center rounded-lg px-2.5 py-1.5 ${
-          discountOverflow ? 'bg-red-50 border border-red-200' : 'bg-gray-50'
-        }`}
-      >
-        <span className="text-sm text-gray-500">Fee After Discount</span>
-        <span
-          className={`text-sm font-medium ${
-            discountOverflow ? 'text-red-600' : 'text-gray-800'
+      {/* ─── Totals block ─────────────────────────────────────────────── */}
+      <div className="mt-3 border-t border-gray-200 pt-2 space-y-1">
+        {/* Fee After Discount */}
+        <div
+          className={`grid grid-cols-2 gap-3 items-center px-2.5 py-1.5 rounded ${
+            discountOverflow ? 'bg-red-50 border border-red-200' : ''
           }`}
         >
-          {discountOverflow ? 'Discounts exceed fee' : fmt(feeAfterDiscount)}
-        </span>
-      </div>
+          <span className="text-sm text-gray-600 text-right">Fee After Discount</span>
+          <span
+            className={`text-sm font-semibold text-right tabular-nums ${
+              discountOverflow ? 'text-red-600' : 'text-gray-900'
+            }`}
+          >
+            {discountOverflow ? 'Discounts exceed fee' : fmt(feeAfterDiscount)}
+          </span>
+        </div>
 
-      {/* VAT % */}
-      <div className="grid grid-cols-2 gap-3 items-center">
-        <label htmlFor={`vat-percent-${index}`} className="text-sm text-gray-600">
-          VAT %
-        </label>
-        <input
-          id={`vat-percent-${index}`}
-          type="number"
-          step="0.01"
-          min="0"
-          max="100"
-          disabled={readOnly}
-          aria-label="VAT Percent"
-          className={inputCls}
-          placeholder="7"
-          {...register(`items.${index}.vatPercent`, { valueAsNumber: true })}
+        {/* VAT — show rate and computed amount on one row. Rate is a system setting,
+            the NumberInput is retained (hidden) to keep form state hydrated. */}
+        <div className="grid grid-cols-2 gap-3 items-center px-2.5 py-1.5">
+          <span className="text-sm text-gray-600 text-right">
+            VAT ({(Number(vatPercent) || 0).toFixed(2)}%)
+          </span>
+          <span className="text-sm font-semibold text-gray-900 text-right tabular-nums">
+            {fmt(vatAmount)}
+          </span>
+        </div>
+        <Controller
+          control={control}
+          name={`items.${index}.vatPercent`}
+          render={({ field }) => (
+            <input
+              {...field}
+              type="hidden"
+              value={field.value ?? ''}
+              onChange={() => {}}
+            />
+          )}
         />
-      </div>
 
-      {/* Computed: Net Amount */}
-      <div className="grid grid-cols-2 gap-3 items-center bg-primary/5 rounded-lg px-2.5 py-2 border border-primary/20">
-        <span className="text-sm font-semibold text-gray-700">Net Amount</span>
-        <span className="text-sm font-bold text-primary">{fmt(netAmount)}</span>
+        {/* Net Amount — primary total. Thick top border for emphasis. */}
+        <div className="grid grid-cols-2 gap-3 items-center border-t-2 border-primary/30 mt-1 pt-2 px-2.5 py-2 bg-primary/5 rounded-b-lg">
+          <span className="text-sm font-semibold text-gray-800 text-right uppercase tracking-wide">
+            Net Amount
+          </span>
+          <span className="text-base font-bold text-primary text-right tabular-nums">
+            {fmt(netAmount)}
+          </span>
+        </div>
       </div>
     </div>
   );

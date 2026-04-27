@@ -46,7 +46,6 @@ const NegotiationModal = ({
     openNegotiation(
       {
         companyQuotationId,
-        proposedPrice: values.proposedPrice,
         message: values.message,
       },
       {
@@ -72,36 +71,20 @@ const NegotiationModal = ({
             <p>
               Negotiating with <strong>{companyName}</strong>. Round{' '}
               <strong>{currentRounds + 1} of {maxRounds}</strong> ({roundsRemaining} remaining).
+              The company sets the revised price by adjusting their per-item discount when they respond.
             </p>
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Proposed Price (THB) <span className="text-danger">*</span>
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            {...register('proposedPrice', { valueAsNumber: true })}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-            placeholder="Enter your proposed price"
-          />
-          {errors.proposedPrice && (
-            <p className="mt-1 text-xs text-danger">{errors.proposedPrice.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Message <span className="text-danger">*</span>
+            Message to Company <span className="text-danger">*</span>
           </label>
           <textarea
             {...register('message')}
-            rows={3}
+            rows={4}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
-            placeholder="Explain your proposed price to the company..."
+            placeholder="Explain what you'd like the company to revise (e.g., target a 10% discount on items 1 and 3)"
           />
           {errors.message && (
             <p className="mt-1 text-xs text-danger">{errors.message.message}</p>

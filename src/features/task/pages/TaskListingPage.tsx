@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useGetTasks, useGetTasksForKanban } from '../api';
+import { useGetPoolTasks, useGetTasks, useGetTasksForKanban } from '../api';
 import type {
   GroupByField,
   Task,
@@ -200,6 +200,13 @@ function TaskListingPage() {
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
+  const { data: poolTotalData } = useGetPoolTasks({
+    pageNumber: 0,
+    pageSize: 1,
+    activityId: filters.activityId,
+  });
+  const poolTotalCount = poolTotalData?.count ?? 0;
+
   const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
     keyof TaskFilterParams,
     string,
@@ -269,9 +276,14 @@ function TaskListingPage() {
       <div className="shrink-0 mb-3">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-semibold text-gray-900">All Tasks</h2>
-          {!isListLoading && totalCount > 0 && activeTab === 'personal' && (
+          {activeTab === 'personal' && !isListLoading && totalCount > 0 && (
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
               {totalCount}
+            </span>
+          )}
+          {activeTab === 'pool' && poolTotalCount > 0 && (
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
+              {poolTotalCount}
             </span>
           )}
         </div>
@@ -314,6 +326,17 @@ function TaskListingPage() {
         >
           <Icon style="solid" name="users" className="size-3" />
           Pool
+          {poolTotalCount > 0 && (
+            <span
+              className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
+                activeTab === 'pool'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {poolTotalCount}
+            </span>
+          )}
           {activeTab === 'pool' && (
             <span className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary rounded-t-full" />
           )}
@@ -520,7 +543,11 @@ function TaskListingPage() {
               </button>
             </div>
           )}
-          <PoolTaskListPage externalSearch={debouncedPoolSearch} externalFilters={poolFilters} />
+          <PoolTaskListPage
+            activityId={filters.activityId}
+            externalSearch={debouncedPoolSearch}
+            externalFilters={poolFilters}
+          />
         </>
       )}
 

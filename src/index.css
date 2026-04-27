@@ -16,6 +16,23 @@
     to { stroke-dashoffset: 0; }
 }
 
+/* Skeleton shimmer for loading placeholders */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        rgb(243 244 246) 0%,
+        rgb(229 231 235) 50%,
+        rgb(243 244 246) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+}
+
 /* Additional global styles */
 html {
     scroll-behavior: smooth;

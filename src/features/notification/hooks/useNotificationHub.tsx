@@ -70,6 +70,7 @@ export function useNotificationHub() {
         if (notification.type === 'DocumentFollowupRaised') {
           queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
           queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+          queryClient.invalidateQueries({ queryKey: ['task-counts'] });
         }
       }
     });

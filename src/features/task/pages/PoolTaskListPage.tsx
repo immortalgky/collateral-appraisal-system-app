@@ -239,6 +239,7 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
         );
       } else if (event.type === 'PoolTaskClaimed') {
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }
     },
     [queryClient],

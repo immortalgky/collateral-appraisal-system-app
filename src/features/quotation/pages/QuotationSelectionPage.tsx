@@ -11,7 +11,6 @@ import {
   useCancelQuotation,
 } from '../api/quotation';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
-import AppraisalContextPanel from '../components/AppraisalContextPanel';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import AppraisalReportListingTable from '../components/AppraisalReportListingTable';
 import QuotationTrackingLog from '../components/QuotationTrackingLog';
@@ -170,34 +169,27 @@ const QuotationSelectionPage = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       {/* Page header */}
-      <div>
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-3"
-        >
-          <Icon name="arrow-left" style="regular" className="size-4" />
-          Back
-        </button>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">{quotation.quotationNumber}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <QuotationStatusBadge status={quotation.status} />
-            </div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="text-base font-semibold text-gray-900 leading-snug">
+            {quotation.quotationNumber}
           </div>
-          {/* Cut-Off Date Time — read-only until PATCH endpoint is available */}
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Cut-Off Date Time
+          <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
+            <QuotationStatusBadge status={quotation.status} />
+            <span>·</span>
+            <span>
+              <span className="font-medium text-gray-700">Cut-Off Date:</span> {cutOffDateDisplay}
             </span>
-            <span className="text-sm font-semibold text-gray-800">{cutOffDateDisplay}</span>
           </div>
         </div>
+        <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+          <Icon name="arrow-left" style="solid" className="size-3.5 mr-1.5" />
+          Back
+        </Button>
       </div>
 
       {/* ─── Section 1: Appraisal Report Listing ──────────────────────────────── */}
-      <AppraisalReportListingTable appraisals={quotation.appraisals ?? []} />
+      <AppraisalReportListingTable appraisals={quotation.appraisals ?? []} rmUserName={quotation.rmUserName} />
 
       {/* Instructions (RM pick phase only) */}
       {isRmPickPhase && !isAlreadyPicked && (
@@ -208,16 +200,6 @@ const QuotationSelectionPage = () => {
             negotiate and finalize the agreement.
           </p>
         </div>
-      )}
-
-      {/* Appraisal context panel (RM view) — for RM pick phase */}
-      {isRmPickPhase && (quotation?.appraisals ?? []).length > 0 && (
-        <AppraisalContextPanel
-          quotationId={quotation.id}
-          appraisals={quotation.appraisals ?? []}
-          viewerRole="RM"
-          allowRemove={false}
-        />
       )}
 
       {/* Tentative winner banner */}
@@ -264,13 +246,19 @@ const QuotationSelectionPage = () => {
                       Company
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quoted Price
+                      Total Fee Amount
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Discount
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Net Amount
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Est. Days
+                      Total Estimate Manday
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Valid Until
+                      Submitted At
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -285,6 +273,21 @@ const QuotationSelectionPage = () => {
                 <tbody className="divide-y divide-gray-100">
                   {shortlisted.map(cq => {
                     const isWinner = quotation.tentativeWinnerQuotationId === cq.id;
+                    const items = cq.items ?? [];
+                    const hasItems = items.length > 0;
+                    const totalFeeAmount = items.reduce((sum, item) => sum + (item.feeAmount ?? 0), 0);
+                    const totalDiscount = items.reduce(
+                      (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
+                      0,
+                    );
+                    const totalEstimateManday = items.reduce((sum, item) => sum + (item.estimatedDays ?? 0), 0);
+                    const submittedAt = (() => {
+                      if (!cq.submittedAt) return '—';
+                      const d = new Date(cq.submittedAt);
+                      if (isNaN(d.getTime())) return '—';
+                      const pad = (n: number) => String(n).padStart(2, '0');
+                      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                    })();
                     return (
                       <tr
                         key={cq.id}
@@ -300,26 +303,29 @@ const QuotationSelectionPage = () => {
                               <Icon name="crown" style="solid" className="size-4 text-indigo-500" />
                             )}
                           </div>
-                          {cq.remarks && (
-                            <div className="text-xs text-gray-500 mt-0.5 max-w-xs truncate">
-                              {cq.remarks}
-                            </div>
-                          )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm text-gray-700 tabular-nums">
+                            {hasItems ? formatCurrency(totalFeeAmount) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm text-gray-700 tabular-nums">
+                            {hasItems ? formatCurrency(totalDiscount) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
                             {formatCurrency(cq.totalQuotedPrice)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-600">{cq.estimatedDays ?? '—'}</span>
+                          <span className="text-sm text-gray-600">
+                            {hasItems ? totalEstimateManday : '—'}
+                          </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-600">
-                            {cq.validUntil
-                              ? new Date(cq.validUntil).toLocaleDateString('th-TH')
-                              : '—'}
-                          </span>
+                          <span className="text-sm text-gray-600">{submittedAt}</span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <QuotationStatusBadge status={cq.status} />
@@ -531,7 +537,8 @@ const QuotationSelectionPage = () => {
           quotationId={quotation.id}
           companyQuotationId={finalizeTarget.id}
           companyName={finalizeTarget.companyName}
-          suggestedPrice={finalizeTarget.currentNegotiatedPrice ?? finalizeTarget.totalQuotedPrice}
+          winnerItems={finalizeTarget.items ?? []}
+          appraisals={quotation.appraisals ?? []}
         />
       )}
     </div>

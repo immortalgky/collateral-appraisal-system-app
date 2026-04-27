@@ -32,13 +32,15 @@ export const QuotationNegotiationSchema = z.object({
   id: z.string().uuid(),
   companyQuotationId: z.string().uuid(),
   roundNumber: z.number().int(),
-  proposedPrice: z.number(),
+  initiatedBy: z.string().nullable().optional(), // 'Admin' | 'Company'
+  initiatedByUserName: z.string().nullable().optional(),
+  proposedPrice: z.number().nullable().optional(),
   message: z.string().nullable().optional(),
   verb: z.string().nullable().optional(), // 'Accept' | 'Counter' | 'Reject' — populated after company responds
   counterPrice: z.number().nullable().optional(),
   responseMessage: z.string().nullable().optional(),
   respondedAt: z.string().nullable().optional(),
-  createdAt: z.string(),
+  initiatedAt: z.string(),
 });
 
 export type QuotationNegotiationDto = z.infer<typeof QuotationNegotiationSchema>;
@@ -102,9 +104,22 @@ export const AppraisalSummarySchema = z.object({
   addedBy: z.string().nullable().optional(),
   /** v7: requestId from which documents are fetched for the share-docs picker. */
   requestId: z.string().uuid().nullable().optional(),
+  /** Primary customer name on the appraisal's owning request; resolved server-side. */
+  customerName: z.string().nullable().optional(),
+  /** Admin-set maximum appraisal duration in days — null if not set by the requester. */
+  maxAppraisalDays: z.number().int().nullable().optional(),
 });
 
 export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;
+
+// ─── Invited Company (for popover listing) ──────────────────────────────────
+
+export const InvitedCompanySchema = z.object({
+  companyId: z.string().uuid(),
+  companyName: z.string(),
+});
+
+export type InvitedCompanyDto = z.infer<typeof InvitedCompanySchema>;
 
 // ─── Draft Summary for the entry-modal picker ────────────────────────────────
 
@@ -135,6 +150,16 @@ export const SharedDocumentEntrySchema = z.object({
   fileName: z.string().nullable().optional(),
   fileType: z.string().nullable().optional(),
   documentTypeName: z.string().nullable().optional(),
+  /** Server-composed section heading, e.g. "Application Documents" or "Land and Building · Title No. 1". */
+  sectionLabel: z.string().nullable().optional(),
+  /** Title order/label when level === 'TitleLevel'; null for RequestLevel. Backend column is nvarchar. */
+  titleNumber: z.string().nullable().optional(),
+  /** ISO datetime of upload — shown under the filename. */
+  uploadedAt: z.string().nullable().optional(),
+  /** Display name of the uploader. */
+  uploadedByName: z.string().nullable().optional(),
+  /** Free-form notes/comment on the document. */
+  notes: z.string().nullable().optional(),
 });
 export type SharedDocumentEntryDto = z.infer<typeof SharedDocumentEntrySchema>;
 
@@ -154,8 +179,7 @@ export const QuotationRequestDetailSchema = z.object({
   requestDate: z.string(),
   dueDate: z.string(),
   status: QuotationStatusSchema,
-  requestedBy: z.string().uuid(),
-  requestedByName: z.string(),
+  requestedBy: z.string(),
   description: z.string().nullable().optional(),
   specialRequirements: z.string().nullable().optional(),
   totalAppraisals: z.number().int(),
@@ -169,6 +193,7 @@ export const QuotationRequestDetailSchema = z.object({
   taskExecutionId: z.string().uuid().nullable().optional(),
   bankingSegment: z.string().nullable().optional(),
   rmUserId: z.string().uuid().nullable().optional(),
+  rmUserName: z.string().nullable().optional(),
   submissionsClosedAt: z.string().nullable().optional(),
   shortlistSentToRmAt: z.string().nullable().optional(),
   shortlistSentByAdminId: z.string().uuid().nullable().optional(),
@@ -182,8 +207,12 @@ export const QuotationRequestDetailSchema = z.object({
   selectedQuotationId: z.string().uuid().nullable().optional(),
   selectedAt: z.string().nullable().optional(),
   selectionReason: z.string().nullable().optional(),
+  // Cancellation reason (admin-supplied or "Last appraisal removed" auto-cancel)
+  cancellationReason: z.string().nullable().optional(),
   // Company submissions (populated when status >= UnderAdminReview)
   companyQuotations: z.array(CompanyQuotationSchema).optional().default([]),
+  // All invited companies (id + name) — used to render the ⓘ popover next to the Companies Invited count.
+  invitedCompanies: z.array(InvitedCompanySchema).optional().default([]),
   // v4: shared documents (visible to all roles; ExtCompany filtered to these in UI)
   sharedDocuments: z.array(SharedDocumentEntrySchema).optional().default([]),
   // v4: RM negotiation recommendation (set when RM picks winner)
@@ -196,7 +225,6 @@ export type QuotationRequestDetailDto = z.infer<typeof QuotationRequestDetailSch
 // ─── Form schemas ─────────────────────────────────────────────────────────────
 
 export const openNegotiationFormSchema = z.object({
-  proposedPrice: z.number({ required_error: 'Proposed price is required' }).positive('Must be positive'),
   message: z.string().min(1, 'Message is required'),
 });
 
@@ -211,7 +239,6 @@ export const respondNegotiationFormSchema = z.object({
 export type RespondNegotiationFormValues = z.infer<typeof respondNegotiationFormSchema>;
 
 export const finalizeFormSchema = z.object({
-  finalPrice: z.number({ required_error: 'Final price is required' }).positive('Must be positive'),
   reason: z.string().nullable().optional(),
 });
 
@@ -234,12 +261,7 @@ export type PickWinnerFormValues = z.infer<typeof pickWinnerFormSchema>;
 /** Per-appraisal line item within the submit form. */
 export const submitQuotationItemSchema = z.object({
   appraisalId: z.string().uuid(),
-  /**
-   * Legacy total price field. In the new Maker/Checker flow this is derived from
-   * feeAmount in the submit handler and is not rendered as an input. Keep optional
-   * so the fee-breakdown path does not require it at validation time.
-   */
-  quotedPrice: z.number().positive('Must be positive').optional(),
+  // Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
   estimatedDays: z
     .number({ required_error: 'Days is required' })
     .int('Must be a whole number')
@@ -249,6 +271,8 @@ export const submitQuotationItemSchema = z.object({
   discount: z.number().nonnegative().optional(),
   negotiatedDiscount: z.number().nonnegative().nullable().optional(),
   vatPercent: z.number().nonnegative().optional(),
+  /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
+  itemNotes: z.string().nullable().optional(),
 }).superRefine((item, ctx) => {
   if (item.feeAmount === undefined) return;
   const discount = item.discount ?? 0;
@@ -265,7 +289,10 @@ export const submitQuotationItemSchema = z.object({
 export type SubmitQuotationItemValues = z.infer<typeof submitQuotationItemSchema>;
 
 export const submitQuotationFormSchema = z.object({
-  quotationNumber: z.string().min(1, 'Quotation number is required'),
+  // Kept in the schema so the save/submit payloads still wire through an empty string,
+  // but no longer surfaced as a form input — removed because it's the company's own
+  // external reference and often left blank. Empty string passes validation.
+  quotationNumber: z.string(),
   /** Per-appraisal line items — at least one required. */
   items: z
     .array(submitQuotationItemSchema)
@@ -294,6 +321,7 @@ export const SaveDraftQuotationItemSchema = z.object({
   negotiatedDiscount: z.number().nonnegative().nullable(),
   vatPercent: z.number().nonnegative(),
   estimatedDays: z.number().int(),
+  itemNotes: z.string().nullable().optional(),
 }).superRefine((item, ctx) => {
   const discount = item.discount ?? 0;
   const negotiated = item.negotiatedDiscount ?? 0;
@@ -350,3 +378,17 @@ export const QuotationActivityLogRowSchema = z.object({
 });
 
 export type QuotationActivityLogRow = z.infer<typeof QuotationActivityLogRowSchema>;
+
+// ─── Edit Draft Quotation (Admin) ─────────────────────────────────────────────
+
+export const EditDraftQuotationSchema = z.object({
+  dueDate: z.string().min(1, 'Due date is required'),
+  companyIds: z.array(z.string().uuid()).min(0),
+});
+
+export type EditDraftQuotationFormValues = z.infer<typeof EditDraftQuotationSchema>;
+
+export type EditDraftQuotationBody = {
+  dueDate: string;
+  companyIds: string[];
+};

@@ -18,9 +18,9 @@ import {
 } from '@features/appraisal/context/AppraisalContext';
 
 type AppraisalSidebarProps = {
-  appraisalId: string;
   logo: string;
   hideGeneralNav?: boolean;
+  loading?: boolean;
 };
 
 // Get background color class based on icon color
@@ -40,6 +40,35 @@ const getIconBgClass = (iconColor: string | undefined) => {
   };
   return colorMap[iconColor] || 'bg-gray-100';
 };
+
+const SKELETON_LABEL_WIDTHS = ['w-28', 'w-20', 'w-32', 'w-24', 'w-16', 'w-28', 'w-20'];
+
+function SkeletonRow({ index, collapsed = false }: { index: number; collapsed?: boolean }) {
+  const delay = `${index * 120}ms`;
+  if (collapsed) {
+    return (
+      <div className="flex justify-center py-2 px-2.5">
+        <div
+          className="w-7 h-7 rounded-lg shimmer"
+          style={{ animationDelay: delay }}
+        />
+      </div>
+    );
+  }
+  const labelWidth = SKELETON_LABEL_WIDTHS[index % SKELETON_LABEL_WIDTHS.length];
+  return (
+    <div className="flex items-center gap-2.5 py-2 px-2.5">
+      <div
+        className="w-7 h-7 rounded-lg shimmer shrink-0"
+        style={{ animationDelay: delay }}
+      />
+      <div
+        className={clsx('h-2.5 rounded-full shimmer', labelWidth)}
+        style={{ animationDelay: delay }}
+      />
+    </div>
+  );
+}
 
 function CompactMenuItem({
   item,
@@ -184,8 +213,8 @@ function ExpandableSection({
 }
 
 export function MobileAppraisalSidebar({
-  appraisalId,
   logo,
+  loading = false,
 }: AppraisalSidebarProps): React.ReactNode {
   const sidebarOpen = useUIStore(state => state.sidebarOpen);
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
@@ -255,7 +284,15 @@ export function MobileAppraisalSidebar({
             {/* Navigation */}
             <nav className="flex flex-1 flex-col px-3 py-2">
               {/* GENERAL Section */}
-              <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} />
+              {loading ? (
+                <div className="mb-3 flex flex-col gap-0.5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <SkeletonRow key={i} index={i} />
+                  ))}
+                </div>
+              ) : (
+                <ExpandableSection title="General" items={generalItems} initialVisibleCount={3} />
+              )}
 
               {/* APPLICATION Section */}
               <div className="pt-3 border-t border-gray-100">
@@ -265,11 +302,17 @@ export function MobileAppraisalSidebar({
                   </span>
                 </div>
                 <ul className="flex flex-col gap-0.5">
-                  {applicationNav.map(item => (
-                    <li key={item.href + item.itemKey}>
-                      <CompactMenuItem item={item} />
-                    </li>
-                  ))}
+                  {loading
+                    ? Array.from({ length: 6 }).map((_, i) => (
+                        <li key={i}>
+                          <SkeletonRow index={i + 3} />
+                        </li>
+                      ))
+                    : applicationNav.map(item => (
+                        <li key={item.href + item.itemKey}>
+                          <CompactMenuItem item={item} />
+                        </li>
+                      ))}
                 </ul>
               </div>
             </nav>
@@ -281,9 +324,9 @@ export function MobileAppraisalSidebar({
 }
 
 export default function AppraisalSidebar({
-  appraisalId,
   logo,
   hideGeneralNav = false,
+  loading = false,
 }: AppraisalSidebarProps): React.ReactNode {
   const requestId = useAppraisalRequestId();
   const basePath = useBasePath();
@@ -347,12 +390,20 @@ export default function AppraisalSidebar({
         >
           {/* GENERAL Section */}
           {!hideGeneralNav && (
-            <ExpandableSection
-              title="General"
-              items={generalItems}
-              initialVisibleCount={3}
-              collapsed={sidebarCollapsed}
-            />
+            loading ? (
+              <div className="mb-3 flex flex-col gap-0.5">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonRow key={i} index={i} collapsed={sidebarCollapsed} />
+                ))}
+              </div>
+            ) : (
+              <ExpandableSection
+                title="General"
+                items={generalItems}
+                initialVisibleCount={3}
+                collapsed={sidebarCollapsed}
+              />
+            )
           )}
 
           {/* APPLICATION Section */}
@@ -370,11 +421,17 @@ export default function AppraisalSidebar({
               </div>
             )}
             <ul className="flex flex-col gap-0.5">
-              {applicationNav.map(item => (
-                <li key={item.href + item.itemKey}>
-                  <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
-                </li>
-              ))}
+              {loading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <li key={i}>
+                      <SkeletonRow index={i + 3} collapsed={sidebarCollapsed} />
+                    </li>
+                  ))
+                : applicationNav.map(item => (
+                    <li key={item.href + item.itemKey}>
+                      <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
+                    </li>
+                  ))}
             </ul>
           </div>
 

@@ -203,6 +203,7 @@ export const useCompleteActivity = () => {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
   });
 };

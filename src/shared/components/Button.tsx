@@ -70,6 +70,10 @@ const Button = ({
 
   return (
     <button
+      // Default to "button" so a Button rendered inside a <form> doesn't implicitly
+      // submit the form when clicked. Real submit buttons opt in via `type="submit"`,
+      // and the spread below lets callers override this default when needed.
+      type="button"
       className={clsx(
         'inline-flex items-center justify-center rounded-md font-medium transition-colors',
         'focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2',

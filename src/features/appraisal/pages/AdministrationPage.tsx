@@ -232,20 +232,29 @@ const AdministrationPage = () => {
       return;
     }
 
+    // assignmentType always reflects the user's Internal/External choice — the backend
+    // AssignmentType value object only accepts those two codes. The "quotation" choice
+    // lives on assignmentMethod, not on assignmentType.
+    const isExternal = data.assignmentType === 'external';
+    const isQuotationMethod = data.assignmentMethod === 'quotation';
+
+    // For quotation method on an external assignment, send the finalized winner's company id
+    // (not whatever was previously selected manually). Internal+quotation falls back to staffId.
+    const resolvedAssigneeCompanyId = isExternal
+      ? isQuotationMethod && quotationWinner
+        ? quotationWinner.companyId
+        : data.companyId
+      : null;
+
     createAssignment(
       {
         appraisalId: appraisalId ?? '',
-        assignmentType:
-          data.assignmentMethod === 'quotation'
-            ? 'Quotation'
-            : data.assignmentType === 'internal'
-              ? 'Internal'
-              : 'External',
-        assigneeUserId: data.assignmentType === 'internal' ? data.staffId : null,
-        assigneeCompanyId: data.assignmentType === 'external' ? data.companyId : null,
+        assignmentType: isExternal ? 'External' : 'Internal',
+        assigneeUserId: isExternal ? null : data.staffId,
+        assigneeCompanyId: resolvedAssigneeCompanyId,
         assignmentMethod: data.assignmentMethod,
-        internalAppraiserId: data.assignmentType === 'external' ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod: data.assignmentType === 'external' ? data.followupStaffMethod : null,
+        internalAppraiserId: isExternal ? data.followupStaffId : null,
+        internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
         assignedBy: currentUser?.username ?? null,
       },
       {
@@ -262,10 +271,15 @@ const AdministrationPage = () => {
               assignmentMethod: data.assignmentMethod,
             };
 
-            // For quotation method with a finalized winner, inject the winner's companyId
+            // For quotation method with a finalized winner, inject the winner as the
+            // selected company. Keys must match `appraisal-assignment.inputMappings` in
+            // appraisal-workflow.json (`selectedCompanyId` / `selectedCompanyName`) — the
+            // engine filters anything not declared there out of the workflow variables,
+            // which would leave `company-selection` with no company to use.
             if (data.assignmentMethod === 'quotation' && isQuotationFinalized && quotationWinner) {
               input.assignmentMethod = 'Quotation';
-              input.assignedCompanyId = quotationWinner.companyId;
+              input.selectedCompanyId = quotationWinner.companyId;
+              input.selectedCompanyName = quotationWinner.companyName;
             }
 
             // For external manual, include company selection data
@@ -1007,6 +1021,9 @@ const AdministrationPage = () => {
             bankingSegment={bankingSegment}
             appraisalNumber={(requestData as any)?.appraisalNumber ?? ''}
             propertyType={(requestData as any)?.detail?.propertyType ?? ''}
+            assignmentType={assignmentType ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1) : null}
+            assignmentMethod={assignmentMethod ? assignmentMethod.charAt(0).toUpperCase() + assignmentMethod.slice(1) : null}
+            internalFollowupAssignmentMethod={followupStaffMethod ?? null}
           />
         </>
       )}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PoolTaskListPage from '../pages/PoolTaskListPage';
-import { useGetTasks, useGetTasksForKanban } from '../api';
+import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
 import { columnDefs, getActivityColumnConfig } from '../config/columnDefs';
@@ -155,6 +155,9 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
+  const { data: taskCounts } = useGetTaskCounts();
+  const poolTotalCount = taskCounts?.get(activityId)?.poolCount ?? 0;
+
   const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
     keyof TaskFilterParams,
     string,
@@ -251,6 +254,17 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
         >
           <Icon style="solid" name="users" className="size-3" />
           Pool
+          {poolTotalCount > 0 && (
+            <span
+              className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
+                activeTab === 'pool'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {poolTotalCount}
+            </span>
+          )}
           {activeTab === 'pool' && (
             <span className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary rounded-t-full" />
           )}
