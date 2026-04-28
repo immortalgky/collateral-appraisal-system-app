@@ -13,6 +13,7 @@ interface UseAssumptionManagementProps {
   setValue: (path: string, value: any, options?: object) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>;
+  onStructuralChange?: () => void;
 }
 
 export function useAssumptionManagement({
@@ -20,6 +21,7 @@ export function useAssumptionManagement({
   getValues,
   setValue,
   control,
+  onStructuralChange,
 }: UseAssumptionManagementProps) {
   const { append, remove, fields } = useFieldArray({
     control,
@@ -28,13 +30,6 @@ export function useAssumptionManagement({
 
   const [editing, setEditing] = useState<string | null>(null);
   const pendingNewClientIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setValue(`${name}.assumptions`, getValues(`${name}.assumptions`), {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-  }, [fields.length, name, setValue, getValues]);
 
   const activeAssumption: DCFAssumption | null = editing
     ? ((getValues(`${name}.assumptions`) as DCFAssumption[] | undefined)?.find(
@@ -52,18 +47,28 @@ export function useAssumptionManagement({
     });
     pendingNewClientIdRef.current = newAssumptionId;
     setEditing(newAssumptionId);
-  }, [append, fields.length]);
+    onStructuralChange?.();
+  }, [append, fields.length, onStructuralChange]);
 
   const handleOnRemoveAssumption = useCallback(
     (index: number) => {
       const assumptions = getValues(`${name}.assumptions`) as DCFAssumption[] | undefined;
       const assumption = assumptions?.[index];
-      if (assumption && editing === assumption.clientId) {
-        setEditing(null);
-      }
+      if (assumption && editing === assumption.clientId) setEditing(null);
+
       remove(index);
+
+      // re-pack displaySeq
+      const remaining = (getValues(`${name}.assumptions`) as DCFAssumption[]) ?? [];
+      remaining.forEach((_a, i) => {
+        setValue(`${name}.assumptions.${i}.displaySeq`, i, {
+          shouldDirty: false,
+          shouldValidate: false,
+        });
+      });
+      onStructuralChange?.();
     },
-    [remove, getValues, name, editing],
+    [getValues, name, editing, remove, onStructuralChange, setValue],
   );
 
   return {
@@ -93,6 +98,7 @@ export function useAssumptionManagement({
         shouldValidate: true,
       });
       pendingNewClientIdRef.current = null;
+      onStructuralChange?.();
     },
   };
 }

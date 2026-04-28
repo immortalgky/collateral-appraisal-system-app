@@ -120,10 +120,11 @@ export function DiscountedCashFlowMethodModal({
     return assumptionTypeCatalog
       .filter(
         p =>
-          !assumptions.some(
+          (!assumptions.some(
             a => a.assumptionType === p.code && a.assumptionType !== initialData.assumptionType,
           ) &&
-          (currentSection?.sectionType === p.sectionType || p.sectionType === 'any'),
+            (currentSection?.sectionType === p.sectionType || p.sectionType === 'any')) ||
+          p.code === 'M99',
       )
       .map(a => ({ value: a.code, label: a.name }));
   }, [assumptionTypeCatalog, assumptions, currentSection?.sectionType, initialData.assumptionType]);

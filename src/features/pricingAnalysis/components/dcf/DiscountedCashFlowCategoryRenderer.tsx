@@ -11,6 +11,7 @@ interface DiscountedCashFlowCategoryRendererProps {
   totalNumberOfYears: number;
   color: SectionColor;
   isReadOnly?: boolean;
+  onStructuralChange?: () => void;
 }
 export function DiscountedCashFlowCategoryRenderer({
   name,
@@ -20,6 +21,7 @@ export function DiscountedCashFlowCategoryRenderer({
   totalNumberOfYears,
   color,
   isReadOnly,
+  onStructuralChange,
 }: DiscountedCashFlowCategoryRendererProps) {
   const props = {
     name: name,
@@ -33,6 +35,7 @@ export function DiscountedCashFlowCategoryRenderer({
       rowHeader: 'pl-8 px-1 py-1 h-9 text-xs border-b border-gray-300',
       rowBody: 'pl-8 px-1 py-1 h-9 text-xs text-right border-b border-gray-300',
     },
+    onStructuralChange: onStructuralChange,
   };
   switch (category.categoryType) {
     case 'income': {

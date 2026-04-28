@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
 import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
@@ -114,6 +114,132 @@ export function DiscountedCashFlowPanel({
   // same payload fires again. Content unchanged = skip.
   const lastSentPayloadHashRef = useRef<string | null>(null);
 
+  const lastStructuralChangeRef = useRef(false);
+
+  // Triggered by the management hook on add/remove
+  const firePreview = useCallback(
+    (values: DCFFormType, opts?: { force?: boolean }) => {
+      if (!isGenerated) return;
+      if (
+        !activeMethod?.pricingAnalysisId ||
+        !activeMethod?.methodId ||
+        !appraisalId ||
+        !propertyId
+      )
+        return;
+
+      // Guard: need at least templateCode to build a valid request.
+      if (!values.templateCode) return;
+
+      // Skip preview while an "Add assumption" modal is open: the pending row is
+      // appended with assumptionType=null and only gets a real type after the
+      // modal saves. Check the raw form state because the mapper coerces null
+      // to '' and keeps rows with methodType set.
+      const hasPendingNewAssumption = (values.sections ?? []).some(
+        (s: { categories?: { assumptions?: { assumptionType?: unknown }[] }[] }) =>
+          (s.categories ?? []).some(c =>
+            (c.assumptions ?? []).some(a => a.assumptionType == null || a.assumptionType === ''),
+          ),
+      );
+      if (hasPendingNewAssumption) return;
+
+      let request: ReturnType<typeof mapDCFFormToSaveRequest>;
+      try {
+        request = mapDCFFormToSaveRequest(values);
+      } catch {
+        return;
+      }
+
+      // Skip if the payload content is identical to the last one we sent —
+      // prevents the response-triggered reset loop. Exclude computed fields
+      // from the hash since those get overwritten by the server response and
+      // shouldn't count as "user edits worth re-previewing".
+      const payloadHash = JSON.stringify({
+        templateCode: request.templateCode,
+        totalNumberOfYears: request.totalNumberOfYears,
+        totalNumberOfDayInYear: request.totalNumberOfDayInYear,
+        capitalizeRate: request.capitalizeRate,
+        discountedRate: request.discountedRate,
+        sections: request.sections.map(s => ({
+          sectionType: s.sectionType,
+          identifier: s.identifier,
+          clientId: s.clientId,
+          categories: s.categories.map(c => ({
+            categoryType: c.categoryType,
+            identifier: c.identifier,
+            clientId: c.clientId,
+            assumptions: c.assumptions.map(a => ({
+              assumptionType: a.assumptionType,
+              identifier: a.identifier,
+              clientId: a.clientId,
+              methodTypeCode: a.methodTypeCode,
+              detail: a.detail,
+            })),
+          })),
+        })),
+      });
+      if (payloadHash === lastSentPayloadHashRef.current) return;
+      lastSentPayloadHashRef.current = payloadHash;
+
+      // Increment and capture the request id so we can discard stale responses.
+      const requestId = ++latestPreviewRequestIdRef.current;
+      // Snapshot the method at fire-time; bail if the user switched methods before the response arrives.
+      const requestMethodId = activeMethod.methodId;
+
+      previewMutation.mutate(
+        {
+          pricingAnalysisId: activeMethod.pricingAnalysisId,
+          methodId: activeMethod.methodId,
+          appraisalId: appraisalId,
+          propertyId: propertyId,
+          request,
+        },
+        {
+          onSuccess: response => {
+            // Discard if a newer preview has already been fired, or if the user
+            // switched to a different Income method while this request was in-flight.
+            if (requestId !== latestPreviewRequestIdRef.current) return;
+            if (requestMethodId !== activeMethod?.methodId) return;
+            // keepDirtyValues preserves both the dirty flag AND the live typed value,
+            // so mid-flight keystrokes are never overwritten by the stale server payload.
+            // reset(mapIncomeAnalysisToDCFForm(response), {
+            //   keepDirtyValues: false,
+            //   keepTouched: true,
+            //   keepErrors: true,
+            // });
+            applyServerComputedFields(
+              setValue,
+              methods.getFieldState,
+              mapIncomeAnalysisToDCFForm(response),
+            );
+          },
+          onError: err => {
+            setSaveError(
+              err instanceof Error ? `Preview failed: ${err.message}` : 'Preview failed',
+            );
+          },
+        },
+      );
+    },
+    [
+      isGenerated,
+      activeMethod?.pricingAnalysisId,
+      activeMethod?.methodId,
+      activeMethod?.approachType,
+      activeMethod?.methodType,
+      appraisalId,
+      propertyId,
+      previewMutation,
+      setValue,
+    ],
+  );
+
+  const requestImmediatePreview = useCallback(() => {
+    lastStructuralChangeRef.current = true;
+    // Bypass the debounce by reading current values now
+    void firePreview(methods.getValues());
+  }, [firePreview, methods]);
+
   const handleOnGenerate = async () => {
     if (!templateDto) return;
     const dcfTemplate = pricingTemplateDtoToDcfTemplate(templateDto);
@@ -147,95 +273,7 @@ export function DiscountedCashFlowPanel({
   // Fire preview whenever debounced watched fields change, but only after Generate/restore.
   useEffect(() => {
     if (!isGenerated) return;
-    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId)
-      return;
-
-    const currentValues = methods.getValues();
-    // Guard: need at least templateCode to build a valid request.
-    if (!currentValues.templateCode) return;
-
-    // Skip preview while an "Add assumption" modal is open: the pending row is
-    // appended with assumptionType=null and only gets a real type after the
-    // modal saves. Check the raw form state because the mapper coerces null
-    // to '' and keeps rows with methodType set.
-    const hasPendingNewAssumption = (currentValues.sections ?? []).some(
-      (s: { categories?: { assumptions?: { assumptionType?: unknown }[] }[] }) =>
-        (s.categories ?? []).some(c =>
-          (c.assumptions ?? []).some(a => a.assumptionType == null || a.assumptionType === ''),
-        ),
-    );
-    if (hasPendingNewAssumption) return;
-
-    let request: ReturnType<typeof mapDCFFormToSaveRequest>;
-    try {
-      request = mapDCFFormToSaveRequest(currentValues);
-    } catch {
-      return;
-    }
-
-    // Skip if the payload content is identical to the last one we sent —
-    // prevents the response-triggered reset loop. Exclude computed fields
-    // from the hash since those get overwritten by the server response and
-    // shouldn't count as "user edits worth re-previewing".
-    const payloadHash = JSON.stringify({
-      templateCode: request.templateCode,
-      totalNumberOfYears: request.totalNumberOfYears,
-      totalNumberOfDayInYear: request.totalNumberOfDayInYear,
-      capitalizeRate: request.capitalizeRate,
-      discountedRate: request.discountedRate,
-      sections: request.sections.map(s => ({
-        sectionType: s.sectionType,
-        identifier: s.identifier,
-        clientId: s.clientId,
-        categories: s.categories.map(c => ({
-          categoryType: c.categoryType,
-          identifier: c.identifier,
-          clientId: c.clientId,
-          assumptions: c.assumptions.map(a => ({
-            assumptionType: a.assumptionType,
-            identifier: a.identifier,
-            clientId: a.clientId,
-            methodTypeCode: a.methodTypeCode,
-            detail: a.detail,
-          })),
-        })),
-      })),
-    });
-    if (payloadHash === lastSentPayloadHashRef.current) return;
-    lastSentPayloadHashRef.current = payloadHash;
-
-    // Increment and capture the request id so we can discard stale responses.
-    const requestId = ++latestPreviewRequestIdRef.current;
-    // Snapshot the method at fire-time; bail if the user switched methods before the response arrives.
-    const requestMethodId = activeMethod.methodId;
-
-    previewMutation.mutate(
-      {
-        pricingAnalysisId: activeMethod.pricingAnalysisId,
-        methodId: activeMethod.methodId,
-        appraisalId: appraisalId,
-        propertyId: propertyId,
-        request,
-      },
-      {
-        onSuccess: response => {
-          // Discard if a newer preview has already been fired, or if the user
-          // switched to a different Income method while this request was in-flight.
-          if (requestId !== latestPreviewRequestIdRef.current) return;
-          if (requestMethodId !== activeMethod?.methodId) return;
-          // keepDirtyValues preserves both the dirty flag AND the live typed value,
-          // so mid-flight keystrokes are never overwritten by the stale server payload.
-          reset(mapIncomeAnalysisToDCFForm(response), {
-            keepDirtyValues: true,
-            keepTouched: true,
-            keepErrors: true,
-          });
-        },
-        onError: err => {
-          setSaveError(err instanceof Error ? `Preview failed: ${err.message}` : 'Preview failed');
-        },
-      },
-    );
+    firePreview(methods.getValues());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isGenerated,
@@ -338,6 +376,7 @@ export function DiscountedCashFlowPanel({
                   totalNumberOfYears={getValues('totalNumberOfYears')}
                   properties={properties ?? []}
                   isReadOnly={isReadOnly}
+                  onStructuralChange={requestImmediatePreview}
                 />
               </div>
               {previewMutation.isPending && (
@@ -420,4 +459,55 @@ function DCFVisualizationSection() {
       />
     </div>
   );
+}
+
+function applyServerComputedFields(
+  setValue: UseFormSetValue<DCFFormType>,
+  getFieldState: UseFormGetFieldState<DCFFormType>,
+  serverForm: DCFFormType,
+) {
+  // 1. Always overwrite — these are pure server-derived totals
+  setValue('finalValue', serverForm.finalValue ?? 0, { shouldDirty: false });
+  setValue('finalValueRounded', serverForm.finalValueRounded ?? 0, { shouldDirty: false });
+
+  serverForm.sections.forEach((s, sIdx) => {
+    setValue(`sections.${sIdx}.totalSectionValues`, s.totalSectionValues, {
+      shouldDirty: false,
+    });
+
+    if (s.sectionType === 'summaryDCF' || s.sectionType === 'summaryDirect') {
+      Object.entries(s).forEach(([k, v]) => {
+        if (Array.isArray(v) && k !== 'totalSectionValues' && k !== 'categories') {
+          setValue(`sections.${sIdx}.${k}` as any, v, { shouldDirty: false });
+        }
+      });
+    }
+
+    s.categories?.forEach((c, cIdx) => {
+      setValue(`sections.${sIdx}.categories.${cIdx}.totalCategoryValues`, c.totalCategoryValues, {
+        shouldDirty: false,
+      });
+
+      c.assumptions?.forEach((a, aIdx) => {
+        const path = `sections.${sIdx}.categories.${cIdx}.assumptions.${aIdx}` as const;
+
+        // Server-only — always overwrite
+        setValue(`${path}.totalAssumptionValues`, a.totalAssumptionValues, { shouldDirty: false });
+        setValue(`${path}.method.totalMethodValues`, a.method?.totalMethodValues ?? [], {
+          shouldDirty: false,
+        });
+
+        // 2. Server-suggested-but-user-overridable — write only if not dirty
+        const detail = a.method?.detail as { occupancy?: unknown[] } | undefined;
+        if (detail?.occupancy && Array.isArray(detail.occupancy)) {
+          detail.occupancy.forEach((cellValue, yearIdx) => {
+            const occPath = `${path}.method.detail.occupancy.${yearIdx}` as const;
+            if (!getFieldState(occPath as any).isDirty) {
+              setValue(occPath as any, cellValue, { shouldDirty: false });
+            }
+          });
+        }
+      });
+    });
+  });
 }

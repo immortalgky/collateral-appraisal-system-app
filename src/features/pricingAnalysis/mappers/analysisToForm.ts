@@ -53,7 +53,6 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
           const idSet =
             kind === 'section' ? sectionIds : kind === 'category' ? categoryIds : assumptionIds;
           const isStillValid = refDbId !== null && idSet.has(refDbId);
-          console.log(d);
           detail = {
             ...d,
             refTarget: {

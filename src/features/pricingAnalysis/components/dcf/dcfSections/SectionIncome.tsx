@@ -11,6 +11,7 @@ interface SectionIncomeProps {
   icon: string;
   color: SectionColor;
   isReadOnly?: boolean;
+  onStructuralChange?: () => void;
 }
 
 export function SectionIncome({
@@ -21,6 +22,7 @@ export function SectionIncome({
   icon,
   color,
   isReadOnly,
+  onStructuralChange,
 }: SectionIncomeProps) {
   return (
     <DynamicSection
@@ -41,6 +43,7 @@ export function SectionIncome({
             totalNumberOfYears={totalNumberOfYears}
             color={color}
             isReadOnly={isReadOnly}
+            onStructuralChange={onStructuralChange}
           />
         );
       })}

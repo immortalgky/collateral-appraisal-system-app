@@ -13,6 +13,7 @@ interface DiscountedCashFlowSectionRendererProps {
   icon: string;
   color: SectionColor;
   isReadOnly?: boolean;
+  onStructuralChange?: () => void;
 }
 export function DiscountedCashFlowSectionRenderer({
   name,
@@ -22,6 +23,7 @@ export function DiscountedCashFlowSectionRenderer({
   icon,
   color,
   isReadOnly,
+  onStructuralChange,
 }: DiscountedCashFlowSectionRendererProps) {
   switch (section.sectionType) {
     case 'income': {
@@ -34,6 +36,7 @@ export function DiscountedCashFlowSectionRenderer({
           icon={icon}
           properties={properties}
           isReadOnly={isReadOnly}
+          onStructuralChange={onStructuralChange}
         />
       );
     }
@@ -47,14 +50,27 @@ export function DiscountedCashFlowSectionRenderer({
           icon={icon}
           properties={properties}
           isReadOnly={isReadOnly}
+          onStructuralChange={onStructuralChange}
         />
       );
     }
     case 'summaryDCF': {
-      return <SectionSummaryDCF name={name} totalNumberOfYears={totalNumberOfYears} isReadOnly={isReadOnly} />;
+      return (
+        <SectionSummaryDCF
+          name={name}
+          totalNumberOfYears={totalNumberOfYears}
+          isReadOnly={isReadOnly}
+        />
+      );
     }
     case 'summaryDirect': {
-      return <SectionSummaryDirectCashFlow name={name} totalNumberOfYears={totalNumberOfYears} isReadOnly={isReadOnly} />;
+      return (
+        <SectionSummaryDirectCashFlow
+          name={name}
+          totalNumberOfYears={totalNumberOfYears}
+          isReadOnly={isReadOnly}
+        />
+      );
     }
   }
 }

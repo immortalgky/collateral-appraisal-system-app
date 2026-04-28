@@ -11,23 +11,24 @@ type Predicate = (assumption: DCFAssumption, category: DCFCategory, section: DCF
 
 export function getDCFFilteredAssumptions(
   getValues: UseFormGetValues<FieldValues>,
-  predicate?: Predicate, // optional — if omitted, return everything
+  predicate?: Predicate,
 ): Result[] {
   const form = getValues();
   const results: Result[] = [];
 
-  for (const section of form.sections) {
-    if (!section.categories) continue;
+  for (const section of form?.sections ?? []) {
+    if (!section?.categories) continue;
 
     for (const category of section.categories) {
-      if (!category.assumptions) continue; // guard added
+      if (!category?.assumptions) continue;
 
       for (const assumption of category.assumptions) {
+        if (!assumption) continue;
+        if (!assumption.assumptionType) continue; // skip pending/empty rows
+
         const shouldInclude = predicate ? predicate(assumption, category, section) : true;
 
-        if (shouldInclude) {
-          results.push({ assumption, category, section });
-        }
+        if (shouldInclude) results.push({ assumption, category, section });
       }
     }
   }

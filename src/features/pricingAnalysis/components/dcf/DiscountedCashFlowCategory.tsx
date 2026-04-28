@@ -18,6 +18,7 @@ interface DiscountedCashFlowCategoryProps {
   color: SectionColor;
   baseStyles: { rowHeader: string; rowBody: string };
   isReadOnly?: boolean;
+  onStructuralChange?: () => void;
 }
 
 export function DiscountedCashFlowCategory({
@@ -29,6 +30,7 @@ export function DiscountedCashFlowCategory({
   color,
   baseStyles,
   isReadOnly,
+  onStructuralChange,
 }: DiscountedCashFlowCategoryProps) {
   const { getValues, setValue, control } = useFormContext();
 
@@ -41,7 +43,13 @@ export function DiscountedCashFlowCategory({
     handleOnOpenEditMode,
     handleOnCancelEditMode,
     handleOnSaveEditMode,
-  } = useAssumptionManagement({ name, getValues, setValue, control });
+  } = useAssumptionManagement({
+    name,
+    getValues,
+    setValue,
+    control,
+    onStructuralChange,
+  });
 
   const { modalInitialData } = useAssumptionEditor({ section, category, activeAssumption });
 

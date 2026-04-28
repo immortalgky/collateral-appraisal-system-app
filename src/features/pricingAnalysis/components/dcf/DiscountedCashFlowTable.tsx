@@ -81,12 +81,14 @@ interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
   properties: Record<string, unknown>[];
   isReadOnly?: boolean;
+  onStructuralChange?: () => void;
 }
 
 export function DiscountedCashFlowTable({
   totalNumberOfYears,
   properties,
   isReadOnly,
+  onStructuralChange,
 }: DiscountedCashFlowTableProps) {
   const { control } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
@@ -199,6 +201,7 @@ export function DiscountedCashFlowTable({
                   totalNumberOfYears={totalNumberOfYears}
                   icon={getIconSection(section.identifier)}
                   isReadOnly={isReadOnly}
+                  onStructuralChange={onStructuralChange}
                 />
               );
             })}
