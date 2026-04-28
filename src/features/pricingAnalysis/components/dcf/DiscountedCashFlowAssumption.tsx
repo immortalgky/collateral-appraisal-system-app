@@ -25,7 +25,7 @@ export function DiscountedCashFlowAssumption({
   onRemoveAssumption,
   isReadOnly,
 }: DiscountedCashFlowAssumptionProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <>

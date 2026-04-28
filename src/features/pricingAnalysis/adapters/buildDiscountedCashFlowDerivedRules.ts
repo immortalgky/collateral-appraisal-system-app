@@ -985,6 +985,72 @@ export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
   });
 }
 
+export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
+  name,
+  totalNumberOfYears,
+}: {
+  name: string;
+  totalNumberOfYears: number;
+}): DerivedFieldRule[] {
+  return [
+    {
+      targetPath: `${name}.detail.newReplacementCost`,
+      deps: [],
+      compute: ({ ctx }) => {
+        return ctx.newReplacementCost ?? 0;
+      },
+    },
+    ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+      return [
+        {
+          targetPath: `${name}.detail.increaseRates.${idx}`,
+          deps: [
+            `${name}.detail.increaseRatePct`,
+            `${name}.detail.increaseRateYrs`,
+            `${name}.detail.startIn`,
+          ],
+          compute: ({ getValues }) => {
+            const increaseRatePct = getValues(`${name}.detail.increaseRatePct`) ?? 0;
+            const increaseRateYrs = getValues(`${name}.detail.increaseRateYrs`) ?? 0;
+            const startIn = getValues(`${name}.detail.startIn`) ?? 1;
+            const startIdx = getStartIdx(startIn);
+
+            if (idx < startIdx) return 0;
+
+            const elapsed = getElapsedYears(idx, startIdx);
+            if (elapsed === 0) return 0;
+            if (elapsed % increaseRateYrs === 0) return toNumber(increaseRatePct);
+            return 0;
+          },
+        },
+        {
+          targetPath: `${name}.detail.totalMethodValues.${idx}`,
+          deps: [
+            `${name}.detail.proportionPct`,
+            `${name}.detail.increaseRates.${idx}`,
+            `${name}.detail.startIn`,
+          ],
+          compute: ({ getValues, ctx }) => {
+            const proportionPct = getValues(`${name}.detail.proportionPct`) ?? 0;
+            const increaseRate = getValues(`${name}.detail.increaseRates.${idx}`) ?? 0;
+            const prevNewReplacmentCost =
+              getValues(`${name}.detail.totalMethodValues.${idx - 1}`) ?? 0;
+            const startIn = getValues(`${name}.detail.startIn`) ?? 1;
+            const startIdx = getStartIdx(startIn);
+
+            if (idx < startIdx) return 0;
+
+            if (idx === startIdx)
+              return toDecimal((proportionPct / 100) * ctx.newReplacementCost, 2);
+
+            return toDecimal(prevNewReplacmentCost * (1 + increaseRate / 100), 2);
+          },
+        },
+      ];
+    }),
+  ];
+}
+
 export function buildMethodSpecifiedValueWithGrowthDerivedRules({
   name,
   totalNumberOfYears,

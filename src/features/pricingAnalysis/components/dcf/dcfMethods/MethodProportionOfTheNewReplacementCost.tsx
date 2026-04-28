@@ -47,17 +47,26 @@ export function MethodProportionOfTheNewReplacementCost({
                     accessor={({ value }) => (
                       <span className="text-right">{value ? value.toLocaleString() : 0}</span>
                     )}
-                  />
+                  />{' '}
                 </td>
               );
             })}
           </tr>
           <tr className="group transition-colors">
             <td className={clsx(baseStyles.rowHeader)}>Total</td>
-            {(method.detail?.proportionOfNewReplacementCosts ?? []).map((val, idx) => {
+            {(
+              method.detail?.proportionOfNewReplacementCosts ??
+              new Array<number>(totalNumberOfYears).fill(0)
+            ).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
-                  <span className="text-right">{val ? val.toLocaleString() : 0}</span>
+                  <RHFInputCell
+                    fieldName={`${name}.detail.totalMethodValues.${idx}`}
+                    inputType="display"
+                    accessor={({ value }) => (
+                      <span className="text-right">{value ? value.toLocaleString() : 0}</span>
+                    )}
+                  />
                 </td>
               );
             })}
