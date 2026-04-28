@@ -18,7 +18,7 @@ const TitleInformationHeader = ({
       <div className="flex gap-4 items-center my-4">
         <p className="font-medium m-0">{title}</p>
         {!isReadOnly && (
-          <button type="button" onClick={onCopy}>
+          <button type="button" onClick={onCopy} className="cursor-pointer">
             <Icon style="solid" name="copy" className="text-cyan-600" />
           </button>
         )}

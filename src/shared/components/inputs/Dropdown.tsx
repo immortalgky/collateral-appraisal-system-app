@@ -13,11 +13,65 @@ import { useFormReadOnly } from '../form/context';
 
 type DropdownProps = DropdownBaseProps & AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
+export type OptionFilter =
+  | { type: 'include'; values: string[] }
+  | { type: 'exclude'; values: string[] }
+  | { type: 'match'; pattern: string } // regex match
+  | { type: 'exclude-match'; pattern: string } //regex match to exclude
+  | { type: 'dynamic'; field: string; map: Record<string, string[]> } // map of watched value to allowed options.
+  | { type: 'dynamic-array'; field: string; itemField: string; map: Record<string, string[]> }; // map of watched value to allowed options for array.
+
+function applyOptionFilters(
+  options: ListBoxItem[],
+  filters: OptionFilter[],
+  watchValues: Record<string, unknown> = {},
+): ListBoxItem[] {
+  return options.filter(opt => {
+    const value = opt.value ?? '';
+    return filters.every(filter => {
+      switch (filter.type) {
+        case 'include':
+          return filter.values.includes(value);
+        case 'exclude':
+          return !filter.values.includes(value);
+        case 'match':
+          return new RegExp(filter.pattern).test(value);
+        case 'exclude-match':
+          return !new RegExp(filter.pattern).test(value);
+        case 'dynamic': {
+          const watched = watchValues[filter.field];
+          const key = String(watched ?? '');
+          const allowed = filter.map[key] ?? filter.map['*'] ?? null;
+          if (allowed === null) return true;
+          return allowed.includes(value);
+        }
+        case 'dynamic-array': {
+          const field = watchValues[filter.field];
+          const arr = Array.isArray(field) ? field : field != null ? [field] : [];
+          if (arr.length === 0) return true;
+          const allowed = new Set<string>();
+          for (const item of arr) {
+            const key = item?.[filter.itemField] != null ? String(item[filter.itemField]) : '';
+            const mapped = filter.map[key] ?? filter.map['*'] ?? null;
+            if (mapped === null) return true;
+            mapped.forEach(v => allowed.add(v));
+          }
+          return allowed.has(value);
+        }
+        default:
+          return true;
+      }
+    });
+  });
+}
+
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   placeholder?: string;
   onChange?: (value: any) => void;
   error?: string;
+  filterOptions?: OptionFilter | OptionFilter[];
+  filterWatchValues?: Record<string, unknown>;
 }
 
 interface ListBoxProps {
@@ -54,6 +108,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       error,
       required,
       disabled,
+      filterOptions,
+      filterWatchValues,
       ...props
     },
     ref,
@@ -61,14 +117,26 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');
+    const filters = useMemo<OptionFilter[]>(() => {
+      if (!filterOptions) return [];
+      return Array.isArray(filterOptions) ? filterOptions : [filterOptions];
+    }, [filterOptions]);
+
+    const allOptions = useMemo(() => {
+      return options !== undefined ? options : parameterOptions;
+    }, [options, parameterOptions]);
+
+    const filteredOptions = useMemo(() => {
+      return applyOptionFilters(allOptions, filters, filterWatchValues);
+    }, [allOptions, filters, filterWatchValues]);
+
     const dropdownOptions = useMemo(() => {
-      const base = options !== undefined ? options : parameterOptions;
-      return [{ value: null, label: placeholder, id: '' }, ...base];
-    }, [options, parameterOptions, placeholder]);
+      return [{ value: null, label: placeholder, id: '' }, ...filteredOptions];
+    }, [filteredOptions, placeholder]);
 
     const selectedOption = useMemo(
-      () => dropdownOptions.find(opt => opt.value === value) ?? null,
-      [dropdownOptions, value],
+      () => allOptions.find(opt => opt.value === value) ?? null,
+      [allOptions, value],
     );
     const selectedOnChange = (opt: ListBoxItem) => {
       onChange?.(opt.value);
@@ -133,7 +201,10 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
               )}
             </div>
           </HeadlessListboxButton>
-          <HeadlessListboxOptions anchor="bottom" className="w-(--button-width) mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 max-h-80 overflow-y-auto">
+          <HeadlessListboxOptions
+            anchor="bottom"
+            className="w-(--button-width) mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 max-h-80 overflow-y-auto"
+          >
             {children}
           </HeadlessListboxOptions>
         </div>
