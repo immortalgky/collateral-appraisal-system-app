@@ -10,14 +10,14 @@ interface InfoRowProps {
 }
 
 const InfoRow = ({ icon, label, value, muted }: InfoRowProps) => (
-  <div className="flex items-center justify-between">
+  <div className="flex items-start justify-between">
     <div className="flex items-center gap-2 text-xs text-gray-500">
       <Icon style="regular" name={icon} className="size-3.5 text-gray-400" />
       {label}
     </div>
     <span
       className={clsx(
-        'text-xs font-medium max-w-[50%] truncate text-right',
+        'text-xs font-medium w-1/2 line-clamp-5 break-words text-right',
         muted ? 'text-gray-400' : 'text-gray-700',
       )}
     >
