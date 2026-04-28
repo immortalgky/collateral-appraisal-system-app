@@ -340,7 +340,10 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   icon="flag"
                   label="Priority"
                   value={
-                    <Badge type="priority" value={(requestData as any)?.priority || 'normal'} />
+                    <Badge
+                      type="priority"
+                      value={appraisal.priority || requestData?.priority || 'normal'}
+                    />
                   }
                 />
               </div>
