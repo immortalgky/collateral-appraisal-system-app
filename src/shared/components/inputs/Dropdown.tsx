@@ -37,8 +37,6 @@ function applyOptionFilters(
           return (opt as any).isActive !== false;
         case 'exclude':
           return !filter.values.includes(value);
-        case 'exclude':
-          return !filter.values.includes(value);
         case 'match':
           return new RegExp(filter.pattern).test(value);
         case 'exclude-match':
@@ -75,6 +73,8 @@ interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
   onChange?: (value: any) => void;
   error?: string;
+  filterOptions?: OptionFilter | OptionFilter[];
+  filterWatchValues?: Record<string, unknown>;
 }
 
 interface ListBoxProps {
@@ -112,6 +112,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       error,
       required,
       disabled,
+      filterOptions,
+      filterWatchValues,
       ...props
     },
     ref,
@@ -119,14 +121,26 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');
+    const filters = useMemo<OptionFilter[]>(() => {
+      if (!filterOptions) return [];
+      return Array.isArray(filterOptions) ? filterOptions : [filterOptions];
+    }, [filterOptions]);
+
+    const allOptions = useMemo(() => {
+      return options !== undefined ? options : parameterOptions;
+    }, [options, parameterOptions]);
+
+    const filteredOptions = useMemo(() => {
+      return applyOptionFilters(allOptions, filters, filterWatchValues);
+    }, [allOptions, filters, filterWatchValues]);
+
     const dropdownOptions = useMemo(() => {
-      const base = options !== undefined ? options : parameterOptions;
-      return [{ value: null, label: placeholder, id: '' }, ...base];
-    }, [options, parameterOptions, placeholder]);
+      return [{ value: null, label: placeholder, id: '' }, ...filteredOptions];
+    }, [filteredOptions, placeholder]);
 
     const selectedOption = useMemo(
-      () => dropdownOptions.find(opt => opt.value === value) ?? null,
-      [dropdownOptions, value],
+      () => allOptions.find(opt => opt.value === value) ?? null,
+      [allOptions, value],
     );
     const selectedOnChange = (opt: ListBoxItem) => {
       onChange?.(opt.value);

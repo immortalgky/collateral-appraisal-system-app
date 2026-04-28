@@ -1,4 +1,5 @@
 import type { FieldArrayField, FormField } from '@/shared/components/form';
+import { mapCollateral } from '../data/mapCollateral';
 
 // =============================================================================
 // Utility
@@ -351,6 +352,12 @@ export const titleInfoFields: FormField[] = [
     group: 'PropertyType',
     wrapperClassName: 'col-span-3',
     required: true,
+    filterOptions: {
+      type: 'dynamic-array',
+      field: 'properties',
+      itemField: 'propertyType',
+      map: mapCollateral,
+    },
   },
   {
     type: 'boolean-toggle',

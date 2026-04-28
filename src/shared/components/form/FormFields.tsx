@@ -218,6 +218,10 @@ function FieldRenderer({
   const { isVisible, isDisabled, isRequired } = useFieldState({ field, namePrefix, index });
   const { setValue, getValues } = useFormContext();
 
+  const filterWatchValues = useFilterWatchValues(
+    field.type === 'dropdown' ? (field as any).filterOptions : undefined,
+  );
+
   // Build a full field name with prefix and index
   let name = field.name;
   if (index !== undefined) {
@@ -381,7 +385,13 @@ function FieldRenderer({
           disabled: isDisabled,
         };
         return (
-          <Dropdown {...fieldProps} {...passedField} {...dropdownProps} error={error?.message} />
+          <Dropdown
+            {...fieldProps}
+            {...passedField}
+            {...dropdownProps}
+            error={error?.message}
+            filterWatchValues={filterWatchValues}
+          />
         );
       }
 
