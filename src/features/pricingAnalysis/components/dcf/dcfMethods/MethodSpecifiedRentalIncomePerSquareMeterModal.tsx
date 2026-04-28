@@ -4,7 +4,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDe
 import { useMemo } from 'react';
 import { useFieldArray, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toNumber } from '../../../domain/calculation';
+import { toDecimal, toNumber } from '../../../domain/calculation';
 
 interface MethodSpecifiedRentalIncomePerSquareMeterModalProps {
   name: string;
@@ -112,7 +112,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           const sumTotalRentalIncomePerMonth =
             getValues(`${name}.sumTotalRentalIncomePerMonth`) ?? 0;
           const sumSaleableArea = getValues(`${name}.sumSaleableArea`) ?? 0;
-          return toNumber(sumTotalRentalIncomePerMonth / sumSaleableArea);
+          return toDecimal(sumTotalRentalIncomePerMonth / sumSaleableArea, 2);
         },
       },
     ];

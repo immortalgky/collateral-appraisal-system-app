@@ -1,4 +1,4 @@
-import { toNumber } from '../domain/calculation';
+import { toDecimal, toNumber } from '../domain/calculation';
 import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
 import type { DerivedFieldRule } from './useDerivedFieldArray';
 
@@ -71,7 +71,7 @@ export function buildMethodPositionBasedSalaryCalculationDerviedRules({
           );
           const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-          return toNumber(prevTotalSalaryCost * (1 + increaseRate / 100));
+          return toDecimal(prevTotalSalaryCost * (1 + increaseRate / 100), 2);
         },
       },
     ];
@@ -101,7 +101,7 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
 
           const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
           const sumSaleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
-          return toNumber(sumSaleableArea * totalNumberOfDayInYear);
+          return toDecimal(sumSaleableArea * totalNumberOfDayInYear, 2);
         },
       },
       {
@@ -151,7 +151,7 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
 
           const saleableArea = getValues(`${name}.detail.saleableArea.${idx}`) ?? 0;
           const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
-          return toNumber(saleableArea * (occupancyRate / 100));
+          return toDecimal(saleableArea * (occupancyRate / 100), 2);
         },
       },
       {
@@ -191,7 +191,7 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
 
           const prevAvgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx - 1}`);
           const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`);
-          return toNumber(prevAvgDailyRate * (1 + roomRateIncrease / 100));
+          return toDecimal(prevAvgDailyRate * (1 + roomRateIncrease / 100), 2);
         },
       },
       {
@@ -209,7 +209,7 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
             `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
           );
           const avgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx}`);
-          return toNumber(totalSaleableAreaDeductByOccRate * avgDailyRate);
+          return toDecimal(totalSaleableAreaDeductByOccRate * avgDailyRate, 2);
         },
       },
       {
@@ -219,8 +219,7 @@ export function buildMethodSpecifiedRoomIncomePerDayDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          const roomIncome = getValues(`${name}.detail.roomIncome.${idx}`);
-          return toNumber(roomIncome);
+          return toDecimal(getValues(`${name}.detail.roomIncome.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -249,7 +248,7 @@ export function buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules({
 
           const totalNumberOfDayInYear = getValues('totalNumberOfDayInYear') ?? 0;
           const sumSaleableArea = getValues(`${name}.detail.totalSaleableArea`) ?? 0;
-          return toNumber(sumSaleableArea * totalNumberOfDayInYear);
+          return toDecimal(sumSaleableArea * totalNumberOfDayInYear, 2);
         },
       },
       {
@@ -299,7 +298,7 @@ export function buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules({
 
           const saleableArea = getValues(`${name}.detail.saleableArea.${idx}`) ?? 0;
           const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
-          return toNumber(saleableArea * (occupancyRate / 100));
+          return toDecimal(saleableArea * (occupancyRate / 100), 2);
         },
       },
       {
@@ -339,7 +338,7 @@ export function buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules({
 
           const prevAvgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx - 1}`);
           const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`);
-          return toNumber(prevAvgDailyRate * (1 + roomRateIncrease / 100));
+          return toDecimal(prevAvgDailyRate * (1 + roomRateIncrease / 100), 2);
         },
       },
       {
@@ -357,7 +356,7 @@ export function buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules({
             `${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`,
           );
           const avgDailyRate = getValues(`${name}.detail.avgDailyRate.${idx}`);
-          return toNumber(totalSaleableAreaDeductByOccRate * avgDailyRate);
+          return toDecimal(totalSaleableAreaDeductByOccRate * avgDailyRate, 2);
         },
       },
       {
@@ -367,8 +366,7 @@ export function buildSpecifiedRoomIncomeBySeasonalRatesDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          const roomIncome = getValues(`${name}.detail.roomIncome.${idx}`);
-          return toNumber(roomIncome);
+          return toDecimal(getValues(`${name}.detail.roomIncome.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -421,10 +419,10 @@ export function buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules({
           const firstYearAmt = getValues(`${name}.detail.firstYearAmt`) ?? 0;
           if (idx === startIdx) return firstYearAmt;
 
-          const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`);
+          const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`) ?? 0;
           const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
-          return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
+          return toDecimal(prevRoomIncome * (1 + roomRateIncrease / 100), 2);
         },
       },
       {
@@ -434,7 +432,7 @@ export function buildMethodSpecifiedRoomIncomeWithGrowthDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+          return toDecimal(getValues(`${name}.detail.roomIncome.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -524,7 +522,7 @@ export function buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRu
           );
           const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
-          return toNumber(prevAdjutedValue * (1 + roomRateIncrease / 100));
+          return toDecimal(prevAdjutedValue * (1 + roomRateIncrease / 100), 2);
         },
       },
       {
@@ -542,7 +540,7 @@ export function buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRu
             getValues(`${name}.detail.roomIncomeAdjustedValuedByGrowthRates.${idx}`) ?? 0;
           const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
 
-          return toNumber((adjRoomIncome * occupancyRate) / 100);
+          return toDecimal((adjRoomIncome * occupancyRate) / 100, 2);
         },
       },
       {
@@ -552,7 +550,7 @@ export function buildMethodSpecifiedRoomIncomeWithGrowthByOccupancyRateDerivedRu
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+          return toDecimal(getValues(`${name}.detail.roomIncome.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -608,7 +606,7 @@ export function buildMethodSpecifiedRentalIncomePerMonthDerivedRules({
           const prevRoomIncome = getValues(`${name}.detail.roomIncome.${idx - 1}`) ?? 0;
           const increaseRate = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
-          return toNumber(prevRoomIncome * (1 + increaseRate / 100));
+          return toDecimal(prevRoomIncome * (1 + increaseRate / 100), 2);
         },
       },
       {
@@ -618,7 +616,7 @@ export function buildMethodSpecifiedRentalIncomePerMonthDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          return getValues(`${name}.detail.roomIncome.${idx}`) ?? 0;
+          return toDecimal(getValues(`${name}.detail.roomIncome.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -675,7 +673,7 @@ export function buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules({
 
           const saleableArea = getValues(`${name}.detail.sumSaleableArea`) ?? 0;
           const occupancyRate = getValues(`${name}.detail.occupancyRate.${idx}`) ?? 0;
-          return toNumber(saleableArea * (occupancyRate / 100));
+          return toDecimal(saleableArea * (occupancyRate / 100), 2);
         },
       },
       {
@@ -718,7 +716,7 @@ export function buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules({
           const prevAvgRentalRate = getValues(`${name}.detail.avgRentalRate.${idx - 1}`) ?? 0;
           const increaseRate = getValues(`${name}.detail.rentalRateIncrease.${idx}`) ?? 0;
 
-          return toNumber(prevAvgRentalRate * (1 + increaseRate / 100));
+          return toDecimal(prevAvgRentalRate * (1 + increaseRate / 100), 2);
         },
       },
       {
@@ -736,7 +734,7 @@ export function buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules({
           const totalSaleableAreaDeductByOccRate =
             getValues(`${name}.detail.totalSaleableAreaDeductByOccRate.${idx}`) ?? 0;
 
-          return toNumber(avgRentalRate * totalSaleableAreaDeductByOccRate * 12);
+          return toDecimal(avgRentalRate * totalSaleableAreaDeductByOccRate * 12, 2);
         },
       },
       {
@@ -746,7 +744,7 @@ export function buildMethodSpecifiedRentalIncomePerSquareMeterDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          return getValues(`${name}.detail.totalRentalIncome.${idx}`) ?? 0;
+          return toDecimal(getValues(`${name}.detail.totalRentalIncome.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -802,7 +800,7 @@ export function buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules({
           const prevRoomIncome = getValues(`${name}.detail.roomExpense.${idx - 1}`);
           const roomRateIncrease = getValues(`${name}.detail.roomRateIncrease.${idx}`) ?? 0;
 
-          return toNumber(prevRoomIncome * (1 + roomRateIncrease / 100));
+          return toDecimal(prevRoomIncome * (1 + roomRateIncrease / 100), 2);
         },
       },
       {
@@ -812,7 +810,7 @@ export function buildMethodRoomCostBasedOnExpensesPerRoomPerDayDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          return getValues(`${name}.detail.roomExpense.${idx}`) ?? 0;
+          return toDecimal(getValues(`${name}.detail.roomExpense.${idx}`) ?? 0, 2);
         },
       },
     ];
@@ -869,7 +867,7 @@ export function buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedR
             getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx - 1}`) ?? 0;
           const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-          return toNumber(prevTotalFoodAndBeveragePerRoomPerDay * (1 + increaseRate / 100));
+          return toDecimal(prevTotalFoodAndBeveragePerRoomPerDay * (1 + increaseRate / 100), 2);
         },
       },
       {
@@ -890,7 +888,10 @@ export function buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedR
                 a.method?.methodType === '06',
             )?.[0]?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
 
-          return toNumber(totalFoodAndBeveragePerRoomPerDay) * toNumber(totalNumberOfSaleableArea);
+          return toDecimal(
+            toNumber(totalFoodAndBeveragePerRoomPerDay) * toNumber(totalNumberOfSaleableArea),
+            2,
+          );
         },
       },
     ];
@@ -947,7 +948,7 @@ export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
             getValues(`${name}.detail.energyCostIndexIncrease.${idx - 1}`) ?? 0;
           const increaseRate = getValues(`${name}.detail.increaseRate.${idx}`) ?? 0;
 
-          return toNumber(prevEnergyCostIndexIncrease * (1 + increaseRate / 100));
+          return toDecimal(prevEnergyCostIndexIncrease * (1 + increaseRate / 100), 2);
         },
       },
       {
@@ -967,7 +968,7 @@ export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
                 a.method?.methodType === '06',
             )?.[0]?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
 
-          return toNumber(totalEnegyCost) * toNumber(totalNumberOfSaleableArea) * 12;
+          return toDecimal(toNumber(totalEnegyCost) * toNumber(totalNumberOfSaleableArea) * 12, 2);
         },
       },
       {
@@ -977,7 +978,7 @@ export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
           const startIn = getValues(`${name}.detail.startIn`) ?? 1;
           if (idx < getStartIdx(startIn)) return 0;
 
-          return getValues(`${name}.detail.totalEnegyCost.${idx}`) ?? 0;
+          return toDecimal(getValues(`${name}.detail.totalEnegyCost.${idx}`) ?? 0, 2);
         },
       },
     ];
