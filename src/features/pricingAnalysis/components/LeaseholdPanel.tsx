@@ -2,7 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch, useController, useFieldArray } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
-import { LeaseholdFormSchema, leaseholdFormDefaults, type LeaseholdFormType } from '../schemas/leaseholdForm';
+import {
+  LeaseholdFormSchema,
+  leaseholdFormDefaults,
+  type LeaseholdFormType,
+} from '../schemas/leaseholdForm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/shared/components';
 import { NumberInput, Toggle } from '@/shared/components/inputs';
@@ -21,7 +25,13 @@ import { RemarkSection } from './RemarkSection';
 import { LeaseholdPartialUsageSection } from './LeaseholdPartialUsageSection';
 import { KpiSummaryStrip, type KpiCard } from './KpiSummaryStrip';
 import { RHFInputCell } from './table/RHFInputCell';
-import { generateLeaseholdTable, computeAppraisalSchedule, calculatePartialUsage, type LeaseholdTableResult } from '../domain/calculateLeasehold';
+import {
+  generateLeaseholdTable,
+  computeAppraisalSchedule,
+  calculatePartialUsage,
+  type LeaseholdTableResult,
+  calculateLeaseLandAreaUsage,
+} from '../domain/calculateLeasehold';
 import type { SaveLeaseholdAnalysisRequest } from '../types/leasehold';
 import { roundToThousand } from '../domain/calculation';
 import { useGetRentalSchedule, useGetLeaseAgreement } from '@/features/appraisal/api/property';
@@ -126,6 +136,18 @@ export function LeaseholdPanel({
     watch,
   } = methods;
 
+  // Rental land area controls
+  const raiCtrl = useController({ control, name: 'partialRai' });
+  const nganCtrl = useController({ control, name: 'partialNgan' });
+  const waCtrl = useController({ control, name: 'partialWa' });
+  const totalLeaseLandArea = useMemo(() => {
+    return calculateLeaseLandAreaUsage({
+      rai: raiCtrl.field.value ?? 0,
+      ngan: nganCtrl.field.value ?? 0,
+      wa: waCtrl.field.value ?? 0,
+    });
+  }, [raiCtrl.field.value, nganCtrl.field.value, waCtrl.field.value]);
+
   // Initialize form once when data loads
   const isInitialized = useRef(false);
   useEffect(() => {
@@ -137,7 +159,7 @@ export function LeaseholdPanel({
       if (savedData?.analysis?.calculationDetails?.length) {
         const details = savedData.analysis.calculationDetails;
         const result: LeaseholdTableResult = {
-          rows: details.map((d) => ({
+          rows: details.map(d => ({
             year: d.year,
             landValue: d.landValue,
             landGrowthPercent: d.landGrowthPercent,
@@ -163,7 +185,6 @@ export function LeaseholdPanel({
       if (savedData?.analysis?.isPartialUsage) {
         setEstimateNetPrice(savedData.analysis.estimateNetPrice ?? null);
       }
-
     }
   }, [savedData]);
 
@@ -191,96 +212,104 @@ export function LeaseholdPanel({
   const getValuesRef = useRef(getValues);
   getValuesRef.current = getValues;
 
-  const handleGenerate = useCallback((overrideValues?: LeaseholdFormType) => {
-    const data = overrideValues ?? getValuesRef.current();
+  const handleGenerate = useCallback(
+    (overrideValues?: LeaseholdFormType) => {
+      const data = overrideValues ?? getValuesRef.current();
 
-    // Compute appraisal schedule to get years and rental income per period
-    const appraisalDateStr = appointment?.appointmentDateTime;
-    const contractRows = rentalScheduleData?.rows ?? [];
-    const { rows: appraisalRows } = appraisalDateStr
-      ? computeAppraisalSchedule(contractRows, appraisalDateStr)
-      : { rows: [] };
+      // Compute appraisal schedule to get years and rental income per period
+      const appraisalDateStr = appointment?.appointmentDateTime;
+      const contractRows = rentalScheduleData?.rows ?? [];
+      const { rows: appraisalRows } = appraisalDateStr
+        ? computeAppraisalSchedule(contractRows, appraisalDateStr)
+        : { rows: [] };
 
-    // Don't overwrite existing table if data isn't ready yet
-    if (appraisalRows.length === 0) return;
+      // Don't overwrite existing table if data isn't ready yet
+      if (appraisalRows.length === 0) return;
 
-    // Use appraisal schedule years and rental amounts
-    const years = appraisalRows.map((r) => r.year);
-    const rentalIncomePerPeriod = appraisalRows.map((r) => r.totalAmount);
+      // Use appraisal schedule years and rental amounts
+      const years = appraisalRows.map(r => r.year);
+      const rentalIncomePerPeriod = appraisalRows.map(r => r.totalAmount);
 
-    // Land base value = pricePerSqWa × totalLandArea
-    const baseLandValue = (data.landValuePerSqWa ?? 0) * (propertyData?.totalLandAreaInSqWa ?? 0);
+      // Land base value = pricePerSqWa × totalLandArea
+      const baseLandValue = (data.landValuePerSqWa ?? 0) * (totalLeaseLandArea ?? 0);
 
-    const result = generateLeaseholdTable({
-      years,
-      landValueConfig: {
-        baseValue: baseLandValue,
-        growthType: data.landGrowthRateType ?? 'Frequency',
-        growthRatePercent: data.landGrowthRatePercent ?? 0,
-        intervalYears: data.landGrowthIntervalYears ?? 1,
-        periods: data.landGrowthPeriods ?? [],
-      },
-      initialBuildingValue: propertyData?.totalBuildingPriceBeforeDepreciation ?? (data.initialBuildingValue ?? 0),
-      constructionCostIndex: data.constructionCostIndex ?? 0,
-      depreciationRate: data.depreciationRate ?? 0,
-      depreciationIntervalYears: data.depreciationIntervalYears ?? 1,
-      buildingCalcStartYear: data.buildingCalcStartYear ?? 0,
-      discountRate: data.discountRate ?? 0,
-      rentalIncomePerPeriod,
-    });
+      const result = generateLeaseholdTable({
+        years,
+        landValueConfig: {
+          baseValue: baseLandValue,
+          growthType: data.landGrowthRateType ?? 'Frequency',
+          growthRatePercent: data.landGrowthRatePercent ?? 0,
+          intervalYears: data.landGrowthIntervalYears ?? 1,
+          periods: data.landGrowthPeriods ?? [],
+        },
+        initialBuildingValue:
+          propertyData?.totalBuildingPriceBeforeDepreciation ?? data.initialBuildingValue ?? 0,
+        constructionCostIndex: data.constructionCostIndex ?? 0,
+        depreciationRate: data.depreciationRate ?? 0,
+        depreciationIntervalYears: data.depreciationIntervalYears ?? 1,
+        buildingCalcStartYear: data.buildingCalcStartYear ?? 0,
+        discountRate: data.discountRate ?? 0,
+        rentalIncomePerPeriod,
+      });
 
-    tableResultRef.current = result;
-    setTableResult(result);
+      tableResultRef.current = result;
+      setTableResult(result);
 
-    // Auto-update estimate price with new computed value
-    const gv = getValuesRef.current;
-    const currentPartial = gv('isPartialUsage')
-      ? calculatePartialUsage({
-          finalValue: result.finalValueRounded,
-          rai: (gv('partialRai') as number) ?? 0,
-          ngan: (gv('partialNgan') as number) ?? 0,
-          wa: (gv('partialWa') as number) ?? 0,
-          pricePerSqWa: (gv('pricePerSqWa') as number) ?? 0,
-        })
-      : null;
-    const newEstimate = currentPartial?.estimatePriceRounded ?? result.finalValueRounded;
+      // Auto-update estimate price with new computed value
+      const gv = getValuesRef.current;
+      const currentPartial = gv('isPartialUsage')
+        ? calculatePartialUsage({
+            finalValue: result.finalValueRounded,
+            rai: (gv('partialRai') as number) ?? 0,
+            ngan: (gv('partialNgan') as number) ?? 0,
+            wa: (gv('partialWa') as number) ?? 0,
+            pricePerSqWa: (gv('pricePerSqWa') as number) ?? 0,
+          })
+        : null;
+      const newEstimate = currentPartial?.estimatePriceRounded ?? result.finalValueRounded;
 
-    setValue('estimatePriceRounded', newEstimate);
-  }, [appointment, rentalScheduleData, propertyData, setValue]);
+      setValue('estimatePriceRounded', newEstimate);
+    },
+    [appointment, rentalScheduleData, propertyData, setValue, totalLeaseLandArea],
+  );
 
   // Sensitivity: recalculate final value with a different discount rate (C3 fix: no getValues in deps)
-  const calcSensitivity = useCallback((rate: number): number | null => {
-    const data = getValuesRef.current();
-    const appraisalDateStr = appointment?.appointmentDateTime;
-    const contractRows = rentalScheduleData?.rows ?? [];
-    const { rows: appraisalRows } = appraisalDateStr
-      ? computeAppraisalSchedule(contractRows, appraisalDateStr)
-      : { rows: [] };
-    if (appraisalRows.length === 0) return null;
+  const calcSensitivity = useCallback(
+    (rate: number): number | null => {
+      const data = getValuesRef.current();
+      const appraisalDateStr = appointment?.appointmentDateTime;
+      const contractRows = rentalScheduleData?.rows ?? [];
+      const { rows: appraisalRows } = appraisalDateStr
+        ? computeAppraisalSchedule(contractRows, appraisalDateStr)
+        : { rows: [] };
+      if (appraisalRows.length === 0) return null;
 
-    const years = appraisalRows.map((r) => r.year);
-    const rentalIncomePerPeriod = appraisalRows.map((r) => r.totalAmount);
-    const baseLandValue = (data.landValuePerSqWa ?? 0) * (propertyData?.totalLandAreaInSqWa ?? 0);
+      const years = appraisalRows.map(r => r.year);
+      const rentalIncomePerPeriod = appraisalRows.map(r => r.totalAmount);
+      const baseLandValue = (data.landValuePerSqWa ?? 0) * (totalLeaseLandArea ?? 0);
 
-    const result = generateLeaseholdTable({
-      years,
-      landValueConfig: {
-        baseValue: baseLandValue,
-        growthType: data.landGrowthRateType ?? 'Frequency',
-        growthRatePercent: data.landGrowthRatePercent ?? 0,
-        intervalYears: data.landGrowthIntervalYears ?? 1,
-        periods: data.landGrowthPeriods ?? [],
-      },
-      initialBuildingValue: propertyData?.totalBuildingPriceBeforeDepreciation ?? (data.initialBuildingValue ?? 0),
-      constructionCostIndex: data.constructionCostIndex ?? 0,
-      depreciationRate: data.depreciationRate ?? 0,
-      depreciationIntervalYears: data.depreciationIntervalYears ?? 1,
-      buildingCalcStartYear: data.buildingCalcStartYear ?? 0,
-      discountRate: rate,
-      rentalIncomePerPeriod,
-    });
-    return result.finalValueRounded;
-  }, [appointment, rentalScheduleData, propertyData]);
+      const result = generateLeaseholdTable({
+        years,
+        landValueConfig: {
+          baseValue: baseLandValue,
+          growthType: data.landGrowthRateType ?? 'Frequency',
+          growthRatePercent: data.landGrowthRatePercent ?? 0,
+          intervalYears: data.landGrowthIntervalYears ?? 1,
+          periods: data.landGrowthPeriods ?? [],
+        },
+        initialBuildingValue:
+          propertyData?.totalBuildingPriceBeforeDepreciation ?? data.initialBuildingValue ?? 0,
+        constructionCostIndex: data.constructionCostIndex ?? 0,
+        depreciationRate: data.depreciationRate ?? 0,
+        depreciationIntervalYears: data.depreciationIntervalYears ?? 1,
+        buildingCalcStartYear: data.buildingCalcStartYear ?? 0,
+        discountRate: rate,
+        rentalIncomePerPeriod,
+      });
+      return result.finalValueRounded;
+    },
+    [appointment, rentalScheduleData, propertyData],
+  );
 
   const handleOnSubmit = async () => {
     if (!pricingAnalysisId || !methodId) return;
@@ -292,12 +321,13 @@ export function LeaseholdPanel({
       landGrowthRatePercent: data.landGrowthRatePercent,
       landGrowthIntervalYears: data.landGrowthIntervalYears,
       constructionCostIndex: data.constructionCostIndex,
-      initialBuildingValue: propertyData?.totalBuildingPriceBeforeDepreciation ?? data.initialBuildingValue,
+      initialBuildingValue:
+        propertyData?.totalBuildingPriceBeforeDepreciation ?? data.initialBuildingValue,
       depreciationRate: data.depreciationRate,
       depreciationIntervalYears: data.depreciationIntervalYears,
       buildingCalcStartYear: data.buildingCalcStartYear,
       discountRate: data.discountRate,
-      landGrowthPeriods: (data.landGrowthPeriods ?? []).map((p) => ({
+      landGrowthPeriods: (data.landGrowthPeriods ?? []).map(p => ({
         fromYear: p.fromYear,
         toYear: p.toYear,
         growthRatePercent: p.growthRatePercent,
@@ -354,10 +384,17 @@ export function LeaseholdPanel({
   // Inline land value controls
   const landGrowthRateType = useWatch({ control, name: 'landGrowthRateType' });
   const { field: landValueField } = useController({ control, name: 'landValuePerSqWa' });
-  const { field: landGrowthPercentField } = useController({ control, name: 'landGrowthRatePercent' });
+  const { field: landGrowthPercentField } = useController({
+    control,
+    name: 'landGrowthRatePercent',
+  });
   const { field: landIntervalField } = useController({ control, name: 'landGrowthIntervalYears' });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { fields: landPeriodFields, append: appendLandPeriod, remove: removeLandPeriod } = useFieldArray({
+  const {
+    fields: landPeriodFields,
+    append: appendLandPeriod,
+    remove: removeLandPeriod,
+  } = useFieldArray({
     control: control as any,
     name: 'landGrowthPeriods',
   });
@@ -365,16 +402,32 @@ export function LeaseholdPanel({
   // Auto-recalculate when inline table inputs change (C2 fix: stable deps via ref comparison)
   const watchedLandInputs = useWatch({
     control,
-    name: ['landValuePerSqWa', 'landGrowthRateType', 'landGrowthRatePercent', 'landGrowthIntervalYears'],
+    name: [
+      'landValuePerSqWa',
+      'landGrowthRateType',
+      'landGrowthRatePercent',
+      'landGrowthIntervalYears',
+    ],
   });
   const watchedLandPeriods = useWatch({ control, name: 'landGrowthPeriods' });
   const watchedTableInputs = useWatch({
     control,
-    name: ['constructionCostIndex', 'depreciationRate', 'depreciationIntervalYears', 'discountRate', 'buildingCalcStartYear'],
+    name: [
+      'constructionCostIndex',
+      'depreciationRate',
+      'depreciationIntervalYears',
+      'discountRate',
+      'buildingCalcStartYear',
+    ],
   });
   const prevWatchKey = useRef<string | null>(null);
   useEffect(() => {
-    const key = watchedTableInputs.join(',') + '|' + watchedLandInputs.join(',') + '|' + JSON.stringify(watchedLandPeriods);
+    const key =
+      watchedTableInputs.join(',') +
+      '|' +
+      watchedLandInputs.join(',') +
+      '|' +
+      JSON.stringify(watchedLandPeriods);
     // Seed the key on first run so we don't fire on mount/cache reload
     if (prevWatchKey.current === null) {
       prevWatchKey.current = key;
@@ -384,7 +437,14 @@ export function LeaseholdPanel({
     if (key === prevWatchKey.current) return;
     prevWatchKey.current = key;
     if (tableResult) handleGenerate();
-  }, [isDirty, watchedTableInputs, watchedLandInputs, watchedLandPeriods, tableResult, handleGenerate]);
+  }, [
+    isDirty,
+    watchedTableInputs,
+    watchedLandInputs,
+    watchedLandPeriods,
+    tableResult,
+    handleGenerate,
+  ]);
 
   const finalValueRounded = tableResult?.finalValueRounded ?? 0;
 
@@ -398,7 +458,7 @@ export function LeaseholdPanel({
   return (
     <FormProvider methods={methods} schema={LeaseholdFormSchema}>
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
@@ -418,9 +478,13 @@ export function LeaseholdPanel({
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">Appraisal Date</div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
+                  Appraisal Date
+                </div>
                 <div className="text-sm font-medium text-gray-900">
-                  {appointment?.appointmentDateTime ? formatDateOnly(appointment.appointmentDateTime) : '-'}
+                  {appointment?.appointmentDateTime
+                    ? formatDateOnly(appointment.appointmentDateTime)
+                    : '-'}
                 </div>
               </div>
             </div>
@@ -429,7 +493,9 @@ export function LeaseholdPanel({
               <div>
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide">Lease Start</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {leaseAgreement?.leaseStartDate ? formatDateOnly(leaseAgreement.leaseStartDate) : '-'}
+                  {leaseAgreement?.leaseStartDate
+                    ? formatDateOnly(leaseAgreement.leaseStartDate)
+                    : '-'}
                 </div>
               </div>
             </div>
@@ -463,15 +529,49 @@ export function LeaseholdPanel({
 
         {/* Land Value & Growth Config — inline (replaces modal) */}
         <div className="rounded-lg border border-gray-200 p-5 space-y-5">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-md bg-gray-50 px-4 py-3">
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">Land Area</div>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="col-span-2 rounded-md bg-gray-50 px-4 py-3">
+              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                Land Area
+              </div>
               <div className="flex items-baseline gap-1.5">
-                <Icon name="ruler-combined" className="size-3.5 text-gray-400 shrink-0 relative top-0.5" />
-                <span className="text-lg font-semibold text-gray-900">
-                  {(propertyData?.totalLandAreaInSqWa ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-xs text-gray-500">Sq. Wa</span>
+                <div className="flex items-baseline gap-1.5">
+                  <Icon
+                    name="ruler-combined"
+                    className="size-3.5 text-gray-400 shrink-0 relative top-0.5"
+                  />
+                  <span className="text-lg font-semibold text-gray-900">
+                    {(propertyData?.totalLandAreaInSqWa ?? 0).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                  <span className="text-xs text-gray-500">Sq. Wa</span>
+                </div>
+                <NumberInput
+                  // label="Rai"
+                  name="partialRai"
+                  value={raiCtrl.field.value}
+                  onChange={e => setValue('partialRai', e.target.value ?? 0)}
+                  decimalPlaces={0}
+                />
+                <span className="text-xs text-gray-500">Rai</span>
+                <NumberInput
+                  // label="Ngan"
+                  name="partialNgan"
+                  value={nganCtrl.field.value}
+                  onChange={e => setValue('partialNgan', e.target.value ?? 0)}
+                  decimalPlaces={0}
+                />
+                <span className="text-xs text-gray-500">Ngan</span>
+                <NumberInput
+                  // label="Sq.Wa"
+                  name="partialWa"
+                  value={waCtrl.field.value}
+                  onChange={e => setValue('partialWa', e.target.value ?? 0)}
+                  decimalPlaces={2}
+                />
+                <span className="text-xs text-gray-500">Sq.Wa</span>
               </div>
             </div>
             <div className="rounded-md bg-gray-50 px-4 py-3">
@@ -484,7 +584,7 @@ export function LeaseholdPanel({
                     name={landValueField.name}
                     ref={landValueField.ref}
                     value={landValueField.value}
-                    onChange={(e) => landValueField.onChange(e.target.value)}
+                    onChange={e => landValueField.onChange(e.target.value)}
                     onBlur={landValueField.onBlur}
                     decimalPlaces={2}
                   />
@@ -493,10 +593,15 @@ export function LeaseholdPanel({
               </div>
             </div>
             <div className="rounded-md bg-primary/5 border border-primary/10 px-4 py-3">
-              <div className="text-[11px] text-primary/60 uppercase tracking-wide mb-1">Total Land Value</div>
+              <div className="text-[11px] text-primary/60 uppercase tracking-wide mb-1">
+                Total Land Value
+              </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-semibold text-primary">
-                  {((landValueField.value ?? 0) * (propertyData?.totalLandAreaInSqWa ?? 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {((landValueField.value ?? 0) * (totalLeaseLandArea ?? 0)).toLocaleString(
+                    'en-US',
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                  )}
                 </span>
                 <span className="text-xs text-primary/60">Baht</span>
               </div>
@@ -511,7 +616,11 @@ export function LeaseholdPanel({
               label="Land Value Growth Rate"
               options={['Frequency', 'Period']}
               checked={landGrowthRateType === 'Period'}
-              onChange={(checked) => setValue('landGrowthRateType', checked ? 'Period' : 'Frequency', { shouldDirty: true })}
+              onChange={checked =>
+                setValue('landGrowthRateType', checked ? 'Period' : 'Frequency', {
+                  shouldDirty: true,
+                })
+              }
               size="sm"
             />
 
@@ -523,7 +632,7 @@ export function LeaseholdPanel({
                     name={landGrowthPercentField.name}
                     ref={landGrowthPercentField.ref}
                     value={landGrowthPercentField.value}
-                    onChange={(e) => landGrowthPercentField.onChange(e.target.value)}
+                    onChange={e => landGrowthPercentField.onChange(e.target.value)}
                     onBlur={landGrowthPercentField.onBlur}
                     decimalPlaces={2}
                     rightIcon={<span className="text-xs text-gray-400">%</span>}
@@ -536,7 +645,7 @@ export function LeaseholdPanel({
                     name={landIntervalField.name}
                     ref={landIntervalField.ref}
                     value={landIntervalField.value}
-                    onChange={(e) => landIntervalField.onChange(e.target.value)}
+                    onChange={e => landIntervalField.onChange(e.target.value)}
                     onBlur={landIntervalField.onBlur}
                     decimalPlaces={0}
                     rightIcon={<span className="text-xs text-gray-400">Year</span>}
@@ -555,17 +664,33 @@ export function LeaseholdPanel({
                   <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-end">
                     <NumberInput
                       value={watch(`landGrowthPeriods.${index}.fromYear` as any) as number}
-                      onChange={(e) => setValue(`landGrowthPeriods.${index}.fromYear` as any, e.target.value ?? 0, { shouldDirty: true })}
+                      onChange={e =>
+                        setValue(
+                          `landGrowthPeriods.${index}.fromYear` as any,
+                          e.target.value ?? 0,
+                          { shouldDirty: true },
+                        )
+                      }
                       decimalPlaces={0}
                     />
                     <NumberInput
                       value={watch(`landGrowthPeriods.${index}.toYear` as any) as number}
-                      onChange={(e) => setValue(`landGrowthPeriods.${index}.toYear` as any, e.target.value ?? 0, { shouldDirty: true })}
+                      onChange={e =>
+                        setValue(`landGrowthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
+                          shouldDirty: true,
+                        })
+                      }
                       decimalPlaces={0}
                     />
                     <NumberInput
                       value={watch(`landGrowthPeriods.${index}.growthRatePercent` as any) as number}
-                      onChange={(e) => setValue(`landGrowthPeriods.${index}.growthRatePercent` as any, e.target.value ?? 0, { shouldDirty: true })}
+                      onChange={e =>
+                        setValue(
+                          `landGrowthPeriods.${index}.growthRatePercent` as any,
+                          e.target.value ?? 0,
+                          { shouldDirty: true },
+                        )
+                      }
                       decimalPlaces={2}
                       rightIcon={<span className="text-xs text-gray-400">%</span>}
                     />
@@ -600,7 +725,11 @@ export function LeaseholdPanel({
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-20">
-                  <RHFInputCell fieldName="constructionCostIndex" inputType="number" number={{ decimalPlaces: 2 }} />
+                  <RHFInputCell
+                    fieldName="constructionCostIndex"
+                    inputType="number"
+                    number={{ decimalPlaces: 2 }}
+                  />
                 </div>
                 <span className="text-[10px] text-gray-400">%</span>
               </div>
@@ -611,7 +740,11 @@ export function LeaseholdPanel({
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-14">
-                  <RHFInputCell fieldName="buildingCalcStartYear" inputType="number" number={{ decimalPlaces: 0 }} />
+                  <RHFInputCell
+                    fieldName="buildingCalcStartYear"
+                    inputType="number"
+                    number={{ decimalPlaces: 0 }}
+                  />
                 </div>
                 <span className="text-[10px] text-gray-400">year(s)</span>
               </div>
@@ -622,11 +755,19 @@ export function LeaseholdPanel({
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-16">
-                  <RHFInputCell fieldName="depreciationRate" inputType="number" number={{ decimalPlaces: 2 }} />
+                  <RHFInputCell
+                    fieldName="depreciationRate"
+                    inputType="number"
+                    number={{ decimalPlaces: 2 }}
+                  />
                 </div>
                 <span className="text-[10px] text-gray-400">% every</span>
                 <div className="w-10">
-                  <RHFInputCell fieldName="depreciationIntervalYears" inputType="number" number={{ decimalPlaces: 0 }} />
+                  <RHFInputCell
+                    fieldName="depreciationIntervalYears"
+                    inputType="number"
+                    number={{ decimalPlaces: 0 }}
+                  />
                 </div>
                 <span className="text-[10px] text-gray-400">yr</span>
               </div>
@@ -637,7 +778,11 @@ export function LeaseholdPanel({
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-20">
-                  <RHFInputCell fieldName="discountRate" inputType="number" number={{ decimalPlaces: 2 }} />
+                  <RHFInputCell
+                    fieldName="discountRate"
+                    inputType="number"
+                    number={{ decimalPlaces: 2 }}
+                  />
                 </div>
                 <span className="text-[10px] text-gray-400">%</span>
               </div>
@@ -647,11 +792,29 @@ export function LeaseholdPanel({
         {/* KPI Summary */}
         {tableResult && (
           <KpiSummaryStrip
-            cards={[
-              { label: 'Total Income', value: tableResult.totalIncomeOverLeaseTerm, icon: 'coins', color: 'blue' },
-              { label: 'Value at Expiry', value: tableResult.valueAtLeaseExpiry, icon: 'building', color: 'gray' },
-              { label: 'Final Value', value: tableResult.finalValueRounded, icon: 'circle-check', color: 'green', primary: true },
-            ] satisfies KpiCard[]}
+            cards={
+              [
+                {
+                  label: 'Total Income',
+                  value: tableResult.totalIncomeOverLeaseTerm,
+                  icon: 'coins',
+                  color: 'blue',
+                },
+                {
+                  label: 'Value at Expiry',
+                  value: tableResult.valueAtLeaseExpiry,
+                  icon: 'building',
+                  color: 'gray',
+                },
+                {
+                  label: 'Final Value',
+                  value: tableResult.finalValueRounded,
+                  icon: 'circle-check',
+                  color: 'green',
+                  primary: true,
+                },
+              ] satisfies KpiCard[]
+            }
           />
         )}
 
@@ -688,7 +851,10 @@ export function LeaseholdPanel({
           <div className="flex items-center justify-between py-1.5">
             <span className="text-xs text-gray-600">Estimate Price (from PV)</span>
             <span className="text-xs font-medium text-gray-800 tabular-nums">
-              {finalValueRounded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {finalValueRounded.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
           </div>
           {watch('isPartialUsage') && estimateNetPrice != null && (
@@ -699,7 +865,10 @@ export function LeaseholdPanel({
                   Partial Land Price
                 </span>
                 <span className="text-xs font-medium text-gray-800 tabular-nums">
-                  {((estimateNetPrice ?? finalValueRounded) - finalValueRounded).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {((estimateNetPrice ?? finalValueRounded) - finalValueRounded).toLocaleString(
+                    'en-US',
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                  )}
                 </span>
               </div>
               <div className="flex items-center justify-between py-1.5">
@@ -708,7 +877,10 @@ export function LeaseholdPanel({
                   Appraisal Price w/ Partial Land
                 </span>
                 <span className="text-xs font-semibold text-gray-900 tabular-nums">
-                  {(estimateNetPrice ?? finalValueRounded).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {(estimateNetPrice ?? finalValueRounded).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             </>
@@ -730,7 +902,8 @@ export function LeaseholdPanel({
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} shrink-0`}
                   >
                     <Icon name={icon} style="solid" className="size-2.5" />
-                    {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}{pct}%)
+                    {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}
+                    {pct}%)
                   </span>
                 );
               })()}
@@ -739,7 +912,7 @@ export function LeaseholdPanel({
                   name={estimateField.name}
                   ref={estimateField.ref}
                   value={estimateField.value}
-                  onChange={(e) => {
+                  onChange={e => {
                     estimateField.onChange(e.target.value);
                   }}
                   onBlur={estimateField.onBlur}
@@ -780,8 +953,6 @@ export function LeaseholdPanel({
     </FormProvider>
   );
 }
-
-
 
 /** Full panel skeleton — shown while initial data loads */
 function PanelSkeleton() {
@@ -878,7 +1049,10 @@ function TableSkeleton() {
       ))}
       {/* Footer */}
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className={`h-9 flex items-center px-3 border-t border-gray-200 ${i >= 2 ? 'bg-green-50' : 'bg-gray-50'}`}>
+        <div
+          key={i}
+          className={`h-9 flex items-center px-3 border-t border-gray-200 ${i >= 2 ? 'bg-green-50' : 'bg-gray-50'}`}
+        >
           <div className="bg-gray-300 rounded h-3 w-40" />
           <div className="ml-auto bg-gray-300 rounded h-3 w-20" />
         </div>

@@ -44,10 +44,7 @@ interface LandValueGrowthConfig {
  * - Frequency mode: value grows by `growthRatePercent` every `intervalYears`.
  * - Period mode: value grows by the rate defined for the period containing `year`.
  */
-export function calculateLandValueGrowth(
-  config: LandValueGrowthConfig,
-  year: number,
-): number {
+export function calculateLandValueGrowth(config: LandValueGrowthConfig, year: number): number {
   const { baseValue, growthType, growthRatePercent, intervalYears, periods } = config;
   if (year <= 0) return round2(baseValue);
 
@@ -60,7 +57,7 @@ export function calculateLandValueGrowth(
   // Period mode: compound year by year using the rate for each year's period
   let value = baseValue;
   for (let y = 1; y <= year; y++) {
-    const period = periods.find((p) => y >= p.fromYear && y <= p.toYear);
+    const period = periods.find(p => y >= p.fromYear && y <= p.toYear);
     const rate = period ? period.growthRatePercent / 100 : 0;
     value = value * (1 + rate);
   }
@@ -127,6 +124,16 @@ interface PartialUsageInput {
   ngan: number;
   wa: number;
   pricePerSqWa: number;
+}
+
+/**
+ * Calculate total lease land area
+ *
+ * Convert Rai, Ngan, Sq.Wa to total Sq.Wa
+ */
+export function calculateLeaseLandAreaUsage(input: { rai: number; ngan: number; wa: number }) {
+  const { rai, ngan, wa } = input;
+  return round2((rai || 0) * 400 + (ngan || 0) * 100 + (wa || 0));
 }
 
 /**
@@ -226,8 +233,8 @@ export function generateLeaseholdTable(input: LeaseholdTableInput): LeaseholdTab
     }
 
     // buildingCalcStartYear is 1-based column index. e.g. 2 = start from 2nd column (i=1)
-    const showBuilding = initialBuildingValue > 0 && (i + 1) >= buildingCalcStartYear;
-    const isFirstBuildingYear = showBuilding && (i + 1) === buildingCalcStartYear;
+    const showBuilding = initialBuildingValue > 0 && i + 1 >= buildingCalcStartYear;
+    const isFirstBuildingYear = showBuilding && i + 1 === buildingCalcStartYear;
 
     // Building value:
     // 1st building year: raw initialBuildingValue
@@ -239,9 +246,12 @@ export function generateLeaseholdTable(input: LeaseholdTableInput): LeaseholdTab
         : round2(prevBuildingValue * (1 + constructionCostIndex / 100) - prevDepAmount);
 
     // Depreciation: flat depreciationRate% of building value, applied every depInterval years
-    const isDepreciationYear = showBuilding && Math.floor(year / depInterval) > Math.floor((year - 1) / depInterval);
+    const isDepreciationYear =
+      showBuilding && Math.floor(year / depInterval) > Math.floor((year - 1) / depInterval);
     const depreciationPercent = isDepreciationYear ? depreciationRate : 0;
-    const depreciationAmount = isDepreciationYear ? round2(buildingValue * depreciationRate / 100) : 0;
+    const depreciationAmount = isDepreciationYear
+      ? round2((buildingValue * depreciationRate) / 100)
+      : 0;
     const buildingAfterDepreciation = showBuilding ? round2(buildingValue - depreciationAmount) : 0;
 
     // Update running values for next iteration
@@ -275,9 +285,7 @@ export function generateLeaseholdTable(input: LeaseholdTableInput): LeaseholdTab
   );
 
   const lastRow = rows[rows.length - 1];
-  const valueAtLeaseExpiry = lastRow
-    ? round2(lastRow.totalLandAndBuilding * lastRow.pvFactor)
-    : 0;
+  const valueAtLeaseExpiry = lastRow ? round2(lastRow.totalLandAndBuilding * lastRow.pvFactor) : 0;
 
   const finalValue = round2(totalIncomeOverLeaseTerm + valueAtLeaseExpiry);
   const finalValueRounded = roundToThousands(finalValue);
