@@ -37,7 +37,6 @@ import { SensitivityStrip } from '../SensitivityStrip';
 import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
 import toast from 'react-hot-toast';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
-import { useGetAppointment } from '@/features/appraisal/api';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
