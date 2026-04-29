@@ -11,6 +11,7 @@ interface SectionExpenseProps {
   icon: string;
   color: SectionColor;
   isReadOnly?: boolean;
+  onStructuralChange?: () => void;
 }
 
 export function SectionExpense({
@@ -21,6 +22,7 @@ export function SectionExpense({
   icon,
   color,
   isReadOnly,
+  onStructuralChange,
 }: SectionExpenseProps) {
   return (
     <DynamicSection
@@ -41,6 +43,7 @@ export function SectionExpense({
             totalNumberOfYears={totalNumberOfYears}
             color={color}
             isReadOnly={isReadOnly}
+            onStructuralChange={onStructuralChange}
           />
         );
       })}

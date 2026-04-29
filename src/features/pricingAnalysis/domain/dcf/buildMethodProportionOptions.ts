@@ -12,15 +12,15 @@ export function buildMethodProportionOptions(params: {
     .flatMap(section => section.categories);
 
   return [
-    ...params.sections.map(section => ({
+    ...(params.sections ?? []).map(section => ({
       value: `section:${section.clientId}`,
       label: `Total - ${section.sectionName}`,
     })),
-    ...categories.map(category => ({
+    ...(categories ?? []).map(category => ({
       value: `category:${category.clientId}`,
       label: `Total - ${category.categoryName}`,
     })),
-    ...params.assumptions.map(item => ({
+    ...(params.assumptions ?? []).map(item => ({
       value: `assumption:${item.assumption.clientId}`,
       label: `${item.section.sectionName} - ${item.assumption.assumptionName ?? ''}`,
     })),

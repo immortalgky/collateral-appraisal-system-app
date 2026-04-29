@@ -1,6 +1,7 @@
 import {
   getPropertyTaxAmount,
   getPropertyTaxRate,
+  toDecimal,
   toFixed2,
   toNumber,
 } from '@features/pricingAnalysis/domain/calculation.ts';
@@ -8,8 +9,7 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import { ScrollableTableContainer } from '@features/pricingAnalysis/components/ScrollableTableContainer.tsx';
 import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { useMemo } from 'react';
-import { useFormContext, useWatch, type UseFormGetValues } from 'react-hook-form';
-import type { FormValues } from '@/features/appraisal/components/tables/bType';
+import { type UseFormGetValues } from 'react-hook-form';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
 
 export function MethodParameterBasedOnTierOfPropertyValueModal({
@@ -20,16 +20,18 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
 }: {
   name: string;
   properties: Record<string, unknown>[];
-  getOuterFormValues: UseFormGetValues<FormValues>;
+  getOuterFormValues: UseFormGetValues<any>;
   isReadOnly?: boolean;
 }) {
   const landGovPrice = (properties ?? [])
-    .filter(p => p.propertyType === 'L')
+    .filter(p => p.propertyType === 'L' || p.propertyType === 'LSL' || p.propertyType === 'LS')
     .flatMap((p: any) => p.titles ?? [])
     .reduce((sum, curr) => sum + toNumber(curr.governmentPrice ?? 0), 0);
 
   const buildingGovPrice = (properties ?? [])
-    .filter((p: any) => p.propertyType === 'B')
+    .filter(
+      (p: any) => p.propertyType === 'B' || p.propertyType === 'LSB' || p.propertyType === 'LS',
+    )
     .flatMap((p: any) => p.depreciationDetails ?? [])
     .filter((d: any) => d.isBuilding)
     .reduce((sum: number, d: any) => sum + toNumber(d.priceAfterDepreciation ?? 0), 0);
@@ -73,8 +75,11 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
         targetPath: `${name}.propertyTax.totalPropertyTax.${idx}`,
         deps: [`${name}.propertyTax.totalPropertyPrice.${idx}`],
         compute: ({ getValues }) => {
-          return getPropertyTaxAmount(
-            toNumber(getValues(`${name}.propertyTax.totalPropertyPrice.${idx}`)),
+          return toDecimal(
+            getPropertyTaxAmount(
+              toNumber(getValues(`${name}.propertyTax.totalPropertyPrice.${idx}`)),
+            ),
+            0,
           );
         },
       },
@@ -181,12 +186,12 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                     <tr>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
                         {t.minValue != undefined || t.minValue != null
-                          ? Number(t.minValue).toLocaleString()
+                          ? toNumber(t.minValue).toLocaleString()
                           : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
                         {t.maxValue != undefined || t.maxValue != null
-                          ? Number(t.maxValue).toLocaleString()
+                          ? toNumber(t.maxValue).toLocaleString()
                           : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
@@ -194,7 +199,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                       </td>
                       <td className="border-b border-gray-300 px-1.5 py-2 text-right">
                         {t.maxValue
-                          ? Number((t.maxValue - t.minValue) * t.taxRate).toLocaleString()
+                          ? toDecimal((t.maxValue - t.minValue) * t.taxRate, 0).toLocaleString()
                           : '-'}
                       </td>
                     </tr>

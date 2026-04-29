@@ -26,9 +26,12 @@ export function MethodProportion({
     (s: DCFSection) => s.identifier !== 'empty',
   );
 
+  // guard againt missing assumptions in case the assumptionType has been removed or changed
+  if (!assumptionType) return null;
+
   const assumptions = getDCFFilteredAssumptions(
     getValues,
-    a => assumptionType !== a.assumptionType,
+    a => Boolean(a?.assumptionType) && assumptionType !== a.assumptionType,
   );
 
   const refTargetOptions = buildMethodProportionOptions({

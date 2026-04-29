@@ -2,12 +2,20 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toNumber } from '../../../domain/calculation';
+import { toDecimal, toNumber } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 
-export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { name: string; isReadOnly?: boolean }) {
+export function MethodSpecifyRoomIncomePerDayModal({
+  name = '',
+  isReadOnly,
+  getOuterFormValues,
+}: {
+  name: string;
+  isReadOnly?: boolean;
+  getOuterFormValues: UseFormGetValues<any>;
+}) {
   const { getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
@@ -32,7 +40,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
             compute: ({ getValues }) => {
               const roomIncome = getValues(`${name}.roomDetails.${idx}.roomIncome`) ?? 0;
               const saleableArea = getValues(`${name}.roomDetails.${idx}.saleableArea`) ?? 0;
-              return toNumber(roomIncome * saleableArea);
+              return toDecimal(roomIncome * saleableArea, 2);
             },
           },
         ];
@@ -46,7 +54,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
             const currRoomIncome = curr.roomIncome ? toNumber(curr.roomIncome) : 0;
             return prev + currRoomIncome;
           }, 0);
-          return toNumber(sumRoomIncome);
+          return toDecimal(sumRoomIncome, 2);
         },
       },
       {
@@ -58,7 +66,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
             const currSaleableArea = curr.saleableArea ? toNumber(curr.saleableArea) : 0;
             return prev + currSaleableArea;
           }, 0);
-          return toNumber(sumSaleableArea);
+          return toDecimal(sumSaleableArea, 0);
         },
       },
       {
@@ -70,7 +78,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
             const currTotalRoomIncome = curr.totalRoomIncome ? toNumber(curr.totalRoomIncome) : 0;
             return prev + currTotalRoomIncome;
           }, 0);
-          return toNumber(sumTotalRoomIncome);
+          return toDecimal(sumTotalRoomIncome, 2);
         },
       },
       {
@@ -82,7 +90,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
 
           if (sumSaleableArea === 0) return 0;
 
-          return toNumber(sumTotalRoomIncome / sumSaleableArea);
+          return toDecimal(sumTotalRoomIncome / sumSaleableArea, 0);
         },
       },
     ];
@@ -247,7 +255,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
             />
           </div>
         </div>
-        <div className="flex flex-row gap-1.5">
+        <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Increase Rate</span>
           <div className={'w-44'}>
             <RHFInputCell
@@ -277,7 +285,7 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
           </div>
           <span className={'w-44'}>year(s)</span>
         </div>
-        <div className="flex flex-row gap-1.5">
+        <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Occupancy Rate - First Year</span>
           <div className={'w-44'}>
             <RHFInputCell
@@ -316,6 +324,23 @@ export function MethodSpecifyRoomIncomePerDayModal({ name = '', isReadOnly }: { 
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,
                 maxValue: 100,
+                allowNegative: false,
+              }}
+            />
+          </div>
+          <span className={''}>year(s)</span>
+        </div>
+        <div className="flex flex-row gap-1.5 items-center">
+          <span className={'w-56'}>Start In</span>
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.startIn`}
+              inputType={'number'}
+              disabled={isReadOnly}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
                 allowNegative: false,
               }}
             />

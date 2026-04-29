@@ -2,17 +2,19 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useFieldArray, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toNumber } from '../../../domain/calculation';
+import { toDecimal, toNumber } from '../../../domain/calculation';
 
 interface MethodSpecifiedRentalIncomePerSquareMeterModalProps {
   name: string;
   isReadOnly?: boolean;
+  getOuterFormValues: UseFormGetValues<any>;
 }
 export function MethodSpecifiedRentalIncomePerSquareMeterModal({
   name,
   isReadOnly,
+  getOuterFormValues,
 }: MethodSpecifiedRentalIncomePerSquareMeterModalProps) {
   const { fields, append, remove } = useFieldArray({ name: `${name}.areaDetail` });
 
@@ -56,7 +58,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
           const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumRentalPrice = areaDetail.reduce((prev, curr) => {
+          const sumRentalPrice = (areaDetail ?? []).reduce((prev, curr) => {
             const currRentalPrice = curr.rentalPrice ? toNumber(curr.rentalPrice) : 0;
             return prev + currRentalPrice;
           }, 0);
@@ -110,7 +112,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           const sumTotalRentalIncomePerMonth =
             getValues(`${name}.sumTotalRentalIncomePerMonth`) ?? 0;
           const sumSaleableArea = getValues(`${name}.sumSaleableArea`) ?? 0;
-          return toNumber(sumTotalRentalIncomePerMonth / sumSaleableArea);
+          return toDecimal(sumTotalRentalIncomePerMonth / sumSaleableArea, 2);
         },
       },
     ];
@@ -378,6 +380,23 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,
                 maxValue: 100,
+                allowNegative: false,
+              }}
+            />
+          </div>
+          <span className={''}>year(s)</span>
+        </div>
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-56'}>Start In</span>
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.startIn`}
+              inputType={'number'}
+              disabled={isReadOnly}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
                 allowNegative: false,
               }}
             />

@@ -1,15 +1,18 @@
+import type { UseFormGetValues } from 'react-hook-form';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayPropsModalProps {
   name: string;
   isReadOnly?: boolean;
+  getOuterFormValues: UseFormGetValues<any>;
 }
 export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
   name,
   isReadOnly,
+  getOuterFormValues,
 }: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayPropsModalProps) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
         <span className={'w-56'}>Food and Beverage Expenses</span>
         <div className={'w-44'}>
@@ -39,6 +42,23 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
             inputType={'number'}
             disabled={isReadOnly}
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
+          />
+        </div>
+        <span className={''}>year(s)</span>
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-56'}>Start In</span>
+        <div className={'w-44'}>
+          <RHFInputCell
+            fieldName={`${name}.startIn`}
+            inputType={'number'}
+            disabled={isReadOnly}
+            number={{
+              decimalPlaces: 0,
+              maxIntegerDigits: 3,
+              maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
+              allowNegative: false,
+            }}
           />
         </div>
         <span className={''}>year(s)</span>

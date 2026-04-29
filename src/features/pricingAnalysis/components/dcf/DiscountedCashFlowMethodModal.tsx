@@ -1,6 +1,6 @@
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { methodParams } from '../../data/dcfParameters';
 import { useGetPricingParameters } from '../../api';
@@ -8,7 +8,6 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { createDefaultMethod } from '../../domain/dcf/createEmptyMethodDetail';
-import { buildDiscountedCashFlowCategoryOptions } from '../../adapters/buildDiscountedCashFlowCategoryOptions';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
 
@@ -121,10 +120,11 @@ export function DiscountedCashFlowMethodModal({
     return assumptionTypeCatalog
       .filter(
         p =>
-          !assumptions.some(
+          (!assumptions.some(
             a => a.assumptionType === p.code && a.assumptionType !== initialData.assumptionType,
           ) &&
-          (currentSection?.sectionType === p.sectionType || p.sectionType === 'any'),
+            (currentSection?.sectionType === p.sectionType || p.sectionType === 'any')) ||
+          p.code === 'M99',
       )
       .map(a => ({ value: a.code, label: a.name }));
   }, [assumptionTypeCatalog, assumptions, currentSection?.sectionType, initialData.assumptionType]);
@@ -154,9 +154,13 @@ export function DiscountedCashFlowMethodModal({
           : (assumptionTypeCatalog.find(p => p.code === nextAssumptionType)?.name ?? null);
       setValue('assumptionName', resolvedName, { shouldDirty: true });
 
-      setValue('method.methodType', null as unknown as AssumptionEditDraft['method']['methodType'], {
-        shouldDirty: true,
-      });
+      setValue(
+        'method.methodType',
+        null as unknown as AssumptionEditDraft['method']['methodType'],
+        {
+          shouldDirty: true,
+        },
+      );
       setValue('method.detail', undefined, { shouldDirty: true });
     },
     [setValue, getValues, assumptionTypeCatalog],
@@ -179,7 +183,7 @@ export function DiscountedCashFlowMethodModal({
         >
           <div className="flex flex-col gap-2 mb-4">
             <div className="flex flex-row gap-1.5">
-              <span className="w-44">Category</span>
+              <span className="w-56">Category</span>
               <div className="w-80">
                 {/* <RHFInputCell
                   fieldName="targetCategoryClientId"
@@ -195,7 +199,7 @@ export function DiscountedCashFlowMethodModal({
             </div>
 
             <div className="flex flex-row items-center gap-1.5">
-              <span className="w-44">Assumption</span>
+              <span className="w-56">Assumption</span>
               <div className="w-80">
                 <RHFInputCell
                   fieldName="assumptionType"
@@ -216,7 +220,7 @@ export function DiscountedCashFlowMethodModal({
             </div>
 
             <div className="flex flex-row gap-1.5">
-              <span className="w-44">Method</span>
+              <span className="w-56">Method</span>
               <div className="w-80">
                 <RHFInputCell
                   fieldName="method.methodType"

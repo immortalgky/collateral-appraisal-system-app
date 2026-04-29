@@ -2,7 +2,6 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../../types/dcf';
 import type { UseFormGetValues } from 'react-hook-form';
-import type { FormValues } from '@/features/appraisal/components/tables/bType';
 
 export function MethodProportionModal({
   name,
@@ -10,7 +9,7 @@ export function MethodProportionModal({
   isReadOnly,
 }: {
   name: string;
-  getOuterFormValues: UseFormGetValues<FormValues>;
+  getOuterFormValues: UseFormGetValues<any>;
   isReadOnly?: boolean;
 }) {
   const sections = (getOuterFormValues('sections') ?? []).filter(
@@ -43,21 +42,44 @@ export function MethodProportionModal({
   ];
 
   return (
-    <div className="flex flex-row gap-1.5 items-center">
-      <span className={'w-44'}>Proportions</span>
-      <div className={'w-44'}>
-        <RHFInputCell fieldName={`${name}.proportionPct`} inputType={'number'} disabled={isReadOnly} />
-      </div>
+    <div className="flex flex-col gap2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={''}>% of</span>
-        <div className="w-64">
+        <span className={'w-56'}>Proportions</span>
+        <div className={'w-44'}>
           <RHFInputCell
-            fieldName={`${name}.refTarget.clientId`}
-            inputType={'select'}
-            options={options}
-            dropdown={{ showValue: false }}
+            fieldName={`${name}.proportionPct`}
+            inputType={'number'}
+            disabled={isReadOnly}
           />
         </div>
+        <div className="flex flex-row gap-1.5 items-center">
+          <span className={''}>% of</span>
+          <div className="w-64">
+            <RHFInputCell
+              fieldName={`${name}.refTarget.clientId`}
+              inputType={'select'}
+              options={options}
+              dropdown={{ showValue: false }}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-56'}>Start In</span>
+        <div className={'w-44'}>
+          <RHFInputCell
+            fieldName={`${name}.startIn`}
+            inputType={'number'}
+            disabled={isReadOnly}
+            number={{
+              decimalPlaces: 0,
+              maxIntegerDigits: 3,
+              maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
+              allowNegative: false,
+            }}
+          />
+        </div>
+        <span className={''}>year(s)</span>
       </div>
     </div>
   );

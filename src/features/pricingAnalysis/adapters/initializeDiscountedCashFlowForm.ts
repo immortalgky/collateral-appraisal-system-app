@@ -56,6 +56,7 @@ function buildMethod(method: DCFMethod, templateIdMap: TemplateToClientIdMap): D
           clientId: resolved ? `${kind}:${resolved}` : null,
           dbId: null,
         },
+        startIn: method.detail?.startIn ?? 1,
       },
     };
   }

@@ -1,5 +1,12 @@
 import { Fragment, useEffect, useMemo } from 'react';
-import { useForm, FormProvider, useFieldArray, useWatch, useFormContext } from 'react-hook-form';
+import {
+  useForm,
+  FormProvider,
+  useFieldArray,
+  useWatch,
+  useFormContext,
+  type UseFormGetValues,
+} from 'react-hook-form';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { roomTypeParameters } from '../../../data/dcfParameters';
 import { Icon } from '@shared/components';
@@ -86,7 +93,15 @@ function resizeRowSeasons(row: RoomIncomeRow, seasonCount: number): RoomIncomeRo
   };
 }
 
-export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name, isReadOnly }: { name: string; isReadOnly?: boolean }) {
+export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
+  name,
+  isReadOnly,
+  getOuterFormValues,
+}: {
+  name: string;
+  isReadOnly?: boolean;
+  getOuterFormValues: UseFormGetValues<any>;
+}) {
   const { control, getValues, setValue } = useFormContext();
 
   const { fields, append, remove, replace } = useFieldArray({
@@ -166,15 +181,17 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name, isReadOnly
 
   useDerivedFields({ rules });
 
+  console.log(seasonCount);
+
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-3">
-        <div className="w-44">
+        <div className="w-56">
           <span>Number of seasons</span>
         </div>
         <div className="w-56">
           <RHFInputCell
-            fieldName="seasonCount"
+            fieldName={`${name}.seasonCount`}
             inputType="number"
             disabled={isReadOnly}
             onUserChange={v => {
@@ -339,31 +356,31 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name, isReadOnly
                 );
               })}
               {!isReadOnly && (
-              <tr>
-                <td className={clsx('border-b border-r border-gray-300 p-1')}>
-                  <button
-                    type="button"
-                    onClick={() => append(createEmptyRow(seasonCount))}
-                    className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
-                  >
-                    + Add Room Type
-                  </button>
-                </td>
-                {Array.from({ length: seasonCount }, (_, seasonIndex) => {
-                  return (
-                    <Fragment key={`${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1"></td>
-                      <td className="border-b border-gray-300 p-1"></td>
-                      <td
-                        className={clsx(
-                          'border-b border-gray-300 p-1',
-                          seasonCount > 1 ? 'border-r' : '',
-                        )}
-                      ></td>
-                    </Fragment>
-                  );
-                })}
-              </tr>
+                <tr>
+                  <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                    <button
+                      type="button"
+                      onClick={() => append(createEmptyRow(seasonCount))}
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                    >
+                      + Add Room Type
+                    </button>
+                  </td>
+                  {Array.from({ length: seasonCount }, (_, seasonIndex) => {
+                    return (
+                      <Fragment key={`${seasonIndex}`}>
+                        <td className="border-b border-gray-300 p-1"></td>
+                        <td className="border-b border-gray-300 p-1"></td>
+                        <td
+                          className={clsx(
+                            'border-b border-gray-300 p-1',
+                            seasonCount > 1 ? 'border-r' : '',
+                          )}
+                        ></td>
+                      </Fragment>
+                    );
+                  })}
+                </tr>
               )}
             </tbody>
 
@@ -531,6 +548,23 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({ name, isReadOnly
                 decimalPlaces: 0,
                 maxIntegerDigits: 3,
                 maxValue: 100,
+                allowNegative: false,
+              }}
+            />
+          </div>
+          <span className={''}>year(s)</span>
+        </div>
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-56'}>Start In</span>
+          <div className={'w-44'}>
+            <RHFInputCell
+              fieldName={`${name}.startIn`}
+              inputType={'number'}
+              disabled={isReadOnly}
+              number={{
+                decimalPlaces: 0,
+                maxIntegerDigits: 3,
+                maxValue: getOuterFormValues('totalNumberOfYears') ?? 100,
                 allowNegative: false,
               }}
             />
