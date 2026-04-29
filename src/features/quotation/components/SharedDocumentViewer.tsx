@@ -83,7 +83,7 @@ const SharedDocumentViewer = ({
         objectUrlRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, quotationRequestId, documentId]);
 
   const isImage = (mimeType: string) => mimeType.startsWith('image/');
@@ -125,7 +125,7 @@ const SharedDocumentViewer = ({
                   </div>
                   <p className="text-sm text-gray-600">
                     You no longer have access to this document — the quotation may have been
-                    finalized or cancelled.
+                    awarded or cancelled.
                   </p>
                   <button
                     type="button"
@@ -138,7 +138,11 @@ const SharedDocumentViewer = ({
               ) : state.status === 'error' ? (
                 <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
                   <div className="size-12 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Icon name="triangle-exclamation" style="solid" className="size-5 text-amber-500" />
+                    <Icon
+                      name="triangle-exclamation"
+                      style="solid"
+                      className="size-5 text-amber-500"
+                    />
                   </div>
                   <p className="text-sm text-gray-600">{state.message}</p>
                   <button
@@ -149,21 +153,19 @@ const SharedDocumentViewer = ({
                     Close
                   </button>
                 </div>
+              ) : // state.status === 'ready'
+              isImage(state.mimeType) ? (
+                <img
+                  src={state.objectUrl}
+                  alt={fileName}
+                  className="max-w-full max-h-[70vh] object-contain"
+                />
               ) : (
-                // state.status === 'ready'
-                isImage(state.mimeType) ? (
-                  <img
-                    src={state.objectUrl}
-                    alt={fileName}
-                    className="max-w-full max-h-[70vh] object-contain"
-                  />
-                ) : (
-                  <iframe
-                    src={state.objectUrl}
-                    title={fileName}
-                    className="w-full h-[70vh] border-0"
-                  />
-                )
+                <iframe
+                  src={state.objectUrl}
+                  title={fileName}
+                  className="w-full h-[70vh] border-0"
+                />
               )}
             </div>
           </DialogPanel>

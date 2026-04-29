@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
+import Alert from '@/shared/components/Alert';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import Textarea from '@/shared/components/inputs/Textarea';
 import { useAuthStore } from '@/features/auth/store';
@@ -34,6 +35,7 @@ interface QuotationActionBarProps {
   variant: 'maker' | 'checker';
   isSavePending: boolean;
   isSubmitPending: boolean;
+  disabled?: boolean;
   onSaveDraft: () => void;
   onSubmitToChecker: () => void;
   onSubmitQuotation: () => void;
@@ -43,18 +45,20 @@ const QuotationActionBar = ({
   variant,
   isSavePending,
   isSubmitPending,
+  disabled = false,
   onSaveDraft,
   onSubmitToChecker,
   onSubmitQuotation,
 }: QuotationActionBarProps) => {
   const anyPending = isSavePending || isSubmitPending;
+  const isDisabled = anyPending || disabled;
   return (
     <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
       <Button
         type="button"
         variant="outline"
         onClick={onSaveDraft}
-        disabled={anyPending}
+        disabled={isDisabled}
         isLoading={isSavePending}
       >
         <Icon name="floppy-disk" style="solid" className="size-4 mr-2" />
@@ -65,7 +69,7 @@ const QuotationActionBar = ({
         <Button
           type="button"
           onClick={onSubmitToChecker}
-          disabled={anyPending}
+          disabled={isDisabled}
           isLoading={isSubmitPending}
         >
           <Icon name="paper-plane" style="solid" className="size-4 mr-2" />
@@ -75,7 +79,7 @@ const QuotationActionBar = ({
         <Button
           type="button"
           onClick={onSubmitQuotation}
-          disabled={anyPending}
+          disabled={isDisabled}
           isLoading={isSubmitPending}
         >
           <Icon name="circle-check" style="solid" className="size-4 mr-2" />
@@ -151,7 +155,6 @@ const ExtCompanySubmitQuotationPage = () => {
   const currentUser = useAuthStore(state => state.user);
   const companyId = currentUser?.companyId ?? '';
 
-  const isMaker = currentUser?.roles.includes('ExtAdmin') ?? false;
   const isChecker = currentUser?.roles.includes('ExtAppraisalChecker') ?? false;
   // Checker takes precedence when a user holds both roles
   const variant: 'maker' | 'checker' = isChecker ? 'checker' : 'maker';
@@ -199,7 +202,7 @@ const ExtCompanySubmitQuotationPage = () => {
       // Non-fatal: surface in console for diagnosis but don't pop a toast — the
       // primary data action succeeded. A periodic retry / engine watchdog would
       // pick up any stuck tasks.
-      // eslint-disable-next-line no-console
+
       console.warn('Workflow stage advance failed', actionValue, err);
     }
   };
@@ -245,12 +248,12 @@ const ExtCompanySubmitQuotationPage = () => {
   useEffect(() => {
     if (appraisals.length === 0) return;
 
-    // Determine the initial item values — prefer from existing draft/submission
+    // Determine the initial item values — prefer from existing draft/submission.
+    // Includes post-submission states (Submitted/UnderReview/Tentative/Accepted/Rejected)
+    // so the standalone read-only view shows what was actually submitted.
+    // Decline is the only state with no values to show.
     const hydrateFromSubmission =
-      mySubmission &&
-      (mySubmission.status === 'Draft' ||
-        mySubmission.status === 'PendingCheckerReview' ||
-        mySubmission.status === 'Negotiating');
+      mySubmission && mySubmission.status !== 'Declined';
 
     const items = appraisals.map(ap => {
       const existingItem = hydrateFromSubmission
@@ -473,7 +476,9 @@ const ExtCompanySubmitQuotationPage = () => {
         return;
       }
 
-      const hasAnyDiscount = items.some(i => i.negotiatedDiscount != null && i.negotiatedDiscount > 0);
+      const hasAnyDiscount = items.some(
+        i => i.negotiatedDiscount != null && i.negotiatedDiscount > 0,
+      );
       if (!hasAnyDiscount) {
         toast.error('Enter a Negotiated Discount on at least one appraisal before submitting');
         return;
@@ -502,7 +507,9 @@ const ExtCompanySubmitQuotationPage = () => {
     errors => {
       // Surface schema-validation failures (e.g. invalid Negotiated Discount on a tab the
       // user isn't currently looking at) so they don't appear to be silently ignored.
-      const itemErrors = (errors.items ?? []) as Array<Record<string, { message?: string }> | undefined>;
+      const itemErrors = (errors.items ?? []) as Array<
+        Record<string, { message?: string }> | undefined
+      >;
       const idx = itemErrors.findIndex(e => e && Object.keys(e).length > 0);
       if (idx >= 0) {
         const ap = appraisals[idx];
@@ -563,16 +570,19 @@ const ExtCompanySubmitQuotationPage = () => {
   const isSubmitted = mySubmission?.status === 'Submitted';
   const isPastDue = quotation ? new Date(quotation.dueDate) < new Date() : false;
 
-  // Editable when:
-  //   • Initial submission flow: quotation is Sent and user is Maker/Checker, OR
-  //   • Negotiation flow: quotation is Negotiating and there's an open round for this company
-  //     (user is Maker — we go straight back to the bank during a round, no Checker hop).
-  const canEdit =
-    !isDeclined &&
-    !isSubmitted &&
-    !isPastDue &&
-    ((quotation?.status === 'Sent' && (isMaker || isChecker)) ||
-      (quotation?.status === 'Negotiating' && !!openNegotiation && isMaker));
+  // canEdit is now the single source of truth supplied by the backend.
+  // The BE sets it true only when this user holds the currently-pending workflow
+  // task for this quotation+company. All previous local heuristics are superseded.
+  const canEdit = quotation?.canEdit ?? false;
+
+  // Human-readable label for the current review stage — shown in the read-only banner.
+  const currentStageLabel = (() => {
+    const s = mySubmission?.status;
+    if (s === 'Draft') return 'Maker review';
+    if (s === 'PendingCheckerReview') return 'Checker review';
+    if (s === 'Submitted') return 'review by the bank';
+    return 'review by your team';
+  })();
 
   /**
    * During a negotiation round, only the Negotiated Discount field is editable —
@@ -694,7 +704,9 @@ const ExtCompanySubmitQuotationPage = () => {
               </span>
             </div>
             {openNegotiation.message ? (
-              <p className="text-sm text-orange-900 whitespace-pre-wrap">{openNegotiation.message}</p>
+              <p className="text-sm text-orange-900 whitespace-pre-wrap">
+                {openNegotiation.message}
+              </p>
             ) : (
               <p className="text-sm text-orange-700 italic">No note provided.</p>
             )}
@@ -708,12 +720,18 @@ const ExtCompanySubmitQuotationPage = () => {
           quotation.specialRequirements && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
               <div className="flex items-center gap-1.5 mb-1">
-                <Icon name="circle-exclamation" style="solid" className="size-4 text-amber-500 shrink-0" />
+                <Icon
+                  name="circle-exclamation"
+                  style="solid"
+                  className="size-4 text-amber-500 shrink-0"
+                />
                 <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
                   Special Instructions
                 </span>
               </div>
-              <p className="text-sm text-amber-900 whitespace-pre-line">{quotation.specialRequirements}</p>
+              <p className="text-sm text-amber-900 whitespace-pre-line">
+                {quotation.specialRequirements}
+              </p>
             </div>
           )
         )}
@@ -773,8 +791,17 @@ const ExtCompanySubmitQuotationPage = () => {
           </div>
         )}
 
-        {/* ── Main two-pane form (visible when canEdit or draft/pending) ─────── */}
-        {(canEdit || mySubmission?.status === 'PendingCheckerReview') && appraisals.length > 0 && (
+        {/* ── Read-only banner (shown when task ownership is absent) ──────────── */}
+        {!canEdit && !isDeclined && !isSubmitted && !isPastDue && appraisals.length > 0 && (
+          <Alert variant="info" className="mb-4">
+            This quotation is currently under{' '}
+            <span className="font-medium">{currentStageLabel}</span>. Only the assigned reviewer
+            can edit it.
+          </Alert>
+        )}
+
+        {/* ── Main two-pane form — always rendered; inputs gate on canEdit (read-only when false) ── */}
+        {appraisals.length > 0 && (
           <div className="rounded-xl border border-gray-200 overflow-hidden">
             {/* Two-pane layout — desktop uses CSS grid so the row's height is driven by the
               right pane; the rail's `min-h-0 overflow-hidden` prevents its intrinsic content
@@ -985,12 +1012,19 @@ const ExtCompanySubmitQuotationPage = () => {
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         Remark for this Appraisal
                       </h2>
-                      <Textarea
-                        disabled={!canEdit || isNegotiatingLock}
-                        placeholder="Add any notes specific to this appraisal (conditions, assumptions, scope caveats)..."
-                        maxLength={4000}
-                        showCharCount
-                        {...register(`items.${selectedIndex}.itemNotes`)}
+                      <Controller
+                        control={control}
+                        name={`items.${selectedIndex}.itemNotes`}
+                        render={({ field }) => (
+                          <Textarea
+                            {...field}
+                            value={field.value ?? ''}
+                            disabled={!canEdit || isNegotiatingLock}
+                            placeholder="Add any notes specific to this appraisal (conditions, assumptions, scope caveats)..."
+                            maxLength={4000}
+                            showCharCount
+                          />
+                        )}
                       />
                     </section>
                   </div>
@@ -1117,16 +1151,16 @@ const ExtCompanySubmitQuotationPage = () => {
         )}
       </div>
 
-      {/* ── Sticky action bar — shrink-0 sibling below the scrollable content (matches AdministrationPage) ── */}
-      {canEdit && appraisals.length > 0 && (
-        openNegotiation ? (
+      {/* ── Sticky action bar — always rendered; buttons disable when !canEdit (read-only) ── */}
+      {appraisals.length > 0 &&
+        (openNegotiation ? (
           /* Negotiation round — Decline this round + Submit Proposal. Maker → bank direct. */
           <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
             <Button
               type="button"
               variant="danger"
               onClick={() => setIsDeclineNegotiationOpen(true)}
-              disabled={isNegotiationPending}
+              disabled={isNegotiationPending || !canEdit}
             >
               <Icon name="ban" style="solid" className="size-4 mr-2" />
               Decline this round
@@ -1134,7 +1168,7 @@ const ExtCompanySubmitQuotationPage = () => {
             <Button
               type="button"
               onClick={handleSubmitNegotiation}
-              disabled={isNegotiationPending}
+              disabled={isNegotiationPending || !canEdit}
               isLoading={isNegotiationPending}
             >
               <Icon name="paper-plane" style="solid" className="size-4 mr-2" />
@@ -1146,12 +1180,12 @@ const ExtCompanySubmitQuotationPage = () => {
             variant={variant}
             isSavePending={isSavePending}
             isSubmitPending={isSubmitPending || isCheckerPending}
+            disabled={!canEdit}
             onSaveDraft={handleSaveDraft}
             onSubmitToChecker={handleSubmitToChecker}
             onSubmitQuotation={handleSubmitQuotation}
           />
-        )
-      )}
+        ))}
     </div>
   );
 };

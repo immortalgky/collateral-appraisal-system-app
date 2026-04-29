@@ -1,6 +1,14 @@
 import type { CheckboxOption } from '@/shared/components/inputs/CheckboxGroup';
 import type { RadioOption } from '@/shared/components/inputs/RadioGroup';
 import type { ListBoxItem } from '@/shared/components/inputs/Dropdown';
+import type { ProjectType } from '../types';
+
+// ─── Project Type Discriminator Labels ───────────────────────────────────────
+
+export const PROJECT_TYPE_LABEL: Record<ProjectType, string> = {
+  Condo: 'Condo',
+  LandAndBuilding: 'Land & Building',
+};
 
 /** LB facility option — uses `key` instead of `value` for historical reasons.
  * TODO(Phase 2): Normalize to CheckboxOption ({value, label}) when migrating village facility form. */

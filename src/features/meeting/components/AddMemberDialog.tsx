@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import { memberFormSchema, type MemberFormValues } from '../schemas/meeting';
-import { useAddMeetingMember } from '../api/meetings';
+import { useAddMeetingMember, useGetMeetingDetail } from '../api/meetings';
 import { POSITION_OPTIONS } from '../constants';
 import { useGetUsers } from '@features/userManagement/api/users';
 
@@ -32,9 +32,16 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
     pageSize: 100,
   });
 
-  // Client-side safety filter: only show users who actually carry the role.
-  // Guards against stale React Query cache or a misconfigured backend returning all users.
-  const committeeUsers = usersData?.items ?? [];
+  // Existing members of this meeting — used to filter the dropdown so a user
+  // already on the roster can't be added twice.
+  const { data: meetingDetail } = useGetMeetingDetail(meetingId);
+  const existingMemberUserIds = new Set(
+    (meetingDetail?.members ?? []).map(m => m.userId),
+  );
+
+  const committeeUsers = (usersData?.items ?? []).filter(
+    u => !existingMemberUserIds.has(u.username),
+  );
 
   const {
     register,
@@ -56,17 +63,16 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
   };
 
   const handleUserSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedUserName = e.target.value;
-    if (!selectedUserName) {
+    const username = e.target.value;
+    if (!username) {
       setValue('userId', '', { shouldValidate: true });
       setValue('memberName', '', { shouldValidate: true });
       return;
     }
 
-    const user = committeeUsers.find(u => `${u.firstName} ${u.lastName}` === selectedUserName);
+    const user = committeeUsers.find(u => u.username === username);
     if (!user) return;
-    console.log(user);
-    console.log(user.username);
+
     // userId stores the userName string (matches CommitteeMember.UserId convention)
     setValue('userId', user.username, { shouldValidate: true });
 

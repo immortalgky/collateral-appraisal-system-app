@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
   EditDraftQuotationBody,
@@ -9,11 +9,12 @@ import type {
   SharedDocumentSelectionDto,
   SubmitDraftToCheckerInput,
 } from '../schemas/quotation';
-import {
-  QuotationActivityLogRowSchema,
-} from '../schemas/quotation';
+import { QuotationActivityLogRowSchema } from '../schemas/quotation';
 import { z } from 'zod';
-import type { Quotation, StartQuotationFromTaskRequest, } from '@/features/appraisal/types/administration'; // ─── Query Key Factory ────────────────────────────────────────────────────────
+import type {
+  Quotation,
+  StartQuotationFromTaskRequest,
+} from '@/features/appraisal/types/administration'; // ─── Query Key Factory ────────────────────────────────────────────────────────
 
 // ─── Query Key Factory ────────────────────────────────────────────────────────
 
@@ -23,7 +24,7 @@ export const quotationKeys = {
   list: (params: Record<string, unknown>) => [...quotationKeys.lists(), params] as const,
   details: () => [...quotationKeys.all, 'detail'] as const,
   detail: (id: string) => [...quotationKeys.details(), id] as const,
-  myInvitations: (companyId: string) => ['my-invitations', companyId] as const,
+  myInvitations: (params: Record<string, unknown>) => ['my-invitations', params] as const,
   drafts: (bankingSegment?: string) =>
     [...quotationKeys.all, 'drafts', bankingSegment ?? ''] as const,
   activityLog: (id: string) => [...quotationKeys.detail(id), 'activity-log'] as const,
@@ -67,23 +68,148 @@ export const useGetAppraisalQuotations = (appraisalId: string | null | undefined
   });
 };
 
-// ─── GET /quotations (ExtCompany — my invitations) ───────────────────────────
+// ─── GET /quotations (paginated list with filters) ───────────────────────────
+
+export interface GetQuotationsParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: string;
+  search?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+}
+
+export interface QuotationListItem {
+  id: string;
+  quotationNumber: string;
+  requestDate: string;
+  dueDate: string;
+  status: string;
+  requestedBy: string;
+  totalAppraisals: number;
+  totalCompaniesInvited: number;
+  totalQuotationsReceived: number;
+}
+
+export interface PaginatedQuotations {
+  items: QuotationListItem[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
 
 /**
- * Fetch the current ExtAdmin's company invitations.
- * Backend scopes results by the `company_id` claim automatically.
- * Uses its own query key to avoid collision with the admin list cache.
+ * Fetch a paginated, filtered list of quotations.
+ * Role-scoped by the backend: Admin/IntAdmin → all, RM → own RmUserId, ExtAdmin → invited companies.
  */
-export const useGetMyCompanyInvitations = (companyId?: string) => {
+export const useGetQuotations = (params: GetQuotationsParams = {}) => {
+  const queryKey = quotationKeys.list({
+    pageNumber: params.pageNumber ?? 0,
+    pageSize: params.pageSize ?? 10,
+    ...(params.status && { status: params.status }),
+    ...(params.search && { search: params.search }),
+    ...(params.dueDateFrom && { dueDateFrom: params.dueDateFrom }),
+    ...(params.dueDateTo && { dueDateTo: params.dueDateTo }),
+  });
+
   return useQuery({
-    queryKey: quotationKeys.myInvitations(companyId ?? ''),
-    queryFn: async (): Promise<Quotation[]> => {
+    queryKey,
+    queryFn: async (): Promise<PaginatedQuotations> => {
       const { data } = await axios.get('/quotations', {
-        params: { PageNumber: 0, PageSize: 100 },
+        params: {
+          PageNumber: params.pageNumber ?? 0,
+          PageSize: params.pageSize ?? 10,
+          ...(params.status && { Status: params.status }),
+          ...(params.search && { Search: params.search }),
+          ...(params.dueDateFrom && { DueDateFrom: params.dueDateFrom }),
+          ...(params.dueDateTo && { DueDateTo: params.dueDateTo }),
+        },
       });
       const result = data.quotations ?? data;
-      return result.items ?? [];
+      return {
+        items: result.items ?? [],
+        count: result.count ?? result.totalCount ?? 0,
+        pageNumber: result.pageNumber ?? params.pageNumber ?? 0,
+        pageSize: result.pageSize ?? params.pageSize ?? 10,
+      };
     },
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  });
+};
+
+// ─── GET /quotations/my-invitations (ExtCompany) ─────────────────────────────
+
+export interface MyInvitationDto {
+  id: string;
+  quotationNumber: string;
+  requestDate: string;
+  dueDate: string;
+  requestedBy: string;
+  totalAppraisals: number;
+  companyId: string;
+  receivedAt: string;
+  totalFeeAmount: number | null;
+  quotedAt: string | null;
+  quotedBy: string | null;
+  companyStatus: string;
+  hasSubmitted: boolean;
+}
+
+export interface PaginatedMyInvitations {
+  items: MyInvitationDto[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface GetMyInvitationsParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: string;
+  search?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+}
+
+/**
+ * Fetch the current ExtAdmin's company invitations from the dedicated endpoint.
+ * Backend scopes results to the caller's company_id claim — no companyId param needed.
+ * Returns vendor-side companyStatus rather than the parent RFQ status.
+ */
+export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
+  const queryKey = quotationKeys.myInvitations({
+    pageNumber: params.pageNumber ?? 0,
+    pageSize: params.pageSize ?? 10,
+    ...(params.status && { status: params.status }),
+    ...(params.search && { search: params.search }),
+    ...(params.dueDateFrom && { dueDateFrom: params.dueDateFrom }),
+    ...(params.dueDateTo && { dueDateTo: params.dueDateTo }),
+  });
+
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<PaginatedMyInvitations> => {
+      const { data } = await axios.get('/quotations/my-invitations', {
+        params: {
+          PageNumber: params.pageNumber ?? 0,
+          PageSize: params.pageSize ?? 10,
+          ...(params.status && { Status: params.status }),
+          ...(params.search && { Search: params.search }),
+          ...(params.dueDateFrom && { DueDateFrom: params.dueDateFrom }),
+          ...(params.dueDateTo && { DueDateTo: params.dueDateTo }),
+        },
+      });
+      const result = data.invitations ?? data;
+      return {
+        items: result.items ?? [],
+        count: result.count ?? result.totalCount ?? 0,
+        pageNumber: result.pageNumber ?? params.pageNumber ?? 0,
+        pageSize: result.pageSize ?? params.pageSize ?? 10,
+      };
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
 };
 
@@ -227,10 +353,7 @@ export const useOpenNegotiation = (quotationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: {
-      companyQuotationId: string;
-      message: string;
-    }) => {
+    mutationFn: async (payload: { companyQuotationId: string; message: string }) => {
       const { data } = await axios.post(`/quotations/${quotationId}/negotiations/open`, payload);
       return data;
     },
@@ -293,10 +416,7 @@ export const useFinalizeQuotation = (quotationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: {
-      companyQuotationId: string;
-      reason?: string | null;
-    }) => {
+    mutationFn: async (payload: { companyQuotationId: string; reason?: string | null }) => {
       const { data } = await axios.post(`/quotations/${quotationId}/finalize`, payload);
       return data;
     },
@@ -360,6 +480,45 @@ export const useSubmitQuotation = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+      queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+    },
+  });
+};
+
+// ─── POST /quotations ────────────────────────────────────────────────────────
+
+export interface CreateQuotationAppraisalInput {
+  appraisalId: string;
+  maxAppraisalDays: number | null;
+}
+
+export interface CreateQuotationBody {
+  dueDate: string; // ISO datetime string
+  requestedBy: string;
+  description?: string;
+  specialRequirements?: string;
+  appraisals?: CreateQuotationAppraisalInput[];
+  invitedCompanyIds?: string[];
+}
+
+export interface CreateQuotationResult {
+  id: string;
+}
+
+/**
+ * Create a standalone Draft quotation (not tied to a task).
+ * Attaches appraisals and invites companies atomically in one call.
+ * On success, invalidates the quotations list cache.
+ */
+export const useCreateQuotation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: CreateQuotationBody): Promise<CreateQuotationResult> => {
+      const { data } = await axios.post('/quotations', body);
+      return data;
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
     },
   });
@@ -517,7 +676,9 @@ export const useSaveDraftQuotation = (quotationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: SaveDraftQuotationInput): Promise<{ companyQuotationId: string; status: string }> => {
+    mutationFn: async (
+      payload: SaveDraftQuotationInput,
+    ): Promise<{ companyQuotationId: string; status: string }> => {
       const { data } = await axios.post(`/quotations/${quotationId}/draft`, payload);
       return data;
     },
@@ -538,7 +699,9 @@ export const useSubmitDraftToChecker = (quotationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: SubmitDraftToCheckerInput): Promise<{ companyQuotationId: string; status: string }> => {
+    mutationFn: async (
+      payload: SubmitDraftToCheckerInput,
+    ): Promise<{ companyQuotationId: string; status: string }> => {
       const { data } = await axios.post(`/quotations/${quotationId}/submit-to-checker`, payload);
       return data;
     },

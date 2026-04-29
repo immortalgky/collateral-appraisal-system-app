@@ -60,6 +60,7 @@ export interface AppraisalDto {
   customerName: string | null;
   province: string | null;
   district: string | null;
+  subDistrict: string | null;
   appointmentDateTime: string | null;
   elapsedHours: number | null;
   remainingHours: number | null;

@@ -10,6 +10,7 @@ import {
   CUT_OFF_ELIGIBLE,
   EDIT_ELIGIBLE,
   ITEM_ACTION_ELIGIBLE,
+  ITEM_REMOVE_ELIGIBLE,
   MEETING_PERMISSIONS,
   RESEND_INVITATION_ELIGIBLE,
 } from '../constants';
@@ -203,10 +204,6 @@ const MeetingDetailPage = () => {
             <dt className="text-xs font-medium text-gray-500 uppercase">End</dt>
             <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.endAt)}</dd>
           </div>
-          <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase">Location</dt>
-            <dd className="mt-1 text-sm text-gray-900">{meeting.location ?? '—'}</dd>
-          </div>
           {meeting.fromText && (
             <div>
               <dt className="text-xs font-medium text-gray-500 uppercase">From</dt>
@@ -219,6 +216,10 @@ const MeetingDetailPage = () => {
               <dd className="mt-1 text-sm text-gray-900">{meeting.toText}</dd>
             </div>
           )}
+          <div>
+            <dt className="text-xs font-medium text-gray-500 uppercase">Location</dt>
+            <dd className="mt-1 text-sm text-gray-900">{meeting.location ?? '—'}</dd>
+          </div>
           {meeting.cutOffAt && (
             <div>
               <dt className="text-xs font-medium text-gray-500 uppercase">Cut-Off At</dt>
@@ -256,13 +257,12 @@ const MeetingDetailPage = () => {
         <AgendaForm
           meetingId={meeting.id}
           initialValues={{
-            fromText: meeting.fromText,
-            toText: meeting.toText,
             agendaCertifyMinutes: meeting.agendaCertifyMinutes,
             agendaChairmanInformed: meeting.agendaChairmanInformed,
             agendaOthers: meeting.agendaOthers,
           }}
           editable={hasAdmin && isEditable}
+          previousEndedMeetingNo={meeting.previousEndedMeetingNo}
         />
       </FormCard>
 
@@ -283,6 +283,7 @@ const MeetingDetailPage = () => {
         <MeetingItemsGrouped
           meeting={meeting}
           canReleaseItems={hasSecretary && ITEM_ACTION_ELIGIBLE.has(status)}
+          canRemoveItems={hasSecretary && ITEM_REMOVE_ELIGIBLE.has(status)}
         />
       </FormCard>
 
@@ -294,7 +295,8 @@ const MeetingDetailPage = () => {
         defaultValues={{
           title: meeting.title,
           location: meeting.location ?? '',
-          notes: meeting.notes ?? '',
+          fromText: meeting.fromText ?? '',
+          toText: meeting.toText ?? '',
           startAt: meeting.startAt ?? '',
           endAt: meeting.endAt ?? '',
         }}

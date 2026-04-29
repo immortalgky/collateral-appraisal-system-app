@@ -115,6 +115,8 @@ export interface MeetingDetailDto {
   agendaCertifyMinutes: string | null;
   agendaChairmanInformed: string | null;
   agendaOthers: string | null;
+  /** Most recently Ended meeting before this one (by EndedAt). Null if none. */
+  previousEndedMeetingNo: string | null;
   cutOffAt: string | null;
   invitationSentAt: string | null;
   location: string | null;
@@ -141,12 +143,9 @@ export interface PaginatedResult<T> {
 // ==================== Request bodies ====================
 
 export interface CreateMeetingRequest {
-  title: string;
-  notes: string | null;
   committeeId?: string;
   startAt?: string;
   endAt?: string;
-  location?: string;
 }
 
 export interface CreateMeetingResponse {
@@ -159,7 +158,8 @@ export interface CreateMeetingResponse {
 export interface UpdateMeetingRequest {
   title: string;
   location: string | null;
-  notes: string | null;
+  fromText: string | null;
+  toText: string | null;
   startAt?: string;
   endAt?: string;
 }
@@ -201,8 +201,6 @@ export interface UpdateMeetingMemberPositionRequest {
 }
 
 export interface UpdateMeetingAgendaRequest {
-  fromText?: string | null;
-  toText?: string | null;
   agendaCertifyMinutes?: string | null;
   agendaChairmanInformed?: string | null;
   agendaOthers?: string | null;
@@ -229,6 +227,12 @@ export interface CancelMeetingRequest {
 
 export interface GetMeetingsParams {
   status?: MeetingStatus;
+  isHistory?: boolean;
+  search?: string;
+  meetingNo?: string;
+  customerName?: string;
+  fromDate?: string;
+  toDate?: string;
   pageNumber?: number;
   pageSize?: number;
 }

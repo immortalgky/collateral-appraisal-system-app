@@ -71,9 +71,7 @@ const DeclineInvitationModal = ({
         {/* Warning banner */}
         <div
           className={`p-3 rounded-lg border flex items-start gap-2 ${
-            isWithdraw
-              ? 'bg-orange-50 border-orange-200'
-              : 'bg-red-50 border-red-200'
+            isWithdraw ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200'
           }`}
         >
           <Icon
@@ -116,7 +114,9 @@ const DeclineInvitationModal = ({
           <Button
             onClick={handleConfirm}
             disabled={isPending || !reason.trim()}
-            className={isWithdraw ? 'bg-orange-600 hover:bg-orange-700' : 'bg-red-600 hover:bg-red-700'}
+            className={
+              isWithdraw ? 'bg-orange-600 hover:bg-orange-700' : 'bg-red-600 hover:bg-red-700'
+            }
           >
             {isPending ? (
               <>
@@ -125,7 +125,11 @@ const DeclineInvitationModal = ({
               </>
             ) : (
               <>
-                <Icon name={isWithdraw ? 'arrow-rotate-left' : 'ban'} style="solid" className="size-4 mr-2" />
+                <Icon
+                  name={isWithdraw ? 'arrow-rotate-left' : 'ban'}
+                  style="solid"
+                  className="size-4 mr-2"
+                />
                 {isWithdraw ? 'Opt Out' : 'Decline Invitation'}
               </>
             )}

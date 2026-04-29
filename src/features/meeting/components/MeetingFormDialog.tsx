@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
 
 import Modal from '@/shared/components/Modal';
@@ -23,6 +24,21 @@ const todayAt = (hour: number): Date => {
   return d;
 };
 
+/**
+ * Wire format for meeting datetimes: the user's picked wall-clock time without a
+ * timezone offset (e.g. "2026-04-28T09:00:00"). The backend parses this as a
+ * Kind=Unspecified DateTime and treats it as application time, so it lines up
+ * with IDateTimeProvider.ApplicationNow comparisons.
+ *
+ * If we sent an ISO string with offset (the picker's default `formatISO` shape),
+ * System.Text.Json would convert it to the server's local TZ — which on Docker
+ * defaults to UTC, putting StartAt 7 hours behind ApplicationNow.
+ */
+const toAppLocalIso = (value: string | Date): string => {
+  const d = typeof value === 'string' ? parseISO(value) : value;
+  return format(d, "yyyy-MM-dd'T'HH:mm:ss");
+};
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface MeetingFormDialogProps {
@@ -37,19 +53,17 @@ interface MeetingFormDialogProps {
 }
 
 const buildCreateDefaults = (): CreateMeetingFormValues => ({
-  title: '',
-  location: '',
-  notes: '',
-  startAt: todayAt(9).toISOString(),
-  endAt: todayAt(17).toISOString(),
+  startAt: toAppLocalIso(todayAt(9)),
+  endAt: toAppLocalIso(todayAt(17)),
 });
 
 const buildUpdateDefaults = (): UpdateMeetingFormValues => ({
   title: '',
   location: '',
-  notes: '',
-  startAt: todayAt(9).toISOString(),
-  endAt: todayAt(17).toISOString(),
+  fromText: '',
+  toText: '',
+  startAt: toAppLocalIso(todayAt(9)),
+  endAt: toAppLocalIso(todayAt(17)),
 });
 
 const sharedInputClass =
@@ -66,7 +80,6 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
   const createMeeting = useCreateMeeting();
 
   const {
-    register,
     handleSubmit,
     watch,
     setValue,
@@ -81,13 +94,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
 
   const onSubmit = (values: CreateMeetingFormValues) => {
     createMeeting.mutate(
-      {
-        title: values.title.trim(),
-        notes: values.notes?.trim() || null,
-        startAt: values.startAt,
-        endAt: values.endAt,
-        location: values.location?.trim() || undefined,
-      },
+      { startAt: toAppLocalIso(values.startAt), endAt: toAppLocalIso(values.endAt) },
       {
         onSuccess: data => {
           toast.success(`Meeting ${data.meetingNo} created`);
@@ -104,21 +111,6 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Title */}
-      <div>
-        <label htmlFor="meeting-title" className="block text-sm font-medium text-gray-700 mb-1">
-          Title <span className="text-red-500">*</span>
-        </label>
-        <input
-          id="meeting-title"
-          type="text"
-          {...register('title')}
-          className={sharedInputClass}
-          placeholder="e.g. Committee meeting — Week 14"
-        />
-        {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
-      </div>
-
       {/* Start / End */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <DateTimePickerInput
@@ -126,43 +118,17 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
           required
           value={startAtValue}
           onChange={iso => setValue('startAt', iso ?? '', { shouldValidate: true })}
+          error={errors.startAt?.message}
+          disablePastDates
         />
         <DateTimePickerInput
           label="End"
           required
           value={endAtValue}
           onChange={iso => setValue('endAt', iso ?? '', { shouldValidate: true })}
+          error={errors.endAt?.message}
+          disablePastDates
         />
-      </div>
-
-      {/* Location */}
-      <div>
-        <label htmlFor="meeting-location" className="block text-sm font-medium text-gray-700 mb-1">
-          Location
-        </label>
-        <input
-          id="meeting-location"
-          type="text"
-          {...register('location')}
-          className={sharedInputClass}
-          placeholder="Optional"
-        />
-        {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label htmlFor="meeting-notes" className="block text-sm font-medium text-gray-700 mb-1">
-          Notes
-        </label>
-        <textarea
-          id="meeting-notes"
-          rows={3}
-          {...register('notes')}
-          className={sharedInputClass}
-          placeholder="Optional"
-        />
-        {errors.notes && <p className="mt-1 text-xs text-red-600">{errors.notes.message}</p>}
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
@@ -215,9 +181,10 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
         body: {
           title: values.title.trim(),
           location: values.location?.trim() || null,
-          notes: values.notes?.trim() || null,
-          startAt: values.startAt,
-          endAt: values.endAt,
+          fromText: values.fromText?.trim() || null,
+          toText: values.toText?.trim() || null,
+          startAt: toAppLocalIso(values.startAt),
+          endAt: toAppLocalIso(values.endAt),
         },
       },
       {
@@ -259,6 +226,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           value={startAtValue}
           onChange={iso => setValue('startAt', iso ?? '', { shouldValidate: true })}
           error={errors.startAt?.message}
+          disablePastDates
         />
         <DateTimePickerInput
           label="End"
@@ -266,7 +234,46 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           value={endAtValue}
           onChange={iso => setValue('endAt', iso ?? '', { shouldValidate: true })}
           error={errors.endAt?.message}
+          disablePastDates
         />
+      </div>
+
+      {/* From / To */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="meeting-fromText"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            From
+          </label>
+          <input
+            id="meeting-fromText"
+            type="text"
+            {...register('fromText')}
+            className={sharedInputClass}
+            placeholder="Optional"
+          />
+          {errors.fromText && (
+            <p className="mt-1 text-xs text-red-600">{errors.fromText.message}</p>
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="meeting-toText"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            To
+          </label>
+          <input
+            id="meeting-toText"
+            type="text"
+            {...register('toText')}
+            className={sharedInputClass}
+            placeholder="Optional"
+          />
+          {errors.toText && <p className="mt-1 text-xs text-red-600">{errors.toText.message}</p>}
+        </div>
       </div>
 
       {/* Location */}
@@ -282,21 +289,6 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           placeholder="Optional"
         />
         {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label htmlFor="meeting-notes" className="block text-sm font-medium text-gray-700 mb-1">
-          Notes
-        </label>
-        <textarea
-          id="meeting-notes"
-          rows={3}
-          {...register('notes')}
-          className={sharedInputClass}
-          placeholder="Optional"
-        />
-        {errors.notes && <p className="mt-1 text-xs text-red-600">{errors.notes.message}</p>}
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

@@ -43,7 +43,7 @@ const AdminQuotationTaskPage = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-6 space-y-4">
+    <div className="w-full px-6 py-6 space-y-4">
       <QuotationSection
         appraisalId={appraisalId}
         onCreateNew={() => setIsQuotationEntryModalOpen(true)}

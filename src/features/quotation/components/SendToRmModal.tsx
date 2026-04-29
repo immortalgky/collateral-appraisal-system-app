@@ -30,7 +30,11 @@ const SendToRmModal = ({ isOpen, onClose, quotationId, shortlistedCount }: SendT
     <Modal isOpen={isOpen} onClose={onClose} title="Send Shortlist to RM" size="sm">
       <div className="flex flex-col gap-4">
         <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-          <Icon name="circle-info" style="solid" className="size-5 text-purple-500 shrink-0 mt-0.5" />
+          <Icon
+            name="circle-info"
+            style="solid"
+            className="size-5 text-purple-500 shrink-0 mt-0.5"
+          />
           <div className="text-sm text-purple-700">
             <p className="font-medium mb-1">Confirm shortlist submission</p>
             <p>
