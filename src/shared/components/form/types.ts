@@ -1,4 +1,4 @@
-import type { ListBoxItem } from '../inputs/Dropdown';
+import type { ListBoxItem, OptionFilter } from '../inputs/Dropdown';
 import type { FormStringToggleOption } from '../inputs/FormStringToggle';
 import type { RadioOption } from '../inputs/RadioGroup';
 import type { CheckboxOption } from '../inputs/CheckboxGroup';
@@ -217,6 +217,7 @@ export type DropdownField = BaseDropdownField &
 interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';
   label: string;
+  filterOptions?: OptionFilter | OptionFilter[];
 }
 
 // =============================================================================
