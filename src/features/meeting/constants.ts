@@ -81,3 +81,13 @@ export const ITEM_ACTION_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
   'InProgress',
   'RoutedBack',
 ]);
+
+/**
+ * Statuses in which an item can be removed from the meeting (returns the queue
+ * item to the queue). Mirrors the backend's EnsureMutableStatus guard on
+ * Meeting.RemoveItem — only allowed before the meeting actually starts.
+ */
+export const ITEM_REMOVE_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
+  'New',
+  'InvitationSent',
+]);

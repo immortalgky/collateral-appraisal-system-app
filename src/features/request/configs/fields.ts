@@ -339,7 +339,7 @@ export const propertiesFieldConfig: FieldArrayField = {
 // Collateral type groups for conditional validation
 const LAND_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS'];
 const TITLE_NUMBER_TYPES = ['L', 'LB', 'LSL', 'LS'];
-const OWNER_NAME_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS', 'U'];
+const OWNER_NAME_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS', 'U', 'B'];
 const BUILDING_REQUIRED_TYPES = ['B', 'LB', 'LSB', 'LS'];
 
 // --- Rendering configs (used by sub-form components for <FormFields>) ---
@@ -500,8 +500,8 @@ export const titleBuildingFields: FormField[] = [
     name: 'ownerName',
     wrapperClassName: 'col-span-3',
     maxLength: 100,
-    requiredWhen: { field: 'collateralType', is: ['B'], operator: 'in' },
-    showWhen: { field: 'collateralType', is: ['B'], operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
+    showWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',

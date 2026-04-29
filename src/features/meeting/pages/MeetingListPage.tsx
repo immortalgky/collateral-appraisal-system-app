@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useHasPermission } from '@/shared/hooks/useHasPermission';
+import { DateInput, Dropdown, TextInput } from '@/shared/components/inputs';
 import {
   CANCEL_ELIGIBLE,
   CUT_OFF_ELIGIBLE,
@@ -172,14 +174,15 @@ const MeetingRow = ({
       <td className="px-4 py-3">
         <MeetingStatusBadge status={meeting.status} />
       </td>
-      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDateTime(meeting.startAt)}</td>
+      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+        {formatDateTime(meeting.startAt)}
+      </td>
       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDateTime(meeting.endAt)}</td>
-      <td className="px-4 py-3 text-gray-600">{meeting.location ?? '—'}</td>
+      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+        {formatDateTime(meeting.cutOffAt)}
+      </td>
       <td className="px-4 py-3 text-right text-gray-600">{meeting.itemCount}</td>
-      <td
-        className="px-3 py-3 text-right"
-        onClick={e => e.stopPropagation()}
-      >
+      <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
         <RowActionsMenu actions={actions} />
       </td>
     </tr>
@@ -188,10 +191,22 @@ const MeetingRow = ({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+type MeetingTab = 'active' | 'history';
+
+const HISTORY_STATUSES: MeetingStatus[] = ['Ended', 'Cancelled'];
+const ACTIVE_STATUSES: MeetingStatus[] = MEETING_STATUS_OPTIONS.filter(
+  s => !HISTORY_STATUSES.includes(s),
+);
+
 const MeetingListPage = () => {
   const navigate = useNavigate();
   const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
+  const [tab, setTab] = useState<MeetingTab>('active');
+  const [searchInput, setSearchInput] = useState('');
+  const [fromDate, setFromDate] = useState<string | undefined>(undefined);
+  const [toDate, setToDate] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>('');
+  const debouncedSearch = useDebounce(searchInput, 400);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
@@ -203,11 +218,37 @@ const MeetingListPage = () => {
   const sendInvitationDialog = useDisclosure();
   const cancelDialog = useDisclosure();
 
+  const statusOptions = tab === 'history' ? HISTORY_STATUSES : ACTIVE_STATUSES;
+
+  // Reset page when any filter input changes.
+  useEffect(() => {
+    setPageNumber(0);
+  }, [debouncedSearch, fromDate, toDate, statusFilter, tab]);
+
   const { data, isLoading } = useGetMeetings({
     status: statusFilter || undefined,
+    isHistory: tab === 'history',
+    search: debouncedSearch || undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
     pageNumber,
     pageSize,
   });
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setFromDate(undefined);
+    setToDate(undefined);
+    setStatusFilter('');
+  };
+
+  const handleTabChange = (next: MeetingTab) => {
+    if (next === tab) return;
+    setTab(next);
+    clearFilters();
+  };
+
+  const hasAnyFilter = !!searchInput || !!fromDate || !!toDate || !!statusFilter;
 
   const items = data?.items ?? [];
   const totalCount = data?.count ?? 0;
@@ -270,23 +311,71 @@ const MeetingListPage = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="shrink-0 flex items-center gap-1 border-b border-gray-200">
+        {(
+          [
+            { key: 'active', label: 'Active' },
+            { key: 'history', label: 'History' },
+          ] as { key: MeetingTab; label: string }[]
+        ).map(({ key, label }) => {
+          const isActive = tab === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleTabChange(key)}
+              className={`px-3 py-1.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                isActive
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
-      <div className="shrink-0 flex items-center gap-3 pb-1">
-        <select
-          value={statusFilter}
-          onChange={e => {
-            setStatusFilter(e.target.value as MeetingStatus | '');
-            setPageNumber(0);
-          }}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-32"
-        >
-          <option value="">All Status</option>
-          {MEETING_STATUS_OPTIONS.map(status => (
-            <option key={status} value={status}>
-              {MEETING_STATUS_LABELS[status]}
-            </option>
-          ))}
-        </select>
+      <div className="shrink-0 flex flex-wrap items-center gap-3 pb-1">
+        <div className="w-72">
+          <TextInput
+            placeholder="Search meeting no. or customer name"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+          />
+        </div>
+        <div className="w-44">
+          <Dropdown
+            placeholder="All Status"
+            showValuePrefix={false}
+            value={statusFilter}
+            options={statusOptions.map(s => ({
+              value: s,
+              label: MEETING_STATUS_LABELS[s],
+            }))}
+            onChange={(val: string | null) => setStatusFilter((val ?? '') as MeetingStatus | '')}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">From</span>
+          <div className="w-40">
+            <DateInput value={fromDate ?? null} onChange={val => setFromDate(val ?? undefined)} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">To</span>
+          <div className="w-40">
+            <DateInput value={toDate ?? null} onChange={val => setToDate(val ?? undefined)} />
+          </div>
+        </div>
+        {hasAnyFilter && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <Icon name="xmark" style="solid" className="size-3.5 mr-1" />
+            Clear
+          </Button>
+        )}
       </div>
 
       {/* Table */}
@@ -306,7 +395,9 @@ const MeetingListPage = () => {
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
                   End
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Location</th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  Cut-off
+                </th>
                 <th className="text-right font-medium text-gray-600 px-4 py-2.5">Items</th>
                 <th className="w-10 px-3 py-2.5" />
               </tr>

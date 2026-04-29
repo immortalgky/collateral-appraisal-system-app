@@ -1,16 +1,63 @@
+import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import type { AppraisalSummaryDto } from '../schemas/quotation';
 
 interface AppraisalReportListingTableProps {
   appraisals: AppraisalSummaryDto[];
   rmUserName?: string | null;
+  rmUserFullName?: string | null;
 }
+
+interface AppraisalRowProps {
+  ap: AppraisalSummaryDto;
+  rmUserName?: string | null;
+  rmUserFullName?: string | null;
+}
+
+const AppraisalRow = ({ ap, rmUserName, rmUserFullName }: AppraisalRowProps) => {
+  const propertyTypeDescription = useParameterDescription('PropertyType', ap.propertyType ?? '');
+
+  return (
+    <tr key={ap.appraisalId} className="hover:bg-gray-50 transition-colors">
+      <td className="px-4 py-3">
+        <span className="text-sm font-medium text-gray-900">{ap.appraisalNumber ?? '—'}</span>
+      </td>
+      <td className="px-4 py-3">
+        <span className="text-sm text-gray-600">{ap.customerName ?? '—'}</span>
+      </td>
+      <td className="px-4 py-3">
+        <span className="text-sm text-gray-600">
+          {ap.propertyType ? propertyTypeDescription || ap.propertyType : '—'}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        {rmUserName ? (
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-900">{rmUserName}</span>
+            {rmUserFullName && rmUserFullName !== rmUserName && (
+              <span className="text-xs text-gray-500">{rmUserFullName}</span>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-gray-600">—</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-center">
+        <span className="text-sm text-gray-600">{ap.maxAppraisalDays ?? '—'}</span>
+      </td>
+    </tr>
+  );
+};
 
 /**
  * Presentational table listing appraisals bundled in an RFQ.
  * Shown at the top of the admin QuotationSelectionPage.
  * Fields not present on AppraisalSummaryDto render as "—".
  */
-const AppraisalReportListingTable = ({ appraisals, rmUserName }: AppraisalReportListingTableProps) => {
+const AppraisalReportListingTable = ({
+  appraisals,
+  rmUserName,
+  rmUserFullName,
+}: AppraisalReportListingTableProps) => {
   if (appraisals.length === 0) {
     return (
       <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -54,25 +101,12 @@ const AppraisalReportListingTable = ({ appraisals, rmUserName }: AppraisalReport
           </thead>
           <tbody className="divide-y divide-gray-100">
             {appraisals.map(ap => (
-              <tr key={ap.appraisalId} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3">
-                  <span className="text-sm font-medium text-gray-900">
-                    {ap.appraisalNumber ?? '—'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-sm text-gray-600">{ap.customerName ?? '—'}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-sm text-gray-600">{ap.propertyType ?? '—'}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-sm text-gray-600">{rmUserName ?? '—'}</span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className="text-sm text-gray-600">{ap.maxAppraisalDays ?? '—'}</span>
-                </td>
-              </tr>
+              <AppraisalRow
+                key={ap.appraisalId}
+                ap={ap}
+                rmUserName={rmUserName}
+                rmUserFullName={rmUserFullName}
+              />
             ))}
           </tbody>
         </table>

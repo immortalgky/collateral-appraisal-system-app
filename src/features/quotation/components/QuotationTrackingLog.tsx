@@ -68,13 +68,15 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
                   {(rows ?? []).map(row => (
                     <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
-                        <span className="text-sm font-medium text-gray-900">{row.activityName}</span>
-                        {row.remark && (
-                          <p className="text-xs text-gray-400 mt-0.5">{row.remark}</p>
-                        )}
+                        <span className="text-sm font-medium text-gray-900">
+                          {row.activityName}
+                        </span>
+                        {row.remark && <p className="text-xs text-gray-400 mt-0.5">{row.remark}</p>}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{formatDateTime(row.actionAt)}</span>
+                        <span className="text-sm text-gray-600">
+                          {formatDateTime(row.actionAt)}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-gray-600">{row.actionBy}</span>

@@ -32,7 +32,16 @@ const ExistingDraftPicker = ({
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full">
           <tbody>
-            <TableRowSkeleton columns={[{ width: 'w-32' }, { width: 'w-24' }, { width: 'w-40' }, { width: 'w-16' }, { width: 'w-24' }]} rows={3} />
+            <TableRowSkeleton
+              columns={[
+                { width: 'w-32' },
+                { width: 'w-24' },
+                { width: 'w-40' },
+                { width: 'w-16' },
+                { width: 'w-24' },
+              ]}
+              rows={3}
+            />
           </tbody>
         </table>
       </div>
@@ -89,9 +98,18 @@ const ExistingDraftPicker = ({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {isSelected && (
-                        <Icon name="circle-check" style="solid" className="size-4 text-purple-500 shrink-0" />
+                        <Icon
+                          name="circle-check"
+                          style="solid"
+                          className="size-4 text-purple-500 shrink-0"
+                        />
                       )}
-                      <span className={clsx('text-sm font-medium', isSelected ? 'text-purple-700' : 'text-purple-600')}>
+                      <span
+                        className={clsx(
+                          'text-sm font-medium',
+                          isSelected ? 'text-purple-700' : 'text-purple-600',
+                        )}
+                      >
                         {draft.quotationNumber}
                       </span>
                     </div>

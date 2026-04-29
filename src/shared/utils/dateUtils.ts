@@ -70,6 +70,58 @@ const RELATIVE_UNITS: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
 ];
 
 /**
+ * Locale-aware date formatter that follows the i18n language toggle.
+ * Thai Buddhist calendar (`th-TH`) when `language` starts with `th-`, else `dd/MM/yyyy`.
+ *
+ * @param date          Date input (string/number/Date) — returns '—' when nullish.
+ * @param language      i18n.language value (e.g. `i18n.language` from useTranslation()).
+ */
+export function formatLocaleDate(
+  date: Date | string | number | null | undefined,
+  language: string | undefined,
+): string {
+  if (date === null || date === undefined) return '—';
+  const d = typeof date === 'object' ? date : new Date(date);
+  if (isNaN(d.getTime())) return '—';
+
+  if (language?.startsWith('th')) {
+    return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+/**
+ * Locale-aware date+time formatter that follows the i18n language toggle.
+ * Thai Buddhist calendar (`th-TH`) when `language` starts with `th-`, else `dd/MM/yyyy HH:mm`.
+ */
+export function formatLocaleDateTime(
+  date: Date | string | number | null | undefined,
+  language: string | undefined,
+): string {
+  if (date === null || date === undefined) return '—';
+  const d = typeof date === 'object' ? date : new Date(date);
+  if (isNaN(d.getTime())) return '—';
+
+  if (language?.startsWith('th')) {
+    return d.toLocaleString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+}
+
+/**
  * Get relative time string (e.g., "2 days ago", "yesterday", "5 นาทีที่แล้ว")
  * Uses Intl.RelativeTimeFormat for locale-aware output.
  * @param date Date to get relative time for

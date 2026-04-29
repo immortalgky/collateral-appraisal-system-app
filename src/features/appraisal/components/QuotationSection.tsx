@@ -1339,6 +1339,24 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const winner = quotationDetail?.companyQuotations?.find(
       cq => cq.id === quotationDetail.tentativeWinnerQuotationId,
     );
+    // Per-appraisal slice — section is always scoped to one appraisalId. Mirror the
+    // backend's CompanyQuotation.RecalculateTotalPrice rule: NetAmount when feeAmount
+    // > 0, else legacy quotedPrice.
+    const appraisalItem = winner?.items.find(i => i.appraisalId === appraisalId);
+    let finalPrice: number | null = null;
+    if (appraisalItem) {
+      if (appraisalItem.feeAmount > 0) {
+        const feeAfterDiscount =
+          appraisalItem.feeAmount -
+          appraisalItem.discount -
+          (appraisalItem.negotiatedDiscount ?? 0);
+        const vatAmount =
+          Math.round(((feeAfterDiscount * appraisalItem.vatPercent) / 100) * 100) / 100;
+        finalPrice = feeAfterDiscount + vatAmount;
+      } else {
+        finalPrice = appraisalItem.quotedPrice;
+      }
+    }
     return (
       <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-200">
@@ -1355,22 +1373,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             Quotation finalized with{' '}
             <strong className="text-gray-900">{winner?.companyName ?? '—'}</strong>.
           </p>
-          {(() => {
-            // Prefer the post-negotiation price; fall back to the original total when no
-            // negotiation rounds happened (currentNegotiatedPrice stays null in that case).
-            const finalPrice = winner?.currentNegotiatedPrice ?? winner?.totalQuotedPrice;
-            if (finalPrice == null) return null;
-            return (
-              <p className="mt-1">
-                Final price:{' '}
-                <strong className="text-green-700">
-                  {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(
-                    finalPrice,
-                  )}
-                </strong>
-              </p>
-            );
-          })()}
+          {finalPrice != null && (
+            <p className="mt-1">
+              Final price:{' '}
+              <strong className="text-green-700">
+                {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(
+                  finalPrice,
+                )}
+              </strong>
+            </p>
+          )}
           <p className="mt-2 text-xs text-gray-400">
             Click "Assign" to route externally to this company.
           </p>

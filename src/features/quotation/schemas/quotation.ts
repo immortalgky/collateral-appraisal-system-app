@@ -194,6 +194,7 @@ export const QuotationRequestDetailSchema = z.object({
   bankingSegment: z.string().nullable().optional(),
   rmUserId: z.string().uuid().nullable().optional(),
   rmUserName: z.string().nullable().optional(),
+  rmUserFullName: z.string().nullable().optional(),
   submissionsClosedAt: z.string().nullable().optional(),
   shortlistSentToRmAt: z.string().nullable().optional(),
   shortlistSentByAdminId: z.string().uuid().nullable().optional(),
@@ -218,6 +219,13 @@ export const QuotationRequestDetailSchema = z.object({
   // v4: RM negotiation recommendation (set when RM picks winner)
   rmRequestsNegotiation: z.boolean().optional(),
   rmNegotiationNote: z.string().nullable().optional(),
+  // Task-ownership flag — backend sets true only when the calling user holds the
+  // currently-pending workflow task for this quotation+company. FE uses this to
+  // gate ext-company edit affordances; internal users ignore it.
+  canEdit: z.boolean().optional().default(false),
+  // RM-task-ownership flag — backend sets true only when the calling user holds the
+  // active rm-pick-winner workflow task (admins always true). Drives Pick button visibility.
+  canPickWinner: z.boolean().optional().default(false),
 });
 
 export type QuotationRequestDetailDto = z.infer<typeof QuotationRequestDetailSchema>;
@@ -253,38 +261,44 @@ export type RejectTentativeFormValues = z.infer<typeof rejectTentativeFormSchema
 export const pickWinnerFormSchema = z.object({
   reason: z.string().min(1, 'Please provide a reason for your selection'),
   requestNegotiation: z.boolean().optional().default(false),
-  negotiationNote: z.string().max(500, 'Note must be 500 characters or fewer').nullable().optional(),
+  negotiationNote: z
+    .string()
+    .max(500, 'Note must be 500 characters or fewer')
+    .nullable()
+    .optional(),
 });
 
 export type PickWinnerFormValues = z.infer<typeof pickWinnerFormSchema>;
 
 /** Per-appraisal line item within the submit form. */
-export const submitQuotationItemSchema = z.object({
-  appraisalId: z.string().uuid(),
-  // Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
-  estimatedDays: z
-    .number({ required_error: 'Days is required' })
-    .int('Must be a whole number')
-    .positive('Must be positive'),
-  // Fee-breakdown fields — used in the Maker/Checker path.
-  feeAmount: z.number().nonnegative().optional(),
-  discount: z.number().nonnegative().optional(),
-  negotiatedDiscount: z.number().nonnegative().nullable().optional(),
-  vatPercent: z.number().nonnegative().optional(),
-  /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
-  itemNotes: z.string().nullable().optional(),
-}).superRefine((item, ctx) => {
-  if (item.feeAmount === undefined) return;
-  const discount = item.discount ?? 0;
-  const negotiated = item.negotiatedDiscount ?? 0;
-  if (discount + negotiated > item.feeAmount) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['negotiatedDiscount'],
-      message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
-    });
-  }
-});
+export const submitQuotationItemSchema = z
+  .object({
+    appraisalId: z.string().uuid(),
+    // Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
+    estimatedDays: z
+      .number({ required_error: 'Days is required' })
+      .int('Must be a whole number')
+      .positive('Must be positive'),
+    // Fee-breakdown fields — used in the Maker/Checker path.
+    feeAmount: z.number().nonnegative().optional(),
+    discount: z.number().nonnegative().optional(),
+    negotiatedDiscount: z.number().nonnegative().nullable().optional(),
+    vatPercent: z.number().nonnegative().optional(),
+    /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
+    itemNotes: z.string().nullable().optional(),
+  })
+  .superRefine((item, ctx) => {
+    if (item.feeAmount === undefined) return;
+    const discount = item.discount ?? 0;
+    const negotiated = item.negotiatedDiscount ?? 0;
+    if (discount + negotiated > item.feeAmount) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['negotiatedDiscount'],
+        message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
+      });
+    }
+  });
 
 export type SubmitQuotationItemValues = z.infer<typeof submitQuotationItemSchema>;
 
@@ -294,9 +308,7 @@ export const submitQuotationFormSchema = z.object({
   // external reference and often left blank. Empty string passes validation.
   quotationNumber: z.string(),
   /** Per-appraisal line items — at least one required. */
-  items: z
-    .array(submitQuotationItemSchema)
-    .min(1, 'At least one appraisal item is required'),
+  items: z.array(submitQuotationItemSchema).min(1, 'At least one appraisal item is required'),
   validUntil: z.string().nullable().optional(),
   proposedStartDate: z.string().nullable().optional(),
   proposedCompletionDate: z.string().nullable().optional(),
@@ -312,27 +324,29 @@ export type SubmitQuotationFormValues = z.infer<typeof submitQuotationFormSchema
 // ─── Save Draft (Maker/Checker) ───────────────────────────────────────────────
 
 /** Per-appraisal line item for the draft save endpoint — fee breakdown is required. */
-export const SaveDraftQuotationItemSchema = z.object({
-  quotationRequestItemId: z.string().uuid(),
-  appraisalId: z.string().uuid(),
-  itemNumber: z.number().int(),
-  feeAmount: z.number().nonnegative(),
-  discount: z.number().nonnegative(),
-  negotiatedDiscount: z.number().nonnegative().nullable(),
-  vatPercent: z.number().nonnegative(),
-  estimatedDays: z.number().int(),
-  itemNotes: z.string().nullable().optional(),
-}).superRefine((item, ctx) => {
-  const discount = item.discount ?? 0;
-  const negotiated = item.negotiatedDiscount ?? 0;
-  if (discount + negotiated > item.feeAmount) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['negotiatedDiscount'],
-      message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
-    });
-  }
-});
+export const SaveDraftQuotationItemSchema = z
+  .object({
+    quotationRequestItemId: z.string().uuid(),
+    appraisalId: z.string().uuid(),
+    itemNumber: z.number().int(),
+    feeAmount: z.number().nonnegative(),
+    discount: z.number().nonnegative(),
+    negotiatedDiscount: z.number().nonnegative().nullable(),
+    vatPercent: z.number().nonnegative(),
+    estimatedDays: z.number().int(),
+    itemNotes: z.string().nullable().optional(),
+  })
+  .superRefine((item, ctx) => {
+    const discount = item.discount ?? 0;
+    const negotiated = item.negotiatedDiscount ?? 0;
+    if (discount + negotiated > item.feeAmount) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['negotiatedDiscount'],
+        message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
+      });
+    }
+  });
 
 export type SaveDraftQuotationItemInput = z.infer<typeof SaveDraftQuotationItemSchema>;
 
@@ -368,13 +382,15 @@ export type SubmitDraftToCheckerInput = z.infer<typeof SubmitDraftToCheckerSchem
 export const QuotationActivityLogRowSchema = z.object({
   id: z.string().uuid(),
   quotationRequestId: z.string().uuid(),
-  companyQuotationId: z.string().uuid().nullable(),
-  companyId: z.string().uuid().nullable(),
+  // Backend serializes with DefaultIgnoreCondition=WhenWritingNull, so null fields are
+  // omitted from the wire payload. Use .nullish() to accept both null and missing keys.
+  companyQuotationId: z.string().uuid().nullish(),
+  companyId: z.string().uuid().nullish(),
   activityName: z.string(),
   actionAt: z.string(), // ISO datetime string — components parse as needed
   actionBy: z.string(),
-  actionByRole: z.string().nullable(),
-  remark: z.string().nullable(),
+  actionByRole: z.string().nullish(),
+  remark: z.string().nullish(),
 });
 
 export type QuotationActivityLogRow = z.infer<typeof QuotationActivityLogRowSchema>;
@@ -388,7 +404,13 @@ export const EditDraftQuotationSchema = z.object({
 
 export type EditDraftQuotationFormValues = z.infer<typeof EditDraftQuotationSchema>;
 
+export type EditDraftAppraisalEntry = {
+  appraisalId: string;
+  maxAppraisalDays: number | null;
+};
+
 export type EditDraftQuotationBody = {
   dueDate: string;
   companyIds: string[];
+  appraisals?: EditDraftAppraisalEntry[];
 };

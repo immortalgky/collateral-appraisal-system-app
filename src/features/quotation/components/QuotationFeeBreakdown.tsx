@@ -86,8 +86,7 @@ const QuotationFeeBreakdown = ({
 
   const fmt = (v: number) => (isNaN(v) ? '—' : THB.format(v));
 
-  const discountOverflow =
-    !isNaN(feeAfterDiscount) && feeAfterDiscount < 0;
+  const discountOverflow = !isNaN(feeAfterDiscount) && feeAfterDiscount < 0;
 
   return (
     <div className="space-y-2">
@@ -187,12 +186,7 @@ const QuotationFeeBreakdown = ({
           control={control}
           name={`items.${index}.vatPercent`}
           render={({ field }) => (
-            <input
-              {...field}
-              type="hidden"
-              value={field.value ?? ''}
-              onChange={() => {}}
-            />
+            <input {...field} type="hidden" value={field.value ?? ''} onChange={() => {}} />
           )}
         />
 

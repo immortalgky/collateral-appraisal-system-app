@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { ProjectUnit, ProjectUnitUpload } from '../types';
+import { projectModelKeys } from './projectModel';
+import { projectTowerKeys } from './projectTower';
+import { projectPricingAssumptionKeys } from './projectPricingAssumption';
 
 // ==================== Query Keys ====================
 
@@ -85,6 +88,15 @@ export const useUploadProjectUnits = () => {
       });
       queryClient.invalidateQueries({
         queryKey: projectUnitKeys.uploads(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectTowerKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
       });
     },
   });

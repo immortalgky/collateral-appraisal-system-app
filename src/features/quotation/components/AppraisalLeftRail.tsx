@@ -40,18 +40,14 @@ const AppraisalLeftRail = ({
               onClick={() => onSelect(idx)}
               className={clsx(
                 'w-full text-left px-3 py-3 transition-colors',
-                isSelected
-                  ? 'bg-primary/5 border-r-2 border-r-primary'
-                  : 'hover:bg-white',
+                isSelected ? 'bg-primary/5 border-r-2 border-r-primary' : 'hover:bg-white',
               )}
             >
               <div className="flex items-start gap-2">
                 <div
                   className={clsx(
                     'size-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold',
-                    isSelected
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-200 text-gray-500',
+                    isSelected ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500',
                   )}
                 >
                   {idx + 1}
@@ -71,16 +67,10 @@ const AppraisalLeftRail = ({
                 </div>
                 <div className="flex items-center gap-1 shrink-0 self-center">
                   {fee > 0 && (
-                    <p className="text-xs font-medium text-gray-700">
-                      {THB.format(fee)}
-                    </p>
+                    <p className="text-xs font-medium text-gray-700">{THB.format(fee)}</p>
                   )}
                   {isSelected && (
-                    <Icon
-                      name="chevron-right"
-                      style="solid"
-                      className="size-3 text-primary"
-                    />
+                    <Icon name="chevron-right" style="solid" className="size-3 text-primary" />
                   )}
                 </div>
               </div>

@@ -70,8 +70,11 @@ const NegotiationModal = ({
           <div className="text-sm text-orange-700">
             <p>
               Negotiating with <strong>{companyName}</strong>. Round{' '}
-              <strong>{currentRounds + 1} of {maxRounds}</strong> ({roundsRemaining} remaining).
-              The company sets the revised price by adjusting their per-item discount when they respond.
+              <strong>
+                {currentRounds + 1} of {maxRounds}
+              </strong>{' '}
+              ({roundsRemaining} remaining). The company sets the revised price by adjusting their
+              per-item discount when they respond.
             </p>
           </div>
         </div>
@@ -86,9 +89,7 @@ const NegotiationModal = ({
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             placeholder="Explain what you'd like the company to revise (e.g., target a 10% discount on items 1 and 3)"
           />
-          {errors.message && (
-            <p className="mt-1 text-xs text-danger">{errors.message.message}</p>
-          )}
+          {errors.message && <p className="mt-1 text-xs text-danger">{errors.message.message}</p>}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

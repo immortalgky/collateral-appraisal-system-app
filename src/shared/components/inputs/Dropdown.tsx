@@ -72,6 +72,14 @@ interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   error?: string;
   filterOptions?: OptionFilter | OptionFilter[];
   filterWatchValues?: Record<string, unknown>;
+  showValuePrefix?: boolean;
+  /**
+   * Render the option's `value` as a `"value - label"` prefix in both the
+   * trigger and the option list. Defaults to `true` to preserve the existing
+   * "code - description" pattern used for parameter codes (e.g. country codes).
+   * Set to `false` for filters where the value is an internal enum and only
+   * the human label should be shown (e.g. status filters).
+   */
 }
 
 interface ListBoxProps {
@@ -83,6 +91,7 @@ interface ListBoxProps {
   children: ReactNode;
   disabled?: boolean;
   error?: string;
+  showValuePrefix?: boolean;
 }
 
 interface ListBoxOptionProps {
@@ -110,6 +119,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       disabled,
       filterOptions,
       filterWatchValues,
+      showValuePrefix = true,
       ...props
     },
     ref,
@@ -159,10 +169,11 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
           selected={selectedOption}
           disabled={isDisabled}
           error={error}
+          showValuePrefix={showValuePrefix}
         >
           {dropdownOptions.map(option => (
             <ListBoxOption key={option.id ?? option.value} value={option}>
-              {`${option.value ? `${option.value} -` : ''} ${option.label}`}
+              {showValuePrefix && option.value ? `${option.value} - ${option.label}` : option.label}
             </ListBoxOption>
           ))}
         </ListBox>
@@ -173,7 +184,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 );
 
 const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
-  ({ placeholder, selected, children, disabled, error, ...props }, ref) => {
+  ({ placeholder, selected, children, disabled, error, showValuePrefix = true, ...props }, ref) => {
     return (
       <HeadlessListBox disabled={disabled} by="value" {...props}>
         <div className="relative">
@@ -195,7 +206,11 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             </div>
             <div className="px-3 py-2 truncate">
               {selected?.value ? (
-                `${selected.value} - ${selected.label}`
+                showValuePrefix ? (
+                  `${selected.value} - ${selected.label}`
+                ) : (
+                  selected.label
+                )
               ) : (
                 <span className="text-gray-400">{placeholder}</span>
               )}
