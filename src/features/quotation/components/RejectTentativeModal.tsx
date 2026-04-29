@@ -55,11 +55,16 @@ const RejectTentativeModal = ({
     <Modal isOpen={isOpen} onClose={handleClose} title="Reject Tentative Winner" size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
-          <Icon name="triangle-exclamation" style="solid" className="size-4 text-red-500 shrink-0 mt-0.5" />
+          <Icon
+            name="triangle-exclamation"
+            style="solid"
+            className="size-4 text-red-500 shrink-0 mt-0.5"
+          />
           <div className="text-sm text-red-700">
             <p>
-              You are rejecting <strong>{companyName}</strong> as the tentative winner. The quotation
-              will return to <strong>Admin Review</strong> so you can revise and re-send the shortlist.
+              You are rejecting <strong>{companyName}</strong> as the tentative winner. The
+              quotation will return to <strong>Admin Review</strong> so you can revise and re-send
+              the shortlist.
             </p>
           </div>
         </div>
@@ -74,9 +79,7 @@ const RejectTentativeModal = ({
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-danger/20 focus:border-danger outline-none resize-none"
             placeholder="Why is this company being rejected as winner?"
           />
-          {errors.reason && (
-            <p className="mt-1 text-xs text-danger">{errors.reason.message}</p>
-          )}
+          {errors.reason && <p className="mt-1 text-xs text-danger">{errors.reason.message}</p>}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

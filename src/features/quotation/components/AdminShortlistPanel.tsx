@@ -56,7 +56,8 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
     if (isPending) return;
     if (cq.isShortlisted) {
       unshortlist(cq.id, {
-        onError: (err: any) => toast.error(err?.apiError?.detail ?? 'Failed to remove from shortlist'),
+        onError: (err: any) =>
+          toast.error(err?.apiError?.detail ?? 'Failed to remove from shortlist'),
       });
     } else {
       shortlist(cq.id, {
@@ -66,7 +67,9 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
   };
 
   const formatCurrency = (v?: number | null) =>
-    v != null ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v) : '—';
+    v != null
+      ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
+      : '—';
 
   /**
    * Re-derive the target inside the confirm callback so a concurrent shortlist change between
@@ -131,11 +134,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
               )}
               Select as Winner
             </Button>
-            <Button
-              size="sm"
-              onClick={openSendToRm}
-              disabled={shortlistedCount === 0}
-            >
+            <Button size="sm" onClick={openSendToRm} disabled={shortlistedCount === 0}>
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
               Send to RM
             </Button>
@@ -215,7 +214,9 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                               : 'border-gray-300 hover:border-indigo-400',
                             isPending && 'opacity-50 cursor-not-allowed',
                           )}
-                          aria-label={cq.isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+                          aria-label={
+                            cq.isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'
+                          }
                         >
                           {cq.isShortlisted && (
                             <Icon name="check" style="solid" className="size-3.5 text-white" />
@@ -248,9 +249,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">
-                          {fmtDateTime(cq.submittedAt)}
-                        </span>
+                        <span className="text-sm text-gray-600">{fmtDateTime(cq.submittedAt)}</span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <QuotationStatusBadge status={cq.status} />
@@ -258,16 +257,29 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                       <td className="px-4 py-3 text-center">
                         {/* Only show detail icon for statuses an admin should review.
                             Exclude Draft and PendingCheckerReview — in-progress ext-company drafts. */}
-                        {cq.id && ['Submitted', 'UnderReview', 'Accepted', 'Rejected', 'Tentative', 'Negotiating', 'Withdrawn'].includes(cq.status) && (
-                          <button
-                            type="button"
-                            aria-label={`View ${cq.companyName} quotation detail`}
-                            onClick={() => setDrawerCompanyQuotationId(cq.id)}
-                            className="p-1 rounded hover:bg-gray-100 transition-colors"
-                          >
-                            <Icon name="file-lines" style="regular" className="size-4 text-blue-500" />
-                          </button>
-                        )}
+                        {cq.id &&
+                          [
+                            'Submitted',
+                            'UnderReview',
+                            'Accepted',
+                            'Rejected',
+                            'Tentative',
+                            'Negotiating',
+                            'Withdrawn',
+                          ].includes(cq.status) && (
+                            <button
+                              type="button"
+                              aria-label={`View ${cq.companyName} quotation detail`}
+                              onClick={() => setDrawerCompanyQuotationId(cq.id)}
+                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                            >
+                              <Icon
+                                name="file-lines"
+                                style="regular"
+                                className="size-4 text-blue-500"
+                              />
+                            </button>
+                          )}
                       </td>
                     </tr>
                   );
@@ -303,7 +315,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
         onClose={closeSelectWinnerConfirm}
         onConfirm={handleConfirmSelectAsWinner}
         title="Select as Winner"
-        message={`Mark ${selectWinnerTargetName} as the winner? You will then be able to finalize or open a negotiation round.`}
+        message={`Mark ${selectWinnerTargetName} as the winner? You will then be able to award or open a negotiation round.`}
         confirmText="Select as Winner"
         variant="primary"
         isLoading={isPickingWinner}

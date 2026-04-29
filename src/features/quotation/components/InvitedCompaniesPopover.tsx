@@ -79,7 +79,9 @@ const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPo
                       className="px-3 py-1.5 text-xs text-gray-800 flex items-start gap-1.5"
                     >
                       <span className="text-gray-300 select-none">•</span>
-                      <span className="truncate" title={c.companyName}>{c.companyName}</span>
+                      <span className="truncate" title={c.companyName}>
+                        {c.companyName}
+                      </span>
                     </li>
                   ))}
                 </ul>

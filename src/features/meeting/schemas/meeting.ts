@@ -32,12 +32,8 @@ const locationField = z
   .optional()
   .or(z.literal(''));
 
-const notesField = z
-  .string()
-  .trim()
-  .max(2000, 'Notes must be 2000 characters or fewer')
-  .optional()
-  .or(z.literal(''));
+const buildFromToField = () =>
+  z.string().trim().max(200, 'Must be 200 characters or fewer').optional().or(z.literal(''));
 
 const startAtField = z
   .string()
@@ -54,9 +50,6 @@ const endAtField = z
  */
 export const createMeetingFormSchema = z
   .object({
-    title: titleField,
-    location: locationField,
-    notes: notesField,
     startAt: startAtField,
     endAt: endAtField,
   })
@@ -75,7 +68,8 @@ export const updateMeetingFormSchema = z
   .object({
     title: titleField,
     location: locationField,
-    notes: notesField,
+    fromText: buildFromToField(),
+    toText: buildFromToField(),
     startAt: startAtField,
     endAt: endAtField,
   })
@@ -141,8 +135,6 @@ export type UpdateMemberPositionFormValues = z.infer<typeof updateMemberPosition
 // ==================== Agenda ====================
 
 export const updateAgendaSchema = z.object({
-  fromText: z.string().max(200).nullable().optional(),
-  toText: z.string().max(200).nullable().optional(),
   agendaCertifyMinutes: z.string().max(2000).nullable().optional(),
   agendaChairmanInformed: z.string().max(2000).nullable().optional(),
   agendaOthers: z.string().max(2000).nullable().optional(),

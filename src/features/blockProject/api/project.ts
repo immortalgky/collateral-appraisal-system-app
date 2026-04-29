@@ -41,6 +41,38 @@ export const useGetProject = (appraisalId: string, expectedType?: ProjectType) =
 };
 
 /**
+ * Change the project type for an appraisal.
+ * POST /appraisals/{appraisalId}/project:change-type
+ *
+ * Destroys type-specific fields and all children, preserving shared fields.
+ * Returns the new project (same shape as GET /project) so the caller can
+ * hydrate without a follow-up GET.
+ * - 404 if no project exists.
+ * - 400 if newProjectType equals the current type.
+ */
+export const useChangeProjectType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      newProjectType: ProjectType;
+    }): Promise<Project> => {
+      const { data } = await axios.post<Project>(
+        `/appraisals/${params.appraisalId}/project:change-type`,
+        { newProjectType: params.newProjectType },
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.detail(variables.appraisalId),
+      });
+    },
+  });
+};
+
+/**
  * Save (upsert) the project for an appraisal.
  * PUT /appraisals/{appraisalId}/project
  *

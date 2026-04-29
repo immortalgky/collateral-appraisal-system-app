@@ -38,7 +38,9 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
   };
 
   const formatCurrency = (v?: number | null) =>
-    v != null ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v) : '—';
+    v != null
+      ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
+      : '—';
 
   const shortlisted = (quotation.companyQuotations ?? []).filter(q => q.isShortlisted);
 
@@ -64,7 +66,9 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
             size="sm"
             onClick={handleRecall}
             disabled={isPending || hasTentativeWinner}
-            title={hasTentativeWinner ? 'Cannot recall once a tentative winner is picked' : undefined}
+            title={
+              hasTentativeWinner ? 'Cannot recall once a tentative winner is picked' : undefined
+            }
           >
             {isPending ? (
               <Icon name="spinner" style="solid" className="size-3.5 animate-spin mr-1.5" />
@@ -79,7 +83,8 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
           <div className="px-4 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
             <Icon name="circle-info" style="solid" className="size-4 text-indigo-500 shrink-0" />
             <p className="text-xs text-indigo-700">
-              RM has already picked a tentative winner — recall is disabled. Use "Reject Tentative Winner" to restart the selection.
+              RM has already picked a tentative winner — recall is disabled. Use "Reject Tentative
+              Winner" to restart the selection.
             </p>
           </div>
         )}
@@ -147,10 +152,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
               {shortlisted.map(cq => {
                 const items = cq.items ?? [];
                 const hasItems = items.length > 0;
-                const totalFeeAmount = items.reduce(
-                  (sum, item) => sum + (item.feeAmount ?? 0),
-                  0,
-                );
+                const totalFeeAmount = items.reduce((sum, item) => sum + (item.feeAmount ?? 0), 0);
                 const totalDiscount = items.reduce(
                   (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                   0,
@@ -205,16 +207,29 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                       <QuotationStatusBadge status={cq.status} />
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {cq.id && ['Submitted', 'UnderReview', 'Accepted', 'Rejected', 'Tentative', 'Negotiating', 'Withdrawn'].includes(cq.status) && (
-                        <button
-                          type="button"
-                          aria-label={`View ${cq.companyName} quotation detail`}
-                          onClick={() => setDrawerCompanyQuotationId(cq.id)}
-                          className="p-1 rounded hover:bg-gray-100 transition-colors"
-                        >
-                          <Icon name="file-lines" style="regular" className="size-4 text-blue-500" />
-                        </button>
-                      )}
+                      {cq.id &&
+                        [
+                          'Submitted',
+                          'UnderReview',
+                          'Accepted',
+                          'Rejected',
+                          'Tentative',
+                          'Negotiating',
+                          'Withdrawn',
+                        ].includes(cq.status) && (
+                          <button
+                            type="button"
+                            aria-label={`View ${cq.companyName} quotation detail`}
+                            onClick={() => setDrawerCompanyQuotationId(cq.id)}
+                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                          >
+                            <Icon
+                              name="file-lines"
+                              style="regular"
+                              className="size-4 text-blue-500"
+                            />
+                          </button>
+                        )}
                     </td>
                   </tr>
                 );

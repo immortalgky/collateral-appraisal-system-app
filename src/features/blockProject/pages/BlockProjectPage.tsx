@@ -8,6 +8,7 @@ import {
   MarketsTab,
   PhotosTab,
 } from '@/features/appraisal/components/tabs';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 
 import type { ProjectType } from '../types';
 import ProjectInfoTab from '../components/tabs/ProjectInfoTab';
@@ -16,6 +17,13 @@ import ProjectLandTab from '../components/tabs/ProjectLandTab';
 import ModelListingTab from '../components/tabs/ModelListingTab';
 import TowerListingTab from '../components/tabs/TowerListingTab';
 import UnitPriceTab from '../components/tabs/UnitPriceTab';
+import ProjectTypePill from '../components/ProjectTypePill';
+import { useGetProject } from '../api/project';
+import { useGetProjectModels } from '../api/projectModel';
+import { useGetProjectTowers } from '../api/projectTower';
+import { useGetProjectUnits } from '../api/projectUnit';
+import { useGetProjectPricingAssumptions } from '../api/projectPricingAssumption';
+import { useGetProjectLand } from '../api/projectLand';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -92,6 +100,8 @@ interface BlockProjectPageProps {
  */
 export default function BlockProjectPage({ projectType }: BlockProjectPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const appraisalId = useAppraisalId() ?? '';
+  const basePath = useBasePath();
   const tabs = getTabs(projectType);
   const validTabIds = tabs.map(t => t.id);
 
@@ -101,6 +111,25 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
 
   const handleTabChange = (tabId: TabId) => {
     setSearchParams({ tab: tabId }, { replace: true });
+  };
+
+  // ── Child count queries for the type-change dialog ────────────────────────
+  // TanStack Query deduplicates these with the same keys used inside tab
+  // subcomponents, so no extra network requests are made.
+  const { data: project } = useGetProject(appraisalId, projectType);
+  const { data: modelsData } = useGetProjectModels(appraisalId);
+  const { data: towersData } = useGetProjectTowers(appraisalId);
+  const { data: unitsData } = useGetProjectUnits(appraisalId);
+  const { data: pricingData } = useGetProjectPricingAssumptions(appraisalId);
+  const { data: landData } = useGetProjectLand(appraisalId);
+
+  const hasExistingProject = project != null;
+  const childCounts = {
+    models: modelsData?.length ?? 0,
+    towers: towersData?.length ?? 0,
+    units: unitsData?.totalCount ?? 0,
+    hasLand: landData != null,
+    hasPricing: pricingData != null,
   };
 
   const renderTabContent = () => {
@@ -134,6 +163,17 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {/* Project Type Pill */}
+      <div className="shrink-0 pb-3">
+        <ProjectTypePill
+          projectType={projectType}
+          appraisalId={appraisalId}
+          basePath={basePath}
+          hasExistingProject={hasExistingProject}
+          childCounts={childCounts}
+        />
+      </div>
+
       {/* Tab Navigation */}
       <div className="shrink-0 pb-4">
         <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100 overflow-x-auto">

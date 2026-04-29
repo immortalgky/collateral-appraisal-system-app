@@ -73,6 +73,8 @@ import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
 import MenuListPage from '@features/menuManagement/pages/MenuListPage';
 import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
 import QuotationSelectionPage from '@/features/quotation/pages/QuotationSelectionPage';
+import QuotationListingPage from '@/features/quotation/pages/QuotationListingPage';
+import NewQuotationPage from '@/features/quotation/pages/NewQuotationPage';
 import ExtCompanyInvitationListPage from '@/features/quotation/pages/ExtCompanyInvitationListPage';
 import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompanySubmitQuotationPage';
 import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
@@ -269,6 +271,8 @@ export const router = createBrowserRouter([
         path: 'quotations',
         element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin']} />,
         children: [
+          { index: true, element: <QuotationListingPage /> },
+          { path: 'new', element: <NewQuotationPage /> },
           { path: ':id', element: <QuotationSelectionPage /> },
           {
             path: ':quotationRequestId/companies/:companyQuotationId',

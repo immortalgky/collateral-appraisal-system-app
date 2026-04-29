@@ -57,11 +57,11 @@ const FinalizeModal = ({
       },
       {
         onSuccess: () => {
-          toast.success('Quotation finalized — click Assign to route externally');
+          toast.success('Quotation awarded — click Assign to route externally');
           handleClose();
         },
         onError: (err: any) => {
-          toast.error(err?.apiError?.detail ?? 'Failed to finalize quotation');
+          toast.error(err?.apiError?.detail ?? 'Failed to award quotation');
         },
       },
     );
@@ -93,15 +93,19 @@ const FinalizeModal = ({
   const grandTotal = sortedItems.reduce((sum, item) => sum + itemFee(item), 0);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Finalize Quotation" size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Award Quotation" size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <div className="p-3 bg-green-50 rounded-lg border border-green-100 flex items-start gap-2">
-          <Icon name="circle-check" style="solid" className="size-4 text-green-500 shrink-0 mt-0.5" />
+          <Icon
+            name="circle-check"
+            style="solid"
+            className="size-4 text-green-500 shrink-0 mt-0.5"
+          />
           <div className="text-sm text-green-700">
             <p>
-              Finalizing with <strong>{companyName}</strong>. The system will commit each appraisal's fee
-              from the per-appraisal price the winner submitted (shown below). Click "Assign" on the task
-              to route externally. This action cannot be undone.
+              Awarding to <strong>{companyName}</strong>. The system will commit each
+              appraisal's fee from the per-appraisal price the winner submitted (shown below). Click
+              "Assign" on the task to route externally. This action cannot be undone.
             </p>
           </div>
         </div>
@@ -171,12 +175,12 @@ const FinalizeModal = ({
             {isPending ? (
               <>
                 <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                Finalizing...
+                Awarding...
               </>
             ) : (
               <>
                 <Icon name="flag-checkered" style="solid" className="size-4 mr-2" />
-                Finalize
+                Award
               </>
             )}
           </Button>

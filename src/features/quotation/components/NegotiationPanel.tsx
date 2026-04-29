@@ -20,16 +20,8 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
     onOpen: openNegotiate,
     onClose: closeNegotiate,
   } = useDisclosure();
-  const {
-    isOpen: isRejectOpen,
-    onOpen: openReject,
-    onClose: closeReject,
-  } = useDisclosure();
-  const {
-    isOpen: isFinalizeOpen,
-    onOpen: openFinalize,
-    onClose: closeFinalize,
-  } = useDisclosure();
+  const { isOpen: isRejectOpen, onOpen: openReject, onClose: closeReject } = useDisclosure();
+  const { isOpen: isFinalizeOpen, onOpen: openFinalize, onClose: closeFinalize } = useDisclosure();
 
   const winner: CompanyQuotationDto | undefined = quotation.companyQuotations?.find(
     cq => cq.id === quotation.tentativeWinnerQuotationId,
@@ -48,15 +40,15 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
   const rmNegotiationNote = quotation.rmNegotiationNote;
 
   const roundsUsed = winner.negotiationRounds ?? 0;
-  const canOpenRound =
-    quotation.status === 'WinnerTentative' || quotation.status === 'Negotiating';
+  const canOpenRound = quotation.status === 'WinnerTentative' || quotation.status === 'Negotiating';
   const roundsExhausted = roundsUsed >= MAX_ROUNDS;
   const awaitingResponse =
-    quotation.status === 'Negotiating' &&
-    winner.negotiations?.some(n => !n.verb && !n.respondedAt);
+    quotation.status === 'Negotiating' && winner.negotiations?.some(n => !n.verb && !n.respondedAt);
 
   const formatCurrency = (v?: number | null) =>
-    v != null ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v) : '—';
+    v != null
+      ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
+      : '—';
 
   return (
     <>
@@ -112,12 +104,12 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               disabled={quotation.status !== 'WinnerTentative'}
               title={
                 quotation.status === 'Negotiating'
-                  ? 'Wait for the company to respond before finalizing'
+                  ? 'Wait for the company to respond before awarding'
                   : undefined
               }
             >
               <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-              Finalize
+              Award
             </Button>
           </div>
         </div>
@@ -178,8 +170,8 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                 roundsExhausted
                   ? 'Maximum negotiation rounds reached'
                   : awaitingResponse
-                  ? 'Awaiting company response'
-                  : undefined
+                    ? 'Awaiting company response'
+                    : undefined
               }
             >
               <Icon name="circle-play" style="solid" className="size-3.5 mr-1.5" />
@@ -187,13 +179,11 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
             </Button>
             {roundsExhausted && (
               <span className="ml-3 text-xs text-amber-600">
-                Maximum rounds ({MAX_ROUNDS}) reached — finalize or reject
+                Maximum rounds ({MAX_ROUNDS}) reached — award or reject
               </span>
             )}
             {awaitingResponse && !roundsExhausted && (
-              <span className="ml-3 text-xs text-amber-600">
-                Awaiting company response...
-              </span>
+              <span className="ml-3 text-xs text-amber-600">Awaiting company response...</span>
             )}
           </div>
         </div>
@@ -223,19 +213,19 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                           {neg.initiatedAt ? new Date(neg.initiatedAt).toLocaleString('th-TH') : ''}
                         </span>
                       </div>
-                      {neg.message && (
-                        <p className="text-gray-600 text-xs mt-1">{neg.message}</p>
-                      )}
+                      {neg.message && <p className="text-gray-600 text-xs mt-1">{neg.message}</p>}
                       {neg.verb && (
                         <div
                           className={clsx(
                             'mt-2 pt-2 border-t border-gray-100 text-xs',
-                            neg.verb === 'Accept' ? 'text-green-700' : neg.verb === 'Reject' ? 'text-red-700' : 'text-amber-700',
+                            neg.verb === 'Accept'
+                              ? 'text-green-700'
+                              : neg.verb === 'Reject'
+                                ? 'text-red-700'
+                                : 'text-amber-700',
                           )}
                         >
-                          <span className="font-medium">
-                            Company {neg.verb}ed
-                          </span>
+                          <span className="font-medium">Company {neg.verb}ed</span>
                           {neg.counterPrice != null && (
                             <span> — counter: {formatCurrency(neg.counterPrice)}</span>
                           )}

@@ -314,7 +314,7 @@ export const AdminCompanyQuotationDetailContent = ({
     isDrawer ? (
       <div className="space-y-5">{children}</div>
     ) : (
-      <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-5">{children}</div>
+      <div className="w-full px-6 py-6 space-y-5">{children}</div>
     );
 
   return (
@@ -367,166 +367,168 @@ export const AdminCompanyQuotationDetailContent = ({
       {/* Main content — left rail + right pane */}
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="flex flex-col md:grid md:grid-cols-[16rem_1fr] min-h-[600px]">
-        {/* Left rail */}
-        {appraisals.length === 0 ? (
-          <div className="flex items-center justify-center w-full h-40 text-gray-400 text-sm">
-            No appraisals in this quotation
-          </div>
-        ) : (
-          <>
-            <AppraisalLeftRail
-              appraisals={appraisals}
-              selectedIndex={selectedIndex}
-              onSelect={setSelectedIndex}
-              feeAmounts={netAmounts}
-            />
-
-            {/* Right pane */}
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-              {selectedAppraisal ? (
-                <div className="p-5 space-y-6">
-                  {/* Section 1 — Appraisal Information */}
-                  <section aria-label="Appraisal Information">
-                    <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                      Appraisal Information
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="block text-xs text-gray-500 mb-0.5">Appraisal Number</span>
-                        <span className="font-medium text-gray-900">
-                          {selectedAppraisal.appraisalNumber?.trim() || '—'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block text-xs text-gray-500 mb-0.5">Customer Name</span>
-                        <span className="font-medium text-gray-900">
-                          {selectedAppraisal.customerName ?? '—'}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
-
-                  {/* Section 2 — Attached Documents (grouped by section, mirrors ext-company submit page) */}
-                  {appraisalDocs.length > 0 && (
-                    <section aria-label="Attached Documents">
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Attach Document
-                      </h2>
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full text-xs table-fixed">
-                          <colgroup>
-                            <col className="w-[24%]" />
-                            <col className="w-[34%]" />
-                            <col className="w-[18%]" />
-                            <col />
-                          </colgroup>
-                          <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
-                            <tr>
-                              <th className="text-left px-3 py-2.5 font-semibold">Type</th>
-                              <th className="text-left px-3 py-2.5 font-semibold">File Name</th>
-                              <th className="text-left px-3 py-2.5 font-semibold">Uploaded At</th>
-                              <th className="text-left px-3 py-2.5 font-semibold">Notes</th>
-                            </tr>
-                          </thead>
-                          {docSectionGroups.map(group => (
-                            <tbody key={group.label} className="divide-y divide-gray-100">
-                              <tr className="bg-gray-50/60">
-                                <td colSpan={4} className="px-3 py-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <Icon
-                                      name={group.titleNumber ? 'building' : 'file-lines'}
-                                      style="solid"
-                                      className="size-3 text-gray-400 shrink-0"
-                                    />
-                                    <span className="text-[11px] font-medium text-gray-600">
-                                      {group.label}
-                                    </span>
-                                    <span className="text-[10px] text-gray-400">
-                                      ({group.docs.length})
-                                    </span>
-                                  </div>
-                                </td>
-                              </tr>
-                              {group.docs.map(doc => (
-                                <DocRow
-                                  key={doc.documentId}
-                                  fileName={doc.fileName}
-                                  documentTypeName={doc.documentTypeName}
-                                  uploadedAt={doc.uploadedAt}
-                                  notes={doc.notes}
-                                  onView={() =>
-                                    setDocViewer({
-                                      documentId: doc.documentId,
-                                      fileName: doc.fileName ?? doc.documentId,
-                                      fileType: doc.fileType,
-                                    })
-                                  }
-                                />
-                              ))}
-                            </tbody>
-                          ))}
-                        </table>
-                      </div>
-                    </section>
-                  )}
-
-                  {/* Section 3 — Quotation Information — Appraisal Fee */}
-                  {selectedItem && (
-                    <section aria-label="Quotation Information">
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Quotation Information — Appraisal Fee
-                      </h2>
-                      <ReadOnlyFeeGrid item={selectedItem} />
-                    </section>
-                  )}
-
-                  {/* Section 4 — Duration */}
-                  {selectedItem && (
-                    <section aria-label="Duration and Mandays">
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Duration
-                      </h2>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">
-                            Max Appraisal Duration (days)
-                          </label>
-                          <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
-                            {selectedAppraisal?.maxAppraisalDays ?? '—'}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">
-                            Estimated Mandays
-                          </label>
-                          <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
-                            {selectedItem.estimatedDays ?? '—'}
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-                  )}
-
-                  {/* Section 5 — Remark for this Appraisal */}
-                  {selectedItem && (
-                    <section aria-label="Appraisal Remark">
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Remark for this Appraisal
-                      </h2>
-                      <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">
-                        {selectedItem.itemNotes?.trim() || '—'}
-                      </div>
-                    </section>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-40 text-sm text-gray-400">
-                  Select an appraisal from the left
-                </div>
-              )}
+          {/* Left rail */}
+          {appraisals.length === 0 ? (
+            <div className="flex items-center justify-center w-full h-40 text-gray-400 text-sm">
+              No appraisals in this quotation
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <AppraisalLeftRail
+                appraisals={appraisals}
+                selectedIndex={selectedIndex}
+                onSelect={setSelectedIndex}
+                feeAmounts={netAmounts}
+              />
+
+              {/* Right pane */}
+              <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+                {selectedAppraisal ? (
+                  <div className="p-5 space-y-6">
+                    {/* Section 1 — Appraisal Information */}
+                    <section aria-label="Appraisal Information">
+                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        Appraisal Information
+                      </h2>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="block text-xs text-gray-500 mb-0.5">
+                            Appraisal Number
+                          </span>
+                          <span className="font-medium text-gray-900">
+                            {selectedAppraisal.appraisalNumber?.trim() || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-xs text-gray-500 mb-0.5">Customer Name</span>
+                          <span className="font-medium text-gray-900">
+                            {selectedAppraisal.customerName ?? '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Section 2 — Attached Documents (grouped by section, mirrors ext-company submit page) */}
+                    {appraisalDocs.length > 0 && (
+                      <section aria-label="Attached Documents">
+                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          Attach Document
+                        </h2>
+                        <div className="rounded-lg border border-gray-200 overflow-hidden">
+                          <table className="w-full text-xs table-fixed">
+                            <colgroup>
+                              <col className="w-[24%]" />
+                              <col className="w-[34%]" />
+                              <col className="w-[18%]" />
+                              <col />
+                            </colgroup>
+                            <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
+                              <tr>
+                                <th className="text-left px-3 py-2.5 font-semibold">Type</th>
+                                <th className="text-left px-3 py-2.5 font-semibold">File Name</th>
+                                <th className="text-left px-3 py-2.5 font-semibold">Uploaded At</th>
+                                <th className="text-left px-3 py-2.5 font-semibold">Notes</th>
+                              </tr>
+                            </thead>
+                            {docSectionGroups.map(group => (
+                              <tbody key={group.label} className="divide-y divide-gray-100">
+                                <tr className="bg-gray-50/60">
+                                  <td colSpan={4} className="px-3 py-1.5">
+                                    <div className="flex items-center gap-2">
+                                      <Icon
+                                        name={group.titleNumber ? 'building' : 'file-lines'}
+                                        style="solid"
+                                        className="size-3 text-gray-400 shrink-0"
+                                      />
+                                      <span className="text-[11px] font-medium text-gray-600">
+                                        {group.label}
+                                      </span>
+                                      <span className="text-[10px] text-gray-400">
+                                        ({group.docs.length})
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {group.docs.map(doc => (
+                                  <DocRow
+                                    key={doc.documentId}
+                                    fileName={doc.fileName}
+                                    documentTypeName={doc.documentTypeName}
+                                    uploadedAt={doc.uploadedAt}
+                                    notes={doc.notes}
+                                    onView={() =>
+                                      setDocViewer({
+                                        documentId: doc.documentId,
+                                        fileName: doc.fileName ?? doc.documentId,
+                                        fileType: doc.fileType,
+                                      })
+                                    }
+                                  />
+                                ))}
+                              </tbody>
+                            ))}
+                          </table>
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Section 3 — Quotation Information — Appraisal Fee */}
+                    {selectedItem && (
+                      <section aria-label="Quotation Information">
+                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          Quotation Information — Appraisal Fee
+                        </h2>
+                        <ReadOnlyFeeGrid item={selectedItem} />
+                      </section>
+                    )}
+
+                    {/* Section 4 — Duration */}
+                    {selectedItem && (
+                      <section aria-label="Duration and Mandays">
+                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          Duration
+                        </h2>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">
+                              Max Appraisal Duration (days)
+                            </label>
+                            <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
+                              {selectedAppraisal?.maxAppraisalDays ?? '—'}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">
+                              Estimated Mandays
+                            </label>
+                            <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
+                              {selectedItem.estimatedDays ?? '—'}
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Section 5 — Remark for this Appraisal */}
+                    {selectedItem && (
+                      <section aria-label="Appraisal Remark">
+                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          Remark for this Appraisal
+                        </h2>
+                        <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">
+                          {selectedItem.itemNotes?.trim() || '—'}
+                        </div>
+                      </section>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-40 text-sm text-gray-400">
+                    Select an appraisal from the left
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Footer row — matches ext-company submit page */}
@@ -565,11 +567,7 @@ export const AdminCompanyQuotationDetailContent = ({
               affordance (the × in the header), so suppress the redundant Cancel button. */}
           {!isDrawer && (
             <div className="flex items-center justify-end gap-3 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-              >
+              <Button type="button" variant="outline" onClick={handleBack}>
                 <Icon name="xmark" style="solid" className="size-4 mr-2" />
                 Cancel
               </Button>
