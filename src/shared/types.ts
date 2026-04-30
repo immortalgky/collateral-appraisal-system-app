@@ -41,6 +41,16 @@ export type BreadcrumbStore = {
   reset: () => void;
 };
 
+/**
+ * Extra breadcrumb items appended after the layout-built crumbs.
+ * Use this for page-level dynamic data (e.g. an active tab, a fetched record name)
+ * that the URL-driven layout breadcrumb can't derive on its own.
+ */
+export type BreadcrumbExtrasStore = {
+  extras: BreadcrumbItem[];
+  setExtras: (items: BreadcrumbItem[]) => void;
+};
+
 export type AddressSource = 'title' | 'dopa';
 
 export type AddressStore = {

@@ -3,6 +3,7 @@ import type {
   AddressSource,
   AddressStore,
   BreadcrumbItem,
+  BreadcrumbExtrasStore,
   BreadcrumbStore,
   CompanyItem,
   CompanyStore,
@@ -71,6 +72,11 @@ export const useBreadcrumbStore = create<BreadcrumbStore>(set => ({
     }),
   pop: () => set(state => ({ items: state.items.slice(0, -1) })),
   reset: () => set({ items: [] }),
+}));
+
+export const useBreadcrumbExtrasStore = create<BreadcrumbExtrasStore>(set => ({
+  extras: [],
+  setExtras: (extras: BreadcrumbItem[]) => set({ extras }),
 }));
 
 export const useAddressStore = create<AddressStore>((set, get) => ({

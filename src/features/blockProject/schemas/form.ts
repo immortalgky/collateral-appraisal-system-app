@@ -156,7 +156,6 @@ export const condoModelFormDefaults: CondoModelFormType = {
   buildingNumber: '',
   startingPriceMin: null,
   startingPriceMax: null,
-  standardPrice: null,
   hasMezzanine: false,
   usableAreaMin: null,
   usableAreaMax: null,
@@ -257,7 +256,6 @@ export const lbModelFormDefaults = {
   modelDescription: null,
   numberOfHouse: null,
   startingPrice: null,
-  standardPrice: null,
   usableAreaMin: null,
   usableAreaMax: null,
   standardUsableArea: null,
@@ -397,7 +395,7 @@ export const condoPricingAssumptionForm = buildFormSchema(condoPricingAllFields)
 export type CondoPricingAssumptionFormType = z.infer<typeof condoPricingAssumptionForm>;
 
 export const condoPricingAssumptionFormDefaults: CondoPricingAssumptionFormType = {
-  locationMethod: null,
+  locationMethod: 'AdjustPriceSqm',
   cornerAdjustment: null,
   edgeAdjustment: null,
   otherAdjustment: null,
@@ -418,7 +416,7 @@ export const lbPricingAssumptionForm = buildFormSchema(lbPricingAllFields);
 export type LbPricingAssumptionFormType = z.infer<typeof lbPricingAssumptionForm>;
 
 export const lbPricingAssumptionFormDefaults: LbPricingAssumptionFormType = {
-  locationMethod: null,
+  locationMethod: 'AdjustPriceSqm',
   cornerAdjustment: null,
   edgeAdjustment: null,
   otherAdjustment: null,

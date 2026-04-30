@@ -1,7 +1,8 @@
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 
 import Icon from '@shared/components/Icon';
+import useBreadcrumbExtras from '@shared/hooks/useBreadcrumbExtras';
 import {
   GalleryTab,
   LawsRegulationTab,
@@ -112,6 +113,17 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   const handleTabChange = (tabId: TabId) => {
     setSearchParams({ tab: tabId }, { replace: true });
   };
+
+  // Append the active tab as a leaf breadcrumb crumb (Task → # → Property Information → {tab}).
+  const location = useLocation();
+  const activeTabDef = tabs.find(t => t.id === activeTab);
+  const tabHref = `${location.pathname}?tab=${activeTab}`;
+  useBreadcrumbExtras(
+    activeTabDef
+      ? [{ label: activeTabDef.label, href: tabHref, icon: activeTabDef.icon }]
+      : [],
+    [tabHref, activeTabDef?.label, activeTabDef?.icon],
+  );
 
   // ── Child count queries for the type-change dialog ────────────────────────
   // TanStack Query deduplicates these with the same keys used inside tab

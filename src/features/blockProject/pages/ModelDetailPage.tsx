@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -25,6 +26,9 @@ import {
   useUpdateProjectModel,
 } from '../api/projectModel';
 import ModelDetailForm from '../forms/ModelDetailForm';
+import ProjectModelPhotoSection, {
+  type ProjectModelPhotoSectionRef,
+} from '../components/ProjectModelPhotoSection';
 import {
   projectModelForm,
   condoModelFormDefaults,
@@ -55,13 +59,27 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   const isEditMode = Boolean(modelId);
   const routeSegment = projectType === 'Condo' ? 'block-condo' : 'block-village';
   const schema = projectModelForm(projectType);
+  const location = useLocation();
 
   const { data: modelData, isLoading } = useGetProjectModelById(appraisalId ?? '', modelId);
+
+  // Breadcrumb: Task → # → Property Information → Model → {model name}.
+  // "Model" links back to the Models tab on the parent BlockProject page.
+  const modelsTabHref = `${basePath}/${routeSegment}?tab=models`;
+  const modelLeafLabel = isEditMode ? modelData?.modelName?.trim() || 'Model' : 'New Model';
+  useBreadcrumbExtras(
+    [
+      { label: 'Model', href: modelsTabHref, icon: 'layer-group' },
+      { label: modelLeafLabel, href: location.pathname, icon: 'layer-group' },
+    ],
+    [modelsTabHref, modelLeafLabel, location.pathname],
+  );
   const { mutate: createModel, isPending: isCreating } = useCreateProjectModel();
   const { mutate: updateModel, isPending: isUpdating } = useUpdateProjectModel();
 
   const isPending = isCreating || isUpdating;
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+  const photoSectionRef = useRef<ProjectModelPhotoSectionRef>(null);
 
   const formDefaults = useMemo(() => {
     if (isEditMode && modelData) {
@@ -72,7 +90,6 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
           buildingNumber: modelData.buildingNumber ?? '',
           startingPriceMin: modelData.startingPriceMin ?? null,
           startingPriceMax: modelData.startingPriceMax ?? null,
-          standardPrice: modelData.standardPrice ?? null,
           hasMezzanine: modelData.hasMezzanine ?? false,
           usableAreaMin: modelData.usableAreaMin ?? null,
           usableAreaMax: modelData.usableAreaMax ?? null,
@@ -96,7 +113,6 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         modelDescription: modelData.modelDescription ?? null,
         numberOfHouse: modelData.numberOfHouse ?? null,
         startingPrice: modelData.startingPrice ?? null,
-        standardPrice: modelData.standardPrice ?? null,
         usableAreaMin: modelData.usableAreaMin ?? null,
         usableAreaMax: modelData.usableAreaMax ?? null,
         standardUsableArea: modelData.standardUsableArea ?? null,
@@ -201,7 +217,8 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
       createModel(
         { appraisalId, data },
         {
-          onSuccess: response => {
+          onSuccess: async response => {
+            await photoSectionRef.current?.linkImagesToModel(response.id);
             toast.success(isDraft ? 'Draft saved successfully' : 'Model saved successfully');
             setSaveAction(null);
             skipWarning();
@@ -246,6 +263,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
           containerId="model-form-scroll"
           anchors={[
             { label: 'Images', id: 'model-images', icon: 'images' },
+            ...(isEditMode && modelData
+              ? [{ label: 'Pricing Analysis', id: 'pricing-analysis', icon: 'chart-line' }]
+              : []),
             { label: 'Model Info', id: 'model-info', icon: 'layer-group' },
             { label: 'Remark', id: 'remark', icon: 'comment' },
           ]}
@@ -268,30 +288,49 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
                   {/* Model Images */}
                   <Section id="model-images" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Model Images</h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center py-12 gap-3">
-                      <Icon name="images" style="regular" className="w-10 h-10 text-gray-300" />
-                      <p className="text-sm text-gray-400">Image upload coming soon</p>
-                      {modelData?.imageDocumentIds && modelData.imageDocumentIds.length > 0 && (
-                        <div className="flex gap-2 flex-wrap justify-center mt-2">
-                          {modelData.imageDocumentIds.map(docId => (
-                            <div
-                              key={docId}
-                              className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-xs text-gray-500 overflow-hidden"
-                            >
-                              <Icon name="image" style="regular" className="w-6 h-6 text-gray-400" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <ProjectModelPhotoSection
+                      ref={photoSectionRef}
+                      appraisalId={appraisalId ?? ''}
+                      entityId={modelId}
+                      images={modelData?.images}
+                    />
                   </Section>
+
+                  {/* Pricing Analysis */}
+                  {isEditMode && modelData && (
+                    <Section id="pricing-analysis" anchor>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">Pricing Analysis</p>
+                          {modelData.pricingAnalysisStatus && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Status: {modelData.pricingAnalysisStatus}
+                              {modelData.finalAppraisedValue != null && (
+                                <span className="ml-2 font-medium text-gray-700">
+                                  &#x0E3F;{modelData.finalAppraisedValue.toLocaleString()} / sq.m.
+                                </span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                        <Link
+                          to={
+                            modelData.pricingAnalysisId
+                              ? `${basePath}/${routeSegment}/model/${modelId}/pricing-analysis/${modelData.pricingAnalysisId}`
+                              : `${basePath}/${routeSegment}/model/${modelId}/pricing-analysis`
+                          }
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+                        >
+                          <Icon
+                            name={modelData.pricingAnalysisId ? 'chart-line' : 'play'}
+                            style="solid"
+                            className="size-3.5"
+                          />
+                          {modelData.pricingAnalysisId ? 'View Pricing Analysis' : 'Run Pricing Analysis'}
+                        </Link>
+                      </div>
+                    </Section>
+                  )}
 
                   {/* Model Information */}
                   <Section id="model-info" anchor className="min-w-0 overflow-hidden">

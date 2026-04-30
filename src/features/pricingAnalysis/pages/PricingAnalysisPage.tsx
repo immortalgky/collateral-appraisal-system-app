@@ -22,6 +22,8 @@ import type { SetFinalValueRequestType } from '@features/pricingAnalysis/schemas
 import { propertyGroupKeys } from '@features/appraisal/api/propertyGroup';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { useCreateProjectModelPricingAnalysis } from '@features/blockProject/api/projectPricingAnalysis';
+import { pricingAnalysisKeys } from '@features/pricingAnalysis/api/queryKeys';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
 
@@ -44,61 +46,135 @@ const initialState: SelectionState = {
   systemCalculationMode: 'System',
 };
 
+// ─── Subject discriminant ─────────────────────────────────────────────────────
+
+export type PricingAnalysisSubject =
+  | { kind: 'propertyGroup'; groupId: string }
+  /** routePrefix: the path segment between basePath and /pricing-analysis/:id
+   *  e.g. "block-condo/model/abc123" */
+  | { kind: 'projectModel'; modelId: string; routePrefix?: string };
+
+interface PricingAnalysisPageProps {
+  subject?: PricingAnalysisSubject;
+}
+
 /**
  * Wrapper: when pricingAnalysisId is missing (new route), auto-create one
  * and redirect. Once we have an ID, render the full content component.
+ *
+ * Accepts an optional `subject` prop:
+ *   - { kind: 'propertyGroup', groupId } (default, reads groupId from route)
+ *   - { kind: 'projectModel', modelId }  (new, reads modelId from route)
+ *
+ * Everything downstream of pricingAnalysisId is subject-agnostic and unchanged.
  */
-function PricingAnalysisPage() {
-  const { groupId, pricingAnalysisId } = useParams<{
-    groupId: string;
+function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
+  const params = useParams<{
+    groupId?: string;
+    modelId?: string;
     pricingAnalysisId?: string;
   }>();
-  const appraisalId = useAppraisalId();
 
+  const appraisalId = useAppraisalId();
   const navigate = useNavigate();
   const basePath = useBasePath();
   const queryClient = useQueryClient();
   const isReadOnly = usePageReadOnly();
 
+  // Resolve the effective subject from prop or route params
+  const resolvedSubject: PricingAnalysisSubject = subject ?? (
+    params.modelId
+      ? { kind: 'projectModel', modelId: params.modelId }
+      : { kind: 'propertyGroup', groupId: params.groupId ?? '' }
+  );
+
+  const pricingAnalysisId = params.pricingAnalysisId;
+
+  // The "canonical" id used by PricingAnalysisContent as the group context.
+  // For the model subject we pass the modelId as the groupId placeholder so
+  // PricingAnalysisContent can still call useSelectionActions (which only uses
+  // groupId for its cancelPricingAccordion navigation — we override that below).
+  const subjectId =
+    resolvedSubject.kind === 'projectModel'
+      ? resolvedSubject.modelId
+      : resolvedSubject.groupId;
+
   const [createState, setCreateState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [createError, setCreateError] = useState<string>('');
   const creatingRef = useRef(false);
 
+  // Hook for model-subject auto-create (called unconditionally per rules of hooks)
+  const createModelAnalysisMutation = useCreateProjectModelPricingAnalysis();
+
   // Auto-create pricing analysis when navigating to "new" route
   useEffect(() => {
     if (isReadOnly) return;
-    if (pricingAnalysisId || !groupId) return;
-    // Prevent duplicate call from React 18 Strict Mode double-mount
+    if (pricingAnalysisId || !subjectId || !appraisalId) return;
     if (creatingRef.current) return;
     creatingRef.current = true;
 
     setCreateState('loading');
 
-    axios
-      .post(`/property-groups/${groupId}/pricing-analysis`)
-      .then(({ data }) => {
-        const newId = data?.id;
-        if (!newId) {
+    if (resolvedSubject.kind === 'projectModel') {
+      // Use the React Query mutation — handles cache invalidation + 409 self-heal
+      createModelAnalysisMutation.mutate(
+        { appraisalId, modelId: resolvedSubject.modelId },
+        {
+          onSuccess: (data) => {
+            const newId = data?.id;
+            if (!newId) {
+              creatingRef.current = false;
+              setCreateState('error');
+              setCreateError('No ID returned from server');
+              return;
+            }
+            // Also invalidate the new analysis detail so it hydrates on redirect
+            queryClient.invalidateQueries({
+              queryKey: pricingAnalysisKeys.detail(newId),
+            });
+            // routePrefix is always supplied by the wrapper components in router.tsx
+            const prefix = resolvedSubject.routePrefix ?? '';
+            navigate(
+              `${basePath}/${prefix}/pricing-analysis/${newId}`,
+              { replace: true },
+            );
+          },
+          onError: (err) => {
+            creatingRef.current = false;
+            setCreateState('error');
+            const anyErr = err as { message?: string };
+            setCreateError(anyErr?.message ?? 'An unexpected error occurred.');
+          },
+        },
+      );
+    } else {
+      // PropertyGroup branch — unchanged inline POST
+      axios
+        .post(`/property-groups/${resolvedSubject.groupId}/pricing-analysis`)
+        .then(({ data }) => {
+          const newId = data?.id;
+          if (!newId) {
+            creatingRef.current = false;
+            setCreateState('error');
+            setCreateError('No ID returned from server');
+            return;
+          }
+          queryClient.invalidateQueries({
+            queryKey: propertyGroupKeys.detail(appraisalId, resolvedSubject.groupId),
+          });
+          navigate(
+            `${basePath}/groups/${resolvedSubject.groupId}/pricing-analysis/${newId}`,
+            { replace: true },
+          );
+        })
+        .catch(err => {
           creatingRef.current = false;
           setCreateState('error');
-          setCreateError('No ID returned from server');
-          return;
-        }
-        if (appraisalId) {
-          queryClient.invalidateQueries({
-            queryKey: propertyGroupKeys.detail(appraisalId, groupId),
-          });
-        }
-        navigate(`${basePath}/groups/${groupId}/pricing-analysis/${newId}`, {
-          replace: true,
+          setCreateError(err?.message ?? 'An unexpected error occurred.');
         });
-      })
-      .catch(err => {
-        creatingRef.current = false;
-        setCreateState('error');
-        setCreateError(err?.message ?? 'An unexpected error occurred.');
-      });
-  }, [isReadOnly, pricingAnalysisId, groupId, appraisalId, navigate, queryClient]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReadOnly, pricingAnalysisId, subjectId, appraisalId]);
 
   // Readonly mode with no pricing analysis — show empty state
   if (isReadOnly && !pricingAnalysisId) {
@@ -119,7 +195,10 @@ function PricingAnalysisPage() {
         <p className="text-xs text-gray-400">{createError}</p>
         <button
           type="button"
-          onClick={() => setCreateState('idle')}
+          onClick={() => {
+            creatingRef.current = false;
+            setCreateState('idle');
+          }}
           className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
         >
           Retry
@@ -138,11 +217,21 @@ function PricingAnalysisPage() {
     );
   }
 
+  // returnTo: the path the "Back" button and any latent "isNew" nav should go to.
+  // For model subjects: basePath + routePrefix (model detail page).
+  // For propertyGroup subjects: left undefined → hook defaults to basePath/property.
+  const returnTo =
+    resolvedSubject.kind === 'projectModel' && resolvedSubject.routePrefix
+      ? `${basePath}/${resolvedSubject.routePrefix}`
+      : undefined;
+
   return (
     <PricingAnalysisContent
       appraisalId={appraisalId ?? ''}
-      groupId={groupId ?? ''}
+      groupId={subjectId}
       pricingAnalysisId={pricingAnalysisId}
+      isModelSubject={resolvedSubject.kind === 'projectModel'}
+      returnTo={returnTo}
     />
   );
 }
@@ -155,10 +244,14 @@ function PricingAnalysisContent({
   appraisalId,
   groupId,
   pricingAnalysisId,
+  isModelSubject = false,
+  returnTo,
 }: {
   appraisalId: string;
   groupId: string;
   pricingAnalysisId: string;
+  isModelSubject?: boolean;
+  returnTo?: string;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('properties');
   // (1) Fetch all server data
@@ -175,6 +268,7 @@ function PricingAnalysisContent({
     appraisalId,
     groupId,
     pricingAnalysisId,
+    skipGroupDetail: isModelSubject,
   });
 
   // (2) Own the reducer
@@ -188,7 +282,9 @@ function PricingAnalysisContent({
 
   // (3) INIT effect — depends on actual data, not loading boolean
   useEffect(() => {
-    if (!groupDetail || !pricingConfiguration || !pricingSelection || !allFactors) return;
+    // For model subjects there is no groupDetail — only require pricingConfiguration etc.
+    if (!isModelSubject && !groupDetail) return;
+    if (!pricingConfiguration || !pricingSelection || !allFactors) return;
     const approaches = createInitialState(pricingConfiguration, pricingSelection);
 
     const wasEditing = viewModeRef.current === 'editing';
@@ -210,7 +306,7 @@ function PricingAnalysisContent({
 
     // Always start in summary mode — user opens the edit modal explicitly
     dispatch({ type: 'SUMMARY_ENTER' });
-  }, [groupDetail, pricingConfiguration, pricingSelection, allFactors, pricingAnalysisId]);
+  }, [groupDetail, pricingConfiguration, pricingSelection, allFactors, pricingAnalysisId, isModelSubject]);
 
   // (4) Selection actions
   const selectionActions = useSelectionActions({
@@ -218,6 +314,7 @@ function PricingAnalysisContent({
     dispatch,
     pricingAnalysisId,
     groupId,
+    returnTo,
   });
 
   // (5) Calculation flow
@@ -322,7 +419,7 @@ function PricingAnalysisContent({
                           number: groupDetail?.groupNumber ?? 0,
                           name: groupDetail?.groupName ?? '',
                           description: groupDetail?.description ?? '',
-                          useSystemCalc: groupDetail?.useSystemCalc ?? true,
+                          useSystemCalc: (pricingSelection as any)?.useSystemCalc ?? true,
                           properties: groupDetail?.properties ?? [],
                         }}
                         onSelectCalculationMethod={calcFlow.startCalculation}

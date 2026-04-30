@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -27,6 +28,9 @@ import {
 import { useGetProjectModels } from '../api/projectModel';
 import TowerDetailForm from '../forms/TowerDetailForm';
 import { projectTowerForm, projectTowerFormDefaults, type ProjectTowerFormType } from '../schemas/form';
+import ProjectTowerPhotoSection, {
+  type ProjectTowerPhotoSectionRef,
+} from '../components/ProjectTowerPhotoSection';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -43,8 +47,21 @@ export default function TowerDetailPage() {
   const { towerId } = useParams<{ towerId?: string }>();
 
   const isEditMode = Boolean(towerId);
+  const location = useLocation();
 
   const { data: towerData, isLoading } = useGetProjectTowerById(appraisalId ?? '', towerId);
+
+  // Breadcrumb: Task → # → Property Information → Tower → {tower name}.
+  // Tower drill-down is Condo-only — block-condo is the parent route segment.
+  const towersTabHref = `${basePath}/block-condo?tab=towers`;
+  const towerLeafLabel = isEditMode ? towerData?.towerName?.trim() || 'Tower' : 'New Tower';
+  useBreadcrumbExtras(
+    [
+      { label: 'Tower', href: towersTabHref, icon: 'building' },
+      { label: towerLeafLabel, href: location.pathname, icon: 'building' },
+    ],
+    [towersTabHref, towerLeafLabel, location.pathname],
+  );
   const { data: modelsData } = useGetProjectModels(appraisalId ?? '');
   const models = Array.isArray(modelsData) ? modelsData : [];
 
@@ -53,6 +70,7 @@ export default function TowerDetailPage() {
 
   const isPending = isCreating || isUpdating;
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+  const photoSectionRef = useRef<ProjectTowerPhotoSectionRef>(null);
 
   const formDefaults = useMemo<ProjectTowerFormType>(() => {
     if (isEditMode && towerData) {
@@ -144,7 +162,8 @@ export default function TowerDetailPage() {
       createTower(
         { appraisalId, data },
         {
-          onSuccess: response => {
+          onSuccess: async response => {
+            await photoSectionRef.current?.linkImagesToTower(response.id);
             toast.success(isDraft ? 'Draft saved successfully' : 'Tower saved successfully');
             setSaveAction(null);
             skipWarning();
@@ -211,29 +230,12 @@ export default function TowerDetailPage() {
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
                   {/* Tower Images */}
                   <Section id="tower-images" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Tower Images</h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center py-12 gap-3">
-                      <Icon name="images" style="regular" className="w-10 h-10 text-gray-300" />
-                      <p className="text-sm text-gray-400">Image upload coming soon</p>
-                      {towerData?.imageDocumentIds && towerData.imageDocumentIds.length > 0 && (
-                        <div className="flex gap-2 flex-wrap justify-center mt-2">
-                          {towerData.imageDocumentIds.map(docId => (
-                            <div
-                              key={docId}
-                              className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center"
-                            >
-                              <Icon name="image" style="regular" className="w-6 h-6 text-gray-400" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <ProjectTowerPhotoSection
+                      ref={photoSectionRef}
+                      appraisalId={appraisalId ?? ''}
+                      entityId={towerId}
+                      images={towerData?.images}
+                    />
                   </Section>
 
                   {/* Tower Information */}

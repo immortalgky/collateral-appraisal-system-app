@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { useGetProjectModels } from '../../api/projectModel';
+import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
+import { toGalleryImage } from '@/features/appraisal/types/gallery';
+import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 import type { ProjectModel, ProjectType } from '../../types';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -38,10 +41,11 @@ interface ModelCardProps {
   model: ProjectModel;
   projectType: ProjectType;
   viewMode: ViewMode;
+  thumbnailSrc?: string;
   onClick: () => void;
 }
 
-function ModelCard({ model, projectType, viewMode, onClick }: ModelCardProps) {
+function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: ModelCardProps) {
   const icon = projectType === 'Condo' ? 'layer-group' : 'house';
 
   if (viewMode === 'list') {
@@ -51,8 +55,16 @@ function ModelCard({ model, projectType, viewMode, onClick }: ModelCardProps) {
         onClick={onClick}
         className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left"
       >
-        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-          <Icon name={icon} style="solid" className="text-gray-400 w-7 h-7" />
+        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+          {thumbnailSrc ? (
+            <img
+              src={thumbnailSrc}
+              alt={model.modelName ?? 'Model thumbnail'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Icon name={icon} style="solid" className="text-gray-400 w-7 h-7" />
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -114,12 +126,20 @@ function ModelCard({ model, projectType, viewMode, onClick }: ModelCardProps) {
       onClick={onClick}
       className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group"
     >
-      <div className="aspect-video bg-gray-100 flex items-center justify-center">
-        <Icon
-          name={icon}
-          style="solid"
-          className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
-        />
+      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={model.modelName ?? 'Model thumbnail'}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Icon
+            name={icon}
+            style="solid"
+            className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
+          />
+        )}
       </div>
 
       <div className="p-4">
@@ -187,6 +207,19 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
 
   const { data: modelsData, isLoading, isError } = useGetProjectModels(appraisalId ?? '');
   const models = Array.isArray(modelsData) ? modelsData : [];
+
+  const { data: galleryData } = useGetGalleryPhotos(appraisalId ?? undefined);
+  const thumbnailByModelId = useMemo(() => {
+    const galleryPhotos = (galleryData?.photos ?? []) as GalleryPhotoDtoType[];
+    const photoById = new Map(galleryPhotos.map(p => [p.id, p]));
+    const map = new Map<string, string>();
+    for (const model of models) {
+      const cover = model.images?.find(i => i.isThumbnail);
+      const photo = cover && photoById.get(cover.galleryPhotoId);
+      if (photo) map.set(model.id, toGalleryImage(photo).thumbnailSrc);
+    }
+    return map;
+  }, [galleryData, models]);
 
   const routeSegment = projectType === 'Condo' ? 'block-condo' : 'block-village';
 
@@ -280,6 +313,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               key={model.id}
               model={model}
               projectType={projectType}
+              thumbnailSrc={thumbnailByModelId.get(model.id)}
               viewMode="grid"
               onClick={() => handleModelClick(model.id)}
             />
@@ -292,6 +326,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               key={model.id}
               model={model}
               projectType={projectType}
+              thumbnailSrc={thumbnailByModelId.get(model.id)}
               viewMode="list"
               onClick={() => handleModelClick(model.id)}
             />

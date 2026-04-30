@@ -322,6 +322,9 @@ export const LB_FIRE_INSURANCE_OPTIONS = [
   { value: 'Unknown', label: 'Unknown' },
 ];
 
+export const LB_FIRE_INSURANCE_LABEL_BY_VALUE: Record<string, string> =
+  Object.fromEntries(LB_FIRE_INSURANCE_OPTIONS.map((o) => [o.value, o.label]));
+
 export const LB_LAND_TYPE_OPTIONS: ListBoxItem[] = [
   { id: 'NS3K', value: 'NS3K', label: 'นส.3ก' },
   { id: 'NS3', value: 'NS3', label: 'นส.3' },

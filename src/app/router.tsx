@@ -81,6 +81,28 @@ import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTas
 import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
 
 /**
+ * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
+ * modelId and pricingAnalysisId are read from route params inside PricingAnalysisPage.
+ */
+const CondoModelPricingAnalysisPage = () => {
+  const { modelId } = useParams<{ modelId: string }>();
+  return (
+    <PricingAnalysisPage
+      subject={{ kind: 'projectModel', modelId: modelId ?? '', routePrefix: `block-condo/model/${modelId}` }}
+    />
+  );
+};
+
+const VillageModelPricingAnalysisPage = () => {
+  const { modelId } = useParams<{ modelId: string }>();
+  return (
+    <PricingAnalysisPage
+      subject={{ kind: 'projectModel', modelId: modelId ?? '', routePrefix: `block-village/model/${modelId}` }}
+    />
+  );
+};
+
+/**
  * Redirect component that navigates to request page with requestId from context
  */
 const AppraisalIndexRedirect = () => {
@@ -576,6 +598,22 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'model/:modelId/pricing-analysis',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CondoModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'model/:modelId/pricing-analysis/:pricingAnalysisId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CondoModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
             path: 'tower/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
@@ -617,6 +655,22 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <ModelDetailPage projectType="LandAndBuilding" />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'model/:modelId/pricing-analysis',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <VillageModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'model/:modelId/pricing-analysis/:pricingAnalysisId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <VillageModelPricingAnalysisPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -950,6 +1004,22 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'model/:modelId/pricing-analysis',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CondoModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'model/:modelId/pricing-analysis/:pricingAnalysisId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CondoModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
             path: 'tower/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
@@ -991,6 +1061,22 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <ModelDetailPage projectType="LandAndBuilding" />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'model/:modelId/pricing-analysis',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <VillageModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'model/:modelId/pricing-analysis/:pricingAnalysisId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <VillageModelPricingAnalysisPage />
               </AppraisalReadOnlyWrapper>
             ),
           },

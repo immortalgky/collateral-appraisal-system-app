@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import type { AxiosError } from 'axios';
@@ -9,6 +9,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { FormProvider } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
+import ActionBar from '@/shared/components/ActionBar';
 import Checkbox from '@/shared/components/inputs/Checkbox';
 import type { ApiError } from '@/shared/types/api';
 
@@ -35,6 +36,11 @@ import {
   type LbPricingAssumptionFormType,
 } from '../../schemas/form';
 import PricingAssumptionForm from '../../forms/PricingAssumptionForm';
+import {
+  CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE,
+  LB_FIRE_INSURANCE_LABEL_BY_VALUE,
+} from '../../data/options';
+import { recomputeUnitPrice, type AssumptionInputs } from '../../utils/recomputeUnitPrice';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -72,13 +78,14 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
       <table className="w-full text-xs">
         <thead className="bg-gray-50">
           <tr>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Model</th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Description</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Usable Area From (sq.m.)
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[160px]">
+              Model
+            </th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium w-full min-w-[200px]">
+              Description
             </th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Usable Area To (sq.m.)
+              Usable Area (sq.m.)
             </th>
             {projectType === 'LandAndBuilding' && (
               <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
@@ -86,13 +93,13 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
               </th>
             )}
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {projectType === 'Condo' ? 'Standard Price (Baht/sq.m.)' : 'Std Price (Baht/sq.m.)'}
+              Standard Price (Baht/sq.m.)
             </th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Coverage (Baht)
+              Coverage Amount (Baht/Sq.m)
             </th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Fire Insurance
+              Fire Insurance Condition
             </th>
           </tr>
         </thead>
@@ -101,11 +108,10 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
             <tr key={m.projectModelId} className="border-b border-gray-100 hover:bg-gray-50">
               <td className="py-2 px-3 font-medium text-gray-800">{m.modelType ?? '-'}</td>
               <td className="py-2 px-3 text-gray-600">{m.modelDescription ?? '-'}</td>
-              <td className="py-2 px-3 text-right text-gray-800">
-                {m.usableAreaFrom?.toLocaleString() ?? '-'}
-              </td>
-              <td className="py-2 px-3 text-right text-gray-800">
-                {m.usableAreaTo?.toLocaleString() ?? '-'}
+              <td className="py-2 px-3 text-right text-gray-800 whitespace-nowrap">
+                {m.usableAreaFrom != null || m.usableAreaTo != null
+                  ? `${m.usableAreaFrom?.toLocaleString() ?? '-'} - ${m.usableAreaTo?.toLocaleString() ?? '-'}`
+                  : '-'}
               </td>
               {projectType === 'LandAndBuilding' && (
                 <td className="py-2 px-3 text-right text-gray-800">
@@ -113,12 +119,21 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
                 </td>
               )}
               <td className="py-2 px-3 text-right text-gray-800">
-                {m.standardPrice?.toLocaleString() ?? '-'}
+                {m.finalAppraisedValue != null
+                  ? m.finalAppraisedValue.toLocaleString()
+                  : <span className="text-gray-400 italic">— pending analysis —</span>}
               </td>
               <td className="py-2 px-3 text-right text-gray-800">
                 {m.coverageAmount?.toLocaleString() ?? '-'}
               </td>
-              <td className="py-2 px-3 text-gray-600">{m.fireInsuranceCondition ?? '-'}</td>
+              <td className="py-2 px-3 text-gray-600">
+                {m.fireInsuranceCondition
+                  ? (projectType === 'Condo'
+                      ? CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE[m.fireInsuranceCondition]
+                      : LB_FIRE_INSURANCE_LABEL_BY_VALUE[m.fireInsuranceCondition]) ??
+                    m.fireInsuranceCondition
+                  : '-'}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -225,7 +240,7 @@ function UnitPriceResultTable({
       <table className="w-full text-xs">
         <thead className="bg-gray-50">
           <tr>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Sq No.</th>
+            <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Seq No</th>
             {projectType === 'Condo' && (
               <>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium">Floor</th>
@@ -273,13 +288,13 @@ function UnitPriceResultTable({
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Appraisal Value</th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Rounded Value</th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Force Sale Price</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Coverage</th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Coverage Amount</th>
           </tr>
         </thead>
         <tbody>
           {unitPrices.map(up => (
             <tr key={up.projectUnitId} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-2 px-3 text-right text-gray-700">{up.sequenceNumber}</td>
+              <td className="py-2 px-3 text-center text-gray-700">{up.sequenceNumber}</td>
               {projectType === 'Condo' && (
                 <>
                   <td className="py-2 px-3 text-right text-gray-700">{up.floor ?? '-'}</td>
@@ -351,10 +366,16 @@ function UnitPriceResultTable({
               <td className="py-2 px-3 text-right font-medium text-gray-900">
                 {fmt(up.totalAppraisalValueRounded)}
               </td>
-              <td className="py-2 px-3 text-right text-amber-700 font-medium">
+              <td className="py-2 px-3 text-right text-gray-800">
                 {fmt(up.forceSellingPrice)}
               </td>
-              <td className="py-2 px-3 text-right text-gray-800">{fmt(up.coverageAmount)}</td>
+              <td className="py-2 px-3 text-right text-gray-800">
+                {fmt(
+                  up.coverageAmount != null && up.usableArea != null
+                    ? up.coverageAmount * up.usableArea
+                    : null,
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -383,11 +404,24 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const { data: unitPricesData, isLoading: pricesLoading } = useGetProjectUnitPrices(
     appraisalId ?? '',
   );
-  const unitPrices = unitPricesData ?? [];
 
-  const { mutate: saveAssumption, isPending: isSaving } = useSaveProjectPricingAssumptions();
-  const { mutate: calculatePrices, isPending: isCalculating } = useCalculateProjectUnitPrices();
-  const { mutateAsync: saveUnitFlags, isPending: isSavingFlags } = useSaveProjectUnitPrices();
+  // Local mirror of unit prices: lets the user toggle flags and see an immediate
+  // client-side recompute (preview). The backend remains the source of truth on
+  // Save / Save Draft — the query is invalidated after save and this state is
+  // refilled from the fresh server data via the useEffect below.
+  const [localUnitPrices, setLocalUnitPrices] = useState<ProjectUnitPrice[]>([]);
+  const [flagsDirty, setFlagsDirty] = useState(false);
+  useEffect(() => {
+    setLocalUnitPrices(unitPricesData ?? []);
+    setFlagsDirty(false);
+  }, [unitPricesData]);
+
+  const { mutateAsync: saveAssumptionAsync, isPending: isSaving } =
+    useSaveProjectPricingAssumptions();
+  const { mutateAsync: calculatePricesAsync, isPending: isCalculating } =
+    useCalculateProjectUnitPrices();
+  const { mutateAsync: saveUnitFlagsAsync, isPending: isSavingFlags } =
+    useSaveProjectUnitPrices();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const methods = useForm<any>({
@@ -405,7 +439,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
     if (pricingAssumption) {
       if (projectType === 'Condo') {
         reset({
-          locationMethod: pricingAssumption.locationMethod ?? null,
+          locationMethod: pricingAssumption.locationMethod ?? 'AdjustPriceSqm',
           cornerAdjustment: pricingAssumption.cornerAdjustment ?? null,
           edgeAdjustment: pricingAssumption.edgeAdjustment ?? null,
           otherAdjustment: pricingAssumption.otherAdjustment ?? null,
@@ -417,7 +451,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
         } satisfies CondoPricingAssumptionFormType);
       } else {
         reset({
-          locationMethod: pricingAssumption.locationMethod ?? null,
+          locationMethod: pricingAssumption.locationMethod ?? 'AdjustPriceSqm',
           cornerAdjustment: pricingAssumption.cornerAdjustment ?? null,
           edgeAdjustment: pricingAssumption.edgeAdjustment ?? null,
           otherAdjustment: pricingAssumption.otherAdjustment ?? null,
@@ -429,149 +463,150 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
     }
   }, [pricingAssumption, reset, projectType]);
 
+  // Live form values for the client-side preview recompute (uses unsaved edits).
+  // Cast: react-hook-form's generic is `any` here since the schema differs per project type.
+  const watchedAssumption = useWatch({ control: methods.control }) as AssumptionInputs;
+
+  // Persist: save flags + assumption together. When `withCalculate` is true
+  // the backend recomputes and becomes the source of truth; the unit-prices
+  // query is invalidated by the mutation hooks, refilling local state.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSave = (data: any) => {
+  const persistAssumption = async (data: any, withCalculate: boolean) => {
     if (!appraisalId) return;
-    saveAssumption(
-      { appraisalId, data },
-      {
-        onSuccess: () => {
-          toast.success('Pricing assumptions saved');
-          reset(data);
-        },
-        onError: (err: unknown) => {
-          const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to save assumptions');
-        },
-      },
-    );
-  };
-
-  const handleCalculate = () => {
-    if (!appraisalId) return;
-    calculatePrices(
-      { appraisalId },
-      {
-        onSuccess: () => toast.success('Unit prices calculated successfully'),
-        onError: (err: unknown) => {
-          const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Calculation failed');
-        },
-      },
-    );
-  };
-
-  // Toggle a flag: save the updated flag set then re-run Calculate so all
-  // downstream values (location adj, total, force sell, coverage) refresh.
-  const handleToggleFlag = async (unitId: string, flag: CondoFlag, value: boolean) => {
-    if (!appraisalId) return;
-    const flags: ProjectUnitPriceFlagData[] = unitPrices.map(up => ({
+    const flags: ProjectUnitPriceFlagData[] = localUnitPrices.map(up => ({
       projectUnitId: up.projectUnitId,
-      isCorner: up.projectUnitId === unitId && flag === 'isCorner' ? value : up.isCorner,
-      isEdge: up.projectUnitId === unitId && flag === 'isEdge' ? value : up.isEdge,
-      isPoolView: up.projectUnitId === unitId && flag === 'isPoolView' ? value : up.isPoolView,
-      isSouth: up.projectUnitId === unitId && flag === 'isSouth' ? value : up.isSouth,
-      isOther: up.projectUnitId === unitId && flag === 'isOther' ? value : up.isOther,
+      isCorner: up.isCorner,
+      isEdge: up.isEdge,
+      isPoolView: up.isPoolView,
+      isSouth: up.isSouth,
+      isOther: up.isOther,
       isNearGarden: up.isNearGarden,
     }));
+
     try {
-      await saveUnitFlags({ appraisalId, flags });
-      calculatePrices({ appraisalId });
+      if (flags.length > 0) {
+        await saveUnitFlagsAsync({ appraisalId, flags });
+      }
+      await saveAssumptionAsync({ appraisalId, data });
+      reset(data);
+
+      if (withCalculate) {
+        await calculatePricesAsync({ appraisalId });
+        toast.success('Pricing assumptions saved and unit prices recalculated');
+      } else {
+        toast.success('Pricing assumptions saved as draft');
+      }
     } catch (err) {
       const error = err as AppError;
-      toast.error(error?.apiError?.detail ?? 'Failed to save flag');
+      toast.error(error?.apiError?.detail ?? 'Failed to save assumptions');
     }
   };
 
+  // Toggle a flag client-side only — just flips the flag on the local row.
+  // The displayed totals are derived below via `displayedUnitPrices`, so any
+  // change to the assumption form OR a flag toggle re-runs the preview.
+  // No API call here — the server recomputes on Save / Save Draft.
+  const handleToggleFlag = (unitId: string, flag: CondoFlag, value: boolean) => {
+    setLocalUnitPrices(prev =>
+      prev.map(up => (up.projectUnitId === unitId ? { ...up, [flag]: value } : up)),
+    );
+    setFlagsDirty(true);
+  };
+
+  // Derived display rows: re-run the preview calc whenever the local flag set
+  // OR the watched assumption form values change.
+  const displayedUnitPrices = useMemo(
+    () => localUnitPrices.map(up => recomputeUnitPrice(up, watchedAssumption, projectType)),
+    [localUnitPrices, watchedAssumption, projectType],
+  );
+
   const modelAssumptions = pricingAssumption?.modelAssumptions ?? [];
+  const isBusy = isSaving || isSavingFlags || isCalculating;
 
   return (
-    <div className="flex flex-col gap-6 overflow-y-auto">
-      {/* Model Assumptions (read-only display — outside FormProvider) */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <SectionHeader
-          icon="layer-group"
-          label="Model Assumptions"
-          color="bg-blue-50 text-blue-600"
-        />
-        <div className="h-px bg-gray-100 mb-4" />
-        {assumptionLoading ? (
-          <div className="space-y-2">
-            {[1, 2].map(i => (
-              <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <ModelAssumptionsTable assumptions={modelAssumptions} projectType={projectType} />
-        )}
-      </div>
-
-      {/* Pricing Assumption form — wrapped in FormProvider */}
-      <FormProvider methods={methods} schema={schema}>
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
-          <div className="bg-white rounded-xl border border-gray-100 p-6">
-            <PricingAssumptionForm projectType={projectType} />
-          </div>
-
-          {/* Actions */}
-          {!isReadOnly && (
-            <div className="flex items-center justify-between py-2">
-              {isDirty && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  Unsaved assumption changes
-                </span>
+    <FormProvider methods={methods} schema={schema}>
+      <form
+        onSubmit={handleSubmit(data => persistAssumption(data, true))}
+        className="flex flex-col h-full min-h-0"
+      >
+        <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+          <div className="flex flex-col gap-6">
+            {/* Model Assumptions (read-only display) */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <SectionHeader
+                icon="layer-group"
+                label="Model Assumptions"
+                color="bg-blue-50 text-blue-600"
+              />
+              <div className="h-px bg-gray-100 mb-4" />
+              {assumptionLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map(i => (
+                    <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <ModelAssumptionsTable assumptions={modelAssumptions} projectType={projectType} />
               )}
-              <div className="flex items-center gap-3 ml-auto">
-                <Button
-                  type="submit"
-                  variant="outline"
-                  isLoading={isSaving}
-                  disabled={isSaving || isCalculating}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save Assumptions
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handleCalculate}
-                  isLoading={isCalculating}
-                  disabled={isSaving || isCalculating}
-                >
-                  <Icon name="calculator" style="solid" className="size-4 mr-2" />
-                  Calculate
-                </Button>
-              </div>
             </div>
-          )}
-        </form>
-      </FormProvider>
 
-      {/* Calculated Unit Prices — OUTSIDE FormProvider (display + side-effect only) */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <SectionHeader
-            icon="tags"
-            label="Calculated Unit Prices"
-            color="bg-violet-50 text-violet-600"
-          />
-          {unitPrices.length > 0 && (
-            <span className="text-xs text-gray-500 self-start mt-0.5">
-              {unitPrices.length.toLocaleString()} units
-            </span>
-          )}
+            {/* Pricing Assumption form */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <PricingAssumptionForm projectType={projectType} />
+            </div>
+
+            {/* Calculated Unit Prices */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <SectionHeader
+                  icon="tags"
+                  label="Calculated Unit Prices"
+                  color="bg-violet-50 text-violet-600"
+                />
+                {displayedUnitPrices.length > 0 && (
+                  <span className="text-xs text-gray-500 self-start mt-0.5">
+                    {displayedUnitPrices.length.toLocaleString()} units
+                  </span>
+                )}
+              </div>
+              <div className="h-px bg-gray-100 mb-4" />
+              <UnitPriceResultTable
+                unitPrices={displayedUnitPrices}
+                projectType={projectType}
+                isLoading={pricesLoading}
+                pricingAssumption={pricingAssumption}
+                onToggleFlag={handleToggleFlag}
+                isDisabled={isReadOnly || isBusy}
+              />
+            </div>
+          </div>
         </div>
-        <div className="h-px bg-gray-100 mb-4" />
-        <UnitPriceResultTable
-          unitPrices={unitPrices}
-          projectType={projectType}
-          isLoading={pricesLoading}
-          pricingAssumption={pricingAssumption}
-          onToggleFlag={handleToggleFlag}
-          isDisabled={isReadOnly || isSavingFlags || isCalculating}
-        />
-      </div>
-    </div>
+
+        {/* Sticky bottom action bar */}
+        <ActionBar>
+          <ActionBar.Left>
+            {!isReadOnly && <ActionBar.UnsavedIndicator show={isDirty || flagsDirty} />}
+          </ActionBar.Left>
+          {!isReadOnly && (
+            <ActionBar.Right>
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => handleSubmit(data => persistAssumption(data, false))()}
+                isLoading={isSaving && !isCalculating}
+                disabled={isBusy}
+              >
+                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button type="submit" isLoading={isBusy} disabled={isBusy}>
+                <Icon name="calculator" style="solid" className="size-4 mr-2" />
+                Save
+              </Button>
+            </ActionBar.Right>
+          )}
+        </ActionBar>
+      </form>
+    </FormProvider>
   );
 }

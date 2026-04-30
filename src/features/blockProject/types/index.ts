@@ -93,7 +93,14 @@ export interface ProjectTower {
   isForestBoundary?: boolean;
   forestBoundaryRemark?: string;
   remark?: string;
-  imageDocumentIds?: string[];
+  images?: Array<{
+    id: string;
+    galleryPhotoId: string;
+    displaySequence: number;
+    title?: string | null;
+    description?: string | null;
+    isThumbnail: boolean;
+  }>;
 }
 
 // ─── ProjectModel ─────────────────────────────────────────────────────────────
@@ -161,7 +168,9 @@ export interface ProjectModel {
   // Common
   modelName?: string;
   modelDescription?: string;
-  standardPrice?: number;
+  pricingAnalysisId?: string;
+  pricingAnalysisStatus?: string;
+  finalAppraisedValue?: number;
   hasMezzanine?: boolean;
   usableAreaMin?: number;
   usableAreaMax?: number;
@@ -173,7 +182,14 @@ export interface ProjectModel {
   upperFloorMaterialTypeOther?: string;
   bathroomFloorMaterialType?: string;
   bathroomFloorMaterialTypeOther?: string;
-  imageDocumentIds?: string[];
+  images?: Array<{
+    id: string;
+    galleryPhotoId: string;
+    displaySequence: number;
+    title?: string | null;
+    description?: string | null;
+    isThumbnail: boolean;
+  }>;
   remark?: string;
   areaDetails?: ProjectModelAreaDetail[];
   // Condo-only
@@ -337,7 +353,9 @@ export interface ProjectModelAssumption {
   modelDescription?: string;
   usableAreaFrom?: number;
   usableAreaTo?: number;
-  standardPrice?: number;
+  pricingAnalysisId?: string;
+  pricingAnalysisStatus?: string;
+  finalAppraisedValue?: number;
   /** LandAndBuilding-only */
   standardLandPrice?: number;
   coverageAmount?: number;

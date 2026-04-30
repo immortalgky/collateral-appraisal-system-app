@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { useGetProjectTowers } from '../../api/projectTower';
+import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
+import { toGalleryImage } from '@/features/appraisal/types/gallery';
+import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 import type { ProjectTower } from '../../types';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -15,10 +18,11 @@ type ViewMode = 'grid' | 'list';
 interface TowerCardProps {
   tower: ProjectTower;
   viewMode: ViewMode;
+  thumbnailSrc?: string;
   onClick: () => void;
 }
 
-function TowerCard({ tower, viewMode, onClick }: TowerCardProps) {
+function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
   if (viewMode === 'list') {
     return (
       <button
@@ -26,8 +30,16 @@ function TowerCard({ tower, viewMode, onClick }: TowerCardProps) {
         onClick={onClick}
         className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left"
       >
-        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-          <Icon name="building" style="solid" className="text-gray-400 w-7 h-7" />
+        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+          {thumbnailSrc ? (
+            <img
+              src={thumbnailSrc}
+              alt={tower.towerName ?? 'Tower thumbnail'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Icon name="building" style="solid" className="text-gray-400 w-7 h-7" />
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -67,12 +79,20 @@ function TowerCard({ tower, viewMode, onClick }: TowerCardProps) {
       onClick={onClick}
       className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group"
     >
-      <div className="aspect-video bg-gray-100 flex items-center justify-center">
-        <Icon
-          name="building"
-          style="solid"
-          className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
-        />
+      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={tower.towerName ?? 'Tower thumbnail'}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Icon
+            name="building"
+            style="solid"
+            className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
+          />
+        )}
       </div>
 
       <div className="p-4">
@@ -118,6 +138,19 @@ export default function TowerListingTab() {
 
   const { data: towersData, isLoading, isError } = useGetProjectTowers(appraisalId ?? '');
   const towers = towersData ?? [];
+
+  const { data: galleryData } = useGetGalleryPhotos(appraisalId ?? undefined);
+  const thumbnailByTowerId = useMemo(() => {
+    const galleryPhotos = (galleryData?.photos ?? []) as GalleryPhotoDtoType[];
+    const photoById = new Map(galleryPhotos.map(p => [p.id, p]));
+    const map = new Map<string, string>();
+    for (const tower of towers) {
+      const cover = tower.images?.find(i => i.isThumbnail);
+      const photo = cover && photoById.get(cover.galleryPhotoId);
+      if (photo) map.set(tower.id, toGalleryImage(photo).thumbnailSrc);
+    }
+    return map;
+  }, [galleryData, towers]);
 
   const handleTowerClick = (towerId: string) => {
     navigate(`${basePath}/block-condo/tower/${towerId}`);
@@ -205,6 +238,7 @@ export default function TowerListingTab() {
             <TowerCard
               key={tower.id}
               tower={tower}
+              thumbnailSrc={thumbnailByTowerId.get(tower.id)}
               viewMode="grid"
               onClick={() => handleTowerClick(tower.id)}
             />
@@ -216,6 +250,7 @@ export default function TowerListingTab() {
             <TowerCard
               key={tower.id}
               tower={tower}
+              thumbnailSrc={thumbnailByTowerId.get(tower.id)}
               viewMode="list"
               onClick={() => handleTowerClick(tower.id)}
             />

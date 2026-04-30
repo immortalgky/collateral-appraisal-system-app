@@ -26,7 +26,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
-import { useUIStore } from '@shared/store';
+import { useBreadcrumbExtrasStore, useUIStore } from '@shared/store';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -256,6 +256,13 @@ function TaskLayout() {
     return items;
   }, [appraisalData, appraisalId, taskId, location.pathname]);
 
+  // Page-level dynamic crumbs (active tab, fetched record names) appended after layout-built crumbs.
+  const breadcrumbExtras = useBreadcrumbExtrasStore(s => s.extras);
+  const breadcrumbItemsWithExtras = useMemo(
+    () => [...breadcrumbItems, ...breadcrumbExtras],
+    [breadcrumbItems, breadcrumbExtras],
+  );
+
   // Build context with workflow fields (must be before early returns — Rules of Hooks)
   const contextValue = useMemo(() => {
     const commonWorkflowFields = {
@@ -377,7 +384,7 @@ function TaskLayout() {
           <div className="flex-1 flex min-h-0">
             <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0">
               <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 min-w-0">
-                <Breadcrumb items={breadcrumbItems} className="mb-4 shrink-0" />
+                <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
 
                 {/* Pool task lock banners */}
                 {isLockedByOther && (

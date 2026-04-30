@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useNavigate } from 'react-router-dom';
+import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
@@ -28,15 +28,19 @@ export function useSelectionActions({
   dispatch,
   pricingAnalysisId,
   groupId,
+  returnTo,
 }: {
   state: SelectionState;
   dispatch: React.Dispatch<SelectionAction>;
   pricingAnalysisId: string;
   groupId: string;
+  /** Override the "Back" navigation destination.
+   *  Defaults to `${basePath}/property` (PropertyGroup subject).
+   *  Pass `${basePath}/block-condo/model/:id` etc. for model subjects. */
+  returnTo?: string;
 }) {
   const navigate = useNavigate();
   const basePath = useBasePath();
-  const appraisalId = useAppraisalId();
   const qc = useQueryClient();
 
   // Deselect confirmation dialog
@@ -113,10 +117,12 @@ export function useSelectionActions({
 
       const isNew = !pricingAnalysisId;
       if (isNew && result.pricingAnalysisId) {
-        navigate(
-          `${basePath}/groups/${groupId}/pricing-analysis/${result.pricingAnalysisId}`,
-          { replace: true },
-        );
+        // returnTo is the model detail path (e.g. block-condo/model/:id) for model subjects;
+        // for propertyGroup subjects fall back to the groups segment.
+        const analysisPath = returnTo
+          ? `${returnTo}/pricing-analysis/${result.pricingAnalysisId}`
+          : `${basePath}/groups/${groupId}/pricing-analysis/${result.pricingAnalysisId}`;
+        navigate(analysisPath, { replace: true });
       }
 
       // Refresh from server so IDs appear in state via INIT effect
@@ -182,7 +188,7 @@ export function useSelectionActions({
   };
 
   const cancelPricingAccordion = () => {
-    navigate(`${basePath}/property`);
+    navigate(returnTo ?? `${basePath}/property`);
   };
 
   const changeSystemCalculation = (method: boolean) => {
@@ -205,7 +211,7 @@ export function useSelectionActions({
       if (!approachId || !isServerId(approachId)) {
         const res = await addApproachMutation.mutateAsync({
           pricingAnalysisId,
-          request: { approachType: mapToServerApproachType(arg.approachType) },
+          request: { approachType: mapToServerApproachType(arg.approachType), weight: null },
         });
         approachId = res.id;
       }
@@ -213,7 +219,7 @@ export function useSelectionActions({
       await addMethodMutation.mutateAsync({
         pricingAnalysisId,
         approachId,
-        request: { methodType: mapToServerMethodType(arg.methodType) },
+        request: { methodType: mapToServerMethodType(arg.methodType), status: null },
       });
 
       toast.success('Method added');
