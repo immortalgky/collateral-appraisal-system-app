@@ -16,7 +16,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
-import { useUIStore } from '@shared/store';
+import { useBreadcrumbExtrasStore, useUIStore } from '@shared/store';
 import { useMenuStore } from '@features/menuManagement/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
 
@@ -196,6 +196,13 @@ function AppraisalLayout() {
     return items;
   }, [appraisalData, appraisalId, location.pathname, returnPath]);
 
+  // Page-level dynamic crumbs (active tab, fetched record names) appended after layout-built crumbs.
+  const breadcrumbExtras = useBreadcrumbExtrasStore(s => s.extras);
+  const breadcrumbItemsWithExtras = useMemo(
+    () => [...breadcrumbItems, ...breadcrumbExtras],
+    [breadcrumbItems, breadcrumbExtras],
+  );
+
   // If no appraisalId, this shouldn't render
   if (!appraisalId) {
     return null;
@@ -311,7 +318,7 @@ function AppraisalLayout() {
             {/* Main Content */}
             <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0">
               <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 min-w-0">
-                <Breadcrumb items={breadcrumbItems} className="mb-4 shrink-0" />
+                <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
                 <div className="flex-1 min-h-0 min-w-0">
                   <ErrorBoundary>
                       <Outlet />

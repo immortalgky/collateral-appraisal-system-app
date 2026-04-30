@@ -54,9 +54,9 @@ function UploadHistoryTable({ uploads, isLoading }: { uploads: ProjectUnitUpload
               <td className="py-2 px-3 text-gray-800 max-w-[180px] truncate" title={upload.fileName}>{upload.fileName}</td>
               <td className="py-2 px-3 text-gray-600 whitespace-nowrap">{new Date(upload.uploadedAt).toLocaleString()}</td>
               <td className="py-2 px-3">
-                <Badge type="status" value={upload.isUsed ? 'completed' : 'pending'}>
-                  {upload.isUsed ? 'Used' : 'Pending'}
-                </Badge>
+                {upload.isUsed && (
+                  <Badge type="status" value="completed">Used</Badge>
+                )}
               </td>
             </tr>
           ))}

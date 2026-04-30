@@ -5,18 +5,20 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
-import { useGetRequestDocuments } from '@/features/request/api/documents';
 import {
+  useAddAppraisalToDraft,
   useEditDraftQuotation,
   useGetLoanTypeMatchedCompanies,
+  useRemoveAppraisalFromDraft,
   useSetSharedDocuments,
 } from '../api/quotation';
 import type {
-  AppraisalSummaryDto,
   EditDraftAppraisalEntry,
   QuotationRequestDetailDto,
   SharedDocumentSelectionDto,
 } from '../schemas/quotation';
+import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
+import type { SelectedAppraisal } from './AppraisalPicker';
 
 interface EditDraftQuotationModalProps {
   isOpen: boolean;
@@ -34,23 +36,57 @@ type DocSelections = Record<string, Record<string, SharedDocumentSelectionDto['l
 
 /**
  * Modal for editing a Draft quotation: due date, per-appraisal max days,
- * per-appraisal shared documents, and invited companies.
+ * per-appraisal shared documents, invited companies, and adding/removing appraisals.
+ *
+ * State model:
+ *  - `appraisals`           — unified working list (existing + newly-added)
+ *  - `docSelections`        — shared-doc selections per appraisalId
+ *  - `markedForRemovalIds`  — existing IDs the user wants removed (shown struck-through; need DELETE on save)
+ *  - `addedAppraisalIds`    — IDs picked from the picker this session (need POST on save)
+ *
+ * Enhancement #3: picker is lazy-mounted behind [+ Add or change appraisals] button.
+ * Enhancement #5: removals of existing rows are marked (not deleted) until Save.
  */
 const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotationModalProps) => {
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [appraisalDays, setAppraisalDays] = useState<Record<string, number | null>>({});
   const [docSelections, setDocSelections] = useState<DocSelections>({});
-  const [expandedAppraisalId, setExpandedAppraisalId] = useState<string | null>(null);
+
+  // Unified appraisal list (existing + added)
+  const [appraisals, setAppraisals] = useState<SelectedAppraisal[]>([]);
+  // Track which existing IDs are marked for removal (shown struck-through; need DELETE on save)
+  const [markedForRemovalIds, setMarkedForRemovalIds] = useState<Set<string>>(new Set());
+  // Track which IDs were added via picker (need POST on save)
+  const [addedAppraisalIds, setAddedAppraisalIds] = useState<Set<string>>(new Set());
+
+  // Lazy-mount picker toggle (Enhancement #3)
+  const [showPicker, setShowPicker] = useState(false);
+
+  // Expanded rows in the compact summary list (Enhancement #1)
+  const [expandedSummaryIds, setExpandedSummaryIds] = useState<Set<string>>(new Set());
+
+  const handleToggleSummaryExpanded = (id: string) => {
+    setExpandedSummaryIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const { mutateAsync: editDraftAsync, isPending: isEditing } = useEditDraftQuotation(quotation.id);
   const { mutateAsync: setSharedDocsAsync, isPending: isSavingDocs } = useSetSharedDocuments(
     quotation.id,
   );
-  const isPending = isEditing || isSavingDocs;
+  const { mutateAsync: addAppraisalAsync, isPending: isAddingAppraisal } = useAddAppraisalToDraft(
+    quotation.id,
+  );
+  const { mutateAsync: removeAppraisalAsync, isPending: isRemovingAppraisal } =
+    useRemoveAppraisalFromDraft(quotation.id);
 
-  // Fetch all eligible companies (no loanType filter for standalone)
+  const isPending = isEditing || isSavingDocs || isAddingAppraisal || isRemovingAppraisal;
+
   const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetLoanTypeMatchedCompanies(
     undefined,
     isOpen,
@@ -67,9 +103,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
     return allCompanies.filter(c => c.companyName.toLowerCase().includes(q));
   }, [allCompanies, searchQuery]);
 
-  // Seed form once per open — depending on quotation.* arrays would retrigger the seed
-  // on background refetches (mutation invalidations, focus refetch) and wipe in-flight edits.
-  // Local state is the source of truth while the modal is open.
+  // Seed form once per open
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isOpen) return;
@@ -80,10 +114,14 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         companyName: c.companyName,
       })),
     );
-    setAppraisalDays(
-      Object.fromEntries(
-        (quotation.appraisals ?? []).map(a => [a.appraisalId, a.maxAppraisalDays ?? null]),
-      ),
+    setAppraisals(
+      (quotation.appraisals ?? []).map(a => ({
+        id: a.appraisalId,
+        requestId: a.requestId ?? null,
+        appraisalNumber: a.appraisalNumber ?? a.appraisalId.slice(0, 8),
+        customerName: a.customerName ?? null,
+        maxAppraisalDays: a.maxAppraisalDays ?? null,
+      })),
     );
     const seededDocs: DocSelections = {};
     for (const entry of quotation.sharedDocuments ?? []) {
@@ -92,13 +130,30 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
     }
     setDocSelections(seededDocs);
     setSearchQuery('');
-    setExpandedAppraisalId(null);
+    setMarkedForRemovalIds(new Set());
+    setAddedAppraisalIds(new Set());
+    setShowPicker(false);
+    setExpandedSummaryIds(new Set());
   }, [isOpen, quotation.id]);
 
   const handleToggleCompany = (company: SelectedCompany) => {
     setSelectedCompanies(prev => {
       const exists = prev.some(c => c.id === company.id);
       return exists ? prev.filter(c => c.id !== company.id) : [...prev, company];
+    });
+  };
+
+  const handleSetAllVisibleCompanies = (companies: SelectedCompany[], selectAll: boolean) => {
+    setSelectedCompanies(prev => {
+      const ids = new Set(companies.map(c => c.id));
+      if (selectAll) {
+        const merged = [...prev];
+        for (const c of companies) {
+          if (!merged.some(x => x.id === c.id)) merged.push(c);
+        }
+        return merged;
+      }
+      return prev.filter(c => !ids.has(c.id));
     });
   };
 
@@ -122,6 +177,61 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
     });
   };
 
+  // Called when the picker adds an appraisal
+  const handleAddAppraisal = (a: SelectedAppraisal) => {
+    setAppraisals(prev => (prev.some(x => x.id === a.id) ? prev : [...prev, a]));
+
+    // If it was marked for removal, undo the mark (still exists on server — no POST needed)
+    if (markedForRemovalIds.has(a.id)) {
+      setMarkedForRemovalIds(prev => {
+        const next = new Set(prev);
+        next.delete(a.id);
+        return next;
+      });
+      return;
+    }
+    // Truly new pick — schedule a POST on save
+    setAddedAppraisalIds(prev => new Set([...prev, a.id]));
+  };
+
+  // Called when user clicks Undo on a marked-for-removal row
+  const handleUndoRemoval = (id: string) => {
+    setMarkedForRemovalIds(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  // Called when user X-clicks a row in the compact summary or in the picker
+  const handleRemoveAppraisal = (id: string) => {
+    setAddedAppraisalIds(prev => {
+      if (prev.has(id)) {
+        // Was newly-added this session — drop from both lists (never persisted)
+        setAppraisals(prevA => prevA.filter(a => a.id !== id));
+        setDocSelections(prevD => {
+          if (!(id in prevD)) return prevD;
+          const next = { ...prevD };
+          delete next[id];
+          return next;
+        });
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      }
+      // Was an existing backend row — mark for removal (keep in appraisals list)
+      setMarkedForRemovalIds(r => new Set([...r, id]));
+      return prev;
+    });
+  };
+
+  // Called when a row's max-days input changes
+  const handleUpdateMaxDays = (id: string, maxAppraisalDays: number | null) => {
+    setAppraisals(prev =>
+      prev.map(a => (a.id === id ? { ...a, maxAppraisalDays } : a)),
+    );
+  };
+
   const handleSave = async () => {
     if (!dueDate) {
       toast.error('Due date is required');
@@ -131,14 +241,45 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
       toast.error('At least one company must be invited');
       return;
     }
+    const activeAppraisals = appraisals.filter(a => !markedForRemovalIds.has(a.id));
+    if (activeAppraisals.length === 0) {
+      toast.error('At least one appraisal is required');
+      return;
+    }
 
-    const appraisalEntries: EditDraftAppraisalEntry[] = (quotation.appraisals ?? []).map(a => ({
-      appraisalId: a.appraisalId,
-      maxAppraisalDays: appraisalDays[a.appraisalId] ?? null,
+    // Step 1 — DELETE removals
+    for (const id of markedForRemovalIds) {
+      try {
+        await removeAppraisalAsync(id);
+      } catch (err: unknown) {
+        const apiErr = err as { apiError?: { detail?: string } };
+        toast.error(apiErr?.apiError?.detail ?? `Failed to remove appraisal`);
+        return;
+      }
+    }
+
+    // Step 2 — POST additions
+    for (const id of addedAppraisalIds) {
+      try {
+        await addAppraisalAsync(id);
+      } catch (err: unknown) {
+        const apiErr = err as { apiError?: { detail?: string } };
+        toast.error(apiErr?.apiError?.detail ?? `Failed to add appraisal`);
+        return;
+      }
+    }
+
+    // Step 3 — PATCH: update due date, companies, per-appraisal max days
+    const appraisalEntries: EditDraftAppraisalEntry[] = activeAppraisals.map(a => ({
+      appraisalId: a.id,
+      maxAppraisalDays: a.maxAppraisalDays ?? null,
     }));
 
+    // Step 4 — PUT shared-docs: only for active appraisals
+    const activeIds = new Set(activeAppraisals.map(a => a.id));
     const docPayload: SharedDocumentSelectionDto[] = [];
     for (const [appraisalId, docs] of Object.entries(docSelections)) {
+      if (!activeIds.has(appraisalId)) continue;
       for (const [documentId, level] of Object.entries(docs)) {
         docPayload.push({ appraisalId, documentId, level });
       }
@@ -161,8 +302,11 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
   const isCompanySelected = (id: string) => selectedCompanies.some(c => c.id === id);
 
+  const activeAppraisalCount = appraisals.filter(a => !markedForRemovalIds.has(a.id)).length;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Draft Quotation" size="xl">
+    <>
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Draft Quotation" size="3xl">
       <div className="flex flex-col gap-5">
         {/* Due Date */}
         <DateTimePickerInput
@@ -174,89 +318,46 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
           onChange={v => setDueDate(v)}
         />
 
-        {/* Appraisals — per-row Max Days + expandable Shared Documents */}
-        {(quotation.appraisals ?? []).length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Appraisals ({quotation.appraisals?.length ?? 0})
-            </label>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 grid grid-cols-[1fr_auto_auto_auto] gap-3 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                <span>Appraisal</span>
-                <span className="w-28 text-right">Max Days</span>
-                <span className="w-28 text-right">Shared Docs</span>
-                <span className="w-6" aria-hidden />
-              </div>
+        {/* Compact appraisal summary + lazy picker */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Appraisals ({activeAppraisalCount})
+          </label>
+
+          {/* Compact summary list — always visible; picker hides its internal selected panel via hideSelectedPanel */}
+          {appraisals.length > 0 && (
+            <div className="rounded-lg border border-gray-200 overflow-hidden mb-2">
+              {/* "Set max days for all" bar */}
+              <SetMaxDaysBar
+                appraisals={appraisals}
+                markedForRemovalIds={markedForRemovalIds}
+                onUpdateMaxDays={handleUpdateMaxDays}
+              />
               <div className="divide-y divide-gray-100">
-                {(quotation.appraisals ?? []).map(a => {
-                  const isExpanded = expandedAppraisalId === a.appraisalId;
-                  const docCount = Object.keys(docSelections[a.appraisalId] ?? {}).length;
-                  return (
-                    <div key={a.appraisalId}>
-                      <div className="px-3 py-2 grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {a.appraisalNumber ?? a.appraisalId.slice(0, 8)}
-                          </p>
-                          {a.customerName && (
-                            <p className="text-xs text-gray-500 truncate">{a.customerName}</p>
-                          )}
-                        </div>
-                        <input
-                          type="number"
-                          min={1}
-                          step={1}
-                          inputMode="numeric"
-                          value={appraisalDays[a.appraisalId] ?? ''}
-                          onChange={e => {
-                            const v = e.target.value;
-                            setAppraisalDays(prev => ({
-                              ...prev,
-                              [a.appraisalId]: v === '' ? null : Math.max(1, Number(v)),
-                            }));
-                          }}
-                          placeholder="—"
-                          aria-label={`Max appraisal days for ${a.appraisalNumber ?? a.appraisalId}`}
-                          className="w-28 px-2 py-1 text-right text-sm tabular-nums border border-gray-200 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                        />
-                        <span className="w-28 text-right text-xs text-gray-600 tabular-nums">
-                          {docCount} selected
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedAppraisalId(isExpanded ? null : a.appraisalId)
-                          }
-                          className="size-6 rounded-md hover:bg-gray-100 text-gray-500 transition-colors flex items-center justify-center"
-                          aria-label={
-                            isExpanded
-                              ? `Hide documents for ${a.appraisalNumber ?? a.appraisalId}`
-                              : `Show documents for ${a.appraisalNumber ?? a.appraisalId}`
-                          }
-                        >
-                          <Icon
-                            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                            style="solid"
-                            className="size-3"
-                          />
-                        </button>
-                      </div>
-                      {isExpanded && (
-                        <div className="border-t border-gray-100 bg-gray-50">
-                          <AppraisalDocPicker
-                            appraisal={a}
-                            apSelection={docSelections[a.appraisalId] ?? {}}
-                            onToggle={handleToggleDoc}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {appraisals.map(a => (
+                  <SelectedAppraisalRow
+                    key={a.id}
+                    appraisal={a}
+                    isExpanded={expandedSummaryIds.has(a.id)}
+                    onToggleExpanded={handleToggleSummaryExpanded}
+                    onUpdateMaxDays={handleUpdateMaxDays}
+                    docSelections={docSelections}
+                    onToggleDoc={handleToggleDoc}
+                    isMarkedForRemoval={markedForRemovalIds.has(a.id)}
+                    onUndoRemoval={handleUndoRemoval}
+                    onRemove={handleRemoveAppraisal}
+                  />
+                ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Open picker popup */}
+          <Button variant="outline" size="sm" onClick={() => setShowPicker(true)}>
+            <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
+            Add or change appraisals
+          </Button>
+        </div>
 
         {/* Selected companies chips */}
         {selectedCompanies.length > 0 && (
@@ -308,7 +409,32 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                 />
               </div>
             </div>
-            <div className="max-h-48 overflow-y-auto">
+            {!isLoadingCompanies && filteredCompanies.length > 0 && (() => {
+              const selectedSet = new Set(selectedCompanies.map(c => c.id));
+              const allVisibleSelected = filteredCompanies.every(c => selectedSet.has(c.id));
+              const someVisibleSelected = filteredCompanies.some(c => selectedSet.has(c.id));
+              return (
+                <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    ref={el => {
+                      if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                    }}
+                    onChange={() => handleSetAllVisibleCompanies(filteredCompanies, !allVisibleSelected)}
+                    className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
+                    aria-label="Select all visible companies"
+                  />
+                  <span className="text-xs text-gray-600">
+                    {allVisibleSelected ? 'Clear all' : 'Select all'}
+                    {searchQuery.trim() && (
+                      <span className="text-gray-400"> ({filteredCompanies.length} matching)</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })()}
+            <div className="max-h-96 overflow-y-auto">
               {isLoadingCompanies ? (
                 <div className="flex items-center justify-center px-4 py-6 gap-2 text-gray-400">
                   <Icon name="spinner" style="solid" className="size-4 animate-spin" />
@@ -366,7 +492,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
           </Button>
           <Button
             onClick={handleSave}
-            disabled={isPending || !dueDate || selectedCompanies.length === 0}
+            disabled={isPending || !dueDate || selectedCompanies.length === 0 || activeAppraisalCount === 0}
             isLoading={isPending}
           >
             {!isPending && <Icon name="floppy-disk" style="solid" className="size-4 mr-1.5" />}
@@ -375,111 +501,36 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         </div>
       </div>
     </Modal>
-  );
-};
 
-// ─── Per-appraisal document picker ───────────────────────────────────────────
-
-interface AppraisalDocPickerProps {
-  appraisal: AppraisalSummaryDto;
-  apSelection: Record<string, SharedDocumentSelectionDto['level']>;
-  onToggle: (
-    appraisalId: string,
-    documentId: string,
-    level: SharedDocumentSelectionDto['level'],
-    checked: boolean,
-  ) => void;
-}
-
-const AppraisalDocPicker = ({ appraisal, apSelection, onToggle }: AppraisalDocPickerProps) => {
-  const { data, isLoading } = useGetRequestDocuments(appraisal.requestId ?? undefined);
-  const sections = data?.sections ?? [];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 py-4 px-3 text-xs text-gray-400">
-        <Icon name="spinner" style="solid" className="size-3.5 animate-spin" />
-        Loading documents...
+    {/* Picker popup — child modal stacks above the edit modal */}
+    <Modal
+      isOpen={showPicker}
+      onClose={() => setShowPicker(false)}
+      title="Add or change appraisals"
+      size="3xl"
+    >
+      <div className="flex flex-col gap-4">
+        <AppraisalPicker
+          selected={appraisals}
+          onAdd={handleAddAppraisal}
+          onRemove={handleRemoveAppraisal}
+          onUpdateMaxDays={handleUpdateMaxDays}
+          docSelections={docSelections}
+          onToggleDoc={handleToggleDoc}
+          excludeQuotationRequestId={quotation.id}
+          markedForRemovalIds={markedForRemovalIds}
+          onUndoRemoval={handleUndoRemoval}
+          hideSelectedPanel
+        />
+        <div className="flex justify-end pt-2 border-t border-gray-100">
+          <Button onClick={() => setShowPicker(false)}>
+            <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
+            Done
+          </Button>
+        </div>
       </div>
-    );
-  }
-
-  if (!appraisal.requestId) {
-    return (
-      <div className="px-3 py-3 text-xs text-amber-600 flex items-center gap-1.5">
-        <Icon name="triangle-exclamation" style="solid" className="size-3.5 shrink-0" />
-        No request linked to this appraisal. Documents cannot be loaded.
-      </div>
-    );
-  }
-
-  const hasUploaded = sections.some(s => s.documents.some(d => d.documentId));
-  if (!hasUploaded) {
-    return (
-      <div className="px-3 py-3 text-xs text-gray-400">
-        No uploaded documents found for this request.
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col divide-y divide-gray-100 max-h-[280px] overflow-y-auto">
-      {sections.map((section, sIdx) => {
-        const level: SharedDocumentSelectionDto['level'] =
-          section.titleId == null ? 'RequestLevel' : 'TitleLevel';
-        const uploadedDocs = section.documents.filter(d => d.documentId);
-        if (uploadedDocs.length === 0) return null;
-
-        const allSelected = uploadedDocs.every(d => !!apSelection[d.documentId!]);
-        const handleSelectAll = (checked: boolean) => {
-          uploadedDocs.forEach(d =>
-            onToggle(appraisal.appraisalId, d.documentId!, level, checked),
-          );
-        };
-
-        return (
-          <div key={sIdx} className="px-3 py-2.5">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                {section.sectionLabel}
-              </span>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={e => handleSelectAll(e.target.checked)}
-                  className="size-3 accent-primary rounded"
-                />
-                <span className="text-[10px] text-gray-500">Select all</span>
-              </label>
-            </div>
-            <div className="flex flex-col gap-1">
-              {uploadedDocs.map(doc => (
-                <label
-                  key={doc.documentId}
-                  className="flex items-center gap-2 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!apSelection[doc.documentId!]}
-                    onChange={e =>
-                      onToggle(appraisal.appraisalId, doc.documentId!, level, e.target.checked)
-                    }
-                    className="size-3.5 accent-primary rounded shrink-0"
-                  />
-                  <span className="text-xs text-gray-800 truncate group-hover:text-primary">
-                    {doc.fileName ?? doc.documentId}
-                    {doc.documentTypeName && (
-                      <span className="text-gray-400"> ({doc.documentTypeName})</span>
-                    )}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    </Modal>
+    </>
   );
 };
 

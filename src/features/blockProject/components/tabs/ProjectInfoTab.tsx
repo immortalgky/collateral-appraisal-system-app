@@ -16,11 +16,7 @@ import type { ApiError } from '@/shared/types/api';
 import { useGetProject, useSaveProject } from '../../api/project';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
-import {
-  projectInfoForm,
-  condoProjectInfoFormDefaults,
-  lbProjectInfoFormDefaults,
-} from '../../schemas/form';
+import { condoProjectInfoFormDefaults, lbProjectInfoFormDefaults, projectInfoForm, } from '../../schemas/form';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -37,7 +33,8 @@ export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
   const isReadOnly = usePageReadOnly();
 
   const schema = projectInfoForm(projectType);
-  const defaults = projectType === 'Condo' ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
+  const defaults =
+    projectType === 'Condo' ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
 
   const { data: project, isLoading } = useGetProject(appraisalId ?? '', projectType);
   const { mutate: saveProject, isPending } = useSaveProject();
@@ -48,7 +45,11 @@ export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
     defaultValues: defaults,
   });
 
-  const { handleSubmit, reset, formState: { isDirty } } = methods;
+  const {
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = methods;
 
   useEffect(() => {
     if (project) {
@@ -63,7 +64,7 @@ export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
           landAreaWa: project.landAreaWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
-          projectType: '',  // stamped from route prop on submit
+          projectType: '', // stamped from route prop on submit
           numberOfPhase: project.numberOfPhase ?? null,
           locationNumber: project.locationNumber ?? null,
           road: project.road ?? null,

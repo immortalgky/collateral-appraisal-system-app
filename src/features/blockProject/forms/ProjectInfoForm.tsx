@@ -2,13 +2,11 @@ import { FormFields } from '@/shared/components/form';
 import type { ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import {
+  condoProjectInfoFields,
+  lbProjectInfoFields,
+  projectDetailFields,
   projectInformationFields,
   projectLocationFields,
-  projectDetailFields,
-  condoProjectInfoFields,
-  condoFacilityFields,
-  lbProjectInfoFields,
-  lbFacilityFields,
 } from '../configs/fields';
 
 interface ProjectInfoFormProps {
@@ -25,8 +23,8 @@ interface ProjectInfoFormProps {
  * route prop on submit — it is not a user-editable field and has no form input.
  */
 const ProjectInfoForm = ({ projectType }: ProjectInfoFormProps) => {
-  const typeSpecificInfoFields = projectType === 'Condo' ? condoProjectInfoFields : lbProjectInfoFields;
-  const facilityFields = projectType === 'Condo' ? condoFacilityFields : lbFacilityFields;
+  const typeSpecificInfoFields =
+    projectType === 'Condo' ? condoProjectInfoFields : lbProjectInfoFields;
 
   return (
     <div className="w-full max-w-full overflow-hidden">
@@ -44,8 +42,6 @@ const ProjectInfoForm = ({ projectType }: ProjectInfoFormProps) => {
 
         <SectionRow title="Project Detail" icon="list-check" isLast>
           <FormFields fields={projectDetailFields} />
-          {/* Facilities differ by type: Condo uses CONDO_FACILITY_OPTIONS; LB uses text-only fallback */}
-          <FormFields fields={facilityFields} />
         </SectionRow>
       </div>
     </div>

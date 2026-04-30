@@ -15,8 +15,8 @@ export const projectModelKeys = {
 
 // ==================== Request Types ====================
 
-type CreateProjectModelRequest = Omit<ProjectModel, 'id' | 'projectId'>;
-type UpdateProjectModelRequest = Omit<ProjectModel, 'id' | 'projectId'>;
+type CreateProjectModelRequest = Omit<ProjectModel, 'id' | 'projectId' | 'pricingAnalysisId' | 'pricingAnalysisStatus' | 'finalAppraisedValue'>;
+type UpdateProjectModelRequest = Omit<ProjectModel, 'id' | 'projectId' | 'pricingAnalysisId' | 'pricingAnalysisStatus' | 'finalAppraisedValue'>;
 
 // ==================== Hooks ====================
 
@@ -128,6 +128,145 @@ export const useDeleteProjectModel = () => {
       );
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+// ==================== Image Hooks ====================
+
+/**
+ * Link a gallery photo to a project model.
+ * POST /appraisals/{appraisalId}/project/models/{modelId}/images
+ */
+export const useAddProjectModelImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      entityId,
+      appraisalId,
+      galleryPhotoId,
+      title,
+      description,
+    }: {
+      entityId: string;
+      appraisalId: string;
+      galleryPhotoId: string;
+      title?: string | null;
+      description?: string | null;
+    }): Promise<{ id: string }> => {
+      const { data } = await axios.post(
+        `/appraisals/${appraisalId}/project/models/${entityId}/images`,
+        { galleryPhotoId, title, description },
+      );
+      return { id: data.id ?? data.imageId };
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.detail(variables.appraisalId, variables.entityId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'gallery'],
+      });
+    },
+  });
+};
+
+/**
+ * Remove a linked image from a project model.
+ * DELETE /appraisals/{appraisalId}/project/models/{modelId}/images/{imageId}
+ */
+export const useRemoveProjectModelImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      entityId,
+      imageId,
+      appraisalId,
+    }: {
+      entityId: string;
+      imageId: string;
+      appraisalId: string;
+    }): Promise<void> => {
+      await axios.delete(
+        `/appraisals/${appraisalId}/project/models/${entityId}/images/${imageId}`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.detail(variables.appraisalId, variables.entityId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+/**
+ * Set a model image as the cover/thumbnail.
+ * PUT /appraisals/{appraisalId}/project/models/{modelId}/images/{imageId}/set-thumbnail
+ */
+export const useSetProjectModelImageThumbnail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      entityId,
+      imageId,
+      appraisalId,
+    }: {
+      entityId: string;
+      imageId: string;
+      appraisalId: string;
+    }): Promise<void> => {
+      await axios.put(
+        `/appraisals/${appraisalId}/project/models/${entityId}/images/${imageId}/set-thumbnail`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.detail(variables.appraisalId, variables.entityId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+/**
+ * Remove the cover/thumbnail designation from a model image.
+ * PUT /appraisals/{appraisalId}/project/models/{modelId}/images/{imageId}/unset-thumbnail
+ */
+export const useUnsetProjectModelImageThumbnail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      entityId,
+      imageId,
+      appraisalId,
+    }: {
+      entityId: string;
+      imageId: string;
+      appraisalId: string;
+    }): Promise<void> => {
+      await axios.put(
+        `/appraisals/${appraisalId}/project/models/${entityId}/images/${imageId}/unset-thumbnail`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.detail(variables.appraisalId, variables.entityId),
+      });
       queryClient.invalidateQueries({
         queryKey: projectModelKeys.all(variables.appraisalId),
       });

@@ -28,10 +28,13 @@ export function useEnrichedPricingAnalysis({
   appraisalId,
   groupId,
   pricingAnalysisId,
+  skipGroupDetail = false,
 }: {
   appraisalId: string;
   groupId: string;
   pricingAnalysisId: string;
+  /** Set true for model-level pricing analyses where there is no PropertyGroup. */
+  skipGroupDetail?: boolean;
 }) {
   // Step 1: For a group, fetch group detail (to get property IDs + types)
   const groupDetailQuery = useQuery({
@@ -40,7 +43,7 @@ export function useEnrichedPricingAnalysis({
       const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
       return data;
     },
-    enabled: !!appraisalId && !!groupId,
+    enabled: !!appraisalId && !!groupId && !skipGroupDetail,
     staleTime: Infinity,
     retry: 1,
   });
@@ -80,7 +83,7 @@ export function useEnrichedPricingAnalysis({
           );
           return data as Record<string, unknown>;
         },
-        enabled: !!appraisalId && !!endpoint,
+        enabled: !!appraisalId && !!endpoint && !skipGroupDetail,
         staleTime: Infinity,
         retry: 1,
       };
@@ -156,7 +159,7 @@ export function useEnrichedPricingAnalysis({
 
   // Step 7: Assemble — wait until all data finished
   const isLoading =
-    groupDetailQuery.isLoading ||
+    (!skipGroupDetail && groupDetailQuery.isLoading) ||
     propertyDetailQueries.some(q => q.isLoading) ||
     marketSurveyDetailQueries.some(q => q.isLoading) ||
     pricingSelectionQuery.isLoading ||

@@ -20,6 +20,8 @@ export interface EligibleAppraisalsParams {
   sortDir?: 'asc' | 'desc';
   pageNumber: number;
   pageSize: number;
+  /** When set, appraisals attached to this quotation are not filtered out — used by the edit-draft picker. */
+  excludeQuotationRequestId?: string;
 }
 
 export interface EligibleAppraisalsResponse {
