@@ -629,6 +629,38 @@ export const router = createBrowserRouter([
               </AppraisalReadOnlyWrapper>
             ),
           },
+          {
+            path: 'market-comparable/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'market-comparable/:marketComparableId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/:itemId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
         ],
       },
       {
@@ -671,6 +703,38 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <VillageModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'market-comparable/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'market-comparable/:marketComparableId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/:itemId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1035,6 +1099,38 @@ export const router = createBrowserRouter([
               </AppraisalReadOnlyWrapper>
             ),
           },
+          {
+            path: 'market-comparable/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'market-comparable/:marketComparableId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/:itemId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
         ],
       },
       {
@@ -1077,6 +1173,38 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <VillageModelPricingAnalysisPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'market-comparable/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'market-comparable/:marketComparableId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateMarketComparablePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'law-and-regulation/:itemId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLawAndRegulationPage />
               </AppraisalReadOnlyWrapper>
             ),
           },

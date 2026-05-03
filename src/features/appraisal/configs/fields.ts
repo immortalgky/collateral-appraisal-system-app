@@ -1590,12 +1590,11 @@ export const constructionMaterialsFormFields: FormField[] = [
 export const condoRoomLayoutFormFields: FormField[] = [
   {
     type: 'radio-group',
-    label: 'Room Layout',
     name: 'roomLayoutType',
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
     group: 'RoomLayout',
-    variant: 'button',
+    variant: 'default',
   },
   {
     type: 'textarea',
@@ -1901,7 +1900,7 @@ export const groundFloorFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
     group: 'GroundFlooringMaterials',
-    variant: 'button',
+    variant: 'default',
   },
   {
     type: 'textarea',
@@ -1923,7 +1922,7 @@ export const upperFloorFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
     group: 'UpperFlooringMaterials',
-    variant: 'button',
+    variant: 'default',
   },
   {
     type: 'textarea',
@@ -1945,7 +1944,7 @@ export const bathroomFloorFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
     group: 'BathroomFlooringMaterials',
-    variant: 'button',
+    variant: 'default',
   },
   {
     type: 'textarea',

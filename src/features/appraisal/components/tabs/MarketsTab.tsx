@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
@@ -21,12 +21,22 @@ const getPropertyIcon = (code: string | null | undefined): string | null => {
   return match?.icon ?? null;
 };
 
+// Container segments that host the Markets tab — drives where market-comparable
+// detail pages are mounted so the URL prefix is preserved.
+const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
+
 export const MarketsTab = () => {
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
+  const location = useLocation();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
+
+  // Pick the segment after the basePath (e.g. 'block-condo' from /tasks/:id/block-condo).
+  const segments = location.pathname.replace(`${basePath}/`, '').split('/').filter(Boolean);
+  const parentSegment =
+    (PARENT_SEGMENTS as readonly string[]).find(s => s === segments[0]) ?? 'property';
 
   const {
     data: appraisalComparables,
@@ -43,12 +53,12 @@ export const MarketsTab = () => {
 
   const handleCreateSelect = (_type: string, _groupId: string, code: string) => {
     navigate(
-      `${basePath}/property/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
+      `${basePath}/${parentSegment}/market-comparable/new?propertyType=${encodeURIComponent(code)}`,
     );
   };
 
   const handleViewComparable = (marketComparableId: string) => {
-    navigate(`${basePath}/property/market-comparable/${marketComparableId}`);
+    navigate(`${basePath}/${parentSegment}/market-comparable/${marketComparableId}`);
   };
 
   const handleUnlink = (comparableId: string) => {

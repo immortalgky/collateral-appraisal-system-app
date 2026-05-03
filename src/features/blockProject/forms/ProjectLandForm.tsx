@@ -1,133 +1,110 @@
-import { useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useEffect, useMemo, useState } from 'react';
+import { type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import toast from 'react-hot-toast';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useGetProjectLand, useSaveProjectLand } from '../api/projectLand';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { FormProvider } from '@shared/components/form';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
+import ResizableSidebar from '@/shared/components/ResizableSidebar';
+import NavAnchors from '@/shared/components/sections/NavAnchors';
+import Section from '@/shared/components/sections/Section';
 import ActionBar from '@/shared/components/ActionBar';
-import Button from '@/shared/components/Button';
 import CancelButton from '@/shared/components/buttons/CancelButton';
+import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import NumberInput from '@/shared/components/inputs/NumberInput';
+import TitleDeedForm from '@/features/appraisal/forms/TitleDeedForm';
+import BlockLandDetailForm from './BlockLandDetailForm';
+import {
+  createLandForm,
+  createLandFormDefault,
+  type createLandFormType,
+} from '@/features/appraisal/schemas/form';
+import { mapLandPropertyResponseToForm } from '@/features/appraisal/utils/mappers';
 import type { ApiError } from '@/shared/types/api';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
-// ── Schema ─────────────────────────────────────────────────────────────────────
-// Covers the title-deed collection used in ProjectLand.titles.
-// The full ProjectLand DTO has many fields; this form exposes the ones
-// most commonly edited (matches the village ProjectLandTab scope).
-
-const landTitleSchema = z.object({
-  id: z.string().nullable().optional(),
-  titleNumber: z.string().min(1, 'Title number is required'),
-  titleType: z.string().min(1, 'Title type is required'),
-  rai: z.coerce.number().nullable().optional(),
-  ngan: z.coerce.number().nullable().optional(),
-  squareWa: z.coerce.number().nullable().optional(),
-});
-
-const projectLandFormSchema = z.object({
-  propertyName: z.string().nullable().optional(),
-  landDescription: z.string().nullable().optional(),
-  province: z.string().nullable().optional(),
-  district: z.string().nullable().optional(),
-  subDistrict: z.string().nullable().optional(),
-  landOffice: z.string().nullable().optional(),
-  titles: z.array(landTitleSchema),
-});
-
-type ProjectLandFormValues = z.infer<typeof projectLandFormSchema>;
-
-// ── Section Header ──────────────────────────────────────────────────────────
-
-function SectionHeader({ icon, label, color }: { icon: string; label: string; color: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon name={icon} style="solid" className="w-5 h-5" />
-      </div>
-      <h2 className="text-base font-semibold text-gray-900">{label}</h2>
-    </div>
-  );
-}
-
-// ── Main Component ─────────────────────────────────────────────────────────────
-
 /**
  * LandAndBuilding-only project land form.
- * Manages land detail + title-deed collection.
- * Used inside ProjectLandTab.
+ *
+ * Mirrors the structure of `CreateLandPage` (NavAnchors + ResizableSidebar +
+ * Section blocks + ActionBar) and reuses the appraisal feature's `TitleDeedForm`
+ * and `LandDetailForm`, so the Block Village land flow has the same UX as the
+ * Property Land flow. Persistence is wired to BV's PUT /project/land endpoint.
  */
 export default function ProjectLandForm() {
+  const isReadOnly = usePageReadOnly();
   const appraisalId = useAppraisalId();
-  const { data: land, isLoading } = useGetProjectLand(appraisalId ?? '');
+
+  const { data: landData, isLoading } = useGetProjectLand(appraisalId ?? '');
   const { mutate: saveLand, isPending } = useSaveProjectLand();
 
+  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+
+  // Hydrate from BV's ProjectLand DTO. Field shapes mirror GetLandPropertyResponse
+  // closely enough that the appraisal mapper handles them; cast through `any` to
+  // avoid a tight coupling to the appraisal response type.
+  const formDefaults = useMemo(() => {
+    if (landData) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return mapLandPropertyResponseToForm(landData as any);
+    }
+    return createLandFormDefault;
+  }, [landData]);
+
+  const methods = useForm<createLandFormType>({
+    defaultValues: formDefaults,
+    resolver: zodResolver(createLandForm),
+  });
   const {
     handleSubmit,
-    register,
-    setValue,
-    watch,
+    getValues,
     reset,
-    control,
-    formState: { errors, isDirty },
-  } = useForm<ProjectLandFormValues>({
-    resolver: zodResolver(projectLandFormSchema),
-    defaultValues: { titles: [] },
-  });
+    formState: { dirtyFields },
+  } = methods;
 
-  const { fields: titleFields, append: appendTitle, remove: removeTitle } = useFieldArray({
-    control,
-    name: 'titles',
-  });
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   useEffect(() => {
-    if (land) {
-      reset({
-        propertyName: land.propertyName ?? null,
-        landDescription: land.landDescription ?? null,
-        province: land.province ?? null,
-        district: land.district ?? null,
-        subDistrict: land.subDistrict ?? null,
-        landOffice: land.landOffice ?? null,
-        titles: (land.titles ?? []).map(t => ({
-          id: t.id ?? null,
-          titleNumber: t.titleNumber,
-          titleType: t.titleType,
-          rai: t.rai ?? null,
-          ngan: t.ngan ?? null,
-          squareWa: t.squareWa ?? null,
-        })),
-      });
+    if (landData) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reset(mapLandPropertyResponseToForm(landData as any));
     }
-  }, [land, reset]);
+  }, [landData, reset]);
 
-  const onSubmit = (data: ProjectLandFormValues, isDraft = false) => {
+  const persist = (data: createLandFormType, isDraft: boolean) => {
     if (!appraisalId) return;
+    setSaveAction(isDraft ? 'draft' : 'submit');
     saveLand(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { appraisalId, data: data as any },
       {
         onSuccess: () => {
+          reset(getValues());
           toast.success(isDraft ? 'Draft saved successfully' : 'Project land saved');
-          reset(data);
+          setSaveAction(null);
+          if (!isDraft) skipWarning();
         },
         onError: (err: unknown) => {
           const error = err as AppError;
           toast.error(error?.apiError?.detail ?? 'Failed to save project land');
+          setSaveAction(null);
         },
       },
     );
   };
 
-  const titles = watch('titles') ?? [];
-  const totalRai = titles.reduce((s, t) => s + (Number(t.rai) || 0), 0);
-  const totalNgan = titles.reduce((s, t) => s + (Number(t.ngan) || 0), 0);
-  const totalWa = titles.reduce((s, t) => s + (Number(t.squareWa) || 0), 0);
+  const onSubmit: SubmitHandler<createLandFormType> = data => persist(data, false);
+  const handleSaveDraft = () => persist(getValues(), true);
+
+  const { isOpen, onToggle } = useDisclosure();
 
   if (isLoading) {
     return (
@@ -138,190 +115,108 @@ export default function ProjectLandForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(data => onSubmit(data, false))}
-      className="flex flex-col h-full min-h-0"
-    >
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-6 pb-4">
-        {/* Land Details */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <SectionHeader icon="map" label="Land Details" color="bg-emerald-50 text-emerald-600" />
-          <div className="h-px bg-gray-100 mb-5" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div className="col-span-full md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Property Name</label>
-              <input
-                {...register('propertyName')}
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            <div className="col-span-full">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Land Description</label>
-              <textarea
-                {...register('landDescription')}
-                rows={2}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
-              <input
-                {...register('province')}
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              {errors.province && <p className="text-xs text-red-500 mt-1">{errors.province.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
-              <input
-                {...register('district')}
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sub District</label>
-              <input
-                {...register('subDistrict')}
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Land Office</label>
-              <input
-                {...register('landOffice')}
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Title Deeds */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <SectionHeader icon="file-lines" label="Title Deeds" color="bg-violet-50 text-violet-600" />
-          <div className="h-px bg-gray-100 mb-4" />
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">Title Number</th>
-                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">Title Type</th>
-                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Rai</th>
-                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Ngan</th>
-                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">sq.wa</th>
-                  <th className="py-2 px-3 w-10" />
-                </tr>
-              </thead>
-              <tbody>
-                {titleFields.map((field, index) => {
-                  const rai = watch(`titles.${index}.rai`);
-                  const ngan = watch(`titles.${index}.ngan`);
-                  const squareWa = watch(`titles.${index}.squareWa`);
-                  return (
-                    <tr key={field.id} className="border-b border-gray-100">
-                      <td className="py-2 px-3">
-                        <input
-                          {...register(`titles.${index}.titleNumber`)}
-                          type="text"
-                          placeholder="e.g. 1234/56"
-                          className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </td>
-                      <td className="py-2 px-3">
-                        <input
-                          {...register(`titles.${index}.titleType`)}
-                          type="text"
-                          placeholder="e.g. Chanote"
-                          className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </td>
-                      <td className="py-2 px-3 min-w-[80px]">
-                        <NumberInput
-                          name={`titles.${index}.rai`}
-                          value={rai}
-                          decimalPlaces={0}
-                          onChange={e => setValue(`titles.${index}.rai`, e.target.value, { shouldDirty: true })}
-                        />
-                      </td>
-                      <td className="py-2 px-3 min-w-[80px]">
-                        <NumberInput
-                          name={`titles.${index}.ngan`}
-                          value={ngan}
-                          decimalPlaces={0}
-                          onChange={e => setValue(`titles.${index}.ngan`, e.target.value, { shouldDirty: true })}
-                        />
-                      </td>
-                      <td className="py-2 px-3 min-w-[90px]">
-                        <NumberInput
-                          name={`titles.${index}.squareWa`}
-                          value={squareWa}
-                          decimalPlaces={2}
-                          onChange={e => setValue(`titles.${index}.squareWa`, e.target.value, { shouldDirty: true })}
-                        />
-                      </td>
-                      <td className="py-2 px-3">
-                        <button type="button" onClick={() => removeTitle(index)} className="text-gray-400 hover:text-red-500 transition-colors">
-                          <Icon name="trash" style="regular" className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {titleFields.length > 0 && (
-                  <tr className="bg-gray-50 font-medium">
-                    <td className="py-2 px-3 text-sm text-gray-700" colSpan={2}>Total</td>
-                    <td className="py-2 px-3 text-right text-sm text-gray-900">{totalRai}</td>
-                    <td className="py-2 px-3 text-right text-sm text-gray-900">{totalNgan}</td>
-                    <td className="py-2 px-3 text-right text-sm text-gray-900">
-                      {totalWa.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td />
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => appendTitle({ titleNumber: '', titleType: '', rai: null, ngan: null, squareWa: null })}
-            className="mt-3 flex items-center gap-2 text-sm text-primary hover:text-primary-700 transition-colors"
-          >
-            <Icon name="plus" style="solid" className="w-4 h-4" />
-            Add title deed
-          </button>
-        </div>
+    <div className="flex flex-col h-full min-h-0">
+      {/* NavAnchors */}
+      <div className="shrink-0 pb-4">
+        <NavAnchors
+          containerId="project-land-scroll-container"
+          anchors={[
+            { label: 'Land Title', id: 'land-title', icon: 'file-lines' },
+            { label: 'Land Detail', id: 'land-info', icon: 'mountain-sun' },
+          ]}
+        />
       </div>
 
-      {/* Action Bar */}
-      <ActionBar>
-        <ActionBar.Left>
-          <CancelButton />
-          <ActionBar.Divider />
-          <ActionBar.UnsavedIndicator show={isDirty} />
-        </ActionBar.Left>
-        <ActionBar.Right>
-          <Button
-            variant="ghost"
-            type="button"
-            onClick={() => handleSubmit(data => onSubmit(data, true))()}
-            isLoading={isPending}
-            disabled={isPending}
+      <FormProvider methods={methods} schema={createLandForm}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+          {/* Scrollable Form Content */}
+          <div
+            id="project-land-scroll-container"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
           >
-            <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-            Save Draft
-          </Button>
-          <Button type="submit" isLoading={isPending} disabled={isPending}>
-            <Icon name="check" style="solid" className="size-4 mr-2" />
-            Save
-          </Button>
-        </ActionBar.Right>
-      </ActionBar>
-    </form>
+            <ResizableSidebar
+              isOpen={isOpen}
+              onToggle={onToggle}
+              openedWidth="w-1/5"
+              closedWidth="w-1/50"
+            >
+              <ResizableSidebar.Main>
+                <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Land Information Header */}
+                  <Section id="properties-section" anchor>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                        <Icon
+                          name="mountain-sun"
+                          style="solid"
+                          className="w-5 h-5 text-amber-600"
+                        />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                    </div>
+                    <div className="h-px bg-gray-200" />
+                  </Section>
+
+                  {/* Title Deeds */}
+                  <Section
+                    id="land-title"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
+                    <TitleDeedForm />
+                  </Section>
+
+                  {/* Land Detail */}
+                  <Section
+                    id="land-info"
+                    anchor
+                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                  >
+                    <BlockLandDetailForm />
+                  </Section>
+                </div>
+              </ResizableSidebar.Main>
+            </ResizableSidebar>
+          </div>
+
+          {/* Sticky Action Buttons */}
+          <ActionBar>
+            <ActionBar.Left>
+              <CancelButton />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                </>
+              )}
+            </ActionBar.Left>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending}
+                >
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save draft
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
+            )}
+          </ActionBar>
+
+          <UnsavedChangesDialog blocker={blocker} />
+        </form>
+      </FormProvider>
+    </div>
   );
 }

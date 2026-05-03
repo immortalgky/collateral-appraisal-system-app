@@ -1,3 +1,9 @@
+export const projectModelPricingContextKeys = {
+  /** ['project-model-pricing-context', appraisalId, projectId, modelId] */
+  detail: (appraisalId: string, projectId: string, modelId: string) =>
+    ['project-model-pricing-context', appraisalId, projectId, modelId] as const,
+};
+
 export const pricingAnalysisKeys = {
   all: ['price-analysis'] as const,
   detail: (id: string) => ['price-analysis', id] as const,
@@ -20,4 +26,6 @@ export const pricingAnalysisKeys = {
   incomeAnalysis: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'income-analysis', methodId] as const,
   pricingParameters: () => ['pricing-parameters'] as const,
+  hypothesisAnalysis: (pricingAnalysisId: string, methodId: string) =>
+    ['price-analysis', pricingAnalysisId, 'hypothesis-analysis', methodId] as const,
 };

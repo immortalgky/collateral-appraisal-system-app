@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import type { AxiosError } from 'axios';
 
@@ -25,6 +25,7 @@ import {
   useCreateProjectModel,
   useUpdateProjectModel,
 } from '../api/projectModel';
+import { useGetProjectTowers } from '../api/projectTower';
 import ModelDetailForm from '../forms/ModelDetailForm';
 import ProjectModelPhotoSection, {
   type ProjectModelPhotoSectionRef,
@@ -63,17 +64,19 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
 
   const { data: modelData, isLoading } = useGetProjectModelById(appraisalId ?? '', modelId);
 
-  // Breadcrumb: Task → # → Property Information → Model → {model name}.
-  // "Model" links back to the Models tab on the parent BlockProject page.
-  const modelsTabHref = `${basePath}/${routeSegment}?tab=models`;
-  const modelLeafLabel = isEditMode ? modelData?.modelName?.trim() || 'Model' : 'New Model';
+  // Structural "Property Information → Model" parents come from the URL (layout).
+  // Only push the dynamic model name here; "New Model" is handled by the layout.
+  const modelLeafLabel = isEditMode ? modelData?.modelName?.trim() || '...' : null;
   useBreadcrumbExtras(
-    [
-      { label: 'Model', href: modelsTabHref, icon: 'layer-group' },
-      { label: modelLeafLabel, href: location.pathname, icon: 'layer-group' },
-    ],
-    [modelsTabHref, modelLeafLabel, location.pathname],
+    modelLeafLabel
+      ? [{ label: modelLeafLabel, href: location.pathname, icon: 'layer-group' }]
+      : [],
+    [modelLeafLabel, location.pathname],
   );
+  // Condo: fetch towers for the tower selector on the model form
+  const { data: towersData } = useGetProjectTowers(appraisalId ?? '');
+  const towers = projectType === 'Condo' ? (towersData ?? []) : [];
+
   const { mutate: createModel, isPending: isCreating } = useCreateProjectModel();
   const { mutate: updateModel, isPending: isUpdating } = useUpdateProjectModel();
 
@@ -87,7 +90,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         return {
           modelName: modelData.modelName ?? '',
           modelDescription: modelData.modelDescription ?? null,
-          buildingNumber: modelData.buildingNumber ?? '',
+          projectTowerId: modelData.projectTowerId ?? null,
           startingPriceMin: modelData.startingPriceMin ?? null,
           startingPriceMax: modelData.startingPriceMax ?? null,
           hasMezzanine: modelData.hasMezzanine ?? false,
@@ -112,21 +115,15 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         modelName: modelData.modelName ?? '',
         modelDescription: modelData.modelDescription ?? null,
         numberOfHouse: modelData.numberOfHouse ?? null,
-        startingPrice: modelData.startingPrice ?? null,
+        startingPriceMin: modelData.startingPriceMin ?? null,
+        startingPriceMax: modelData.startingPriceMax ?? null,
         usableAreaMin: modelData.usableAreaMin ?? null,
         usableAreaMax: modelData.usableAreaMax ?? null,
         standardUsableArea: modelData.standardUsableArea ?? null,
-        landAreaRai: modelData.landAreaRai ?? null,
-        landAreaNgan: modelData.landAreaNgan ?? null,
-        landAreaWa: modelData.landAreaWa ?? null,
+        landAreaMin: modelData.landAreaMin ?? null,
+        landAreaMax: modelData.landAreaMax ?? null,
         standardLandArea: modelData.standardLandArea ?? null,
         fireInsuranceCondition: modelData.fireInsuranceCondition ?? null,
-        groundFloorMaterialType: modelData.groundFloorMaterialType ?? null,
-        groundFloorMaterialTypeOther: modelData.groundFloorMaterialTypeOther ?? null,
-        upperFloorMaterialType: modelData.upperFloorMaterialType ?? null,
-        upperFloorMaterialTypeOther: modelData.upperFloorMaterialTypeOther ?? null,
-        bathroomFloorMaterialType: modelData.bathroomFloorMaterialType ?? null,
-        bathroomFloorMaterialTypeOther: modelData.bathroomFloorMaterialTypeOther ?? null,
         remark: modelData.remark ?? null,
         buildingType: modelData.buildingType ?? null,
         buildingTypeOther: modelData.buildingTypeOther ?? null,
@@ -162,7 +159,6 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         exteriorWallTypeOther: modelData.exteriorWallTypeOther ?? null,
         fenceType: modelData.fenceType ?? [],
         fenceTypeOther: modelData.fenceTypeOther ?? null,
-        areaDetails: modelData.areaDetails ?? [],
         surfaces: modelData.surfaces ?? [],
         depreciationDetails: modelData.depreciationDetails ?? [],
       } satisfies Partial<LbModelFormType>;
@@ -263,11 +259,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
           containerId="model-form-scroll"
           anchors={[
             { label: 'Images', id: 'model-images', icon: 'images' },
-            ...(isEditMode && modelData
-              ? [{ label: 'Pricing Analysis', id: 'pricing-analysis', icon: 'chart-line' }]
-              : []),
             { label: 'Model Info', id: 'model-info', icon: 'layer-group' },
-            { label: 'Remark', id: 'remark', icon: 'comment' },
           ]}
         />
       </div>
@@ -296,45 +288,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
                     />
                   </Section>
 
-                  {/* Pricing Analysis */}
-                  {isEditMode && modelData && (
-                    <Section id="pricing-analysis" anchor>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">Pricing Analysis</p>
-                          {modelData.pricingAnalysisStatus && (
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              Status: {modelData.pricingAnalysisStatus}
-                              {modelData.finalAppraisedValue != null && (
-                                <span className="ml-2 font-medium text-gray-700">
-                                  &#x0E3F;{modelData.finalAppraisedValue.toLocaleString()} / sq.m.
-                                </span>
-                              )}
-                            </p>
-                          )}
-                        </div>
-                        <Link
-                          to={
-                            modelData.pricingAnalysisId
-                              ? `${basePath}/${routeSegment}/model/${modelId}/pricing-analysis/${modelData.pricingAnalysisId}`
-                              : `${basePath}/${routeSegment}/model/${modelId}/pricing-analysis`
-                          }
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-                        >
-                          <Icon
-                            name={modelData.pricingAnalysisId ? 'chart-line' : 'play'}
-                            style="solid"
-                            className="size-3.5"
-                          />
-                          {modelData.pricingAnalysisId ? 'View Pricing Analysis' : 'Run Pricing Analysis'}
-                        </Link>
-                      </div>
-                    </Section>
-                  )}
-
                   {/* Model Information */}
                   <Section id="model-info" anchor className="min-w-0 overflow-hidden">
-                    <ModelDetailForm projectType={projectType} />
+                    <ModelDetailForm projectType={projectType} towers={towers} />
                   </Section>
                 </div>
               </ResizableSidebar.Main>

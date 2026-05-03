@@ -36,7 +36,9 @@ import {
   useUpdateDraftRequest,
   useUpdateRequest,
 } from '../api';
-import { mapRequestResponseToForm } from '../utils/mappers';
+import { mapCopyTemplateToForm, mapRequestResponseToForm } from '../utils/mappers';
+import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
+import { AppraisalCopyProvider } from '../contexts/AppraisalCopyContext';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
 import type { CreateDraftRequestRequestType } from '../api';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -237,6 +239,51 @@ function RequestPage() {
   };
 
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+
+  // ── Copy-from-previous-appraisal ──────────────────────────────────────────
+  const [copyBannerNumber, setCopyBannerNumber] = useState<string | null>(null);
+  const [copyBannerValue, setCopyBannerValue] = useState<number | null>(null);
+
+  const handleCopySelect = useCallback(
+    (template: AppraisalCopyTemplate) => {
+      const current = getValues();
+      const partial = mapCopyTemplateToForm(template);
+
+      // Merge: copy everything except appointment and fee, which must be preserved
+      reset({
+        ...current,
+        ...partial,
+        detail: {
+          ...current.detail,
+          ...(partial.detail ?? {}),
+          // Hard-preserve these two sections regardless of what the template contains
+          appointment: current.detail.appointment,
+          fee: current.detail.fee,
+        },
+      });
+
+      const { appraisalNumber, appraisalValue } = template.prevAppraisal;
+      setCopyBannerNumber(appraisalNumber);
+      setCopyBannerValue(appraisalValue ?? null);
+
+      const valueText = appraisalValue != null ? ` (value: ${appraisalValue.toLocaleString('th-TH')})` : '';
+      toast.success(
+        `Copied from appraisal ${appraisalNumber}${valueText}. Review & adjust before saving. Appointment and fee were not copied.`,
+        { duration: 6000 },
+      );
+    },
+    [getValues, reset],
+  );
+
+  const handleDismissCopyBanner = () => {
+    // Clear only the four prevAppraisal* metadata fields — do NOT wipe copied data
+    setValue('detail.prevAppraisalId', null, { shouldDirty: true });
+    setValue('detail.prevAppraisalReportNo', null, { shouldDirty: true });
+    setValue('detail.prevAppraisalValue', null, { shouldDirty: true });
+    setValue('detail.prevAppraisalDate', null, { shouldDirty: true });
+    setCopyBannerNumber(null);
+    setCopyBannerValue(null);
+  };
 
   const handleConfirmDuplicate = () => {
     const currentData = getValues();
@@ -529,8 +576,38 @@ function RequestPage() {
                     iconColor="blue"
                   >
                     <div className="flex flex-col gap-6">
+                      {/* Re-appraisal banner — shown while a previous appraisal is selected in create mode */}
+                      {!isEditMode && copyBannerNumber && (
+                        <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                          <div className="flex items-center gap-2">
+                            <Icon name="circle-info" style="solid" className="w-4 h-4 shrink-0 text-blue-500" />
+                            <span>
+                              Re-appraisal of <strong>{copyBannerNumber}</strong>
+                              {copyBannerValue != null
+                                ? ` (value: ${copyBannerValue.toLocaleString('th-TH')})`
+                                : ''}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleDismissCopyBanner}
+                            className="text-blue-400 hover:text-blue-600 transition-colors shrink-0"
+                            title="Clear previous appraisal reference"
+                          >
+                            <Icon name="xmark" style="solid" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                       <CustomersForm />
-                      <RequestForm />
+                      {/* In create mode, wrap with AppraisalCopyProvider so AppraisalSelector
+                          can receive the full copy callback via context */}
+                      {isEditMode ? (
+                        <RequestForm disableAppraisalSelector />
+                      ) : (
+                        <AppraisalCopyProvider onCopySelect={handleCopySelect}>
+                          <RequestForm />
+                        </AppraisalCopyProvider>
+                      )}
                       <PropertiesForm />
                       <AddressForm />
                       <AppointmentAndFeeForm />

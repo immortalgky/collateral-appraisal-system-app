@@ -22,7 +22,7 @@ export interface Project {
   // Land Area
   landAreaRai?: number;
   landAreaNgan?: number;
-  landAreaWa?: number;
+  landAreaSquareWa?: number;
   // Project Details
   unitForSaleCount?: number;
   numberOfPhase?: number;
@@ -34,7 +34,7 @@ export interface Project {
   district?: string;
   province?: string;
   postcode?: string;
-  locationNumber?: string;
+  houseNumber?: string;
   road?: string;
   soi?: string;
   // Utilities & Facilities
@@ -61,7 +61,6 @@ export interface ProjectTower {
   numberOfUnits?: number;
   numberOfFloors?: number;
   condoRegistrationNumber?: string;
-  modelTypeIds?: string[];
   conditionType?: string;
   hasObligation?: boolean;
   obligationDetails?: string;
@@ -74,16 +73,9 @@ export interface ProjectTower {
   roadSurfaceTypeOther?: string;
   decorationType?: string;
   decorationTypeOther?: string;
-  constructionYear?: number;
-  totalNumberOfFloors?: number;
+  buildingAge?: number;
   buildingFormType?: string;
   constructionMaterialType?: string;
-  groundFloorMaterialType?: string;
-  groundFloorMaterialTypeOther?: string;
-  upperFloorMaterialType?: string;
-  upperFloorMaterialTypeOther?: string;
-  bathroomFloorMaterialType?: string;
-  bathroomFloorMaterialTypeOther?: string;
   roofType?: string[];
   roofTypeOther?: string;
   isExpropriated?: boolean;
@@ -148,23 +140,25 @@ export interface ProjectModelDepreciationDetail {
   depreciationYearPct?: number;
   totalDepreciationPct?: number;
   priceDepreciation?: number;
-  periods?: ProjectModelDepreciationPeriod[];
+  depreciationPeriods?: ProjectModelDepreciationPeriod[];
 }
 
 /**
  * Superset model DTO for both Condo and LandAndBuilding.
- * Condo-specific: buildingNumber, startingPriceMin, startingPriceMax,
- *   roomLayoutType, roomLayoutTypeOther.
- * LB-specific: numberOfHouse, startingPrice, landAreaRai/Ngan/Wa,
- *   standardLandArea, buildingType, buildingTypeOther, numberOfFloors,
- *   decorationType, buildingMaterialType, buildingStyleType, isResidential,
- *   buildingAge, constructionYear, constructionStyleType, structureType,
- *   roofFrameType, roofType, ceilingType, interiorWallType, exteriorWallType,
- *   fenceType, constructionType, utilizationType, surfaces, depreciationDetails.
+ * Pricing (both): startingPriceMin, startingPriceMax.
+ * Condo-specific: roomLayoutType, roomLayoutTypeOther.
+ * LB-specific: numberOfHouse, landAreaMin/landAreaMax/standardLandArea (all sq.wa),
+ *   buildingType, buildingTypeOther, numberOfFloors, decorationType,
+ *   buildingMaterialType, buildingStyleType, isResidential, buildingAge,
+ *   constructionYear, constructionStyleType, structureType, roofFrameType,
+ *   roofType, ceilingType, interiorWallType, exteriorWallType, fenceType,
+ *   constructionType, utilizationType, surfaces, depreciationDetails.
  */
 export interface ProjectModel {
   id: string;
   projectId: string;
+  /** Condo: required FK to ProjectTower. Village: null. */
+  projectTowerId?: string | null;
   // Common
   modelName?: string;
   modelDescription?: string;
@@ -192,18 +186,17 @@ export interface ProjectModel {
   }>;
   remark?: string;
   areaDetails?: ProjectModelAreaDetail[];
-  // Condo-only
-  buildingNumber?: string;
+  // Pricing range — used by both Condo and LB
   startingPriceMin?: number;
   startingPriceMax?: number;
+  // Condo-only
   roomLayoutType?: string;
   roomLayoutTypeOther?: string;
   // LandAndBuilding-only
   numberOfHouse?: number;
-  startingPrice?: number;
-  landAreaRai?: number;
-  landAreaNgan?: number;
-  landAreaWa?: number;
+  // LB land area is a min/max range (sq.wa) plus a standard.
+  landAreaMin?: number;
+  landAreaMax?: number;
   standardLandArea?: number;
   buildingType?: string;
   buildingTypeOther?: string;

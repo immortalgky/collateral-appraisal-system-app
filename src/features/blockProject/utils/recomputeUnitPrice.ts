@@ -40,6 +40,9 @@ const applyLocationMethod = (
       return rawAdjustment * areaMultiplier;
     case 'AdjustPricePercentage':
       return (standardPriceTotal * rawAdjustment) / 100;
+    case 'Lumpsum':
+      // Flat baht — applied as-is, not multiplied by area or percentage.
+      return rawAdjustment;
     default:
       return rawAdjustment;
   }

@@ -10,6 +10,7 @@ import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
 import { CostMachinePanel } from './CostMachinePanel';
 import { LeaseholdPanel } from './LeaseholdPanel';
 import { ProfitRentPanel } from './ProfitRentPanel';
+import { HypothesisPanel } from './hypothesis/HypothesisPanel';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -95,6 +96,15 @@ export function MethodSectionRenderer({
           propertiesMap={serverData.propertiesMap}
           firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
           firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+        />
+      );
+    case 'Hypothesis':
+      return (
+        <HypothesisPanel
+          activeMethod={state.activeMethod}
+          onCalculationSave={onCalculationSave}
+          onCalculationMethodDirty={onCalculationMethodDirty}
+          onCancelCalculationMethod={onCancelCalculationMethod}
         />
       );
     default:

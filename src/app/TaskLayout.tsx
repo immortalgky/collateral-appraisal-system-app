@@ -90,18 +90,76 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   summary: { label: 'Summary & Decision', icon: 'clipboard-check' },
   property: { label: 'Property Information', icon: 'buildings' },
   'property-pma': { label: 'Property Information (PMA)', icon: 'buildings' },
+  'block-condo': { label: 'Property Information', icon: 'buildings' },
+  'block-village': { label: 'Property Information', icon: 'buildings' },
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
   groups: { label: 'Groups', icon: 'layer-group' },
   'provide-documents': { label: 'Provide Additional Documents', icon: 'file-circle-plus' },
 };
 
-const propertySubRouteLabels: Record<string, { label: string; icon: string }> = {
+// Structural sub-routes under property / property-pma / block-condo / block-village.
+// `parentTab` is the tab id used to build the parent's `?tab=` href so the parent
+// link returns to the right tab.
+const propertySubRouteLabels: Record<
+  string,
+  { label: string; icon: string; parentTab?: string }
+> = {
   land: { label: 'Land', icon: 'map-location-dot' },
   building: { label: 'Building', icon: 'building' },
   condo: { label: 'Condominium', icon: 'city' },
   'land-building': { label: 'Land & Building', icon: 'house-chimney' },
-  'market-comparable': { label: 'Market Comparable', icon: 'magnifying-glass-location' },
-  'law-and-regulation': { label: 'Law & Regulation', icon: 'gavel' },
+  'market-comparable': {
+    label: 'Markets',
+    icon: 'magnifying-glass-location',
+    parentTab: 'markets',
+  },
+  'law-and-regulation': { label: 'Law & Regulation', icon: 'gavel', parentTab: 'laws' },
+  tower: { label: 'Tower', icon: 'building', parentTab: 'towers' },
+  model: { label: 'Model', icon: 'layer-group', parentTab: 'models' },
+};
+
+// Active-tab labels per container route — read from `?tab=` and appended as a
+// structural breadcrumb crumb on the index page.
+const tabLabelsByPageSegment: Record<
+  string,
+  Record<string, { label: string; icon: string }>
+> = {
+  'block-condo': {
+    'project-info': { label: 'Project Info', icon: 'building-columns' },
+    'unit-listing': { label: 'Unit Listing', icon: 'table-list' },
+    towers: { label: 'Tower', icon: 'building' },
+    models: { label: 'Model', icon: 'layer-group' },
+    'unit-price': { label: 'Unit Price', icon: 'tags' },
+    markets: { label: 'Markets', icon: 'magnifying-glass-chart' },
+    gallery: { label: 'Gallery', icon: 'images' },
+    photos: { label: 'Photo', icon: 'camera' },
+    laws: { label: 'Laws and Regulation', icon: 'gavel' },
+  },
+  'block-village': {
+    'project-info': { label: 'Project Info', icon: 'building-columns' },
+    'unit-listing': { label: 'Unit Listing', icon: 'table-list' },
+    'project-land': { label: 'Project Land', icon: 'map' },
+    models: { label: 'Model', icon: 'layer-group' },
+    'unit-price': { label: 'Unit Price', icon: 'tags' },
+    markets: { label: 'Markets', icon: 'magnifying-glass-chart' },
+    gallery: { label: 'Gallery', icon: 'images' },
+    photos: { label: 'Photo', icon: 'camera' },
+    laws: { label: 'Laws and Regulation', icon: 'gavel' },
+  },
+  property: {
+    properties: { label: 'Properties', icon: 'buildings' },
+    markets: { label: 'Markets', icon: 'magnifying-glass-chart' },
+    gallery: { label: 'Gallery', icon: 'images' },
+    photos: { label: 'Photos', icon: 'camera' },
+    laws: { label: 'Laws & Regulations', icon: 'gavel' },
+  },
+  'property-pma': {
+    properties: { label: 'Properties', icon: 'buildings' },
+    markets: { label: 'Markets', icon: 'magnifying-glass-chart' },
+    gallery: { label: 'Gallery', icon: 'images' },
+    photos: { label: 'Photos', icon: 'camera' },
+    laws: { label: 'Laws & Regulations', icon: 'gavel' },
+  },
 };
 
 function ParameterLoader() {
@@ -211,13 +269,16 @@ function TaskLayout() {
       const pageInfo = routeLabels[pageSegment];
       if (pageInfo) {
         const isPropertyRoute = pageSegment === 'property' || pageSegment === 'property-pma';
+        const isBlockProjectRoute =
+          pageSegment === 'block-condo' || pageSegment === 'block-village';
+        const isContainerRoute = isPropertyRoute || isBlockProjectRoute;
 
-        let propertyHrefSuffix = '';
-        if (isPropertyRoute && pathSegments.length >= 4) {
-          const propertyType = pathSegments[3];
-          if (propertyType === 'market-comparable') propertyHrefSuffix = '?tab=markets';
-          else if (propertyType === 'law-and-regulation') propertyHrefSuffix = '?tab=laws';
-        }
+        // Sub-route under a container, e.g. /block-condo/market-comparable/:id.
+        const subRouteSegment =
+          isContainerRoute && pathSegments.length >= 4 ? pathSegments[3] : null;
+        const subRouteInfo = subRouteSegment
+          ? propertySubRouteLabels[subRouteSegment]
+          : undefined;
 
         if (pageSegment === 'groups' && pathSegments.includes('pricing-analysis')) {
           items.push({
@@ -229,24 +290,44 @@ function TaskLayout() {
           return items;
         }
 
+        // Parent "Property Information" / "Request Information" / etc. — always
+        // links to the bare container index, never with a `?tab=` suffix. The
+        // sub-route crumb is what links back to the originating tab.
         items.push({
           label: pageInfo.label,
-          href: `/tasks/${taskId}/${pageSegment}${propertyHrefSuffix}`,
+          href: `/tasks/${taskId}/${pageSegment}`,
           icon: pageInfo.icon,
         });
 
-        if (isPropertyRoute && pathSegments.length >= 4) {
-          const propertyType = pathSegments[3];
-          const propertyInfo = propertySubRouteLabels[propertyType];
-          if (propertyInfo) {
-            const isNew = pathSegments[4] === 'new';
-            const pmaLabel = pageSegment === 'property-pma' ? ' (PMA)' : '';
+        if (subRouteInfo) {
+          // Sub-route page (tower, model, market-comparable, law-and-regulation, …).
+          // The crumb links back to the parent listing tab (e.g. `?tab=markets`)
+          // so clicking it returns to where the user came from.
+          const isNew = pathSegments[4] === 'new';
+          const pmaLabel = pageSegment === 'property-pma' ? ' (PMA)' : '';
+          const subRouteHref = subRouteInfo.parentTab
+            ? `/tasks/${taskId}/${pageSegment}?tab=${subRouteInfo.parentTab}`
+            : `/tasks/${taskId}/${pageSegment}/${subRouteSegment}${
+                pathSegments[4] ? `/${pathSegments.slice(4).join('/')}` : ''
+              }`;
+          items.push({
+            label: isNew
+              ? `New ${subRouteInfo.label}${pmaLabel}`
+              : `${subRouteInfo.label}${pmaLabel}`,
+            href: subRouteHref,
+            icon: subRouteInfo.icon,
+          });
+        } else if (isContainerRoute && pathSegments.length === 3) {
+          // Container index page (property / property-pma / block-condo / block-village)
+          // — append the active tab from `?tab=` as a structural crumb.
+          const tabParam = new URLSearchParams(location.search).get('tab');
+          const tabMap = tabLabelsByPageSegment[pageSegment];
+          const tabInfo = tabParam && tabMap ? tabMap[tabParam] : undefined;
+          if (tabInfo) {
             items.push({
-              label: isNew
-                ? `New ${propertyInfo.label}${pmaLabel}`
-                : `${propertyInfo.label}${pmaLabel}`,
-              href: location.pathname,
-              icon: propertyInfo.icon,
+              label: tabInfo.label,
+              href: `/tasks/${taskId}/${pageSegment}?tab=${tabParam}`,
+              icon: tabInfo.icon,
             });
           }
         }
@@ -254,14 +335,23 @@ function TaskLayout() {
     }
 
     return items;
-  }, [appraisalData, appraisalId, taskId, location.pathname]);
+  }, [appraisalData, appraisalId, taskId, location.pathname, location.search]);
 
-  // Page-level dynamic crumbs (active tab, fetched record names) appended after layout-built crumbs.
+  // Page-level dynamic crumbs (fetched record names) appended after layout-built crumbs.
+  // Structural breadcrumb items are derived from the URL above — pages should only
+  // contribute the dynamic leaf (e.g. comparable number). To prevent stale extras
+  // from a previous page leaking into the next render (e.g. on browser back), we
+  // clear extras whenever the pathname changes; pages re-set them in their own
+  // useEffect on the next commit.
   const breadcrumbExtras = useBreadcrumbExtrasStore(s => s.extras);
-  const breadcrumbItemsWithExtras = useMemo(
-    () => [...breadcrumbItems, ...breadcrumbExtras],
-    [breadcrumbItems, breadcrumbExtras],
-  );
+  const setExtras = useBreadcrumbExtrasStore(s => s.setExtras);
+  useEffect(() => {
+    setExtras([]);
+  }, [location.pathname, setExtras]);
+  const breadcrumbItemsWithExtras = useMemo(() => {
+    const merged = [...breadcrumbItems, ...breadcrumbExtras];
+    return merged.filter((item, idx) => idx === 0 || item.label !== merged[idx - 1].label);
+  }, [breadcrumbItems, breadcrumbExtras]);
 
   // Build context with workflow fields (must be before early returns — Rules of Hooks)
   const contextValue = useMemo(() => {

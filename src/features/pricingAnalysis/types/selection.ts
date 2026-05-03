@@ -4,6 +4,7 @@ import type {
   MarketComparableDetailType,
   PricingAnalysisConfigType,
 } from '../schemas';
+import type { FlatContext, ProjectModelPricingContextDto } from '../utils/flattenPricingContext';
 
 export interface PricingAnalysisMethodRequest {
   id: string;
@@ -66,6 +67,10 @@ export interface PricingServerData {
   marketSurveyDetails: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   pricingConfiguration: PricingAnalysisConfigType[] | undefined;
+  /** Populated for projectModel subjects only. Used by ModelCardContent. */
+  flatContext?: FlatContext;
+  /** Raw pricing context DTO — populated for projectModel subjects only. */
+  pricingContext?: ProjectModelPricingContextDto;
 }
 
 export interface MethodConfiguration {

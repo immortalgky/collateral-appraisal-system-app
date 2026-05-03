@@ -205,13 +205,14 @@ export function ComparativeFactorTable({
                       collateralColumnStyle,
                     )}
                   >
-                    <RHFInputCell
-                      fieldName={comparativeFactorsFactorCodePath({ row: rowIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        const factor = allFactors?.find(f => f.factorCode === value);
-                        const fieldName = factor?.fieldName as string | undefined;
-                        const raw = fieldName ? property[fieldName] : null;
+                    {/* Should-fix 5: branch on fieldName. Truthy → resolved read-only
+                        display. Null/empty → legacy editable input for manual entry. */}
+                    {(() => {
+                      const factorCode = watchComparativeFactors[rowIndex]?.factorCode;
+                      const factor = allFactors?.find(f => f.factorCode === factorCode);
+                      const fieldName = factor?.fieldName as string | undefined;
+                      if (fieldName) {
+                        const raw = property[fieldName];
                         const rawStr = raw != null ? String(raw) : null;
                         return (
                           <FactorValueDisplay
@@ -220,8 +221,15 @@ export function ComparativeFactorTable({
                             parameterGroup={factor?.parameterGroup as string | undefined}
                           />
                         );
-                      }}
-                    />
+                      }
+                      return (
+                        <RHFInputCell
+                          fieldName={`comparativeFactors.${rowIndex}.collateralValue`}
+                          inputType="text"
+                          text={{ maxLength: 200 }}
+                        />
+                      );
+                    })()}
                   </td>
                   {comparativeMarketSurveys.map((survey: MarketComparableDetailType) => {
                     return (

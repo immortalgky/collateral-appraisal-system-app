@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -39,13 +39,23 @@ import {
   type createMarketComparableFormType,
 } from '../schemas/form';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
+
+// Container segments that host market-comparable detail pages — drives the
+// after-save redirect so the URL prefix (block-condo / property / etc.) is preserved.
+const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateMarketComparablePage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const appraisalId = useAppraisalId();
+
+  const segments = location.pathname.replace(`${basePath}/`, '').split('/').filter(Boolean);
+  const parentSegment =
+    (PARENT_SEGMENTS as readonly string[]).find(s => s === segments[0]) ?? 'property';
 
   // Support both appraisal-nested routes (URL params) and standalone routes (search params)
   const { marketComparableId } = useParams<{
@@ -62,6 +72,23 @@ const CreateMarketComparablePage = () => {
   );
   const { data: template, isLoading: isLoadingTemplate } = useGetMarketComparableTemplateById(
     isEditMode ? marketComparable?.marketComparable.templateId : undefined,
+  );
+
+  // The "Property Information → Market Comparable" structural parents are derived
+  // from the URL by the layout. Only push the dynamic leaf (comparable number) here.
+  const comparableNumber = marketComparable?.marketComparable.comparableNumber?.trim();
+  const comparableLeafLabel = isEditMode ? comparableNumber || '...' : null;
+  useBreadcrumbExtras(
+    comparableLeafLabel
+      ? [
+          {
+            label: comparableLeafLabel,
+            href: location.pathname,
+            icon: 'magnifying-glass-location',
+          },
+        ]
+      : [],
+    [comparableLeafLabel, location.pathname],
   );
 
   const { mutate: createMarketComparable, isPending: isCreating } = useCreateMarketComparable();
@@ -178,7 +205,7 @@ const CreateMarketComparablePage = () => {
           }
           skipWarning();
           toast.success('Market comparable updated successfully');
-          navigate(`${basePath}/property?tab=markets`);
+          navigate(`${basePath}/${parentSegment}?tab=markets`);
         },
         onError: (error: any) => {
           toast.error(
@@ -228,7 +255,7 @@ const CreateMarketComparablePage = () => {
           skipWarning();
           toast.success('Market comparable created successfully');
           if (appraisalId) {
-            navigate(`${basePath}/property/market-comparable/${response.id}`);
+            navigate(`${basePath}/${parentSegment}/market-comparable/${response.id}`);
           } else {
             navigate(`/market-comparable/detail?id=${response.id}`);
           }

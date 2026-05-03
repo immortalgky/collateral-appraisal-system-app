@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
@@ -67,11 +67,20 @@ const ItemRow = ({ item, onClick, onDelete, readOnly }: ItemRowProps) => {
   );
 };
 
+// Container segments that host the Laws & Regulation tab — drives where law detail
+// pages are mounted so the URL prefix is preserved.
+const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
+
 export const LawsRegulationTab = () => {
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
+  const location = useLocation();
   const appraisalId = useAppraisalId();
+
+  const segments = location.pathname.replace(`${basePath}/`, '').split('/').filter(Boolean);
+  const parentSegment =
+    (PARENT_SEGMENTS as readonly string[]).find(s => s === segments[0]) ?? 'property';
 
   const { data, isLoading } = useGetLawAndRegulations(appraisalId);
   const saveMutation = useSaveLawAndRegulations();
@@ -81,11 +90,11 @@ export const LawsRegulationTab = () => {
   const [deleteTarget, setDeleteTarget] = useState<LawAndRegulationDtoType | null>(null);
 
   const handleCreate = () => {
-    navigate(`${basePath}/property/law-and-regulation/new`);
+    navigate(`${basePath}/${parentSegment}/law-and-regulation/new`);
   };
 
   const handleItemClick = (item: LawAndRegulationDtoType) => {
-    navigate(`${basePath}/property/law-and-regulation/${item.id}`);
+    navigate(`${basePath}/${parentSegment}/law-and-regulation/${item.id}`);
   };
 
   const handleDeleteConfirm = () => {

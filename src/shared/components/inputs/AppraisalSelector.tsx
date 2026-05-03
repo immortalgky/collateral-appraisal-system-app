@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useFormReadOnly } from '../form/context';
 import Icon from '../Icon';
-import SearchAppraisalModal, {
-  type AppraisalReport,
-} from '@/features/request/components/SearchAppraisalModal';
+import SearchAppraisalModal from '@/features/request/components/SearchAppraisalModal';
+import { useAppraisalCopyHandler } from '@/features/request/contexts/AppraisalCopyContext';
+import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
 
 interface AppraisalSelectorProps {
   /** Form path for display field (reportNo) */
@@ -35,6 +35,8 @@ const AppraisalSelector = ({
 }: AppraisalSelectorProps) => {
   const { setValue, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
+  // Picks up the copy handler when inside an AppraisalCopyProvider (create mode only)
+  const onCopySelect = useAppraisalCopyHandler();
   const isDisabled = disabled || isReadOnly;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,17 +55,17 @@ const AppraisalSelector = ({
     setIsModalOpen(false);
   };
 
-  const handleSelectAppraisal = (report: AppraisalReport) => {
-    // Populate all mapped fields
-    setValue(name, report.reportNo, { shouldDirty: true });
-    setValue(idField, report.id, { shouldDirty: true });
-
-    if (valueField) {
-      setValue(valueField, report.appraisalValue, { shouldDirty: true });
-    }
-
-    if (dateField) {
-      setValue(dateField, report.appraisalDate, { shouldDirty: true });
+  const handleSelectTemplate = (template: AppraisalCopyTemplate) => {
+    if (onCopySelect) {
+      // Full-copy mode: delegate prefill to caller (RequestPage)
+      onCopySelect(template);
+    } else {
+      // Legacy mode: just stamp the three metadata fields
+      const { prevAppraisal } = template;
+      setValue(name, prevAppraisal.appraisalNumber, { shouldDirty: true });
+      setValue(idField, prevAppraisal.appraisalId, { shouldDirty: true });
+      if (valueField) setValue(valueField, prevAppraisal.appraisalValue, { shouldDirty: true });
+      if (dateField) setValue(dateField, prevAppraisal.completedDate, { shouldDirty: true });
     }
   };
 
@@ -141,7 +143,7 @@ const AppraisalSelector = ({
       <SearchAppraisalModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onSelect={handleSelectAppraisal}
+        onSelect={handleSelectTemplate}
       />
     </div>
   );

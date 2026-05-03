@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
+import { useParameterDescription } from '@shared/utils/parameterUtils';
 import toast from 'react-hot-toast';
 import ActionBar from '@shared/components/ActionBar';
 import Icon from '@shared/components/Icon';
@@ -62,13 +64,22 @@ const formFields: FormField[] = [
   },
 ];
 
+// Container segments that host law-and-regulation detail pages — drives the
+// after-save redirect so the URL prefix (block-condo / property / etc.) is preserved.
+const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
+
 const CreateLawAndRegulationPage = () => {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
+  const location = useLocation();
   const appraisalId = useAppraisalId();
   const { itemId } = useParams<{ itemId?: string }>();
   const isEditMode = Boolean(itemId);
+
+  const segments = location.pathname.replace(`${basePath}/`, '').split('/').filter(Boolean);
+  const parentSegment =
+    (PARENT_SEGMENTS as readonly string[]).find(s => s === segments[0]) ?? 'property';
 
   // RHF + Zod
   const methods = useForm<CreateLawAndRegulationFormType>({
@@ -139,6 +150,18 @@ const CreateLawAndRegulationPage = () => {
   }, []);
 
   const allItems = useMemo(() => data?.items ?? [], [data]);
+
+  // Structural "Property Information → Law & Regulation" parents come from the URL
+  // (handled in the layout). Only push the dynamic leaf (header label) here.
+  const editingItem = isEditMode ? allItems.find(i => i.id === itemId) : null;
+  const headerLabel = useParameterDescription('Header', editingItem?.headerCode);
+  const lawLeafLabel = isEditMode ? headerLabel || '...' : null;
+  useBreadcrumbExtras(
+    lawLeafLabel
+      ? [{ label: lawLeafLabel, href: location.pathname, icon: 'gavel' }]
+      : [],
+    [lawLeafLabel, location.pathname],
+  );
 
   // Build a map from galleryPhotoId → GalleryImage for URL resolution
   const galleryPhotoMap = useMemo(() => {
@@ -437,7 +460,7 @@ const CreateLawAndRegulationPage = () => {
     ];
   };
 
-  const navigateBack = () => navigate(`${basePath}/property?tab=laws`);
+  const navigateBack = () => navigate(`${basePath}/${parentSegment}?tab=laws`);
 
   const handleSave = (action: 'draft' | 'submit') => {
     if (!appraisalId) return;

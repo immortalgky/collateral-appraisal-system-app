@@ -33,8 +33,13 @@ interface Tab {
   icon: string;
 }
 
-const TABS: Tab[] = [
+const PROPERTY_GROUP_TABS: Tab[] = [
   { id: 'properties', label: 'Properties', icon: 'buildings' },
+  { id: 'markets', label: 'Markets', icon: 'chart-line' },
+];
+
+const PROJECT_MODEL_TABS: Tab[] = [
+  { id: 'properties', label: 'Model', icon: 'layer-group' },
   { id: 'markets', label: 'Markets', icon: 'chart-line' },
 ];
 
@@ -88,8 +93,6 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
       : { kind: 'propertyGroup', groupId: params.groupId ?? '' }
   );
 
-  const pricingAnalysisId = params.pricingAnalysisId;
-
   // The "canonical" id used by PricingAnalysisContent as the group context.
   // For the model subject we pass the modelId as the groupId placeholder so
   // PricingAnalysisContent can still call useSelectionActions (which only uses
@@ -105,6 +108,12 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
 
   // Hook for model-subject auto-create (called unconditionally per rules of hooks)
   const createModelAnalysisMutation = useCreateProjectModelPricingAnalysis();
+
+  // Effective id: prefer the URL param, but fall back to the freshly-created id from
+  // the mutation's data so we don't hang on the "Creating..." spinner if the route
+  // transition / remount doesn't propagate the new param immediately.
+  const pricingAnalysisId =
+    params.pricingAnalysisId ?? createModelAnalysisMutation.data?.id ?? undefined;
 
   // Auto-create pricing analysis when navigating to "new" route
   useEffect(() => {
@@ -254,6 +263,9 @@ function PricingAnalysisContent({
   returnTo?: string;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('properties');
+  // Tab label: "Properties" for group subjects; "Model" for projectModel subjects.
+  // Tab id stays 'properties' in both cases to avoid breaking reducer/URL state.
+  const TABS = isModelSubject ? PROJECT_MODEL_TABS : PROPERTY_GROUP_TABS;
   // (1) Fetch all server data
   const {
     groupDetail,
@@ -264,6 +276,9 @@ function PricingAnalysisContent({
     pricingSelection,
     allFactors,
     isLoading,
+    flatContext,
+    pricingContext,
+    modelThumbnailSrc,
   } = useEnrichedPricingAnalysis({
     appraisalId,
     groupId,
@@ -397,6 +412,8 @@ function PricingAnalysisContent({
     marketSurveyDetails: marketSurveyDetails ?? [],
     allFactors,
     pricingConfiguration,
+    flatContext,
+    pricingContext,
   };
 
   const renderTabContent = () => {
@@ -409,8 +426,8 @@ function PricingAnalysisContent({
             <StateCtx.Provider value={state}>
               <DispatchCtx.Provider value={dispatch}>
                 {!isLoading && (
-                  <div className="flex-1 min-w-0 min-h-0 flex-col">
-                    <div className="flex flex-col gap-2">
+                  <div className="h-full min-w-0 min-h-0 flex flex-col">
+                    <div className="flex flex-col gap-2 flex-1 min-h-0">
                       <PricingAnalysisAccordion
                         state={state}
                         appraisalId={appraisalId}
@@ -440,6 +457,10 @@ function PricingAnalysisContent({
                         onAddMethod={selectionActions.addMethod}
                         onDeleteMethod={selectionActions.requestDeleteMethod}
                         pricingConfiguration={pricingConfiguration}
+                        isModelSubject={isModelSubject}
+                        flatContext={flatContext}
+                        pricingContext={pricingContext}
+                        modelThumbnailSrc={modelThumbnailSrc}
                         deleteConfirm={selectionActions.deleteConfirm}
                         onManualValueChange={handleManualValueChange}
                       />

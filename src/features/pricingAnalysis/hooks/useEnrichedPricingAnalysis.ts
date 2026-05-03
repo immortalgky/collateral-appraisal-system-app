@@ -11,6 +11,12 @@ import {
 } from '../schemas';
 import pricingAnalysisConfig from '../data/pricingAnalysis.config.json';
 import { pricingAnalysisKeys } from '../api/queryKeys';
+import { useProjectModelPricingContext } from './useProjectModelPricingContext';
+import type { FlatContext } from '../utils/flattenPricingContext';
+import type { ProjectModel } from '@/features/blockProject/types';
+import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
+import { toGalleryImage } from '@/features/appraisal/types/gallery';
+import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 
 // Stable fallback for new pricing analyses — avoids creating a new object every render
 const EMPTY_PRICING_SELECTION = { approaches: [] } as unknown as GetPricingAnalysisResponseType;
@@ -31,11 +37,47 @@ export function useEnrichedPricingAnalysis({
   skipGroupDetail = false,
 }: {
   appraisalId: string;
+  /** For propertyGroup: the group ID. For projectModel: the model ID. */
   groupId: string;
   pricingAnalysisId: string;
   /** Set true for model-level pricing analyses where there is no PropertyGroup. */
   skipGroupDetail?: boolean;
 }) {
+  // Step 0: For projectModel subjects, fetch the model to get its projectId,
+  // then fetch the combined pricing context (project + tower + model).
+  // When skipGroupDetail=false this branch stays disabled.
+  const modelDetailQuery = useQuery({
+    queryKey: ['appraisal', appraisalId, 'project', 'models', groupId],
+    queryFn: async (): Promise<ProjectModel> => {
+      const { data } = await axios.get(`/appraisals/${appraisalId}/project/models/${groupId}`);
+      return data as ProjectModel;
+    },
+    enabled: !!appraisalId && !!groupId && skipGroupDetail,
+    staleTime: Infinity,
+    retry: 1,
+  });
+
+  const projectId = modelDetailQuery.data?.projectId ?? '';
+
+  // Resolve the model's thumbnail src (only for projectModel subjects)
+  const galleryPhotosQuery = useGetGalleryPhotos(skipGroupDetail ? appraisalId : undefined);
+  const modelThumbnailSrc = useMemo<string | undefined>(() => {
+    if (!skipGroupDetail) return undefined;
+    const model = modelDetailQuery.data;
+    const cover = model?.images?.find(i => i.isThumbnail);
+    if (!cover) return undefined;
+    const photos = (galleryPhotosQuery.data?.photos ?? []) as GalleryPhotoDtoType[];
+    const photo = photos.find(p => p.id === cover.galleryPhotoId);
+    return photo ? toGalleryImage(photo).thumbnailSrc : undefined;
+  }, [skipGroupDetail, modelDetailQuery.data, galleryPhotosQuery.data]);
+
+  const pricingContextResult = useProjectModelPricingContext({
+    appraisalId,
+    projectId,
+    modelId: groupId,
+    enabled: skipGroupDetail && !!projectId,
+  });
+
   // Step 1: For a group, fetch group detail (to get property IDs + types)
   const groupDetailQuery = useQuery({
     queryKey: [propertyGroupKeys.detail(appraisalId!, groupId), 'price'],
@@ -160,6 +202,7 @@ export function useEnrichedPricingAnalysis({
   // Step 7: Assemble — wait until all data finished
   const isLoading =
     (!skipGroupDetail && groupDetailQuery.isLoading) ||
+    (skipGroupDetail && (modelDetailQuery.isLoading || pricingContextResult.isLoading)) ||
     propertyDetailQueries.some(q => q.isLoading) ||
     marketSurveyDetailQueries.some(q => q.isLoading) ||
     pricingSelectionQuery.isLoading ||
@@ -194,9 +237,23 @@ export function useEnrichedPricingAnalysis({
   const pricingSelection = pricingSelectionQuery.data ?? EMPTY_PRICING_SELECTION;
   const allFactors = allFactorQuery.data;
 
+  // For projectModel subjects, expose the flat context so the scoring forms
+  // can resolve subject column values via factor.fieldName. Also expose it
+  // as a single-entry properties array so existing panel prop chains that
+  // read properties[0] work without modification.
+  const flatContext: FlatContext | undefined = skipGroupDetail
+    ? pricingContextResult.flat
+    : undefined;
+
+  // When subject is projectModel, inject flat as properties[0] so panels
+  // that use properties[0] for the subject column get the resolved values.
+  const effectiveProperties = skipGroupDetail && flatContext
+    ? [flatContext as Record<string, unknown>]
+    : properties;
+
   return {
     groupDetail,
-    properties,
+    properties: effectiveProperties,
     propertiesMap,
     marketSurveyDetails,
     pricingConfiguration,
@@ -204,6 +261,11 @@ export function useEnrichedPricingAnalysis({
     allFactors,
     isLoading,
     error,
+    /** Flat pricing context — only populated when skipGroupDetail=true (projectModel subject) */
+    flatContext,
+    pricingContext: pricingContextResult.context,
+    /** Resolved thumbnail src for the project model (projectModel subjects only) */
+    modelThumbnailSrc,
   };
 }
 

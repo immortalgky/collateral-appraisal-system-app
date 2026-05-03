@@ -16,20 +16,29 @@ import type { ApiError } from '@/shared/types/api';
 import { useGetProject, useSaveProject } from '../../api/project';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
+import type { ChildCounts } from '../ChangeProjectTypeDialog';
+import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { condoProjectInfoFormDefaults, lbProjectInfoFormDefaults, projectInfoForm, } from '../../schemas/form';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
 interface ProjectInfoTabProps {
   projectType: ProjectType;
+  hasExistingProject: boolean;
+  childCounts: ChildCounts;
 }
 
 /**
  * Merged ProjectInfo tab for both Condo and LandAndBuilding.
  * Uses the correct schema factory based on projectType.
  */
-export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
+export default function ProjectInfoTab({
+  projectType,
+  hasExistingProject,
+  childCounts,
+}: ProjectInfoTabProps) {
   const appraisalId = useAppraisalId();
+  const basePath = useBasePath();
   const isReadOnly = usePageReadOnly();
 
   const schema = projectInfoForm(projectType);
@@ -61,12 +70,12 @@ export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
           projectSaleLaunchDate: project.projectSaleLaunchDate ?? null,
           landAreaRai: project.landAreaRai ?? null,
           landAreaNgan: project.landAreaNgan ?? null,
-          landAreaWa: project.landAreaWa ?? null,
+          landAreaSquareWa: project.landAreaSquareWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
           projectType: '', // stamped from route prop on submit
           numberOfPhase: project.numberOfPhase ?? null,
-          locationNumber: project.locationNumber ?? null,
+          houseNumber: project.houseNumber ?? null,
           road: project.road ?? null,
           soi: project.soi ?? null,
           subDistrict: project.subDistrict ?? null,
@@ -90,12 +99,12 @@ export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
           projectSaleLaunchDate: project.projectSaleLaunchDate ?? null,
           landAreaRai: project.landAreaRai ?? null,
           landAreaNgan: project.landAreaNgan ?? null,
-          landAreaWa: project.landAreaWa ?? null,
+          landAreaSquareWa: project.landAreaSquareWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
           projectType: '',
           numberOfPhase: project.numberOfPhase ?? null,
-          locationNumber: project.locationNumber ?? null,
+          houseNumber: project.houseNumber ?? null,
           road: project.road ?? null,
           soi: project.soi ?? null,
           subDistrict: project.subDistrict ?? null,
@@ -148,7 +157,13 @@ export default function ProjectInfoTab({ projectType }: ProjectInfoTabProps) {
         className="flex flex-col h-full min-h-0"
       >
         <div className="flex-1 min-h-0 overflow-y-auto pb-4">
-          <ProjectInfoForm projectType={projectType} />
+          <ProjectInfoForm
+            projectType={projectType}
+            appraisalId={appraisalId ?? ''}
+            basePath={basePath}
+            hasExistingProject={hasExistingProject}
+            childCounts={childCounts}
+          />
         </div>
 
         <ActionBar>

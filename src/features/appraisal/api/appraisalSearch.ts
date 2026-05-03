@@ -118,7 +118,10 @@ export const appraisalSearchKeys = {
 
 // ── Hooks ──────────────────────────────────────────────────
 
-export function useAppraisalSearch(params: AppraisalSearchParams) {
+export function useAppraisalSearch(
+  params: AppraisalSearchParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: appraisalSearchKeys.list(params),
     queryFn: async () => {
@@ -132,6 +135,7 @@ export function useAppraisalSearch(params: AppraisalSearchParams) {
     },
     placeholderData: keepPreviousData,
     staleTime: 30_000,
+    enabled: options?.enabled,
   });
 }
 

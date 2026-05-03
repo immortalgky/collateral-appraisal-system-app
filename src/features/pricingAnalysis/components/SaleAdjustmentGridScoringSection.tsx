@@ -418,15 +418,16 @@ export const SaleAdjustmentGridScoringSection = ({
                   })}
 
                   <td className={clsx('bg-white', collateralColumnBody)}>
-                    <RHFInputCell
-                      fieldName={qualitativeFactorCodePath({ row: rowIndex })}
-                      inputType="display"
-                      accessor={({ value }) => {
-                        const factor = (serverData.allFactors ?? []).find(
-                          (f: FactorDataType) => f.factorCode === value,
-                        );
-                        const fieldName = factor?.fieldName as string | undefined;
-                        const raw = fieldName ? property[fieldName] : null;
+                    {/* Should-fix 5: branch on fieldName. Truthy → resolved read-only
+                        display. Null/empty → legacy editable input for manual entry. */}
+                    {(() => {
+                      const factorCode = watchedQualitatives[rowIndex]?.factorCode ?? '';
+                      const factor = (serverData.allFactors ?? []).find(
+                        (f: FactorDataType) => f.factorCode === factorCode,
+                      );
+                      const fieldName = factor?.fieldName as string | undefined;
+                      if (fieldName) {
+                        const raw = property[fieldName];
                         const rawStr = raw != null ? String(raw) : null;
                         return (
                           <FactorValueDisplay
@@ -435,8 +436,15 @@ export const SaleAdjustmentGridScoringSection = ({
                             parameterGroup={factor?.parameterGroup as string | undefined}
                           />
                         );
-                      }}
-                    />
+                      }
+                      return (
+                        <RHFInputCell
+                          fieldName={`saleAdjustmentGridQualitatives.${rowIndex}.collateralValue`}
+                          inputType="text"
+                          text={{ maxLength: 200 }}
+                        />
+                      );
+                    })()}
                   </td>
                 </tr>
               );

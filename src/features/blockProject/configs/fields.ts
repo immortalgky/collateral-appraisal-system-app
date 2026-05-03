@@ -1,23 +1,8 @@
 import type { FormField } from '@/shared/components/form';
 import {
-  CONDO_FACILITY_OPTIONS,
   CONDO_FIRE_INSURANCE_CONDITION_OPTIONS,
-  CONDO_ROOM_LAYOUT_OPTIONS,
-  CONDO_TOWER_CONDITION_OPTIONS,
-  DECORATION_OPTIONS,
-  DOCUMENT_VALIDATION_OPTIONS,
-  FLOOR_MATERIAL_OPTIONS,
-  LB_BUILDING_MATERIAL_TYPE_OPTIONS,
-  LB_BUILDING_STYLE_TYPE_OPTIONS,
-  LB_BUILDING_TYPE_OPTIONS,
-  LB_CONSTRUCTION_STYLE_TYPE_OPTIONS,
-  LB_CONSTRUCTION_TYPE_OPTIONS,
-  LB_DECORATION_TYPE_OPTIONS,
   LB_FIRE_INSURANCE_OPTIONS,
-  LB_UTILIZATION_TYPE_OPTIONS,
   LOCATION_METHOD_OPTIONS,
-  QUALITY_OPTIONS,
-  ROAD_SURFACE_OPTIONS,
 } from '../data/options';
 
 // =============================================================================
@@ -51,7 +36,8 @@ export const projectInformationFields: FormField[] = [
     type: 'text-input',
     label: 'Project Sale Launch Date',
     name: 'projectSaleLaunchDate',
-    placeholder: 'YYYY-MM-DD',
+    placeholder: 'YYYY or YYYY-MM or YYYY-MM-DD',
+    maxLength: 10,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -64,22 +50,22 @@ export const projectInformationFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Land Area (Rai)',
+    label: 'Rai',
     name: 'landAreaRai',
     decimalPlaces: 0,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
-    label: 'Land Area (Ngan)',
+    label: 'Ngan',
     name: 'landAreaNgan',
     decimalPlaces: 0,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
-    label: 'Land Area (Wa)',
-    name: 'landAreaWa',
+    label: 'Square Wa',
+    name: 'landAreaSquareWa',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',
   },
@@ -102,10 +88,10 @@ export const projectInformationFields: FormField[] = [
 export const projectLocationFields: FormField[] = [
   {
     type: 'text-input',
-    label: 'Location Number',
-    name: 'locationNumber',
+    label: 'House Number',
+    name: 'houseNumber',
     wrapperClassName: 'col-span-4',
-    maxLength: 100,
+    maxLength: 10,
   },
   {
     type: 'text-input',
@@ -121,39 +107,48 @@ export const projectLocationFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     maxLength: 100,
   },
+  // Single autocomplete that fills sub-district, district, province, postcode codes
+  // — and the matching display-name form fields below (mirrors the appraisal-side
+  // `LocationSelector` pattern).
   {
-    type: 'text-input',
+    type: 'location-selector',
     label: 'Sub District',
     name: 'subDistrict',
+    districtField: 'district',
+    provinceField: 'province',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
+    districtNameField: 'districtName',
+    provinceNameField: 'provinceName',
     wrapperClassName: 'col-span-4',
-    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'District',
-    name: 'district',
+    name: 'districtName',
+    disabled: true,
     wrapperClassName: 'col-span-4',
-    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Province',
-    name: 'province',
+    name: 'provinceName',
+    disabled: true,
     wrapperClassName: 'col-span-4',
-    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Postcode',
     name: 'postcode',
+    disabled: true,
     wrapperClassName: 'col-span-4',
-    maxLength: 10,
   },
   {
     type: 'number-input',
     label: 'Latitude',
     name: 'latitude',
     decimalPlaces: 6,
+    maxIntegerDigits: 3,
     allowNegative: true,
     wrapperClassName: 'col-span-4',
   },
@@ -162,6 +157,7 @@ export const projectLocationFields: FormField[] = [
     label: 'Longitude',
     name: 'longitude',
     decimalPlaces: 6,
+    maxIntegerDigits: 3,
     allowNegative: true,
     wrapperClassName: 'col-span-4',
   },
@@ -183,7 +179,7 @@ export const projectDetailFields: FormField[] = [
     name: 'utilitiesOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'utilities', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'utilities', is: '99', operator: 'contains' },
   },
   {
     type: 'checkbox-group',
@@ -200,7 +196,7 @@ export const projectDetailFields: FormField[] = [
     name: 'facilitiesOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'facilities', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'facilities', is: '99', operator: 'contains' },
   },
   {
     type: 'textarea',
@@ -269,7 +265,7 @@ export const modelFloorMaterialFields: FormField[] = [
     type: 'radio-group',
     label: 'Ground Flooring Materials',
     name: 'groundFloorMaterialType',
-    options: FLOOR_MATERIAL_OPTIONS,
+    group: 'GroundFlooringMaterials',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -280,14 +276,14 @@ export const modelFloorMaterialFields: FormField[] = [
     name: 'groundFloorMaterialTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'groundFloorMaterialType', is: 'Other' },
-    requiredWhen: { field: 'groundFloorMaterialType', is: 'Other' },
+    showWhen: { field: 'groundFloorMaterialType', is: '99' },
+    requiredWhen: { field: 'groundFloorMaterialType', is: '99' },
   },
   {
     type: 'radio-group',
     label: 'Upper Flooring Materials',
     name: 'upperFloorMaterialType',
-    options: FLOOR_MATERIAL_OPTIONS,
+    group: 'UpperFlooringMaterials',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -298,14 +294,14 @@ export const modelFloorMaterialFields: FormField[] = [
     name: 'upperFloorMaterialTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'upperFloorMaterialType', is: 'Other' },
-    requiredWhen: { field: 'upperFloorMaterialType', is: 'Other' },
+    showWhen: { field: 'upperFloorMaterialType', is: '99' },
+    requiredWhen: { field: 'upperFloorMaterialType', is: '99' },
   },
   {
     type: 'radio-group',
     label: 'Bathroom Flooring Materials',
     name: 'bathroomFloorMaterialType',
-    options: FLOOR_MATERIAL_OPTIONS,
+    group: 'BathroomFlooringMaterials',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -316,8 +312,8 @@ export const modelFloorMaterialFields: FormField[] = [
     name: 'bathroomFloorMaterialTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'bathroomFloorMaterialType', is: 'Other' },
-    requiredWhen: { field: 'bathroomFloorMaterialType', is: 'Other' },
+    showWhen: { field: 'bathroomFloorMaterialType', is: '99' },
+    requiredWhen: { field: 'bathroomFloorMaterialType', is: '99' },
   },
 ];
 
@@ -340,7 +336,7 @@ export const condoFacilityFields: FormField[] = [
     type: 'checkbox-group',
     label: 'Facilities',
     name: 'facilities',
-    options: CONDO_FACILITY_OPTIONS,
+    group: 'Facilities',
     variant: 'tag',
     wrap: true,
     wrapperClassName: 'col-span-12',
@@ -351,7 +347,7 @@ export const condoFacilityFields: FormField[] = [
     name: 'facilitiesOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'facilities', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'facilities', is: '99', operator: 'contains' },
   },
 ];
 
@@ -365,19 +361,18 @@ export const condoModelInfoFields: FormField[] = [
     maxLength: 200,
   },
   {
-    type: 'text-input',
-    label: 'Building Number',
-    name: 'buildingNumber',
-    required: true,
-    wrapperClassName: 'col-span-6',
-    maxLength: 100,
-  },
-  {
     type: 'textarea',
     label: 'Model Description',
     name: 'modelDescription',
     wrapperClassName: 'col-span-12',
     maxLength: 500,
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Has Mezzanine',
+    name: 'hasMezzanine',
+    options: ['No', 'Yes'],
+    wrapperClassName: 'col-span-12',
   },
   {
     type: 'number-input',
@@ -394,25 +389,18 @@ export const condoModelInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
   },
   {
-    type: 'boolean-toggle',
-    label: 'Has Mezzanine',
-    name: 'hasMezzanine',
-    options: ['No', 'Yes'],
-    wrapperClassName: 'col-span-4',
-  },
-  {
     type: 'number-input',
     label: 'Usable Area Min (sq.m.)',
     name: 'usableAreaMin',
     decimalPlaces: 2,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
     label: 'Usable Area Max (sq.m.)',
     name: 'usableAreaMax',
     decimalPlaces: 2,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
@@ -426,14 +414,14 @@ export const condoModelInfoFields: FormField[] = [
     label: 'Fire Insurance Condition',
     name: 'fireInsuranceCondition',
     options: CONDO_FIRE_INSURANCE_CONDITION_OPTIONS,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-12',
   },
   {
     type: 'radio-group',
     label: 'Room Layout',
     name: 'roomLayoutType',
-    options: CONDO_ROOM_LAYOUT_OPTIONS,
-    variant: 'button',
+    group: 'RoomLayout',
+    variant: 'default',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
   },
@@ -443,8 +431,8 @@ export const condoModelInfoFields: FormField[] = [
     name: 'roomLayoutTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roomLayoutType', is: 'Other' },
-    requiredWhen: { field: 'roomLayoutType', is: 'Other' },
+    showWhen: { field: 'roomLayoutType', is: '99' },
+    requiredWhen: { field: 'roomLayoutType', is: '99' },
   },
   {
     type: 'textarea',
@@ -464,13 +452,21 @@ export const condoTowerInfoFields: FormField[] = [
     maxLength: 200,
   },
   {
+    type: 'text-input',
+    label: 'Condo Registration Number',
+    name: 'condoRegistrationNumber',
+    required: true,
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+  {
     type: 'number-input',
     label: 'Number of Units',
     name: 'numberOfUnits',
     required: true,
     decimalPlaces: 0,
     allowZero: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
   },
   {
     type: 'number-input',
@@ -479,15 +475,7 @@ export const condoTowerInfoFields: FormField[] = [
     required: true,
     decimalPlaces: 0,
     allowZero: true,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'text-input',
-    label: 'Condo Registration Number',
-    name: 'condoRegistrationNumber',
-    required: true,
     wrapperClassName: 'col-span-6',
-    maxLength: 100,
   },
 ];
 
@@ -496,7 +484,7 @@ export const condoTowerConditionFields: FormField[] = [
     type: 'radio-group',
     label: 'Condition',
     name: 'conditionType',
-    options: CONDO_TOWER_CONDITION_OPTIONS,
+    group: 'BuildingCondition',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -521,7 +509,7 @@ export const condoTowerConditionFields: FormField[] = [
     type: 'radio-group',
     label: 'Document Validation',
     name: 'documentValidationType',
-    options: DOCUMENT_VALIDATION_OPTIONS,
+    group: 'DocumentValidation',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -561,7 +549,7 @@ export const condoTowerLocationFields: FormField[] = [
     type: 'radio-group',
     label: 'Road Surface',
     name: 'roadSurfaceType',
-    options: ROAD_SURFACE_OPTIONS,
+    group: 'Condo_RoadSurface',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -572,8 +560,8 @@ export const condoTowerLocationFields: FormField[] = [
     name: 'roadSurfaceTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roadSurfaceType', is: 'Other' },
-    requiredWhen: { field: 'roadSurfaceType', is: 'Other' },
+    showWhen: { field: 'roadSurfaceType', is: '99' },
+    requiredWhen: { field: 'roadSurfaceType', is: '99' },
   },
 ];
 
@@ -582,7 +570,7 @@ export const condoTowerStructureFields: FormField[] = [
     type: 'radio-group',
     label: 'Decoration',
     name: 'decorationType',
-    options: DECORATION_OPTIONS,
+    group: 'Decoration',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -593,20 +581,13 @@ export const condoTowerStructureFields: FormField[] = [
     name: 'decorationTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'decorationType', is: 'Other' },
-    requiredWhen: { field: 'decorationType', is: 'Other' },
+    showWhen: { field: 'decorationType', is: '99' },
+    requiredWhen: { field: 'decorationType', is: '99' },
   },
   {
     type: 'number-input',
-    label: 'Construction Year',
-    name: 'constructionYear',
-    decimalPlaces: 0,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'number-input',
-    label: 'Total Number of Floors',
-    name: 'totalNumberOfFloors',
+    label: 'Building Age',
+    name: 'buildingAge',
     decimalPlaces: 0,
     wrapperClassName: 'col-span-4',
   },
@@ -614,7 +595,7 @@ export const condoTowerStructureFields: FormField[] = [
     type: 'radio-group',
     label: 'Building Form',
     name: 'buildingFormType',
-    options: QUALITY_OPTIONS,
+    group: 'BuildingForm',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -623,69 +604,17 @@ export const condoTowerStructureFields: FormField[] = [
     type: 'radio-group',
     label: 'Construction Materials',
     name: 'constructionMaterialType',
-    options: QUALITY_OPTIONS,
+    group: 'ConstructionMaterials',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
   },
 ];
 
-export const condoTowerFloorFields: FormField[] = [
-  {
-    type: 'radio-group',
-    label: 'Ground Flooring',
-    name: 'groundFloorMaterialType',
-    options: FLOOR_MATERIAL_OPTIONS,
-    variant: 'button',
-    orientation: 'horizontal',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other Ground Floor Material',
-    name: 'groundFloorMaterialTypeOther',
-    placeholder: 'Please specify...',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'groundFloorMaterialType', is: 'Other' },
-    requiredWhen: { field: 'groundFloorMaterialType', is: 'Other' },
-  },
-  {
-    type: 'radio-group',
-    label: 'Upper Flooring',
-    name: 'upperFloorMaterialType',
-    options: FLOOR_MATERIAL_OPTIONS,
-    variant: 'button',
-    orientation: 'horizontal',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other Upper Floor Material',
-    name: 'upperFloorMaterialTypeOther',
-    placeholder: 'Please specify...',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'upperFloorMaterialType', is: 'Other' },
-    requiredWhen: { field: 'upperFloorMaterialType', is: 'Other' },
-  },
-  {
-    type: 'radio-group',
-    label: 'Bathroom Flooring',
-    name: 'bathroomFloorMaterialType',
-    options: FLOOR_MATERIAL_OPTIONS,
-    variant: 'button',
-    orientation: 'horizontal',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Other Bathroom Floor Material',
-    name: 'bathroomFloorMaterialTypeOther',
-    placeholder: 'Please specify...',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'bathroomFloorMaterialType', is: 'Other' },
-    requiredWhen: { field: 'bathroomFloorMaterialType', is: 'Other' },
-  },
-];
+/** Floor-material fields were removed from ProjectTower (backend decision §1a).
+ *  They now live on ProjectModel only. Array kept as empty export to avoid
+ *  import churn in schema/form files that still reference it. */
+export const condoTowerFloorFields: FormField[] = [];
 
 export const condoTowerRoofFields: FormField[] = [
   // NOTE: roofType is a z.array(z.string()) field declared separately in the form schema.
@@ -697,7 +626,7 @@ export const condoTowerRoofFields: FormField[] = [
     name: 'roofTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'roofType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -799,29 +728,30 @@ export const condoPricingFloorFields: FormField[] = [
 
 export const lbProjectInfoFields: FormField[] = [
   {
-    type: 'text-input',
+    type: 'date-input',
     label: 'License Expiration Date',
     name: 'licenseExpirationDate',
-    placeholder: 'YYYY-MM-DD',
     wrapperClassName: 'col-span-4',
   },
 ];
 
-/**
- * LB facility field config.
- *
- * TODO(Phase 2): LB_FACILITY_OPTIONS uses `{ key, label }` shape but CheckboxOption
- * requires `{ value, label }`. Phase 2 must normalize LB_FACILITY_OPTIONS or use a
- * custom component. The checkbox-group field is omitted here to avoid a type mismatch;
- * Phase 2 will render facilities inline with a custom component.
- */
 export const lbFacilityFields: FormField[] = [
+  {
+    type: 'checkbox-group',
+    label: 'Facilities',
+    name: 'facilities',
+    group: 'Facilities',
+    variant: 'tag',
+    wrap: true,
+    wrapperClassName: 'col-span-12',
+  },
   {
     type: 'text-input',
     label: 'Other Facilities',
     name: 'facilitiesOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
+    showWhen: { field: 'facilities', is: '99', operator: 'contains' },
   },
 ];
 
@@ -831,7 +761,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Model Name',
     name: 'modelName',
     required: true,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-12',
     maxLength: 200,
   },
   {
@@ -841,6 +771,7 @@ export const lbModelInfoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 500,
   },
+  // Row: numberOfHouse + startingPriceMin + startingPriceMax → 4+4+4 = 12
   {
     type: 'number-input',
     label: 'Number of Houses',
@@ -850,24 +781,32 @@ export const lbModelInfoFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Starting Price (THB)',
-    name: 'startingPrice',
+    label: 'Starting Price Min (THB)',
+    name: 'startingPriceMin',
     decimalPlaces: 2,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-4',
   },
+  {
+    type: 'number-input',
+    label: 'Starting Price Max (THB)',
+    name: 'startingPriceMax',
+    decimalPlaces: 2,
+    wrapperClassName: 'col-span-4',
+  },
+  // Row: usableAreaMin + usableAreaMax + standardUsableArea → 4+4+4 = 12
   {
     type: 'number-input',
     label: 'Usable Area Min (sq.m.)',
     name: 'usableAreaMin',
     decimalPlaces: 2,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
     label: 'Usable Area Max (sq.m.)',
     name: 'usableAreaMax',
     decimalPlaces: 2,
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
@@ -878,28 +817,21 @@ export const lbModelInfoFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Land Area (Rai)',
-    name: 'landAreaRai',
-    decimalPlaces: 0,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'number-input',
-    label: 'Land Area (Ngan)',
-    name: 'landAreaNgan',
-    decimalPlaces: 0,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'number-input',
-    label: 'Land Area (Wa)',
-    name: 'landAreaWa',
+    label: 'Land Area Min (sq.wa)',
+    name: 'landAreaMin',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
-    label: 'Standard Land Area (sq.w.)',
+    label: 'Land Area Max (sq.wa)',
+    name: 'landAreaMax',
+    decimalPlaces: 2,
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    type: 'number-input',
+    label: 'Standard Land Area (sq.wa)',
     name: 'standardLandArea',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',
@@ -925,7 +857,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     type: 'radio-group',
     label: 'Building Type',
     name: 'buildingType',
-    options: LB_BUILDING_TYPE_OPTIONS,
+    group: 'BuildingType',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -936,8 +868,8 @@ export const lbModelBuildingDetailFields: FormField[] = [
     name: 'buildingTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'buildingType', is: 'Other' },
-    requiredWhen: { field: 'buildingType', is: 'Other' },
+    showWhen: { field: 'buildingType', is: '99' },
+    requiredWhen: { field: 'buildingType', is: '99' },
   },
   {
     type: 'number-input',
@@ -950,7 +882,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     type: 'radio-group',
     label: 'Decoration',
     name: 'decorationType',
-    options: LB_DECORATION_TYPE_OPTIONS,
+    group: 'Decoration',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -961,14 +893,14 @@ export const lbModelBuildingDetailFields: FormField[] = [
     name: 'decorationTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'decorationType', is: 'Other' },
-    requiredWhen: { field: 'decorationType', is: 'Other' },
+    showWhen: { field: 'decorationType', is: '99' },
+    requiredWhen: { field: 'decorationType', is: '99' },
   },
   {
     type: 'radio-group',
     label: 'Building Material',
     name: 'buildingMaterialType',
-    options: LB_BUILDING_MATERIAL_TYPE_OPTIONS,
+    group: 'BuildingMaterial',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -977,7 +909,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     type: 'radio-group',
     label: 'Building Style',
     name: 'buildingStyleType',
-    options: LB_BUILDING_STYLE_TYPE_OPTIONS,
+    group: 'BuildingStyle',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -1000,7 +932,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     type: 'radio-group',
     label: 'Construction Style',
     name: 'constructionStyleType',
-    options: LB_CONSTRUCTION_STYLE_TYPE_OPTIONS,
+    group: 'ConstructionStyle',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -1016,7 +948,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     type: 'radio-group',
     label: 'Construction Type',
     name: 'constructionType',
-    options: LB_CONSTRUCTION_TYPE_OPTIONS,
+    group: 'ConstructionType',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -1027,13 +959,13 @@ export const lbModelBuildingDetailFields: FormField[] = [
     name: 'constructionTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'constructionType', is: 'Other' },
+    showWhen: { field: 'constructionType', is: '99' },
   },
   {
     type: 'radio-group',
     label: 'Utilization Type',
     name: 'utilizationType',
-    options: LB_UTILIZATION_TYPE_OPTIONS,
+    group: 'Utilization',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -1044,7 +976,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     name: 'utilizationTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'utilizationType', is: 'Other' },
+    showWhen: { field: 'utilizationType', is: '99' },
   },
 ];
 
@@ -1063,7 +995,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'structureTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'structureType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'structureType', is: '99', operator: 'contains' },
   },
   {
     type: 'text-input',
@@ -1071,7 +1003,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'roofFrameTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofFrameType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'roofFrameType', is: '99', operator: 'contains' },
   },
   {
     type: 'text-input',
@@ -1079,7 +1011,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'roofTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'roofType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'roofType', is: '99', operator: 'contains' },
   },
   {
     type: 'text-input',
@@ -1087,7 +1019,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'ceilingTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'ceilingType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'ceilingType', is: '99', operator: 'contains' },
   },
   {
     type: 'text-input',
@@ -1095,7 +1027,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'interiorWallTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'interiorWallType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
   },
   {
     type: 'text-input',
@@ -1103,7 +1035,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'exteriorWallTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'exteriorWallType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
   },
   {
     type: 'text-input',
@@ -1111,7 +1043,7 @@ export const lbModelStructureFields: FormField[] = [
     name: 'fenceTypeOther',
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'fenceType', is: 'Other', operator: 'contains' },
+    showWhen: { field: 'fenceType', is: '99', operator: 'contains' },
   },
 ];
 
@@ -1141,17 +1073,73 @@ export const lbPricingLocationFields: FormField[] = [
   },
 ];
 
-// Re-export option constants needed by Phase 2 form components that build on these configs.
-// These are complex multi-select options not covered by the FormField[] arrays above.
-export {
-  LB_FLOOR_SURFACE_TYPE_OPTIONS,
-  LB_FLOOR_STRUCTURE_TYPE_OPTIONS,
-  LB_STRUCTURE_TYPE_OPTIONS,
-  LB_ROOF_FRAME_TYPE_OPTIONS,
-  LB_ROOF_TYPE_OPTIONS,
-  LB_CEILING_TYPE_OPTIONS,
-  LB_WALL_TYPE_OPTIONS,
-  LB_FENCE_TYPE_OPTIONS,
-  LB_FACILITY_OPTIONS,
-  CONDO_ROOF_OPTIONS,
-} from '../data/options';
+// Re-export only option constants without a matching parameter group.
+// LB floor surface/structure options have no `FloorSurface`/`FloorStructure`
+// parameter group yet — keep as local options until backend exposes one.
+export { LB_FLOOR_SURFACE_TYPE_OPTIONS, LB_FLOOR_STRUCTURE_TYPE_OPTIONS } from '../data/options';
+
+// =============================================================================
+// Project Land — block-owned copies of appraisal land configs
+// =============================================================================
+// Sections that need to differ from the per-asset appraisal flow are copied
+// here so the block-project flow can evolve independently. Sections that are
+// still identical to appraisal continue to import from `appraisal/configs/fields`
+// inside `BlockLandDetailForm`; copy each one into this file when it needs
+// to diverge.
+
+/**
+ * Land Information section for the project-land form.
+ *
+ * Differences from appraisal `landInfoField`:
+ *   • No `latitude` / `longitude` (captured at the project level on Project Info).
+ *   • No `landOffice` (same — single project-level land office on Project Info).
+ */
+export const projectLandInfoFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Property Name',
+    name: 'propertyName',
+    wrapperClassName: 'col-span-12',
+    maxLength: 150,
+  },
+  // Location selector (sub-district autocomplete that populates district, province, postcode).
+  // Three fields fill the row 4+4+4 = 12 since lat/lon and Land Office are dropped here.
+  {
+    type: 'location-selector',
+    label: 'Sub District',
+    name: 'subDistrict',
+    districtField: 'district',
+    districtNameField: 'districtName',
+    provinceField: 'province',
+    provinceNameField: 'provinceName',
+    postcodeField: 'postcode',
+    subDistrictNameField: 'subDistrictName',
+    addressSource: 'title',
+    wrapperClassName: 'col-span-4',
+    required: true,
+  },
+  // Display fields (autopopulated by location-selector)
+  {
+    type: 'text-input',
+    label: 'District',
+    name: 'districtName',
+    disabled: true,
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    type: 'text-input',
+    label: 'Province',
+    name: 'provinceName',
+    disabled: true,
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    type: 'textarea',
+    label: 'Land Description',
+    name: 'landDescription',
+    wrapperClassName: 'col-span-12',
+    required: true,
+    maxLength: 100,
+    showCharCount: true,
+  },
+];

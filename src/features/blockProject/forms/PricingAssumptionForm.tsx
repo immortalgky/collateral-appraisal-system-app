@@ -54,7 +54,10 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
 
 const buildLocationMethodOptions = (projectType: ProjectType) => {
   const areaUnit = projectType === 'Condo' ? 'Sq.m' : 'Sq.wa';
-  return [{ value: 'AdjustPriceSqm', label: `01 - Adjust Price/${areaUnit}` }];
+  return [
+    { value: 'AdjustPriceSqm', label: `01 - Adjust Price/${areaUnit}` },
+    { value: 'Lumpsum', label: '02 - Lumpsum' },
+  ];
 };
 
 interface LocationRow {

@@ -1,15 +1,22 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { useGetProjectModels } from '../../api/projectModel';
+import { useCreateProjectModelPricingAnalysis } from '../../api/projectPricingAnalysis';
 import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
+import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 import type { ProjectModel, ProjectType } from '../../types';
+import type { ApiError } from '@/shared/types/api';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
+
+type AppError = AxiosError & { apiError?: ApiError };
 
 type ViewMode = 'grid' | 'list';
 
@@ -27,12 +34,15 @@ function formatPriceRange(min?: number | null, max?: number | null): string {
   return (min ?? max)?.toLocaleString() ?? '-';
 }
 
-function formatLandArea(rai?: number | null, ngan?: number | null, wa?: number | null): string {
-  const parts: string[] = [];
-  if (rai) parts.push(`${rai} ไร่`);
-  if (ngan) parts.push(`${ngan} งาน`);
-  if (wa) parts.push(`${wa} ตร.ว.`);
-  return parts.length ? parts.join(' ') : '-';
+function formatLandAreaRange(min?: number | null, max?: number | null): string {
+  if (!min && !max) return '-';
+  if (min && max) return `${min} - ${max} sq.wa`;
+  return `${min ?? max} sq.wa`;
+}
+
+function formatStandardPrice(value: number | null | undefined): string | null {
+  if (value == null) return null;
+  return `฿${value.toLocaleString()} / sq.m.`;
 }
 
 // ── Model Card ────────────────────────────────────────────────────────────────
@@ -43,17 +53,78 @@ interface ModelCardProps {
   viewMode: ViewMode;
   thumbnailSrc?: string;
   onClick: () => void;
+  onPricingAnalysis: () => void;
+  isPricingAnalysisPending: boolean;
 }
 
-function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: ModelCardProps) {
+/** Pricing-analysis CTA. Stops propagation so the card click doesn't navigate. */
+function PricingAnalysisAction({
+  hasAnalysis,
+  isPending,
+  onClick,
+  size = 'sm',
+}: {
+  hasAnalysis: boolean;
+  isPending: boolean;
+  onClick: () => void;
+  size?: 'sm' | 'xs';
+}) {
+  const sizeCls = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs';
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={e => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={clsx(
+        'inline-flex items-center gap-1.5 rounded-md font-medium transition-colors shrink-0',
+        sizeCls,
+        hasAnalysis
+          ? 'bg-primary/10 text-primary hover:bg-primary/15'
+          : 'bg-primary text-white hover:bg-primary/90',
+        isPending && 'opacity-60 cursor-not-allowed',
+      )}
+    >
+      <Icon name={hasAnalysis ? 'chart-line' : 'play'} style="solid" className="size-3" />
+      {hasAnalysis ? 'Pricing' : 'Run Pricing'}
+    </button>
+  );
+}
+
+function ModelCard({
+  model,
+  projectType,
+  viewMode,
+  thumbnailSrc,
+  onClick,
+  onPricingAnalysis,
+  isPricingAnalysisPending,
+}: ModelCardProps) {
   const icon = projectType === 'Condo' ? 'layer-group' : 'house';
+  const hasAnalysis = Boolean(model.pricingAnalysisId);
+  const standardPrice = formatStandardPrice(model.finalAppraisedValue);
+  const roomTypeDescription = useParameterDescription('RoomLayout', model.roomLayoutType);
+
+  // Card-level click & keyboard handlers (replaces the outer <button>)
+  const cardProps = {
+    role: 'button' as const,
+    tabIndex: 0,
+    onClick,
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    },
+  };
 
   if (viewMode === 'list') {
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left"
+      <div
+        {...cardProps}
+        className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left cursor-pointer"
       >
         <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
           {thumbnailSrc ? (
@@ -94,7 +165,7 @@ function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: Mode
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-400">Room Type</p>
-                <p className="text-sm font-medium text-gray-700">{model.roomLayoutType ?? '-'}</p>
+                <p className="text-sm font-medium text-gray-700">{roomTypeDescription || '-'}</p>
               </div>
             </>
           )}
@@ -113,18 +184,30 @@ function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: Mode
               </div>
             </>
           )}
+
+          {standardPrice && (
+            <div className="text-right">
+              <p className="text-xs text-gray-400">Standard Price</p>
+              <p className="text-sm font-semibold text-primary">{standardPrice}</p>
+            </div>
+          )}
         </div>
 
+        <PricingAnalysisAction
+          hasAnalysis={hasAnalysis}
+          isPending={isPricingAnalysisPending}
+          onClick={onPricingAnalysis}
+        />
+
         <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4 shrink-0" />
-      </button>
+      </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group"
+    <div
+      {...cardProps}
+      className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group cursor-pointer"
     >
       <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
         {thumbnailSrc ? (
@@ -143,9 +226,16 @@ function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: Mode
       </div>
 
       <div className="p-4">
-        <p className="text-sm font-semibold text-gray-900 truncate">
-          {model.modelName ?? 'Unnamed Model'}
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-gray-900 truncate">
+            {model.modelName ?? 'Unnamed Model'}
+          </p>
+          <PricingAnalysisAction
+            hasAnalysis={hasAnalysis}
+            isPending={isPricingAnalysisPending}
+            onClick={onPricingAnalysis}
+          />
+        </div>
         <p className="text-xs text-gray-500 mt-1 line-clamp-2 min-h-[2rem]">
           {model.modelDescription ?? '-'}
         </p>
@@ -168,7 +258,7 @@ function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: Mode
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Room Type</span>
-                <span className="text-gray-700 font-medium">{model.roomLayoutType ?? '-'}</span>
+                <span className="text-gray-700 font-medium">{roomTypeDescription || '-'}</span>
               </div>
             </>
           )}
@@ -178,7 +268,7 @@ function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: Mode
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Land Area</span>
                 <span className="text-gray-700 font-medium">
-                  {formatLandArea(model.landAreaRai, model.landAreaNgan, model.landAreaWa)}
+                  {formatLandAreaRange(model.landAreaMin, model.landAreaMax)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
@@ -187,9 +277,18 @@ function ModelCard({ model, projectType, viewMode, thumbnailSrc, onClick }: Mode
               </div>
             </>
           )}
+
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-400">Standard Price</span>
+            {standardPrice ? (
+              <span className="text-gray-700 font-medium">{standardPrice}</span>
+            ) : (
+              <span className="text-gray-400 italic">Pending analysis</span>
+            )}
+          </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -206,7 +305,13 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const { data: modelsData, isLoading, isError } = useGetProjectModels(appraisalId ?? '');
-  const models = Array.isArray(modelsData) ? modelsData : [];
+  const models = useMemo(
+    () =>
+      (Array.isArray(modelsData) ? [...modelsData] : []).sort((a, b) =>
+        (a.modelName ?? '').localeCompare(b.modelName ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+      ),
+    [modelsData],
+  );
 
   const { data: galleryData } = useGetGalleryPhotos(appraisalId ?? undefined);
   const thumbnailByModelId = useMemo(() => {
@@ -223,12 +328,43 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
 
   const routeSegment = projectType === 'Condo' ? 'block-condo' : 'block-village';
 
+  const { mutate: createPricingAnalysis, isPending: isCreatingPricingAnalysis, variables: pricingMutationVars } =
+    useCreateProjectModelPricingAnalysis();
+
   const handleModelClick = (modelId: string) => {
     navigate(`${basePath}/${routeSegment}/model/${modelId}`);
   };
 
   const handleAddModel = () => {
     navigate(`${basePath}/${routeSegment}/model/new`);
+  };
+
+  const handlePricingAnalysis = (model: ProjectModel) => {
+    if (model.pricingAnalysisId) {
+      navigate(
+        `${basePath}/${routeSegment}/model/${model.id}/pricing-analysis/${model.pricingAnalysisId}`,
+      );
+      return;
+    }
+    if (!appraisalId) return;
+    createPricingAnalysis(
+      { appraisalId, modelId: model.id },
+      {
+        onSuccess: data => {
+          if (!data?.id) {
+            toast.error('No pricing analysis ID returned from server');
+            return;
+          }
+          navigate(
+            `${basePath}/${routeSegment}/model/${model.id}/pricing-analysis/${data.id}`,
+          );
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to create pricing analysis');
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -316,6 +452,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               thumbnailSrc={thumbnailByModelId.get(model.id)}
               viewMode="grid"
               onClick={() => handleModelClick(model.id)}
+              onPricingAnalysis={() => handlePricingAnalysis(model)}
+              isPricingAnalysisPending={
+                isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
+              }
             />
           ))}
         </div>
@@ -329,6 +469,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               thumbnailSrc={thumbnailByModelId.get(model.id)}
               viewMode="list"
               onClick={() => handleModelClick(model.id)}
+              onPricingAnalysis={() => handlePricingAnalysis(model)}
+              isPricingAnalysisPending={
+                isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
+              }
             />
           ))}
         </div>
