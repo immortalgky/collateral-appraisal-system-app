@@ -1,6 +1,7 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
 import type { ProjectType } from '../types';
+import { isValidPartialDate } from '../utils/partialDate';
 import {
   projectInformationFields,
   projectLocationFields,
@@ -52,7 +53,24 @@ const condoProjectInfoAllFields = [
   ...condoFacilityFields,
 ];
 
-export const condoProjectInfoForm = buildFormSchema(condoProjectInfoAllFields, projectInfoBase);
+/** Reject invalid partial-date inputs (rule shared between Condo + LB). */
+const validatePartialSaleLaunchDate = (
+  data: { projectSaleLaunchDate?: string | null },
+  ctx: z.RefinementCtx,
+) => {
+  if (!isValidPartialDate(data.projectSaleLaunchDate)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Use YYYY, YYYY-MM, or YYYY-MM-DD',
+      path: ['projectSaleLaunchDate'],
+    });
+  }
+};
+
+export const condoProjectInfoForm = buildFormSchema(
+  condoProjectInfoAllFields,
+  projectInfoBase,
+).superRefine(validatePartialSaleLaunchDate);
 export type CondoProjectInfoFormType = z.infer<typeof condoProjectInfoForm>;
 
 export const condoProjectInfoFormDefaults: CondoProjectInfoFormType = {
@@ -62,17 +80,20 @@ export const condoProjectInfoFormDefaults: CondoProjectInfoFormType = {
   projectSaleLaunchDate: null,
   landAreaRai: null,
   landAreaNgan: null,
-  landAreaWa: null,
+  landAreaSquareWa: null,
   unitForSaleCount: null,
   numberOfPhase: null,
   landOffice: '',
   projectType: '',
-  locationNumber: null,
+  houseNumber: null,
   road: null,
   soi: null,
   subDistrict: null,
+  subDistrictName: null,
   district: null,
+  districtName: null,
   province: null,
+  provinceName: null,
   postcode: null,
   latitude: null,
   longitude: null,
@@ -92,7 +113,10 @@ const lbProjectInfoAllFields = [
   ...lbFacilityFields,
 ];
 
-export const lbProjectInfoForm = buildFormSchema(lbProjectInfoAllFields, projectInfoBase);
+export const lbProjectInfoForm = buildFormSchema(
+  lbProjectInfoAllFields,
+  projectInfoBase,
+).superRefine(validatePartialSaleLaunchDate);
 export type LbProjectInfoFormType = z.infer<typeof lbProjectInfoForm>;
 
 export const lbProjectInfoFormDefaults: LbProjectInfoFormType = {
@@ -102,17 +126,20 @@ export const lbProjectInfoFormDefaults: LbProjectInfoFormType = {
   projectSaleLaunchDate: null,
   landAreaRai: null,
   landAreaNgan: null,
-  landAreaWa: null,
+  landAreaSquareWa: null,
   unitForSaleCount: null,
   numberOfPhase: null,
   landOffice: '',
   projectType: '',
-  locationNumber: null,
+  houseNumber: null,
   road: null,
   soi: null,
   subDistrict: null,
+  subDistrictName: null,
   district: null,
+  districtName: null,
   province: null,
+  provinceName: null,
   postcode: null,
   latitude: null,
   longitude: null,
@@ -143,17 +170,36 @@ const condoModelAreaDetailItem = z.object({
 
 const condoModelBase = z.object({
   areaDetails: z.array(condoModelAreaDetailItem).nullable().optional(),
+  /** Condo only: FK to ProjectTower. Required by backend when projectType = Condo. */
+  projectTowerId: z.string().uuid().nullable().optional(),
 });
 
 const allCondoModelFields = [...condoModelInfoFields, ...modelFloorMaterialFields];
 
-export const condoModelForm = buildFormSchema(allCondoModelFields, condoModelBase);
+const _condoModelFormBase = buildFormSchema(allCondoModelFields, condoModelBase);
+
+/**
+ * Condo model form schema.
+ * Adds a superRefine after buildFormSchema so the tower-required rule survives
+ * the schema merge (buildFormSchema unwraps ZodEffects when merging).
+ */
+export const condoModelForm = _condoModelFormBase.superRefine((data, ctx) => {
+  // projectTowerId is mandatory for all Condo models.
+  // This schema is used exclusively for Condo — LandAndBuilding uses lbModelForm.
+  if (!data.projectTowerId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Tower is required for Condo projects',
+      path: ['projectTowerId'],
+    });
+  }
+});
 export type CondoModelFormType = z.infer<typeof condoModelForm>;
 
 export const condoModelFormDefaults: CondoModelFormType = {
   modelName: '',
   modelDescription: null,
-  buildingNumber: '',
+  projectTowerId: null,
   startingPriceMin: null,
   startingPriceMax: null,
   hasMezzanine: false,
@@ -217,7 +263,7 @@ const lbModelDepreciationDetailItem = z.object({
   depreciationYearPct: z.coerce.number().nullable().optional(),
   totalDepreciationPct: z.coerce.number().nullable().optional(),
   priceDepreciation: z.coerce.number().nullable().optional(),
-  periods: z.array(lbModelDepreciationPeriodItem).nullable().optional(),
+  depreciationPeriods: z.array(lbModelDepreciationPeriodItem).nullable().optional(),
 });
 
 const lbModelBase = z.object({
@@ -255,21 +301,15 @@ export const lbModelFormDefaults = {
   modelName: '',
   modelDescription: null,
   numberOfHouse: null,
-  startingPrice: null,
+  startingPriceMin: null,
+  startingPriceMax: null,
   usableAreaMin: null,
   usableAreaMax: null,
   standardUsableArea: null,
-  landAreaRai: null,
-  landAreaNgan: null,
-  landAreaWa: null,
+  landAreaMin: null,
+  landAreaMax: null,
   standardLandArea: null,
   fireInsuranceCondition: null,
-  groundFloorMaterialType: null,
-  groundFloorMaterialTypeOther: null,
-  upperFloorMaterialType: null,
-  upperFloorMaterialTypeOther: null,
-  bathroomFloorMaterialType: null,
-  bathroomFloorMaterialTypeOther: null,
   remark: null,
   buildingType: null,
   buildingTypeOther: null,
@@ -305,7 +345,6 @@ export const lbModelFormDefaults = {
   exteriorWallTypeOther: null,
   fenceType: [] as string[],
   fenceTypeOther: null,
-  areaDetails: [],
   surfaces: [],
   depreciationDetails: [],
 } satisfies Partial<LbModelFormType>;
@@ -322,9 +361,6 @@ export function projectModelForm(projectType: ProjectType) {
 // =============================================================================
 
 const condoTowerBase = z.object({
-  // modelTypeIds uses dynamic options from useGetProjectModels — rendered via
-  // a custom component, NOT via configs/fields.ts
-  modelTypeIds: z.array(z.string()).nullable().optional(),
   roofType: z.array(z.string()).nullable().optional(),
 });
 
@@ -346,7 +382,6 @@ export const projectTowerFormDefaults: ProjectTowerFormType = {
   numberOfUnits: 0,
   numberOfFloors: 0,
   condoRegistrationNumber: '',
-  modelTypeIds: [],
   conditionType: null,
   hasObligation: false,
   obligationDetails: null,
@@ -359,16 +394,9 @@ export const projectTowerFormDefaults: ProjectTowerFormType = {
   roadSurfaceTypeOther: null,
   decorationType: null,
   decorationTypeOther: null,
-  constructionYear: null,
-  totalNumberOfFloors: null,
+  buildingAge: null,
   buildingFormType: null,
   constructionMaterialType: null,
-  groundFloorMaterialType: null,
-  groundFloorMaterialTypeOther: null,
-  upperFloorMaterialType: null,
-  upperFloorMaterialTypeOther: null,
-  bathroomFloorMaterialType: null,
-  bathroomFloorMaterialTypeOther: null,
   roofType: [],
   roofTypeOther: null,
   isExpropriated: false,

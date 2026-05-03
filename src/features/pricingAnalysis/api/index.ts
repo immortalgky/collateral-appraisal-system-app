@@ -873,6 +873,237 @@ export function usePreviewIncomeAnalysis() {
   });
 }
 
+// ==================== Hypothesis Analysis Hooks ====================
+
+import type {
+  GetHypothesisAnalysisResult,
+  SaveHypothesisAnalysisRequest,
+  SaveHypothesisAnalysisResult,
+  PreviewHypothesisAnalysisRequest,
+  PreviewHypothesisAnalysisResult,
+  GenerateHypothesisAnalysisRequest,
+  GenerateHypothesisAnalysisResult,
+  UploadHypothesisUnitDetailsResult,
+} from '../types/hypothesis';
+
+/**
+ * GET /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis
+ * Returns null body when no analysis generated yet (404 → undefined).
+ */
+export function useGetHypothesisAnalysis(
+  pricingAnalysisId: string | undefined,
+  methodId: string | undefined,
+) {
+  return useQuery({
+    queryKey: pricingAnalysisKeys.hypothesisAnalysis(pricingAnalysisId ?? '', methodId ?? ''),
+    queryFn: async (): Promise<GetHypothesisAnalysisResult | undefined> => {
+      const response = await axios.get(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis`,
+        { validateStatus: status => status === 200 || status === 404 },
+      );
+      if (response.status === 404) return undefined;
+      return response.data as GetHypothesisAnalysisResult;
+    },
+    enabled: !!pricingAnalysisId && !!methodId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * POST /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis
+ * Creates the aggregate and seeds default cost rows.
+ */
+export function useGenerateHypothesisAnalysis() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: GenerateHypothesisAnalysisRequest;
+    }): Promise<GenerateHypothesisAnalysisResult> => {
+      const { data } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis`,
+        request,
+      );
+      return data as GenerateHypothesisAnalysisResult;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+    },
+  });
+}
+
+/**
+ * PUT /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis
+ * Persists user inputs; server recalculates all derived values.
+ */
+export function useSaveHypothesisAnalysis() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: SaveHypothesisAnalysisRequest;
+    }): Promise<SaveHypothesisAnalysisResult> => {
+      const { data } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis`,
+        request,
+      );
+      return data as SaveHypothesisAnalysisResult;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+        refetchType: 'none',
+      });
+    },
+  });
+}
+
+/**
+ * POST /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis/preview
+ * Returns full computed snapshot without persisting.
+ */
+export function usePreviewHypothesisAnalysis() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: PreviewHypothesisAnalysisRequest;
+    }): Promise<PreviewHypothesisAnalysisResult> => {
+      const { data } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis/preview`,
+        request,
+      );
+      return data as PreviewHypothesisAnalysisResult;
+    },
+  });
+}
+
+/**
+ * POST /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis/uploads
+ * Upload an xlsx file; deactivates any previous upload.
+ */
+export function useUploadHypothesisUnitDetails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      file,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      file: File;
+    }): Promise<UploadHypothesisUnitDetailsResult> => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis/uploads`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return data as UploadHypothesisUnitDetailsResult;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+    },
+  });
+}
+
+/**
+ * DELETE /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis/uploads/{uploadId}
+ */
+export function useDeleteHypothesisUpload() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      uploadId,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      uploadId: string;
+    }): Promise<void> => {
+      await axios.delete(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis/uploads/${uploadId}`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+    },
+  });
+}
+
+/**
+ * DELETE /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis
+ * Resets (deletes) the entire hypothesis analysis.
+ */
+export function useDeleteHypothesisAnalysis() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+    }): Promise<void> => {
+      await axios.delete(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
+          variables.pricingAnalysisId,
+          variables.methodId,
+        ),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+        refetchType: 'none',
+      });
+    },
+  });
+}
+
 // ==================== Template & Factor Hooks ====================
 
 /**

@@ -36,8 +36,8 @@ const CONFIG_TO_SERVER_METHOD: Record<string, string> = {
   MC_COST: 'MachineryCost',
   // Income
   I: 'Income',
-  // Residual (config has methodType "I" for Hypothesis — likely a typo, but map it)
-  HYPO: 'Hypothesis',
+  // Residual (variant chosen inside the panel via template)
+  Hypothesis: 'Hypothesis',
 };
 
 export function mapToServerMethodType(methodType: string): string {

@@ -179,8 +179,8 @@
       "appraisalValue": 0,
       "methods": [
         {
-          "id": "HYPO",
-          "methodType": "I",
+          "id": "Hypothesis",
+          "methodType": "Hypothesis",
           "icon": "flask-vial",
           "label": "Hypothesis",
           "appraisalValue": 0,

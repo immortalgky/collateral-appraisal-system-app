@@ -4,11 +4,13 @@ import clsx from 'clsx';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PricingAnalysisApproachMethodSelector } from './PricingAnalysisApproachMethodSelector';
 import { PropertyCardContent } from '@features/appraisal/components/PropertyCardContent';
+import { ModelCardContent } from './ModelCardContent';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PropertyGroupItemDto } from '@features/appraisal/api';
 import type { PricingAnalysisConfigType } from '../../schemas';
 import { mapGroupItemToPropertyItem } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
+import type { FlatContext, ProjectModelPricingContextDto } from '../../utils/flattenPricingContext';
 
 interface PricingAnalysisAccordionProps {
   state: SelectionState;
@@ -43,6 +45,12 @@ interface PricingAnalysisAccordionProps {
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   pricingConfiguration?: PricingAnalysisConfigType[];
+  /** When true the left panel renders a single Model card instead of property list. */
+  isModelSubject?: boolean;
+  flatContext?: FlatContext;
+  pricingContext?: ProjectModelPricingContextDto;
+  /** Resolved thumbnail src for the project model card (projectModel subjects only). */
+  modelThumbnailSrc?: string;
   deleteConfirm?: {
     isOpen: boolean;
     hasData: boolean;
@@ -78,6 +86,10 @@ export const PricingAnalysisAccordion = ({
   onAddMethod,
   onDeleteMethod,
   pricingConfiguration,
+  isModelSubject = false,
+  flatContext,
+  pricingContext,
+  modelThumbnailSrc,
   deleteConfirm,
   onManualValueChange,
 }: PricingAnalysisAccordionProps) => {
@@ -119,8 +131,22 @@ export const PricingAnalysisAccordion = ({
       {/* header */}
       <div className="grid grid-cols-12 justify-between items-center h-12">
         <div className="col-span-8 flex items-center gap-2">
-          <span className="font-semibold">{`Group: ${group?.number ?? ''} ${group?.name ?? ''}`}</span>
-          <span className="text-sm text-gray-400">{`${group?.properties?.length ?? 0} item(s)`}</span>
+          {isModelSubject ? (
+            <span className="font-semibold flex items-center gap-1.5 min-w-0">
+              <span className="text-gray-500 truncate">
+                {flatContext?.projectName ? String(flatContext.projectName) : 'Project'}
+              </span>
+              <Icon name="chevron-right" style="solid" className="text-gray-300 size-3 shrink-0" />
+              <span className="text-gray-900 truncate">
+                {flatContext?.modelName ? String(flatContext.modelName) : 'Model'}
+              </span>
+            </span>
+          ) : (
+            <>
+              <span className="font-semibold">{`Group: ${group?.number ?? ''} ${group?.name ?? ''}`}</span>
+              <span className="text-sm text-gray-400">{`${group?.properties?.length ?? 0} item(s)`}</span>
+            </>
+          )}
           {selectedApproach && (
             <Badge
               size="xs"
@@ -177,9 +203,29 @@ export const PricingAnalysisAccordion = ({
           )}
         >
           <div className="flex w-full gap-0">
-            {/* Left: Property List (50%) */}
+            {/* Left: Model card (projectModel) or Property list (propertyGroup) */}
             <div className="w-1/2 shrink-0 overflow-y-auto space-y-2 pr-3 border-r border-gray-200">
-              {propertyItems.length > 0 ? (
+              {isModelSubject ? (
+                flatContext ? (
+                  <ModelCardContent
+                    flat={flatContext}
+                    context={pricingContext}
+                    projectType={
+                      pricingContext != null
+                        ? pricingContext.tower != null
+                          ? 'Condo'
+                          : 'LandAndBuilding'
+                        : undefined
+                    }
+                    thumbnailSrc={modelThumbnailSrc}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <Icon name="layer-group" className="text-2xl mb-2" />
+                    <p className="text-xs">Loading model data...</p>
+                  </div>
+                )
+              ) : propertyItems.length > 0 ? (
                 propertyItems.map(property => (
                   <div
                     key={property.id}

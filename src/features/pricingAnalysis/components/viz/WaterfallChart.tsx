@@ -15,11 +15,15 @@ export interface WaterfallStep {
   value: number;
   type: WaterfallStepType;
   color?: string;
+  /** DOM id of the section this step represents — clicking the bar scrolls to it. */
+  targetId?: string;
 }
 
 export interface WaterfallChartProps {
   steps: WaterfallStep[];
   title?: string;
+  /** Called when a bar is clicked. If omitted, falls back to scrollIntoView on `targetId`. */
+  onStepClick?: (step: WaterfallStep) => void;
 }
 
 const fmtCompact = (n: number): string => {
@@ -48,6 +52,7 @@ interface WaterfallDatum {
   type: WaterfallStepType;
   color: string;
   originalValue: number;
+  targetId?: string;
 }
 
 function buildWaterfallData(steps: WaterfallStep[]): WaterfallDatum[] {
@@ -83,6 +88,7 @@ function buildWaterfallData(steps: WaterfallStep[]): WaterfallDatum[] {
       type: step.type,
       color,
       originalValue: step.value,
+      targetId: step.targetId,
     };
   });
 }
@@ -105,13 +111,27 @@ function WaterfallTooltip({ active, payload, label }: any) {
   );
 }
 
-export function WaterfallChart({ steps, title = 'Value Breakdown' }: WaterfallChartProps) {
+export function WaterfallChart({ steps, title = 'Value Breakdown', onStepClick }: WaterfallChartProps) {
   const data = buildWaterfallData(steps);
 
+  const handleBarClick = (datum: WaterfallDatum) => {
+    const step = steps.find((s) => s.label === datum.label);
+    if (!step) return;
+    if (onStepClick) {
+      onStepClick(step);
+      return;
+    }
+    if (step.targetId) {
+      const el = document.getElementById(step.targetId);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="rounded-lg border border-gray-200 p-3">
+    <div className="rounded-lg border border-gray-200 p-3 h-full flex flex-col">
       <div className="text-[11px] font-medium text-gray-500 mb-1">{title}</div>
-      <ResponsiveContainer width="100%" height={200}>
+      <div className="flex-1 min-h-[200px]">
+        <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
           <XAxis
@@ -132,12 +152,23 @@ export function WaterfallChart({ steps, title = 'Value Breakdown' }: WaterfallCh
             dataKey="segment"
             stackId="waterfall"
             legendType="none"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onClick={(data: any) => data?.payload && handleBarClick(data.payload)}
             shape={({ x, y, width, height, payload }: any) => (
-              <rect x={x} y={y} width={width} height={height} fill={payload.color} rx={2} />
+              <rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                fill={payload.color}
+                rx={2}
+                style={{ cursor: payload.targetId ? 'pointer' : 'default' }}
+              />
             )}
           />
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

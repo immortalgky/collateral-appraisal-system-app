@@ -1,15 +1,15 @@
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 
 import Icon from '@shared/components/Icon';
-import useBreadcrumbExtras from '@shared/hooks/useBreadcrumbExtras';
 import {
   GalleryTab,
   LawsRegulationTab,
   MarketsTab,
   PhotosTab,
 } from '@/features/appraisal/components/tabs';
-import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 
 import type { ProjectType } from '../types';
 import ProjectInfoTab from '../components/tabs/ProjectInfoTab';
@@ -18,7 +18,6 @@ import ProjectLandTab from '../components/tabs/ProjectLandTab';
 import ModelListingTab from '../components/tabs/ModelListingTab';
 import TowerListingTab from '../components/tabs/TowerListingTab';
 import UnitPriceTab from '../components/tabs/UnitPriceTab';
-import ProjectTypePill from '../components/ProjectTypePill';
 import { useGetProject } from '../api/project';
 import { useGetProjectModels } from '../api/projectModel';
 import { useGetProjectTowers } from '../api/projectTower';
@@ -61,10 +60,10 @@ interface TabDef {
 const CONDO_TABS: TabDef[] = [
   { id: 'project-info', label: 'Project Info', icon: 'building-columns' },
   { id: 'unit-listing', label: 'Unit Listing', icon: 'table-list' },
-  { id: 'models', label: 'Model', icon: 'layer-group' },
   { id: 'towers', label: 'Tower', icon: 'building' },
+  { id: 'models', label: 'Model', icon: 'layer-group' },
   { id: 'unit-price', label: 'Unit Price', icon: 'tags' },
-  { id: 'markets', label: 'Markets', icon: 'chart-line' },
+  { id: 'markets', label: 'Markets', icon: 'magnifying-glass-chart' },
   { id: 'gallery', label: 'Gallery', icon: 'images' },
   { id: 'photos', label: 'Photo', icon: 'camera' },
   { id: 'laws', label: 'Laws and Regulation', icon: 'gavel' },
@@ -76,7 +75,7 @@ const LB_TABS: TabDef[] = [
   { id: 'project-land', label: 'Project Land', icon: 'map' },
   { id: 'models', label: 'Model', icon: 'house' },
   { id: 'unit-price', label: 'Unit Price', icon: 'tags' },
-  { id: 'markets', label: 'Markets', icon: 'chart-line' },
+  { id: 'markets', label: 'Markets', icon: 'magnifying-glass-chart' },
   { id: 'gallery', label: 'Gallery', icon: 'images' },
   { id: 'photos', label: 'Photo', icon: 'camera' },
   { id: 'laws', label: 'Laws and Regulation', icon: 'gavel' },
@@ -102,7 +101,6 @@ interface BlockProjectPageProps {
 export default function BlockProjectPage({ projectType }: BlockProjectPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const appraisalId = useAppraisalId() ?? '';
-  const basePath = useBasePath();
   const tabs = getTabs(projectType);
   const validTabIds = tabs.map(t => t.id);
 
@@ -110,20 +108,19 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   const activeTab: TabId =
     tabParam && validTabIds.includes(tabParam) ? tabParam : 'project-info';
 
+  // Seed `?tab=project-info` on first arrival so the URL is the source of truth
+  // (the layout breadcrumb reads `?tab=` to render the active-tab crumb).
+  useEffect(() => {
+    if (!tabParam || !validTabIds.includes(tabParam as TabId)) {
+      setSearchParams({ tab: 'project-info' }, { replace: true });
+    }
+    // validTabIds is derived from `tabs`, which depends only on projectType — stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam, setSearchParams]);
+
   const handleTabChange = (tabId: TabId) => {
     setSearchParams({ tab: tabId }, { replace: true });
   };
-
-  // Append the active tab as a leaf breadcrumb crumb (Task → # → Property Information → {tab}).
-  const location = useLocation();
-  const activeTabDef = tabs.find(t => t.id === activeTab);
-  const tabHref = `${location.pathname}?tab=${activeTab}`;
-  useBreadcrumbExtras(
-    activeTabDef
-      ? [{ label: activeTabDef.label, href: tabHref, icon: activeTabDef.icon }]
-      : [],
-    [tabHref, activeTabDef?.label, activeTabDef?.icon],
-  );
 
   // ── Child count queries for the type-change dialog ────────────────────────
   // TanStack Query deduplicates these with the same keys used inside tab
@@ -147,7 +144,13 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   const renderTabContent = () => {
     switch (activeTab) {
       case 'project-info':
-        return <ProjectInfoTab projectType={projectType} />;
+        return (
+          <ProjectInfoTab
+            projectType={projectType}
+            hasExistingProject={hasExistingProject}
+            childCounts={childCounts}
+          />
+        );
       case 'unit-listing':
         return <UnitListingTab projectType={projectType} />;
       case 'project-land':
@@ -175,17 +178,6 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Project Type Pill */}
-      <div className="shrink-0 pb-3">
-        <ProjectTypePill
-          projectType={projectType}
-          appraisalId={appraisalId}
-          basePath={basePath}
-          hasExistingProject={hasExistingProject}
-          childCounts={childCounts}
-        />
-      </div>
-
       {/* Tab Navigation */}
       <div className="shrink-0 pb-4">
         <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100 overflow-x-auto">

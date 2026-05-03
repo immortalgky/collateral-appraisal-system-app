@@ -25,6 +25,8 @@ import {
 import InlineSubSection from '@/shared/components/sections/InlineSubSection';
 import GroupCard from '@/shared/components/sections/GroupCard';
 import ApproachMatrixTable from '../components/summary/ApproachMatrixTable';
+import BlockApproachMatrixTable from '../components/summary/BlockApproachMatrixTable';
+import BlockPriceSummaryTable from '../components/summary/BlockPriceSummaryTable';
 import GovernmentPriceTable from '../components/summary/GovernmentPriceTable';
 import ApprovalListSection from '../components/summary/ApprovalListSection';
 import DecisionSection from '../components/summary/DecisionSection';
@@ -475,18 +477,34 @@ const DecisionSummaryPage = () => {
                 <GroupCard icon="scale-balanced" iconColor="teal" title="Valuation">
                     {showSection('decisionApproach') && (
                       <InlineSubSection title="Decision Approach">
-                        {data?.approachMatrix?.length
-                          ? <ApproachMatrixTable groups={data.approachMatrix} />
-                          : <EmptyLine text="No approach data available." />}
+                        {data?.isBlock ? (
+                          <BlockApproachMatrixTable
+                            rows={data.blockApproachMatrix ?? []}
+                            projectTotal={data.totalAppraisalPrice ?? 0}
+                          />
+                        ) : data?.approachMatrix?.length ? (
+                          <ApproachMatrixTable groups={data.approachMatrix} />
+                        ) : (
+                          <EmptyLine text="No approach data available." />
+                        )}
                       </InlineSubSection>
                     )}
                     {showSection('priceSummary') && (
                       <InlineSubSection title="Appraisal Price Summary">
-                        <div className="grid grid-cols-3 gap-6">
-                          <ReadOnlyField label="Total Appraisal Price" value={data?.totalAppraisalPrice} />
-                          <ReadOnlyField label="Force Selling Price" value={data?.forceSellingPrice} />
-                          <ReadOnlyField label="Building Insurance" value={data?.buildingInsurance} />
-                        </div>
+                        {data?.isBlock ? (
+                          <BlockPriceSummaryTable
+                            rows={data.blockModelPrices ?? []}
+                            projectTotal={data.totalAppraisalPrice ?? 0}
+                            forceSellingPrice={data.forceSellingPrice ?? 0}
+                            buildingInsurance={data.buildingInsurance ?? 0}
+                          />
+                        ) : (
+                          <div className="grid grid-cols-3 gap-6">
+                            <ReadOnlyField label="Total Appraisal Price" value={data?.totalAppraisalPrice} />
+                            <ReadOnlyField label="Force Selling Price" value={data?.forceSellingPrice} />
+                            <ReadOnlyField label="Building Insurance" value={data?.buildingInsurance} />
+                          </div>
+                        )}
                       </InlineSubSection>
                     )}
                     {showSection('governmentPrice') && (

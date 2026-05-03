@@ -13,6 +13,44 @@ export type ApproachItem = z.infer<typeof schemas.ApproachItem>;
 export type GovernmentPriceRow = z.infer<typeof schemas.GovernmentPriceRow>;
 
 /**
+ * Block appraisal types.
+ *
+ * `isBlock`, `blockApproachMatrix`, and `blockModelPrices` are new fields on
+ * `GetDecisionSummaryResponse` added for the block-appraisal valuation refactor.
+ * Hand-typed here until v1.ts is regenerated from the updated OpenAPI spec.
+ */
+export interface BlockApproachMatrixRow {
+  projectModelId: string;
+  modelName: string | null;
+  marketValue: number | null;
+  costValue: number | null;
+  incomeValue: number | null;
+  residualValue: number | null;
+  /** "Market" | "Cost" | "Income" | "Residual" | null */
+  selectedApproach: string | null;
+  modelTotalAppraisalPrice: number;
+}
+
+export interface BlockModelPriceRow {
+  projectModelId: string;
+  modelName: string | null;
+  unitCount: number;
+  totalAppraisalPrice: number;
+  forceSellingPrice: number;
+  buildingInsurance: number;
+}
+
+/**
+ * Augments the auto-generated `GetDecisionSummaryResponse` with block-appraisal
+ * fields that v1.ts has not yet picked up.
+ */
+export type DecisionSummaryData = GetDecisionSummaryResponse & {
+  isBlock: boolean;
+  blockApproachMatrix: BlockApproachMatrixRow[] | null;
+  blockModelPrices: BlockModelPriceRow[] | null;
+};
+
+/**
  * Workflow-scoped approval list types.
  *
  * The canonical shape lives in the backend's
@@ -75,7 +113,7 @@ export const decisionSummaryKeys = {
 export const useGetDecisionSummary = (appraisalId: string | undefined) => {
   return useQuery({
     queryKey: decisionSummaryKeys.detail(appraisalId!),
-    queryFn: async (): Promise<GetDecisionSummaryResponse> => {
+    queryFn: async (): Promise<DecisionSummaryData> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/decision-summary`);
       return data;
     },

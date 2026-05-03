@@ -1,6 +1,7 @@
 import type { GetRequestByIdResultType } from '../api';
 import type { createRequestFormType } from '../schemas/form';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
+import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
 
 /**
  * Map Request API response to form values
@@ -77,5 +78,81 @@ export const mapRequestResponseToForm = (
     titles: (response.titles ?? []) as createRequestFormType['titles'],
     documents: (response.documents ?? []) as createRequestFormType['documents'],
     comments: [] as createRequestFormType['comments'],
+  };
+};
+
+/**
+ * Partial detail shape returned by mapCopyTemplateToForm.
+ * Deliberately excludes `appointment` and `fee` — those must be preserved from current form values.
+ */
+type CopyTemplateDetailPartial = Omit<createRequestFormType['detail'], 'appointment' | 'fee'>;
+
+/**
+ * Map a copy-template API response to a partial form value.
+ * Appointment and fee are intentionally excluded — the caller in RequestPage
+ * merges this with current.detail.appointment and current.detail.fee preserved.
+ */
+export const mapCopyTemplateToForm = (
+  template: AppraisalCopyTemplate,
+): {
+  detail: CopyTemplateDetailPartial;
+  customers: createRequestFormType['customers'];
+  properties: createRequestFormType['properties'];
+  titles: createRequestFormType['titles'];
+  documents: createRequestFormType['documents'];
+} => {
+  const addrLookup = template.detail.address?.subDistrict
+    ? findAddressBySubDistrictCode(template.detail.address.subDistrict)
+    : undefined;
+
+  return {
+    detail: {
+      hasAppraisalBook: template.detail.hasAppraisalBook ?? false,
+      loanDetail: {
+        bankingSegment: template.detail.loanDetail?.bankingSegment ?? '',
+        loanApplicationNumber: template.detail.loanDetail?.loanApplicationNumber ?? '',
+        facilityLimit: template.detail.loanDetail?.facilityLimit ?? 0,
+        additionalFacilityLimit: template.detail.loanDetail?.additionalFacilityLimit ?? null,
+        previousFacilityLimit: template.detail.loanDetail?.previousFacilityLimit ?? null,
+        totalSellingPrice: template.detail.loanDetail?.totalSellingPrice ?? 0,
+      },
+      // Stamp prev-appraisal metadata from the snapshot
+      prevAppraisalId: template.prevAppraisal.appraisalId,
+      prevAppraisalReportNo: template.prevAppraisal.appraisalNumber,
+      prevAppraisalValue: template.prevAppraisal.appraisalValue ?? null,
+      prevAppraisalDate: template.prevAppraisal.completedDate ?? null,
+      address: {
+        houseNumber: template.detail.address?.houseNumber ?? '',
+        projectName: template.detail.address?.projectName ?? '',
+        moo: template.detail.address?.moo ?? '',
+        soi: template.detail.address?.soi ?? '',
+        road: template.detail.address?.road ?? '',
+        subDistrict: template.detail.address?.subDistrict ?? '',
+        // *Name fields aren't returned by the copy-template endpoint —
+        // resolved client-side from the subDistrict code via findAddressBySubDistrictCode.
+        subDistrictName: addrLookup?.subDistrictName ?? null,
+        district: template.detail.address?.district ?? '',
+        districtName: addrLookup?.districtName ?? null,
+        province: template.detail.address?.province ?? '',
+        provinceName: addrLookup?.provinceName ?? null,
+        postcode: template.detail.address?.postcode ?? '',
+      },
+      contact: {
+        contactPersonName: template.detail.contact?.contactPersonName ?? '',
+        contactPersonPhone: template.detail.contact?.contactPersonPhone ?? '',
+        dealerCode: template.detail.contact?.dealerCode ?? '',
+      },
+    },
+    customers: (template.customers ?? []).map(c => ({
+      name: c.name ?? '',
+      contactNumber: c.contactNumber ?? '',
+    })),
+    properties: (template.properties ?? []).map(p => ({
+      propertyType: p.propertyType ?? '',
+      buildingType: p.buildingType ?? null,
+      sellingPrice: p.sellingPrice ?? null,
+    })),
+    titles: (template.titles ?? []) as createRequestFormType['titles'],
+    documents: (template.documents ?? []) as createRequestFormType['documents'],
   };
 };

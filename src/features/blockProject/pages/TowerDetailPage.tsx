@@ -25,7 +25,6 @@ import {
   useCreateProjectTower,
   useUpdateProjectTower,
 } from '../api/projectTower';
-import { useGetProjectModels } from '../api/projectModel';
 import TowerDetailForm from '../forms/TowerDetailForm';
 import { projectTowerForm, projectTowerFormDefaults, type ProjectTowerFormType } from '../schemas/form';
 import ProjectTowerPhotoSection, {
@@ -51,20 +50,15 @@ export default function TowerDetailPage() {
 
   const { data: towerData, isLoading } = useGetProjectTowerById(appraisalId ?? '', towerId);
 
-  // Breadcrumb: Task → # → Property Information → Tower → {tower name}.
-  // Tower drill-down is Condo-only — block-condo is the parent route segment.
-  const towersTabHref = `${basePath}/block-condo?tab=towers`;
-  const towerLeafLabel = isEditMode ? towerData?.towerName?.trim() || 'Tower' : 'New Tower';
+  // Structural "Property Information → Tower" parents come from the URL (layout).
+  // Only push the dynamic tower name here; "New Tower" is handled by the layout.
+  const towerLeafLabel = isEditMode ? towerData?.towerName?.trim() || '...' : null;
   useBreadcrumbExtras(
-    [
-      { label: 'Tower', href: towersTabHref, icon: 'building' },
-      { label: towerLeafLabel, href: location.pathname, icon: 'building' },
-    ],
-    [towersTabHref, towerLeafLabel, location.pathname],
+    towerLeafLabel
+      ? [{ label: towerLeafLabel, href: location.pathname, icon: 'building' }]
+      : [],
+    [towerLeafLabel, location.pathname],
   );
-  const { data: modelsData } = useGetProjectModels(appraisalId ?? '');
-  const models = Array.isArray(modelsData) ? modelsData : [];
-
   const { mutate: createTower, isPending: isCreating } = useCreateProjectTower();
   const { mutate: updateTower, isPending: isUpdating } = useUpdateProjectTower();
 
@@ -79,7 +73,6 @@ export default function TowerDetailPage() {
         numberOfUnits: towerData.numberOfUnits ?? 0,
         numberOfFloors: towerData.numberOfFloors ?? 0,
         condoRegistrationNumber: towerData.condoRegistrationNumber ?? '',
-        modelTypeIds: towerData.modelTypeIds ?? [],
         conditionType: towerData.conditionType ?? null,
         hasObligation: towerData.hasObligation ?? false,
         obligationDetails: towerData.obligationDetails ?? null,
@@ -92,16 +85,9 @@ export default function TowerDetailPage() {
         roadSurfaceTypeOther: towerData.roadSurfaceTypeOther ?? null,
         decorationType: towerData.decorationType ?? null,
         decorationTypeOther: towerData.decorationTypeOther ?? null,
-        constructionYear: towerData.constructionYear ?? null,
-        totalNumberOfFloors: towerData.totalNumberOfFloors ?? null,
+        buildingAge: towerData.buildingAge ?? null,
         buildingFormType: towerData.buildingFormType ?? null,
         constructionMaterialType: towerData.constructionMaterialType ?? null,
-        groundFloorMaterialType: towerData.groundFloorMaterialType ?? null,
-        groundFloorMaterialTypeOther: towerData.groundFloorMaterialTypeOther ?? null,
-        upperFloorMaterialType: towerData.upperFloorMaterialType ?? null,
-        upperFloorMaterialTypeOther: towerData.upperFloorMaterialTypeOther ?? null,
-        bathroomFloorMaterialType: towerData.bathroomFloorMaterialType ?? null,
-        bathroomFloorMaterialTypeOther: towerData.bathroomFloorMaterialTypeOther ?? null,
         roofType: towerData.roofType ?? [],
         roofTypeOther: towerData.roofTypeOther ?? null,
         isExpropriated: towerData.isExpropriated ?? false,
@@ -240,7 +226,7 @@ export default function TowerDetailPage() {
 
                   {/* Tower Information */}
                   <Section id="tower-info" anchor className="min-w-0 overflow-hidden">
-                    <TowerDetailForm models={models} />
+                    <TowerDetailForm />
                   </Section>
                 </div>
               </ResizableSidebar.Main>

@@ -25,8 +25,8 @@ const SERVER_TO_CONFIG_METHOD: Record<string, string> = {
   MachineryCost: 'MC_COST',
   // Income
   Income: 'I',
-  // Residual
-  Hypothesis: 'HYPO',
+  // Residual (variant chosen inside the panel via template)
+  Hypothesis: 'Hypothesis',
 };
 
 // Cost approach methods that share server types with Market

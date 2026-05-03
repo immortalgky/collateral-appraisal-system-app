@@ -63,8 +63,8 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
             <p className="text-sm font-medium text-gray-700">{tower.numberOfFloors ?? '-'}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-400">Construction</p>
-            <p className="text-sm font-medium text-gray-700">{tower.constructionYear ?? '-'}</p>
+            <p className="text-xs text-gray-400">Building Age</p>
+            <p className="text-sm font-medium text-gray-700">{tower.buildingAge ?? '-'}</p>
           </div>
         </div>
 
@@ -115,8 +115,8 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
             <span className="text-gray-700 font-medium">{tower.numberOfFloors ?? '-'}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">Construction Year</span>
-            <span className="text-gray-700 font-medium">{tower.constructionYear ?? '-'}</span>
+            <span className="text-gray-400">Building Age</span>
+            <span className="text-gray-700 font-medium">{tower.buildingAge ?? '-'}</span>
           </div>
         </div>
       </div>
@@ -137,7 +137,13 @@ export default function TowerListingTab() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const { data: towersData, isLoading, isError } = useGetProjectTowers(appraisalId ?? '');
-  const towers = towersData ?? [];
+  const towers = useMemo(
+    () =>
+      [...(towersData ?? [])].sort((a, b) =>
+        (a.towerName ?? '').localeCompare(b.towerName ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+      ),
+    [towersData],
+  );
 
   const { data: galleryData } = useGetGalleryPhotos(appraisalId ?? undefined);
   const thumbnailByTowerId = useMemo(() => {

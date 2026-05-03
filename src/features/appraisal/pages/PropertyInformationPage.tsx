@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+// Tab state is mirrored to the URL (?tab=xxx) so it survives reload, deep-link,
+// and the layout breadcrumb can append the active tab as a structural crumb.
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
 import {
@@ -21,7 +23,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: 'properties', label: 'Properties', icon: 'buildings' },
-  { id: 'markets', label: 'Markets', icon: 'chart-line' },
+  { id: 'markets', label: 'Markets', icon: 'magnifying-glass-chart' },
   { id: 'gallery', label: 'Gallery', icon: 'images' },
   { id: 'photos', label: 'Photos', icon: 'camera' },
   { id: 'laws', label: 'Laws & Regulations', icon: 'gavel' },
@@ -30,11 +32,23 @@ const TABS: Tab[] = [
 const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
 
 export default function PropertyInformationPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
-  const initialTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'properties';
+  const activeTab: TabId =
+    tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'properties';
 
-  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  // Seed `?tab=properties` on first arrival so the URL is the source of truth
+  // (the layout breadcrumb reads `?tab=` to render the active-tab crumb).
+  useEffect(() => {
+    if (!tabParam || !VALID_TABS.includes(tabParam)) {
+      setSearchParams({ tab: 'properties' }, { replace: true });
+    }
+  }, [tabParam, setSearchParams]);
+
+  const handleTabChange = (tabId: TabId) => {
+    setSearchParams({ tab: tabId }, { replace: true });
+  };
+
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const renderTabContent = () => {
@@ -67,7 +81,7 @@ export default function PropertyInformationPage() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={clsx(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
                   isActive
