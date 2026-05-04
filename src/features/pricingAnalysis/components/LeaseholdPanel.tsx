@@ -41,6 +41,7 @@ import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useGetAppointment } from '@/features/appraisal/api/appointment';
 import toast from 'react-hot-toast';
 import { formatDateOnly } from '../domain/formatters';
+import clsx from 'clsx';
 
 interface LeaseholdPanelProps {
   activeMethod?: {
@@ -135,6 +136,8 @@ export function LeaseholdPanel({
     control,
     watch,
   } = methods;
+
+  const isPartialUsage = useWatch({ control, name: 'isPartialUsage' });
 
   // Rental land area controls
   const raiCtrl = useController({ control, name: 'partialRai' });
@@ -231,7 +234,9 @@ export function LeaseholdPanel({
       const rentalIncomePerPeriod = appraisalRows.map(r => r.totalAmount);
 
       // Land base value = pricePerSqWa × totalLandArea
-      const baseLandValue = (data.landValuePerSqWa ?? 0) * (totalLeaseLandArea ?? 0);
+      const baseLandValue =
+        (data.landValuePerSqWa ?? 0) *
+        (isPartialUsage ? (totalLeaseLandArea ?? 0) : (propertyData?.totalLandAreaInSqWa ?? 0));
 
       const result = generateLeaseholdTable({
         years,
@@ -270,7 +275,7 @@ export function LeaseholdPanel({
 
       setValue('estimatePriceRounded', newEstimate);
     },
-    [appointment, rentalScheduleData, propertyData, setValue, totalLeaseLandArea],
+    [appointment, rentalScheduleData, propertyData, setValue, totalLeaseLandArea, isPartialUsage],
   );
 
   // Sensitivity: recalculate final value with a different discount rate (C3 fix: no getValues in deps)
@@ -286,7 +291,9 @@ export function LeaseholdPanel({
 
       const years = appraisalRows.map(r => r.year);
       const rentalIncomePerPeriod = appraisalRows.map(r => r.totalAmount);
-      const baseLandValue = (data.landValuePerSqWa ?? 0) * (totalLeaseLandArea ?? 0);
+      const baseLandValue =
+        (data.landValuePerSqWa ?? 0) *
+        (isPartialUsage ? (totalLeaseLandArea ?? 0) : (propertyData?.totalLandAreaInSqWa ?? 0));
 
       const result = generateLeaseholdTable({
         years,
@@ -308,7 +315,7 @@ export function LeaseholdPanel({
       });
       return result.finalValueRounded;
     },
-    [appointment, rentalScheduleData, propertyData],
+    [appointment, rentalScheduleData, propertyData, isPartialUsage],
   );
 
   const handleOnSubmit = async () => {
@@ -420,6 +427,10 @@ export function LeaseholdPanel({
       'buildingCalcStartYear',
     ],
   });
+  const watchedPartialUsage = useWatch({
+    control,
+    name: ['isPartialUsage', 'partialRai', 'partialNgan', 'partialWa'],
+  });
   const prevWatchKey = useRef<string | null>(null);
   useEffect(() => {
     const key =
@@ -427,6 +438,7 @@ export function LeaseholdPanel({
       '|' +
       watchedLandInputs.join(',') +
       '|' +
+      watchedPartialUsage.join(',') +
       JSON.stringify(watchedLandPeriods);
     // Seed the key on first run so we don't fire on mount/cache reload
     if (prevWatchKey.current === null) {
@@ -442,6 +454,7 @@ export function LeaseholdPanel({
     watchedTableInputs,
     watchedLandInputs,
     watchedLandPeriods,
+    watchedPartialUsage,
     tableResult,
     handleGenerate,
   ]);
@@ -474,7 +487,7 @@ export function LeaseholdPanel({
 
         {/* Lease Info */}
         <div className="rounded-lg border border-gray-200 p-5 space-y-4">
-          <div className="grid grid-cols-4 gap-4">
+          <div className={'grid grid-cols-4 gap-4'}>
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
               <div>
@@ -529,8 +542,10 @@ export function LeaseholdPanel({
 
         {/* Land Value & Growth Config — inline (replaces modal) */}
         <div className="rounded-lg border border-gray-200 p-5 space-y-5">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="col-span-2 rounded-md bg-gray-50 px-4 py-3">
+          <div
+            className={clsx(isPartialUsage ? 'grid grid-cols-4 gap-4' : 'grid grid-cols-4 gap-4')}
+          >
+            <div className="rounded-md bg-gray-50 px-4 py-3">
               <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
                 Land Area
               </div>
@@ -548,33 +563,105 @@ export function LeaseholdPanel({
                   </span>
                   <span className="text-xs text-gray-500">Sq. Wa</span>
                 </div>
-                <NumberInput
-                  // label="Rai"
-                  name="partialRai"
-                  value={raiCtrl.field.value}
-                  onChange={e => setValue('partialRai', e.target.value ?? 0)}
-                  decimalPlaces={0}
-                />
-                <span className="text-xs text-gray-500">Rai</span>
-                <NumberInput
-                  // label="Ngan"
-                  name="partialNgan"
-                  value={nganCtrl.field.value}
-                  onChange={e => setValue('partialNgan', e.target.value ?? 0)}
-                  decimalPlaces={0}
-                />
-                <span className="text-xs text-gray-500">Ngan</span>
-                <NumberInput
-                  // label="Sq.Wa"
-                  name="partialWa"
-                  value={waCtrl.field.value}
-                  onChange={e => setValue('partialWa', e.target.value ?? 0)}
-                  decimalPlaces={2}
-                />
-                <span className="text-xs text-gray-500">Sq.Wa</span>
               </div>
             </div>
             <div className="rounded-md bg-gray-50 px-4 py-3">
+              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                Patial Usage
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <Toggle
+                  options={['No', 'Yes']}
+                  size="sm"
+                  checked={isPartialUsage}
+                  onChange={checked => {
+                    setValue('isPartialUsage', checked, { shouldDirty: true });
+                    if (!checked) {
+                      setValue('partialRai', null, { shouldDirty: true });
+                      setValue('partialNgan', null, { shouldDirty: true });
+                      setValue('partialWa', null, { shouldDirty: true });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {isPartialUsage && (
+              <>
+                <div
+                  className={clsx(
+                    isPartialUsage ? 'col-span-2' : 'col-span-1',
+                    'rounded-md bg-gray-50 px-4 py-3',
+                  )}
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Lease Land Area
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <div className="w-28">
+                      <NumberInput
+                        name="partialRai"
+                        value={raiCtrl.field.value}
+                        onChange={e => raiCtrl.field.onChange(e.target.value ?? 0)}
+                        decimalPlaces={0}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">Rai</span>
+                    <div className="w-28">
+                      <NumberInput
+                        name="partialNgan"
+                        value={nganCtrl.field.value}
+                        onChange={e => nganCtrl.field.onChange(e.target.value ?? 0)}
+                        decimalPlaces={0}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">Ngan</span>
+                    <div className="w-28">
+                      <NumberInput
+                        name="partialWa"
+                        value={waCtrl.field.value}
+                        onChange={e => waCtrl.field.onChange(e.target.value ?? 0)}
+                        decimalPlaces={2}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">Sq.Wa</span>
+                  </div>
+                </div>
+                <div
+                  className={clsx(
+                    isPartialUsage ? 'col-span-1' : 'col-span-2',
+                    'rounded-md bg-gray-50 px-4 py-3',
+                  )}
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Total Lease Land Area
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <div className="flex items-baseline gap-1.5">
+                      <Icon
+                        name="ruler-combined"
+                        className="size-3.5 text-gray-400 shrink-0 relative top-0.5"
+                      />
+                      <span className="text-lg font-semibold text-gray-900">
+                        {(isPartialUsage
+                          ? (totalLeaseLandArea ?? 0)
+                          : (propertyData?.totalLandAreaInSqWa ?? 0)
+                        ).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                      <span className="text-xs text-gray-500">Sq. Wa</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            <div
+              className={clsx(
+                isPartialUsage ? 'col-span-2' : 'col-span-1',
+                'rounded-md bg-gray-50 px-4 py-3',
+              )}
+            >
               <label className="text-[11px] text-gray-400 uppercase tracking-wide mb-1 block">
                 Land Value <span className="text-red-400">*</span>
               </label>
@@ -592,16 +679,23 @@ export function LeaseholdPanel({
                 <span className="text-xs text-gray-500">Baht/Sq.Wa</span>
               </div>
             </div>
-            <div className="rounded-md bg-primary/5 border border-primary/10 px-4 py-3">
+            <div
+              className={clsx(
+                isPartialUsage ? 'col-span-1' : 'col-span-1',
+                'rounded-md bg-primary/5 border border-primary/10 px-4 py-3',
+              )}
+            >
               <div className="text-[11px] text-primary/60 uppercase tracking-wide mb-1">
                 Total Land Value
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-semibold text-primary">
-                  {((landValueField.value ?? 0) * (totalLeaseLandArea ?? 0)).toLocaleString(
-                    'en-US',
-                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-                  )}
+                  {(
+                    (landValueField.value ?? 0) *
+                    (isPartialUsage
+                      ? (totalLeaseLandArea ?? 0)
+                      : (propertyData?.totalLandAreaInSqWa ?? 0))
+                  ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-xs text-primary/60">Baht</span>
               </div>
@@ -840,6 +934,8 @@ export function LeaseholdPanel({
         <LeaseholdPartialUsageSection
           finalValueRounded={finalValueRounded}
           landValuePerSqWa={getValues('landValuePerSqWa') ?? 0}
+          totalLeaseLandArea={totalLeaseLandArea}
+          totalLandArea={propertyData?.totalLandAreaInSqWa ?? 0}
           onEstimateChange={(estimateRounded, estimateNet) => {
             setValue('estimatePriceRounded', estimateRounded);
             setEstimateNetPrice(estimateNet);

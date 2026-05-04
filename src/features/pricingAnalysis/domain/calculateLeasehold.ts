@@ -137,6 +137,33 @@ export function calculateLeaseLandAreaUsage(input: { rai: number; ngan: number; 
 }
 
 /**
+ * Calculate land area not covered by the lease agreement
+ *
+ * Partial land area (Sq.Wa) = rai * 400 + ngan * 100 + wa
+ * Partial land price = partialLandArea * pricePerSqWa
+ * Estimate net price = finalValue - partialLandPrice
+ */
+
+interface RemainingLandAreaInput {
+  finalValue: number;
+  totalLeaseLandArea: number;
+  totalLandArea: number;
+  pricePerSqWa: number;
+}
+
+export function calculateRemainingLandArea(input: RemainingLandAreaInput) {
+  const { finalValue, totalLeaseLandArea, totalLandArea, pricePerSqWa } = input;
+  let remainingLandArea = round2(totalLandArea - totalLeaseLandArea);
+
+  if (remainingLandArea <= 0) remainingLandArea = 0;
+
+  const remainingLandPrice = round2(remainingLandArea * (pricePerSqWa || 0));
+  const estimateNetPrice = round2(finalValue + remainingLandPrice);
+  const estimatePriceRounded = roundToThousands(estimateNetPrice);
+  return { remainingLandArea, remainingLandPrice, estimateNetPrice, estimatePriceRounded };
+}
+
+/**
  * Calculate partial land usage deduction.
  *
  * Partial land area (Sq.Wa) = rai * 400 + ngan * 100 + wa
