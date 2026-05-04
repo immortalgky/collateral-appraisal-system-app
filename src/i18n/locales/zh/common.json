@@ -54,5 +54,20 @@
     "english": "English",
     "thai": "ไทย",
     "chinese": "中文"
+  },
+  "readiness": {
+    "analyzePrice": "分析价格",
+    "starting": "开始中…",
+    "notReadyTitle": "该物业组尚未准备好进行价格分析",
+    "MARKET_SURVEY_REQUIRED": "此评估至少需要一项市场调查。",
+    "BUILDING_DETAIL_REQUIRED": "此物业需要建筑详情。",
+    "RENTAL_INFO_REQUIRED": "租赁协议物业需要租金信息。",
+    "RENTAL_SCHEDULE_REQUIRED": "至少需要一项租金计划条目。",
+    "PROPERTY_NOT_SAVED": "必须先保存此物业才能开始价格分析。",
+    "MARKET_SURVEY_REQUIRED.short": "缺少市场调查",
+    "BUILDING_DETAIL_REQUIRED.short": "缺少建筑详情",
+    "RENTAL_INFO_REQUIRED.short": "缺少租金信息",
+    "RENTAL_SCHEDULE_REQUIRED.short": "缺少租金计划",
+    "PROPERTY_NOT_SAVED.short": "未保存"
   }
 }

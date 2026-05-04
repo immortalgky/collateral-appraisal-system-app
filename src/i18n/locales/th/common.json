@@ -52,5 +52,20 @@
     "th": "TH",
     "english": "English",
     "thai": "ไทย"
+  },
+  "readiness": {
+    "analyzePrice": "วิเคราะห์ราคา",
+    "starting": "กำลังเริ่ม…",
+    "notReadyTitle": "กลุ่มทรัพย์สินนี้ยังไม่พร้อมสำหรับการวิเคราะห์ราคา",
+    "MARKET_SURVEY_REQUIRED": "ต้องมีข้อมูลสำรวจตลาดอย่างน้อย 1 รายการในงานประเมินนี้",
+    "BUILDING_DETAIL_REQUIRED": "ต้องระบุรายละเอียดสิ่งปลูกสร้างของทรัพย์สินนี้",
+    "RENTAL_INFO_REQUIRED": "ต้องระบุข้อมูลค่าเช่าสำหรับสัญญาเช่านี้",
+    "RENTAL_SCHEDULE_REQUIRED": "ต้องมีรายการตารางค่าเช่าอย่างน้อย 1 รายการ",
+    "PROPERTY_NOT_SAVED": "ต้องบันทึกทรัพย์สินก่อนเริ่มการวิเคราะห์ราคา",
+    "MARKET_SURVEY_REQUIRED.short": "ขาดข้อมูลสำรวจตลาด",
+    "BUILDING_DETAIL_REQUIRED.short": "ขาดรายละเอียดสิ่งปลูกสร้าง",
+    "RENTAL_INFO_REQUIRED.short": "ขาดข้อมูลค่าเช่า",
+    "RENTAL_SCHEDULE_REQUIRED.short": "ขาดตารางค่าเช่า",
+    "PROPERTY_NOT_SAVED.short": "ยังไม่ได้บันทึก"
   }
 }

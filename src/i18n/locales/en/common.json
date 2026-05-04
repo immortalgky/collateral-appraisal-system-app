@@ -52,5 +52,20 @@
     "th": "TH",
     "english": "English",
     "thai": "Thai"
+  },
+  "readiness": {
+    "analyzePrice": "Analyze Price",
+    "starting": "Starting…",
+    "notReadyTitle": "This group is not ready for pricing analysis",
+    "MARKET_SURVEY_REQUIRED": "At least one market survey is required for this appraisal.",
+    "BUILDING_DETAIL_REQUIRED": "Building detail is required for this property.",
+    "RENTAL_INFO_REQUIRED": "Rental information is required for this lease agreement property.",
+    "RENTAL_SCHEDULE_REQUIRED": "At least one rental schedule entry is required.",
+    "PROPERTY_NOT_SAVED": "This property must be saved before pricing analysis can start.",
+    "MARKET_SURVEY_REQUIRED.short": "Market survey missing",
+    "BUILDING_DETAIL_REQUIRED.short": "Building detail missing",
+    "RENTAL_INFO_REQUIRED.short": "Rental info missing",
+    "RENTAL_SCHEDULE_REQUIRED.short": "Rental schedule missing",
+    "PROPERTY_NOT_SAVED.short": "Not saved"
   }
 }
