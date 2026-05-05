@@ -291,6 +291,7 @@ export const roadField: FormField[] = [
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'number-input',
@@ -1133,7 +1134,7 @@ export const ceilingField: FormField[] = [
 export const wallField: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Interior',
+    label: 'Interior Wall',
     name: 'interiorWallType',
     orientation: 'horizontal',
     group: 'Interior',
@@ -1152,7 +1153,7 @@ export const wallField: FormField[] = [
   },
   {
     type: 'checkbox-group',
-    label: 'Exterior',
+    label: 'Exterior Wall',
     name: 'exteriorWallType',
     orientation: 'horizontal',
     group: 'Exterior',
@@ -1502,6 +1503,7 @@ export const condoLocationFields: FormField[] = [
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'number-input',
@@ -1855,7 +1857,7 @@ export const constructionAndUseField: FormField[] = [
 export const interiorWallFields: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Interior',
+    label: 'Interior Wall',
     name: 'interiorWallType',
     orientation: 'horizontal',
     group: 'Interior',
@@ -1876,7 +1878,7 @@ export const interiorWallFields: FormField[] = [
 export const exteriorWallFields: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Exterior',
+    label: 'Exterior Wall',
     name: 'exteriorWallType',
     orientation: 'horizontal',
     group: 'Exterior',
