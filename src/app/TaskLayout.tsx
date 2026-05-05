@@ -263,6 +263,7 @@ function TaskLayout() {
         appraisal: {
           appraisalId: appraisalData.id ?? appraisalId ?? '',
           requestId: appraisalData.requestId ?? '',
+          requestedAt: appraisalData.requestedAt ?? undefined,
           appraisalReportNo: appraisalData.appraisalNumber ?? undefined,
           status: appraisalData.status ?? undefined,
           appraisalType: appraisalData.appraisalType ?? undefined,

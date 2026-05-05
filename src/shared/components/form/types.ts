@@ -70,7 +70,8 @@ export type FormField =
   | SwitchField
   | AppraisalSelectorField
   | LocationSelectorField
-  | FieldArrayField;
+  | FieldArrayField
+  | ParameterSearchField;
 
 /**
  * Base properties shared by all form fields
@@ -188,6 +189,12 @@ export interface DateInputField extends BaseFormField {
   disableFutureDates?: boolean;
   /** Disable today specifically */
   disableToday?: boolean;
+  /** Disable dates strictly before this date (minDate itself is selectable) */
+  minDate?: Date | string | null;
+  /** Disable dates more than N days before today */
+  disableDaysBefore?: number;
+  /** Disable dates more than N days after today */
+  disableDaysAfter?: number;
 }
 
 export interface DateTimeInputField extends BaseFormField {
@@ -199,6 +206,12 @@ export interface DateTimeInputField extends BaseFormField {
   disableFutureDates?: boolean;
   /** Disable today specifically */
   disableToday?: boolean;
+  /** Disable dates strictly before this date (minDate itself is selectable) */
+  minDate?: Date | string | null;
+  /** Disable dates more than N days before today */
+  disableDaysBefore?: number;
+  /** Disable dates more than N days after today */
+  disableDaysAfter?: number;
 }
 
 // =============================================================================

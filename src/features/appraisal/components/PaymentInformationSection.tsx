@@ -23,6 +23,7 @@ interface PaymentInformationSectionProps {
   ) => void;
   onRemovePayment?: (paymentId: string) => void;
   isPaymentPending?: boolean;
+  requestedAt?: string | null;
 }
 
 /**
@@ -35,6 +36,7 @@ export default function PaymentInformationSection({
   onUpdatePayment,
   onRemovePayment,
   isPaymentPending,
+  requestedAt,
 }: PaymentInformationSectionProps) {
   const readOnly = usePageReadOnly();
   const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(true);
@@ -386,6 +388,7 @@ export default function PaymentInformationSection({
         }
         isEditing={editingPaymentId !== null}
         maxAmount={editingPayment ? remaining + editingPayment.paymentAmount : remaining}
+        requestedAt={requestedAt}
       />
 
       {/* Delete Confirmation Dialog */}
