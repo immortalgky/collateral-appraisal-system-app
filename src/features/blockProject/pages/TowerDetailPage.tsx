@@ -29,7 +29,11 @@ import {
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DeleteButton from '@/shared/components/buttons/DeleteButton';
 import TowerDetailForm from '../forms/TowerDetailForm';
-import { projectTowerForm, projectTowerFormDefaults, type ProjectTowerFormType } from '../schemas/form';
+import {
+  projectTowerForm,
+  projectTowerFormDefaults,
+  type ProjectTowerFormType,
+} from '../schemas/form';
 import ProjectTowerPhotoSection, {
   type ProjectTowerPhotoSectionRef,
 } from '../components/ProjectTowerPhotoSection';
@@ -57,9 +61,7 @@ export default function TowerDetailPage() {
   // Only push the dynamic tower name here; "New Tower" is handled by the layout.
   const towerLeafLabel = isEditMode ? towerData?.towerName?.trim() || '...' : null;
   useBreadcrumbExtras(
-    towerLeafLabel
-      ? [{ label: towerLeafLabel, href: location.pathname, icon: 'building' }]
-      : [],
+    towerLeafLabel ? [{ label: towerLeafLabel, href: location.pathname, icon: 'building' }] : [],
     [towerLeafLabel, location.pathname],
   );
   const { mutate: createTower, isPending: isCreating } = useCreateProjectTower();
@@ -79,7 +81,7 @@ export default function TowerDetailPage() {
         numberOfFloors: towerData.numberOfFloors ?? 0,
         condoRegistrationNumber: towerData.condoRegistrationNumber ?? '',
         conditionType: towerData.conditionType ?? null,
-        hasObligation: towerData.hasObligation ?? false,
+        hasObligation: towerData.hasObligation ?? '',
         obligationDetails: towerData.obligationDetails ?? null,
         documentValidationType: towerData.documentValidationType ?? null,
         isLocationCorrect: towerData.isLocationCorrect ?? true,
@@ -112,7 +114,12 @@ export default function TowerDetailPage() {
     resolver: zodResolver(projectTowerForm),
   });
 
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
   const { isOpen, onToggle } = useDisclosure();

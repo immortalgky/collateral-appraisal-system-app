@@ -53,6 +53,9 @@ interface DatePickerInputProps {
   disableFutureDates?: boolean;
   /** Disable today specifically */
   disableToday?: boolean;
+  minDate?: Date | string | null;
+  disableDaysBefore?: number;
+  disableDaysAfter?: number;
 }
 
 const DATE_FORMAT = 'dd/MM/yyyy';
@@ -75,6 +78,9 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       disablePastDates,
       disableFutureDates,
       disableToday,
+      minDate,
+      disableDaysBefore,
+      disableDaysAfter,
     },
     ref,
   ) => {
@@ -91,8 +97,23 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const [constraintError, setConstraintError] = useState<string | null>(null);
 
     const disabledMatcher = useMemo(
-      () => buildDisabledMatcher({ disablePastDates, disableFutureDates, disableToday }),
-      [disablePastDates, disableFutureDates, disableToday],
+      () =>
+        buildDisabledMatcher({
+          disablePastDates,
+          disableFutureDates,
+          disableToday,
+          minDate,
+          disableDaysBefore,
+          disableDaysAfter,
+        }),
+      [
+        disablePastDates,
+        disableFutureDates,
+        disableToday,
+        minDate,
+        disableDaysBefore,
+        disableDaysAfter,
+      ],
     );
 
     // Combine refs

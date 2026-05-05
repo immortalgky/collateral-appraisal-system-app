@@ -11,6 +11,7 @@ export interface AppraisalData {
   appraisalId: string;
   requestId: string;
   appraisalReportNo?: string;
+  requestedAt?: string;
 
   // Status & Workflow
   status?: string;

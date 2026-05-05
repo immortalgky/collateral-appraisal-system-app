@@ -304,7 +304,7 @@ export const router = createBrowserRouter([
       // RequestMaker / Admin selection page
       {
         path: 'quotations',
-        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin']} />,
+        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin', 'IntAdmin']} />,
         children: [
           { index: true, element: <QuotationListingPage /> },
           { path: 'new', element: <NewQuotationPage /> },

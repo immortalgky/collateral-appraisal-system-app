@@ -4,7 +4,7 @@ import { SectionHeader } from '@shared/components';
 const CustomersForm = () => {
   return (
     <div>
-      <SectionHeader title="Customers" />
+      <SectionHeader title="Customers" required={true} />
       <FormTable columns={customersColumns} name={'customers'} />
     </div>
   );

@@ -283,6 +283,7 @@ export default function AppointmentAndFeePage() {
               onRecordPayment={handleRecordPayment}
               onUpdatePayment={handleUpdatePayment}
               onRemovePayment={handleRemovePayment}
+              requestedAt={appraisal?.requestedAt}
               isPaymentPending={
                 recordPayment.isPending || updatePayment.isPending || removePayment.isPending
               }

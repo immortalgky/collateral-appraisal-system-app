@@ -62,7 +62,7 @@ export interface ProjectTower {
   numberOfFloors?: number;
   condoRegistrationNumber?: string;
   conditionType?: string;
-  hasObligation?: boolean;
+  hasObligation?: string;
   obligationDetails?: string;
   documentValidationType?: string;
   isLocationCorrect?: boolean;
@@ -426,7 +426,7 @@ export interface ProjectLand {
   landOffice?: string;
   ownerName?: string;
   isOwnerVerified?: boolean;
-  hasObligation?: boolean;
+  hasObligation?: string;
   obligationDetails?: string;
   isLandLocationVerified?: boolean;
   landCheckMethodType?: string;
