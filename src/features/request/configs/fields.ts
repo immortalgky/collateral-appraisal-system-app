@@ -23,7 +23,7 @@ export const requestFields: FormField[] = [
     group: 'AppraisalPurpose',
     wrapperClassName: 'col-span-3',
     required: true,
-    filterOptions: [{ type: 'match', pattern: '^\\d' }],
+    filterOptions: { type: 'isActive', values: true },
   },
   {
     type: 'boolean-toggle',
