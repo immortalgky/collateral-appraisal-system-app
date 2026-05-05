@@ -1,5 +1,4 @@
 import type { FieldArrayField, FormField } from '@/shared/components/form';
-import { mapCollateral } from '../data/mapCollateral';
 
 // =============================================================================
 // Utility
@@ -336,11 +335,107 @@ export const propertiesFieldConfig: FieldArrayField = {
 // Title field configs
 // =============================================================================
 
-// Collateral type groups for conditional validation
-const LAND_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS'];
-const TITLE_NUMBER_TYPES = ['L', 'LB', 'LSL', 'LS'];
-const OWNER_NAME_TYPES = ['L', 'LB', 'LSL', 'LSB', 'LS', 'U', 'B'];
-const BUILDING_REQUIRED_TYPES = ['B', 'LB', 'LSB', 'LS'];
+// Collateral type groups for conditional validation (new 33-code parameter table)
+// Land family: codes that capture land area / title deed info
+const LAND_TYPES = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '09',
+  '13',
+  '14',
+  '17',
+  '19',
+  '21',
+  '23',
+  '24',
+  '25',
+  '26',
+  '27',
+  '29',
+  '30',
+  '31',
+  '32',
+];
+// Codes that require a TitleNumber (land + lease types)
+const TITLE_NUMBER_TYPES = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '09',
+  '13',
+  '14',
+  '17',
+  '19',
+  '21',
+  '23',
+  '24',
+  '25',
+  '26',
+  '27',
+  '29',
+  '30',
+  '31',
+  '32',
+];
+// Codes that capture owner name (all non-movable types)
+const OWNER_NAME_TYPES = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '08',
+  '09',
+  '13',
+  '14',
+  '15',
+  '16',
+  '17',
+  '18',
+  '19',
+  '20',
+  '21',
+  '22',
+  '23',
+  '24',
+  '25',
+  '26',
+  '27',
+  '28',
+  '29',
+  '30',
+  '31',
+  '32',
+  '33',
+];
+// Codes that capture building type / usable area / number of buildings
+const BUILDING_REQUIRED_TYPES = [
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '09',
+  '15',
+  '16',
+  '18',
+  '20',
+  '22',
+  '23',
+  '24',
+  '25',
+  '30',
+  '31',
+  '32',
+];
+// Condo-specific codes (room/floor/building number, condo name)
+const CONDO_TYPES = ['08', '33'];
 
 // --- Rendering configs (used by sub-form components for <FormFields>) ---
 
@@ -349,15 +444,9 @@ export const titleInfoFields: FormField[] = [
     type: 'dropdown',
     label: 'Collateral Type',
     name: 'collateralType',
-    group: 'PropertyType',
+    group: 'CollateralType',
     wrapperClassName: 'col-span-3',
     required: true,
-    filterOptions: {
-      type: 'dynamic-array',
-      field: 'properties',
-      itemField: 'propertyType',
-      map: mapCollateral,
-    },
   },
   {
     type: 'boolean-toggle',
@@ -376,7 +465,7 @@ export const titleLandFields: FormField[] = [
     name: 'titleType',
     group: 'DeedType',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
   },
   {
     type: 'text-input',
@@ -384,7 +473,11 @@ export const titleLandFields: FormField[] = [
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
+    requiredWhen: {
+      field: 'collateralType',
+      is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
+      operator: 'in',
+    },
   },
   {
     type: 'text-input',
@@ -468,7 +561,7 @@ export const titleLandFields: FormField[] = [
     name: 'notes',
     wrapperClassName: 'col-span-6',
     maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
   },
 ];
 
@@ -489,7 +582,7 @@ export const titleBuildingFields: FormField[] = [
     requiredWhen: {
       field: 'collateralType',
       operator: 'in',
-      is: [...BUILDING_REQUIRED_TYPES, 'U'],
+      is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
     },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
@@ -526,7 +619,7 @@ export const titleCondoFields: FormField[] = [
     name: 'titleType',
     group: 'DeedType',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
   },
   {
     type: 'text-input',
@@ -534,14 +627,18 @@ export const titleCondoFields: FormField[] = [
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
     maxLength: 40,
-    requiredWhen: { field: 'collateralType', is: [...TITLE_NUMBER_TYPES, 'U'], operator: 'in' },
+    requiredWhen: {
+      field: 'collateralType',
+      is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
+      operator: 'in',
+    },
   },
   {
     type: 'text-input',
     label: 'Room Number',
     name: 'roomNumber',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 10,
   },
   {
@@ -549,7 +646,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Floor Number',
     name: 'floorNumber',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 10,
   },
   {
@@ -557,7 +654,7 @@ export const titleCondoFields: FormField[] = [
     label: 'Building Number',
     name: 'buildingNumber',
     wrapperClassName: 'col-span-2',
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 10,
   },
   {
@@ -566,7 +663,7 @@ export const titleCondoFields: FormField[] = [
     name: 'condoName',
     wrapperClassName: 'col-span-4',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'U' },
+    requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 100,
   },
   {
@@ -577,7 +674,7 @@ export const titleCondoFields: FormField[] = [
     requiredWhen: {
       field: 'collateralType',
       operator: 'in',
-      is: [...BUILDING_REQUIRED_TYPES, 'U'],
+      is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
     },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
@@ -596,7 +693,7 @@ export const titleCondoFields: FormField[] = [
     name: 'notes',
     wrapperClassName: 'col-span-6',
     maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, 'U'], operator: 'in' },
+    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
   },
 ];
 
@@ -608,7 +705,7 @@ export const titleVehicleFields: FormField[] = [
     group: 'VehicleType',
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'VEH' },
+    requiredWhen: { field: 'collateralType', is: '10' },
   },
   {
     type: 'text-input',
@@ -616,7 +713,7 @@ export const titleVehicleFields: FormField[] = [
     name: 'licensePlateNumber',
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'VEH' },
+    requiredWhen: { field: 'collateralType', is: '10' },
     maxLength: 50,
   },
   {
@@ -636,7 +733,7 @@ export const titleMachineFields: FormField[] = [
     group: 'MachineStatus',
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'MAC' },
+    requiredWhen: { field: 'collateralType', is: '11' },
   },
   {
     type: 'dropdown',
@@ -645,7 +742,7 @@ export const titleMachineFields: FormField[] = [
     group: 'MachineType',
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'MAC' },
+    requiredWhen: { field: 'collateralType', is: '11' },
   },
   {
     type: 'boolean-toggle',
@@ -654,7 +751,7 @@ export const titleMachineFields: FormField[] = [
     options: ['Unregistered', 'Registered'],
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'MAC' },
+    requiredWhen: { field: 'collateralType', is: '11' },
   },
   {
     type: 'text-input',
@@ -685,7 +782,7 @@ export const titleMachineFields: FormField[] = [
     name: 'numberOfMachine',
     wrapperClassName: 'col-span-3',
     required: true,
-    requiredWhen: { field: 'collateralType', is: 'MAC' },
+    requiredWhen: { field: 'collateralType', is: '11' },
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },

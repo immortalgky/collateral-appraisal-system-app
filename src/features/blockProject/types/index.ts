@@ -321,6 +321,7 @@ export interface ProjectUnitPrice {
   priceIncrementPerFloor?: number;
   // LB-only calculated
   landIncreaseDecreaseAmount?: number;
+  landAreaDifference?: number;
 }
 
 /** Request shape for saving location flags on unit prices. */

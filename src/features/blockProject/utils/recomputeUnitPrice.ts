@@ -110,13 +110,9 @@ const recomputeCondo = (
 };
 
 /**
- * LB: ProjectUnitPrice.standardPrice is stored as the area-based total
- * (per-sq.m. rate × usableArea, see Project.cs:CalculateLandAndBuildingUnitPrices).
+ * LB: ProjectUnitPrice.standardPrice is the model's FinalAppraisedValue directly (total Baht).
+ * It is NOT multiplied by usable area — see Project.cs:CalculateLandAndBuildingUnitPrices.
  * Location adjustments scale by LandArea (sq.wa), not UsableArea.
- *
- * landIncreaseDecreaseAmount depends on standardLandArea (only on the model),
- * which isn't denormalized onto the unit-price record. Toggling a flag doesn't
- * affect this value, so we preserve whatever the backend last computed.
  */
 const recomputeLB = (
   unit: ProjectUnitPrice,

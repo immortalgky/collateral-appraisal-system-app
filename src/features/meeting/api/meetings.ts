@@ -234,8 +234,28 @@ export const useSendInvitation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id }: { id: string }): Promise<SendInvitationResponse> => {
-      const { data } = await axios.post(`/meetings/${id}/send-invitation`);
+    mutationFn: async ({
+      id,
+      from,
+      to,
+      subject,
+      content,
+      attachments,
+    }: {
+      id: string;
+      from: string;
+      to: string;
+      subject: string;
+      content?: string;
+      attachments?: string[];
+    }): Promise<SendInvitationResponse> => {
+      const { data } = await axios.post(`/meetings/${id}/send-invitation`, {
+        from,
+        to,
+        subject,
+        content,
+        attachments,
+      });
       return data;
     },
     onSuccess: (_data, variables) => {

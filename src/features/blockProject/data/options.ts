@@ -94,10 +94,15 @@ export const LB_FLOOR_STRUCTURE_TYPE_OPTIONS = [
   { value: 'Other', label: 'Other' },
 ];
 
-export const LB_FIRE_INSURANCE_OPTIONS = [
-  { value: 'WithInsurance', label: 'With insurance' },
-  { value: 'WithoutInsurance', label: 'Without insurance' },
-  { value: 'Unknown', label: 'Unknown' },
+export const LB_FIRE_INSURANCE_OPTIONS: ListBoxItem[] = [
+  { id: 'OneTwoStoreyTownhouse',         value: 'OneTwoStoreyTownhouse',         label: '1-2 Storey Townhouse' },
+  { id: 'ThreeStoreyTownhouse',          value: 'ThreeStoreyTownhouse',          label: '3 Storey Townhouse' },
+  { id: 'SemiDetachedHouse',             value: 'SemiDetachedHouse',             label: 'Semi-detached house' },
+  { id: 'SingleHouseAreaLessThan150',    value: 'SingleHouseAreaLessThan150',    label: 'Single house, Area < 150 Sq.m' },
+  { id: 'SingleHouseArea150To200',       value: 'SingleHouseArea150To200',       label: 'Single house, Area ≥ 150 < 200 Sq.m' },
+  { id: 'SingleHouseArea200To400',       value: 'SingleHouseArea200To400',       label: 'Single house, Area ≥ 200 < 400 Sq.m' },
+  { id: 'SingleHouseArea400To500',       value: 'SingleHouseArea400To500',       label: 'Single house, Area ≥ 400 < 500 Sq.m' },
+  { id: 'SingleHouseAreaGreaterThan500', value: 'SingleHouseAreaGreaterThan500', label: 'Single house, Area > 500 Sq.m' },
 ];
 
 export const LB_FIRE_INSURANCE_LABEL_BY_VALUE: Record<string, string> =

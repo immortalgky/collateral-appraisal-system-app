@@ -76,6 +76,14 @@ export function useAppraisalContext(): AppraisalContextValue {
 }
 
 /**
+ * Hook to access appraisal context without throwing.
+ * Returns null when used outside an AppraisalProvider (e.g. dev/stub routes).
+ */
+export function useAppraisalContextSafe(): AppraisalContextValue | null {
+  return useContext(AppraisalContext);
+}
+
+/**
  * Hook to get the requestId from appraisal context
  * Returns undefined if not in appraisal context or still loading
  */
