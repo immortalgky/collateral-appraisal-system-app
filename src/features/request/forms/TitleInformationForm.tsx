@@ -182,6 +182,7 @@ const TitleInformationForm = () => {
         subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles?.length} title(s)`}
         icon="file-certificate"
         iconColor="purple"
+        required={true}
         rightIcon={
           isEditing ? (
             <button

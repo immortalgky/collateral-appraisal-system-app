@@ -4,7 +4,7 @@ import { SectionHeader } from '../../../shared/components';
 const PropertiesForm = () => {
   return (
     <div>
-      <SectionHeader title="Properties" />
+      <SectionHeader title="Properties" required={true} />
       <FormTable
         name="properties"
         columns={propertiesColumns}

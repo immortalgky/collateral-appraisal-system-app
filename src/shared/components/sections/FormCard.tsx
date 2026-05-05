@@ -2,7 +2,17 @@ import type { ReactNode, HTMLAttributes } from 'react';
 import clsx from 'clsx';
 import SectionHeader from './SectionHeader';
 
-type IconColor = 'primary' | 'blue' | 'purple' | 'amber' | 'cyan' | 'emerald' | 'teal' | 'rose' | 'orange' | 'gray';
+type IconColor =
+  | 'primary'
+  | 'blue'
+  | 'purple'
+  | 'amber'
+  | 'cyan'
+  | 'emerald'
+  | 'teal'
+  | 'rose'
+  | 'orange'
+  | 'gray';
 
 interface FormCardProps extends HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -12,6 +22,7 @@ interface FormCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   rightIcon?: ReactNode;
   noPadding?: boolean;
+  required?: boolean;
   /** Show colored left border accent */
   coloredBorder?: boolean;
 }
@@ -50,6 +61,7 @@ const FormCard = ({
   noPadding = false,
   coloredBorder = false,
   className,
+  required,
   ...props
 }: FormCardProps) => {
   return (
@@ -57,7 +69,7 @@ const FormCard = ({
       className={clsx(
         'bg-white rounded-2xl shadow-sm border border-gray-100',
         coloredBorder && ['border-l-4', borderColorStyles[iconColor]],
-        className
+        className,
       )}
       {...props}
     >
@@ -68,6 +80,7 @@ const FormCard = ({
         iconColor={iconColor}
         rightIcon={rightIcon}
         variant="card"
+        required={required}
       />
       <div className={clsx(!noPadding && 'p-5')}>{children}</div>
     </div>
