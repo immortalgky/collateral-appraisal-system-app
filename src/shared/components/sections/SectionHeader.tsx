@@ -2,7 +2,17 @@ import type { HTMLAttributes } from 'react';
 import clsx from 'clsx';
 import Icon from '../Icon';
 
-type IconColor = 'primary' | 'blue' | 'purple' | 'amber' | 'cyan' | 'emerald' | 'teal' | 'rose' | 'orange' | 'gray';
+type IconColor =
+  | 'primary'
+  | 'blue'
+  | 'purple'
+  | 'amber'
+  | 'cyan'
+  | 'emerald'
+  | 'teal'
+  | 'rose'
+  | 'orange'
+  | 'gray';
 
 interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -11,6 +21,7 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   iconColor?: IconColor;
   rightIcon?: React.ReactNode;
   variant?: 'default' | 'card';
+  required?: boolean;
 }
 
 const iconColorStyles: Record<IconColor, { bg: string; text: string }> = {
@@ -34,6 +45,7 @@ const SectionHeader = ({
   rightIcon,
   variant = 'default',
   className,
+  required,
 }: SectionHeaderProps) => {
   const colorStyle = iconColorStyles[iconColor];
 
@@ -57,7 +69,10 @@ const SectionHeader = ({
             </div>
           )}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+            <h3 className="text-sm font-semibold text-gray-800">
+              {title}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </h3>
             {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
         </div>
@@ -72,16 +87,16 @@ const SectionHeader = ({
         <div className="flex items-center gap-3">
           {icon && (
             <div
-              className={clsx(
-                'w-8 h-8 rounded-lg flex items-center justify-center',
-                colorStyle.bg,
-              )}
+              className={clsx('w-8 h-8 rounded-lg flex items-center justify-center', colorStyle.bg)}
             >
               <Icon name={icon} style="solid" className={clsx('size-3.5', colorStyle.text)} />
             </div>
           )}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+            <h3 className="text-sm font-semibold text-gray-800">
+              {title}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </h3>
             {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
         </div>

@@ -23,7 +23,7 @@ const LAND_TYPES = new Set([
 function formatWaToRaiNganWa(totalWa: number): string {
   const rai = Math.floor(totalWa / 400);
   const ngan = Math.floor((totalWa % 400) / 100);
-  const wa = totalWa % 100;
+  const wa = (totalWa % 100).toFixed(2);
   return `${rai}-${ngan}-${wa} (${totalWa} sq.wa)`;
 }
 
