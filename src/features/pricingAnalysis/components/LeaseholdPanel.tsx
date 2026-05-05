@@ -439,6 +439,7 @@ export function LeaseholdPanel({
       watchedLandInputs.join(',') +
       '|' +
       watchedPartialUsage.join(',') +
+      '|' +
       JSON.stringify(watchedLandPeriods);
     // Seed the key on first run so we don't fire on mount/cache reload
     if (prevWatchKey.current === null) {
@@ -931,16 +932,18 @@ export function LeaseholdPanel({
         ) : null}
 
         {/* Partial Usage */}
-        <LeaseholdPartialUsageSection
-          finalValueRounded={finalValueRounded}
-          landValuePerSqWa={getValues('landValuePerSqWa') ?? 0}
-          totalLeaseLandArea={totalLeaseLandArea}
-          totalLandArea={propertyData?.totalLandAreaInSqWa ?? 0}
-          onEstimateChange={(estimateRounded, estimateNet) => {
-            setValue('estimatePriceRounded', estimateRounded);
-            setEstimateNetPrice(estimateNet);
-          }}
-        />
+        {isPartialUsage && (
+          <LeaseholdPartialUsageSection
+            finalValueRounded={finalValueRounded}
+            landValuePerSqWa={getValues('landValuePerSqWa') ?? 0}
+            totalLeaseLandArea={totalLeaseLandArea}
+            totalLandArea={propertyData?.totalLandAreaInSqWa ?? 0}
+            onEstimateChange={(estimateRounded, estimateNet) => {
+              setValue('estimatePriceRounded', estimateRounded);
+              setEstimateNetPrice(estimateNet);
+            }}
+          />
+        )}
 
         {/* Estimate Price */}
         <div className="text-sm divide-y divide-gray-100 border-t border-gray-200 pt-3">
@@ -958,7 +961,7 @@ export function LeaseholdPanel({
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-xs text-gray-600">
                   <span className="font-bold mr-1">+</span>
-                  Partial Land Price
+                  Land price of the area not covered by the lease agreement
                 </span>
                 <span className="text-xs font-medium text-gray-800 tabular-nums">
                   {((estimateNetPrice ?? finalValueRounded) - finalValueRounded).toLocaleString(
