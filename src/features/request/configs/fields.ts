@@ -22,6 +22,7 @@ export const requestFields: FormField[] = [
     group: 'AppraisalPurpose',
     wrapperClassName: 'col-span-3',
     required: true,
+    filterOptions: { type: 'isActive', values: true },
   },
   {
     type: 'boolean-toggle',

@@ -71,6 +71,7 @@ export function useParameterOptions(group: string): ListBoxItem[] {
         value: p.code,
         label: p.description,
         id: p.code,
+        isActive: p.isActive,
       })),
     [params],
   );
@@ -80,18 +81,12 @@ export function useParameterOptions(group: string): ListBoxItem[] {
 export function useParameterAsCheckboxOptions(group: string): CheckboxOption[] {
   const params = useParametersByGroup(group);
 
-  return useMemo(
-    () => params.map(p => ({ value: p.code, label: p.description })),
-    [params],
-  );
+  return useMemo(() => params.map(p => ({ value: p.code, label: p.description })), [params]);
 }
 
 /** Returns RadioOption[] for RadioGroup */
 export function useParameterAsRadioOptions(group: string): RadioOption[] {
   const params = useParametersByGroup(group);
 
-  return useMemo(
-    () => params.map(p => ({ value: p.code, label: p.description })),
-    [params],
-  );
+  return useMemo(() => params.map(p => ({ value: p.code, label: p.description })), [params]);
 }
