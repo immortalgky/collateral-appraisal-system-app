@@ -492,6 +492,46 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     activeQuotation?.id ?? '',
   );
 
+  const defaultEmailValues = useMemo(() => {
+    const appraisals = quotationDetail?.appraisals ?? [];
+    const dueDate = quotationDetail?.dueDate ? new Date(quotationDetail.dueDate) : null;
+
+    const distinctCustomerNames = [
+      ...new Set(appraisals.map((a) => a.customerName).filter(Boolean)),
+    ].join(', ');
+    const appraisalNumbers = appraisals.map((a) => a.appraisalNumber ?? '').filter(Boolean).join(',');
+
+    const targetTime = dueDate
+      ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
+      : '';
+    const targetDate = dueDate
+      ? dueDate.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '';
+
+    const appraisalList = appraisals
+      .map(
+        (a, i) =>
+          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`
+      )
+      .join('\n');
+
+    const adminFullName =
+      `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
+
+    const bccEmails = (quotationDetail?.invitedCompanies ?? [])
+      .map((c) => c.email)
+      .filter(Boolean)
+      .join(',');
+
+    return {
+      from: currentUser?.email ?? '',
+      cc: 'appraisal.team@lhbank.com',
+      bcc: bccEmails,
+      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
+      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+    };
+  }, [quotationDetail, currentUser]);
+
   /**
    * Statuses where the Cancel Quotation action is offered. Mirrors the branches
    * that include `renderCancelFooter()`. Used as a pre-flight guard so a stale
@@ -870,6 +910,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               from: pendingEmailData.from,
               to: pendingEmailData.to,
               cc: pendingEmailData.cc,
+              bcc: pendingEmailData.bcc,
               subject: pendingEmailData.subject,
               content: pendingEmailData.content,
             },
@@ -1107,7 +1148,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           isOpen={sendStep === 'confirm'}
           onClose={handleCancelSendFlow}
           title="Drafting email to send to external appraisal company"
+          defaultValues={defaultEmailValues}
           showCc={true}
+          showBcc={true}
           showAttachments={false}
           subjectLabel="Subject"
           isPending={false}

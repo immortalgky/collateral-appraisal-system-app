@@ -27,6 +27,7 @@ import {
   ExternalTaskSummaryWidget,
   NotesWidget,
   ProgressSummaryWidget,
+  QuotationTaskSummaryWidget,
   RecentTaskWidget,
   ReminderWidget,
   TaskSummaryWidget,
@@ -119,6 +120,8 @@ function HomePage() {
         return <TeamWorkloadWidget />;
       case 'external-task-summary':
         return <ExternalTaskSummaryWidget />;
+      case 'quotation-task-summary':
+        return <QuotationTaskSummaryWidget />;
       default:
         return null;
     }

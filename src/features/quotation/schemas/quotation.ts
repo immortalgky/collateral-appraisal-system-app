@@ -117,6 +117,7 @@ export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;
 export const InvitedCompanySchema = z.object({
   companyId: z.string().uuid(),
   companyName: z.string(),
+  email: z.string().nullable().optional(),
 });
 
 export type InvitedCompanyDto = z.infer<typeof InvitedCompanySchema>;

@@ -31,7 +31,7 @@ export const projectInformationFields: FormField[] = [
     type: 'text-input',
     label: 'Developer',
     name: 'developer',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
   {
@@ -40,14 +40,6 @@ export const projectInformationFields: FormField[] = [
     name: 'projectSaleLaunchDate',
     placeholder: 'YYYY or YYYY-MM or YYYY-MM-DD',
     maxLength: 10,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'dropdown',
-    label: 'Land Office',
-    name: 'landOffice',
-    group: 'LandOffice',
-    required: true,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -258,6 +250,16 @@ export const pricingForceSaleFields: FormField[] = [
   },
 ];
 
+export const pricingLandAssumptionFields: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Land Increase / Decrease (Baht/sq.wa)',
+    name: 'landIncreaseDecreaseRate',
+    decimalPlaces: 2,
+    wrapperClassName: 'col-span-6',
+  },
+];
+
 // =============================================================================
 // Shared Model fields (common to Condo + LandAndBuilding)
 // =============================================================================
@@ -330,6 +332,14 @@ export const condoProjectInfoFields: FormField[] = [
     name: 'builtOnTitleDeedNumber',
     wrapperClassName: 'col-span-6',
     maxLength: 100,
+  },
+  {
+    type: 'parameter-search',
+    label: 'Land Office',
+    name: 'landOffice',
+    group: 'LandOffice',
+    required: true,
+    wrapperClassName: 'col-span-6',
   },
 ];
 
@@ -735,6 +745,14 @@ export const lbProjectInfoFields: FormField[] = [
     type: 'date-input',
     label: 'License Expiration Date',
     name: 'licenseExpirationDate',
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    type: 'parameter-search',
+    label: 'Land Office',
+    name: 'landOffice',
+    group: 'LandOffice',
+    required: true,
     wrapperClassName: 'col-span-4',
   },
 ];

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -80,6 +80,7 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
 function QuotationListingPage() {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
+  const [searchParams] = useSearchParams();
 
   // Pagination state
   const [pageNumber, setPageNumber] = useState(0);
@@ -87,7 +88,7 @@ function QuotationListingPage() {
 
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
   const [dueDateFrom, setDueDateFrom] = useState<string | null>(null);
   const [dueDateTo, setDueDateTo] = useState<string | null>(null);
 

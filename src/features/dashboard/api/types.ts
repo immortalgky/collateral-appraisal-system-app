@@ -97,3 +97,9 @@ export type NoteItem = {
 export type NotesResponse = {
   items: NoteItem[];
 };
+
+export type QuotationTaskSummaryResponse = {
+  pendingQuotationCreation: number;
+  waitingCompanySubmission: number;
+  waitingRmSelection: number;
+};

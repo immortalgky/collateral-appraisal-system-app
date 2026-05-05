@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import type { AxiosError } from 'axios';
 
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { FormProvider } from '@/shared/components/form';
 import ActionBar from '@/shared/components/ActionBar';
@@ -16,8 +16,7 @@ import type { ApiError } from '@/shared/types/api';
 import { useGetProject, useSaveProject } from '../../api/project';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
-import type { ChildCounts } from '../ChangeProjectTypeDialog';
-import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
+import ChangeProjectTypeDialog, { type ChildCounts } from '../ChangeProjectTypeDialog';
 import { condoProjectInfoFormDefaults, lbProjectInfoFormDefaults, projectInfoForm, } from '../../schemas/form';
 
 type AppError = AxiosError & { apiError?: ApiError };
@@ -40,6 +39,14 @@ export default function ProjectInfoTab({
   const appraisalId = useAppraisalId();
   const basePath = useBasePath();
   const isReadOnly = usePageReadOnly();
+
+  const [pendingType, setPendingType] = useState<ProjectType | null>(null);
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
+
+  // Defensive: clears pending selection if projectType prop changes without unmount.
+  // Under normal flow the router navigates to a new route on type change, which
+  // remounts this component and resets state automatically.
+  useEffect(() => { setPendingType(null); }, [projectType]);
 
   const schema = projectInfoForm(projectType);
   const defaults =
@@ -127,6 +134,11 @@ export default function ProjectInfoTab({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = (data: any, isDraft = false) => {
     if (!appraisalId) return;
+    // If user changed project type, confirm via dialog before saving
+    if (pendingType !== null) {
+      setIsTypeDialogOpen(true);
+      return;
+    }
     saveProject(
       { appraisalId, data: { ...data, projectType } },
       {
@@ -151,51 +163,63 @@ export default function ProjectInfoTab({
   }
 
   return (
-    <FormProvider methods={methods} schema={schema}>
-      <form
-        onSubmit={handleSubmit(data => onSubmit(data, false))}
-        className="flex flex-col h-full min-h-0"
-      >
-        <div className="flex-1 min-h-0 overflow-y-auto pb-4">
-          <ProjectInfoForm
-            projectType={projectType}
-            appraisalId={appraisalId ?? ''}
-            basePath={basePath}
-            hasExistingProject={hasExistingProject}
-            childCounts={childCounts}
-          />
-        </div>
+    <>
+      <FormProvider methods={methods} schema={schema}>
+        <form
+          onSubmit={handleSubmit(data => onSubmit(data, false))}
+          className="flex flex-col h-full min-h-0"
+        >
+          <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+            <ProjectInfoForm
+              projectType={projectType}
+              pendingType={pendingType}
+              hasExistingProject={hasExistingProject}
+              onProjectTypeChange={setPendingType}
+            />
+          </div>
 
-        <ActionBar>
-          <ActionBar.Left>
-            <CancelButton />
+          <ActionBar>
+            <ActionBar.Left>
+              <CancelButton />
+              {!isReadOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={isDirty} />
+                </>
+              )}
+            </ActionBar.Left>
             {!isReadOnly && (
-              <>
-                <ActionBar.Divider />
-                <ActionBar.UnsavedIndicator show={isDirty} />
-              </>
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => handleSubmit(data => onSubmit(data, true))()}
+                  isLoading={isPending}
+                  disabled={isPending}
+                >
+                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                  Save Draft
+                </Button>
+                <Button type="submit" isLoading={isPending} disabled={isPending}>
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  Save
+                </Button>
+              </ActionBar.Right>
             )}
-          </ActionBar.Left>
-          {!isReadOnly && (
-            <ActionBar.Right>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => handleSubmit(data => onSubmit(data, true))()}
-                isLoading={isPending}
-                disabled={isPending}
-              >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save Draft
-              </Button>
-              <Button type="submit" isLoading={isPending} disabled={isPending}>
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
-              </Button>
-            </ActionBar.Right>
-          )}
-        </ActionBar>
-      </form>
-    </FormProvider>
+          </ActionBar>
+        </form>
+      </FormProvider>
+
+      {appraisalId && isTypeDialogOpen && (
+        <ChangeProjectTypeDialog
+          isOpen={isTypeDialogOpen}
+          onClose={() => setIsTypeDialogOpen(false)}
+          currentProjectType={projectType}
+          appraisalId={appraisalId}
+          basePath={basePath ?? ''}
+          childCounts={childCounts}
+        />
+      )}
+    </>
   );
 }

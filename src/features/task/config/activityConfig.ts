@@ -98,6 +98,41 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     icon: 'file-circle-plus',
     allowedRoles: ['Admin', 'IntAdmin', 'RequestMaker'],
   },
+  'admin-review-submissions': {
+    activityId: 'admin-review-submissions',
+    title: 'Review Quotation Submissions',
+    description: 'Tasks for reviewing submitted quotations and preparing shortlist',
+    icon: 'clipboard-list',
+    allowedRoles: [],
+  },
+  'rm-pick-winner': {
+    activityId: 'rm-pick-winner',
+    title: 'Pick Quotation Winner',
+    description: 'Tasks for reviewing shortlist and selecting the tentative winner',
+    icon: 'trophy',
+    allowedRoles: [],
+  },
+  'admin-finalize': {
+    activityId: 'admin-finalize',
+    title: 'Finalize Quotation',
+    description: 'Tasks for finalizing quotation, opening negotiation, or cancelling',
+    icon: 'check-circle',
+    allowedRoles: [],
+  },
+  'ext-collect-submissions': {
+    activityId: 'ext-collect-submissions',
+    title: 'Submit Quotation',
+    description: 'Tasks for external users to submit their quotations',
+    icon: 'file-arrow-up',
+    allowedRoles: [],
+  },
+  'ext-respond-negotiation': {
+    activityId: 'ext-respond-negotiation',
+    title: 'Response to Negotiation',
+    description: 'Tasks for external users to respond to negotiation requests',
+    icon: 'chat-bubble-left-right',
+    allowedRoles: [],
+  },
 };
 
 export const ACTIVITY_IDS = Object.keys(ACTIVITY_CONFIG_MAP);

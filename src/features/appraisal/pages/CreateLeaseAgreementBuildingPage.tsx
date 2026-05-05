@@ -3,7 +3,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useBasePath, useAppraisalId, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -34,7 +34,8 @@ import toast from 'react-hot-toast';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
+import { FormReadOnlyContext } from '@shared/components/form';
 import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -78,7 +79,9 @@ const useUpdateLeaseAgreementBuildingProperty = () => {
 // ─── Page Component ───────────────────────────────────────────────
 
 const CreateLeaseAgreementBuildingPage = () => {
-  const isReadOnly = usePageReadOnly();
+  const _baseReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
+  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -131,10 +134,10 @@ const CreateLeaseAgreementBuildingPage = () => {
   const [activeTab, setActiveTab] = useState<'building' | 'construction' | 'lease-agreement' | 'rental-info'>(initialBuildingTab);
 
   useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction) {
+    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
       setActiveTab('building');
     }
-  }, [isUnderConstruction, activeTab]);
+  }, [isUnderConstruction, activeTab, isCiAppraisal]);
 
   const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -252,7 +255,7 @@ const CreateLeaseAgreementBuildingPage = () => {
               icon: 'building',
               onClick: () => setActiveTab('building'),
             },
-            ...(isUnderConstruction
+            ...((isUnderConstruction || isCiAppraisal)
               ? [
                   {
                     label: 'Construction Inspection',
@@ -268,6 +271,7 @@ const CreateLeaseAgreementBuildingPage = () => {
         />
       </div>
 
+      <PageReadOnlyContext.Provider value={isReadOnly}>
       <FormProvider methods={methods} schema={createLeaseAgreementBuildingForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -283,23 +287,27 @@ const CreateLeaseAgreementBuildingPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section */}
-                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
+                  {/* Photos Section — re-override to status-only readonly so CI appraisals can still manage photos */}
+                  <PageReadOnlyContext.Provider value={_baseReadOnly}>
+                  <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    {appraisalId && (
-                      <PropertyPhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        propertyId={propertyId}
-                      />
-                    )}
-                  </Section>
+                      <div className="h-px bg-gray-200 mb-4" />
+                      {appraisalId && (
+                        <PropertyPhotoSection
+                          ref={photoSectionRef}
+                          appraisalId={appraisalId}
+                          propertyId={propertyId}
+                        />
+                      )}
+                    </Section>
+                  </FormReadOnlyContext.Provider>
+                  </PageReadOnlyContext.Provider>
 
                   {/* Building Tab Content */}
                   <div
@@ -319,7 +327,7 @@ const CreateLeaseAgreementBuildingPage = () => {
                   </div>
 
                   {/* Construction Inspection Tab Content */}
-                  {isUnderConstruction && (
+                  {(isUnderConstruction || isCiAppraisal) && (
                     <div
                       id="construction-section"
                       className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
@@ -334,7 +342,9 @@ const CreateLeaseAgreementBuildingPage = () => {
                       </div>
                       <div className="h-px bg-gray-200" />
                       <Section id="construction-info" anchor className="flex flex-col gap-6">
-                        <ConstructionInspectionTab readOnly={isReadOnly} />
+                        <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                          <ConstructionInspectionTab readOnly={_baseReadOnly} ciMode={isCiAppraisal} />
+                        </FormReadOnlyContext.Provider>
                       </Section>
                     </div>
                   )}
@@ -381,14 +391,14 @@ const CreateLeaseAgreementBuildingPage = () => {
           <ActionBar>
             <ActionBar.Left>
               <CancelButton />
-              {!isReadOnly && (
+              {!_baseReadOnly && (
                 <>
                   <ActionBar.Divider />
                   <ActionBar.UnsavedIndicator show={hasDirtyFields} />
                 </>
               )}
             </ActionBar.Left>
-            {!isReadOnly && (
+            {!_baseReadOnly && (
               <ActionBar.Right>
                 <Button
                   variant="ghost"
@@ -415,6 +425,7 @@ const CreateLeaseAgreementBuildingPage = () => {
           <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>
+      </PageReadOnlyContext.Provider>
     </div>
   );
 };

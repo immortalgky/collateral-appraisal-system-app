@@ -18,9 +18,9 @@ const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) :
 // Vendor-relevant status filter options (subset of all companyStatus values)
 const VENDOR_STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'Pending', label: 'Pending Submission' },
-  { value: 'Draft', label: 'Draft' },
+  { value: 'Draft', label: 'Pending Submission' },
   { value: 'PendingCheckerReview', label: 'Pending Checker Review' },
-  { value: 'Submitted', label: 'Submitted' },
+  { value: 'Submitted', label: 'Quoted' },
   { value: 'UnderReview', label: 'Under Review' },
   { value: 'Tentative', label: 'Tentative Winner' },
   { value: 'Negotiating', label: 'Negotiating' },
@@ -190,7 +190,7 @@ const ExtCompanyInvitationListPage = () => {
                   Total Fee Amount
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Received On
+                  Received At
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
                   Cut Off Time

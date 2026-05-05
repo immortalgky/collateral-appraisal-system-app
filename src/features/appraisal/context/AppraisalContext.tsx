@@ -21,8 +21,11 @@ export interface AppraisalData {
   /** Whether this appraisal is a PMA (Property Market Assessment) */
   isPma?: boolean;
 
-  /** Whether this appraisal is a Block (Condo) appraisal (Purpose = '07') */
-  isBlockCondo?: boolean;
+  /** Whether this appraisal has a block project (Projects table row exists) */
+  isBlock?: boolean;
+
+  /** Project type for block appraisals: 'Condo' | 'LandAndBuilding' | undefined */
+  blockProjectType?: string;
 
   /** Facility limit from the request's loan detail */
   facilityLimit?: number;
@@ -85,6 +88,15 @@ export function useAppraisalContextSafe(): AppraisalContextValue | null {
 }
 
 /**
+ * Returns true when the current appraisal is a Construction Inspection type.
+ * Safe to call outside an AppraisalProvider (returns false).
+ */
+export function useIsCiAppraisal(): boolean {
+  const ctx = useContext(AppraisalContext);
+  return ctx?.appraisal?.appraisalType === 'ConstructionInspection';
+}
+
+/**
  * Hook to get the requestId from appraisal context
  * Returns undefined if not in appraisal context or still loading
  */
@@ -103,12 +115,21 @@ export function useAppraisalIsPma(): boolean {
 }
 
 /**
- * Hook to get the isBlockCondo flag from appraisal context
- * Returns true when Purpose = '07'
+ * Hook to get the isBlock flag from appraisal context.
+ * Returns true when the backend reports a Projects row exists for this appraisal.
  */
-export function useAppraisalIsBlockCondo(): boolean {
+export function useAppraisalIsBlock(): boolean {
   const context = useContext(AppraisalContext);
-  return context?.appraisal?.isBlockCondo ?? false;
+  return context?.appraisal?.isBlock ?? false;
+}
+
+/**
+ * Hook to get the block project type ('Condo' or 'LandAndBuilding').
+ * Returns undefined for non-block appraisals.
+ */
+export function useAppraisalBlockProjectType(): string | undefined {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.blockProjectType;
 }
 
 /**

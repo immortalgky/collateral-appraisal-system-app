@@ -9,6 +9,7 @@ import type {
   CalendarResponse,
   NotesResponse,
   NoteItem,
+  QuotationTaskSummaryResponse,
 } from './types';
 
 export const dashboardApi = {
@@ -95,5 +96,10 @@ export const dashboardApi = {
 
   deleteNote: async (id: string): Promise<void> => {
     await axios.delete(`/dashboard/notes/${id}`);
+  },
+
+  getQuotationTaskSummary: async () => {
+    const { data } = await axios.get<QuotationTaskSummaryResponse>('/dashboard/quotation-task-summary');
+    return data;
   },
 };

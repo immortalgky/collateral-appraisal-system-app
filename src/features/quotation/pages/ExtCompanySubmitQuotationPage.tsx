@@ -120,6 +120,7 @@ const ExtCompanySubmitQuotationPage = () => {
   const queryClient = useQueryClient();
 
   const navigateAfterSubmit = () => {
+    queryClient.invalidateQueries({ queryKey: ['my-invitations'] });
     if (taskId) {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
@@ -299,12 +300,6 @@ const ExtCompanySubmitQuotationPage = () => {
           deriveFeeTotals(item.feeAmount, item.discount, item.negotiatedDiscount, item.vatPercent)
             .netAmount,
       ),
-    [watchedItems],
-  );
-
-  /** Gross fee amounts — shown in the sidebar per user request (not net). */
-  const feeAmountsPerItem = useMemo(
-    () => (watchedItems ?? []).map(item => Number(item.feeAmount) || 0),
     [watchedItems],
   );
 
@@ -813,14 +808,14 @@ const ExtCompanySubmitQuotationPage = () => {
                   appraisals={appraisals}
                   selectedIndex={selectedIndex}
                   onSelect={setSelectedIndex}
-                  feeAmounts={feeAmountsPerItem}
+                  feeAmounts={netAmountsPerItem}
                 />
               )}
 
               {/* Right pane — flows naturally; page-level scroll (Layout.tsx) handles overflow */}
               <div className="min-w-0">
                 {selectedAppraisal && selectedItem ? (
-                  <div className="p-5 space-y-6">
+                  <div key={selectedIndex} className="p-5 space-y-6">
                     {/* Section 1: Appraisal Information (read-only) */}
                     <section aria-label="Appraisal Information">
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
@@ -1156,15 +1151,6 @@ const ExtCompanySubmitQuotationPage = () => {
         (openNegotiation ? (
           /* Negotiation round — Decline this round + Submit Proposal. Maker → bank direct. */
           <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => setIsDeclineNegotiationOpen(true)}
-              disabled={isNegotiationPending || !canEdit}
-            >
-              <Icon name="ban" style="solid" className="size-4 mr-2" />
-              Decline this round
-            </Button>
             <Button
               type="button"
               onClick={handleSubmitNegotiation}
