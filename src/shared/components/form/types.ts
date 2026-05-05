@@ -352,3 +352,12 @@ export interface FieldArrayField extends BaseFormField {
   /** Maximum number of items (maps to z.array().max()) */
   maxItems?: number;
 }
+
+// =============================================================================
+// Parameter Search Field
+// =============================================================================
+export interface ParameterSearchField extends BaseFormField {
+  type: 'parameter-search';
+  label: string;
+  group: string;
+}

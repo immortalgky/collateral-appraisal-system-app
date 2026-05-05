@@ -77,11 +77,11 @@ export const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-3',
   },
   {
-    type: 'dropdown',
+    type: 'parameter-search',
     label: 'Land Office',
     name: 'landOffice',
     group: 'LandOffice',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     required: true,
   },
   {
@@ -1382,10 +1382,10 @@ export const condoFields: FormField[] = [
     max: 180,
   },
   {
-    type: 'dropdown',
+    type: 'parameter-search',
     label: 'Land Office',
     name: 'landOffice',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
     required: true,
     group: 'LandOffice',
   },
