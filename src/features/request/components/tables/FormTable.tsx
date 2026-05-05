@@ -20,6 +20,7 @@ interface FormTableProps {
   columns: FormTableColumn[];
   sumColumns?: string[];
   totalFieldName?: string;
+  allowOverride?: boolean;
 }
 
 type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
@@ -84,6 +85,7 @@ const TotalCell = ({
   totalFieldName,
   isOverridden,
   isReadOnly,
+  allowOverride,
   onOverride,
   onReset,
   onSetValue,
@@ -93,6 +95,7 @@ const TotalCell = ({
   totalFieldName?: string;
   isOverridden: boolean;
   isReadOnly: boolean;
+  allowOverride: boolean;
   onOverride: () => void;
   onReset: () => void;
   onSetValue: (v: any) => void;
@@ -131,13 +134,15 @@ const TotalCell = ({
   return (
     <div className="flex items-center gap-2">
       <NumberInput value={value} disabled decimalPlaces={2} className="font-semibold" />
-      <IconBtn
-        size={7}
-        onClick={onOverride}
-        icon="pen"
-        className="bg-primary/10 text-primary hover:bg-primary/20"
-        title="Override total"
-      />
+      {allowOverride && (
+        <IconBtn
+          size={7}
+          onClick={onOverride}
+          icon="pen"
+          className="bg-primary/10 text-primary hover:bg-primary/20"
+          title="Override total"
+        />
+      )}
     </div>
   );
 };
@@ -194,7 +199,13 @@ const TableCell = ({
 
 // --- FormTable ---
 
-const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTableProps) => {
+const FormTable = ({
+  name,
+  columns,
+  sumColumns = [],
+  totalFieldName,
+  allowOverride = false,
+}: FormTableProps) => {
   const { getValues, setValue, control, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
   const { append, remove } = useFieldArray({ control, name });
@@ -352,6 +363,7 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
                           totalFieldName={totalFieldName}
                           isOverridden={isOverridden}
                           isReadOnly={isReadOnly}
+                          allowOverride={allowOverride}
                           onOverride={() => setIsOverridden(true)}
                           onReset={handleResetTotal}
                           onSetValue={v => totalFieldName && setValue(totalFieldName, v)}
