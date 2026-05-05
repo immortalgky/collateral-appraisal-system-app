@@ -1,4 +1,10 @@
-import { type Control, type FieldValues, useController, useFormContext, useWatch, } from 'react-hook-form';
+import {
+  type Control,
+  type FieldValues,
+  useController,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
@@ -23,6 +29,8 @@ import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
 import type { FormField } from './types';
+import { useFilterWatchValues } from '@/shared/hooks/useFilterWatchValues';
+import ParameterSearchInput from '../inputs/ParameterSearchInput';
 
 // =============================================================================
 // Field State Hook
@@ -531,6 +539,17 @@ function FieldRenderer({
             error={error?.message}
             className={passedField.className}
             {...locationProps}
+          />
+        );
+      }
+      case 'parameter-search': {
+        return (
+          <ParameterSearchInput
+            {...fieldProps}
+            group={(passedField as any).group}
+            label={passedField.label}
+            {...{ required: isRequired, disabled: isDisabled }}
+            error={error?.message}
           />
         );
       }
