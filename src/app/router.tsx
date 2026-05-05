@@ -42,7 +42,10 @@ import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/Cre
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
-import { AppraisalReadOnlyWrapper, ReadOnlyPageWrapper, } from '@shared/contexts/PageReadOnlyContext';
+import {
+  AppraisalReadOnlyWrapper,
+  ReadOnlyPageWrapper,
+} from '@shared/contexts/PageReadOnlyContext';
 import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
 import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
