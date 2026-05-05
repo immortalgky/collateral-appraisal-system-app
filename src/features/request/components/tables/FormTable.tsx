@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
 import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
@@ -11,7 +11,7 @@ import {
   useFormContext,
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
-import ParameterDisplay from '@/shared/components/ParameterDisplay'; // --- Types ---
+import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
 // --- Types ---
 
@@ -53,7 +53,6 @@ const fmtNum = (n: number, dp = 2) =>
 
 const IconBtn = ({
   onClick,
-  onMouseDown,
   icon,
   size = 8,
   iconSize = 'size-3.5',
@@ -61,7 +60,6 @@ const IconBtn = ({
   title,
 }: {
   onClick: () => void;
-  onMouseDown?: () => void;
   icon: string;
   size?: 7 | 8;
   iconSize?: string;
@@ -70,7 +68,6 @@ const IconBtn = ({
 }) => (
   <button
     type="button"
-    onMouseDown={onMouseDown}
     onClick={onClick}
     title={title}
     className={`${size === 7 ? 'shrink-0 w-6 h-6' : 'w-7 h-7'} flex items-center justify-center rounded-md transition-colors ${className}`}
@@ -150,15 +147,11 @@ const TotalCell = ({
 const TableCell = ({
   name,
   index,
-  editIndex,
-  value,
   column,
   control,
 }: {
   name: string;
   index: number;
-  editIndex: number | undefined;
-  value: string;
   column: FormTableRegularColumn;
   control: Control<FieldValues, any, FieldValues>;
 }) => {
@@ -168,17 +161,6 @@ const TableCell = ({
   } = useController({ name: `${name}.${index}.${column.name}`, control });
   const isNum = column.inputType === 'number';
   const dp = column.decimalPlaces ?? 2;
-
-  const displayValue = (val: unknown): string => {
-    if (val == null || val === '') return '-';
-    if (column.inputType === 'dropdown' && column.options)
-      return column.options.find(o => o.value === val)?.label ?? String(val);
-    if (isNum) {
-      const n = typeof val === 'string' ? parseFloat(val) : val;
-      if (typeof n === 'number' && !isNaN(n)) return fmtNum(n, dp);
-    }
-    return String(val);
-  };
 
   const input = () => {
     if (isNum)
@@ -204,17 +186,7 @@ const TableCell = ({
 
   return (
     <div>
-      {editIndex === index ? (
-        input()
-      ) : (
-        <div className={isNum ? 'text-right' : 'truncate'}>
-          {column.inputType === 'dropdown' && column.group ? (
-            <ParameterDisplay group={column.group} code={value} />
-          ) : (
-            displayValue(value)
-          )}
-        </div>
-      )}
+      {input()}
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
   );
@@ -228,98 +200,16 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
   const { append, remove } = useFieldArray({ control, name });
   const values = getValues(name);
   const watchedValues = watch(name);
-  const [editIndex, setEditIndex] = useState<number | undefined>();
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; index: number | null }>({
     isOpen: false,
     index: null,
   });
-  const [blurConfirm, setBlurConfirm] = useState(false);
   const [isOverridden, setIsOverridden] = useState(false);
-  const originalValuesRef = useRef<Record<string, any> | null>(null);
-  const isNewRowRef = useRef(false);
-  const editingRowRef = useRef<HTMLTableRowElement | null>(null);
-  const suppressBlurRef = useRef(false);
-  const pendingAddRowRef = useRef(false);
-
-  const suppressBlur = () => {
-    suppressBlurRef.current = true;
-  };
-  const withBlurRelease = (fn: () => void) => () => {
-    suppressBlurRef.current = false;
-    fn();
-  };
-
-  const resetEditState = () => {
-    originalValuesRef.current = null;
-    isNewRowRef.current = false;
-    setEditIndex(undefined);
-  };
-
-  const handleSaveEdit = () => resetEditState();
-  const handleCancelEdit = () => {
-    if (editIndex !== undefined) {
-      if (isNewRowRef.current) remove(editIndex);
-      else if (originalValuesRef.current)
-        Object.entries(originalValuesRef.current).forEach(([k, v]) =>
-          setValue(`${name}.${editIndex}.${k}`, v),
-        );
-    }
-    resetEditState();
-  };
-
-  const handleRowKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSaveEdit();
-    }
-  };
-  const handleRowBlur = (e: React.FocusEvent<HTMLTableRowElement>) => {
-    const row = e.currentTarget;
-    if (e.relatedTarget && row.contains(e.relatedTarget as Node)) return;
-    requestAnimationFrame(() => {
-      if (suppressBlurRef.current || row.contains(document.activeElement)) return;
-      // Skip blur if a dropdown inside this row is open (options render outside the row via portal)
-      if (row.querySelector('[data-headlessui-state*="open"]')) return;
-      suppressBlurRef.current = true;
-      setBlurConfirm(true);
-    });
-  };
-
-  const handleBlurContinueEditing = () => {
-    setBlurConfirm(false);
-    pendingAddRowRef.current = false;
-    requestAnimationFrame(() => {
-      editingRowRef.current
-        ?.querySelector<HTMLElement>('input, select, [role="listbox"], [tabindex]')
-        ?.focus();
-      suppressBlurRef.current = false;
-    });
-  };
-  const handleBlurDiscard = () => {
-    setBlurConfirm(false);
-    handleCancelEdit();
-    const shouldAdd = pendingAddRowRef.current;
-    pendingAddRowRef.current = false;
-    suppressBlurRef.current = false;
-    if (shouldAdd) setTimeout(() => handleAddRow(), 0);
-  };
 
   const handleAddRow = () => {
     const newRow: Record<string, any> = {};
     for (const col of columns) if (isRegular(col)) newRow[col.name] = '';
     append(newRow);
-    originalValuesRef.current = null;
-    isNewRowRef.current = true;
-    setEditIndex(getValues(name).length - 1);
-  };
-  const handleAddRowWithBlurCheck = () => {
-    if (editIndex !== undefined) {
-      pendingAddRowRef.current = true;
-      suppressBlurRef.current = true;
-      setBlurConfirm(true);
-      return;
-    }
-    handleAddRow();
   };
 
   const calcSum = (col: string): number =>
@@ -341,7 +231,6 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
   const isEmpty = values?.length === 0;
   const hasSumRow = sumColumns.length > 0 && !isEmpty;
   const colSpan = isReadOnly ? columns.length : columns.length + 1;
-  const editing = (i: number) => editIndex === i;
   const colStyle = (col: FormTableColumn) =>
     isRowNum(col)
       ? { width: '60px' }
@@ -364,10 +253,8 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
             {!isReadOnly && (
               <th
                 className="text-primary text-xs font-semibold py-2 px-3 text-right rounded-tr-lg"
-                style={{ width: '80px' }}
-              >
-                Actions
-              </th>
+                style={{ width: '60px' }}
+              ></th>
             )}
           </tr>
         </thead>
@@ -383,7 +270,7 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
                   {!isReadOnly && (
                     <button
                       type="button"
-                      onClick={handleAddRowWithBlurCheck}
+                      onClick={handleAddRow}
                       className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
                     >
                       <Icon style="solid" name="plus" className="size-3" /> Add First Item
@@ -394,24 +281,31 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
             </tr>
           ) : (
             values?.map((field: Record<string, any>, i: number) => (
-              <tr
-                key={i}
-                className="hover:bg-gray-50 transition-colors"
-                ref={editing(i) ? editingRowRef : undefined}
-                onKeyDown={editing(i) ? handleRowKeyDown : undefined}
-                onBlur={editing(i) ? handleRowBlur : undefined}
-              >
+              <tr key={i} className="hover:bg-gray-50 transition-colors">
                 {columns.map((col, ci) =>
                   isRegular(col) ? (
                     <td key={ci} className="py-1.5 px-3">
-                      <TableCell
-                        name={name}
-                        index={i}
-                        editIndex={editIndex}
-                        value={field[col.name]}
-                        column={col}
-                        control={control}
-                      />
+                      {isReadOnly ? (
+                        // Read-only: show formatted value
+                        <div
+                          className={
+                            col.inputType === 'number' ? 'text-right text-sm' : 'text-sm truncate'
+                          }
+                        >
+                          {col.inputType === 'dropdown' && col.group ? (
+                            <ParameterDisplay group={col.group} code={field[col.name]} />
+                          ) : col.inputType === 'number' ? (
+                            (() => {
+                              const n = parseFloat(field[col.name]);
+                              return isNaN(n) ? '-' : fmtNum(n, col.decimalPlaces ?? 2);
+                            })()
+                          ) : (
+                            (field[col.name] ?? '-')
+                          )}
+                        </div>
+                      ) : (
+                        <TableCell name={name} index={i} column={col} control={control} />
+                      )}
                     </td>
                   ) : (
                     <td key={ci} className="py-1.5 px-3" style={{ width: '60px' }}>
@@ -424,45 +318,12 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
                 {!isReadOnly && (
                   <td className="py-1.5 px-3">
                     <div className="flex gap-1 justify-end">
-                      {editing(i) ? (
-                        <>
-                          <IconBtn
-                            onMouseDown={suppressBlur}
-                            onClick={withBlurRelease(handleSaveEdit)}
-                            icon="check"
-                            iconSize="size-3.5"
-                            className="bg-success-50 text-success-600 hover:bg-success-100"
-                            title="Save"
-                          />
-                          <IconBtn
-                            onMouseDown={suppressBlur}
-                            onClick={withBlurRelease(handleCancelEdit)}
-                            icon="xmark"
-                            iconSize="size-3.5"
-                            className="bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            title="Cancel"
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <IconBtn
-                            onClick={() => {
-                              originalValuesRef.current = { ...getValues(`${name}.${i}`) };
-                              isNewRowRef.current = false;
-                              setEditIndex(i);
-                            }}
-                            icon="pen"
-                            className="bg-primary/10 text-primary hover:bg-primary/20"
-                            title="Edit"
-                          />
-                          <IconBtn
-                            onClick={() => setDeleteConfirm({ isOpen: true, index: i })}
-                            icon="trash"
-                            className="bg-danger-50 text-danger-600 hover:bg-danger-100"
-                            title="Delete"
-                          />
-                        </>
-                      )}
+                      <IconBtn
+                        onClick={() => setDeleteConfirm({ isOpen: true, index: i })}
+                        icon="trash"
+                        className="bg-danger-50 text-danger-600 hover:bg-danger-100"
+                        title="Delete"
+                      />
                     </div>
                   </td>
                 )}
@@ -526,7 +387,7 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
         <div className="border-t border-gray-100">
           <button
             type="button"
-            onClick={handleAddRowWithBlurCheck}
+            onClick={handleAddRow}
             className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-primary bg-gray-50 hover:bg-primary/10 transition-colors rounded-b-lg"
           >
             <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -541,10 +402,6 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
         onClose={() => setDeleteConfirm({ isOpen: false, index: null })}
         onConfirm={() => {
           if (deleteConfirm.index !== null) {
-            if (editIndex === deleteConfirm.index) {
-              setEditIndex(undefined);
-              originalValuesRef.current = null;
-            }
             remove(deleteConfirm.index);
             setDeleteConfirm({ isOpen: false, index: null });
           }
@@ -554,16 +411,6 @@ const FormTable = ({ name, columns, sumColumns = [], totalFieldName }: FormTable
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
-      />
-      <ConfirmDialog
-        isOpen={blurConfirm}
-        onClose={handleBlurContinueEditing}
-        onConfirm={handleBlurDiscard}
-        title="Unsaved Changes"
-        message="You have unsaved changes in this row. Would you like to continue editing or discard your changes?"
-        confirmText="Discard Changes"
-        cancelText="Continue Editing"
-        variant="warning"
       />
     </div>
   );
