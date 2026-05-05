@@ -185,6 +185,13 @@ export interface StartQuotationFromTaskRequest {
   assignmentMethod?: string | null;
   /** Pre-registers the internal follow-up method (e.g. 'roundrobin', 'manual'). */
   internalFollowupAssignmentMethod?: string | null;
+  /**
+   * Company IDs previously engaged on this collateral (from CollateralMaster lookup).
+   * Passed as a workflow variable so the engine can enforce appeal-exclusion rules.
+   * NOTE: backend extension needed — POST /quotations/start-from-task must accept and
+   * store this field before it becomes functional.
+   */
+  excludedCompanyIds?: string[] | null;
 }
 
 /**

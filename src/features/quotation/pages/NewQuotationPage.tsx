@@ -13,6 +13,7 @@ import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput'
 import axios from '@shared/api/axiosInstance';
 import { useAuthStore } from '@features/auth/store.ts';
 import { useCreateQuotation, useGetLoanTypeMatchedCompanies } from '../api/quotation';
+import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import {
   AppraisalPicker,
@@ -51,11 +52,16 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
   const [query, setQuery] = useState('');
   const selectedIds = new Set(selected.map(c => c.id));
 
+  // Appeal exclusion: hide the most-recent prior company so the user can't reselect it
+  const excludedCompanyId = useAppealExclusionStore(s => s.excludedCompanyId);
+
   const { data: rawCompanies, isLoading } = useGetLoanTypeMatchedCompanies(undefined, true);
 
   const companies: SelectedCompany[] = useMemo(
-    () => (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.name })),
-    [rawCompanies],
+    () => (rawCompanies ?? [])
+      .filter(c => c.id !== excludedCompanyId)
+      .map(c => ({ id: c.id, companyName: c.name })),
+    [rawCompanies, excludedCompanyId],
   );
 
   const filtered = useMemo(() => {
@@ -66,6 +72,14 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
 
   return (
     <div className="flex flex-col gap-2">
+      {excludedCompanyId && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+          <span>
+            1 prior company excluded (appeal flow — most recent appraiser of this collateral).
+          </span>
+        </div>
+      )}
+
       {/* Selected chips */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -179,6 +193,11 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
 function NewQuotationPage() {
   const navigate = useNavigate();
   const currentUser = useAuthStore(state => state.user);
+
+  // Note: appeal exclusion on this non-task quotation flow is NOT wired in v1.1.
+  // Use CreateQuotationModal (start-from-task) for appeal flows. If this page ever needs
+  // to support appeals, pull from useAppealExclusionStore.excludedCompanyId and extend
+  // POST /quotations to accept it.
 
   const [selectedAppraisals, setSelectedAppraisals] = useState<SelectedAppraisal[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);

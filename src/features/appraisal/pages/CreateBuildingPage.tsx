@@ -3,7 +3,9 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useBasePath, useAppraisalId, useAppraisalContextSafe } from '@/features/appraisal/context/AppraisalContext';
+import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
+import { useProgressivePrefill } from '@/features/collateralMaster/hooks/useProgressivePrefill';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -50,7 +52,7 @@ const CreateBuildingPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
-  const { data: propertyData, isLoading } = useGetBuildingPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetBuildingPropertyById(appraisalId ?? '', propertyId);
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
@@ -78,6 +80,70 @@ const CreateBuildingPage = () => {
       reset(mapBuildingPropertyResponseToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
+
+  // ── Progressive appraisal prefill ──────────────────────────────────────────
+  // In create mode for a Progressive appraisal, seed the construction inspection
+  // fields from the prior inspection stored on the CollateralMaster.
+  const appraisalCtx = useAppraisalContextSafe();
+  const appraisal = appraisalCtx?.appraisal ?? null;
+  const isProgressive = appraisal?.appraisalType === 'Progressive';
+  const lastConstructionInspectionId = useCollateralPrefillStore(
+    s => s.lastConstructionInspectionId,
+  );
+  // Only call the hook when conditions warrant a prefill — null disables the query
+  const prefillInspectionId =
+    !isEditMode && isProgressive ? lastConstructionInspectionId : null;
+
+  const { buildSeedRows, isSummaryMode, summaryPreviousProgressPct, priorDetails } =
+    useProgressivePrefill(prefillInspectionId);
+
+  // Guard: apply prefill only once per create-mode mount
+  const prefillAppliedRef = useRef(false);
+
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    if (!priorDetails) return;
+    if (isEditMode) return;
+
+    prefillAppliedRef.current = true;
+
+    if (!isSummaryMode) {
+      const seeds = buildSeedRows();
+      if (seeds && seeds.length > 0) {
+        methods.setValue('constructionEnterDetail', true, { shouldDirty: true });
+        methods.setValue(
+          'constructionSubItems',
+          seeds.map(s => ({
+            id: null,
+            constructionWorkGroupId: s.constructionWorkGroupId ?? '',
+            constructionWorkItemId: s.constructionWorkItemId ?? null,
+            workItemName: s.workItemName ?? '',
+            displayOrder: s.displayOrder ?? 0,
+            proportionPct: s.proportionPct ?? 0,
+            previousProgressPct: s.previousProgressPct ?? 0,
+            currentProgressPct: 0, // fresh inspection starts at 0 delta from previous
+          })),
+          { shouldDirty: true },
+        );
+      }
+    } else {
+      // Summary mode: seed the previous progress from prior summary
+      methods.setValue('constructionEnterDetail', false, { shouldDirty: true });
+      methods.setValue(
+        'constructionSummary.summaryPreviousProgressPct',
+        summaryPreviousProgressPct ?? 0,
+        { shouldDirty: true },
+      );
+    }
+  }, [
+    priorDetails,
+    isEditMode,
+    isSummaryMode,
+    buildSeedRows,
+    summaryPreviousProgressPct,
+    methods,
+  ]);
+  // ──────────────────────────────────────────────────────────────────────────
 
   const { mutate: createBuildingProperties, isPending: isCreating } = useCreateBuildingProperty();
   const { mutate: updateBuildingProperties, isPending: isUpdating } = useUpdateBuildingProperty();

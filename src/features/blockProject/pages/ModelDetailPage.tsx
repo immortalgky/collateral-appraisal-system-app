@@ -24,7 +24,10 @@ import {
   useGetProjectModelById,
   useCreateProjectModel,
   useUpdateProjectModel,
+  useDeleteProjectModel,
 } from '../api/projectModel';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import DeleteButton from '@/shared/components/buttons/DeleteButton';
 import { useGetProjectTowers } from '../api/projectTower';
 import ModelDetailForm from '../forms/ModelDetailForm';
 import ProjectModelPhotoSection, {
@@ -79,9 +82,11 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
 
   const { mutate: createModel, isPending: isCreating } = useCreateProjectModel();
   const { mutate: updateModel, isPending: isUpdating } = useUpdateProjectModel();
+  const { mutate: deleteModel, isPending: isDeleting } = useDeleteProjectModel();
 
   const isPending = isCreating || isUpdating;
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const photoSectionRef = useRef<ProjectModelPhotoSectionRef>(null);
 
   const formDefaults = useMemo(() => {
@@ -185,6 +190,25 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
 
   const handleNavigateBack = () => {
     navigate(`${basePath}/${routeSegment}?tab=models`);
+  };
+
+  const handleDelete = () => {
+    if (!appraisalId || !modelId) return;
+    deleteModel(
+      { appraisalId, modelId },
+      {
+        onSuccess: () => {
+          toast.success('Model deleted successfully');
+          skipWarning();
+          navigate(`${basePath}/${routeSegment}?tab=models`);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to delete model');
+          setIsDeleteDialogOpen(false);
+        },
+      },
+    );
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -303,6 +327,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
               <Button variant="ghost" type="button" onClick={handleNavigateBack}>
                 Cancel
               </Button>
+              {isEditMode && !isReadOnly && (
+                <DeleteButton onClick={() => setIsDeleteDialogOpen(true)} disabled={isPending || isDeleting} />
+              )}
               {!isReadOnly && (
                 <>
                   <ActionBar.Divider />
@@ -334,6 +361,15 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
             )}
           </ActionBar>
 
+          <ConfirmDialog
+            isOpen={isDeleteDialogOpen}
+            onClose={() => setIsDeleteDialogOpen(false)}
+            onConfirm={handleDelete}
+            title="Delete Model"
+            message="Are you sure you want to delete this model? This action cannot be undone."
+            confirmText="Delete"
+            isLoading={isDeleting}
+          />
           <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>

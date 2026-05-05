@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
+import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import {
   useGetQuotationById,
   usePickTentativeWinner,
@@ -221,8 +222,14 @@ const QuotationSelectionPage = () => {
     return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
   };
 
-  const handleSendConfirm = () => {
-    sendQuotation(undefined, {
+  const handleSendConfirm = (emailData: {
+    from: string;
+    to: string;
+    cc?: string;
+    subject: string;
+    content?: string;
+  }) => {
+    sendQuotation(emailData, {
       onSuccess: () => {
         toast.success('Quotation sent — companies have been notified');
         setIsSendConfirmOpen(false);
@@ -233,7 +240,6 @@ const QuotationSelectionPage = () => {
           apiErr?.apiError?.detail ??
             'Failed to send quotation. Set shared documents via the task page before sending.',
         );
-        setIsSendConfirmOpen(false);
       },
     });
   };
@@ -941,54 +947,17 @@ const QuotationSelectionPage = () => {
         />
       )}
 
-      {/* Send confirmation */}
-      <Modal
+      {/* Send confirmation — email composition */}
+      <EmailCompositionModal
         isOpen={isSendConfirmOpen}
         onClose={() => setIsSendConfirmOpen(false)}
-        title="Send Quotation"
-        size="sm"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-2">
-            <Icon
-              name="paper-plane"
-              style="solid"
-              className="size-4 text-blue-500 shrink-0 mt-0.5"
-            />
-            <p className="text-sm text-blue-700">
-              Send this quotation to{' '}
-              <strong>
-                {quotation.invitedCompanies?.length ?? quotation.totalCompaniesInvited}
-              </strong>{' '}
-              invited{' '}
-              {(quotation.invitedCompanies?.length ?? quotation.totalCompaniesInvited) === 1
-                ? 'company'
-                : 'companies'}
-              ? They will be notified to submit their bids.
-            </p>
-          </div>
-          <p className="text-xs text-gray-500">
-            Note: each appraisal with uploaded documents must have at least one shared document
-            configured before sending. If the send fails, use the task page to set up shared
-            documents first.
-          </p>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsSendConfirmOpen(false)}
-              disabled={isSendPending}
-            >
-              Go Back
-            </Button>
-            <Button onClick={handleSendConfirm} disabled={isSendPending} isLoading={isSendPending}>
-              {!isSendPending && (
-                <Icon name="paper-plane" style="solid" className="size-4 mr-1.5" />
-              )}
-              Send
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        title="Drafting email to send to external appraisal company"
+        showCc={true}
+        showAttachments={false}
+        subjectLabel="Subject"
+        isPending={isSendPending}
+        onSubmit={handleSendConfirm}
+      />
 
       {/* Draft cancel confirmation */}
       <Modal

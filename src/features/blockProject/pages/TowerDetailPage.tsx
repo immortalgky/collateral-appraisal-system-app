@@ -24,7 +24,10 @@ import {
   useGetProjectTowerById,
   useCreateProjectTower,
   useUpdateProjectTower,
+  useDeleteProjectTower,
 } from '../api/projectTower';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import DeleteButton from '@/shared/components/buttons/DeleteButton';
 import TowerDetailForm from '../forms/TowerDetailForm';
 import { projectTowerForm, projectTowerFormDefaults, type ProjectTowerFormType } from '../schemas/form';
 import ProjectTowerPhotoSection, {
@@ -61,9 +64,11 @@ export default function TowerDetailPage() {
   );
   const { mutate: createTower, isPending: isCreating } = useCreateProjectTower();
   const { mutate: updateTower, isPending: isUpdating } = useUpdateProjectTower();
+  const { mutate: deleteTower, isPending: isDeleting } = useDeleteProjectTower();
 
   const isPending = isCreating || isUpdating;
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const photoSectionRef = useRef<ProjectTowerPhotoSectionRef>(null);
 
   const formDefaults = useMemo<ProjectTowerFormType>(() => {
@@ -120,6 +125,25 @@ export default function TowerDetailPage() {
 
   const handleNavigateBack = () => {
     navigate(`${basePath}/block-condo?tab=towers`);
+  };
+
+  const handleDelete = () => {
+    if (!appraisalId || !towerId) return;
+    deleteTower(
+      { appraisalId, towerId },
+      {
+        onSuccess: () => {
+          toast.success('Tower deleted successfully');
+          skipWarning();
+          navigate(`${basePath}/block-condo?tab=towers`);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to delete tower');
+          setIsDeleteDialogOpen(false);
+        },
+      },
+    );
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -239,6 +263,9 @@ export default function TowerDetailPage() {
               <Button variant="ghost" type="button" onClick={handleNavigateBack}>
                 Cancel
               </Button>
+              {isEditMode && !isReadOnly && (
+                <DeleteButton onClick={() => setIsDeleteDialogOpen(true)} disabled={isPending || isDeleting} />
+              )}
               {!isReadOnly && (
                 <>
                   <ActionBar.Divider />
@@ -270,6 +297,15 @@ export default function TowerDetailPage() {
             )}
           </ActionBar>
 
+          <ConfirmDialog
+            isOpen={isDeleteDialogOpen}
+            onClose={() => setIsDeleteDialogOpen(false)}
+            onConfirm={handleDelete}
+            title="Delete Tower"
+            message="Are you sure you want to delete this tower? This action cannot be undone."
+            confirmText="Delete"
+            isLoading={isDeleting}
+          />
           <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>

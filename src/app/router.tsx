@@ -72,6 +72,9 @@ import CommitteeAdminPage from '@/features/committee/pages/CommitteeAdminPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
 import MenuListPage from '@features/menuManagement/pages/MenuListPage';
 import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
+import CollateralCatalogPage from '@/features/collateralMaster/pages/CollateralCatalogPage';
+import CollateralMasterDetailPage from '@/features/collateralMaster/pages/CollateralMasterDetailPage';
+import BackfillReportPage from '@/features/collateralMaster/pages/BackfillReportPage';
 import QuotationSelectionPage from '@/features/quotation/pages/QuotationSelectionPage';
 import QuotationListingPage from '@/features/quotation/pages/QuotationListingPage';
 import NewQuotationPage from '@/features/quotation/pages/NewQuotationPage';
@@ -258,6 +261,16 @@ export const router = createBrowserRouter([
               { index: true, element: <MenuListPage /> },
               { path: 'new', element: <MenuEditPage /> },
               { path: ':menuId', element: <MenuEditPage /> },
+            ],
+          },
+          // Collateral master admin — gated by COLLATERAL_ADMIN permission
+          {
+            path: 'collateral-masters',
+            element: <RoleProtectedRoute allowedRoles={['Admin', 'IntAdmin']} requiredPermission="COLLATERAL_ADMIN" />,
+            children: [
+              { index: true, element: <CollateralCatalogPage /> },
+              { path: 'backfill', element: <BackfillReportPage /> },
+              { path: ':masterId', element: <CollateralMasterDetailPage /> },
             ],
           },
         ],

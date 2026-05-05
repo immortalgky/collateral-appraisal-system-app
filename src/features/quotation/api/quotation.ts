@@ -654,8 +654,14 @@ export const useSendQuotation = (quotationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const { data } = await axios.post(`/quotations/${quotationId}/send`);
+    mutationFn: async (emailData: {
+      from: string;
+      to: string;
+      cc?: string;
+      subject: string;
+      content?: string;
+    }) => {
+      const { data } = await axios.post(`/quotations/${quotationId}/send`, emailData);
       return data;
     },
     onSuccess: () => {

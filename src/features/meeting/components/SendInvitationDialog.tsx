@@ -1,9 +1,8 @@
 import toast from 'react-hot-toast';
 
-import Modal from '@/shared/components/Modal';
-import Button from '@/shared/components/Button';
-import Icon from '@/shared/components/Icon';
+import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import { useSendInvitation } from '../api/meetings';
+import type { EmailFormValues } from '@/shared/schemas/email';
 import type { SendInvitationResponse } from '../api/types';
 
 interface SendInvitationDialogProps {
@@ -11,6 +10,8 @@ interface SendInvitationDialogProps {
   onClose: () => void;
   meetingId: string;
   meetingNo: string;
+  /** Pre-filled To field — comma-separated member emails. */
+  memberEmails?: string;
   /** When true, renders as a resend confirmation (idempotent on the backend). */
   isResend?: boolean;
   onSuccess?: (response: SendInvitationResponse) => void;
@@ -20,19 +21,23 @@ const SendInvitationDialog = ({
   isOpen,
   onClose,
   meetingId,
-  meetingNo,
+  meetingNo: _meetingNo,
+  memberEmails,
   isResend = false,
   onSuccess,
 }: SendInvitationDialogProps) => {
   const sendInvitation = useSendInvitation();
 
-  const handleClose = () => {
-    if (!sendInvitation.isPending) onClose();
-  };
-
-  const handleConfirm = () => {
+  const handleSubmit = (values: EmailFormValues) => {
     sendInvitation.mutate(
-      { id: meetingId },
+      {
+        id: meetingId,
+        from: values.from,
+        to: values.to,
+        subject: values.subject,
+        content: values.content,
+        attachments: values.attachments,
+      },
       {
         onSuccess: data => {
           toast.success(
@@ -51,54 +56,18 @@ const SendInvitationDialog = ({
     );
   };
 
-  const title = isResend ? 'Resend Invitation' : 'Send Invitation';
-  const actionLabel = isResend ? 'Resend Invitation' : 'Send Invitation';
-  const pendingLabel = isResend ? 'Resending...' : 'Sending...';
-
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-          <span className="text-xs font-medium text-gray-500 uppercase">Meeting No.</span>
-          <span className="text-sm font-semibold text-gray-900">{meetingNo}</span>
-        </div>
-
-        <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <Icon
-            name="triangle-exclamation"
-            style="solid"
-            className="w-5 h-5 text-amber-500 shrink-0 mt-0.5"
-          />
-          <p className="text-sm text-amber-800">
-            {isResend ? (
-              <>
-                The invitation will be <strong>re-sent</strong> to all committee members. The
-                meeting status will remain unchanged.
-              </>
-            ) : (
-              <>
-                The invitation will be emailed to all committee members and the meeting status will
-                move to <strong>Invitation Sent</strong>. This action cannot be undone.
-              </>
-            )}
-          </p>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Button
-            variant="ghost"
-            type="button"
-            onClick={handleClose}
-            disabled={sendInvitation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleConfirm} disabled={sendInvitation.isPending}>
-            {sendInvitation.isPending ? pendingLabel : actionLabel}
-          </Button>
-        </div>
-      </div>
-    </Modal>
+    <EmailCompositionModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isResend ? 'Resend Invitation' : 'New Email'}
+      showAttachments={true}
+      showCc={false}
+      subjectLabel="Title"
+      defaultValues={{ to: memberEmails ?? '' }}
+      isPending={sendInvitation.isPending}
+      onSubmit={handleSubmit}
+    />
   );
 };
 

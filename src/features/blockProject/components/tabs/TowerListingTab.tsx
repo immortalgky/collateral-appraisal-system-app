@@ -1,15 +1,21 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
-import { useGetProjectTowers } from '../../api/projectTower';
+import { useGetProjectTowers, useDeleteProjectTower } from '../../api/projectTower';
 import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 import type { ProjectTower } from '../../types';
+import type { ApiError } from '@/shared/types/api';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+
+type AppError = AxiosError & { apiError?: ApiError };
 
 type ViewMode = 'grid' | 'list';
 
@@ -20,15 +26,27 @@ interface TowerCardProps {
   viewMode: ViewMode;
   thumbnailSrc?: string;
   onClick: () => void;
+  onDelete: (e: React.MouseEvent) => void;
 }
 
-function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
+function TowerCard({ tower, viewMode, thumbnailSrc, onClick, onDelete }: TowerCardProps) {
+  const cardProps = {
+    role: 'button' as const,
+    tabIndex: 0,
+    onClick,
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    },
+  };
+
   if (viewMode === 'list') {
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left"
+      <div
+        {...cardProps}
+        className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left cursor-pointer"
       >
         <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
           {thumbnailSrc ? (
@@ -68,18 +86,26 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={onDelete}
+          className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+          title="Delete tower"
+        >
+          <Icon name="trash-can" style="regular" className="size-4" />
+        </button>
+
         <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4 shrink-0" />
-      </button>
+      </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group"
+    <div
+      {...cardProps}
+      className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group cursor-pointer"
     >
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
@@ -93,6 +119,14 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
             className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
           />
         )}
+        <button
+          type="button"
+          onClick={onDelete}
+          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+          title="Delete tower"
+        >
+          <Icon name="trash-can" style="regular" className="size-3.5" />
+        </button>
       </div>
 
       <div className="p-4">
@@ -120,7 +154,7 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -135,8 +169,10 @@ export default function TowerListingTab() {
   const basePath = useBasePath();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const { data: towersData, isLoading, isError } = useGetProjectTowers(appraisalId ?? '');
+  const { mutate: deleteTower, isPending: isDeleting } = useDeleteProjectTower();
   const towers = useMemo(
     () =>
       [...(towersData ?? [])].sort((a, b) =>
@@ -164,6 +200,24 @@ export default function TowerListingTab() {
 
   const handleAddTower = () => {
     navigate(`${basePath}/block-condo/tower/new`);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!appraisalId || !deleteTarget) return;
+    deleteTower(
+      { appraisalId, towerId: deleteTarget.id },
+      {
+        onSuccess: () => {
+          toast.success(`Tower "${deleteTarget.name}" deleted`);
+          setDeleteTarget(null);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to delete tower');
+          setDeleteTarget(null);
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -247,6 +301,7 @@ export default function TowerListingTab() {
               thumbnailSrc={thumbnailByTowerId.get(tower.id)}
               viewMode="grid"
               onClick={() => handleTowerClick(tower.id)}
+              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
             />
           ))}
         </div>
@@ -259,10 +314,21 @@ export default function TowerListingTab() {
               thumbnailSrc={thumbnailByTowerId.get(tower.id)}
               viewMode="list"
               onClick={() => handleTowerClick(tower.id)}
+              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Tower"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

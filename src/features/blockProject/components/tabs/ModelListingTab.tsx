@@ -5,8 +5,9 @@ import clsx from 'clsx';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
-import { useGetProjectModels } from '../../api/projectModel';
+import { useGetProjectModels, useDeleteProjectModel } from '../../api/projectModel';
 import { useCreateProjectModelPricingAnalysis } from '../../api/projectPricingAnalysis';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
 import { useParameterDescription } from '@/shared/utils/parameterUtils';
@@ -55,6 +56,7 @@ interface ModelCardProps {
   onClick: () => void;
   onPricingAnalysis: () => void;
   isPricingAnalysisPending: boolean;
+  onDelete: (e: React.MouseEvent) => void;
 }
 
 /** Pricing-analysis CTA. Stops propagation so the card click doesn't navigate. */
@@ -101,6 +103,7 @@ function ModelCard({
   onClick,
   onPricingAnalysis,
   isPricingAnalysisPending,
+  onDelete,
 }: ModelCardProps) {
   const icon = projectType === 'Condo' ? 'layer-group' : 'house';
   const hasAnalysis = Boolean(model.pricingAnalysisId);
@@ -199,6 +202,15 @@ function ModelCard({
           onClick={onPricingAnalysis}
         />
 
+        <button
+          type="button"
+          onClick={onDelete}
+          className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+          title="Delete model"
+        >
+          <Icon name="trash-can" style="regular" className="size-4" />
+        </button>
+
         <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4 shrink-0" />
       </div>
     );
@@ -209,7 +221,7 @@ function ModelCard({
       {...cardProps}
       className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group cursor-pointer"
     >
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
@@ -223,6 +235,14 @@ function ModelCard({
             className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
           />
         )}
+        <button
+          type="button"
+          onClick={onDelete}
+          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+          title="Delete model"
+        >
+          <Icon name="trash-can" style="regular" className="size-3.5" />
+        </button>
       </div>
 
       <div className="p-4">
@@ -303,8 +323,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
   const basePath = useBasePath();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const { data: modelsData, isLoading, isError } = useGetProjectModels(appraisalId ?? '');
+  const { mutate: deleteModel, isPending: isDeleting } = useDeleteProjectModel();
   const models = useMemo(
     () =>
       (Array.isArray(modelsData) ? [...modelsData] : []).sort((a, b) =>
@@ -337,6 +359,24 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
 
   const handleAddModel = () => {
     navigate(`${basePath}/${routeSegment}/model/new`);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!appraisalId || !deleteTarget) return;
+    deleteModel(
+      { appraisalId, modelId: deleteTarget.id },
+      {
+        onSuccess: () => {
+          toast.success(`Model "${deleteTarget.name}" deleted`);
+          setDeleteTarget(null);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to delete model');
+          setDeleteTarget(null);
+        },
+      },
+    );
   };
 
   const handlePricingAnalysis = (model: ProjectModel) => {
@@ -456,6 +496,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               isPricingAnalysisPending={
                 isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
               }
+              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' }); }}
             />
           ))}
         </div>
@@ -473,10 +514,21 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               isPricingAnalysisPending={
                 isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
               }
+              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' }); }}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Model"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
