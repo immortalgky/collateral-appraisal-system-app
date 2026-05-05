@@ -9,6 +9,8 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 // Land fields (from LandDetailForm.tsx)
 // =============================================================================
 
+const ObligationDetail = ['02', '03', '04', '05', '99'];
+
 export const landInfoField: FormField[] = [
   {
     type: 'text-input',
@@ -109,19 +111,21 @@ export const landInfoField: FormField[] = [
     maxLength: 100,
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['No Obligation', 'Mortgage as Security'],
-    wrapperClassName: 'col-span-6',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
+    wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
 ];
@@ -854,19 +858,21 @@ export const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['No Obligation', 'Mortgage as Security'],
-    wrapperClassName: 'col-span-6',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
+    wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
 ];
@@ -989,9 +995,9 @@ export const isResidentialField: FormField[] = [
     label: 'Building Age',
     name: 'buildingAge',
     wrapperClassName: 'col-span-2',
-    required: true,
     maxIntegerDigits: 3,
     decimalPlaces: 1,
+    allowZero: true,
   },
   {
     type: 'textarea',
@@ -1421,19 +1427,21 @@ export const condoFields: FormField[] = [
     showCharCount: true,
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
     wrapperClassName: 'col-span-12',
-    options: ['No obligations', 'Mortgage as security'],
   },
   {
     type: 'text-input',
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
   {

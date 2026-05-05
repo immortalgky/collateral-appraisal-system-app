@@ -103,7 +103,7 @@ export const CreateBuildingRequest = z
     constructionCompletionPercent: z.coerce.number(),
     constructionLicenseExpirationDate: z.string().datetime({ offset: true }),
     isAppraisable: z.boolean(),
-    hasObligation: z.boolean(),
+    hasObligation: z.string(),
     obligationDetails: z.string(),
 
     buildingType: z.string(),
@@ -172,7 +172,7 @@ export const UpdateBuildingRequest = z
     constructionCompletionPercent: z.coerce.number(),
     constructionLicenseExpirationDate: z.string().datetime({ offset: true }),
     isAppraisable: z.boolean(),
-    hasObligation: z.boolean(),
+    hasObligation: z.string(),
     obligationDetails: z.string(),
 
     buildingType: z.string(),
@@ -241,7 +241,7 @@ export const GetBuildingPropertyByIdResult = z
     constructionCompletionPercent: z.coerce.number(),
     constructionLicenseExpirationDate: z.string().datetime({ local: true }),
     isAppraisable: z.boolean(),
-    hasObligation: z.boolean(),
+    hasObligation: z.string(),
     obligationDetails: z.string(),
 
     buildingType: z.string(),
