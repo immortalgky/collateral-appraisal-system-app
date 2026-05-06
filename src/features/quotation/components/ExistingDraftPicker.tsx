@@ -115,16 +115,16 @@ const ExistingDraftPicker = ({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-600">{formatDate(draft.createdOn)}</span>
+                    <span className="text-sm text-gray-600">{formatDate(draft.requestDate)}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div>
                       <span className="text-sm font-medium text-gray-900">
-                        {draft.appraisalCount}
+                        {draft.totalAppraisals}
                       </span>
-                      {draft.appraisalPreview.length > 0 && (
+                      {draft.appraisalNumberPreview.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-0.5">
-                          {draft.appraisalPreview.slice(0, 5).map(no => (
+                          {draft.appraisalNumberPreview.slice(0, 5).map(no => (
                             <span
                               key={no}
                               className="inline-flex items-center px-1.5 py-0.5 bg-primary/5 rounded text-[10px] font-medium text-primary"
@@ -132,9 +132,9 @@ const ExistingDraftPicker = ({
                               {no}
                             </span>
                           ))}
-                          {draft.appraisalCount > 5 && (
+                          {draft.totalAppraisals > 5 && (
                             <span className="text-[10px] text-gray-400">
-                              +{draft.appraisalCount - 5} more
+                              +{draft.totalAppraisals - 5} more
                             </span>
                           )}
                         </div>
@@ -142,7 +142,7 @@ const ExistingDraftPicker = ({
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-sm text-gray-600">{draft.invitedCompanyCount}</span>
+                    <span className="text-sm text-gray-600">{draft.totalCompaniesInvited}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-gray-600">

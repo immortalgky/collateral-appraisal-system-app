@@ -252,6 +252,13 @@ export function LandBuildingTabs({
   const watchedFields = watch(['summary', 'costOfBuildingItems', 'otherCostItems']);
   const prevWatchKey = useRef<string | null>(null);
 
+  // Stable refs so the debounce timer survives re-renders:
+  //   runPreviewRef — always holds the latest runPreview without being a dep
+  //   debounceTimerRef — stores the timer id so a new re-render (different watchedFields
+  //     reference but same JSON value) can't cancel it via useEffect cleanup
+  const runPreviewRef = useRef<() => void>(() => {});
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const runPreview = useCallback(() => {
     const values = getValues();
     const request: PreviewHypothesisAnalysisRequest = {
@@ -327,21 +334,22 @@ export function LandBuildingTabs({
       },
     );
   }, [pricingAnalysisId, methodId, previewMutation, getValues]);
+  runPreviewRef.current = runPreview;
 
   // Watch inputs and debounce preview calls
   useEffect(() => {
     const key = JSON.stringify(watchedFields);
-    if (prevWatchKey.current === null) {
-      prevWatchKey.current = key;
-      return;
-    }
-    if (!isDirty) return;
+    if (prevWatchKey.current === null) { prevWatchKey.current = key; return; }
     if (key === prevWatchKey.current) return;
     prevWatchKey.current = key;
 
-    const timer = setTimeout(runPreview, 400);
-    return () => clearTimeout(timer);
-  }, [watchedFields, isDirty, runPreview]);
+    if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      debounceTimerRef.current = null;
+      runPreviewRef.current();
+    }, 400);
+  }, [watchedFields]);
+  useEffect(() => () => { if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current); }, []);
 
   // Single-shot init: reset the form from saved data, then immediately fire the
   // initial preview so per-model aggregates (Cost of Building, Summary tab) populate
@@ -451,9 +459,10 @@ export function LandBuildingTabs({
     try {
       const result = await saveMutation.mutateAsync({ pricingAnalysisId, methodId, request });
       const finalValue = result.landBuildingSummary?.totalAssetValueRounded ?? 0;
-      // Allow next savedData change to re-hydrate — picks up server-assigned ids for new rows.
-      isInitialized.current = false;
-      reset(values); // clear dirty state immediately so UI shows "saved"
+      reset(mapSavedToFormValues({
+        ...savedData,
+        landBuildingSummary: result.landBuildingSummary ?? savedData.landBuildingSummary,
+      }));
       onSaveSuccess(finalValue);
     } catch {
       toast.error('Failed to save');
@@ -530,6 +539,7 @@ export function LandBuildingTabs({
               models={effectiveModels}
               totalLandAreaFromTitles={effectiveTotalLandAreaFromTitles}
               costItems={previewCostItems ?? savedData.costItems}
+              isCalculating={previewMutation.isPending}
             />
           )}
         </div>
