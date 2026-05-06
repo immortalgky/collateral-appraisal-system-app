@@ -127,12 +127,12 @@ export type InvitedCompanyDto = z.infer<typeof InvitedCompanySchema>;
 export const QuotationDraftSummarySchema = z.object({
   id: z.string().uuid(),
   quotationNumber: z.string(),
-  createdOn: z.string(),
+  requestDate: z.string(),
   dueDate: z.string().nullable().optional(),
   bankingSegment: z.string().nullable().optional(),
-  appraisalCount: z.number().int(),
-  appraisalPreview: z.array(z.string()).optional().default([]), // first 3–5 appraisal numbers
-  invitedCompanyCount: z.number().int(),
+  totalAppraisals: z.number().int(),
+  appraisalNumberPreview: z.array(z.string()).default([]),
+  totalCompaniesInvited: z.number().int(),
 });
 
 export type QuotationDraftSummaryDto = z.infer<typeof QuotationDraftSummarySchema>;
