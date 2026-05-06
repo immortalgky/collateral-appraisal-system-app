@@ -3,7 +3,12 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId, useAppraisalContextSafe, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import {
+  useBasePath,
+  useAppraisalId,
+  useAppraisalContextSafe,
+  useIsCiAppraisal,
+} from '@/features/appraisal/context/AppraisalContext';
 import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
 import { useProgressivePrefill } from '@/features/collateralMaster/hooks/useProgressivePrefill';
 
@@ -55,7 +60,10 @@ const CreateBuildingPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
-  const { data: propertyData, isLoading } = useGetBuildingPropertyById(appraisalId ?? '', propertyId);
+  const { data: propertyData, isLoading } = useGetBuildingPropertyById(
+    appraisalId ?? '',
+    propertyId,
+  );
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
@@ -94,8 +102,7 @@ const CreateBuildingPage = () => {
     s => s.lastConstructionInspectionId,
   );
   // Only call the hook when conditions warrant a prefill — null disables the query
-  const prefillInspectionId =
-    !isEditMode && isProgressive ? lastConstructionInspectionId : null;
+  const prefillInspectionId = !isEditMode && isProgressive ? lastConstructionInspectionId : null;
 
   const { buildSeedRows, isSummaryMode, summaryPreviousProgressPct, priorDetails } =
     useProgressivePrefill(prefillInspectionId);
@@ -138,14 +145,7 @@ const CreateBuildingPage = () => {
         { shouldDirty: true },
       );
     }
-  }, [
-    priorDetails,
-    isEditMode,
-    isSummaryMode,
-    buildSeedRows,
-    summaryPreviousProgressPct,
-    methods,
-  ]);
+  }, [priorDetails, isEditMode, isSummaryMode, buildSeedRows, summaryPreviousProgressPct, methods]);
   // ──────────────────────────────────────────────────────────────────────────
 
   const { mutate: createBuildingProperties, isPending: isCreating } = useCreateBuildingProperty();
@@ -214,7 +214,7 @@ const CreateBuildingPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: payload,
+          data: { ...payload, isDraft: true } as any,
         },
         {
           onSuccess: () => {
@@ -233,7 +233,7 @@ const CreateBuildingPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: payload,
+          data: { ...payload, isDraft: true } as any,
         },
         {
           onSuccess: async (response: any) => {
@@ -288,7 +288,7 @@ const CreateBuildingPage = () => {
               icon: 'building',
               onClick: () => setActiveTab('building'),
             },
-            ...((isUnderConstruction || isCiAppraisal)
+            ...(isUnderConstruction || isCiAppraisal
               ? [
                   {
                     label: 'Construction Inspection',
@@ -303,129 +303,138 @@ const CreateBuildingPage = () => {
       </div>
 
       <PageReadOnlyContext.Provider value={isReadOnly}>
-      <FormProvider methods={methods} schema={createBuildingForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+        <FormProvider methods={methods} schema={createBuildingForm}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <div
+              id="form-scroll-container"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section — re-override to status-only readonly so CI appraisals can still manage photos */}
-                  <PageReadOnlyContext.Provider value={_baseReadOnly}>
-                  <FormReadOnlyContext.Provider value={_baseReadOnly}>
-                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                      </div>
-                      <div className="h-px bg-gray-200 mb-4" />
-                      {appraisalId && (
-                        <PropertyPhotoSection
-                          ref={photoSectionRef}
-                          appraisalId={appraisalId}
-                          propertyId={propertyId}
-                        />
-                      )}
-                    </Section>
-                  </FormReadOnlyContext.Provider>
-                  </PageReadOnlyContext.Provider>
+              <ResizableSidebar
+                isOpen={isOpen}
+                onToggle={onToggle}
+                openedWidth="w-1/5"
+                closedWidth="w-1/50"
+              >
+                <ResizableSidebar.Main>
+                  <div className="flex-auto flex flex-col gap-6 min-w-0">
+                    {/* Photos Section — re-override to status-only readonly so CI appraisals can still manage photos */}
+                    <PageReadOnlyContext.Provider value={_baseReadOnly}>
+                      <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                        <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                              <Icon
+                                name="images"
+                                style="solid"
+                                className="w-5 h-5 text-indigo-600"
+                              />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                          </div>
+                          <div className="h-px bg-gray-200 mb-4" />
+                          {appraisalId && (
+                            <PropertyPhotoSection
+                              ref={photoSectionRef}
+                              appraisalId={appraisalId}
+                              propertyId={propertyId}
+                            />
+                          )}
+                        </Section>
+                      </FormReadOnlyContext.Provider>
+                    </PageReadOnlyContext.Provider>
 
-                  {/* Building Tab Content */}
-                  <div
-                    id="properties-section"
-                    className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                    <Section id="building-info" anchor className="flex flex-col gap-6">
-                      <BuildingDetailForm />
-                    </Section>
-                  </div>
-
-                  {/* Construction Inspection Tab Content */}
-                  {(isUnderConstruction || isCiAppraisal) && (
+                    {/* Building Tab Content */}
                     <div
-                      id="construction-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                      id="properties-section"
+                      className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon
-                            name="helmet-safety"
-                            style="solid"
-                            className="w-5 h-5 text-teal-600"
-                          />
+                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">
-                          Construction Inspection
+                          Building Information
                         </h2>
                       </div>
                       <div className="h-px bg-gray-200" />
-                      <Section id="construction-info" anchor className="flex flex-col gap-6">
-                        <FormReadOnlyContext.Provider value={_baseReadOnly}>
-                          <ConstructionInspectionTab readOnly={_baseReadOnly} ciMode={isCiAppraisal} />
-                        </FormReadOnlyContext.Provider>
+                      <Section id="building-info" anchor className="flex flex-col gap-6">
+                        <BuildingDetailForm />
                       </Section>
                     </div>
-                  )}
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
 
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
+                    {/* Construction Inspection Tab Content */}
+                    {(isUnderConstruction || isCiAppraisal) && (
+                      <div
+                        id="construction-section"
+                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <Icon
+                              name="helmet-safety"
+                              style="solid"
+                              className="w-5 h-5 text-teal-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            Construction Inspection
+                          </h2>
+                        </div>
+                        <div className="h-px bg-gray-200" />
+                        <Section id="construction-info" anchor className="flex flex-col gap-6">
+                          <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                            <ConstructionInspectionTab
+                              readOnly={_baseReadOnly}
+                              ciMode={isCiAppraisal}
+                            />
+                          </FormReadOnlyContext.Provider>
+                        </Section>
+                      </div>
+                    )}
+                  </div>
+                </ResizableSidebar.Main>
+              </ResizableSidebar>
+            </div>
+
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!_baseReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
               {!_baseReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                    Save draft
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!_baseReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormProvider>
       </PageReadOnlyContext.Provider>
     </div>
   );

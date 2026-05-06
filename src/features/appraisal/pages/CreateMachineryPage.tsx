@@ -88,7 +88,7 @@ const CreateMachineryPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: { ...data, isDraft: false } as any,
         },
         {
           onSuccess: () => {
@@ -107,7 +107,7 @@ const CreateMachineryPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: { ...data, isDraft: false } as any,
         },
         {
           onSuccess: async (response: any) => {
@@ -137,7 +137,7 @@ const CreateMachineryPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: { ...data, isDraft: true } as any,
         },
         {
           onSuccess: () => {
@@ -156,7 +156,7 @@ const CreateMachineryPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: { ...data, isDraft: true } as any,
         },
         {
           onSuccess: async (response: any) => {
