@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { isAxiosError } from 'axios';
 import type { ProjectModel } from '../types';
+import { projectPricingAssumptionKeys } from './projectPricingAssumption';
 
 // ==================== Query Keys ====================
 
@@ -32,6 +33,7 @@ export const useGetProjectModels = (appraisalId: string) => {
       return data;
     },
     enabled: !!appraisalId,
+    refetchOnMount: 'always',
   });
 };
 
@@ -78,6 +80,9 @@ export const useCreateProjectModel = () => {
       queryClient.invalidateQueries({
         queryKey: projectModelKeys.all(variables.appraisalId),
       });
+      queryClient.invalidateQueries({
+        queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
+      });
     },
   });
 };
@@ -107,6 +112,9 @@ export const useUpdateProjectModel = () => {
       queryClient.invalidateQueries({
         queryKey: projectModelKeys.detail(variables.appraisalId, variables.modelId),
       });
+      queryClient.invalidateQueries({
+        queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
+      });
     },
   });
 };
@@ -130,6 +138,9 @@ export const useDeleteProjectModel = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
       });
     },
   });

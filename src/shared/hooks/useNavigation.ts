@@ -56,7 +56,7 @@ export function useAppraisalNavigation(
   const appraisal = useMenuStore(state => state.appraisal);
   const { i18n } = useTranslation();
   const lang = i18n.language;
-  const { basePath = '', requestId, isPma, isBlockCondo, status } = context;
+  const { basePath = '', requestId, isPma, isBlock, blockProjectType, status } = context;
   const terminalStatus = isTerminalStatus(status);
 
   return useMemo(() => {
@@ -64,15 +64,21 @@ export function useAppraisalNavigation(
       const condition = appraisalMenuConditions[node.itemKey];
 
       // Apply showWhen predicate
-      if (condition?.showWhen && !condition.showWhen({ isPma, isBlockCondo, status })) {
+      if (condition?.showWhen && !condition.showWhen({ isPma, isBlock, blockProjectType, status })) {
         return null;
       }
 
       // Determine canEdit — terminal status or per-item forceReadOnly override backend value
-      const forceRO = condition?.forceReadOnly?.({ isPma, isBlockCondo, status }) ?? false;
+      const forceRO = condition?.forceReadOnly?.({ isPma, isBlock, blockProjectType, status }) ?? false;
       const canEdit = !terminalStatus && !forceRO && node.canEdit;
 
-      const href = interpolatePath(node.path, basePath, requestId);
+      // For block appraisals, override "Property Information" href to the correct block page
+      let href = interpolatePath(node.path, basePath, requestId);
+      if (isBlock && node.itemKey === 'appraisal.property') {
+        href = blockProjectType === 'Condo'
+          ? `${basePath}/block-condo`
+          : `${basePath}/block-village`;
+      }
 
       const children = node.children
         .map(processNode)
@@ -92,5 +98,5 @@ export function useAppraisalNavigation(
     };
 
     return appraisal.map(processNode).filter((n): n is NavItemWithAccess => n !== null);
-  }, [appraisal, lang, basePath, requestId, isPma, isBlockCondo, status, terminalStatus]);
+  }, [appraisal, lang, basePath, requestId, isPma, isBlock, blockProjectType, status, terminalStatus]);
 }

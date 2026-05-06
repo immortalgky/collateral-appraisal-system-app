@@ -11,6 +11,7 @@ interface EmailCompositionModalProps {
   title: string;
   defaultValues?: Partial<EmailFormValues>;
   showCc?: boolean;
+  showBcc?: boolean;
   showAttachments?: boolean;
   subjectLabel?: string;
   isPending?: boolean;
@@ -26,6 +27,7 @@ const EmailCompositionModal = ({
   title,
   defaultValues,
   showCc = false,
+  showBcc = false,
   showAttachments = false,
   subjectLabel = 'Subject',
   isPending = false,
@@ -44,6 +46,7 @@ const EmailCompositionModal = ({
       from: '',
       to: '',
       cc: '',
+      bcc: '',
       subject: '',
       content: '',
       attachments: [],
@@ -61,6 +64,7 @@ const EmailCompositionModal = ({
         from: '',
         to: '',
         cc: '',
+        bcc: '',
         subject: '',
         content: '',
         attachments: [],
@@ -99,7 +103,7 @@ const EmailCompositionModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={title} size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title={title} size="xl">
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <div className="flex flex-col gap-3">
           {/* From */}
@@ -138,6 +142,21 @@ const EmailCompositionModal = ({
                 <input {...register('cc')} type="text" className={inputClass} />
                 {errors.cc && (
                   <p className="mt-1 text-xs text-red-500">{errors.cc.message}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* BCC (conditional) */}
+          {showBcc && (
+            <div className="flex items-start gap-3">
+              <label className="w-24 shrink-0 text-right text-sm font-medium text-gray-600 pt-2">
+                BCC
+              </label>
+              <div className="flex-1">
+                <input {...register('bcc')} type="text" className={inputClass} />
+                {errors.bcc && (
+                  <p className="mt-1 text-xs text-red-500">{errors.bcc.message}</p>
                 )}
               </div>
             </div>
@@ -202,8 +221,8 @@ const EmailCompositionModal = ({
             <div className="flex-1">
               <textarea
                 {...register('content')}
-                rows={6}
-                className={inputClass + ' resize-none'}
+                rows={14}
+                className={inputClass + ' resize-y min-h-[8rem]'}
               />
               {errors.content && (
                 <p className="mt-1 text-xs text-red-500">{errors.content.message}</p>

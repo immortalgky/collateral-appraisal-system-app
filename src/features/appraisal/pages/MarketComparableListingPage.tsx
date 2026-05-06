@@ -9,10 +9,13 @@ import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
 import toast from 'react-hot-toast';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
+import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 
 const MarketComparableListingPage = () => {
-  const isReadOnly = usePageReadOnly();
+  const _baseReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
+  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market comparable data (general pool, no appraisalId needed)
   const { data: marketComparables, isLoading } = useGetMarketComparables();
@@ -84,6 +87,7 @@ const MarketComparableListingPage = () => {
   }
 
   return (
+    <PageReadOnlyContext.Provider value={isReadOnly}>
     <div>
       <div>
         <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
@@ -138,6 +142,7 @@ const MarketComparableListingPage = () => {
         </ResizableSidebar>
       </div>
     </div>
+    </PageReadOnlyContext.Provider>
   );
 };
 

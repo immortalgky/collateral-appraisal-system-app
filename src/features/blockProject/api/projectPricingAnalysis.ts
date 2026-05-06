@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { isAxiosError } from 'axios';
 import { projectModelKeys } from './projectModel';
+import { projectPricingAssumptionKeys } from './projectPricingAssumption';
 import { pricingAnalysisKeys } from '@features/pricingAnalysis/api/queryKeys';
 
 // ==================== Query Keys ====================
@@ -38,6 +39,9 @@ export const useCreateProjectModelPricingAnalysis = () => {
       });
       queryClient.invalidateQueries({
         queryKey: projectModelKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
       });
       // Prime the analysis detail cache so the redirect renders immediately
       if (data?.id) {

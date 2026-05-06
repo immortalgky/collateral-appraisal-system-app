@@ -35,6 +35,7 @@ import {
   type CreateLawAndRegulationFormType,
 } from '../schemas/lawAndRegulation';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 
 const LAW_HEADER_GROUP = 'Header';
 
@@ -69,7 +70,9 @@ const formFields: FormField[] = [
 const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateLawAndRegulationPage = () => {
-  const isReadOnly = usePageReadOnly();
+  const _baseReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
+  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const navigate = useNavigate();
   const basePath = useBasePath();
   const location = useLocation();

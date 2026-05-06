@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
+import { useAuthStore } from '@/features/auth/store';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import type { QuotationRequestDetailDto, CompanyQuotationDto } from '../schemas/quotation';
 import QuotationStatusBadge from './QuotationStatusBadge';
@@ -15,6 +16,7 @@ interface NegotiationPanelProps {
 }
 
 const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
+  const isIntAdmin = useAuthStore(s => s.user?.roles?.includes('IntAdmin') ?? false);
   const {
     isOpen: isNegotiateOpen,
     onOpen: openNegotiate,
@@ -87,31 +89,33 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openReject}
-              className="text-red-600 border-red-300 hover:bg-red-50"
-            >
-              <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-              Reject Winner
-            </Button>
-            <Button
-              size="sm"
-              onClick={openFinalize}
-              className="bg-green-600 hover:bg-green-700"
-              disabled={quotation.status !== 'WinnerTentative'}
-              title={
-                quotation.status === 'Negotiating'
-                  ? 'Wait for the company to respond before awarding'
-                  : undefined
-              }
-            >
-              <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-              Award
-            </Button>
-          </div>
+          {isIntAdmin && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openReject}
+                className="text-red-600 border-red-300 hover:bg-red-50"
+              >
+                <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
+                Reject Winner
+              </Button>
+              <Button
+                size="sm"
+                onClick={openFinalize}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={quotation.status !== 'WinnerTentative'}
+                title={
+                  quotation.status === 'Negotiating'
+                    ? 'Wait for the company to respond before awarding'
+                    : undefined
+                }
+              >
+                <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
+                Award
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Winner card */}
@@ -126,10 +130,6 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                 <QuotationStatusBadge status={winner.status} />
               </div>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                <span>
-                  <span className="text-gray-400">Quoted: </span>
-                  {formatCurrency(winner.totalQuotedPrice)}
-                </span>
                 {winner.currentNegotiatedPrice != null && (
                   <span>
                     <span className="text-gray-400">Negotiated: </span>
@@ -195,7 +195,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               Negotiation History
             </p>
             <div className="space-y-3">
-              {(winner.negotiations ?? []).map(neg => (
+              {(winner.negotiations ?? []).map((neg, idx, arr) => (
                 <div key={neg.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="size-6 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
@@ -234,7 +234,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                           )}
                         </div>
                       )}
-                      {!neg.verb && (
+                      {!neg.verb && idx === arr.length - 1 && (
                         <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-amber-600">
                           Awaiting company response...
                         </div>

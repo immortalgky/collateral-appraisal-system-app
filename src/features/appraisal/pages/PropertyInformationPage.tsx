@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 // Tab state is mirrored to the URL (?tab=xxx) so it survives reload, deep-link,
 // and the layout breadcrumb can append the active tab as a structural crumb.
 import clsx from 'clsx';
+import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
+import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
 import {
   GalleryTab,
@@ -32,6 +34,8 @@ const TABS: Tab[] = [
 const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
 
 export default function PropertyInformationPage() {
+  const isReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
   const activeTab: TabId =
@@ -71,6 +75,7 @@ export default function PropertyInformationPage() {
   };
 
   return (
+    <PageReadOnlyContext.Provider value={isReadOnly || isCiAppraisal}>
     <div className="flex flex-col h-full min-h-0">
       {/* Tab Navigation - Compact */}
       <div className="shrink-0 pb-4">
@@ -104,5 +109,6 @@ export default function PropertyInformationPage() {
       {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
     </div>
+    </PageReadOnlyContext.Provider>
   );
 }

@@ -14,7 +14,7 @@ interface PartialDateInputProps {
   error?: string;
   /** Inclusive start (CE) of the year dropdown range. Default: currentYear − 30. */
   yearStart?: number;
-  /** Inclusive end (CE) of the year dropdown range. Default: currentYear + 5. */
+  /** Inclusive end (CE) of the year dropdown range. Default: currentYear + 10. */
   yearEnd?: number;
 }
 
@@ -73,7 +73,7 @@ export default function PartialDateInput({
 
   const now = new Date();
   const start = yearStart ?? now.getFullYear() - 30;
-  const end = yearEnd ?? now.getFullYear() + 5;
+  const end = yearEnd ?? now.getFullYear() + 10;
 
   // Year options. Stored values stay CE; labels reflect the user's locale.
   const yearOptions = useMemo<ListBoxItem[]>(() => {

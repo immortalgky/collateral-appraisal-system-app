@@ -17,9 +17,10 @@ import { isBuildingType, getDetailEndpoint, getRouteSegment } from '../../utils/
 
 interface ConstructionInspectionTabProps {
   readOnly?: boolean;
+  ciMode?: boolean;
 }
 
-export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTabProps) {
+export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInspectionTabProps) {
   const navigate = useNavigate();
   const basePath = useBasePath();
   const appraisalId = useAppraisalId();
@@ -231,7 +232,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
 
           <div className="flex items-center gap-2">
             {/* Copy From Dropdown */}
-            {!readOnly && otherBuildingProperties.length > 0 && (
+            {!readOnly && !ciMode && otherBuildingProperties.length > 0 && (
               <div className="relative">
                 <button
                   ref={copyBtnRef}
@@ -362,7 +363,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
             onChange={checked =>
               setValue('constructionEnterDetail', checked, { shouldDirty: true })
             }
-            disabled={readOnly}
+            disabled={readOnly || ciMode}
             size="sm"
           />
         </div>
@@ -378,6 +379,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
             onUpdateSubItem={handleUpdateSubItem}
             onDeleteSubItem={handleDeleteSubItem}
             readOnly={readOnly}
+            ciMode={ciMode}
           />
         ) : (
           <ConstructionSummaryForm
@@ -392,6 +394,7 @@ export function ConstructionInspectionTab({ readOnly }: ConstructionInspectionTa
               setValue('constructionRemark', value, { shouldDirty: true })
             }
             readOnly={readOnly}
+            ciMode={ciMode}
           />
         )}
       </div>

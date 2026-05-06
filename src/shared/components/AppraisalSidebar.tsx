@@ -12,7 +12,8 @@ import {
 import {
   useAppraisalRequestId,
   useAppraisalIsPma,
-  useAppraisalIsBlockCondo,
+  useAppraisalIsBlock,
+  useAppraisalBlockProjectType,
   useAppraisalStatus,
   useBasePath,
 } from '@features/appraisal/context/AppraisalContext';
@@ -221,12 +222,13 @@ export function MobileAppraisalSidebar({
   const requestId = useAppraisalRequestId();
   const basePath = useBasePath();
   const isPma = useAppraisalIsPma();
-  const isBlockCondo = useAppraisalIsBlockCondo();
+  const isBlock = useAppraisalIsBlock();
+  const blockProjectType = useAppraisalBlockProjectType();
   const status = useAppraisalStatus();
 
   const navContext = useMemo(
-    () => ({ isPma, isBlockCondo, status, basePath, requestId }),
-    [isPma, isBlockCondo, status, basePath, requestId],
+    () => ({ isPma, isBlock, blockProjectType, status, basePath, requestId }),
+    [isPma, isBlock, blockProjectType, status, basePath, requestId],
   );
 
   const applicationNav = useAppraisalNavigation(navContext);
@@ -331,14 +333,15 @@ export default function AppraisalSidebar({
   const requestId = useAppraisalRequestId();
   const basePath = useBasePath();
   const isPma = useAppraisalIsPma();
-  const isBlockCondo = useAppraisalIsBlockCondo();
+  const isBlock = useAppraisalIsBlock();
+  const blockProjectType = useAppraisalBlockProjectType();
   const status = useAppraisalStatus();
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
 
   const navContext = useMemo(
-    () => ({ isPma, isBlockCondo, status, basePath, requestId }),
-    [isPma, isBlockCondo, status, basePath, requestId],
+    () => ({ isPma, isBlock, blockProjectType, status, basePath, requestId }),
+    [isPma, isBlock, blockProjectType, status, basePath, requestId],
   );
 
   const applicationNav = useAppraisalNavigation(navContext);

@@ -658,6 +658,7 @@ export const useSendQuotation = (quotationId: string) => {
       from: string;
       to: string;
       cc?: string;
+      bcc?: string;
       subject: string;
       content?: string;
     }) => {

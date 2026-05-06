@@ -2,7 +2,7 @@ import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useBasePath, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
 import { DispatchCtx, ServerDataCtx, StateCtx, } from '@features/pricingAnalysis/store/selectionContext';
 import { approachMethodReducer, type SelectionState, } from '@features/pricingAnalysis/store/selectionReducer';
@@ -12,7 +12,7 @@ import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectio
 import { useCalculationFlow } from '@features/pricingAnalysis/hooks/useCalculationFlow';
 import { createInitialState } from '@features/pricingAnalysis/store/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import { useSetFinalValue } from '@features/pricingAnalysis/api';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
@@ -84,7 +84,9 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
   const navigate = useNavigate();
   const basePath = useBasePath();
   const queryClient = useQueryClient();
-  const isReadOnly = usePageReadOnly();
+  const _baseReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
+  const isReadOnly = _baseReadOnly || isCiAppraisal;
 
   // Resolve the effective subject from prop or route params
   const resolvedSubject: PricingAnalysisSubject = subject ?? (
@@ -235,13 +237,15 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
       : undefined;
 
   return (
-    <PricingAnalysisContent
-      appraisalId={appraisalId ?? ''}
-      groupId={subjectId}
-      pricingAnalysisId={pricingAnalysisId}
-      isModelSubject={resolvedSubject.kind === 'projectModel'}
-      returnTo={returnTo}
-    />
+    <PageReadOnlyContext.Provider value={isReadOnly}>
+      <PricingAnalysisContent
+        appraisalId={appraisalId ?? ''}
+        groupId={subjectId}
+        pricingAnalysisId={pricingAnalysisId}
+        isModelSubject={resolvedSubject.kind === 'projectModel'}
+        returnTo={returnTo}
+      />
+    </PageReadOnlyContext.Provider>
   );
 }
 

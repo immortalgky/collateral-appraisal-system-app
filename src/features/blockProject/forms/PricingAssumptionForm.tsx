@@ -9,6 +9,7 @@ import type { ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import {
   pricingForceSaleFields,
+  pricingLandAssumptionFields,
   condoPricingFloorFields,
 } from '../configs/fields';
 
@@ -83,45 +84,6 @@ const LB_LOCATION_ROWS: LocationRow[] = [
   { name: 'otherAdjustment', label: 'Other' },
 ];
 
-// ── Land Assumption Table (LB only) ──────────────────────────────────────────
-
-const LandAssumptionTable = () => {
-  const { control } = useFormContext();
-
-  return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
-      <table className="w-full table-fixed">
-        <colgroup>
-          <col className="w-2/5" />
-          <col />
-        </colgroup>
-        <tbody className="bg-white">
-          <tr>
-            <td className="px-4 py-2 text-sm text-gray-700">
-              Land Increase / Decrease
-              <span className="text-gray-400 ml-1">(Baht/sq.wa)</span>
-            </td>
-            <td className="px-3 py-1.5">
-              <Controller
-                control={control}
-                name="landIncreaseDecreaseRate"
-                render={({ field, fieldState }) => (
-                  <NumberInput
-                    decimalPlaces={2}
-                    value={field.value ?? ''}
-                    onChange={e => field.onChange(e.target.value)}
-                    onBlur={field.onBlur}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
-};
 
 interface LocationAssumptionsTableProps {
   projectType: ProjectType;
@@ -213,19 +175,9 @@ const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
       <LocationAssumptionsTable projectType={projectType} />
     </section>
 
-    {projectType === 'LandAndBuilding' && (
-      <section>
-        <SectionHeader title="Land Assumption" icon="mountain-city" />
-        <p className="text-xs text-gray-400 mb-3">
-          Land price adjustment applied to each unit based on land area.
-        </p>
-        <LandAssumptionTable />
-      </section>
-    )}
-
     <div className="h-px bg-gray-200" />
 
-    {/* Floor + Force Sale — keep existing two-column SectionRow layout */}
+    {/* Floor / Land + Force Sale — two-column SectionRow layout */}
     <div className="grid grid-cols-5 gap-x-6 gap-y-4">
       {projectType === 'Condo' && (
         <SectionRow title="Floor Assumptions" icon="stairs">
@@ -233,6 +185,15 @@ const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
             Price increment applied for every N floors above the base floor.
           </SectionSubtitle>
           <FormFields fields={condoPricingFloorFields} />
+        </SectionRow>
+      )}
+
+      {projectType === 'LandAndBuilding' && (
+        <SectionRow title="Land Assumption" icon="mountain-city">
+          <SectionSubtitle>
+            Land price adjustment applied to each unit based on land area.
+          </SectionSubtitle>
+          <FormFields fields={pricingLandAssumptionFields} />
         </SectionRow>
       )}
 

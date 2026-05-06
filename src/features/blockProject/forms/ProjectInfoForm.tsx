@@ -6,7 +6,7 @@ import type { ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import ProjectTypePill from '../components/ProjectTypePill';
 import PartialDateInput from '../components/PartialDateInput';
-import type { ChildCounts } from '../components/ChangeProjectTypeDialog';
+
 import {
   condoProjectInfoFields,
   lbProjectInfoFields,
@@ -17,10 +17,9 @@ import {
 
 interface ProjectInfoFormProps {
   projectType: ProjectType;
-  appraisalId: string;
-  basePath: string;
+  pendingType: ProjectType | null;
   hasExistingProject: boolean;
-  childCounts: ChildCounts;
+  onProjectTypeChange: (newType: ProjectType | null) => void;
 }
 
 /**
@@ -35,10 +34,9 @@ interface ProjectInfoFormProps {
  */
 const ProjectInfoForm = ({
   projectType,
-  appraisalId,
-  basePath,
+  pendingType,
   hasExistingProject,
-  childCounts,
+  onProjectTypeChange,
 }: ProjectInfoFormProps) => {
   const { control } = useFormContext();
   const typeSpecificInfoFields =
@@ -78,14 +76,13 @@ const ProjectInfoForm = ({
           <div className="col-span-4">
             <ProjectTypePill
               projectType={projectType}
-              appraisalId={appraisalId}
-              basePath={basePath}
+              pendingType={pendingType}
               hasExistingProject={hasExistingProject}
-              childCounts={childCounts}
+              onPendingTypeChange={onProjectTypeChange}
             />
           </div>
           <FormFields fields={beforeLaunchDate} />
-          <div className="col-span-4">
+          <div className="col-span-6">
             <Controller
               control={control}
               name="projectSaleLaunchDate"

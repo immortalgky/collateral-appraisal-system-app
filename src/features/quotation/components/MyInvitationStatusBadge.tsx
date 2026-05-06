@@ -23,7 +23,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
     className: 'bg-amber-100 text-amber-700 border border-amber-200',
   },
   Draft: {
-    label: 'Draft',
+    label: 'Pending Submission',
     className: 'bg-amber-100 text-amber-700 border border-amber-200',
   },
   PendingCheckerReview: {
@@ -31,17 +31,14 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
     className: 'bg-indigo-100 text-indigo-700 border border-indigo-200',
   },
   Submitted: {
-    label: 'Submitted',
+    label: 'Quoted',
     className: 'bg-blue-100 text-blue-700 border border-blue-200',
   },
   UnderReview: {
     label: 'Under Review',
     className: 'bg-blue-100 text-blue-700 border border-blue-200',
   },
-  Tentative: {
-    label: 'Tentative Winner',
-    className: 'bg-purple-100 text-purple-700 border border-purple-200',
-  },
+  Tentative: QUOTED,
   Negotiating: {
     label: 'Negotiating',
     className: 'bg-purple-100 text-purple-700 border border-purple-200',

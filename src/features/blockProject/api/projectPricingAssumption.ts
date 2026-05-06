@@ -43,6 +43,7 @@ export const useGetProjectPricingAssumptions = (appraisalId: string) => {
       return data ?? null;
     },
     enabled: !!appraisalId,
+    refetchOnMount: 'always',
   });
 };
 
