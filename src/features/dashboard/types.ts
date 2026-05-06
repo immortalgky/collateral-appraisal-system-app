@@ -7,7 +7,8 @@ export type WidgetType =
   | 'total-appraisals'
   | 'progress-summary'
   | 'team-workload'
-  | 'external-task-summary';
+  | 'external-task-summary'
+  | 'quotation-task-summary';
 
 // Column spans in a 12-column grid
 export type ColumnSpan = 3 | 4 | 6 | 8 | 12;
@@ -91,6 +92,14 @@ export const WIDGET_CONFIGS: Record<WidgetType, WidgetConfig> = {
     minCols: 6,
     maxCols: 12,
     defaultCols: 6,
+  },
+  'quotation-task-summary': {
+    type: 'quotation-task-summary',
+    title: 'Quotation Task Summary',
+    description: 'Track quotation pipeline stages for intAdmin',
+    minCols: 8,
+    maxCols: 12,
+    defaultCols: 12,
   },
   calendar: {
     type: 'calendar',
@@ -187,6 +196,14 @@ export const DEFAULT_WIDGETS: Widget[] = [
     cols: 6,
     order: 9,
     visible: false,
+    position: 'main',
+  },
+  {
+    id: 'quotation-task-summary',
+    type: 'quotation-task-summary',
+    cols: 12,
+    order: 10,
+    visible: true,
     position: 'main',
   },
 ];

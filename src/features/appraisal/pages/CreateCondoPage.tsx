@@ -84,7 +84,7 @@ const CreateCondoPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data,
+          data: { ...data, isDraft: false } as any,
         },
         {
           onSuccess: () => {
@@ -103,7 +103,7 @@ const CreateCondoPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data,
+          data: { ...data, isDraft: false } as any,
         },
         {
           onSuccess: async (response: any) => {
@@ -133,7 +133,7 @@ const CreateCondoPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data,
+          data: { ...data, isDraft: true } as any,
         },
         {
           onSuccess: () => {
@@ -152,7 +152,7 @@ const CreateCondoPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data,
+          data: { ...data, isDraft: true } as any,
         },
         {
           onSuccess: async (response: any) => {

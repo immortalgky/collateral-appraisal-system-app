@@ -6,7 +6,8 @@
 
 export type NavContext = {
   isPma?: boolean;
-  isBlockCondo?: boolean;
+  isBlock?: boolean;
+  blockProjectType?: string;
   status?: string;
 };
 

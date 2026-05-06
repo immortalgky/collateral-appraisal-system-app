@@ -46,7 +46,10 @@ export const PropertyTableRow = ({
   };
 
   return (
-    <tr data-property-id={property.id} className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
+    <tr
+      data-property-id={property.id}
+      className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group"
+    >
       {/* Thumbnail */}
       <td className="px-2 py-2" onClick={handleClick}>
         <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden cursor-pointer">
@@ -67,7 +70,10 @@ export const PropertyTableRow = ({
       {/* Address */}
       <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate" title={property.address}>
+          <p
+            className="text-sm font-medium text-gray-900 w-11/12 truncate"
+            title={property.address}
+          >
             {property.address}
           </p>
           <p className="text-xs text-gray-500 truncate">{property.location}</p>

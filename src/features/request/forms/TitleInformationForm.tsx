@@ -12,6 +12,10 @@ import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import TitleDocumentAddressForm from './TitleDocumentAddressForm';
 import DopaAddressForm from './DopaAddressForm';
+import { TitleLookupIntegration } from '@/features/collateralMaster/components/TitleLookupIntegration';
+import { CollateralLookupProvider } from '@/features/collateralMaster/components/CollateralLookupContext';
+import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
+import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
 import {
   requestTitleDefault,
   RequestTitleDto,
@@ -53,6 +57,13 @@ const TitleInformationForm = () => {
   if (editIndex !== undefined && titles.length > editIndex) {
     currentFormType = titles[editIndex]?.collateralType;
   }
+
+  // Reset cross-flow stores on mount so stale data from a previous request
+  // creation doesn't leak into the current one (lookup-driven exclusions / prefill).
+  useEffect(() => {
+    useAppealExclusionStore.getState().clearExclusions();
+    useCollateralPrefillStore.getState().clearPrefill();
+  }, []);
 
   // Auto scroll to bottom when new item is added
   useEffect(() => {
@@ -123,28 +134,28 @@ const TitleInformationForm = () => {
   };
 
   const getCollateralTypeIcon = (type: string | undefined) => {
-    switch (type) {
-      case 'L':
-        return 'mountain-sun';
-      case 'B':
-        return 'building';
-      case 'LB':
-        return 'city';
-      case 'U':
-        return 'building-user';
-      case 'VEH':
-        return 'car';
-      case 'MAC':
-        return 'gear';
-      case 'LSL':
-        return 'file-contract';
-      case 'LS':
-        return 'file-signature';
-      case 'LSB':
-        return 'file-lines';
-      default:
-        return 'file-circle-question';
-    }
+    if (!type) return 'file-circle-question';
+    // Land family
+    if (['01','13','14','17','19','21','26','27'].includes(type)) return 'mountain-sun';
+    // Land+Building family
+    if (['02','03','04','23','24','32'].includes(type)) return 'city';
+    // Building family
+    if (['05','06','07','15','16','18','20','22'].includes(type)) return 'building';
+    // Condo family
+    if (['08','33'].includes(type)) return 'building-user';
+    // Vehicle
+    if (type === '10') return 'car';
+    // Machine
+    if (type === '11') return 'gear';
+    // Vessel
+    if (type === '12') return 'ship';
+    // Lease land
+    if (type === '29') return 'file-contract';
+    // Lease land+building
+    if (['09','25','30','31'].includes(type)) return 'file-signature';
+    // Lease condo
+    if (type === '28') return 'file-lines';
+    return 'file-circle-question';
   };
 
   // Context menu state
@@ -171,6 +182,7 @@ const TitleInformationForm = () => {
   }, [contextMenu]);
 
   return (
+    <CollateralLookupProvider>
     <>
       {/* Initialize required documents for all titles */}
       {titles?.map((_: any, index: number) => (
@@ -182,6 +194,7 @@ const TitleInformationForm = () => {
         subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles?.length} title(s)`}
         icon="file-certificate"
         iconColor="purple"
+        required={true}
         rightIcon={
           isEditing ? (
             <button
@@ -328,6 +341,12 @@ const TitleInformationForm = () => {
 
             {/* Right Panel - Detail Form */}
             <div className="flex-1 min-w-0">
+              {/* Collateral lookup banner — fires when dedup-key fields fill in */}
+              {!isReadOnly && editIndex !== undefined && (
+                <div className="mb-3 pr-2">
+                  <TitleLookupIntegration titleIndex={editIndex} />
+                </div>
+              )}
               <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
                 <FormFields fields={titleInfoFields} namePrefix="titles" index={editIndex} />
                 <TitleForm index={editIndex} currentFormType={currentFormType} />
@@ -381,6 +400,7 @@ const TitleInformationForm = () => {
         />
       </FormCard>
     </>
+    </CollateralLookupProvider>
   );
 };
 
@@ -459,8 +479,12 @@ const TitleTableView = ({
     const details: { label: string; value: string }[] = [];
     const type = title?.collateralType;
 
-    // Title info (land types + condo)
-    if (['L', 'LB', 'LSL', 'LS', 'LSB', 'B', 'U'].includes(type)) {
+    const LAND_AREA_TYPES = ['01','02','03','04','09','13','14','17','19','21','23','24','25','26','27','29','30','31','32'];
+    const BUILDING_USABLE_TYPES = ['02','03','04','05','06','07','09','15','16','18','20','22','23','24','25','30','31','32'];
+    const CONDO_TYPES_LOCAL = ['08','33'];
+
+    // Title info (non-movable types)
+    if (!['10','11','12'].includes(type)) {
       const titleStr =
         title?.titleType || title?.titleNumber
           ? `${title?.titleType ? `${title.titleType}: ` : ''}${title?.titleNumber || ''}`
@@ -479,7 +503,7 @@ const TitleTableView = ({
     }
 
     // Area (land types)
-    if (['L', 'LB', 'LSL', 'LS', 'LSB'].includes(type)) {
+    if (LAND_AREA_TYPES.includes(type)) {
       const hasArea = title?.areaRai || title?.areaNgan || title?.areaSquareWa;
       if (hasArea) {
         details.push({
@@ -489,13 +513,13 @@ const TitleTableView = ({
       }
     }
 
-    // Usable area (condo + building types)
-    if (['U', 'B', 'LB', 'LSB', 'LS'].includes(type) && title?.usableArea) {
+    // Usable area (building + land+building types)
+    if (BUILDING_USABLE_TYPES.includes(type) && title?.usableArea) {
       details.push({ label: 'Usable Area', value: `${title.usableArea} sq.m` });
     }
 
     // Condo-specific
-    if (type === 'U') {
+    if (CONDO_TYPES_LOCAL.includes(type)) {
       if (title?.condoName) details.push({ label: 'Condo', value: title.condoName });
       const room = [
         title?.roomNumber && `Room ${title.roomNumber}`,
@@ -507,14 +531,14 @@ const TitleTableView = ({
     }
 
     // Vehicle-specific
-    if (type === 'VEH') {
+    if (type === '10') {
       if (title?.licensePlateNumber)
         details.push({ label: 'License Plate', value: title.licensePlateNumber });
       if (title?.vehicleType) details.push({ label: 'Vehicle Type', value: title.vehicleType });
     }
 
     // Machine-specific
-    if (type === 'MAC') {
+    if (type === '11') {
       if (title?.machineType) details.push({ label: 'Machine Type', value: title.machineType });
       if (title?.numberOfMachine)
         details.push({ label: 'Qty', value: String(title.numberOfMachine) });
@@ -677,56 +701,74 @@ const TitleRequiredDocsInitializer = ({ index }: { index: number }) => {
   return null;
 };
 
+const LAND_ONLY_CODES = ['01','13','14','17','19','21','26','27','29'];
+const LAND_AND_BUILDING_CODES = ['02','03','04','09','23','24','25','30','31','32'];
+const BUILDING_ONLY_CODES = ['05','06','07','15','16','18','20','22'];
+const CONDO_FORM_CODES = ['08','28','33'];
+
 const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
-  switch (currentFormType) {
-    case 'L':
-      return <TitleLandForm index={index} />;
-    case 'B':
-      return <TitleBuildingForm index={index} />;
-    case 'LB':
-      return (
-        <>
-          <TitleLandForm index={index} variant="landAndBuilding" />
-          <TitleBuildingForm index={index} variant={2} />
-        </>
-      );
-    case 'U':
-      return <TitleCondoForm index={index} />;
-    case 'VEH':
-      return <TitleVehicleForm index={index} />;
-    case 'MAC':
-      return <TitleMachineForm index={index} />;
-    case 'LSL':
-      return <TitleLandForm index={index} />;
-    case 'LS':
-      return (
-        <>
-          <TitleLandForm index={index} variant="landAndBuilding" />
-          <TitleBuildingForm index={index} variant={2} />
-        </>
-      );
-    case 'LSB':
-      return <TitleBuildingForm index={index} />;
-    default:
-      return (
-        <div className="col-span-6 text-center py-8 text-gray-500">
-          <Icon style="regular" name="hand-pointer" className="size-8 mx-auto mb-2 text-gray-400" />
-          <p>Please select a collateral type to continue</p>
-        </div>
-      );
+  if (!currentFormType) {
+    return (
+      <div className="col-span-6 text-center py-8 text-gray-500">
+        <Icon style="regular" name="hand-pointer" className="size-8 mx-auto mb-2 text-gray-400" />
+        <p>Please select a collateral type to continue</p>
+      </div>
+    );
   }
+  if (LAND_ONLY_CODES.includes(currentFormType)) return <TitleLandForm index={index} />;
+  if (LAND_AND_BUILDING_CODES.includes(currentFormType))
+    return (
+      <>
+        <TitleLandForm index={index} variant="landAndBuilding" />
+        <TitleBuildingForm index={index} variant={2} />
+      </>
+    );
+  if (BUILDING_ONLY_CODES.includes(currentFormType)) return <TitleBuildingForm index={index} />;
+  if (CONDO_FORM_CODES.includes(currentFormType)) return <TitleCondoForm index={index} />;
+  if (currentFormType === '10') return <TitleVehicleForm index={index} />;
+  if (currentFormType === '11') return <TitleMachineForm index={index} />;
+  return (
+    <div className="col-span-6 text-center py-8 text-gray-500">
+      <Icon style="regular" name="hand-pointer" className="size-8 mx-auto mb-2 text-gray-400" />
+      <p>Please select a collateral type to continue</p>
+    </div>
+  );
 };
 
-const collateralTypeOptions = [
-  { value: 'L', label: 'Land' },
-  { value: 'LB', label: 'Land and Building' },
-  { value: 'B', label: 'Building' },
-  { value: 'U', label: 'Condominium' },
-  { value: 'VEH', label: 'Vehicle' },
-  { value: 'MAC', label: 'Machine' },
-  { value: 'LSL', label: 'Lease Agreement Land' },
-  { value: 'LS', label: 'Lease Agreement Land and Building' },
-  { value: 'LSB', label: 'Lease Agreement Building' },
+const collateralTypeOptions: { value: string; label: string }[] = [
+  { value: '01', label: 'Land' },
+  { value: '02', label: 'Land with buildings' },
+  { value: '03', label: 'Land with buildings (blueprint)' },
+  { value: '04', label: 'Land allocation (whole project)' },
+  { value: '05', label: 'Buildings' },
+  { value: '06', label: 'Building (blueprint)' },
+  { value: '07', label: 'Building (whole project)' },
+  { value: '08', label: 'Apartment' },
+  { value: '09', label: 'Leasehold rights, real estate' },
+  { value: '10', label: 'Car' },
+  { value: '11', label: 'Machinery' },
+  { value: '12', label: 'Ship' },
+  { value: '13', label: 'Land (Part 1)' },
+  { value: '14', label: 'Land (Part 2)' },
+  { value: '15', label: 'Building (Part 1)' },
+  { value: '16', label: 'Building (Part 2)' },
+  { value: '17', label: 'Land (Part 2)' },
+  { value: '18', label: 'Building (Part 2)' },
+  { value: '19', label: 'Land (Group 1)' },
+  { value: '20', label: 'Building (Group 1)' },
+  { value: '21', label: 'Land (Group 2)' },
+  { value: '22', label: 'Building (Group 2)' },
+  { value: '23', label: 'Land with buildings (Group 1)' },
+  { value: '24', label: 'Land with buildings (Group 2)' },
+  { value: '25', label: 'Leasehold rights (land with buildings)' },
+  { value: '26', label: 'Land (Group 3)' },
+  { value: '27', label: 'Land (Group 4)' },
+  { value: '28', label: 'Leasehold rights (condominium)' },
+  { value: '29', label: 'Land lease rights' },
+  { value: '30', label: 'Leasehold rights' },
+  { value: '31', label: 'Lease rights for space within shopping center' },
+  { value: '32', label: 'Land with buildings (BlockLand)' },
+  { value: '33', label: 'Condominium (BlockCondo)' },
 ];
 
 export default TitleInformationForm;

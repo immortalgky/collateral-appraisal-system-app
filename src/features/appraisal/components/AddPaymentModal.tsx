@@ -17,6 +17,7 @@ interface AddPaymentModalProps {
   defaultValues?: { paymentDate: string; amount: number } | null;
   isEditing?: boolean;
   maxAmount?: number;
+  requestedAt?: string | null;
 }
 
 /**
@@ -29,6 +30,7 @@ export default function AddPaymentModal({
   defaultValues,
   isEditing = false,
   maxAmount,
+  requestedAt,
 }: AddPaymentModalProps) {
   const {
     handleSubmit,
@@ -83,6 +85,7 @@ export default function AddPaymentModal({
           required
           value={paymentDate}
           onChange={value => setValue('paymentDate', value || '')}
+          minDate={requestedAt}
           error={errors.paymentDate?.message}
         />
 

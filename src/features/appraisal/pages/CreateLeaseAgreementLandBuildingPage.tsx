@@ -3,7 +3,11 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
+import {
+  useAppraisalId,
+  useBasePath,
+  useIsCiAppraisal,
+} from '@/features/appraisal/context/AppraisalContext';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -27,9 +31,15 @@ import {
   type createLeaseAgreementLandAndBuildingFormType,
 } from '../schemas/form';
 import toast from 'react-hot-toast';
-import { mapLandAndBuildingFormDataToApiPayload, mapLandAndBuildingPropertyResponseToForm, } from '../utils/mappers';
-import PropertyPhotoSection, { type PropertyPhotoSectionRef, } from '../components/PropertyPhotoSection';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import {
+  mapLandAndBuildingFormDataToApiPayload,
+  mapLandAndBuildingPropertyResponseToForm,
+} from '../utils/mappers';
+import PropertyPhotoSection, {
+  type PropertyPhotoSectionRef,
+} from '../components/PropertyPhotoSection';
+import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
+import { FormReadOnlyContext } from '@shared/components/form';
 import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -81,7 +91,9 @@ const useUpdateLeaseAgreementLandBuildingProperty = () => {
 // ─── Page Component ───────────────────────────────────────────────
 
 const CreateLeaseAgreementLandBuildingPage = () => {
-  const isReadOnly = usePageReadOnly();
+  const _baseReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
+  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -142,10 +154,10 @@ const CreateLeaseAgreementLandBuildingPage = () => {
   >(initialTab);
 
   useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction) {
+    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
       setActiveTab('land');
     }
-  }, [isUnderConstruction, activeTab]);
+  }, [isUnderConstruction, activeTab, isCiAppraisal]);
 
   const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -160,7 +172,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
 
     if (isEditMode && propertyId) {
       updateProperty(
-        { appraisalId: appraisalId!, propertyId, data: payload as any },
+        { appraisalId: appraisalId!, propertyId, data: { ...payload, isDraft: false } as any },
         {
           onSuccess: () => {
             reset(getValues());
@@ -175,7 +187,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
       );
     } else {
       createProperty(
-        { appraisalId: appraisalId!, groupId, data: payload as any },
+        { appraisalId: appraisalId!, groupId, data: { ...payload, isDraft: false } as any },
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
@@ -203,7 +215,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
 
     if (isEditMode && propertyId) {
       updateProperty(
-        { appraisalId: appraisalId!, propertyId, data: payload as any },
+        { appraisalId: appraisalId!, propertyId, data: { ...payload, isDraft: true } as any },
         {
           onSuccess: () => {
             reset(getValues());
@@ -218,7 +230,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
       );
     } else {
       createProperty(
-        { appraisalId: appraisalId!, groupId, data: payload as any },
+        { appraisalId: appraisalId!, groupId, data: { ...payload, isDraft: true } as any },
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
@@ -269,7 +281,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
               icon: 'building',
               onClick: () => setActiveTab('building'),
             },
-            ...(isUnderConstruction
+            ...(isUnderConstruction || isCiAppraisal
               ? [
                   {
                     label: 'Construction Inspection',
@@ -295,197 +307,214 @@ const CreateLeaseAgreementLandBuildingPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLeaseAgreementLandAndBuildingForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+      <PageReadOnlyContext.Provider value={isReadOnly}>
+        <FormProvider methods={methods} schema={createLeaseAgreementLandAndBuildingForm}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <div
+              id="form-scroll-container"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section */}
-                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    {appraisalId && (
-                      <PropertyPhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        propertyId={propertyId}
-                      />
-                    )}
-                  </Section>
+              <ResizableSidebar
+                isOpen={isOpen}
+                onToggle={onToggle}
+                openedWidth="w-1/5"
+                closedWidth="w-1/50"
+              >
+                <ResizableSidebar.Main>
+                  <div className="flex-auto flex flex-col gap-6 min-w-0">
+                    {/* Photos Section — re-override to status-only readonly so CI appraisals can still manage photos */}
+                    <PageReadOnlyContext.Provider value={_baseReadOnly}>
+                      <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                        <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                              <Icon
+                                name="images"
+                                style="solid"
+                                className="w-5 h-5 text-indigo-600"
+                              />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                          </div>
+                          <div className="h-px bg-gray-200 mb-4" />
+                          {appraisalId && (
+                            <PropertyPhotoSection
+                              ref={photoSectionRef}
+                              appraisalId={appraisalId}
+                              propertyId={propertyId}
+                            />
+                          )}
+                        </Section>
+                      </FormReadOnlyContext.Provider>
+                    </PageReadOnlyContext.Provider>
 
-                  {/* Land Tab Content */}
-                  <div
-                    id="land-section"
-                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon
-                          name="mountain-sun"
-                          style="solid"
-                          className="w-5 h-5 text-amber-600"
-                        />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                    <Section
-                      id="land-title"
-                      anchor
-                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                    >
-                      <TitleDeedForm />
-                    </Section>
-                    <Section
-                      id="land-info"
-                      anchor
-                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                    >
-                      <LandDetailForm />
-                    </Section>
-                  </div>
-
-                  {/* Building Tab Content */}
-                  <div
-                    id="building-section"
-                    className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Building Information</h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                    <Section id="building-info" anchor className="flex flex-col gap-6">
-                      <BuildingDetailForm />
-                    </Section>
-                  </div>
-
-                  {/* Construction Inspection Tab Content */}
-                  {isUnderConstruction && (
+                    {/* Land Tab Content */}
                     <div
-                      id="construction-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                      id="land-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
                           <Icon
-                            name="helmet-safety"
+                            name="mountain-sun"
                             style="solid"
-                            className="w-5 h-5 text-teal-600"
+                            className="w-5 h-5 text-amber-600"
                           />
                         </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                      </div>
+                      <div className="h-px bg-gray-200" />
+                      <Section
+                        id="land-title"
+                        anchor
+                        className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                      >
+                        <TitleDeedForm />
+                      </Section>
+                      <Section
+                        id="land-info"
+                        anchor
+                        className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                      >
+                        <LandDetailForm />
+                      </Section>
+                    </div>
+
+                    {/* Building Tab Content */}
+                    <div
+                      id="building-section"
+                      className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
+                        </div>
                         <h2 className="text-lg font-semibold text-gray-900">
-                          Construction Inspection
+                          Building Information
                         </h2>
                       </div>
                       <div className="h-px bg-gray-200" />
-                      <Section id="construction-info" anchor className="flex flex-col gap-6">
-                        <ConstructionInspectionTab readOnly={isReadOnly} />
+                      <Section id="building-info" anchor className="flex flex-col gap-6">
+                        <BuildingDetailForm />
                       </Section>
                     </div>
-                  )}
 
-                  {/* Lease Agreement Tab Content */}
-                  <div
-                    id="lease-agreement-section"
-                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
-                  >
-                    <Section anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                          <Icon
-                            name="file-contract"
-                            style="solid"
-                            className="w-5 h-5 text-purple-600"
-                          />
+                    {/* Construction Inspection Tab Content */}
+                    {(isUnderConstruction || isCiAppraisal) && (
+                      <div
+                        id="construction-section"
+                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <Icon
+                              name="helmet-safety"
+                              style="solid"
+                              className="w-5 h-5 text-teal-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            Construction Inspection
+                          </h2>
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
+                        <div className="h-px bg-gray-200" />
+                        <Section id="construction-info" anchor className="flex flex-col gap-6">
+                          <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                            <ConstructionInspectionTab
+                              readOnly={_baseReadOnly}
+                              ciMode={isCiAppraisal}
+                            />
+                          </FormReadOnlyContext.Provider>
+                        </Section>
                       </div>
-                      <div className="h-px bg-gray-200 mb-6" />
-                      <LeaseAgreementForm namePrefix="leaseAgreement" />
-                    </Section>
-                  </div>
+                    )}
 
-                  {/* Rental Info Tab Content */}
-                  <div
-                    id="rental-info-section"
-                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
-                  >
-                    <Section anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon
-                            name="calendar-days"
-                            style="solid"
-                            className="w-5 h-5 text-teal-600"
-                          />
+                    {/* Lease Agreement Tab Content */}
+                    <div
+                      id="lease-agreement-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Icon
+                              name="file-contract"
+                              style="solid"
+                              className="w-5 h-5 text-purple-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
-                      </div>
-                      <div className="h-px bg-gray-200 mb-6" />
-                      <RentalInfoForm namePrefix="rentalInfo" />
-                    </Section>
-                  </div>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+                        <div className="h-px bg-gray-200 mb-6" />
+                        <LeaseAgreementForm namePrefix="leaseAgreement" />
+                      </Section>
+                    </div>
 
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
-              {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                    {/* Rental Info Tab Content */}
+                    <div
+                      id="rental-info-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <Icon
+                              name="calendar-days"
+                              style="solid"
+                              className="w-5 h-5 text-teal-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
+                        </div>
+                        <div className="h-px bg-gray-200 mb-6" />
+                        <RentalInfoForm namePrefix="rentalInfo" />
+                      </Section>
+                    </div>
+                  </div>
+                </ResizableSidebar.Main>
+              </ResizableSidebar>
+            </div>
+
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!_baseReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
+              {!_baseReadOnly && (
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                    Save draft
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormProvider>
+      </PageReadOnlyContext.Provider>
     </div>
   );
 };

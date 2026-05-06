@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 
@@ -132,7 +132,19 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   const { data: pricingData } = useGetProjectPricingAssumptions(appraisalId);
   const { data: landData } = useGetProjectLand(appraisalId);
 
-  const hasExistingProject = project != null;
+  // Latch: once the project is confirmed to exist, keep this true so transient
+  // background refetches (triggered by invalidateQueries after save) don't
+  // briefly flip hasExistingProject to false and disable the type dropdown.
+  // The latch only goes true→false when appraisalId changes (different appraisal);
+  // type changes navigate to a new route which unmounts/remounts this component.
+  const [hasExistingProject, setHasExistingProject] = useState(() => project != null);
+  useEffect(() => {
+    if (project != null) setHasExistingProject(true);
+  }, [project]);
+  useEffect(() => {
+    setHasExistingProject(project != null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appraisalId]);
   const childCounts = {
     models: modelsData?.length ?? 0,
     towers: towersData?.length ?? 0,

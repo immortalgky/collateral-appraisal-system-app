@@ -56,7 +56,12 @@ const CreateLandPage = () => {
     defaultValues: formDefaults,
     resolver: zodResolver(createLandForm),
   });
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
 
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -82,7 +87,7 @@ const CreateLandPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: { ...data, isDraft: false } as any,
         },
         {
           onSuccess: () => {
@@ -101,7 +106,7 @@ const CreateLandPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: { ...data, isDraft: false } as any,
         },
         {
           onSuccess: async (response: any) => {
@@ -131,7 +136,7 @@ const CreateLandPage = () => {
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: { ...data, isDraft: true } as any,
         },
         {
           onSuccess: () => {
@@ -150,7 +155,7 @@ const CreateLandPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: { ...data, isDraft: true } as any,
         },
         {
           onSuccess: async (response: any) => {

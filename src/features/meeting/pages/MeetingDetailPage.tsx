@@ -313,6 +313,8 @@ const MeetingDetailPage = () => {
         onClose={sendInvitationDialog.onClose}
         meetingId={meeting.id}
         meetingNo={meeting.meetingNo}
+        startAt={meeting.startAt}
+        location={meeting.location}
       />
 
       <SendInvitationDialog
@@ -320,6 +322,8 @@ const MeetingDetailPage = () => {
         onClose={resendInvitationDialog.onClose}
         meetingId={meeting.id}
         meetingNo={meeting.meetingNo}
+        startAt={meeting.startAt}
+        location={meeting.location}
         isResend
       />
 

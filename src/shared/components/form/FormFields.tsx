@@ -30,6 +30,7 @@ import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
 import type { FormField } from './types';
 import { useFilterWatchValues } from '@/shared/hooks/useFilterWatchValues';
+import ParameterSearchInput from '../inputs/ParameterSearchInput';
 
 // =============================================================================
 // Field State Hook
@@ -548,6 +549,17 @@ function FieldRenderer({
             error={error?.message}
             className={passedField.className}
             {...locationProps}
+          />
+        );
+      }
+      case 'parameter-search': {
+        return (
+          <ParameterSearchInput
+            {...fieldProps}
+            group={(passedField as any).group}
+            label={passedField.label}
+            {...{ required: isRequired, disabled: isDisabled }}
+            error={error?.message}
           />
         );
       }

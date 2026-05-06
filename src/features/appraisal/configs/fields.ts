@@ -9,6 +9,8 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 // Land fields (from LandDetailForm.tsx)
 // =============================================================================
 
+const ObligationDetail = ['02', '03', '04', '05', '99'];
+
 export const landInfoField: FormField[] = [
   {
     type: 'text-input',
@@ -75,11 +77,11 @@ export const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-3',
   },
   {
-    type: 'dropdown',
+    type: 'parameter-search',
     label: 'Land Office',
     name: 'landOffice',
     group: 'LandOffice',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     required: true,
   },
   {
@@ -109,19 +111,21 @@ export const landInfoField: FormField[] = [
     maxLength: 100,
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['No Obligation', 'Mortgage as Security'],
-    wrapperClassName: 'col-span-6',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
+    wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
 ];
@@ -287,6 +291,7 @@ export const roadField: FormField[] = [
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'number-input',
@@ -766,6 +771,8 @@ export const buildingInfoField: FormField[] = [
     label: 'House No.',
     name: 'houseNumber',
     wrapperClassName: 'col-span-3',
+    disableWhen: { field: 'noHouseNumber', is: '02' },
+    disabledValue: '-',
     required: true,
     maxLength: 10,
   },
@@ -802,6 +809,15 @@ export const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-5',
     required: true,
     maxLength: 200,
+  },
+  {
+    type: 'radio-group',
+    label: 'No House Number',
+    name: 'noHouseNumber',
+    wrapperClassName: 'col-span-12',
+    group: 'NoHouseNumber',
+    orientation: 'horizontal',
+    variant: 'button',
   },
   {
     type: 'radio-group',
@@ -854,19 +870,21 @@ export const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['No Obligation', 'Mortgage as Security'],
-    wrapperClassName: 'col-span-6',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
+    wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
 ];
@@ -989,9 +1007,9 @@ export const isResidentialField: FormField[] = [
     label: 'Building Age',
     name: 'buildingAge',
     wrapperClassName: 'col-span-2',
-    required: true,
     maxIntegerDigits: 3,
     decimalPlaces: 1,
+    allowZero: true,
   },
   {
     type: 'textarea',
@@ -1116,7 +1134,7 @@ export const ceilingField: FormField[] = [
 export const wallField: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Interior',
+    label: 'Interior Wall',
     name: 'interiorWallType',
     orientation: 'horizontal',
     group: 'Interior',
@@ -1135,7 +1153,7 @@ export const wallField: FormField[] = [
   },
   {
     type: 'checkbox-group',
-    label: 'Exterior',
+    label: 'Exterior Wall',
     name: 'exteriorWallType',
     orientation: 'horizontal',
     group: 'Exterior',
@@ -1376,10 +1394,10 @@ export const condoFields: FormField[] = [
     max: 180,
   },
   {
-    type: 'dropdown',
+    type: 'parameter-search',
     label: 'Land Office',
     name: 'landOffice',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
     required: true,
     group: 'LandOffice',
   },
@@ -1421,19 +1439,21 @@ export const condoFields: FormField[] = [
     showCharCount: true,
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
     wrapperClassName: 'col-span-12',
-    options: ['No obligations', 'Mortgage as security'],
   },
   {
     type: 'text-input',
     label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
   {
@@ -1483,6 +1503,7 @@ export const condoLocationFields: FormField[] = [
     name: 'accessRoadWidth',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
   {
     type: 'number-input',
@@ -1835,7 +1856,7 @@ export const constructionAndUseField: FormField[] = [
 export const interiorWallFields: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Interior',
+    label: 'Interior Wall',
     name: 'interiorWallType',
     orientation: 'horizontal',
     group: 'Interior',
@@ -1856,7 +1877,7 @@ export const interiorWallFields: FormField[] = [
 export const exteriorWallFields: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Exterior',
+    label: 'Exterior Wall',
     name: 'exteriorWallType',
     orientation: 'horizontal',
     group: 'Exterior',

@@ -100,30 +100,25 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
 // Structural sub-routes under property / property-pma / block-condo / block-village.
 // `parentTab` is the tab id used to build the parent's `?tab=` href so the parent
 // link returns to the right tab.
-const propertySubRouteLabels: Record<
-  string,
-  { label: string; icon: string; parentTab?: string }
-> = {
-  land: { label: 'Land', icon: 'map-location-dot' },
-  building: { label: 'Building', icon: 'building' },
-  condo: { label: 'Condominium', icon: 'city' },
-  'land-building': { label: 'Land & Building', icon: 'house-chimney' },
-  'market-comparable': {
-    label: 'Markets',
-    icon: 'magnifying-glass-location',
-    parentTab: 'markets',
-  },
-  'law-and-regulation': { label: 'Law & Regulation', icon: 'gavel', parentTab: 'laws' },
-  tower: { label: 'Tower', icon: 'building', parentTab: 'towers' },
-  model: { label: 'Model', icon: 'layer-group', parentTab: 'models' },
-};
+const propertySubRouteLabels: Record<string, { label: string; icon: string; parentTab?: string }> =
+  {
+    land: { label: 'Land', icon: 'map-location-dot' },
+    building: { label: 'Building', icon: 'building' },
+    condo: { label: 'Condominium', icon: 'city' },
+    'land-building': { label: 'Land & Building', icon: 'house-chimney' },
+    'market-comparable': {
+      label: 'Markets',
+      icon: 'magnifying-glass-location',
+      parentTab: 'markets',
+    },
+    'law-and-regulation': { label: 'Law & Regulation', icon: 'gavel', parentTab: 'laws' },
+    tower: { label: 'Tower', icon: 'building', parentTab: 'towers' },
+    model: { label: 'Model', icon: 'layer-group', parentTab: 'models' },
+  };
 
 // Active-tab labels per container route — read from `?tab=` and appended as a
 // structural breadcrumb crumb on the index page.
-const tabLabelsByPageSegment: Record<
-  string,
-  Record<string, { label: string; icon: string }>
-> = {
+const tabLabelsByPageSegment: Record<string, Record<string, { label: string; icon: string }>> = {
   'block-condo': {
     'project-info': { label: 'Project Info', icon: 'building-columns' },
     'unit-listing': { label: 'Unit Listing', icon: 'table-list' },
@@ -210,9 +205,7 @@ function TaskLayout() {
   const isMenuSynced = isMenuLoaded && activeActivityId === expectedActivityId;
 
   const isLoading =
-    isTaskLoading ||
-    (!!appraisalId && isAppraisalLoading) ||
-    (!!taskData && !isMenuSynced);
+    isTaskLoading || (!!appraisalId && isAppraisalLoading) || (!!taskData && !isMenuSynced);
 
   // Pool task lock awareness
   const isPoolTask = taskData?.assignedType === '2';
@@ -276,9 +269,7 @@ function TaskLayout() {
         // Sub-route under a container, e.g. /block-condo/market-comparable/:id.
         const subRouteSegment =
           isContainerRoute && pathSegments.length >= 4 ? pathSegments[3] : null;
-        const subRouteInfo = subRouteSegment
-          ? propertySubRouteLabels[subRouteSegment]
-          : undefined;
+        const subRouteInfo = subRouteSegment ? propertySubRouteLabels[subRouteSegment] : undefined;
 
         if (pageSegment === 'groups' && pathSegments.includes('pricing-analysis')) {
           items.push({
@@ -370,12 +361,14 @@ function TaskLayout() {
         appraisal: {
           appraisalId: appraisalData.id ?? appraisalId ?? '',
           requestId: appraisalData.requestId ?? '',
+          requestedAt: appraisalData.requestedAt ?? undefined,
           appraisalReportNo: appraisalData.appraisalNumber ?? undefined,
           status: appraisalData.status ?? undefined,
           appraisalType: appraisalData.appraisalType ?? undefined,
           priority: appraisalData.priority ?? undefined,
-          isPma: (appraisalData as any).isPma ?? true,
-          isBlockCondo: (appraisalData as any).purpose === '07',
+          isPma: appraisalData?.isPma ?? true,
+          isBlock: appraisalData?.isBlock ?? false,
+          blockProjectType: appraisalData?.blockProjectType ?? undefined,
           ...commonWorkflowFields,
         },
         isLoading: false,

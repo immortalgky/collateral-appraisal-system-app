@@ -41,6 +41,7 @@ export const dashboardKeys = {
   reminders: () => [...dashboardKeys.all, 'reminders'] as const,
   calendar: (month: string) => [...dashboardKeys.all, 'calendar', month] as const,
   notes: () => [...dashboardKeys.all, 'notes'] as const,
+  quotationTaskSummary: () => [...dashboardKeys.all, 'quotation-task-summary'] as const,
 };
 
 export const useTaskSummary = () => {
@@ -107,6 +108,14 @@ export const useNotes = () => {
   return useQuery({
     queryKey: dashboardKeys.notes(),
     queryFn: () => dashboardApi.getNotes(),
+    staleTime: DASHBOARD_STALE_TIME,
+  });
+};
+
+export const useQuotationTaskSummary = () => {
+  return useQuery({
+    queryKey: dashboardKeys.quotationTaskSummary(),
+    queryFn: () => dashboardApi.getQuotationTaskSummary(),
     staleTime: DASHBOARD_STALE_TIME,
   });
 };

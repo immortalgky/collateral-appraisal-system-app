@@ -39,7 +39,7 @@ export const CreateCondoRequest = z
 
     isOwnerVerified: z.boolean(),
     buildingConditionType: z.string(),
-    hasObligation: z.boolean(),
+    hasObligation: z.string(),
     obligationDetails: z.string(),
     documentValidationResultType: z.string(),
 
@@ -118,7 +118,7 @@ export const UpdateCondoRequest = z
 
     isOwnerVerified: z.boolean(),
     buildingConditionType: z.string(),
-    hasObligation: z.boolean(),
+    hasObligation: z.string(),
     obligationDetails: z.string(),
     documentValidationResultType: z.string(),
 
@@ -197,7 +197,7 @@ export const GetCondoPropertyByIdResult = z
 
     isOwnerVerified: z.boolean(),
     buildingConditionType: z.string(),
-    hasObligation: z.boolean(),
+    hasObligation: z.string(),
     obligationDetails: z.string(),
     documentValidationResultType: z.string(),
 

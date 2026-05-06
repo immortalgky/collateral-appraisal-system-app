@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import UploadArea from '@/shared/components/inputs/UploadArea';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
-import { useGetProjectUnits, useGetProjectUnitUploads, useUploadProjectUnits } from '../../api/projectUnit';
+import { useGetProjectUnits, useGetProjectUnitUploads, useUploadProjectUnits, useDeleteProjectUnitUpload } from '../../api/projectUnit';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
 import type { AxiosError } from 'axios';
 import type { ApiError } from '@/shared/types/api';
@@ -26,7 +28,17 @@ function validateFile(file: File): string | null {
 
 // ── Upload History Table ──────────────────────────────────────────────────────
 
-function UploadHistoryTable({ uploads, isLoading }: { uploads: ProjectUnitUpload[]; isLoading: boolean }) {
+function UploadHistoryTable({
+  uploads,
+  isLoading,
+  onDelete,
+  deletingId,
+}: {
+  uploads: ProjectUnitUpload[];
+  isLoading: boolean;
+  onDelete: (upload: ProjectUnitUpload) => void;
+  deletingId: string | null;
+}) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -45,6 +57,7 @@ function UploadHistoryTable({ uploads, isLoading }: { uploads: ProjectUnitUpload
             <th className="text-left py-2 px-3 text-gray-500 font-medium">File Name</th>
             <th className="text-left py-2 px-3 text-gray-500 font-medium">Date / Time</th>
             <th className="text-left py-2 px-3 text-gray-500 font-medium">Status</th>
+            <th className="py-2 px-3" />
           </tr>
         </thead>
         <tbody>
@@ -57,6 +70,17 @@ function UploadHistoryTable({ uploads, isLoading }: { uploads: ProjectUnitUpload
                 {upload.isUsed && (
                   <Badge type="status" value="completed">Used</Badge>
                 )}
+              </td>
+              <td className="py-2 px-3 text-right">
+                <button
+                  type="button"
+                  onClick={() => onDelete(upload)}
+                  disabled={deletingId === upload.id}
+                  className="text-gray-400 hover:text-danger transition-colors disabled:opacity-50"
+                  title="Delete upload"
+                >
+                  <Icon style="regular" name="trash" className="size-3.5" />
+                </button>
               </td>
             </tr>
           ))}
@@ -208,10 +232,28 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { data: unitsData, isLoading: unitsLoading } = useGetProjectUnits(appraisalId ?? '');
   const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(appraisalId ?? '');
   const { mutate: uploadUnits, isPending: isUploading } = useUploadProjectUnits();
+  const { mutate: deleteUpload, isPending: isDeleting } = useDeleteProjectUnitUpload();
 
   const units = unitsData?.units ?? [];
   const uploads = uploadsData ?? [];
   const totalCount = unitsData?.totalCount ?? units.length;
+
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingDeleteUpload, setPendingDeleteUpload] = useState<ProjectUnitUpload | null>(null);
+
+  const doUpload = (file: File) => {
+    if (!appraisalId) return;
+    uploadUnits(
+      { appraisalId, file },
+      {
+        onSuccess: () => toast.success('Units imported successfully'),
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Upload failed. Please check the file format.');
+        },
+      },
+    );
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -223,14 +265,26 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
       return;
     }
 
-    uploadUnits(
-      { appraisalId, file },
+    if (units.length > 0) {
+      setPendingFile(file);
+    } else {
+      doUpload(file);
+    }
+  };
+
+  const handleConfirmReupload = () => {
+    if (pendingFile) doUpload(pendingFile);
+    setPendingFile(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!pendingDeleteUpload || !appraisalId) return;
+    deleteUpload(
+      { appraisalId, uploadId: pendingDeleteUpload.id },
       {
-        onSuccess: () => toast.success('Units imported successfully'),
-        onError: (err: unknown) => {
-          const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Upload failed. Please check the file format.');
-        },
+        onSuccess: () => toast.success('Upload deleted'),
+        onError: () => toast.error('Failed to delete upload'),
+        onSettled: () => setPendingDeleteUpload(null),
       },
     );
   };
@@ -250,7 +304,12 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">Upload History</h3>
-          <UploadHistoryTable uploads={uploads} isLoading={uploadsLoading} />
+          <UploadHistoryTable
+            uploads={uploads}
+            isLoading={uploadsLoading}
+            onDelete={setPendingDeleteUpload}
+            deletingId={isDeleting ? (pendingDeleteUpload?.id ?? null) : null}
+          />
         </div>
       </div>
 
@@ -266,6 +325,28 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingFile !== null}
+        onClose={() => setPendingFile(null)}
+        onConfirm={handleConfirmReupload}
+        title="Replace existing units?"
+        message="Uploading a new file will replace all current unit data. This cannot be undone."
+        confirmText="Replace"
+        variant="warning"
+        isLoading={isUploading}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingDeleteUpload !== null}
+        onClose={() => setPendingDeleteUpload(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete upload?"
+        message={`This will permanently remove "${pendingDeleteUpload?.fileName}" and all its unit rows.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

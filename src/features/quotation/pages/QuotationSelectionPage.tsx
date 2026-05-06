@@ -1,28 +1,28 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import {
-  useGetQuotationById,
-  usePickTentativeWinner,
-  useCancelQuotation,
-  useSendQuotation,
-} from '../api/quotation';
+import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
+import { useCancelQuotation, useGetQuotationById, usePickTentativeWinner, useSendQuotation, } from '../api/quotation';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import EditDraftQuotationModal from '../components/EditDraftQuotationModal';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import NegotiationPanel from '../components/NegotiationPanel';
 import AppraisalReportListingTable from '../components/AppraisalReportListingTable';
+import InvitedCompaniesTable from '../components/InvitedCompaniesTable';
 import QuotationTrackingLog from '../components/QuotationTrackingLog';
 import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
+import { useAuthStore } from '@/features/auth/store';
+import SlideOverPanel from '@/shared/components/SlideOverPanel';
+import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetailPage';
 
 /**
  * Combined RM + Admin quotation page.
@@ -37,6 +37,8 @@ import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 const QuotationSelectionPage = () => {
   const id = useQuotationIdFromRoute();
   const navigate = useNavigate();
+  const currentUser = useAuthStore(s => s.user);
+  const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
   const { data: quotation, isLoading, isError } = useGetQuotationById(id);
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
@@ -75,6 +77,7 @@ const QuotationSelectionPage = () => {
   const [isEditDraftOpen, setIsEditDraftOpen] = useState(false);
   const [isSendConfirmOpen, setIsSendConfirmOpen] = useState(false);
   const [isDraftCancelOpen, setIsDraftCancelOpen] = useState(false);
+  const [viewingCqId, setViewingCqId] = useState<string | null>(null);
 
   const shortlisted = (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted);
   const tentativeWinner = quotation?.tentativeWinnerQuotationId
@@ -147,6 +150,49 @@ const QuotationSelectionPage = () => {
       ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
       : '—';
 
+  const defaultEmailValues = useMemo(() => {
+    const appraisals = quotation?.appraisals ?? [];
+    const dueDate = quotation?.dueDate ? new Date(quotation.dueDate) : null;
+
+    const distinctCustomerNames = [
+      ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
+    ].join(', ');
+    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean).join(',');
+
+    const targetTime = dueDate
+      ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
+      : '';
+    const targetDate = dueDate
+      ? dueDate.toLocaleDateString('th-TH-u-ca-buddhist', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : '';
+
+    const appraisalList = appraisals
+      .map(
+        (a, i) =>
+          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`,
+      )
+      .join('\n');
+
+    const adminFullName = `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
+
+    const bccEmails = (quotation?.invitedCompanies ?? [])
+      .map(c => c.email)
+      .filter(Boolean)
+      .join(',');
+
+    return {
+      from: currentUser?.email ?? '',
+      cc: 'appraisal.team@lhbank.com',
+      bcc: bccEmails,
+      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
+      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+    };
+  }, [quotation, currentUser]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -209,9 +255,10 @@ const QuotationSelectionPage = () => {
   // ─── Hours-remaining badge — only meaningful while bids are still open ────
   // After Sent the bidding window has closed (admin review / pick winner / etc.),
   // so a "hours remaining" countdown would be misleading.
-  const hoursLeft = showSentPanel && quotation.dueDate
-    ? Math.max(0, Math.floor((new Date(quotation.dueDate).getTime() - Date.now()) / 36e5))
-    : null;
+  const hoursLeft =
+    showSentPanel && quotation.dueDate
+      ? Math.max(0, Math.floor((new Date(quotation.dueDate).getTime() - Date.now()) / 36e5))
+      : null;
 
   const formatDateTimeShort = (iso: string | null | undefined) => {
     if (!iso) return '—';
@@ -221,8 +268,15 @@ const QuotationSelectionPage = () => {
     return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
   };
 
-  const handleSendConfirm = () => {
-    sendQuotation(undefined, {
+  const handleSendConfirm = (emailData: {
+    from: string;
+    to: string;
+    cc?: string;
+    bcc?: string;
+    subject: string;
+    content?: string;
+  }) => {
+    sendQuotation(emailData, {
       onSuccess: () => {
         toast.success('Quotation sent — companies have been notified');
         setIsSendConfirmOpen(false);
@@ -233,7 +287,6 @@ const QuotationSelectionPage = () => {
           apiErr?.apiError?.detail ??
             'Failed to send quotation. Set shared documents via the task page before sending.',
         );
-        setIsSendConfirmOpen(false);
       },
     });
   };
@@ -270,9 +323,9 @@ const QuotationSelectionPage = () => {
       {/* Lean header — compact title with status + cut-off below, metrics + cancel on the right */}
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="min-w-0">
-          <h1 className="text-sm font-semibold text-gray-900 truncate leading-tight">
+          <div className="text-sm font-semibold text-primary truncate leading-tight">
             {quotation.quotationNumber}
-          </h1>
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <QuotationStatusBadge status={quotation.status} />
             <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
@@ -293,40 +346,33 @@ const QuotationSelectionPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-5 text-xs">
+        <div className="flex items-center gap-3">
           {showCancelButton && (
             <button
               type="button"
               onClick={() => setIsCancelConfirmOpen(true)}
               disabled={isCancelPending}
-              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed mr-2"
             >
               <Icon name="ban" style="solid" className="size-3" />
               Cancel Quotation
             </button>
           )}
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-gray-400 uppercase tracking-wide text-[10px]">Appraisals</span>
-            <span className="font-semibold text-gray-900 tabular-nums">
-              {quotation.totalAppraisals}
-            </span>
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-gray-400 uppercase tracking-wide text-[10px]">Invited</span>
-            <span className="font-semibold text-gray-900 tabular-nums">
-              {quotation.totalCompaniesInvited}
-            </span>
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-gray-400 uppercase tracking-wide text-[10px]">Responses</span>
-            <span className="font-semibold text-gray-900 tabular-nums">
+          <span className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-md px-2.5 py-1 text-xs">
+            <span className="text-blue-400 font-medium">Appraisals</span>
+            <span className="font-semibold text-blue-700 tabular-nums">{quotation.totalAppraisals}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-100 rounded-md px-2.5 py-1 text-xs">
+            <span className="text-teal-400 font-medium">Invited</span>
+            <span className="font-semibold text-teal-700 tabular-nums">{quotation.totalCompaniesInvited}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 bg-violet-50 border border-violet-100 rounded-md px-2.5 py-1 text-xs">
+            <span className="text-violet-400 font-medium">Responses</span>
+            <span className="font-semibold text-violet-700 tabular-nums">
               {quotation.totalQuotationsReceived}
-              <span className="text-gray-400 font-normal">
-                {' '}
-                / {quotation.totalCompaniesInvited}
-              </span>
+              <span className="text-violet-400 font-normal">/{quotation.totalCompaniesInvited}</span>
             </span>
-          </div>
+          </span>
         </div>
       </div>
 
@@ -364,6 +410,12 @@ const QuotationSelectionPage = () => {
         appraisals={quotation.appraisals ?? []}
         rmUserName={quotation.rmUserName}
         rmUserFullName={quotation.rmUserFullName}
+      />
+
+      {/* ─── Section 1b: Invited Companies ───────────────────────────────────── */}
+      <InvitedCompaniesTable
+        companies={quotation.invitedCompanies ?? []}
+        companyQuotations={quotation.companyQuotations ?? []}
       />
 
       {/* Instructions (RM pick phase only) */}
@@ -440,9 +492,7 @@ const QuotationSelectionPage = () => {
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">
-                            {inv.companyName}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900">{inv.companyName}</div>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="text-sm text-gray-700 tabular-nums">
@@ -547,9 +597,7 @@ const QuotationSelectionPage = () => {
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
-          <div className="px-4 py-3 text-sm text-gray-500">
-            This quotation was cancelled.
-          </div>
+          <div className="px-4 py-3 text-sm text-gray-500">This quotation was cancelled.</div>
         </div>
       )}
 
@@ -558,9 +606,9 @@ const QuotationSelectionPage = () => {
         <div className="rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-gray-700">
-              Shortlisted Bids ({shortlisted.length})
+              Shortlisted Submissions ({shortlisted.length})
             </h2>
-            {showWinnerActions && (
+            {showWinnerActions && isIntAdmin && (
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -595,9 +643,27 @@ const QuotationSelectionPage = () => {
             )}
           </div>
 
+          {quotation?.rmRequestsNegotiation && (
+            <div className="m-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
+              <div className="size-7 rounded-lg bg-amber-200 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon name="comment-dots" style="solid" className="size-3.5 text-amber-700" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-amber-900">
+                  RM requests negotiation with <strong>{tentativeWinner?.companyName}</strong>
+                </p>
+                {quotation.rmNegotiationNote && (
+                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
+                    {quotation.rmNegotiationNote}
+                  </blockquote>
+                )}
+              </div>
+            </div>
+          )}
+
           {shortlisted.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-gray-500">No shortlisted bids available</p>
+              <p className="text-sm text-gray-500">No shortlisted submissions available</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -624,6 +690,9 @@ const QuotationSelectionPage = () => {
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Detail
                     </th>
                     {!isRmReadOnly && (
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -700,6 +769,16 @@ const QuotationSelectionPage = () => {
                         <td className="px-4 py-3 text-center">
                           <QuotationStatusBadge status={cq.status} />
                         </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            aria-label={`View ${cq.companyName} quotation detail`}
+                            onClick={() => setViewingCqId(cq.id)}
+                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                          >
+                            <Icon name="file-lines" style="regular" className="size-4 text-blue-500" />
+                          </button>
+                        </td>
                         {!isRmReadOnly && (
                           <td className="px-4 py-3 text-center">
                             <Button
@@ -722,15 +801,6 @@ const QuotationSelectionPage = () => {
         </div>
       )}
 
-      {/* Close-only state */}
-      {showCloseOnly && (
-        <div className="flex items-center justify-end gap-3 pt-1">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Close
-          </Button>
-        </div>
-      )}
-
       {/* ─── Section 4: Quotation Tracking Log ───────────────────────────────── */}
       {id && <QuotationTrackingLog quotationId={id} />}
 
@@ -748,21 +818,8 @@ const QuotationSelectionPage = () => {
             <Icon name="crown" style="solid" className="size-4 text-indigo-500 shrink-0 mt-0.5" />
             <p className="text-sm text-indigo-700">
               You are selecting <strong>{pickedCompany?.companyName}</strong> as the tentative
-              winner. Admin will be notified to start negotiation.
+              winner.
             </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Reason <span className="text-xs text-gray-400">(optional)</span>
-            </label>
-            <textarea
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
-              placeholder="Why this company?"
-            />
           </div>
 
           {/* Request negotiation toggle */}
@@ -847,15 +904,12 @@ const QuotationSelectionPage = () => {
             />
             <p className="text-sm text-red-700">
               This will cancel quotation <strong>{quotation.quotationNumber}</strong>. All invited
-              companies will be notified and the workflow task will be cancelled. This action
-              cannot be undone.
+              companies will be notified and the workflow task will be cancelled. This action cannot
+              be undone.
             </p>
           </div>
           <div>
-            <label
-              htmlFor="standalone-cancel-reason"
-              className="block text-sm text-gray-600 mb-1"
-            >
+            <label htmlFor="standalone-cancel-reason" className="block text-sm text-gray-600 mb-1">
               Reason <span className="text-gray-400">(optional)</span>
             </label>
             <textarea
@@ -867,9 +921,7 @@ const QuotationSelectionPage = () => {
               placeholder="Why is this quotation being cancelled?"
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             />
-            <p className="mt-1 text-[11px] text-gray-400 text-right">
-              {cancelReason.length}/500
-            </p>
+            <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={closeCancelConfirm} disabled={isCancelPending}>
@@ -941,54 +993,19 @@ const QuotationSelectionPage = () => {
         />
       )}
 
-      {/* Send confirmation */}
-      <Modal
+      {/* Send confirmation — email composition */}
+      <EmailCompositionModal
         isOpen={isSendConfirmOpen}
         onClose={() => setIsSendConfirmOpen(false)}
-        title="Send Quotation"
-        size="sm"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-2">
-            <Icon
-              name="paper-plane"
-              style="solid"
-              className="size-4 text-blue-500 shrink-0 mt-0.5"
-            />
-            <p className="text-sm text-blue-700">
-              Send this quotation to{' '}
-              <strong>
-                {quotation.invitedCompanies?.length ?? quotation.totalCompaniesInvited}
-              </strong>{' '}
-              invited{' '}
-              {(quotation.invitedCompanies?.length ?? quotation.totalCompaniesInvited) === 1
-                ? 'company'
-                : 'companies'}
-              ? They will be notified to submit their bids.
-            </p>
-          </div>
-          <p className="text-xs text-gray-500">
-            Note: each appraisal with uploaded documents must have at least one shared document
-            configured before sending. If the send fails, use the task page to set up shared
-            documents first.
-          </p>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsSendConfirmOpen(false)}
-              disabled={isSendPending}
-            >
-              Go Back
-            </Button>
-            <Button onClick={handleSendConfirm} disabled={isSendPending} isLoading={isSendPending}>
-              {!isSendPending && (
-                <Icon name="paper-plane" style="solid" className="size-4 mr-1.5" />
-              )}
-              Send
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        title="Drafting email to send to external appraisal company"
+        defaultValues={defaultEmailValues}
+        showCc={true}
+        showBcc={true}
+        showAttachments={false}
+        subjectLabel="Subject"
+        isPending={isSendPending}
+        onSubmit={handleSendConfirm}
+      />
 
       {/* Draft cancel confirmation */}
       <Modal
@@ -1029,6 +1046,23 @@ const QuotationSelectionPage = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Company quotation detail drawer */}
+      <SlideOverPanel
+        isOpen={!!viewingCqId}
+        onClose={() => setViewingCqId(null)}
+        title="Company Quotation Detail"
+        width="2xl"
+      >
+        {viewingCqId && (
+          <AdminCompanyQuotationDetailContent
+            quotationRequestId={quotation.id}
+            companyQuotationId={viewingCqId}
+            mode="drawer"
+            onClose={() => setViewingCqId(null)}
+          />
+        )}
+      </SlideOverPanel>
     </div>
   );
 };

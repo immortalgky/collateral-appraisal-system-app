@@ -123,6 +123,13 @@ export function CondominiumTabs({
   const watchedFields = watch(['summary']);
   const prevWatchKey = useRef<string | null>(null);
 
+  // Stable refs so the debounce timer survives re-renders:
+  //   runPreviewRef — always holds the latest runPreview without being a dep
+  //   debounceTimerRef — stores the timer id so a new re-render (different watchedFields
+  //     reference but same JSON value) can't cancel it via useEffect cleanup
+  const runPreviewRef = useRef<() => void>(() => {});
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const runPreview = useCallback(() => {
     const values = getValues();
     const request: PreviewHypothesisAnalysisRequest = {
@@ -164,20 +171,21 @@ export function CondominiumTabs({
       },
     );
   }, [pricingAnalysisId, methodId, previewMutation, getValues]);
+  runPreviewRef.current = runPreview;
 
   useEffect(() => {
     const key = JSON.stringify(watchedFields);
-    if (prevWatchKey.current === null) {
-      prevWatchKey.current = key;
-      return;
-    }
-    if (!isDirty) return;
+    if (prevWatchKey.current === null) { prevWatchKey.current = key; return; }
     if (key === prevWatchKey.current) return;
     prevWatchKey.current = key;
 
-    const timer = setTimeout(runPreview, 400);
-    return () => clearTimeout(timer);
-  }, [watchedFields, isDirty, runPreview]);
+    if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      debounceTimerRef.current = null;
+      runPreviewRef.current();
+    }, 400);
+  }, [watchedFields]);
+  useEffect(() => () => { if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current); }, []);
 
   // Single-shot init: reset the form from saved data, then immediately fire the
   // initial preview so Summary tab populates even when navigating in via React
@@ -243,9 +251,10 @@ export function CondominiumTabs({
     try {
       const result = await saveMutation.mutateAsync({ pricingAnalysisId, methodId, request });
       const finalValue = result.condominiumSummary?.totalAssetValueRounded ?? 0;
-      // Allow next savedData change to re-hydrate from server (picks up any server-side changes).
-      isInitialized.current = false;
-      reset(values);
+      reset(mapSavedToFormValues({
+        ...savedData,
+        condominiumSummary: result.condominiumSummary ?? savedData.condominiumSummary,
+      }));
       onSaveSuccess(finalValue);
     } catch {
       toast.error('Failed to save');
@@ -309,6 +318,7 @@ export function CondominiumTabs({
             <CondominiumSummaryTab
               previewSummary={effectiveSummary}
               totalLandAreaFromTitles={effectiveTotalLandAreaFromTitles}
+              isCalculating={previewMutation.isPending}
             />
           )}
         </div>

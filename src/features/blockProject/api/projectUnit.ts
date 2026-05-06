@@ -101,3 +101,27 @@ export const useUploadProjectUnits = () => {
     },
   });
 };
+
+/**
+ * Delete a unit upload batch and its associated units.
+ * DELETE /appraisals/{appraisalId}/project/units/uploads/{uploadId}
+ */
+export const useDeleteProjectUnitUpload = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { appraisalId: string; uploadId: string }): Promise<void> => {
+      await axios.delete(
+        `/appraisals/${params.appraisalId}/project/units/uploads/${params.uploadId}`,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectUnitKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitKeys.uploads(variables.appraisalId),
+      });
+    },
+  });
+};

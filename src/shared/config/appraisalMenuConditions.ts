@@ -17,19 +17,22 @@ export type AppraisalMenuCondition = {
  * canEdit value.
  */
 export const appraisalMenuConditions: Record<string, AppraisalMenuCondition> = {
-  // Property Information — standard (non-PMA, non-block-condo). Legacy showWhen preserved.
+  // Property Information — shown for all appraisal types except PMA.
+  // For block appraisals the href is overridden in useNavigation to point at the block page.
   'appraisal.property': {
-    showWhen: ctx => !ctx.isPma && !ctx.isBlockCondo,
+    showWhen: ctx => !ctx.isPma,
   },
-  // Property Information (PMA variant) — legacy showWhen preserved.
+  // Property Information (PMA variant)
   'appraisal.property-pma': {
     showWhen: ctx => ctx.isPma === true,
   },
-  // Note: appraisal.block-condo and appraisal.block-village had NO showWhen predicate
-  // in the legacy navigation (always visible to viewers with the role). Do not add a
-  // visibility predicate here without explicit design intent — a previous implementation
-  // incorrectly gated both on ctx.isBlockCondo which narrowed visibility and keyed the
-  // village variant on the wrong flag.
+  // Block Condo / Village items are collapsed into "Property Information" above — always hide.
+  'appraisal.block-condo': {
+    showWhen: () => false,
+  },
+  'appraisal.block-village': {
+    showWhen: () => false,
+  },
 
   // 360 Summary — always visible (no condition); editableRoles was empty = read-only
   'appraisal.360': {

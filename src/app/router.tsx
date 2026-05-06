@@ -15,12 +15,6 @@ import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
 import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
 import TaskListingPage from '@/features/task/pages/TaskListingPage';
 import ActivityTaskListPage from '@/features/task/pages/ActivityTaskListPage';
-
-function TaskPageDispatcher() {
-  const [searchParams] = useSearchParams();
-  const activityId = searchParams.get('activityId');
-  return activityId ? <ActivityTaskListPage /> : <TaskListingPage />;
-}
 import NotificationPage from '@/features/notification/pages/NotificationPage';
 import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
 import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
@@ -48,10 +42,7 @@ import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/Cre
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
-import {
-  ReadOnlyPageWrapper,
-  AppraisalReadOnlyWrapper,
-} from '@shared/contexts/PageReadOnlyContext';
+import { AppraisalReadOnlyWrapper, ReadOnlyPageWrapper, } from '@shared/contexts/PageReadOnlyContext';
 import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
 import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
@@ -72,6 +63,9 @@ import CommitteeAdminPage from '@/features/committee/pages/CommitteeAdminPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
 import MenuListPage from '@features/menuManagement/pages/MenuListPage';
 import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
+import CollateralCatalogPage from '@/features/collateralMaster/pages/CollateralCatalogPage';
+import CollateralMasterDetailPage from '@/features/collateralMaster/pages/CollateralMasterDetailPage';
+import BackfillReportPage from '@/features/collateralMaster/pages/BackfillReportPage';
 import QuotationSelectionPage from '@/features/quotation/pages/QuotationSelectionPage';
 import QuotationListingPage from '@/features/quotation/pages/QuotationListingPage';
 import NewQuotationPage from '@/features/quotation/pages/NewQuotationPage';
@@ -79,6 +73,12 @@ import ExtCompanyInvitationListPage from '@/features/quotation/pages/ExtCompanyI
 import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompanySubmitQuotationPage';
 import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
 import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
+
+function TaskPageDispatcher() {
+  const [searchParams] = useSearchParams();
+  const activityId = searchParams.get('activityId');
+  return activityId ? <ActivityTaskListPage /> : <TaskListingPage />;
+}
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -88,7 +88,11 @@ const CondoModelPricingAnalysisPage = () => {
   const { modelId } = useParams<{ modelId: string }>();
   return (
     <PricingAnalysisPage
-      subject={{ kind: 'projectModel', modelId: modelId ?? '', routePrefix: `block-condo/model/${modelId}` }}
+      subject={{
+        kind: 'projectModel',
+        modelId: modelId ?? '',
+        routePrefix: `block-condo/model/${modelId}`,
+      }}
     />
   );
 };
@@ -97,7 +101,11 @@ const VillageModelPricingAnalysisPage = () => {
   const { modelId } = useParams<{ modelId: string }>();
   return (
     <PricingAnalysisPage
-      subject={{ kind: 'projectModel', modelId: modelId ?? '', routePrefix: `block-village/model/${modelId}` }}
+      subject={{
+        kind: 'projectModel',
+        modelId: modelId ?? '',
+        routePrefix: `block-village/model/${modelId}`,
+      }}
     />
   );
 };
@@ -260,6 +268,16 @@ export const router = createBrowserRouter([
               { path: ':menuId', element: <MenuEditPage /> },
             ],
           },
+          // Collateral master admin — gated by COLLATERAL_ADMIN permission
+          {
+            path: 'collateral-masters',
+            element: <RoleProtectedRoute allowedRoles={['Admin', 'IntAdmin']} />,
+            children: [
+              { index: true, element: <CollateralCatalogPage /> },
+              { path: 'backfill', element: <BackfillReportPage /> },
+              { path: ':masterId', element: <CollateralMasterDetailPage /> },
+            ],
+          },
         ],
       },
       // Template Management Routes
@@ -291,7 +309,7 @@ export const router = createBrowserRouter([
       // RequestMaker / Admin selection page
       {
         path: 'quotations',
-        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin']} />,
+        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin', 'IntAdmin']} />,
         children: [
           { index: true, element: <QuotationListingPage /> },
           { path: 'new', element: <NewQuotationPage /> },

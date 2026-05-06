@@ -303,8 +303,9 @@ function AppraisalLayout() {
             status: appraisalData.status ?? undefined,
             appraisalType: appraisalData.appraisalType ?? undefined,
             priority: appraisalData.priority ?? undefined,
-            isPma: (appraisalData as any).isPma ?? true, // TODO: change default back to false once backend returns isPma
-            isBlockCondo: (appraisalData as any).purpose === '07',
+            isPma: appraisalData?.isPma ?? true,
+            isBlock: appraisalData?.isBlock ?? false,
+            blockProjectType: appraisalData?.blockProjectType ?? undefined,
             facilityLimit: (requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0,
             hasAppraisalBook: (requestData as any)?.detail?.hasAppraisalBook ?? false,
             basePath: `/appraisals/${appraisalId}`,

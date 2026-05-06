@@ -383,7 +383,7 @@ export const projectTowerFormDefaults: ProjectTowerFormType = {
   numberOfFloors: 0,
   condoRegistrationNumber: '',
   conditionType: null,
-  hasObligation: false,
+  hasObligation: '',
   obligationDetails: null,
   documentValidationType: null,
   isLocationCorrect: true,

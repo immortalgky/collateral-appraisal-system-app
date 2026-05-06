@@ -602,7 +602,7 @@ function RequestPage() {
                       {/* In create mode, wrap with AppraisalCopyProvider so AppraisalSelector
                           can receive the full copy callback via context */}
                       {isEditMode ? (
-                        <RequestForm disableAppraisalSelector />
+                        <RequestForm />
                       ) : (
                         <AppraisalCopyProvider onCopySelect={handleCopySelect}>
                           <RequestForm />

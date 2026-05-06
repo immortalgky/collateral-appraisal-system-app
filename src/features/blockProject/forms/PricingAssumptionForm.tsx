@@ -9,6 +9,7 @@ import type { ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import {
   pricingForceSaleFields,
+  pricingLandAssumptionFields,
   condoPricingFloorFields,
 } from '../configs/fields';
 
@@ -79,14 +80,10 @@ const CONDO_LOCATION_ROWS: LocationRow[] = [
 const LB_LOCATION_ROWS: LocationRow[] = [
   { name: 'cornerAdjustment', label: 'Corner' },
   { name: 'edgeAdjustment', label: 'Edge' },
-  { name: 'nearGardenAdjustment', label: 'Near Garden' },
+  { name: 'nearGardenAdjustment', label: 'Near Garden/Clubhouse' },
   { name: 'otherAdjustment', label: 'Other' },
-  {
-    name: 'landIncreaseDecreaseRate',
-    label: 'Land Increase / Decrease Rate',
-    unit: '%',
-  },
 ];
+
 
 interface LocationAssumptionsTableProps {
   projectType: ProjectType;
@@ -180,7 +177,7 @@ const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
 
     <div className="h-px bg-gray-200" />
 
-    {/* Floor + Force Sale — keep existing two-column SectionRow layout */}
+    {/* Floor / Land + Force Sale — two-column SectionRow layout */}
     <div className="grid grid-cols-5 gap-x-6 gap-y-4">
       {projectType === 'Condo' && (
         <SectionRow title="Floor Assumptions" icon="stairs">
@@ -188,6 +185,15 @@ const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
             Price increment applied for every N floors above the base floor.
           </SectionSubtitle>
           <FormFields fields={condoPricingFloorFields} />
+        </SectionRow>
+      )}
+
+      {projectType === 'LandAndBuilding' && (
+        <SectionRow title="Land Assumption" icon="mountain-city">
+          <SectionSubtitle>
+            Land price adjustment applied to each unit based on land area.
+          </SectionSubtitle>
+          <FormFields fields={pricingLandAssumptionFields} />
         </SectionRow>
       )}
 

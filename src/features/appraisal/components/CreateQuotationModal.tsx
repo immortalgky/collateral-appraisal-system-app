@@ -7,6 +7,7 @@ import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput'
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import toast from 'react-hot-toast';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
+import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 
 interface CreateQuotationModalProps {
   isOpen: boolean;
@@ -51,15 +52,21 @@ const CreateQuotationModal = ({
   const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
   const [remarks, setRemarks] = useState('');
 
+  // Appeal exclusion: most-recent prior company id captured at collateral lookup time.
+  // Wrapped in single-element array for the v1 plural-list contract on start-from-task.
+  const excludedCompanyId = useAppealExclusionStore(s => s.excludedCompanyId);
+
   const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
     bankingSegment,
     isOpen,
   );
 
-  // Map raw company data to the SelectedCompany shape
+  // Map raw company data to the SelectedCompany shape, filtering out the appeal-excluded company
   const allCompanies: SelectedCompany[] = useMemo(
-    () => (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.companyName })),
-    [rawCompanies],
+    () => (rawCompanies ?? [])
+      .filter(c => c.id !== excludedCompanyId)
+      .map(c => ({ id: c.id, companyName: c.companyName })),
+    [rawCompanies, excludedCompanyId],
   );
 
   const companyList = useMemo(() => {
@@ -117,6 +124,8 @@ const CreateQuotationModal = ({
         assignmentType: assignmentType ?? null,
         assignmentMethod: assignmentMethod ?? null,
         internalFollowupAssignmentMethod: internalFollowupAssignmentMethod ?? null,
+        // Appeal exclusion — most-recent prior company only; wrapped in array for v1 contract
+        excludedCompanyIds: excludedCompanyId ? [excludedCompanyId] : null,
       },
       {
         onSuccess: () => {

@@ -62,7 +62,7 @@ export interface ProjectTower {
   numberOfFloors?: number;
   condoRegistrationNumber?: string;
   conditionType?: string;
-  hasObligation?: boolean;
+  hasObligation?: string;
   obligationDetails?: string;
   documentValidationType?: string;
   isLocationCorrect?: boolean;
@@ -321,6 +321,7 @@ export interface ProjectUnitPrice {
   priceIncrementPerFloor?: number;
   // LB-only calculated
   landIncreaseDecreaseAmount?: number;
+  landAreaDifference?: number;
 }
 
 /** Request shape for saving location flags on unit prices. */
@@ -425,7 +426,7 @@ export interface ProjectLand {
   landOffice?: string;
   ownerName?: string;
   isOwnerVerified?: boolean;
-  hasObligation?: boolean;
+  hasObligation?: string;
   obligationDetails?: string;
   isLandLocationVerified?: boolean;
   landCheckMethodType?: string;

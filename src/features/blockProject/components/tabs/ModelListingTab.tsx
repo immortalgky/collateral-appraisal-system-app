@@ -5,8 +5,9 @@ import clsx from 'clsx';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
-import { useGetProjectModels } from '../../api/projectModel';
+import { useGetProjectModels, useDeleteProjectModel } from '../../api/projectModel';
 import { useCreateProjectModelPricingAnalysis } from '../../api/projectPricingAnalysis';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
 import { useParameterDescription } from '@/shared/utils/parameterUtils';
@@ -24,19 +25,37 @@ type ViewMode = 'grid' | 'list';
 
 function formatAreaRange(min?: number | null, max?: number | null): string {
   if (!min && !max) return '-';
-  if (min && max) return `${min} - ${max} sq.m.`;
+  if (min && max) return min === max ? `${min} sq.m.` : `${min} - ${max} sq.m.`;
   return `${min ?? max} sq.m.`;
+}
+
+function formatPrice(value: number): string {
+  if (value >= 1_000_000) {
+    const m = value / 1_000_000;
+    return `${Number.isInteger(m) ? m : m.toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    const k = value / 1_000;
+    return `${Number.isInteger(k) ? k : k.toFixed(1)}K`;
+  }
+  return value.toLocaleString();
 }
 
 function formatPriceRange(min?: number | null, max?: number | null): string {
   if (!min && !max) return '-';
-  if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()}`;
+  if (min && max) return min === max ? formatPrice(min) : `${formatPrice(min)} - ${formatPrice(max)}`;
+  return formatPrice(min ?? max ?? 0);
+}
+
+function formatPriceRangeFull(min?: number | null, max?: number | null): string {
+  if (!min && !max) return '-';
+  if (min && max) return min === max ? min.toLocaleString() : `${min.toLocaleString()} - ${max.toLocaleString()}`;
   return (min ?? max)?.toLocaleString() ?? '-';
 }
 
 function formatLandAreaRange(min?: number | null, max?: number | null): string {
   if (!min && !max) return '-';
-  if (min && max) return `${min} - ${max} sq.wa`;
+  if (min && max) return min === max ? `${min} sq.wa` : `${min} - ${max} sq.wa`;
   return `${min ?? max} sq.wa`;
 }
 
@@ -55,6 +74,7 @@ interface ModelCardProps {
   onClick: () => void;
   onPricingAnalysis: () => void;
   isPricingAnalysisPending: boolean;
+  onDelete: (e: React.MouseEvent) => void;
 }
 
 /** Pricing-analysis CTA. Stops propagation so the card click doesn't navigate. */
@@ -70,10 +90,12 @@ function PricingAnalysisAction({
   size?: 'sm' | 'xs';
 }) {
   const sizeCls = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs';
+
   return (
     <button
       type="button"
       disabled={isPending}
+      title={hasAnalysis ? 'View pricing analysis' : 'Run pricing analysis'}
       onClick={e => {
         e.stopPropagation();
         onClick();
@@ -81,14 +103,21 @@ function PricingAnalysisAction({
       className={clsx(
         'inline-flex items-center gap-1.5 rounded-md font-medium transition-colors shrink-0',
         sizeCls,
+        // #4 — distinct styles: solid CTA for Run, outlined ghost for View
         hasAnalysis
-          ? 'bg-primary/10 text-primary hover:bg-primary/15'
+          ? 'border border-primary text-primary bg-transparent hover:bg-primary/5'
           : 'bg-primary text-white hover:bg-primary/90',
         isPending && 'opacity-60 cursor-not-allowed',
       )}
     >
-      <Icon name={hasAnalysis ? 'chart-line' : 'play'} style="solid" className="size-3" />
-      {hasAnalysis ? 'Pricing' : 'Run Pricing'}
+      {/* #1 — spinner while pending */}
+      <Icon
+        name={isPending ? 'circle-notch' : hasAnalysis ? 'chart-line' : 'play'}
+        style="solid"
+        className={clsx('size-3', isPending && 'animate-spin')}
+      />
+      {/* #2 — "View Pricing" instead of "Pricing" */}
+      {isPending ? 'Running…' : hasAnalysis ? 'View Pricing' : 'Run Pricing'}
     </button>
   );
 }
@@ -101,6 +130,7 @@ function ModelCard({
   onClick,
   onPricingAnalysis,
   isPricingAnalysisPending,
+  onDelete,
 }: ModelCardProps) {
   const icon = projectType === 'Condo' ? 'layer-group' : 'house';
   const hasAnalysis = Boolean(model.pricingAnalysisId);
@@ -122,85 +152,67 @@ function ModelCard({
 
   if (viewMode === 'list') {
     return (
-      <div
-        {...cardProps}
-        className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left cursor-pointer"
-      >
-        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-          {thumbnailSrc ? (
-            <img
-              src={thumbnailSrc}
-              alt={model.modelName ?? 'Model thumbnail'}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Icon name={icon} style="solid" className="text-gray-400 w-7 h-7" />
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">
-            {model.modelName ?? 'Unnamed Model'}
-          </p>
-          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-            {model.modelDescription ?? '-'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-6 shrink-0">
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Usable Area</p>
-            <p className="text-sm font-medium text-gray-700">
-              {formatAreaRange(model.usableAreaMin, model.usableAreaMax)}
-            </p>
+      <tr className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
+        <td className="px-2 py-2 cursor-pointer" onClick={onClick}>
+          <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
+            {thumbnailSrc ? (
+              <img src={thumbnailSrc} alt={model.modelName ?? 'Model'} className="w-full h-full object-cover" />
+            ) : (
+              <Icon name={icon} style="solid" className="text-gray-400 w-5 h-5" />
+            )}
           </div>
-
-          {projectType === 'Condo' && (
-            <>
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Price</p>
-                <p className="text-sm font-medium text-gray-700">
-                  {formatPriceRange(model.startingPriceMin, model.startingPriceMax)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Room Type</p>
-                <p className="text-sm font-medium text-gray-700">{roomTypeDescription || '-'}</p>
-              </div>
-            </>
+        </td>
+        <td className="px-3 py-2 cursor-pointer" onClick={onClick}>
+          <p className="text-sm font-medium text-gray-900 truncate">{model.modelName ?? 'Unnamed Model'}</p>
+          {model.modelDescription && (
+            <p className="text-xs text-gray-500 truncate">{model.modelDescription}</p>
           )}
-
-          {projectType === 'LandAndBuilding' && (
-            <>
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Land Area (Std)</p>
-                <p className="text-sm font-medium text-gray-700">
-                  {model.standardLandArea ? `${model.standardLandArea} sq.wa` : '-'}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Houses</p>
-                <p className="text-sm font-medium text-gray-700">{model.numberOfHouse ?? '-'}</p>
-              </div>
-            </>
-          )}
-
-          {standardPrice && (
-            <div className="text-right">
-              <p className="text-xs text-gray-400">Standard Price</p>
-              <p className="text-sm font-semibold text-primary">{standardPrice}</p>
-            </div>
-          )}
-        </div>
-
-        <PricingAnalysisAction
-          hasAnalysis={hasAnalysis}
-          isPending={isPricingAnalysisPending}
-          onClick={onPricingAnalysis}
-        />
-
-        <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4 shrink-0" />
-      </div>
+        </td>
+        <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+          {formatAreaRange(model.usableAreaMin, model.usableAreaMax)}
+        </td>
+        {projectType === 'Condo' ? (
+          <>
+            <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+              {formatPriceRangeFull(model.startingPriceMin, model.startingPriceMax)}
+            </td>
+            <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+              {roomTypeDescription || '-'}
+            </td>
+          </>
+        ) : (
+          <>
+            <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+              {model.standardLandArea ? `${model.standardLandArea} sq.wa` : '-'}
+            </td>
+            <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+              {model.numberOfHouse ?? '-'}
+            </td>
+          </>
+        )}
+        <td className="px-3 py-2 text-sm font-semibold text-primary cursor-pointer" onClick={onClick}>
+          {standardPrice ?? '-'}
+        </td>
+        <td className="px-2 py-2">
+          <div className="flex items-center justify-end gap-1">
+            <PricingAnalysisAction
+              hasAnalysis={hasAnalysis}
+              isPending={isPricingAnalysisPending}
+              onClick={onPricingAnalysis}
+              size="xs"
+            />
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              title="Delete model"
+            >
+              <Icon name="trash-can" style="regular" className="size-3.5" />
+            </button>
+            <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4" />
+          </div>
+        </td>
+      </tr>
     );
   }
 
@@ -209,7 +221,8 @@ function ModelCard({
       {...cardProps}
       className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group cursor-pointer"
     >
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+      {/* #6 — tighter 4:3 image instead of 16:9 */}
+      <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
@@ -223,6 +236,14 @@ function ModelCard({
             className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
           />
         )}
+        <button
+          type="button"
+          onClick={onDelete}
+          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+          title="Delete model"
+        >
+          <Icon name="trash-can" style="regular" className="size-3.5" />
+        </button>
       </div>
 
       <div className="p-4">
@@ -236,56 +257,52 @@ function ModelCard({
             onClick={onPricingAnalysis}
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1 line-clamp-2 min-h-[2rem]">
-          {model.modelDescription ?? '-'}
-        </p>
 
-        <div className="mt-3 space-y-1">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">Usable Area</span>
-            <span className="text-gray-700 font-medium">
-              {formatAreaRange(model.usableAreaMin, model.usableAreaMax)}
-            </span>
+        {/* #7 — 2-col stat grid */}
+        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+          <div>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Usable Area</p>
+            <p className="text-xs font-medium text-gray-700">{formatAreaRange(model.usableAreaMin, model.usableAreaMax)}</p>
           </div>
 
-          {projectType === 'Condo' && (
+          {projectType === 'Condo' ? (
             <>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400">Starting Price</span>
-                <span className="text-gray-700 font-medium">
-                  {formatPriceRange(model.startingPriceMin, model.startingPriceMax)}
-                </span>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Starting Price</p>
+                <p className="text-xs font-medium text-gray-700">{formatPriceRange(model.startingPriceMin, model.startingPriceMax)}</p>
               </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400">Room Type</span>
-                <span className="text-gray-700 font-medium">{roomTypeDescription || '-'}</span>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Room Type</p>
+                <p className="text-xs font-medium text-gray-700">{roomTypeDescription || '-'}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Land Area</p>
+                <p className="text-xs font-medium text-gray-700">{formatLandAreaRange(model.landAreaMin, model.landAreaMax)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Houses</p>
+                <p className="text-xs font-medium text-gray-700">{model.numberOfHouse ?? '-'}</p>
               </div>
             </>
           )}
+        </div>
 
-          {projectType === 'LandAndBuilding' && (
-            <>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400">Land Area</span>
-                <span className="text-gray-700 font-medium">
-                  {formatLandAreaRange(model.landAreaMin, model.landAreaMax)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-400">Houses</span>
-                <span className="text-gray-700 font-medium">{model.numberOfHouse ?? '-'}</span>
-              </div>
-            </>
+        {/* #4 — pricing status indicator */}
+        <div className="mt-3">
+          {standardPrice ? (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+              <Icon name="chart-line" style="solid" className="size-3" />
+              {standardPrice}
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 text-xs font-medium">
+              <Icon name="clock" style="regular" className="size-3" />
+              Pending analysis
+            </div>
           )}
-
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">Standard Price</span>
-            {standardPrice ? (
-              <span className="text-gray-700 font-medium">{standardPrice}</span>
-            ) : (
-              <span className="text-gray-400 italic">Pending analysis</span>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -303,8 +320,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
   const basePath = useBasePath();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const { data: modelsData, isLoading, isError } = useGetProjectModels(appraisalId ?? '');
+  const { mutate: deleteModel, isPending: isDeleting } = useDeleteProjectModel();
   const models = useMemo(
     () =>
       (Array.isArray(modelsData) ? [...modelsData] : []).sort((a, b) =>
@@ -337,6 +356,24 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
 
   const handleAddModel = () => {
     navigate(`${basePath}/${routeSegment}/model/new`);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!appraisalId || !deleteTarget) return;
+    deleteModel(
+      { appraisalId, modelId: deleteTarget.id },
+      {
+        onSuccess: () => {
+          toast.success(`Model "${deleteTarget.name}" deleted`);
+          setDeleteTarget(null);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to delete model');
+          setDeleteTarget(null);
+        },
+      },
+    );
   };
 
   const handlePricingAnalysis = (model: ProjectModel) => {
@@ -456,27 +493,63 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               isPricingAnalysisPending={
                 isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
               }
+              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' }); }}
             />
           ))}
         </div>
       ) : (
-        <div className="space-y-2 overflow-y-auto">
-          {models.map(model => (
-            <ModelCard
-              key={model.id}
-              model={model}
-              projectType={projectType}
-              thumbnailSrc={thumbnailByModelId.get(model.id)}
-              viewMode="list"
-              onClick={() => handleModelClick(model.id)}
-              onPricingAnalysis={() => handlePricingAnalysis(model)}
-              isPricingAnalysisPending={
-                isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
-              }
-            />
-          ))}
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model Name</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usable Area</th>
+                {projectType === 'Condo' ? (
+                  <>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Starting Price</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Type</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Land Area (Std)</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Houses</th>
+                  </>
+                )}
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Standard Price</th>
+                <th className="w-28 px-2 py-2" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {models.map(model => (
+                <ModelCard
+                  key={model.id}
+                  model={model}
+                  projectType={projectType}
+                  thumbnailSrc={thumbnailByModelId.get(model.id)}
+                  viewMode="list"
+                  onClick={() => handleModelClick(model.id)}
+                  onPricingAnalysis={() => handlePricingAnalysis(model)}
+                  isPricingAnalysisPending={
+                    isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
+                  }
+                  onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' }); }}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Model"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

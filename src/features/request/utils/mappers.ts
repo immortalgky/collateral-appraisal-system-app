@@ -27,7 +27,7 @@ export const mapRequestResponseToForm = (
         totalSellingPrice: response.detail?.loanDetail?.totalSellingPrice ?? 0,
       },
       prevAppraisalId: response.detail?.prevAppraisalId ?? null,
-      prevAppraisalReportNo: response.detail?.prevAppraisalReportNo ?? null,
+      prevAppraisalReportNo: response.detail?.prevAppraisalNumber ?? null,
       prevAppraisalValue: response.detail?.prevAppraisalValue ?? null,
       prevAppraisalDate: response.detail?.prevAppraisalDate ?? null,
       address: (() => {

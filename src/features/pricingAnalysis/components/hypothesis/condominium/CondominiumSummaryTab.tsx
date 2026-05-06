@@ -19,6 +19,7 @@ import {
   FvDerivedRow,
   FvInputRow,
   InlineNumberInput,
+  IsCalculatingProvider,
 } from '../_shared/summaryAtoms';
 import { HypothesisResidualWaterfall } from '../../viz/HypothesisResidualWaterfall';
 import { HypothesisCostDonut } from '../../viz/HypothesisCostDonut';
@@ -28,11 +29,13 @@ interface CondominiumSummaryTabProps {
   previewSummary?: CondominiumSummaryDto | null;
   /** System-derived land area from title deeds (Sq.Wa) — preferred over persisted input. */
   totalLandAreaFromTitles?: number | null;
+  isCalculating?: boolean;
 }
 
 export function CondominiumSummaryTab({
   previewSummary: s,
   totalLandAreaFromTitles,
+  isCalculating,
 }: CondominiumSummaryTabProps) {
   const { control } = useFormContext<CondominiumFormValues>();
   // E01 prefers the live title-sum; fall back to the snapshot's persisted value.
@@ -41,6 +44,7 @@ export function CondominiumSummaryTab({
     s?.areaSqM ?? (areaTitleDeedSqWa !== null ? Number(areaTitleDeedSqWa) * 4 : null);
 
   return (
+    <IsCalculatingProvider value={isCalculating ?? false}>
     <div className="space-y-5">
       {/* ── Visual residual story + cost composition ────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -467,6 +471,7 @@ export function CondominiumSummaryTab({
         />
       </SectionPrimary>
     </div>
+    </IsCalculatingProvider>
   );
 }
 

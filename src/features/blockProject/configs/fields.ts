@@ -9,6 +9,8 @@ import {
 // Shared Project Info fields
 // =============================================================================
 
+const ObligationDetail = ['02', '03', '04', '05', '99'];
+
 export const projectInformationFields: FormField[] = [
   {
     type: 'text-input',
@@ -29,7 +31,7 @@ export const projectInformationFields: FormField[] = [
     type: 'text-input',
     label: 'Developer',
     name: 'developer',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
   {
@@ -38,14 +40,6 @@ export const projectInformationFields: FormField[] = [
     name: 'projectSaleLaunchDate',
     placeholder: 'YYYY or YYYY-MM or YYYY-MM-DD',
     maxLength: 10,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'dropdown',
-    label: 'Land Office',
-    name: 'landOffice',
-    group: 'LandOffice',
-    required: true,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -256,6 +250,16 @@ export const pricingForceSaleFields: FormField[] = [
   },
 ];
 
+export const pricingLandAssumptionFields: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Land Increase / Decrease (Baht/sq.wa)',
+    name: 'landIncreaseDecreaseRate',
+    decimalPlaces: 2,
+    wrapperClassName: 'col-span-6',
+  },
+];
+
 // =============================================================================
 // Shared Model fields (common to Condo + LandAndBuilding)
 // =============================================================================
@@ -328,6 +332,14 @@ export const condoProjectInfoFields: FormField[] = [
     name: 'builtOnTitleDeedNumber',
     wrapperClassName: 'col-span-6',
     maxLength: 100,
+  },
+  {
+    type: 'parameter-search',
+    label: 'Land Office',
+    name: 'landOffice',
+    group: 'LandOffice',
+    required: true,
+    wrapperClassName: 'col-span-6',
   },
 ];
 
@@ -490,19 +502,21 @@ export const condoTowerConditionFields: FormField[] = [
     wrapperClassName: 'col-span-12',
   },
   {
-    type: 'boolean-toggle',
+    type: 'radio-group',
     label: 'Is Obligation',
     name: 'hasObligation',
-    options: ['No obligations', 'Mortgage as security'],
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
     wrapperClassName: 'col-span-12',
   },
   {
     type: 'text-input',
-    label: 'Obligation Details',
+    label: 'Obligation',
     name: 'obligationDetails',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: true },
-    requiredWhen: { field: 'hasObligation', is: true },
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 200,
   },
   {
@@ -731,6 +745,14 @@ export const lbProjectInfoFields: FormField[] = [
     type: 'date-input',
     label: 'License Expiration Date',
     name: 'licenseExpirationDate',
+    wrapperClassName: 'col-span-4',
+  },
+  {
+    type: 'parameter-search',
+    label: 'Land Office',
+    name: 'landOffice',
+    group: 'LandOffice',
+    required: true,
     wrapperClassName: 'col-span-4',
   },
 ];

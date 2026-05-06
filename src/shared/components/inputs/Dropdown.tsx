@@ -16,6 +16,7 @@ type DropdownProps = DropdownBaseProps & AtLeastOne<{ group: string; options: Li
 export type OptionFilter =
   | { type: 'include'; values: string[] }
   | { type: 'exclude'; values: string[] }
+  | { type: 'isActive'; values: boolean }
   | { type: 'match'; pattern: string } // regex match
   | { type: 'exclude-match'; pattern: string } //regex match to exclude
   | { type: 'dynamic'; field: string; map: Record<string, string[]> } // map of watched value to allowed options.
@@ -32,6 +33,10 @@ function applyOptionFilters(
       switch (filter.type) {
         case 'include':
           return filter.values.includes(value);
+        case 'isActive':
+          return (opt as any).isActive !== false;
+        case 'exclude':
+          return !filter.values.includes(value);
         case 'exclude':
           return !filter.values.includes(value);
         case 'match':
@@ -103,6 +108,7 @@ export type ListBoxItem = {
   value: string | null | undefined;
   label: string;
   id?: string | number;
+  isActive?: boolean;
 };
 
 const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(

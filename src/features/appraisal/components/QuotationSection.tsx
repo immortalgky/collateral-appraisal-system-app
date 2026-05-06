@@ -28,6 +28,8 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import InvitedCompaniesPopover from '@/features/quotation/components/InvitedCompaniesPopover';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Modal from '@/shared/components/Modal';
+import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
+import type { EmailFormValues } from '@/shared/schemas/email';
 import { useAuthStore } from '@/features/auth/store';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
@@ -413,6 +415,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { i18n } = useTranslation();
   const currentUser = useAuthStore(s => s.user);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
+  const [pendingEmailData, setPendingEmailData] = useState<EmailFormValues | null>(null);
   /** appraisalId → { documentId → { level } }; outer key tracks per-appraisal coverage */
   const [shareSelections, setShareSelections] = useState<ShareSelections>({});
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
@@ -488,6 +491,46 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { mutate: editDraftQuotation, isPending: isEditSaving } = useEditDraftQuotation(
     activeQuotation?.id ?? '',
   );
+
+  const defaultEmailValues = useMemo(() => {
+    const appraisals = quotationDetail?.appraisals ?? [];
+    const dueDate = quotationDetail?.dueDate ? new Date(quotationDetail.dueDate) : null;
+
+    const distinctCustomerNames = [
+      ...new Set(appraisals.map((a) => a.customerName).filter(Boolean)),
+    ].join(', ');
+    const appraisalNumbers = appraisals.map((a) => a.appraisalNumber ?? '').filter(Boolean).join(',');
+
+    const targetTime = dueDate
+      ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
+      : '';
+    const targetDate = dueDate
+      ? dueDate.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '';
+
+    const appraisalList = appraisals
+      .map(
+        (a, i) =>
+          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`
+      )
+      .join('\n');
+
+    const adminFullName =
+      `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
+
+    const bccEmails = (quotationDetail?.invitedCompanies ?? [])
+      .map((c) => c.email)
+      .filter(Boolean)
+      .join(',');
+
+    return {
+      from: currentUser?.email ?? '',
+      cc: 'appraisal.team@lhbank.com',
+      bcc: bccEmails,
+      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
+      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+    };
+  }, [quotationDetail, currentUser]);
 
   /**
    * Statuses where the Cancel Quotation action is offered. Mirrors the branches
@@ -825,8 +868,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
     const draftAppraisals = draftDetail?.appraisals ?? [];
 
-    /** Step 1 → Step 2: open the share-docs step */
-    const handleProceedToShareDocs = () => {
+    /** Step 1 (email compose) → Step 2: store email data and open the share-docs step */
+    const handleEmailComposed = (values: EmailFormValues) => {
+      setPendingEmailData(values);
       setShareSelections({});
       setSendStep('share-docs');
     };
@@ -835,6 +879,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const handleCancelSendFlow = () => {
       setSendStep(null);
       setShareSelections({});
+      setPendingEmailData(null);
     };
 
     /**
@@ -850,7 +895,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
     /** Step 2 → final send: PUT shared-docs then POST send */
     const handleFinalSend = () => {
-      if (!allAppraisalsCovered) return;
+      if (!allAppraisalsCovered || !pendingEmailData) return;
       const selections: SharedDocumentSelectionDto[] = draftAppraisals.flatMap(ap =>
         Object.entries(shareSelections[ap.appraisalId] ?? {}).map(([documentId, { level }]) => ({
           appraisalId: ap.appraisalId,
@@ -860,16 +905,27 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       );
       setSharedDocuments(selections, {
         onSuccess: () => {
-          sendQuotation(undefined, {
-            onSuccess: () => {
-              toast.success('Quotation sent — bidding is now open');
-              setSendStep(null);
+          sendQuotation(
+            {
+              from: pendingEmailData.from,
+              to: pendingEmailData.to,
+              cc: pendingEmailData.cc,
+              bcc: pendingEmailData.bcc,
+              subject: pendingEmailData.subject,
+              content: pendingEmailData.content,
             },
-            onError: (err: unknown) => {
-              const apiErr = err as { apiError?: { detail?: string } };
-              toast.error(apiErr?.apiError?.detail ?? 'Failed to send quotation');
+            {
+              onSuccess: () => {
+                toast.success('Quotation sent — bidding is now open');
+                setSendStep(null);
+                setPendingEmailData(null);
+              },
+              onError: (err: unknown) => {
+                const apiErr = err as { apiError?: { detail?: string } };
+                toast.error(apiErr?.apiError?.detail ?? 'Failed to send quotation');
+              },
             },
-          });
+          );
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
@@ -1087,41 +1143,19 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           isLoading={isRemoving}
         />
 
-        {/* ── Step 1: Confirm send ── */}
-        {sendStep === 'confirm' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="size-10 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Icon name="paper-plane" style="solid" className="size-5 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Send Quotation</h3>
-                  <p className="text-xs text-gray-500">Step 1 of 2 — Confirm details</p>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500 mb-5">
-                This will open bidding for{' '}
-                <strong>{companyCount} {companyCount === 1 ? 'company' : 'companies'}</strong>.
-                You will not be able to add or remove appraisals after sending.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  onClick={handleCancelSendFlow}
-                >
-                  Cancel
-                </Button>
-                <Button size="sm" type="button" onClick={handleProceedToShareDocs}>
-                  Next: Share Documents
-                  <Icon name="arrow-right" style="solid" className="size-3.5 ml-1.5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ── Step 1: Email composition ── */}
+        <EmailCompositionModal
+          isOpen={sendStep === 'confirm'}
+          onClose={handleCancelSendFlow}
+          title="Drafting email to send to external appraisal company"
+          defaultValues={defaultEmailValues}
+          showCc={true}
+          showBcc={true}
+          showAttachments={false}
+          subjectLabel="Subject"
+          isPending={false}
+          onSubmit={handleEmailComposed}
+        />
 
         {/* ── Step 2: Share documents ── */}
         {sendStep === 'share-docs' && (

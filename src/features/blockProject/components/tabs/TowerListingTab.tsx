@@ -1,15 +1,21 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
-import { useGetProjectTowers } from '../../api/projectTower';
+import { useGetProjectTowers, useDeleteProjectTower } from '../../api/projectTower';
 import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 import type { ProjectTower } from '../../types';
+import type { ApiError } from '@/shared/types/api';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+
+type AppError = AxiosError & { apiError?: ApiError };
 
 type ViewMode = 'grid' | 'list';
 
@@ -20,66 +26,66 @@ interface TowerCardProps {
   viewMode: ViewMode;
   thumbnailSrc?: string;
   onClick: () => void;
+  onDelete: (e: React.MouseEvent) => void;
 }
 
-function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
+function TowerCard({ tower, viewMode, thumbnailSrc, onClick, onDelete }: TowerCardProps) {
+  const cardProps = {
+    role: 'button' as const,
+    tabIndex: 0,
+    onClick,
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    },
+  };
+
   if (viewMode === 'list') {
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/40 hover:shadow-sm transition-all text-left"
-      >
-        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-          {thumbnailSrc ? (
-            <img
-              src={thumbnailSrc}
-              alt={tower.towerName ?? 'Tower thumbnail'}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Icon name="building" style="solid" className="text-gray-400 w-7 h-7" />
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">
-            {tower.towerName ?? 'Unnamed Tower'}
-          </p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Reg No: {tower.condoRegistrationNumber ?? '-'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-6 shrink-0">
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Units</p>
-            <p className="text-sm font-medium text-gray-700">
-              {tower.numberOfUnits?.toLocaleString() ?? '-'}
-            </p>
+      <tr className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group">
+        <td className="px-2 py-2 cursor-pointer" onClick={onClick}>
+          <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
+            {thumbnailSrc ? (
+              <img src={thumbnailSrc} alt={tower.towerName ?? 'Tower'} className="w-full h-full object-cover" />
+            ) : (
+              <Icon name="building" style="solid" className="text-gray-400 w-5 h-5" />
+            )}
           </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Floors</p>
-            <p className="text-sm font-medium text-gray-700">{tower.numberOfFloors ?? '-'}</p>
+        </td>
+        <td className="px-3 py-2 cursor-pointer" onClick={onClick}>
+          <p className="text-sm font-medium text-gray-900 truncate">{tower.towerName ?? 'Unnamed Tower'}</p>
+        </td>
+        <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+          {tower.numberOfUnits?.toLocaleString() ?? '-'}
+        </td>
+        <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
+          {tower.numberOfFloors ?? '-'}
+        </td>
+        <td className="px-2 py-2">
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              title="Delete tower"
+            >
+              <Icon name="trash-can" style="regular" className="size-3.5" />
+            </button>
+            <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4" />
           </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Building Age</p>
-            <p className="text-sm font-medium text-gray-700">{tower.buildingAge ?? '-'}</p>
-          </div>
-        </div>
-
-        <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4 shrink-0" />
-      </button>
+        </td>
+      </tr>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group"
+    <div
+      {...cardProps}
+      className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-md transition-all text-left group cursor-pointer"
     >
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
@@ -93,34 +99,35 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick }: TowerCardProps) {
             className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
           />
         )}
+        <button
+          type="button"
+          onClick={onDelete}
+          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+          title="Delete tower"
+        >
+          <Icon name="trash-can" style="regular" className="size-3.5" />
+        </button>
       </div>
 
       <div className="p-4">
         <p className="text-sm font-semibold text-gray-900 truncate">
           {tower.towerName ?? 'Unnamed Tower'}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Reg No: {tower.condoRegistrationNumber ?? '-'}
-        </p>
 
         <div className="mt-3 space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">Unit Count</span>
+            <span className="text-gray-400">No. of Units</span>
             <span className="text-gray-700 font-medium">
               {tower.numberOfUnits?.toLocaleString() ?? '-'}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">Floor Count</span>
+            <span className="text-gray-400">No. of Floors</span>
             <span className="text-gray-700 font-medium">{tower.numberOfFloors ?? '-'}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">Building Age</span>
-            <span className="text-gray-700 font-medium">{tower.buildingAge ?? '-'}</span>
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -135,8 +142,10 @@ export default function TowerListingTab() {
   const basePath = useBasePath();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const { data: towersData, isLoading, isError } = useGetProjectTowers(appraisalId ?? '');
+  const { mutate: deleteTower, isPending: isDeleting } = useDeleteProjectTower();
   const towers = useMemo(
     () =>
       [...(towersData ?? [])].sort((a, b) =>
@@ -164,6 +173,24 @@ export default function TowerListingTab() {
 
   const handleAddTower = () => {
     navigate(`${basePath}/block-condo/tower/new`);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!appraisalId || !deleteTarget) return;
+    deleteTower(
+      { appraisalId, towerId: deleteTarget.id },
+      {
+        onSuccess: () => {
+          toast.success(`Tower "${deleteTarget.name}" deleted`);
+          setDeleteTarget(null);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? 'Failed to delete tower');
+          setDeleteTarget(null);
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -247,22 +274,47 @@ export default function TowerListingTab() {
               thumbnailSrc={thumbnailByTowerId.get(tower.id)}
               viewMode="grid"
               onClick={() => handleTowerClick(tower.id)}
+              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
             />
           ))}
         </div>
       ) : (
-        <div className="space-y-2 overflow-y-auto">
-          {towers.map(tower => (
-            <TowerCard
-              key={tower.id}
-              tower={tower}
-              thumbnailSrc={thumbnailByTowerId.get(tower.id)}
-              viewMode="list"
-              onClick={() => handleTowerClick(tower.id)}
-            />
-          ))}
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tower Name</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Units</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Floors</th>
+                <th className="w-16 px-2 py-2" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {towers.map(tower => (
+                <TowerCard
+                  key={tower.id}
+                  tower={tower}
+                  thumbnailSrc={thumbnailByTowerId.get(tower.id)}
+                  viewMode="list"
+                  onClick={() => handleTowerClick(tower.id)}
+                  onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Tower"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
