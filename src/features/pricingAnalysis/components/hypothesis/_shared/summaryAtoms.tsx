@@ -6,12 +6,41 @@
  * Suffix slot uses a negative left margin to sit flush against the rate-unit
  * label; long suffixes wrap to a second line within the slot.
  */
-import type { ReactNode } from 'react';
+import { type ReactNode, createContext, useContext } from 'react';
 import { Controller } from 'react-hook-form';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import { Icon } from '@/shared/components';
 import { fmt } from '../../../domain/formatters';
 import { FieldTooltip } from './FieldTooltip';
+
+// ─── Calculating context ──────────────────────────────────────────────────────
+// Wrap a summary tab in <IsCalculatingProvider value={true}> while a preview
+// request is in-flight; all derived-value atoms read from this context and
+// swap their number with an animated placeholder.
+
+const IsCalculatingContext = createContext(false);
+
+export function IsCalculatingProvider({
+  value,
+  children,
+}: {
+  value: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <IsCalculatingContext.Provider value={value}>
+      {children}
+    </IsCalculatingContext.Provider>
+  );
+}
+
+function CalcPlaceholder({ wide }: { wide?: boolean }) {
+  return (
+    <span
+      className={`inline-block h-3.5 ${wide ? 'w-28' : 'w-16'} rounded bg-gray-200 animate-pulse align-middle`}
+    />
+  );
+}
 
 // ─── Shared column widths ─────────────────────────────────────────────────────
 
@@ -100,6 +129,7 @@ export function DerivedValue({
   unit?: string;
   emphasize?: boolean;
 }) {
+  const isCalculating = useContext(IsCalculatingContext);
   return (
     <div className="ml-auto flex items-center gap-2">
       <span
@@ -107,7 +137,7 @@ export function DerivedValue({
           emphasize ? 'font-semibold text-primary' : 'font-medium text-gray-800'
         }`}
       >
-        {fmt(value)}
+        {isCalculating ? <CalcPlaceholder /> : fmt(value)}
       </span>
       {unit && <span className="text-[11px] text-gray-500 w-[68px]">{unit}</span>}
     </div>
@@ -167,6 +197,7 @@ export function PdcDerivedRow({
   compact?: boolean;
   tooltip?: string;
 }) {
+  const isCalculating = useContext(IsCalculatingContext);
   return (
     <div className="flex items-center px-5 py-2.5 gap-2">
       <div className="flex-1 text-xs font-medium text-gray-700 min-w-0 flex items-center gap-0.5">
@@ -196,7 +227,7 @@ export function PdcDerivedRow({
         )}
       </div>
       <span className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}>
-        {total !== null && total !== undefined ? fmt(total) : ''}
+        {isCalculating ? <CalcPlaceholder /> : (total !== null && total !== undefined ? fmt(total) : '')}
       </span>
       <span className={`${COL.totalUnit} text-[11px] text-gray-500 shrink-0`}>
         {total !== null && total !== undefined ? 'Baht' : ''}
@@ -204,7 +235,7 @@ export function PdcDerivedRow({
       {!compact && (
         <>
           <span className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}>
-            {ratioPercent !== null && ratioPercent !== undefined ? `${Number(ratioPercent).toFixed(2)} %` : ''}
+            {isCalculating ? <CalcPlaceholder /> : (ratioPercent !== null && ratioPercent !== undefined ? `${Number(ratioPercent).toFixed(2)} %` : '')}
           </span>
           <span className={`${COL.remove} shrink-0`} />
         </>
@@ -222,17 +253,18 @@ export function PdcTotalRow({
   total?: number | null;
   ratioPercent?: number | null;
 }) {
+  const isCalculating = useContext(IsCalculatingContext);
   return (
     <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-gray-200/70 border-t border-gray-300 items-center">
       <div className="col-span-4 text-xs font-bold text-gray-900">{label}</div>
       <div className="col-span-8 flex items-center gap-2 ml-auto justify-end">
         <span className="min-w-[140px] text-right tabular-nums text-sm font-bold text-gray-900">
-          {fmt(total)}
+          {isCalculating ? <CalcPlaceholder wide /> : fmt(total)}
         </span>
         <span className="text-[11px] text-gray-600 whitespace-nowrap">Baht</span>
         {ratioPercent !== null && ratioPercent !== undefined && (
           <span className="min-w-[80px] text-right tabular-nums text-sm font-bold text-gray-900">
-            {`${Number(ratioPercent).toFixed(2)} %`}
+            {isCalculating ? <CalcPlaceholder /> : `${Number(ratioPercent).toFixed(2)} %`}
           </span>
         )}
       </div>
@@ -312,6 +344,7 @@ export function FvDerivedRow({
   emphasize?: boolean;
   tooltip?: string;
 }) {
+  const isCalculating = useContext(IsCalculatingContext);
   return (
     <div
       className={`flex items-center px-5 py-2.5 gap-2 ${
@@ -331,7 +364,7 @@ export function FvDerivedRow({
           emphasize ? 'text-sm font-bold text-primary' : 'text-xs font-medium text-gray-800'
         }`}
       >
-        {fmt(value)}
+        {isCalculating ? <CalcPlaceholder wide /> : fmt(value)}
       </span>
       {unit && (
         <span

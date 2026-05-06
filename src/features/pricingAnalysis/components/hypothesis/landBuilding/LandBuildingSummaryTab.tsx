@@ -24,6 +24,7 @@ import {
   FvDerivedRow,
   FvInputRow,
   InlineNumberInput,
+  IsCalculatingProvider,
 } from '../_shared/summaryAtoms';
 import { HypothesisResidualWaterfall } from '../../viz/HypothesisResidualWaterfall';
 import { HypothesisCostDonut } from '../../viz/HypothesisCostDonut';
@@ -36,6 +37,7 @@ interface LandBuildingSummaryTabProps {
   totalLandAreaFromTitles?: number | null;
   /** Server snapshot of cost items — used to read computed categoryRatio for user-added rows. */
   costItems?: CostItemDto[] | null;
+  isCalculating?: boolean;
 }
 
 export function LandBuildingSummaryTab({
@@ -43,6 +45,7 @@ export function LandBuildingSummaryTab({
   models,
   totalLandAreaFromTitles,
   costItems,
+  isCalculating,
 }: LandBuildingSummaryTabProps) {
   const { control } = useFormContext<LandBuildingFormValues>();
   const modelList = models ? Object.values(models) : [];
@@ -105,6 +108,7 @@ export function LandBuildingSummaryTab({
   const totalArea = totalLandAreaFromTitles ?? s?.totalArea ?? null;
 
   return (
+    <IsCalculatingProvider value={isCalculating ?? false}>
     <div className="space-y-5">
       {/* ── Visual residual story + cost composition ────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -481,6 +485,7 @@ export function LandBuildingSummaryTab({
       </SectionPrimary>
 
     </div>
+    </IsCalculatingProvider>
   );
 }
 
