@@ -37,8 +37,6 @@ function applyOptionFilters(
           return (opt as any).isActive !== false;
         case 'exclude':
           return !filter.values.includes(value);
-        case 'exclude':
-          return !filter.values.includes(value);
         case 'match':
           return new RegExp(filter.pattern).test(value);
         case 'exclude-match':
