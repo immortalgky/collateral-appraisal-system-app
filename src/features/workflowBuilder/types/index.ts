@@ -63,6 +63,14 @@ export interface StartProperties {
   [key: string]: unknown;
 }
 
+export interface TaskAction {
+  value: string;
+  label: string;
+  assignmentMode: 'system' | 'user';
+  movement: 'F' | 'B' | 'C';
+  condition?: string;
+}
+
 export interface TaskProperties {
   activityName: string;
   assigneeRole?: string;
@@ -72,6 +80,13 @@ export interface TaskProperties {
   revisitAssignmentStrategies: string[];
   timeoutDuration: string;
   decisionConditions: Record<string, string>;
+  actions?: TaskAction[];
+  canRaiseFollowup?: boolean;
+  canRaiseQuotation?: boolean;
+  teamIdVariable?: string;
+  assignmentRules?: { teamConstrained: boolean };
+  assigneeVariable?: string;
+  inputMappings?: Record<string, string>;
 }
 
 export interface RoutingProperties {
@@ -118,10 +133,17 @@ export interface GenericProperties {
 // Phase 2 — new activity property interfaces
 
 export interface ApprovalProperties {
-  memberSource: { type: string; parameters: Record<string, unknown> };
-  quorum: { type: 'count' | 'percent'; value: number };
-  majority: { type: 'count' | 'percent'; value: number };
+  activityName?: string;
+  memberSource: {
+    type: string;
+    valueExpression?: string;
+    thresholds?: Array<{ maxValue: number | null; committeeCode: string }>;
+    parameters?: Record<string, unknown>;
+  };
+  quorum?: { type: 'count' | 'percent'; value: number };
+  majority?: { type: 'count' | 'percent'; value: number };
   voteOptions: string[];
+  voteMovements?: Record<string, string>;
   decisionConditions: Record<string, string>;
   timeoutDuration: string;
 }
@@ -419,6 +441,7 @@ export function createDefaultApprovalProperties(): ApprovalProperties {
     quorum: { type: 'count', value: 1 },
     majority: { type: 'count', value: 1 },
     voteOptions: ['approve', 'reject', 'route_back'],
+    voteMovements: {},
     decisionConditions: {},
     timeoutDuration: 'PT72H',
   };

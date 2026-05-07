@@ -57,7 +57,8 @@ export function MethodSectionRenderer({
     savedCalculations: calculationMethodData.comparativeFactors?.calculations,
     savedComparativeAnalysisTemplateId:
       calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
-    savedMethodValue: calculationMethodData.comparativeFactors?.methodValue ?? null,
+    savedFinalValueAdjusted: (calculationMethodData.comparativeFactors as any)?.finalValue?.finalValueAdjusted ?? null,
+    savedLandValue: (calculationMethodData.comparativeFactors as any)?.finalValue?.landValue ?? null,
     onCalculationSave,
     onCalculationMethodDirty,
     onCancelCalculationMethod,
@@ -65,7 +66,15 @@ export function MethodSectionRenderer({
 
   switch (state.activeMethod?.methodType) {
     case 'WQS_MARKET':
-      return <WQSPanel {...panelProps} />;
+      return (
+        <WQSPanel
+          {...panelProps}
+          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
+          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
+          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
+          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+        />
+      );
     case 'SAG_MARKET':
       return <SaleAdjustmentGridPanel {...panelProps} />;
     case 'DC_MARKET':
@@ -75,7 +84,15 @@ export function MethodSectionRenderer({
     case 'MC_COST':
       return <CostMachinePanel {...panelProps} propertiesMap={serverData.propertiesMap} />;
     case 'WQS_COST':
-      return <WQSPanel {...panelProps} />;
+      return (
+        <WQSPanel
+          {...panelProps}
+          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
+          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
+          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
+          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+        />
+      );
     case 'SAG_COST':
       return <SaleAdjustmentGridPanel {...panelProps} />;
     case 'DC_COST':
@@ -84,9 +101,8 @@ export function MethodSectionRenderer({
       return (
         <LeaseholdPanel
           {...panelProps}
-          propertiesMap={serverData.propertiesMap}
-          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
-          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
+          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
         />
       );
     case 'PR':
@@ -94,8 +110,8 @@ export function MethodSectionRenderer({
         <ProfitRentPanel
           {...panelProps}
           propertiesMap={serverData.propertiesMap}
-          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId}
-          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType}
+          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
+          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
         />
       );
     case 'Hypothesis':

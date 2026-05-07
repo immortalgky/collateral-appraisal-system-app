@@ -46,7 +46,12 @@ interface WQSPanelProps {
   savedFactorScores?: FactorScoreType[];
   savedCalculations?: CalculationType[];
   savedComparativeAnalysisTemplateId?: string | null;
-  savedMethodValue?: number | null;
+  savedFinalValueAdjusted?: number | null;
+  savedLandValue?: number | null;
+  savedBuildingCost?: number | null;
+  savedAppraisalPrice?: number | null;
+  savedHasBuildingCost?: boolean | null;
+  savedIncludeLandArea?: boolean | null;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -67,7 +72,12 @@ export function WQSPanel({
   savedFactorScores,
   savedCalculations,
   savedComparativeAnalysisTemplateId,
-  savedMethodValue,
+  savedFinalValueAdjusted,
+  savedLandValue,
+  savedBuildingCost,
+  savedAppraisalPrice,
+  savedHasBuildingCost,
+  savedIncludeLandArea,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -130,24 +140,23 @@ export function WQSPanel({
     const value = getValues();
 
     try {
-      const appraisalValue = value.WQSFinalValue?.appraisalPriceRounded ?? null;
+      const landValue = ((value.WQSFinalValue as any)?.landValue as number | undefined) ?? null;
 
       const request = mapWQSFormToSubmitSchema({
         WQSForm: value,
         comparativeAnalysisTemplateId: selectedTemplateId,
       });
-      request.appraisalValue = appraisalValue;
 
       await saveMutation.mutateAsync({
         id: activeMethod.pricingAnalysisId,
         methodId,
         request,
       });
-      if (appraisalValue && activeMethod?.approachType && activeMethod?.methodType) {
+      if (landValue && activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
-          appraisalValue,
+          appraisalValue: landValue,
         });
       }
       toast.success('Saved!');
@@ -242,12 +251,30 @@ export function WQSPanel({
         savedCalculations,
         reset,
       });
-      // Set appraisal price from saved method value AFTER reset, with shouldDirty
-      // so derived rules won't overwrite it with the calculated final value
-      if (savedMethodValue != null && savedMethodValue !== 0) {
-        setValue('WQSFinalValue.appraisalPriceRounded' as any, savedMethodValue, {
+      // Restore landValue (only meaningful when hasBuildingCost; for cases 1/2 the user's
+      // rounded value is bound to appraisalPrice, restored separately below).
+      if (savedLandValue != null && savedLandValue !== 0) {
+        setValue('WQSFinalValue.landValue' as any, savedLandValue, { shouldDirty: true });
+      }
+      // Restore user-overridden final value adjusted so derive rules don't reseed it
+      if (savedFinalValueAdjusted != null && savedFinalValueAdjusted !== 0) {
+        setValue('WQSFinalValue.finalValueAdjusted' as any, savedFinalValueAdjusted, {
           shouldDirty: true,
         });
+      }
+      // Restore building cost fields
+      if (savedBuildingCost != null && savedBuildingCost !== 0) {
+        setValue('WQSFinalValue.buildingCost' as any, savedBuildingCost, { shouldDirty: true });
+      }
+      if (savedAppraisalPrice != null && savedAppraisalPrice !== 0) {
+        setValue('WQSFinalValue.appraisalPrice' as any, savedAppraisalPrice, { shouldDirty: true });
+      }
+      // Restore toggles
+      if (savedHasBuildingCost != null) {
+        setValue('WQSFinalValue.hasBuildingCost' as any, savedHasBuildingCost, { shouldDirty: false });
+      }
+      if (savedIncludeLandArea != null) {
+        setValue('WQSFinalValue.includeLandArea' as any, savedIncludeLandArea, { shouldDirty: false });
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {

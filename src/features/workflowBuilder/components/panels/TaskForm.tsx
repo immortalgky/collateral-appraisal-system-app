@@ -15,6 +15,14 @@ const STRATEGY_OPTIONS = [
   { value: AssignmentStrategy.STARTED_BY, label: 'Started By' },
   { value: AssignmentStrategy.ROUND_ROBIN, label: 'Round Robin' },
   { value: AssignmentStrategy.PREVIOUS_OWNER, label: 'Previous Owner' },
+  { value: 'pool', label: 'Pool' },
+  { value: 'variable_assignee', label: 'Variable Assignee' },
+];
+
+const MOVEMENT_OPTIONS = [
+  { value: 'F', label: 'Forward (F)' },
+  { value: 'B', label: 'Backward (B)' },
+  { value: 'C', label: 'Complete (C)' },
 ];
 
 function recordToArray(record: Record<string, string>): { key: string; value: string }[] {
@@ -46,6 +54,12 @@ export function TaskForm({ nodeId }: TaskFormProps) {
   const { fields: decisionFields, append: appendDecision, remove: removeDecision } =
     useFieldArray({ control, name: 'decisionConditions' });
 
+  const { fields: actionFields, append: appendAction, remove: removeAction } =
+    useFieldArray({ control, name: 'actions' });
+
+  const { fields: mappingFields, append: appendMapping, remove: removeMapping } =
+    useFieldArray({ control, name: 'inputMappings' });
+
   useEffect(() => {
     if (data && props) {
       reset(buildDefaults(data, props));
@@ -58,14 +72,22 @@ export function TaskForm({ nodeId }: TaskFormProps) {
       description: values.description,
       requiredRoles: values.requiredRoles,
       properties: {
+        ...(props ?? {}),
         activityName: values.activityName,
-        assigneeRole: values.assigneeRole,
+        assigneeRole: values.assigneeRole || undefined,
         assigneeGroup: values.assigneeGroup,
         assignmentStrategies: values.initialAssignmentStrategies[0] ?? 'round_robin',
         initialAssignmentStrategies: values.initialAssignmentStrategies,
         revisitAssignmentStrategies: values.revisitAssignmentStrategies,
         timeoutDuration: values.timeoutDuration,
         decisionConditions: arrayToRecord(values.decisionConditions),
+        actions: values.actions.length > 0 ? values.actions : undefined,
+        canRaiseFollowup: values.canRaiseFollowup || undefined,
+        canRaiseQuotation: values.canRaiseQuotation || undefined,
+        teamIdVariable: values.teamIdVariable || undefined,
+        assignmentRules: values.teamConstrained ? { teamConstrained: true } : undefined,
+        assigneeVariable: values.assigneeVariable || undefined,
+        inputMappings: values.inputMappings.length > 0 ? arrayToRecord(values.inputMappings) : undefined,
       },
     });
   };
@@ -239,12 +261,198 @@ export function TaskForm({ nodeId }: TaskFormProps) {
           type="button"
           onClick={() => {
             appendDecision({ key: '', value: '' });
-            // Trigger store update so node re-renders with new handle
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
           className="btn btn-ghost btn-xs text-primary"
         >
           + Add Decision
+        </button>
+      </div>
+
+      {/* Actions */}
+      <div className="divider text-xs">Actions</div>
+
+      <div className="flex flex-col gap-3">
+        {actionFields.map((field, index) => (
+          <div key={field.id} className="border border-base-300 rounded-lg p-2 flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="label py-0">
+                  <span className="label-text text-xs">Value</span>
+                </label>
+                <input
+                  {...register(`actions.${index}.value`)}
+                  className="input input-bordered input-xs w-full"
+                  placeholder="e.g. approve"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="label py-0">
+                  <span className="label-text text-xs">Label</span>
+                </label>
+                <input
+                  {...register(`actions.${index}.label`)}
+                  className="input input-bordered input-xs w-full"
+                  placeholder="e.g. Approve"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  removeAction(index);
+                  handleSubmit(onSubmit)();
+                }}
+                className="btn btn-ghost btn-xs text-error self-end"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="label py-0">
+                  <span className="label-text text-xs">Assignment Mode</span>
+                </label>
+                <select
+                  {...register(`actions.${index}.assignmentMode`)}
+                  className="select select-bordered select-xs w-full"
+                >
+                  <option value="system">System</option>
+                  <option value="user">User</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="label py-0">
+                  <span className="label-text text-xs">Movement</span>
+                </label>
+                <select
+                  {...register(`actions.${index}.movement`)}
+                  className="select select-bordered select-xs w-full"
+                >
+                  {MOVEMENT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="label py-0">
+                <span className="label-text text-xs">Condition (optional)</span>
+              </label>
+              <input
+                {...register(`actions.${index}.condition`)}
+                className="input input-bordered input-xs w-full"
+                placeholder="e.g. status == 'pending'"
+              />
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => {
+            appendAction({ value: '', label: '', assignmentMode: 'system', movement: 'F', condition: '' });
+            setTimeout(() => handleSubmit(onSubmit)(), 0);
+          }}
+          className="btn btn-ghost btn-xs text-primary"
+        >
+          + Add Action
+        </button>
+      </div>
+
+      {/* Additional Options */}
+      <div className="divider text-xs">Additional Options</div>
+
+      <div className="flex flex-col gap-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            {...register('canRaiseFollowup')}
+            className="checkbox checkbox-primary checkbox-xs"
+          />
+          <span className="text-xs">Can Raise Followup</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            {...register('canRaiseQuotation')}
+            className="checkbox checkbox-primary checkbox-xs"
+          />
+          <span className="text-xs">Can Raise Quotation</span>
+        </label>
+      </div>
+
+      {/* Variable Assignee */}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text text-xs font-medium">Assignee Variable</span>
+        </label>
+        <input
+          {...register('assigneeVariable')}
+          className="input input-bordered input-sm w-full"
+          placeholder="e.g. internalFollowupStaffId"
+        />
+      </div>
+
+      {/* Team Assignment */}
+      <div className="divider text-xs">Team Assignment</div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text text-xs font-medium">Team ID Variable</span>
+        </label>
+        <input
+          {...register('teamIdVariable')}
+          className="input input-bordered input-sm w-full"
+          placeholder="e.g. assignedCompanyId"
+        />
+      </div>
+
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          {...register('teamConstrained')}
+          className="checkbox checkbox-primary checkbox-xs"
+        />
+        <span className="text-xs">Team Constrained</span>
+      </label>
+
+      {/* Input Mappings */}
+      <div className="divider text-xs">Input Mappings</div>
+
+      <div className="flex flex-col gap-2">
+        {mappingFields.map((field, index) => (
+          <div key={field.id} className="flex gap-2">
+            <input
+              {...register(`inputMappings.${index}.key`)}
+              className="input input-bordered input-xs flex-1"
+              placeholder="Key"
+              onBlur={handleSubmit(onSubmit)}
+            />
+            <input
+              {...register(`inputMappings.${index}.value`)}
+              className="input input-bordered input-xs flex-[2]"
+              placeholder="Value / variable"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                removeMapping(index);
+                handleSubmit(onSubmit)();
+              }}
+              className="btn btn-ghost btn-xs text-error"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => {
+            appendMapping({ key: '', value: '' });
+            setTimeout(() => handleSubmit(onSubmit)(), 0);
+          }}
+          className="btn btn-ghost btn-xs text-primary"
+        >
+          + Add Mapping
         </button>
       </div>
     </form>
@@ -266,5 +474,18 @@ function buildDefaults(
     timeoutDuration: props?.timeoutDuration ?? 'PT72H',
     decisionConditions: recordToArray(props?.decisionConditions ?? {}),
     requiredRoles: data?.requiredRoles ?? [],
+    actions: (props?.actions ?? []).map((a) => ({
+      value: a.value ?? '',
+      label: a.label ?? '',
+      assignmentMode: a.assignmentMode ?? 'system',
+      movement: a.movement ?? 'F',
+      condition: a.condition ?? '',
+    })),
+    canRaiseFollowup: props?.canRaiseFollowup ?? false,
+    canRaiseQuotation: props?.canRaiseQuotation ?? false,
+    teamIdVariable: props?.teamIdVariable ?? '',
+    teamConstrained: props?.assignmentRules?.teamConstrained ?? false,
+    assigneeVariable: props?.assigneeVariable ?? '',
+    inputMappings: recordToArray(props?.inputMappings ?? {}),
   };
 }

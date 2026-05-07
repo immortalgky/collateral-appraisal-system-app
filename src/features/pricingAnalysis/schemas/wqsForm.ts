@@ -41,7 +41,9 @@ const WQSScore = z.object({
 const WQSFinalValue = z
   .object({
     finalValueRounded: z.number(requireMsg('Final value (rounded)')),
-    appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
+    landValue: z.number(requireMsg('Land value')).optional(),
+    buildingCost: z.number(requireMsg('Building cost')).optional(),
+    appraisalPrice: z.number(requireMsg('Appraisal price')).optional(),
   })
   .passthrough();
 

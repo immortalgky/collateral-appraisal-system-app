@@ -24,6 +24,7 @@ import {
   useRemoveFeeItem,
   useRemovePayment,
   useUpdateAppraisalFee,
+  useUpdateConstructionInspectionFee,
   useUpdateFeeItem,
   useUpdatePayment,
 } from '../api/fee';
@@ -57,6 +58,7 @@ export default function AppointmentAndFeePage() {
   const approveFeeItem = useApproveFeeItem();
   const rejectFeeItem = useRejectFeeItem();
   const updateAppraisalFee = useUpdateAppraisalFee();
+  const updateConstructionInspectionFee = useUpdateConstructionInspectionFee();
 
   const isNewAppointment = !appointment;
 
@@ -245,6 +247,15 @@ export default function AppointmentAndFeePage() {
     }
   };
 
+  const handleUpdateConstructionInspectionFee = async (amount: number | null) => {
+    if (!currentFee) return;
+    await updateConstructionInspectionFee.mutateAsync({
+      appraisalId,
+      feeId: currentFee.id!,
+      amount,
+    });
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Main Content - Scrollable */}
@@ -274,6 +285,14 @@ export default function AppointmentAndFeePage() {
               onApproveFeeItem={handleApproveFeeItem}
               onRejectFeeItem={handleRejectFeeItem}
               isFeePaymentTypeUpdating={updateAppraisalFee.isPending}
+              showConstructionInspectionFee={
+                currentFee?.hasBuildingUnderConstruction ?? false
+              }
+              constructionInspectionFeeAmount={
+                currentFee?.constructionInspectionFeeAmount ?? null
+              }
+              onUpdateConstructionInspectionFee={handleUpdateConstructionInspectionFee}
+              isConstructionInspectionFeeUpdating={updateConstructionInspectionFee.isPending}
             />
 
             {/* Payment Information (Right Column) */}

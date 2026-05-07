@@ -34,7 +34,10 @@ export const FeeSchema = z.object({
   feeType: z.string().min(1, 'Fee type is required').nullable(),
   items: z.array(FeeItemSchema),
   bankAbsorbAmount: z.number().min(0, 'Bank absorb amount must be non-negative'),
-  inspectionFee: z.number().min(0, 'Inspection fee must be non-negative').nullable(),
+  constructionInspectionFee: z
+    .number()
+    .min(0, 'Construction inspection fee must be non-negative')
+    .nullable(),
 });
 
 /**
@@ -58,7 +61,7 @@ export const appointmentAndFeeFormDefaults = {
     feeType: null,
     items: [],
     bankAbsorbAmount: 0,
-    inspectionFee: null,
+    constructionInspectionFee: null,
   },
   payments: [],
 };

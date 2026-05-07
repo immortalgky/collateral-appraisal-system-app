@@ -121,13 +121,13 @@ export function restoreWQSFromSavedData({
       marketId: survey.id ?? '',
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
       offeringPriceMeasurementUnit:
-        saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
+        saved?.offeringPriceUnit ?? survey.offerPriceUnit ?? (surveyMap.get('20') as string) ?? '',
       offeringPriceAdjustmentPct:
         saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
       offeringPriceAdjustmentAmt:
         saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
-      sellingPriceMeasurementUnit: (surveyMap.get('20') as string) ?? '',
+      sellingPriceMeasurementUnit: survey.salePriceUnit ?? (surveyMap.get('20') as string) ?? '',
       sellingPriceAdjustmentYear: saved?.adjustedPeriodPct ?? toNum(surveyMap.get('23'), 3),
       numberOfYears: saved?.buySellYear ?? yearDiffFromToday(survey.saleDate),
       totalAdjustedSellingPrice: saved?.cumulativeAdjPeriod ?? 0,
@@ -177,8 +177,9 @@ export function restoreWQSFromSavedData({
         slope: 0,
         lowestEstimate: 0,
         highestEstimate: 0,
-        appraisalPriceRounded: 0,
-        priceDifferentiate: 0,
+        landValue: 0,
+        buildingCost: 0,
+        appraisalPrice: 0,
       },
       generateAt: new Date().toISOString(),
     },

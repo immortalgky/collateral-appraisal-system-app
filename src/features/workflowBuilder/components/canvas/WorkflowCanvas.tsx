@@ -39,6 +39,7 @@ import { RequestSubmissionNode } from './nodes/RequestSubmissionNode';
 import { AdminReviewNode } from './nodes/AdminReviewNode';
 import { TimerNode } from './nodes/TimerNode';
 import { WorkflowEdge } from './edges/WorkflowEdge';
+import { DraggableEdge } from './edges/DraggableEdge';
 
 const nodeTypes: NodeTypes = {
   StartActivity: StartNode,
@@ -65,10 +66,11 @@ const nodeTypes: NodeTypes = {
 
 const edgeTypes: EdgeTypes = {
   workflow: WorkflowEdge,
+  draggable: DraggableEdge,
 };
 
 const defaultEdgeOptions: DefaultEdgeOptions = {
-  type: 'workflow',
+  type: 'draggable',
   markerEnd: { type: MarkerType.ArrowClosed },
 };
 

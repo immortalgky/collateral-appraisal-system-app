@@ -78,6 +78,36 @@ export const useUpdateAppraisalFee = () => {
 };
 
 /**
+ * Update the Construction Inspection Fee on a fee record.
+ * PATCH /appraisals/{appraisalId}/fees/{feeId}/construction-inspection-fee
+ */
+export const useUpdateConstructionInspectionFee = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      feeId,
+      amount,
+    }: {
+      appraisalId: string;
+      feeId: string;
+      amount: number | null;
+    }): Promise<void> => {
+      await axios.patch(
+        `/appraisals/${appraisalId}/fees/${feeId}/construction-inspection-fee`,
+        { amount },
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'fees'],
+      });
+    },
+  });
+};
+
+/**
  * Approve a fee item
  * PATCH /appraisals/{appraisalId}/fees/{feeId}/items/{itemId}/approve
  */

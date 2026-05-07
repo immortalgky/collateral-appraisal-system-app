@@ -4,7 +4,6 @@ import {
   calcAdjustedValueFromSellingPrice,
   calcSum,
   calcWeightedScore,
-  floorToTenThousands,
   floorToThousands,
   round2,
   toFiniteNumber,
@@ -14,7 +13,6 @@ import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
 import { wqsFieldPath } from './wqsFieldPath';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
-import { shouldAutoDefault } from '@features/pricingAnalysis/domain/shouldAutoDefault.ts';
 import type { WQSScore } from '../types/wqs';
 
 export function buildWQSScoringSurveyDerivedRules(args: {
@@ -340,19 +338,19 @@ export function buildWQSFinalValueDerivedRules(args: {
       },
     },
     {
+      // System-calculated: always floor(finalValue). Never overridden by user.
       targetPath: finalValueFinalValueRoundedPath(),
       deps: [finalValueFinalValuePath()],
-      when: ({ getValues, getFieldState, formState }) => {
-        const target = finalValueFinalValueRoundedPath();
-        const curr = getValues(target) ?? 0;
-        const { isDirty } = getFieldState(target, formState);
-        return shouldAutoDefault({ value: curr, isDirty });
-      },
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValueFinalValuePath()) ?? 0;
         return floorToThousands(finalValue);
       },
     },
+    // NOTE: the finalValueAdjusted seed rule lives in WQSAdjustFinalValueSection.tsx
+    // alongside the other ref-guarded user-seed rules (landValue, appraisalPrice).
+    // Co-locating them lets all three use the same "did upstream actually change"
+    // pattern via React refs, which is required to prevent reset(value) and rule
+    // array re-creation from clobbering the user's saved override.
     {
       targetPath: finalValueCoefficientOfDecisionPath(),
       deps: [

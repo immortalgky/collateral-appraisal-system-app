@@ -21,6 +21,7 @@ export interface CategorySubtotal {
   constructionWorkGroupId: string;
   totalConstructionValue: number;
   totalProportion: number;
+  totalCurrentProportion: number;
   averagePreviousProgress: number;
   averageCurrentProgress: number;
   totalPreviousPropertyValue: number;
