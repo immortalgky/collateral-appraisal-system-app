@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import Dropdown from '@shared/components/inputs/Dropdown';
+import NumberInput from '@shared/components/inputs/NumberInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { FeeItem } from '../types/appointmentAndFee';
 import { FEE_ITEM_TYPE_OPTIONS, VAT_PERCENTAGE } from '../types/appointmentAndFee';
@@ -28,6 +29,16 @@ interface FeeInformationSectionProps {
   onApproveFeeItem?: (feeId: string, itemId: string) => void;
   onRejectFeeItem?: (feeId: string, itemId: string, reason: string) => void;
   isFeePaymentTypeUpdating?: boolean;
+
+  /**
+   * Show the Construction Inspection Fee input. Driven by the backend's
+   * AppraisalFeeDto.hasBuildingUnderConstruction flag (true when at least one
+   * Building or Land+Building property has IsUnderConstruction=true).
+   */
+  showConstructionInspectionFee?: boolean;
+  constructionInspectionFeeAmount?: number | null;
+  onUpdateConstructionInspectionFee?: (amount: number | null) => Promise<void>;
+  isConstructionInspectionFeeUpdating?: boolean;
 }
 
 /**
@@ -44,11 +55,35 @@ export default function FeeInformationSection({
   onApproveFeeItem,
   onRejectFeeItem,
   isFeePaymentTypeUpdating,
+  showConstructionInspectionFee = false,
+  constructionInspectionFeeAmount = null,
+  onUpdateConstructionInspectionFee,
+  isConstructionInspectionFeeUpdating,
 }: FeeInformationSectionProps) {
   const readOnly = usePageReadOnly();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
   const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
+
+  // Local-buffered editor for the CI fee. Hydrate from server, commit on blur to avoid
+  // a server round-trip per keystroke. Resync whenever the server value changes
+  // (e.g. another tab edits or the fees query refetches).
+  const [ciFeeDraft, setCiFeeDraft] = useState<number | null>(constructionInspectionFeeAmount);
+  useEffect(() => {
+    setCiFeeDraft(constructionInspectionFeeAmount);
+  }, [constructionInspectionFeeAmount]);
+
+  const handleCiFeeBlur = async () => {
+    if (!onUpdateConstructionInspectionFee) return;
+    if (ciFeeDraft === constructionInspectionFeeAmount) return;
+    try {
+      await onUpdateConstructionInspectionFee(ciFeeDraft);
+      toast.success('Construction inspection fee saved');
+    } catch (error: any) {
+      toast.error(error?.apiError?.detail || 'Failed to save construction inspection fee.');
+      setCiFeeDraft(constructionInspectionFeeAmount); // rollback
+    }
+  };
 
   // Calculate totals from API items
   const subtotal = items.reduce((sum, item) => sum + (item.feeAmount || 0), 0);
@@ -378,6 +413,27 @@ export default function FeeInformationSection({
           <span className="hidden md:block" />
         </div>
       </div>
+
+      {/* Construction Inspection Fee — only visible when at least one building property is under construction */}
+      {showConstructionInspectionFee && (
+        <div className="border border-amber-200 bg-amber-50/40 rounded-lg p-4">
+          <NumberInput
+            name="constructionInspectionFee"
+            label="Construction Inspection Fee"
+            decimalPlaces={2}
+            min={0}
+            value={ciFeeDraft}
+            onChange={e => setCiFeeDraft(e.target.value)}
+            onBlur={handleCiFeeBlur}
+            disabled={readOnly || isConstructionInspectionFeeUpdating}
+            placeholder="0.00"
+          />
+          <p className="mt-2 text-xs text-gray-500">
+            This fee is reused as the appraisal fee on the next Construction Inspection
+            application for this collateral.
+          </p>
+        </div>
+      )}
 
       {/* Add/Edit Fee Modal */}
       <AddFeeModal

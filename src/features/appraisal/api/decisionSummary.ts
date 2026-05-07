@@ -40,14 +40,28 @@ export interface BlockModelPriceRow {
   buildingInsurance: number;
 }
 
+export interface ConstructionSummaryRow {
+  label: string;
+  constructionProgressPct: number;
+  totalAppraisalValue: number;
+  totalLandValue: number;
+  totalBuildingValue: number;
+  buildingValueConstructing: number;
+}
+
+export interface ConstructionSummary {
+  rows: ConstructionSummaryRow[];
+}
+
 /**
  * Augments the auto-generated `GetDecisionSummaryResponse` with block-appraisal
- * fields that v1.ts has not yet picked up.
+ * and construction-summary fields that v1.ts has not yet picked up.
  */
 export type DecisionSummaryData = GetDecisionSummaryResponse & {
   isBlock: boolean;
   blockApproachMatrix: BlockApproachMatrixRow[] | null;
   blockModelPrices: BlockModelPriceRow[] | null;
+  constructionSummary: ConstructionSummary | null;
 };
 
 /**

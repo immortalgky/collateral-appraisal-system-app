@@ -59,6 +59,7 @@ export const wqsFieldPath = {
   /** final value section */
   finalValueFinalValue: () => `WQSFinalValue.finalValue`,
   finalValueFinalValueRounded: () => `WQSFinalValue.finalValueRounded`,
+  finalValueFinalValueAdjusted: () => `WQSFinalValue.finalValueAdjusted`,
   finalValueCoefficientOfDecision: () => `WQSFinalValue.coefficientOfDecision`,
   finalValueStandardError: () => `WQSFinalValue.standardError`,
   finalValueIntersectionPoint: () => `WQSFinalValue.intersectionPoint`,
@@ -69,14 +70,7 @@ export const wqsFieldPath = {
   finalValueIncludeLandArea: () => `WQSFinalValue.includeLandArea`,
   finalValueLandArea: () => `WQSFinalValue.landArea`,
   finalValueUsableArea: () => `WQSFinalValue.usableArea`,
+  finalValueLandValue: () => `WQSFinalValue.landValue`,
+  finalValueBuildingCost: () => `WQSFinalValue.buildingCost`,
   finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice`,
-  finalValueAppraisalPriceRounded: () => `WQSFinalValue.appraisalPriceRounded`,
-  finalValuePriceDifferentiate: () => `WQSFinalValue.priceDifferentiate`,
-  finalValueTotalBuildingCost: () => `WQSFinalValue.totalBuildingCost`,
-  finalValueAppraisalPriceIncludeBuildingCost: () =>
-    `WQSFinalValue.appraisalPriceIncludeBuildingCost`,
-  finalValueAppraisalPriceIncludeBuildingCostRounded: () =>
-    `WQSFinalValue.appraisalPriceIncludeBuildingCostRounded`,
-  finalValuePriceIncludeBuildingCostDifferentiate: () =>
-    `WQSFinalValue.priceIncludeBuildingCostDifferentiate`,
 };

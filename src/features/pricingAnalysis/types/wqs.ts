@@ -65,6 +65,7 @@ export interface WQSTotalScore {
 export interface WQSFinalValue {
   finalValue: number;
   finalValueRounded: number;
+  finalValueAdjusted?: number;
   coefficientOfDecision: number;
   standardError: number;
   intersectionPoint: number;
@@ -75,8 +76,10 @@ export interface WQSFinalValue {
   includeLandArea: boolean;
   landArea?: number;
   usableArea?: number;
-  appraisalPrice: number;
-  appraisalPriceRounded: number;
+  // stored fields (backend persists these)
+  landValue?: number;       // user-edited land price
+  buildingCost?: number;    // user-edited building cost
+  appraisalPrice?: number;  // user-edited final total (hasBuildingCost only)
 }
 
 export interface WQS {

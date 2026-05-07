@@ -998,16 +998,11 @@ export function WQSScoringSection({
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
-              <td className={clsx('bg-gray-100 border-b border-gray-300 px-1 py-1')}>
+              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-right font-semibold')}>
                 <RHFInputCell
                   fieldName={finalValueFinalValueRoundedPath()}
-                  inputType="number"
-                  number={{
-                    decimalPlaces: 2,
-                    maxIntegerDigits: 15,
-                    allowNegative: false,
-                    maxValue: 999_999_999_999_999.0,
-                  }}
+                  inputType="display"
+                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
                 />
               </td>
             </tr>

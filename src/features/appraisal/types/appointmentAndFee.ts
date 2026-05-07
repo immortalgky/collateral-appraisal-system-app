@@ -40,7 +40,7 @@ export interface FeeData {
   feeType: string | null;
   items: FeeItem[];
   bankAbsorbAmount: number;
-  inspectionFee: number | null;
+  constructionInspectionFee: number | null;
 }
 
 /**

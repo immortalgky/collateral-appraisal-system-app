@@ -85,11 +85,11 @@ export function syncWQSFormSurveys({
           return {
             marketId: survey.id.toString(),
             offeringPrice: survey.offerPrice ?? 0,
-            offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            offeringPriceMeasurementUnit: survey.offerPriceUnit ?? (surveyMap.get('20') as string) ?? '',
             offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
             offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
             sellingPrice: survey.salePrice ?? 0,
-            sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+            sellingPriceMeasurementUnit: survey.salePriceUnit ?? (surveyMap.get('20') as string) ?? '',
             sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
             numberOfYears: yearDiffFromToday(survey.saleDate),
           };

@@ -97,7 +97,7 @@ export const taskFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
   activityName: z.string().min(1, 'Activity name is required'),
-  assigneeRole: z.string().min(1, 'Assignee role is required'),
+  assigneeRole: z.string().optional(),
   assigneeGroup: z.string().min(1, 'Assignee group is required'),
   initialAssignmentStrategies: z.array(z.string()).min(1),
   revisitAssignmentStrategies: z.array(z.string()).min(1),
@@ -109,6 +109,21 @@ export const taskFormSchema = z.object({
     }),
   ),
   requiredRoles: z.array(z.string()),
+  actions: z.array(
+    z.object({
+      value: z.string(),
+      label: z.string(),
+      assignmentMode: z.enum(['system', 'user']),
+      movement: z.enum(['F', 'B', 'C']),
+      condition: z.string().optional(),
+    }),
+  ),
+  canRaiseFollowup: z.boolean().optional(),
+  canRaiseQuotation: z.boolean().optional(),
+  teamIdVariable: z.string().optional(),
+  teamConstrained: z.boolean().optional(),
+  assigneeVariable: z.string().optional(),
+  inputMappings: z.array(z.object({ key: z.string(), value: z.string() })),
 });
 
 export const routingFormSchema = z.object({
@@ -182,12 +197,19 @@ export const transitionFormSchema = z.object({
 export const approvalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
+  activityName: z.string().optional(),
   memberSourceType: z.string().min(1, 'Member source type is required'),
+  valueExpression: z.string().optional(),
+  thresholds: z.array(z.object({
+    committeeCode: z.string(),
+    maxValue: z.string(), // string in form; convert to number|null on submit
+  })),
   quorumType: z.enum(['count', 'percent']),
   quorumValue: z.coerce.number().min(1),
   majorityType: z.enum(['count', 'percent']),
   majorityValue: z.coerce.number().min(1),
   voteOptions: z.array(z.string().min(1)),
+  voteMovements: z.array(z.object({ key: z.string(), value: z.string() })),
   decisionConditions: z.array(z.object({ key: z.string(), value: z.string() })),
   timeoutDuration: z.string().min(1, 'Timeout is required'),
 });

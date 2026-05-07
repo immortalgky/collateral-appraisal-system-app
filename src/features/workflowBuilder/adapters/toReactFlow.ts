@@ -26,20 +26,16 @@ export function transitionToEdge(
   sourceActivity?: Activity,
 ): Edge {
   const isConditional = transition.type === 'Conditional';
-
   return {
     id: transition.id,
     source: transition.from,
     target: transition.to,
-    type: 'workflow',
+    type: 'draggable',
+    animated: !isConditional,
+    style: { stroke: isConditional ? '#6366f1' : '#94a3b8', strokeWidth: 2 },
     label: transition.condition
       ? truncateLabel(transition.condition, 30)
       : undefined,
-    animated: !isConditional,
-    style: {
-      stroke: isConditional ? '#6366f1' : '#94a3b8',
-      strokeWidth: 2,
-    },
     markerEnd: { type: 'arrowclosed' as MarkerType },
     data: { ...transition },
     sourceHandle: resolveSourceHandle(transition, sourceActivity),

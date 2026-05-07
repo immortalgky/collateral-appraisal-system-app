@@ -26,6 +26,7 @@ interface CategorySubtotal {
   constructionWorkGroupId: string;
   totalConstructionValue: number;
   totalProportion: number;
+  totalCurrentProportion: number;
   averagePreviousProgress: number;
   averageCurrentProgress: number;
   totalPreviousPropertyValue: number;
@@ -40,6 +41,9 @@ interface ConstructionDetailTableProps {
   grandTotal: {
     totalConstructionValue: number;
     totalProportion: number;
+    totalCurrentProportion: number;
+    weightedPreviousProgress: number;
+    weightedCurrentProgress: number;
     totalPreviousPropertyValue: number;
     totalCurrentPropertyValue: number;
   };
@@ -235,9 +239,15 @@ export function ConstructionDetailTable({
               {formatNumber(grandTotal.totalProportion, 2)}
               {isOverLimit && ' !'}
             </td>
-            <td className="text-right px-3 py-2.5" />
-            <td className="text-right px-3 py-2.5" />
-            <td className="text-right px-3 py-2.5" />
+            <td className="text-right px-3 py-2.5 tabular-nums">
+              {formatNumber(grandTotal.weightedPreviousProgress, 2)} %
+            </td>
+            <td className="text-right px-3 py-2.5 tabular-nums">
+              {formatNumber(grandTotal.weightedCurrentProgress, 2)} %
+            </td>
+            <td className="text-right px-3 py-2.5 tabular-nums">
+              {formatNumber(grandTotal.totalCurrentProportion, 2)}
+            </td>
             <td className="text-right px-3 py-2.5 tabular-nums">
               {formatNumber(grandTotal.totalPreviousPropertyValue, 2)}
             </td>
@@ -386,7 +396,9 @@ function CategorySection({
           <td className="text-right px-3 py-2 tabular-nums">
             {formatNumber(subtotal.averageCurrentProgress, 2)} %
           </td>
-          <td className="text-right px-3 py-2" />
+          <td className="text-right px-3 py-2 tabular-nums">
+            {formatNumber(subtotal.totalCurrentProportion, 2)}
+          </td>
           <td className="text-right px-3 py-2 tabular-nums">
             {formatNumber(subtotal.totalPreviousPropertyValue, 2)}
           </td>

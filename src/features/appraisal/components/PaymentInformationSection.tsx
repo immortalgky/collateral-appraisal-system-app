@@ -43,8 +43,6 @@ export default function PaymentInformationSection({
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
-  const [inspectionFee, setInspectionFee] = useState<number>(fee?.inspectionFeeAmount ?? 0);
-
   const bankAbsorbAmount = fee?.bankAbsorbAmount ?? 0;
   const payments = fee?.paymentHistory ?? [];
 
@@ -360,18 +358,6 @@ export default function PaymentInformationSection({
           </div>
         </div>
       </div>
-
-      {/* Inspection Fee Input */}
-      {/*<NumberInput*/}
-      {/*  label="Inspection Fee"*/}
-      {/*  required*/}
-      {/*  decimalPlaces={2}*/}
-      {/*  value={fee?.inspectionFeeAmount ?? inspectionFee}*/}
-      {/*  onChange={e => {*/}
-      {/*    const value = e.target.value ?? 0;*/}
-      {/*    setInspectionFee(value);*/}
-      {/*  }}*/}
-      {/*/>*/}
 
       {/* Add / Edit Payment Modal */}
       <AddPaymentModal

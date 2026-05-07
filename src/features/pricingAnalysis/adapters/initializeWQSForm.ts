@@ -28,17 +28,17 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
     const surveyMap = new Map(
       (survey.factorData ?? []).map((s: FactorDataType) => [
         s.factorCode,
-        readFactorValue({ dataType: s.dataType, value: s.value, fieldDecimal: s.fieldDecimal }),
-      ]),
+        readFactorValue({ dataType: s.dataType as string, value: s.value, fieldDecimal: s.fieldDecimal }),
+      ] as [string, string | undefined]),
     );
     return {
       marketId: survey.id ?? '',
       offeringPrice: survey.offerPrice ?? 0,
-      offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+      offeringPriceMeasurementUnit: survey.offerPriceUnit ?? (surveyMap.get('20') as string) ?? '',
       offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
       offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: survey.salePrice ?? 0,
-      sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+      sellingPriceMeasurementUnit: survey.salePriceUnit ?? (surveyMap.get('20') as string) ?? '',
       sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
       numberOfYears: yearDiffFromToday(survey.saleDate),
     } as WQSCalculation;
@@ -61,8 +61,9 @@ function buildFinalValue(property: Record<string, unknown>) {
     slope: 0,
     lowestEstimate: 0,
     highestEstimate: 0,
-    appraisalPriceRounded: 0,
-    priceDifferentiate: 0,
+    landValue: 0,
+    buildingCost: 0,
+    appraisalPrice: 0,
   };
 }
 
@@ -133,8 +134,8 @@ export function initializeWQSForm({
     WQSScores: template.calculationFactors?.map(calFact => ({
       factorId: factorIdMap.get(calFact.factorCode) ?? '',
       factorCode: calFact.factorCode,
-      weight: calFact.weight,
-      intensity: calFact.intensity,
+      weight: calFact.weight ?? undefined,
+      intensity: calFact.intensity ?? undefined,
       surveys: surveyEntries,
       collateral: 0,
     })),

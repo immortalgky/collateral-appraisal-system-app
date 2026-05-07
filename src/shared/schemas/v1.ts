@@ -1473,6 +1473,13 @@ const SaveComparativeAnalysisRequest = z
     calculations: z.array(CalculationInput),
     comparativeAnalysisTemplateId: z.string().uuid().nullish().default(null),
     appraisalValue: z.number().nullish().default(null),
+    finalValueAdjusted: z.number().nullish().default(null),
+    hasBuildingCost: z.boolean().nullish().default(null),
+    buildingCost: z.number().nullish().default(null),
+    appraisalPrice: z.number().nullish().default(null),
+    includeLandArea: z.boolean().nullish().default(null),
+    landArea: z.number().nullish().default(null),
+    landValue: z.number().nullish().default(null),
   })
   .passthrough();
 const SaveComparativeAnalysisResponse = z
@@ -1615,6 +1622,7 @@ const GetComparativeFactorsResponse = z
     methodType: z.string(),
     comparativeAnalysisTemplateId: z.string().uuid().nullable(),
     methodValue: z.number().nullable(),
+    finalValueAdjusted: z.number().nullable().optional(),
     linkedComparables: z.array(LinkedComparableDto),
     comparativeFactors: z.array(ComparativeFactorDto),
     factorScores: z.array(FactorScoreDto),
@@ -2002,7 +2010,8 @@ const AppraisalFeeDto = z
     totalPaidAmount: z.number(),
     outstandingAmount: z.number(),
     paymentStatus: z.string(),
-    inspectionFeeAmount: z.number().nullable(),
+    constructionInspectionFeeAmount: z.number().nullable(),
+    hasBuildingUnderConstruction: z.boolean(),
     createdAt: z.string().datetime({ offset: true }).nullable(),
     items: z.array(AppraisalFeeItemDto),
     paymentHistory: z.array(PaymentHistoryDto),

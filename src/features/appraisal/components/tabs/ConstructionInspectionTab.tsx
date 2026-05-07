@@ -113,6 +113,7 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
           constructionWorkGroupId: gId,
           totalConstructionValue: items.reduce((s: number, i: any) => s + i.constructionValue, 0),
           totalProportion: items.reduce((s: number, i: any) => s + i.proportionPct, 0),
+          totalCurrentProportion: items.reduce((s: number, i: any) => s + (Number(i.currentProportionPct) || 0), 0),
           averagePreviousProgress: items.reduce((s: number, i: any) => s + (Number(i.previousProgressPct) || 0), 0) / items.length,
           averageCurrentProgress: items.reduce((s: number, i: any) => s + (Number(i.currentProgressPct) || 0), 0) / items.length,
           totalPreviousPropertyValue: items.reduce((s: number, i: any) => s + i.previousPropertyValue, 0),
@@ -122,12 +123,20 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       .filter(Boolean) as any[];
   }, [computedSubItems, workGroups]);
 
-  const grandTotal = useMemo(() => ({
-    totalConstructionValue: computedSubItems.reduce((s: number, i: any) => s + i.constructionValue, 0),
-    totalProportion: computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0),
-    totalPreviousPropertyValue: computedSubItems.reduce((s: number, i: any) => s + i.previousPropertyValue, 0),
-    totalCurrentPropertyValue: computedSubItems.reduce((s: number, i: any) => s + i.currentPropertyValue, 0),
-  }), [computedSubItems]);
+  const grandTotal = useMemo(() => {
+    const totalConstructionValue = computedSubItems.reduce((s: number, i: any) => s + i.constructionValue, 0);
+    const totalPreviousPropertyValue = computedSubItems.reduce((s: number, i: any) => s + i.previousPropertyValue, 0);
+    const totalCurrentPropertyValue = computedSubItems.reduce((s: number, i: any) => s + i.currentPropertyValue, 0);
+    return {
+      totalConstructionValue,
+      totalProportion: computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0),
+      totalCurrentProportion: computedSubItems.reduce((s: number, i: any) => s + (Number(i.currentProportionPct) || 0), 0),
+      weightedPreviousProgress: totalConstructionValue > 0 ? (totalPreviousPropertyValue / totalConstructionValue) * 100 : 0,
+      weightedCurrentProgress: totalConstructionValue > 0 ? (totalCurrentPropertyValue / totalConstructionValue) * 100 : 0,
+      totalPreviousPropertyValue,
+      totalCurrentPropertyValue,
+    };
+  }, [computedSubItems]);
 
   const summaryCurrentValue = useMemo(
     () => totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100),

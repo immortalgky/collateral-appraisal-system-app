@@ -30,6 +30,7 @@ import BlockPriceSummaryTable from '../components/summary/BlockPriceSummaryTable
 import GovernmentPriceTable from '../components/summary/GovernmentPriceTable';
 import ApprovalListSection from '../components/summary/ApprovalListSection';
 import DecisionSection from '../components/summary/DecisionSection';
+import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
 
 // ==================== Field Definitions ====================
 
@@ -150,6 +151,7 @@ const additionalAssumptionsFields: FormField[] = [
 type SectionKey =
   | 'decisionApproach'
   | 'priceSummary'
+  | 'constructionSummary'
   | 'priceVerification'
   | 'governmentPrice'
   | 'condition'
@@ -171,13 +173,13 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
   'appraisal-initiation':       { sections: [] },
   'appraisal-assignment':        { sections: [] },
   'ext-appraisal-assignment':    { sections: [] },
-  'ext-appraisal-execution':     { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'] },
-  'ext-appraisal-check':         { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'], readOnly: true },
-  'ext-appraisal-verification':  { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'], readOnly: true },
-  'appraisal-book-verification': { sections: ['decisionApproach', 'priceSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true, editableSections: ['priceVerification', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'] },
-  'int-appraisal-execution':     { sections: ['decisionApproach', 'priceSummary', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'additionalAssumptions'] },
-  'int-appraisal-check':         { sections: ['decisionApproach', 'priceSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true },
-  'int-appraisal-verification':  { sections: ['decisionApproach', 'priceSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true },
+  'ext-appraisal-execution':     { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'] },
+  'ext-appraisal-check':         { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'], readOnly: true },
+  'ext-appraisal-verification':  { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'governmentPrice', 'appraiserOpinion', 'additionalAssumptions'], readOnly: true },
+  'appraisal-book-verification': { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true, editableSections: ['priceVerification', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'] },
+  'int-appraisal-execution':     { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'additionalAssumptions'] },
+  'int-appraisal-check':         { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true },
+  'int-appraisal-verification':  { sections: ['decisionApproach', 'priceSummary', 'constructionSummary', 'priceVerification', 'governmentPrice', 'condition', 'remark', 'appraiserOpinion', 'committeeOpinion', 'reviewPrices', 'additionalAssumptions'], readOnly: true },
   'pending-approval':            { sections: ['committeeApproval'] },
 };
 
@@ -521,6 +523,13 @@ const DecisionSummaryPage = () => {
                           : <EmptyLine text="No government price data available." />}
                       </InlineSubSection>
                     )}
+                </GroupCard>
+              )}
+
+              {/* Construction Summary — standalone, shown only when CI data exists */}
+              {showSection('constructionSummary') && data?.constructionSummary && (
+                <GroupCard icon="helmet-safety" iconColor="teal" title="Construction Summary">
+                  <ConstructionSummaryTable rows={data.constructionSummary.rows} />
                 </GroupCard>
               )}
 

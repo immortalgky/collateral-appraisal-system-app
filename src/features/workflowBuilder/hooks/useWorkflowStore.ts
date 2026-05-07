@@ -190,7 +190,7 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
       target: connection.target,
       sourceHandle: connection.sourceHandle,
       targetHandle: connection.targetHandle,
-      type: 'smoothstep',
+      type: 'draggable',
       animated: true,
       style: { stroke: '#94a3b8', strokeWidth: 2 },
       markerEnd: { type: 'arrowclosed' as const },
