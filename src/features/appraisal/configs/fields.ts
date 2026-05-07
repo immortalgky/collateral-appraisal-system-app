@@ -298,7 +298,7 @@ export const roadField: FormField[] = [
     label: 'Right of Way',
     name: 'rightOfWay',
     wrapperClassName: 'col-span-6',
-    maxIntegerDigits: 2,
+    maxIntegerDigits: 3,
     decimalPlaces: 0,
   },
   {
@@ -1511,7 +1511,7 @@ export const condoLocationFields: FormField[] = [
     name: 'rightOfWay',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 2,
+    maxIntegerDigits: 3,
   },
   {
     type: 'radio-group',
