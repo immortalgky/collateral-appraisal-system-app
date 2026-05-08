@@ -59,30 +59,6 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           startIn: 1,
         },
       };
-    case '02':
-      return {
-        id,
-        methodType: '02',
-        totalMethodValues: [],
-        detail: {
-          seasonCount: 1,
-          seasonDetails: [],
-          roomDetails: [],
-          avgRoomRate: 0,
-          totalSaleableArea: 0,
-          increaseRatePct: 0,
-          increaseRateYrs: 0,
-          occupancyRateFirstYearPct: 0,
-          occupancyRatePct: 0,
-          occupancyRateYrs: 0,
-          saleableArea: [],
-          occupancyRate: [],
-          totalSaleableAreaDeductByOccRate: [],
-          roomRateIncrease: [],
-          avgDailyRate: [],
-          roomIncome: [],
-        },
-      };
     case '03':
       return {
         id,
@@ -275,13 +251,6 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           increaseRateYrs: 0,
           startIn: 1,
         },
-      };
-    case '15':
-      return {
-        id,
-        methodType: '15',
-        totalMethodValues: [],
-        detail: { startIn: 1 },
       };
     default: {
       const _exhaustive: never = methodType;
