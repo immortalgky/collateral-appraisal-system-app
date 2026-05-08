@@ -67,6 +67,7 @@ import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
 import MenuListPage from '@features/menuManagement/pages/MenuListPage';
 import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
+import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeaseAgreementCondoPage';
 
 function TaskPageDispatcher() {
   const [searchParams] = useSearchParams();
@@ -468,6 +469,22 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <CreateLeaseAgreementBuildingPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
