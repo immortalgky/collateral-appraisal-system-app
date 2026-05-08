@@ -435,7 +435,7 @@ const BUILDING_REQUIRED_TYPES = [
   '32',
 ];
 // Condo-specific codes (room/floor/building number, condo name)
-const CONDO_TYPES = ['08', '33'];
+const CONDO_TYPES = ['08', '28', '33'];
 
 // --- Rendering configs (used by sub-form components for <FormFields>) ---
 

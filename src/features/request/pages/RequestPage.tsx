@@ -55,6 +55,7 @@ import FormCard from '@/shared/components/sections/FormCard';
 import SearchUserModal from '../components/SearchUserModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useActivityId } from '@features/appraisal/context/AppraisalContext.tsx';
 
 /**
  * Component that initializes request-level required documents.
@@ -75,6 +76,9 @@ function RequestPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useAuthStore(state => state.user);
+  // Activity detection
+  const activityId = useActivityId();
+  const isRouteBackFollowup = activityId === 'appraisal-initiation';
   // Get requestId from URL params - determines create vs edit mode
   const { requestId } = useParams<{ requestId?: string }>();
   const isEditMode = Boolean(requestId);
@@ -629,13 +633,20 @@ function RequestPage() {
             {!readOnly && (
               <ActionBar>
                 <ActionBar.Left>
-                  <CancelButton />
-                  <ActionBar.Divider />
-                  <DeleteButton
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                    disabled={!isEditMode || isPending}
-                  />
-                  <DuplicateButton onClick={handleDuplicate} disabled={!isEditMode || isPending} />
+                  {!isRouteBackFollowup && (
+                    <>
+                      <CancelButton />
+                      <ActionBar.Divider />
+                      <DeleteButton
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        disabled={!isEditMode || isPending}
+                      />
+                      <DuplicateButton
+                        onClick={handleDuplicate}
+                        disabled={!isEditMode || isPending}
+                      />
+                    </>
+                  )}
                   <ActionBar.UnsavedIndicator show={isDirty} />
                 </ActionBar.Left>
                 <ActionBar.Right>
@@ -658,15 +669,17 @@ function RequestPage() {
                     <Icon style="solid" name="check" className="size-4 mr-2" />
                     Save
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSubmitRequest}
-                    isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending}
-                  >
-                    <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                    Submit
-                  </Button>
+                  {!isRouteBackFollowup && (
+                    <Button
+                      type="button"
+                      onClick={handleSubmitRequest}
+                      isLoading={isPending && saveAction === 'submit'}
+                      disabled={isPending}
+                    >
+                      <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
+                      Submit
+                    </Button>
+                  )}
                 </ActionBar.Right>
               </ActionBar>
             )}

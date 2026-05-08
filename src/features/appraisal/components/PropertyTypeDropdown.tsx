@@ -49,6 +49,13 @@ export const PROPERTY_TYPES = [
     description: 'Leased land with building',
   },
   {
+    type: 'Lease Agreement Condo',
+    code: 'LSU',
+    icon: 'file-signature',
+    route: 'lease-condo',
+    description: 'Leased condominium unit',
+  },
+  {
     type: 'Lease Agreement Lands',
     code: 'LSL',
     icon: 'scroll',
