@@ -706,6 +706,8 @@ const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
           <TitleBuildingForm index={index} variant={2} />
         </>
       );
+    case 'LSU':
+      return <TitleCondoForm index={index} />;
     case 'LSB':
       return <TitleBuildingForm index={index} />;
     default:
