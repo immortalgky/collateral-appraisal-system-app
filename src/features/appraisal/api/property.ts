@@ -264,6 +264,23 @@ export const useGetLeaseAgreementLandAndBuildingPropertyById = (
   });
 };
 
+export const useGetLeaseAgreementCondoPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'lease-agreement-condo-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetCondoPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/lease-agreement-condo-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
 export const useGetMachineryPropertyById = (appraisalId: string, propertyId?: string) => {
   return useQuery({
     queryKey: ['appraisals', appraisalId, 'machinery-properties', propertyId],

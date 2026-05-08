@@ -14,6 +14,7 @@ export const typeToDetailEndpoint: Record<string, string> = {
   LSL: 'lease-agreement-land-detail',
   LSB: 'lease-agreement-building-detail',
   LS: 'lease-agreement-land-building-detail',
+  LSU: 'lease-agreement-condo-detail',
 };
 
 /** Maps property type code to the frontend route segment */
@@ -26,6 +27,7 @@ export const typeToRouteSegment: Record<string, string> = {
   LSL: 'lease-land',
   LSB: 'lease-building',
   LS: 'lease-land-building',
+  LSU: 'lease-condo',
 };
 
 /** Set of property type codes that have building details */
@@ -44,6 +46,7 @@ const displayNameToCode: Record<string, string> = {
   'Lease Agreement Lands': 'LSL',
   'Lease Agreement Building': 'LSB',
   'Lease Agreement Land and building': 'LS',
+  'Lease Agreement Condo': 'LSU',
 };
 
 /** Resolve a display name or short code to its short code */

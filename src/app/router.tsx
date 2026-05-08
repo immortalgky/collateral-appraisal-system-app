@@ -39,6 +39,7 @@ import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage'
 import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
 import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
 import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
+import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeaseAgreementCondoPage';
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
@@ -109,6 +110,12 @@ const VillageModelPricingAnalysisPage = () => {
     />
   );
 };
+
+function TaskPageDispatcher() {
+  const [searchParams] = useSearchParams();
+  const activityId = searchParams.get('activityId');
+  return activityId ? <ActivityTaskListPage /> : <TaskListingPage />;
+}
 
 /**
  * Redirect component that navigates to request page with requestId from context
@@ -539,6 +546,22 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'lease-condo/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
             path: 'lease-land-building/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
@@ -819,9 +842,9 @@ export const router = createBrowserRouter([
       {
         path: 'request/:requestId',
         element: (
-          <ReadOnlyPageWrapper>
+          <AppraisalReadOnlyWrapper pageName="Request Information">
             <RequestPage />
-          </ReadOnlyPageWrapper>
+          </AppraisalReadOnlyWrapper>
         ),
       },
       {
@@ -1021,6 +1044,22 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <CreateLeaseAgreementLandBuildingPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
               </AppraisalReadOnlyWrapper>
             ),
           },

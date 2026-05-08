@@ -862,6 +862,13 @@ export const createLeaseAgreementLandAndBuildingForm = buildFormSchema(
 export type createLeaseAgreementLandAndBuildingFormType = z.infer<
   typeof createLeaseAgreementLandAndBuildingForm
 >;
+export const createLeaseAgreementCondoForm = buildFormSchema(
+  allCondoFields,
+  createCondoFormBase.extend(leaseAgreementExtension),
+)
+  .superRefine(constructionProportionRefinement)
+  .superRefine(rentalInfoRefinement);
+export type createLeaseAgreementCondoFormType = z.infer<typeof createLeaseAgreementCondoForm>;
 
 export const createLeaseAgreementBuildingFormDefault: createLeaseAgreementBuildingFormType = {
   ...createBuildingFormDefault,
@@ -881,3 +888,9 @@ export const createLeaseAgreementLandAndBuildingFormDefault: createLeaseAgreemen
     leaseAgreement: null,
     rentalInfo: null,
   };
+
+export const createLeaseAgreementCondoFormDefault: createLeaseAgreementCondoFormType = {
+  ...createCondoFormDefault,
+  leaseAgreement: null,
+  rentalInfo: null,
+};
