@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, useGetLeaseAgreementCondoPropertyById } from '../api';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -7,7 +7,6 @@ import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import {
-  createCondoFormDefault,
   createLeaseAgreementCondoForm,
   createLeaseAgreementCondoFormDefault,
   type createLeaseAgreementCondoFormType,
@@ -92,7 +91,7 @@ const CreateLeaseAgreementCondoPage = () => {
 
   // ─── Condo detail form ─────────────────────────────
   const { data: propertyData, isLoading } = useGetLeaseAgreementCondoPropertyById(
-    appraisalId,
+    appraisalId ?? '',
     propertyId,
   );
 
@@ -137,9 +136,8 @@ const CreateLeaseAgreementCondoPage = () => {
 
   const onSubmit: SubmitHandler<createLeaseAgreementCondoFormType> = async data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo } = data;
-    const basePayload = createCondoFormDefault;
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const { leaseAgreement, rentalInfo, ...rest } = data;
+    const payload = { ...rest, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -180,9 +178,8 @@ const CreateLeaseAgreementCondoPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    const { leaseAgreement, rentalInfo } = data;
-    const basePayload = createCondoFormDefault;
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const { leaseAgreement, rentalInfo, ...rest } = data;
+    const payload = { ...rest, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(

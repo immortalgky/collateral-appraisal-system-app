@@ -39,13 +39,11 @@ import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage'
 import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
 import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
 import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
+import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeaseAgreementCondoPage';
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
-import {
-  AppraisalReadOnlyWrapper,
-  ReadOnlyPageWrapper,
-} from '@shared/contexts/PageReadOnlyContext';
+import { AppraisalReadOnlyWrapper, ReadOnlyPageWrapper, } from '@shared/contexts/PageReadOnlyContext';
 import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
 import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
@@ -67,7 +65,6 @@ import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
 import MenuListPage from '@features/menuManagement/pages/MenuListPage';
 import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
-import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeaseAgreementCondoPage';
 
 function TaskPageDispatcher() {
   const [searchParams] = useSearchParams();
@@ -875,6 +872,22 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <CreateLeaseAgreementLandBuildingPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'lease-condo/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateLeaseAgreementCondoPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
