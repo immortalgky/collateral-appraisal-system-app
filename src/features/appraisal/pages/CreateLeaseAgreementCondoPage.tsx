@@ -4,6 +4,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppraisalId, useBasePath } from '../context/AppraisalContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
+import PropertyPhotoSection from '../components/PropertyPhotoSection';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import {
@@ -20,7 +21,6 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import Section from '@/shared/components/sections/Section';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import PropertyPhotoSection from '../components/PropertyPhotoSection';
 import CondoDetailForm from '../forms/CondoDetailForm';
 import LeaseAgreementForm from '../forms/LeaseAgreementForm';
 import RentalInfoForm from '../forms/RentalInfoForm';
@@ -29,7 +29,7 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { Button } from '@/shared/components';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { type SubmitHandler, useForm } from 'react-hook-form';
 
 // ─── Inline create/update mutations ──────────────────────────────
 
@@ -69,6 +69,14 @@ const useUpdateLeaseAgreementCondoProperty = () => {
       queryClient.invalidateQueries({ queryKey: propertyGroupKeys.all(variables.appraisalId) });
       queryClient.invalidateQueries({
         queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          'appraisals',
+          variables.appraisalId,
+          'lease-agreement-condo-properties',
+          variables.propertyId,
+        ],
       });
     },
   });
