@@ -3,6 +3,7 @@ export const mapCollateral = {
   LB: ['L', 'LB', 'B'],
   LSL: ['LSL', 'LS'],
   LSB: ['LSB'],
+  LSU: ['LSU'],
   LS: ['LS', 'LSL', 'LSB'],
   B: ['B', 'LB'],
   VEH: ['VEH'],
