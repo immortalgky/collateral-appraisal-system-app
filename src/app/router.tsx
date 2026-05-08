@@ -75,12 +75,6 @@ import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompany
 import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
 import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
 
-function TaskPageDispatcher() {
-  const [searchParams] = useSearchParams();
-  const activityId = searchParams.get('activityId');
-  return activityId ? <ActivityTaskListPage /> : <TaskListingPage />;
-}
-
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
  * modelId and pricingAnalysisId are read from route params inside PricingAnalysisPage.
