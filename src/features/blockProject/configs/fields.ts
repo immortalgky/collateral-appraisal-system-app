@@ -47,6 +47,7 @@ export const projectInformationFields: FormField[] = [
     label: 'Rai',
     name: 'landAreaRai',
     decimalPlaces: 0,
+    maxIntegerDigits: 5,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -54,6 +55,7 @@ export const projectInformationFields: FormField[] = [
     label: 'Ngan',
     name: 'landAreaNgan',
     decimalPlaces: 0,
+    maxIntegerDigits: 1,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -61,6 +63,7 @@ export const projectInformationFields: FormField[] = [
     label: 'Square Wa',
     name: 'landAreaSquareWa',
     decimalPlaces: 2,
+    maxIntegerDigits: 3,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -68,6 +71,7 @@ export const projectInformationFields: FormField[] = [
     label: 'Unit For Sale',
     name: 'unitForSaleCount',
     decimalPlaces: 0,
+    maxIntegerDigits: 5,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -75,6 +79,7 @@ export const projectInformationFields: FormField[] = [
     label: 'Number of Phase',
     name: 'numberOfPhase',
     decimalPlaces: 0,
+    maxIntegerDigits: 2,
     wrapperClassName: 'col-span-4',
   },
 ];
@@ -144,6 +149,9 @@ export const projectLocationFields: FormField[] = [
     decimalPlaces: 6,
     maxIntegerDigits: 3,
     allowNegative: true,
+    allowZero: true,
+    min: -90,
+    max: 90,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -153,6 +161,9 @@ export const projectLocationFields: FormField[] = [
     decimalPlaces: 6,
     maxIntegerDigits: 3,
     allowNegative: true,
+    allowZero: true,
+    min: -180,
+    max: 180,
     wrapperClassName: 'col-span-4',
   },
 ];
@@ -174,6 +185,8 @@ export const projectDetailFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'utilities', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'utilities', is: '99', operator: 'contains' },
+    maxLength: 100,
   },
   {
     type: 'checkbox-group',
@@ -191,6 +204,8 @@ export const projectDetailFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilities', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'facilities', is: '99', operator: 'contains' },
+    maxLength: 100,
   },
   {
     type: 'textarea',
@@ -220,6 +235,7 @@ export const pricingLocationSharedFields: FormField[] = [
     label: 'Corner (Baht)',
     name: 'cornerAdjustment',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -227,6 +243,7 @@ export const pricingLocationSharedFields: FormField[] = [
     label: 'Edge (Baht)',
     name: 'edgeAdjustment',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -234,6 +251,7 @@ export const pricingLocationSharedFields: FormField[] = [
     label: 'Other (Baht)',
     name: 'otherAdjustment',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
 ];
@@ -282,6 +300,7 @@ export const modelFloorMaterialFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'groundFloorMaterialType', is: '99' },
     requiredWhen: { field: 'groundFloorMaterialType', is: '99' },
+    maxLength: 100,
   },
   {
     type: 'radio-group',
@@ -300,6 +319,7 @@ export const modelFloorMaterialFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'upperFloorMaterialType', is: '99' },
     requiredWhen: { field: 'upperFloorMaterialType', is: '99' },
+    maxLength: 100,
   },
   {
     type: 'radio-group',
@@ -318,6 +338,7 @@ export const modelFloorMaterialFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'bathroomFloorMaterialType', is: '99' },
     requiredWhen: { field: 'bathroomFloorMaterialType', is: '99' },
+    maxLength: 100,
   },
 ];
 
@@ -331,7 +352,7 @@ export const condoProjectInfoFields: FormField[] = [
     label: 'Built on Title Deed Number',
     name: 'builtOnTitleDeedNumber',
     wrapperClassName: 'col-span-6',
-    maxLength: 100,
+    maxLength: 200,
   },
   {
     type: 'parameter-search',
@@ -360,6 +381,8 @@ export const condoFacilityFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilities', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'facilities', is: '99', operator: 'contains' },
+    maxLength: 100,
   },
 ];
 
@@ -391,6 +414,7 @@ export const condoModelInfoFields: FormField[] = [
     label: 'Starting Price Min (THB)',
     name: 'startingPriceMin',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-6',
   },
   {
@@ -398,6 +422,7 @@ export const condoModelInfoFields: FormField[] = [
     label: 'Starting Price Max (THB)',
     name: 'startingPriceMax',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-6',
   },
   {
@@ -405,6 +430,7 @@ export const condoModelInfoFields: FormField[] = [
     label: 'Usable Area Min (sq.m.)',
     name: 'usableAreaMin',
     decimalPlaces: 2,
+    maxIntegerDigits: 6,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -412,6 +438,7 @@ export const condoModelInfoFields: FormField[] = [
     label: 'Usable Area Max (sq.m.)',
     name: 'usableAreaMax',
     decimalPlaces: 2,
+    maxIntegerDigits: 6,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -419,6 +446,7 @@ export const condoModelInfoFields: FormField[] = [
     label: 'Standard Usable Area (sq.m.)',
     name: 'standardUsableArea',
     decimalPlaces: 2,
+    maxIntegerDigits: 5,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -445,6 +473,7 @@ export const condoModelInfoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roomLayoutType', is: '99' },
     requiredWhen: { field: 'roomLayoutType', is: '99' },
+    maxLength: 100,
   },
   {
     type: 'textarea',
@@ -478,6 +507,7 @@ export const condoTowerInfoFields: FormField[] = [
     required: true,
     decimalPlaces: 0,
     allowZero: true,
+    maxIntegerDigits: 3,
     wrapperClassName: 'col-span-6',
   },
   {
@@ -486,6 +516,7 @@ export const condoTowerInfoFields: FormField[] = [
     name: 'numberOfFloors',
     required: true,
     decimalPlaces: 0,
+    maxIntegerDigits: 3,
     allowZero: true,
     wrapperClassName: 'col-span-6',
   },
@@ -543,20 +574,23 @@ export const condoTowerLocationFields: FormField[] = [
     label: 'Distance (m)',
     name: 'distance',
     decimalPlaces: 2,
+    maxIntegerDigits: 5,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
     label: 'Road Width (m)',
     name: 'roadWidth',
-    decimalPlaces: 2,
+    decimalPlaces: 0,
+    maxIntegerDigits: 3,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
     label: 'Right of Way (m)',
     name: 'rightOfWay',
-    decimalPlaces: 2,
+    decimalPlaces: 0,
+    maxIntegerDigits: 3,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -602,7 +636,8 @@ export const condoTowerStructureFields: FormField[] = [
     type: 'number-input',
     label: 'Building Age',
     name: 'buildingAge',
-    decimalPlaces: 0,
+    maxIntegerDigits: 3,
+    decimalPlaces: 1,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -708,6 +743,7 @@ export const condoPricingLocationFields: FormField[] = [
     label: 'Pool View (Baht)',
     name: 'poolViewAdjustment',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -715,6 +751,7 @@ export const condoPricingLocationFields: FormField[] = [
     label: 'South (Baht)',
     name: 'southAdjustment',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
 ];
@@ -774,6 +811,8 @@ export const lbFacilityFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilities', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'facilities', is: '99', operator: 'contains' },
+    maxLength: 100,
   },
 ];
 
@@ -784,14 +823,14 @@ export const lbModelInfoFields: FormField[] = [
     name: 'modelName',
     required: true,
     wrapperClassName: 'col-span-12',
-    maxLength: 200,
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Model Description',
     name: 'modelDescription',
     wrapperClassName: 'col-span-12',
-    maxLength: 500,
+    maxLength: 50,
   },
   // Row: numberOfHouse + startingPriceMin + startingPriceMax → 4+4+4 = 12
   {
@@ -806,6 +845,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Starting Price Min (THB)',
     name: 'startingPriceMin',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -813,6 +853,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Starting Price Max (THB)',
     name: 'startingPriceMax',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
   // Row: usableAreaMin + usableAreaMax + standardUsableArea → 4+4+4 = 12
@@ -821,6 +862,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Usable Area Min (sq.m.)',
     name: 'usableAreaMin',
     decimalPlaces: 2,
+    maxIntegerDigits: 6,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -828,12 +870,14 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Usable Area Max (sq.m.)',
     name: 'usableAreaMax',
     decimalPlaces: 2,
+    maxIntegerDigits: 6,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
     label: 'Standard Usable Area (sq.m.)',
     name: 'standardUsableArea',
+    maxIntegerDigits: 6,
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',
   },
@@ -842,6 +886,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Land Area Min (Sq.Wa)',
     name: 'landAreaMin',
     decimalPlaces: 2,
+    maxIntegerDigits: 8,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -849,6 +894,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Land Area Max (Sq.Wa)',
     name: 'landAreaMax',
     decimalPlaces: 2,
+    maxIntegerDigits: 8,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -856,6 +902,7 @@ export const lbModelInfoFields: FormField[] = [
     label: 'Standard Land Area (Sq.Wa)',
     name: 'standardLandArea',
     decimalPlaces: 2,
+    maxIntegerDigits: 8,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -882,6 +929,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     group: 'BuildingType',
     variant: 'button',
     orientation: 'horizontal',
+    required: true,
     wrapperClassName: 'col-span-12',
   },
   {
@@ -892,12 +940,14 @@ export const lbModelBuildingDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'buildingType', is: '99' },
     requiredWhen: { field: 'buildingType', is: '99' },
+    maxLength: 100,
   },
   {
     type: 'number-input',
     label: 'Number of Floors',
     name: 'numberOfFloors',
     decimalPlaces: 0,
+    maxIntegerDigits: 3,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -908,6 +958,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
+    required: true,
   },
   {
     type: 'text-input',
@@ -917,6 +968,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
+    maxLength: 100,
   },
   {
     type: 'radio-group',
@@ -947,7 +999,8 @@ export const lbModelBuildingDetailFields: FormField[] = [
     type: 'number-input',
     label: 'Building Age',
     name: 'buildingAge',
-    decimalPlaces: 0,
+    maxIntegerDigits: 3,
+    decimalPlaces: 1,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -1016,6 +1069,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Structure Type',
     name: 'structureTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'structureType', is: '99', operator: 'contains' },
   },
@@ -1024,6 +1078,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Roof Frame Type',
     name: 'roofFrameTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofFrameType', is: '99', operator: 'contains' },
   },
@@ -1032,6 +1087,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Roof Type',
     name: 'roofTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99', operator: 'contains' },
   },
@@ -1040,6 +1096,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Ceiling Type',
     name: 'ceilingTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'ceilingType', is: '99', operator: 'contains' },
   },
@@ -1048,6 +1105,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Interior Wall Type',
     name: 'interiorWallTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
   },
@@ -1056,6 +1114,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Exterior Wall Type',
     name: 'exteriorWallTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
   },
@@ -1064,6 +1123,7 @@ export const lbModelStructureFields: FormField[] = [
     label: 'Other Fence Type',
     name: 'fenceTypeOther',
     placeholder: 'Please specify...',
+    maxLength: 100,
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'fenceType', is: '99', operator: 'contains' },
   },
@@ -1084,6 +1144,7 @@ export const lbPricingLocationFields: FormField[] = [
     label: 'Near Garden (Baht)',
     name: 'nearGardenAdjustment',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-4',
   },
   {
