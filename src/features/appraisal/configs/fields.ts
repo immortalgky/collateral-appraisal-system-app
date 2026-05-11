@@ -198,14 +198,14 @@ export const landLocationField: FormField[] = [
     type: 'dropdown',
     label: 'Land Shape',
     name: 'landShapeType',
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-12',
     group: 'LandShape',
   },
   {
     type: 'dropdown',
     label: 'Type of urban plan',
     name: 'urbanPlanningType',
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-12',
     group: 'TypeOfUrbanPlanning',
   },
   {
