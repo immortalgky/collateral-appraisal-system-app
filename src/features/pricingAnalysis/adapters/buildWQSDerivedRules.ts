@@ -4,7 +4,7 @@ import {
   calcAdjustedValueFromSellingPrice,
   calcSum,
   calcWeightedScore,
-  floorToThousands,
+  roundToThousand,
   round2,
   toFiniteNumber,
   toNumberArray,
@@ -338,12 +338,12 @@ export function buildWQSFinalValueDerivedRules(args: {
       },
     },
     {
-      // System-calculated: always floor(finalValue). Never overridden by user.
+      // System-calculated: round-to-nearest 1k. Never overridden by user.
       targetPath: finalValueFinalValueRoundedPath(),
       deps: [finalValueFinalValuePath()],
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValueFinalValuePath()) ?? 0;
-        return floorToThousands(finalValue);
+        return roundToThousand(finalValue);
       },
     },
     // NOTE: the finalValueAdjusted seed rule lives in WQSAdjustFinalValueSection.tsx

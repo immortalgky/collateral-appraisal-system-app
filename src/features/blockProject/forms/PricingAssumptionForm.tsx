@@ -54,7 +54,7 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
 // ── Location Assumptions Table ────────────────────────────────────────────────
 
 const buildLocationMethodOptions = (projectType: ProjectType) => {
-  const areaUnit = projectType === 'Condo' ? 'Sq.m' : 'Sq.wa';
+  const areaUnit = projectType === 'Condo' ? 'Sq.M' : 'Sq.Wa';
   return [
     { value: 'AdjustPriceSqm', label: `01 - Adjust Price/${areaUnit}` },
     { value: 'Lumpsum', label: '02 - Lumpsum' },

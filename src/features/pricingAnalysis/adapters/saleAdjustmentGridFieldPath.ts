@@ -82,6 +82,7 @@ export const saleGridFieldPath = {
   /** Final value section */
   finalValue: () => 'saleAdjustmentGridFinalValue.finalValue',
   finalValueRounded: () => 'saleAdjustmentGridFinalValue.finalValueRounded',
+  finalValueAdjusted: () => 'saleAdjustmentGridFinalValue.finalValueAdjusted',
 
   /** Appraisal price */
   includeLandArea: () => 'saleAdjustmentGridAppraisalPrice.includeLandArea',
@@ -89,6 +90,7 @@ export const saleGridFieldPath = {
   usableArea: () => 'saleAdjustmentGridAppraisalPrice.usableArea',
   appraisalPrice: () => 'saleAdjustmentGridAppraisalPrice.appraisalPrice',
   appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded',
+  landValue: () => 'saleAdjustmentGridAppraisalPrice.landValue',
   priceDifferentiate: () => 'saleAdjustmentGridAppraisalPrice.priceDifferentiate',
   finalValueHasBuildingCost: () => `saleAdjustmentGridAppraisalPrice.hasBuildingCost`,
   finalValueTotalBuildingCost: () => `saleAdjustmentGridAppraisalPrice.totalBuildingCost`,

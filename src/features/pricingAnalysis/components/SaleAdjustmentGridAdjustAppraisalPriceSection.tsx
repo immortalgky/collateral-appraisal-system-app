@@ -5,11 +5,9 @@ import {
   useDerivedFields,
 } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
-import { useContext, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { round2, toFiniteNumber } from '../domain/calculateSaleAdjustmentGrid';
-import { deriveGroupCollateralType } from '../domain/deriveGroupCollateralType';
-import { ServerDataCtx } from '../store/selectionContext';
+import { floorToTenThousands, roundToThousand } from '../domain/calculateSaleAdjustmentGrid';
 import { BuildingCostTable } from './BuildingCostTable';
 
 interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
@@ -18,12 +16,13 @@ interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
   isCostApproach: boolean;
 }
 export function SaleAdjustmentGridAdjustAppraisalPriceSection({
-  property,
   buildingCost,
   isCostApproach,
 }: SaleAdjustmentGridAdjustAppraisalPriceSectionProps) {
   const {
+    finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
+    finalValueAdjusted: finalValueAdjustedPath,
     includeLandArea: includeLandAreaPath,
     landArea: landAreaPath,
     usableArea: usableAreaPath,
@@ -40,44 +39,83 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
 
   const prevAppraisalPriceRef = useRef<number | null>(null);
   const prevValueIncludeCostRef = useRef<number | null>(null);
+  const prevFinalValueRoundedRef = useRef<number | null>(null);
+
+  const { control, setValue } = useFormContext();
+
+  const calculations = useWatch({ control, name: 'saleAdjustmentGridCalculations' });
+
+  const detectedUnit = useMemo(() => {
+    if (!(calculations as any[])?.length) return null;
+    const units: string[] = (calculations as any[])
+      .map((c: any) =>
+        c.offeringPrice && Number(c.offeringPrice) !== 0
+          ? c.offeringPriceMeasurementUnit
+          : c.sellingPriceMeasurementUnit,
+      )
+      .filter(Boolean);
+    if (!units.length) return null;
+    const freq = new Map<string, number>();
+    for (const u of units) freq.set(u, (freq.get(u) ?? 0) + 1);
+    return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  }, [calculations]);
+
+  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02';
+  const unitAreaPath = detectedUnit === '02' ? usableAreaPath() : landAreaPath();
+  const unitAreaLabel = detectedUnit === '02' ? 'Sq.M' : 'Sq.Wa';
+
+  // Auto-derive includeLandArea from the comparables' measure unit.
+  useEffect(() => {
+    setValue(includeLandAreaPath(), isUnitPrice, { shouldDirty: false });
+  }, [isUnitPrice, setValue, includeLandAreaPath]);
 
   const rules: DerivedFieldRule[] = [
     {
-      targetPath: appraisalPricePath(),
+      // Seed rule: re-seed finalValueAdjusted from finalValueRounded only when upstream changes.
+      targetPath: finalValueAdjustedPath(),
       deps: [finalValueRoundedPath()],
-      compute: ({ getValues }) => {
-        const finalValueRounded = getValues(finalValueRoundedPath()) ?? 0;
-
-        const isIncludeLandArea = getValues(includeLandAreaPath());
-        const landArea = getValues(landAreaPath());
-        if (isIncludeLandArea && !!landArea) {
-          return round2(finalValueRounded * (landArea ?? 0));
+      when: ({ getValues: gv }) => {
+        const rounded = Number(gv(finalValueRoundedPath())) || 0;
+        if (prevFinalValueRoundedRef.current === null) {
+          prevFinalValueRoundedRef.current = rounded;
+          return false;
         }
-
-        const usableArea = getValues(usableAreaPath());
-        if (isIncludeLandArea && !!usableArea) {
-          return round2(finalValueRounded * (usableArea ?? 0));
+        if (prevFinalValueRoundedRef.current !== rounded) {
+          prevFinalValueRoundedRef.current = rounded;
+          return true;
         }
-
-        return finalValueRounded;
+        return false;
+      },
+      compute: ({ getValues: gv }) => Number(gv(finalValueRoundedPath())) || 0,
+    },
+    {
+      // Unit-aware: 01/02 → finalValueAdjusted × area; other → finalValue (auto-computed)
+      targetPath: appraisalPricePath(),
+      deps: [finalValueAdjustedPath(), finalValuePath(), unitAreaPath],
+      compute: ({ getValues: gv }) => {
+        const fvAdj = Number(gv(finalValueAdjustedPath())) || 0;
+        const fv = Number(gv(finalValuePath())) || 0;
+        const area = Number(gv(unitAreaPath)) || 0;
+        return isUnitPrice && area ? roundToThousand(fvAdj * area) : roundToThousand(fv);
       },
     },
     {
       targetPath: priceDifferentiatePath(),
-      deps: [appraisalPriceRoundedPath(), finalValueRoundedPath()],
-      compute: ({ getValues }) => {
-        const appraisalPriceRounded = getValues(appraisalPriceRoundedPath()) ?? 0;
-        const finalValueRounded = getValues(appraisalPricePath()) ?? 0;
-        return appraisalPriceRounded - finalValueRounded;
+      deps: [appraisalPriceRoundedPath(), appraisalPricePath()],
+      compute: ({ getValues: gv }) => {
+        const appraisalPriceRounded = gv(appraisalPriceRoundedPath()) ?? 0;
+        const appraisalPrice = gv(appraisalPricePath()) ?? 0;
+        return appraisalPriceRounded - appraisalPrice;
       },
     },
     {
       targetPath: appraisalPriceRoundedPath(),
       deps: [appraisalPricePath()],
-      compute: ({ getValues }) => Number(getValues(appraisalPricePath())) || 0,
-      when: ({ getValues }) => {
-        const depValue = Number(getValues(appraisalPricePath())) || 0;
-        const current = Number(getValues(appraisalPriceRoundedPath())) || 0;
+      compute: ({ getValues: gv }) =>
+        floorToTenThousands(Number(gv(appraisalPricePath())) || 0),
+      when: ({ getValues: gv }) => {
+        const depValue = Number(gv(appraisalPricePath())) || 0;
+        const current = Number(gv(appraisalPriceRoundedPath())) || 0;
 
         if (prevAppraisalPriceRef.current === null) {
           prevAppraisalPriceRef.current = depValue;
@@ -95,19 +133,20 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     {
       targetPath: appraisalPriceIncludeBuildingCostPath(),
       deps: [appraisalPriceRoundedPath(), totalBuildingCostPath()],
-      compute: ({ getValues }) => {
-        const landPrice = Number(getValues(appraisalPriceRoundedPath())) || 0;
-        const buildingCost = Number(getValues(totalBuildingCostPath())) || 0;
-        return landPrice + buildingCost;
+      compute: ({ getValues: gv }) => {
+        const landPrice = Number(gv(appraisalPriceRoundedPath())) || 0;
+        const buildingCostVal = Number(gv(totalBuildingCostPath())) || 0;
+        return landPrice + buildingCostVal;
       },
     },
     {
       targetPath: appraisalPriceIncludeBuildingCostRoundedPath(),
       deps: [appraisalPriceIncludeBuildingCostPath()],
-      compute: ({ getValues }) => Number(getValues(appraisalPriceIncludeBuildingCostPath())) || 0,
-      when: ({ getValues }) => {
-        const depValue = Number(getValues(appraisalPriceIncludeBuildingCostPath())) || 0;
-        const current = Number(getValues(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
+      compute: ({ getValues: gv }) =>
+        Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0,
+      when: ({ getValues: gv }) => {
+        const depValue = Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0;
+        const current = Number(gv(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
 
         if (prevValueIncludeCostRef.current === null) {
           prevValueIncludeCostRef.current = depValue;
@@ -128,10 +167,9 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
         appraisalPriceIncludeBuildingCostPath(),
         appraisalPriceIncludeBuildingCostRoundedPath(),
       ],
-      compute: ({ getValues }) => {
-        const appraisalPriceRounded =
-          getValues(appraisalPriceIncludeBuildingCostRoundedPath()) ?? 0;
-        const finalValueRounded = getValues(appraisalPriceIncludeBuildingCostPath()) ?? 0;
+      compute: ({ getValues: gv }) => {
+        const appraisalPriceRounded = gv(appraisalPriceIncludeBuildingCostRoundedPath()) ?? 0;
+        const finalValueRounded = gv(appraisalPriceIncludeBuildingCostPath()) ?? 0;
         return appraisalPriceRounded - finalValueRounded;
       },
     },
@@ -139,8 +177,6 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
 
   useDerivedFields({ rules: rules });
 
-  const { control, getValues, setValue } = useFormContext();
-  const includeLandArea = useWatch({ control, name: includeLandAreaPath() });
   const includeBuildingCost = useWatch({ control, name: hasBuildingCostPath() });
 
   useEffect(() => {
@@ -181,193 +217,254 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     setValue(totalBuildingCostPath(), grandTotal, { shouldDirty: false });
   }, [buildingCost, totalBuildingCostPath, setValue]);
 
-  const serverData = useContext(ServerDataCtx);
-  const groupCollateralType = deriveGroupCollateralType(serverData?.groupDetail?.properties ?? []);
-  const isLand = groupCollateralType === 'L';
-  const isUsable = groupCollateralType === 'U';
-  const areaUnit = isLand ? 'Sq. Wa' : 'Sq. m.';
-  const areaFieldPath = isLand ? landAreaPath() : usableAreaPath();
+  const diffBadge = (fieldPath: string) => (
+    <RHFInputCell
+      fieldName={fieldPath}
+      inputType="display"
+      accessor={({ value }) => {
+        const num = Number(value) || 0;
+        if (num === 0) return <span />;
+        const color = num > 0 ? 'text-green-600' : 'text-red-500';
+        const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
+        const icon = num > 0 ? 'arrow-up' : 'arrow-down';
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
+          >
+            <Icon name={icon} style="solid" className="size-3" />
+            {Math.abs(num).toLocaleString()}
+          </span>
+        );
+      }}
+    />
+  );
+
+  const valueDisplay = (fieldPath: string) => (
+    <div className="w-40 text-right">
+      <RHFInputCell
+        fieldName={fieldPath}
+        inputType="display"
+        accessor={({ value }) => (
+          <span className="font-semibold text-gray-800 tabular-nums">
+            {value ? Number(value).toLocaleString() : '0'}
+          </span>
+        )}
+      />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <div className="flex flex-col gap-3 text-sm py-2">
-        {/* Include Area toggle */}
-        {(isLand || isUsable) && (
+
+      {/* ── COST APPROACH, no building cost, unit=01/02 ── */}
+      {isCostApproach && !includeBuildingCost && isUnitPrice && (
+        <>
           <div className="flex items-center gap-4">
-            <span className="w-48 text-gray-500">Include Area</span>
-            <RHFInputCell
-              fieldName={includeLandAreaPath()}
-              inputType="toggle"
-              toggle={{ checked: includeLandArea, options: ['No', 'Yes'] }}
-            />
-          </div>
-        )}
-        {includeLandArea && (
-          <div className="flex items-center gap-4">
-            <span className="w-48 text-gray-500">Area</span>
-            <span className="font-medium text-gray-800">
+            <span className="w-48 shrink-0 text-gray-500">Final Value</span>
+            <div className="w-40">
               <RHFInputCell
-                fieldName={areaFieldPath}
-                inputType="display"
-                accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+                fieldName={finalValueAdjustedPath()}
+                inputType="number"
+                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
               />
-            </span>
-            <span className="text-gray-500">{areaUnit}</span>
+            </div>
+            <span className="text-gray-500">Baht/{unitAreaLabel}</span>
           </div>
-        )}
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Area</span>
+            {valueDisplay(unitAreaPath)}
+            <span className="text-gray-500">{unitAreaLabel}</span>
+          </div>
+        </>
+      )}
+
+      {/* ── MARKET APPROACH ── */}
+      {!isCostApproach && isUnitPrice && (
+        <>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Final Value</span>
+            <div className="w-40">
+              <RHFInputCell
+                fieldName={finalValueAdjustedPath()}
+                inputType="number"
+                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+              />
+            </div>
+            <span className="text-gray-500">Baht/{unitAreaLabel}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Area</span>
+            {valueDisplay(unitAreaPath)}
+            <span className="text-gray-500">{unitAreaLabel}</span>
+          </div>
+        </>
+      )}
+
+      {/* Market approach: Appraisal Price computed display */}
+      {!isCostApproach && (
         <div className="flex items-center gap-4">
-          <span className="w-48 text-gray-500">
-            Final Value (Rounded) {includeLandArea ? 'x Area' : ''}
-          </span>
-          <span className="font-medium text-gray-800">
-            <RHFInputCell
-              fieldName={appraisalPricePath()}
-              inputType={'display'}
-              accessor={({ value }) => {
-                return value?.toLocaleString() ?? '0';
-              }}
-            />
-          </span>
+          <span className="w-48 shrink-0 text-gray-500">Appraisal Price</span>
+          {valueDisplay(appraisalPricePath())}
           <span className="text-gray-500">Baht</span>
         </div>
-        <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
-          <span className="w-48 shrink-0 font-semibold text-gray-800">Appraisal Price</span>
+      )}
+
+      {/* ── COST APPROACH, no building cost: Appraisal Price display + rounded input ── */}
+      {isCostApproach && !includeBuildingCost && (
+        <>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Appraisal Price</span>
+            {valueDisplay(appraisalPricePath())}
+            <span className="text-gray-500">Baht</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 font-semibold text-gray-800">
+              Appraisal Price
+              <span className="ml-1 text-xs font-normal text-gray-400">(rounded)</span>
+            </span>
+            <div className="w-40">
+              <RHFInputCell
+                fieldName={appraisalPriceRoundedPath()}
+                inputType="number"
+                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                onUserChange={
+                  !isUnitPrice
+                    ? (next: any) => {
+                        setValue(finalValueAdjustedPath(), next, { shouldDirty: true });
+                        return next;
+                      }
+                    : undefined
+                }
+              />
+            </div>
+            <span className="text-gray-500">Baht</span>
+            {diffBadge(priceDifferentiatePath())}
+          </div>
+        </>
+      )}
+
+      {/* ── MARKET APPROACH: Appraisal Price rounded input ── */}
+      {!isCostApproach && (
+        <div className="flex items-center gap-4">
+          <span className="w-48 shrink-0 font-semibold text-gray-800">
+            Appraisal Price
+            <span className="ml-1 text-xs font-normal text-gray-400">(rounded)</span>
+          </span>
           <div className="w-40">
             <RHFInputCell
               fieldName={appraisalPriceRoundedPath()}
-              inputType={'number'}
-              number={{
-                decimalPlaces: 2,
-                maxIntegerDigits: 15,
-                maxValue: 999_999_999_999_999.0,
-                allowNegative: false,
-              }}
+              inputType="number"
+              number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+              onUserChange={
+                !isUnitPrice
+                  ? (next: any) => {
+                      setValue(finalValueAdjustedPath(), next, { shouldDirty: true });
+                      return next;
+                    }
+                  : undefined
+              }
             />
           </div>
           <span className="text-gray-500">Baht</span>
-          <div className="flex items-center">
-            <RHFInputCell
-              fieldName={priceDifferentiatePath()}
-              inputType={'display'}
-              accessor={({ value }) => {
-                const num = Number(value) || 0;
-                if (num === 0) return <span className="text-gray-400"></span>;
-                const color = num > 0 ? 'text-green-600' : 'text-red-600';
-                const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
-                const icon = num > 0 ? 'arrow-up' : 'arrow-down';
-                return (
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
-                  >
-                    <Icon name={icon} style="solid" className="size-3" />
-                    {Math.abs(num).toLocaleString()}
-                  </span>
-                );
-              }}
-            />
-          </div>
+          {diffBadge(priceDifferentiatePath())}
         </div>
-        {/* Include building cost toggle */}
-        {isCostApproach && (
+      )}
+
+      {/* ── INCLUDE BUILDING COST TOGGLE — only when toggle is OFF ── */}
+      {isCostApproach && !includeBuildingCost && (
+        <div className="flex items-center gap-4">
+          <span className="w-48 shrink-0 text-gray-500">Include building cost</span>
+          <RHFInputCell
+            fieldName={hasBuildingCostPath()}
+            inputType="toggle"
+            toggle={{ checked: includeBuildingCost, options: ['No', 'Yes'] }}
+          />
+        </div>
+      )}
+
+      {/* ── COST APPROACH, with building cost ── */}
+      {isCostApproach && includeBuildingCost && (
+        <>
+          {isUnitPrice && (
+            <div className="flex items-center gap-4">
+              <span className="w-48 shrink-0 text-gray-500">Price/{unitAreaLabel}</span>
+              <div className="w-40">
+                <RHFInputCell
+                  fieldName={finalValueAdjustedPath()}
+                  inputType="number"
+                  number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                />
+              </div>
+              <span className="text-gray-500">Baht/{unitAreaLabel}</span>
+            </div>
+          )}
           <div className="flex items-center gap-4">
-            <span className="w-48 text-gray-500">Include building cost</span>
+            <span className="w-48 shrink-0 text-gray-500">Area</span>
+            {valueDisplay(unitAreaPath)}
+            <span className="text-gray-500">{unitAreaLabel}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Land Price</span>
+            {valueDisplay(appraisalPricePath())}
+            <span className="text-gray-500">Baht</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 font-semibold text-gray-800">
+              Land Price
+              <span className="ml-1 text-xs font-normal text-gray-400">(rounded)</span>
+            </span>
+            <div className="w-40">
+              <RHFInputCell
+                fieldName={appraisalPriceRoundedPath()}
+                inputType="number"
+                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+              />
+            </div>
+            <span className="text-gray-500">Baht</span>
+            {diffBadge(priceDifferentiatePath())}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Include building cost</span>
             <RHFInputCell
               fieldName={hasBuildingCostPath()}
               inputType="toggle"
               toggle={{ checked: includeBuildingCost, options: ['No', 'Yes'] }}
             />
           </div>
-        )}
 
-        {isCostApproach && includeBuildingCost && (
-          <div className="flex flex-col gap-3 text-sm">
-            <div className="">
-              {includeBuildingCost && (
-                <div className="flex flex-col gap-3 text-sm">
-                  <div>
-                    <BuildingCostTable buildingCost={buildingCost ?? []} />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="w-48 text-gray-500">Land Price</span>
-              <span className="font-medium text-gray-800">
-                <RHFInputCell
-                  fieldName={appraisalPriceRoundedPath()}
-                  inputType="display"
-                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
-                />
-              </span>
-              <span className="text-gray-500">Baht</span>
-            </div>
+          <BuildingCostTable buildingCost={buildingCost ?? []} />
 
-            <div className="flex items-center gap-4">
-              <span className="w-48 text-gray-500">Building Cost</span>
-              <span className="font-medium text-gray-800">
-                <RHFInputCell
-                  fieldName={totalBuildingCostPath()}
-                  inputType="display"
-                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
-                />
-              </span>
-              <span className="text-gray-500">Baht</span>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <span className="w-48 text-gray-500">Appraisal Price Include Building Cost</span>
-              <span className="font-medium text-gray-800">
-                <RHFInputCell
-                  fieldName={appraisalPriceIncludeBuildingCostPath()}
-                  inputType="display"
-                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
-                />
-              </span>
-              <span className="text-gray-500">Baht</span>
-            </div>
-
-            <div className="flex items-center gap-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 -mx-4">
-              <span className="w-48 text-xs shrink-0 font-semibold text-gray-800">
-                Appraisal Price Include Building Cost (rounded)
-              </span>
-              <div className="w-40">
-                <RHFInputCell
-                  fieldName={appraisalPriceIncludeBuildingCostRoundedPath()}
-                  inputType="number"
-                  number={{
-                    decimalPlaces: 2,
-                    maxIntegerDigits: 15,
-                    maxValue: 999_999_999_999_999.0,
-                    allowNegative: false,
-                  }}
-                />
-              </div>
-              <span className="text-gray-500">Baht</span>
-              <div className="flex items-center">
-                <RHFInputCell
-                  fieldName={priceIncludeBuildingCostDifferentiatePath()}
-                  inputType="display"
-                  accessor={({ value }) => {
-                    const num = Number(value) || 0;
-                    if (num === 0) return <span className="text-gray-400"></span>;
-                    const color = num > 0 ? 'text-green-600' : 'text-red-600';
-                    const bgColor = num > 0 ? 'bg-green-50' : 'bg-red-50';
-                    const icon = num > 0 ? 'arrow-up' : 'arrow-down';
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
-                      >
-                        <Icon name={icon} style="solid" className="size-3" />
-                        {Math.abs(num).toLocaleString()}
-                      </span>
-                    );
-                  }}
-                />
-              </div>
-            </div>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">
+              <span className="mr-1 text-gray-400">+</span>Building Cost
+            </span>
+            {valueDisplay(totalBuildingCostPath())}
+            <span className="text-gray-500">Baht</span>
           </div>
-        )}
-      </div>
+          <div className="border-t border-gray-200 -mx-1" />
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 text-gray-500">Appraisal Price</span>
+            {valueDisplay(appraisalPriceIncludeBuildingCostPath())}
+            <span className="text-gray-500">Baht</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-48 shrink-0 font-semibold text-gray-800">
+              Appraisal Price
+              <span className="ml-1 text-xs font-normal text-gray-400">(rounded)</span>
+            </span>
+            <div className="w-40">
+              <RHFInputCell
+                fieldName={appraisalPriceIncludeBuildingCostRoundedPath()}
+                inputType="number"
+                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+              />
+            </div>
+            <span className="text-gray-500">Baht</span>
+            {diffBadge(priceIncludeBuildingCostDifferentiatePath())}
+          </div>
+        </>
+      )}
     </div>
   );
 }

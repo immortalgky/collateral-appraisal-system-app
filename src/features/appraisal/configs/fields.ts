@@ -524,7 +524,7 @@ export const encroachedField: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Encroached Area Sq.wa',
+    label: 'Encroached Area (Sq.Wa)',
     name: 'encroachmentArea',
     wrapperClassName: 'col-span-5',
     disableWhen: { field: 'isEncroached', is: false },
@@ -1332,7 +1332,7 @@ export const condoFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Usable Area (Sqm)',
+    label: 'Usable Area (Sq.M)',
     name: 'usableArea',
     wrapperClassName: 'col-span-3',
     required: true,
@@ -1496,6 +1496,7 @@ export const condoLocationFields: FormField[] = [
     name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 5,
+    suffix: 'm',
   },
   {
     type: 'number-input',
@@ -1504,6 +1505,7 @@ export const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
     decimalPlaces: 0,
+    suffix: 'm',
   },
   {
     type: 'number-input',

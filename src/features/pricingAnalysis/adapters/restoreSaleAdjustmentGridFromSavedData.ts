@@ -132,13 +132,14 @@ export function restoreSaleAdjustmentGridFromSavedData({
       marketId: survey.id,
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
       offeringPriceMeasurementUnit:
-        saved?.offeringPriceUnit ?? (surveyMap.get('20') as string) ?? '',
+        saved?.offeringPriceUnit ?? (survey as any).offerPriceUnit ?? '',
       offeringPriceAdjustmentPct:
         saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
       offeringPriceAdjustmentAmt:
         saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
-      sellingPriceMeasurementUnit: (surveyMap.get('20') as string) ?? '',
+      sellingPriceMeasurementUnit:
+        (saved as any)?.sellingPriceUnit ?? (survey as any).salePriceUnit ?? '',
       sellingDate: survey.saleDate ?? '',
       sellingPriceAdjustmentYear: saved?.adjustedPeriodPct ?? toNum(surveyMap.get('23'), 3),
       numberOfYears: saved?.buySellYear ?? yearDiffFromToday(survey.saleDate),

@@ -188,11 +188,11 @@ export interface CondominiumSummaryInput {
   areaTitleDeed?: number | null;
   /** FSD field E03: Floor Area Ratio (FAR). */
   far?: number | null;
-  /** FSD field E05: Total building area (SqM). */
+  /** FSD field E05: Total building area (Sq.M). */
   totalBuildingArea?: number | null;
   /** FSD field E14: Estimated project sales duration (months). */
   estSalesDurationMonths?: number | null;
-  /** FSD field E15: Condo building construction cost (Baht/SqM). */
+  /** FSD field E15: Condo building construction cost (Baht/Sq.M). */
   condoBuildingCostPerSqM?: number | null;
   /** FSD field E18: Set average room size (units) — overrides upload count. */
   setAvgRoomSizeUnits?: number | null;
@@ -381,20 +381,20 @@ export interface CondominiumSummaryDto {
   areaSqM?: number | null;
   /** FSD field E03: Floor Area Ratio (FAR). */
   far?: number | null;
-  /** FSD field E04: Construction area per city plan (SqM). Computed. */
+  /** FSD field E04: Construction area per city plan (Sq.M). Computed. */
   constructionAreaCityPlan?: number | null;
-  /** FSD field E05: Total building area (SqM). */
+  /** FSD field E05: Total building area (Sq.M). */
   totalBuildingArea?: number | null;
   /** FSD field E06: Common area % (100% - E08). Computed. */
   commonAreaPercent?: number | null;
-  /** FSD field E07: Common area (SqM). Computed: E05 - E09. */
+  /** FSD field E07: Common area (Sq.M). Computed: E05 - E09. */
   commonArea?: number | null;
   /** FSD field E08: Indoor sales area % of total building area. Computed. */
   indoorSalesAreaPercent?: number | null;
-  /** FSD field E09: Indoor sales area (SqM). From unit detail upload (D02 total). */
+  /** FSD field E09: Indoor sales area (Sq.M). From unit detail upload (D02 total). */
   indoorSalesArea?: number | null;
   // Revenue
-  /** FSD field E10: Project sales area (SqM). = E09. */
+  /** FSD field E10: Project sales area (Sq.M). = E09. */
   projectSalesArea?: number | null;
   /** FSD field E11: Average price per SqM. Computed: E12/E10. */
   averagePricePerSqM?: number | null;
@@ -406,15 +406,15 @@ export interface CondominiumSummaryDto {
   /** FSD field E14: Estimated project sales duration (months). */
   estSalesDurationMonths?: number | null;
   // Hard cost
-  /** FSD field E15: Condo building construction cost (Baht/SqM). */
+  /** FSD field E15: Condo building construction cost (Baht/Sq.M). */
   condoBuildingCostPerSqM?: number | null;
-  /** FSD field E16: Total building area (SqM). = E05. */
+  /** FSD field E16: Total building area (Sq.M). = E05. */
   buildingArea?: number | null;
   /** FSD field E17: Condo building construction cost (Baht). Computed. */
   condoBuildingCostTotal?: number | null;
   /** FSD field E18: Set average room size (units). = D03. */
   setAvgRoomSizeUnits?: number | null;
-  /** FSD field E19: Average indoor sales area per unit (SqM). Computed. */
+  /** FSD field E19: Average indoor sales area per unit (Sq.M). Computed. */
   avgIndoorSalesAreaPerUnit?: number | null;
   /** FSD field E20: Furniture/Kitchen/AC per unit (Baht/unit). */
   furniturePerUnit?: number | null;

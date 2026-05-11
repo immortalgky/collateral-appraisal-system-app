@@ -12,6 +12,7 @@ interface GovernmentPriceTableProps {
  */
 const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTableProps) => {
   const totalPrice = rows.reduce((sum, row) => sum + (row.governmentPrice ?? 0), 0);
+  const isSingleDeed = rows.length === 1;
 
   return (
     <div className="overflow-x-auto border border-gray-200 rounded-sm">
@@ -20,39 +21,34 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Title Deed No.</th>
             <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Sq.Wa</th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600">Miss out on Survey</th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Price per Sq.Wa</th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Price</th>
+            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Baht / Sq.Wa</th>
+            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Land Price</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {rows.map((row, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
               <td className="px-3 py-2 text-gray-900">
-                {row.titleNumber ?? '-'}
-              </td>
-              <td className="px-3 py-2 text-right text-gray-700">
-                {row.areaSquareWa != null ? formatNumber(row.areaSquareWa, 2) : '-'}
-              </td>
-              <td className="px-3 py-2 text-center">
-                <span
-                  className={
-                    row.isMissingFromSurvey
-                      ? 'text-amber-600 font-medium'
-                      : 'text-gray-500'
-                  }
-                >
-                  {row.isMissingFromSurvey ? 'Yes' : 'No'}
+                <span className="inline-flex items-center gap-2">
+                  {row.titleNumber ?? '-'}
+                  {row.isMissingFromSurvey && (
+                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
+                      Missing from survey
+                    </span>
+                  )}
                 </span>
               </td>
-              <td className="px-3 py-2 text-right text-gray-700">
+              <td className="px-3 py-2 text-right text-gray-700 tabular-nums">
+                {row.areaSquareWa != null ? formatNumber(row.areaSquareWa, 2) : '-'}
+              </td>
+              <td className="px-3 py-2 text-right text-gray-700 tabular-nums">
                 {row.isMissingFromSurvey
                   ? '-'
                   : row.governmentPricePerSqWa != null
                     ? formatNumber(row.governmentPricePerSqWa, 2)
                     : '-'}
               </td>
-              <td className="px-3 py-2 text-right text-gray-700">
+              <td className="px-3 py-2 text-right text-gray-700 tabular-nums">
                 {row.isMissingFromSurvey
                   ? '-'
                   : row.governmentPrice != null
@@ -62,27 +58,27 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
             </tr>
           ))}
         </tbody>
-        <tfoot>
-          <tr className="border-t border-gray-200">
-            <td className="px-3 py-2 font-medium text-gray-700">Average</td>
-            <td className="px-3 py-2 text-right font-medium text-gray-700">
-              {formatNumber(totalArea, 2)}
-            </td>
-            <td className="px-3 py-2" />
-            <td className="px-3 py-2 text-right font-medium text-gray-700">
-              {formatNumber(avgPerSqWa, 2)}
-            </td>
-            <td className="px-3 py-2" />
-          </tr>
-          <tr className="bg-gray-50 border-t border-gray-200 font-semibold">
-            <td className="px-3 py-2 text-gray-900" colSpan={4}>
-              Total
-            </td>
-            <td className="px-3 py-2 text-right text-gray-900">
-              {formatNumber(totalPrice, 2)}
-            </td>
-          </tr>
-        </tfoot>
+        {!isSingleDeed && (
+          <tfoot>
+            <tr className="bg-gray-100 border-t-2 border-gray-400">
+              <td className="px-3 py-3 text-gray-700 font-bold uppercase tracking-wider text-xs">
+                Total
+              </td>
+              <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">
+                {formatNumber(totalArea, 2)}
+              </td>
+              <td className="px-3 py-3 text-right text-gray-700 tabular-nums">
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mr-1.5">
+                  avg
+                </span>
+                {formatNumber(avgPerSqWa, 2)}
+              </td>
+              <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">
+                {formatNumber(totalPrice, 2)}
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );

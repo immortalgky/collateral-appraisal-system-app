@@ -11,6 +11,8 @@ interface NumberInputProps
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  /** Non-interactive unit suffix shown on the right (e.g. "m", "years", "%"). Visual-only — does not affect the value. */
+  suffix?: string;
   /** Number of decimal places (default: 2) */
   decimalPlaces?: number;
   /** Allow negative numbers (default: false) */
@@ -38,6 +40,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       fullWidth = true,
       leftIcon,
       rightIcon,
+      suffix,
       required,
       disabled,
       id,
@@ -298,6 +301,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                 : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-12',
+              suffix && !rightIcon && 'pr-10',
               fullWidth && 'w-full',
               className,
             )}
@@ -319,6 +323,15 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
               {rightIcon}
             </div>
+          )}
+
+          {suffix && !rightIcon && (
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-medium text-gray-400 select-none"
+            >
+              {suffix}
+            </span>
           )}
         </div>
 

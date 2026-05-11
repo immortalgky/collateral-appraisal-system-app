@@ -17,11 +17,25 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
       .filter(Boolean),
   );
 
+  const fv = (SaleAdjustmentGridForm as any).saleAdjustmentGridFinalValue;
+  const ap = (SaleAdjustmentGridForm as any).saleAdjustmentGridAppraisalPrice;
+  const hasBuildingCost = !!ap?.hasBuildingCost;
+  const userRoundedAppraisalPrice = ap?.appraisalPriceRounded ?? null;
+  const landValueToSend = hasBuildingCost ? (ap?.landValue ?? null) : null;
+
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
+    appraisalValue: userRoundedAppraisalPrice,
+    finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
+    hasBuildingCost: ap?.hasBuildingCost ?? null,
+    buildingCost: ap?.totalBuildingCost ?? null,
+    appraisalPrice: userRoundedAppraisalPrice,
+    includeLandArea: ap?.includeLandArea ?? null,
+    landArea: ap?.landArea ?? null,
+    landValue: landValueToSend,
     comparativeFactors: (SaleAdjustmentGridForm.comparativeFactors ?? []).map((cf, index) => ({
       id: cf.id || null,
-      factorId: cf.factorId || null,
+      factorId: cf.factorId || '',
       displaySequence: index,
       isSelectedForScoring: scoringFactorIds.has(cf.factorId),
       remarks: null,
@@ -34,8 +48,8 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
       // landPrice / usableAreaPrice are stored as top-level form fields (shared across all surveys)
       const formAny = SaleAdjustmentGridForm as any;
       return {
-        marketComparableId: calc.marketId,
-        offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
+        marketComparableId: calc.marketId ?? '',
+        offeringPrice: hasOfferingPrice ? (calc.offeringPrice ?? null) : null,
         offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
         adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
         adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
@@ -81,7 +95,7 @@ function buildFactorScores(
   for (let rowIdx = 0; rowIdx < qualitatives.length; rowIdx++) {
     const qual = qualitatives[rowIdx];
     const adj = adjMap.get(qual.factorId);
-    const fid = qual.factorId || null;
+    const fid = qual.factorId || '';
 
     for (const q of qual.qualitatives ?? []) {
       // Find matching adjustment survey for this market
@@ -93,6 +107,9 @@ function buildFactorScores(
         marketComparableId: q.marketId || null,
         factorWeight: 0,
         displaySequence: rowIdx,
+        value: null,
+        score: null,
+        intensity: null,
         comparisonResult: q.qualitativeLevel || null,
         adjustmentPct: adjSurvey?.adjustPercent ?? null,
         adjustmentAmt: adjSurvey?.adjustAmount ?? null,

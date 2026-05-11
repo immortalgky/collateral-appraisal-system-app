@@ -76,7 +76,13 @@ export const PropertyTableRow = ({
           >
             {property.address}
           </p>
-          <p className="text-xs text-gray-500 truncate">{property.location}</p>
+          <p className="text-xs text-gray-500 truncate">
+            {property.location && property.location !== '-' ? (
+              property.location
+            ) : (
+              <span className="italic text-gray-400">Not set</span>
+            )}
+          </p>
         </div>
       </td>
 
@@ -92,6 +98,22 @@ export const PropertyTableRow = ({
         <div className="flex items-center gap-1 text-xs text-gray-600">
           <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
           <span>{property.area}</span>
+        </div>
+      </td>
+
+      {/* Coordinates */}
+      <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
+        <div className="flex items-center gap-1 text-xs text-gray-600">
+          <Icon name="map-pin" className="text-gray-400 text-[10px]" style="solid" />
+          {property.latitude != null &&
+          property.longitude != null &&
+          !(property.latitude === 0 && property.longitude === 0) ? (
+            <span>
+              {property.latitude.toFixed(6)}, {property.longitude.toFixed(6)}
+            </span>
+          ) : (
+            <span className="italic text-gray-400">Not set</span>
+          )}
         </div>
       </td>
 

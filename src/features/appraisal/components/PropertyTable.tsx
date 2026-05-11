@@ -36,6 +36,9 @@ export const PropertyTable = ({
           <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Area
           </th>
+          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Coordinates
+          </th>
           <th className="w-12 px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
             Actions
           </th>

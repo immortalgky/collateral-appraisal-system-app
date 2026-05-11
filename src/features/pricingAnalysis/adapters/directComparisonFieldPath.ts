@@ -76,6 +76,7 @@ export const directComparisonPath = {
   /** Final value section */
   finalValue: () => 'directComparisonFinalValue.finalValue',
   finalValueRounded: () => 'directComparisonFinalValue.finalValueRounded',
+  finalValueAdjusted: () => 'directComparisonFinalValue.finalValueAdjusted',
 
   /** Appraisal price */
   includeLandArea: () => 'directComparisonAppraisalPrice.includeLandArea',
@@ -83,6 +84,7 @@ export const directComparisonPath = {
   usableArea: () => 'directComparisonAppraisalPrice.usableArea',
   appraisalPrice: () => 'directComparisonAppraisalPrice.appraisalPrice',
   appraisalPriceRounded: () => 'directComparisonAppraisalPrice.appraisalPriceRounded',
+  landValue: () => 'directComparisonAppraisalPrice.landValue',
   priceDifferentiate: () => 'directComparisonAppraisalPrice.priceDifferentiate',
   finalValueHasBuildingCost: () => `directComparisonAppraisalPrice.hasBuildingCost`,
   finalValueTotalBuildingCost: () => `directComparisonAppraisalPrice.totalBuildingCost`,

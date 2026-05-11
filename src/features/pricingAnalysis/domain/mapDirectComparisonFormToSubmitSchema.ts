@@ -15,11 +15,25 @@ export function mapDirectComparisonFormToSubmitSchema({
     (DirectComparisonForm.directComparisonQualitatives ?? []).map(q => q.factorId).filter(Boolean),
   );
 
+  const fv = (DirectComparisonForm as any).directComparisonFinalValue;
+  const ap = (DirectComparisonForm as any).directComparisonAppraisalPrice;
+  const hasBuildingCost = !!ap?.hasBuildingCost;
+  const userRoundedAppraisalPrice = ap?.appraisalPriceRounded ?? null;
+  const landValueToSend = hasBuildingCost ? (ap?.landValue ?? null) : null;
+
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
+    appraisalValue: userRoundedAppraisalPrice,
+    finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
+    hasBuildingCost: ap?.hasBuildingCost ?? null,
+    buildingCost: ap?.totalBuildingCost ?? null,
+    appraisalPrice: userRoundedAppraisalPrice,
+    includeLandArea: ap?.includeLandArea ?? null,
+    landArea: ap?.landArea ?? null,
+    landValue: landValueToSend,
     comparativeFactors: (DirectComparisonForm.comparativeFactors ?? []).map((cf, index) => ({
       id: cf.id || null,
-      factorId: cf.factorId || null,
+      factorId: cf.factorId || '',
       displaySequence: index,
       isSelectedForScoring: scoringFactorIds.has(cf.factorId),
       remarks: null,
@@ -32,12 +46,13 @@ export function mapDirectComparisonFormToSubmitSchema({
       // landPrice / usableAreaPrice are stored as top-level form fields (shared across all surveys)
       const formAny = DirectComparisonForm as any;
       return {
-        marketComparableId: calc.marketId,
-        offeringPrice: hasOfferingPrice ? calc.offeringPrice : null,
+        marketComparableId: calc.marketId ?? '',
+        offeringPrice: hasOfferingPrice ? (calc.offeringPrice ?? null) : null,
         offeringPriceUnit: calc.offeringPriceMeasurementUnit ?? null,
         adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
         adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
         sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
+        sellingPriceUnit: calc.sellingPriceMeasurementUnit ?? null,
         buySellYear:
           !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
         buySellMonth: null,
@@ -55,6 +70,7 @@ export function mapDirectComparisonFormToSubmitSchema({
         totalFactorDiffPct: calc.factorDiffPct ?? null,
         totalFactorDiffAmt: calc.factorDiffAmt ?? null,
         weight: null,
+        weightedAdjustedValue: null,
       };
     }),
   };
@@ -77,7 +93,7 @@ function buildFactorScores(
   for (let rowIdx = 0; rowIdx < qualitatives.length; rowIdx++) {
     const qual = qualitatives[rowIdx];
     const adj = adjMap.get(qual.factorId);
-    const fid = qual.factorId || null;
+    const fid = qual.factorId || '';
 
     for (const q of qual.qualitatives ?? []) {
       // Find matching adjustment survey for this market
@@ -89,6 +105,9 @@ function buildFactorScores(
         marketComparableId: q.marketId || null,
         factorWeight: 0,
         displaySequence: rowIdx,
+        value: null,
+        score: null,
+        intensity: null,
         comparisonResult: q.qualitativeLevel || null,
         adjustmentPct: adjSurvey?.adjustPercent ?? null,
         adjustmentAmt: adjSurvey?.adjustAmount ?? null,

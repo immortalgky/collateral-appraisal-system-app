@@ -1,4 +1,5 @@
 import type { FieldArrayField, FormField } from '@/shared/components/form';
+import { mapCollateral } from '@features/request/data/mapCollateral.ts';
 
 // =============================================================================
 // Utility
@@ -437,6 +438,8 @@ const BUILDING_REQUIRED_TYPES = [
 // Condo-specific codes (room/floor/building number, condo name)
 const CONDO_TYPES = ['08', '28', '33'];
 
+const BUILDING_TYPE = ['05', '06', '07', '15', '16', '18', '20', '22'];
+
 // --- Rendering configs (used by sub-form components for <FormFields>) ---
 
 export const titleInfoFields: FormField[] = [
@@ -447,6 +450,12 @@ export const titleInfoFields: FormField[] = [
     group: 'CollateralType',
     wrapperClassName: 'col-span-3',
     required: true,
+    filterOptions: {
+      type: 'dynamic-array',
+      field: 'properties',
+      itemField: 'propertyType',
+      map: mapCollateral,
+    },
   },
   {
     type: 'boolean-toggle',
@@ -533,7 +542,7 @@ export const titleLandFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Sq.wa',
+    label: 'Sq.Wa',
     name: 'areaSquareWa',
     wrapperClassName: 'col-span-2',
     requiredWhen: {
@@ -594,7 +603,11 @@ export const titleBuildingFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     maxLength: 100,
     requiredWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
-    showWhen: { field: 'collateralType', is: OWNER_NAME_TYPES, operator: 'in' },
+    showWhen: {
+      field: 'collateralType',
+      is: BUILDING_TYPE,
+      operator: 'in',
+    },
   },
   {
     type: 'number-input',

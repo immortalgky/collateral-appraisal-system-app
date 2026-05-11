@@ -72,7 +72,7 @@ export function ModelCardContent({ flat, context, projectType, thumbnailSrc }: M
   );
   const roomType = flat.roomLayoutType ? String(flat.roomLayoutType) : '-';
   const landArea =
-    typeof flat.landAreaSquareWa === 'number' ? `${flat.landAreaSquareWa} sq.wa` : '-';
+    typeof flat.landAreaSquareWa === 'number' ? `${flat.landAreaSquareWa} Sq.Wa` : '-';
   const utilization = flat.utilizationType ? String(flat.utilizationType) : '-';
 
   return (

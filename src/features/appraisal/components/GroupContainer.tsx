@@ -151,6 +151,28 @@ export const GroupContainer = React.memo(
       return Object.entries(counts).map(([type, count]) => ({ type, count }));
     }, [group.items]);
 
+    // Aggregate area totals from item.area strings: "0-1-40.00 (140 Sq.Wa)" or "100 Sq.M"
+    const areaTotals = useMemo(() => {
+      let landWa = 0;
+      let buildingSqm = 0;
+      for (const item of group.items) {
+        if (!item.area || item.area === '-') continue;
+        const wa = item.area.match(/([\d.]+)\s*sq\.wa/i);
+        if (wa) {
+          landWa += parseFloat(wa[1]);
+          continue;
+        }
+        const sqm = item.area.match(/([\d.]+)\s*sq\.m\.?/i);
+        if (sqm) buildingSqm += parseFloat(sqm[1]);
+      }
+      const fmt = (n: number) =>
+        Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      const segments: string[] = [];
+      if (landWa > 0) segments.push(`${fmt(landWa)} Sq.Wa land`);
+      if (buildingSqm > 0) segments.push(`${fmt(buildingSqm)} Sq.M building`);
+      return segments;
+    }, [group.items]);
+
     return (
       <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
         <Disclosure defaultOpen>
@@ -187,6 +209,11 @@ export const GroupContainer = React.memo(
                   <span className="text-[11px] text-gray-400">
                     ({group.items.length})
                   </span>
+                  {areaTotals.length > 0 && (
+                    <span className="text-[11px] text-gray-500">
+                      · {areaTotals.join(' · ')}
+                    </span>
+                  )}
                   {/* Inline type breakdown badges */}
                   {typeBreakdown.length > 0 && (
                     <>

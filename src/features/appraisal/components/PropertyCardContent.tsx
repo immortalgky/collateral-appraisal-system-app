@@ -210,9 +210,15 @@ export function PropertyCardContent({
                         className="text-[9px] text-gray-400"
                         style="solid"
                       />
-                      {property.location}
+                      {property.location && property.location !== '-' ? (
+                        property.location
+                      ) : (
+                        <span className="italic text-gray-400">Not set</span>
+                      )}
                     </span>
-                    {property.latitude != null && property.longitude != null ? (
+                    {property.latitude != null &&
+                    property.longitude != null &&
+                    !(property.latitude === 0 && property.longitude === 0) ? (
                       <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
                         <Icon name="map-pin" className={cfg.iconSize} style="solid" />
                         {property.latitude.toFixed(6)}, {property.longitude.toFixed(6)}
@@ -220,7 +226,7 @@ export function PropertyCardContent({
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
                         <Icon name="map-pin" className={cfg.iconSize} style="solid" />
-                        {'-'}, {'-'}
+                        <span className="italic text-gray-400">Coords not set</span>
                       </span>
                     )}
                   </>
@@ -256,9 +262,13 @@ export function PropertyCardContent({
 
                 <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
                   <Icon name="location-dot" className={cfg.iconSize} style="solid" />
-                  <span className="truncate" title={property.location}>
-                    {property.location}
-                  </span>
+                  {property.location && property.location !== '-' ? (
+                    <span className="truncate" title={property.location}>
+                      {property.location}
+                    </span>
+                  ) : (
+                    <span className="italic">Not set</span>
+                  )}
                 </div>
               </>
             )}

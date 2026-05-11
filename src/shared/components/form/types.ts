@@ -174,6 +174,8 @@ export interface NumberInputField extends BaseFormField {
   thousandSeparator?: boolean;
   /** When true, 0 is treated as a valid value instead of "empty" (default: false) */
   allowZero?: boolean;
+  /** Non-interactive unit suffix shown inside the input on the right (e.g. "m", "years", "%"). Visual-only — does not affect the value. */
+  suffix?: string;
 }
 
 // =============================================================================

@@ -4,7 +4,8 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import {
-  floorToThousands,
+  floorToTenThousands,
+  roundToThousand,
   toFiniteNumber,
 } from '@features/pricingAnalysis/domain/calculateWQS.ts';
 import {
@@ -59,9 +60,9 @@ export const AdjustFinalValueSection = ({
     return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
   }, [calculations]);
 
-  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02'; // per Sq.Wa or per Sq.m
+  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02'; // per Sq.Wa or per Sq.M
   const unitAreaPath = detectedUnit === '02' ? usableAreaPath() : landAreaPath();
-  const unitAreaLabel = detectedUnit === '02' ? 'Sq.m' : 'Sq.Wa';
+  const unitAreaLabel = detectedUnit === '02' ? 'Sq.M' : 'Sq.Wa';
 
   // The "Include Area" toggle is auto-derived from the comparables' measure unit
   // (01/02 → land area applies; 03 → total price, no area). Keeps the form field
@@ -163,7 +164,7 @@ export const AdjustFinalValueSection = ({
         const fvAdj = Number(getValues(finalValueAdjustedPath())) || 0;
         const fv = Number(getValues(finalValueFinalValuePath())) || 0;
         const area = Number(getValues(rawLandPriceAreaPath)) || 0;
-        return isUnitPrice && area ? floorToThousands(fvAdj * area) : fv;
+        return isUnitPrice && area ? roundToThousand(fvAdj * area) : roundToThousand(fv);
       },
     },
     {
@@ -211,6 +212,7 @@ export const AdjustFinalValueSection = ({
       // appraisalPrice: re-seed from the case-appropriate upstream when it changes.
       // - hasBuildingCost: from _totalPrice (= landValue + buildingCost)
       // - !hasBuildingCost: from _rawLandPrice (case 1: fvAdj × area; case 2: finalValue)
+      // Always rounded — this field IS the "Appraisal Price (rounded)" input.
       targetPath: appraisalPricePath(),
       deps: ['WQSFinalValue._totalPrice', 'WQSFinalValue._rawLandPrice', hasBuildingCostPath()],
       when: ({ getValues }) => {
@@ -225,7 +227,7 @@ export const AdjustFinalValueSection = ({
         }
         return false;
       },
-      compute: ({ getValues }) => getAppraisalUpstream(getValues),
+      compute: ({ getValues }) => floorToTenThousands(getAppraisalUpstream(getValues)),
     },
     {
       // appraisalDiff: appraisalPrice − upstream (negative = user rounded down).
@@ -353,9 +355,7 @@ export const AdjustFinalValueSection = ({
       {/* Market approach: rawLandPrice computed row */}
       {!isCostApproach && (
         <div className="flex items-center gap-4">
-          <span className="w-48 shrink-0 text-gray-500">
-            Appraisal Price{isUnitPrice ? '' : ' (RSQ)'}
-          </span>
+          <span className="w-48 shrink-0 text-gray-500">Appraisal Price</span>
           {valueDisplay('WQSFinalValue._rawLandPrice')}
           <span className="text-gray-500">Baht</span>
         </div>

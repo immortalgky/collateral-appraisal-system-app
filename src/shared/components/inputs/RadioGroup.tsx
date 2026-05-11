@@ -67,8 +67,8 @@ const RadioGroup = ({
     lg: 'h-2.5 w-2.5',
   };
 
-  // Button variant - renders as segmented pill group
-  if (variant === 'button') {
+  // Default rendering: pill group (used for both 'button' and 'default' variants)
+  if (variant !== 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
         {label && <Label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
@@ -79,31 +79,32 @@ const RadioGroup = ({
           onChange={onChange}
           disabled={disabled}
           name={name}
-          className={clsx(
-            'inline-flex flex-wrap rounded-full bg-gray-100/80 p-1 gap-0.5',
-            disabled && 'opacity-60',
-          )}
+          className={clsx('inline-flex flex-wrap gap-2', disabled && 'opacity-60')}
         >
-          {resolvedOptions.map(option => (
-            <HeadlessRadio
-              key={option.value}
-              value={option.value}
-              disabled={option.disabled || disabled}
-              className={clsx(
-                'group relative px-4 py-1.5 text-sm font-medium rounded-full',
-                'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-                'cursor-pointer data-disabled:cursor-not-allowed',
-                'data-checked:bg-primary data-checked:text-white data-checked:shadow-md data-checked:shadow-primary/25',
-                'data-[checked=false]:text-gray-500 data-[checked=false]:hover:text-gray-600',
-                'focus:outline-none',
-              )}
-            >
-              <span className="flex items-center gap-2">
-                {option.icon && <Icon style="solid" name={option.icon} className="size-4" />}
-                {option.label}
-              </span>
-            </HeadlessRadio>
-          ))}
+          {resolvedOptions.map(option => {
+            const isChecked = value === option.value;
+            return (
+              <HeadlessRadio
+                key={option.value}
+                value={option.value}
+                disabled={option.disabled || disabled}
+                className={clsx(
+                  'group relative inline-flex items-center justify-center h-8 px-4 text-sm font-medium rounded-full border-0',
+                  'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+                  'cursor-pointer data-disabled:cursor-not-allowed',
+                  isChecked
+                    ? 'bg-primary text-white shadow-sm shadow-primary/25'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1',
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  {option.icon && <Icon style="solid" name={option.icon} className="size-4" />}
+                  {option.label}
+                </span>
+              </HeadlessRadio>
+            );
+          })}
         </HeadlessRadioGroup>
 
         {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
