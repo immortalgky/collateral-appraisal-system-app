@@ -19,6 +19,31 @@ export function roundToThousand(n: unknown) {
   return Math.round(x / 1000) * 1000;
 }
 
+/**
+ * Picks the dominant price unit from a list of WQS calculation rows.
+ * Mirrors BE WqsCalculationService.DetectPriceUnit — per row, prefer the
+ * offering unit when offering price is non-zero, else the selling unit;
+ * the most frequent wins. Returns null when no usable unit found.
+ */
+export function detectPriceUnit(calculations: unknown): string | null {
+  const rows = Array.isArray(calculations) ? calculations : [];
+  if (rows.length === 0) return null;
+
+  const units: string[] = rows
+    .map((c: any) =>
+      c?.offeringPrice && Number(c.offeringPrice) !== 0
+        ? c?.offeringPriceMeasurementUnit
+        : c?.sellingPriceMeasurementUnit,
+    )
+    .filter((u): u is string => typeof u === 'string' && u.length > 0);
+
+  if (units.length === 0) return null;
+
+  const freq = new Map<string, number>();
+  for (const u of units) freq.set(u, (freq.get(u) ?? 0) + 1);
+  return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
+
 export function calcWeightedScore(weight: unknown, score: unknown) {
   const w = Number(weight) || 0;
   const s = Number(score) || 0;

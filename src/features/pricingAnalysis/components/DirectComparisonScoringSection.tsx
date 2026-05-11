@@ -12,6 +12,7 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import clsx from 'clsx';
 import { getParameterDescription } from '@shared/utils/parameterUtils';
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath';
+import { fmt } from '../domain/formatters';
 import {
   buildDirectComparisonAdjustmentFactorAmountRules,
   buildDirectComparisonAdjustmentFactorDefaultPercentRules,
@@ -479,7 +480,7 @@ export const DirectComparisonScoringSection = ({
                         const unit = survey.offerPriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
                           : '';
-                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
+                        return unit ? `${fmt(Number(value) || 0)} ${unit}` : fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -577,7 +578,7 @@ export const DirectComparisonScoringSection = ({
                         const unit = survey.salePriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
                           : '';
-                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
+                        return unit ? `${fmt(Number(value) || 0)} ${unit}` : fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -667,7 +668,7 @@ export const DirectComparisonScoringSection = ({
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => value.toLocaleString() ?? 0}
+                      accessor={({ value }) => fmt(Number(value) || 0)}
                     />
                   </td>
                 );
@@ -685,7 +686,7 @@ export const DirectComparisonScoringSection = ({
                       fieldName={calculationAdjustedValuePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : 0;
+                        return fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -799,10 +800,10 @@ export const DirectComparisonScoringSection = ({
                                     }),
                                   ),
                                 ) ? (
-                                  <div>{value.toLocaleString() ?? 'error'}</div>
+                                  <div>{fmt(Number(value) || 0)}</div>
                                 ) : (
                                   <div className="text-danger">
-                                    {value.toLocaleString() ?? 'error'}
+                                    {fmt(Number(value) || 0)}
                                   </div>
                                 );
                               }}
@@ -839,14 +840,14 @@ export const DirectComparisonScoringSection = ({
                         <RHFInputCell
                           fieldName={calculationSumFactorPctPath({ column: columnIndex })}
                           inputType="display"
-                          accessor={({ value }) => (value ? value.toLocaleString() : 0)}
+                          accessor={({ value }) => fmt(Number(value) || 0)}
                         />
                       </div>
                       <div>
                         <RHFInputCell
                           fieldName={calculationSumFactorAmtPath({ column: columnIndex })}
                           inputType="display"
-                          accessor={({ value }) => (value ? value.toLocaleString() : 0)}
+                          accessor={({ value }) => fmt(Number(value) || 0)}
                         />
                       </div>
                     </div>
@@ -868,7 +869,7 @@ export const DirectComparisonScoringSection = ({
                       fieldName={calculationTotalAdjustValuePath({ column: columnIndex })}
                       inputType="display"
                       accessor={({ value }) => {
-                        return value ? value.toLocaleString() : value;
+                        return fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -916,16 +917,11 @@ export const DirectComparisonScoringSection = ({
               {comparativeSurveys.map((survey: MarketComparableDetailType) => {
                 return <td key={survey.id} className={clsx('bg-gray-100', surveyColumnBody)}></td>;
               })}
-              <td className={clsx('bg-gray-100', collateralColumnBody)}>
+              <td className={clsx('bg-gray-100 text-right', collateralColumnBody)}>
                 <RHFInputCell
                   fieldName={finalValueRoundedPath()}
-                  inputType="number"
-                  number={{
-                    decimalPlaces: 2,
-                    maxIntegerDigits: 15,
-                    maxValue: 999_999_999_999_999.0,
-                    allowNegative: false,
-                  }}
+                  inputType="display"
+                  accessor={({ value }) => fmt(Number(value) || 0)}
                 />
               </td>
             </tr>

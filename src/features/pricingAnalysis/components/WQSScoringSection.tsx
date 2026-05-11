@@ -3,6 +3,7 @@ import { useContext, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
+import { fmt, toNum } from '../domain/formatters';
 import clsx from 'clsx';
 import { getParameterDescription } from '@shared/utils/parameterUtils';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -375,7 +376,7 @@ export function WQSScoringSection({
                       <RHFInputCell
                         fieldName={scoringFactorWeightedIntensityPath({ row: rowIndex })}
                         inputType="display"
-                        accessor={({ value }) => value.toLocaleString() ?? 0}
+                        accessor={({ value }) => fmt(toNum(value))}
                       />
                     </td>
 
@@ -408,7 +409,7 @@ export function WQSScoringSection({
                                     column: columnIndex,
                                   })}
                                   inputType="display"
-                                  accessor={({ value }) => value.toLocaleString() ?? 0}
+                                  accessor={({ value }) => fmt(toNum(value))}
                                 />
                               </div>
                             </div>
@@ -441,7 +442,7 @@ export function WQSScoringSection({
                               row: rowIndex,
                             })}
                             inputType="display"
-                            accessor={({ value }) => value.toLocaleString() ?? 0}
+                            accessor={({ value }) => fmt(toNum(value))}
                           />
                         </div>
                       </div>
@@ -631,7 +632,7 @@ export function WQSScoringSection({
                         const unit = survey.offerPriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
                           : '';
-                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
+                        return unit ? `${fmt(toNum(value))} ${unit}` : fmt(toNum(value));
                       }}
                     />
                   </td>
@@ -762,7 +763,7 @@ export function WQSScoringSection({
                         const unit = survey.salePriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
                           : '';
-                        return unit ? `${value.toLocaleString()} ${unit}` : value.toLocaleString();
+                        return unit ? `${fmt(toNum(value))} ${unit}` : fmt(toNum(value));
                       }}
                     />
                   </td>
@@ -886,7 +887,7 @@ export function WQSScoringSection({
                     <RHFInputCell
                       fieldName={calculationTotalAdjustedSellingPricePath({ column: columnIndex })}
                       inputType="display"
-                      accessor={({ value }) => value.toLocaleString() ?? 0}
+                      accessor={({ value }) => fmt(toNum(value))}
                     />
                   </td>
                 );
@@ -934,7 +935,7 @@ export function WQSScoringSection({
                               isScoreReasonable(currentSurvey, otherSurveys) ? '' : 'text-danger'
                             }
                           >
-                            {value ? value.toLocaleString() : ''}
+                            {value ? fmt(toNum(value)) : ''}
                           </span>
                         );
                       }}
@@ -973,7 +974,7 @@ export function WQSScoringSection({
                 <RHFInputCell
                   fieldName={finalValueFinalValuePath()}
                   inputType="display"
-                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+                  accessor={({ value }) => fmt(toNum(value))}
                 />
               </td>
             </tr>
@@ -1002,7 +1003,7 @@ export function WQSScoringSection({
                 <RHFInputCell
                   fieldName={finalValueFinalValueRoundedPath()}
                   inputType="display"
-                  accessor={({ value }) => (value ? Number(value).toLocaleString() : '0')}
+                  accessor={({ value }) => fmt(toNum(value))}
                 />
               </td>
             </tr>

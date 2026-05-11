@@ -216,11 +216,11 @@ export function useSaveComparativeAnalysis() {
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.comparativeFactors(variables.id, variables.methodId),
       });
-      // Mark detail as stale without refetching immediately
-      // (immediate refetch triggers INIT which resets activeMethod and hides the form)
+      // Refetch detail so method cards reflect the new MethodValue.
+      // Safe: the INIT reducer case now preserves activeMethod, so the open
+      // calculation panel stays mounted across the refetch.
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.detail(variables.id),
-        refetchType: 'none',
       });
     },
   });

@@ -139,6 +139,9 @@ export function approachMethodReducer(
         summarySelected: cloneApproaches(visibleApproach),
         systemCalculationMode: action.payload.useSystemCalc === false ? 'FillIn' : 'System',
         pricingAnalysisId: action.payload.pricingAnalysisId,
+        // Preserve activeMethod across re-INIT (e.g. detail query refetch after save)
+        // so the open calculation panel doesn't unmount mid-edit.
+        activeMethod: state.activeMethod,
       };
     }
 

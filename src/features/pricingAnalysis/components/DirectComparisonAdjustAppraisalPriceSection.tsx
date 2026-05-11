@@ -7,7 +7,8 @@ import {
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath.ts';
 import { useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { floorToTenThousands, roundToThousand } from '../domain/calculateDirectComparison';
+import { roundToThousand } from '../domain/calculateDirectComparison';
+import { fmt } from '../domain/formatters';
 import { BuildingCostTable } from './BuildingCostTable';
 
 interface DirectComparisonAdjustAppraisalPriceSectionProps {
@@ -20,7 +21,6 @@ export function DirectComparisonAdjustAppraisalPriceSection({
   isCostApproach,
 }: DirectComparisonAdjustAppraisalPriceSectionProps) {
   const {
-    finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
     finalValueAdjusted: finalValueAdjustedPath,
     includeLandArea: includeLandAreaPath,
@@ -71,17 +71,24 @@ export function DirectComparisonAdjustAppraisalPriceSection({
 
   const rules: DerivedFieldRule[] = [
     {
-      // Seed rule: re-seed finalValueAdjusted from finalValueRounded only when upstream changes.
+      // Seed rule: re-seed finalValueAdjusted from finalValueRounded when upstream changes,
+      // or on first run when downstream is still empty (fresh Generate, no saved value).
       targetPath: finalValueAdjustedPath(),
       deps: [finalValueRoundedPath()],
-      when: ({ getValues: gv }) => {
+      when: ({ getValues: gv, getFieldState, formState }) => {
         const rounded = Number(gv(finalValueRoundedPath())) || 0;
+        const adjusted = Number(gv(finalValueAdjustedPath())) || 0;
+        const { isDirty } = getFieldState(finalValueAdjustedPath(), formState);
         if (prevFinalValueRoundedRef.current === null) {
           prevFinalValueRoundedRef.current = rounded;
-          return false;
+          return rounded > 0 && adjusted === 0;
         }
         if (prevFinalValueRoundedRef.current !== rounded) {
           prevFinalValueRoundedRef.current = rounded;
+          return true;
+        }
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (rounded > 0 && adjusted === 0 && !isDirty) {
           return true;
         }
         return false;
@@ -89,14 +96,15 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       compute: ({ getValues: gv }) => Number(gv(finalValueRoundedPath())) || 0,
     },
     {
-      // Unit-aware: 01/02 → finalValueAdjusted × area; other → finalValue (auto-computed)
+      // Unit-aware: 01/02 → finalValueAdjusted × area (raw, no rounding);
+      // other (e.g. unit 03) → finalValueRounded (already rounded by the grid).
       targetPath: appraisalPricePath(),
-      deps: [finalValueAdjustedPath(), finalValuePath(), unitAreaPath],
+      deps: [finalValueAdjustedPath(), finalValueRoundedPath(), unitAreaPath],
       compute: ({ getValues: gv }) => {
         const fvAdj = Number(gv(finalValueAdjustedPath())) || 0;
-        const fv = Number(gv(finalValuePath())) || 0;
+        const fvRounded = Number(gv(finalValueRoundedPath())) || 0;
         const area = Number(gv(unitAreaPath)) || 0;
-        return isUnitPrice && area ? roundToThousand(fvAdj * area) : roundToThousand(fv);
+        return isUnitPrice && area ? fvAdj * area : fvRounded;
       },
     },
     {
@@ -112,10 +120,11 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       targetPath: appraisalPriceRoundedPath(),
       deps: [appraisalPricePath()],
       compute: ({ getValues: gv }) =>
-        floorToTenThousands(Number(gv(appraisalPricePath())) || 0),
-      when: ({ getValues: gv }) => {
+        roundToThousand(Number(gv(appraisalPricePath())) || 0),
+      when: ({ getValues: gv, getFieldState, formState }) => {
         const depValue = Number(gv(appraisalPricePath())) || 0;
         const current = Number(gv(appraisalPriceRoundedPath())) || 0;
+        const { isDirty } = getFieldState(appraisalPriceRoundedPath(), formState);
 
         if (prevAppraisalPriceRef.current === null) {
           prevAppraisalPriceRef.current = depValue;
@@ -124,6 +133,11 @@ export function DirectComparisonAdjustAppraisalPriceSection({
 
         if (prevAppraisalPriceRef.current !== depValue) {
           prevAppraisalPriceRef.current = depValue;
+          return true;
+        }
+
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (current === 0 && depValue !== 0 && !isDirty) {
           return true;
         }
 
@@ -144,9 +158,10 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       deps: [appraisalPriceIncludeBuildingCostPath()],
       compute: ({ getValues: gv }) =>
         Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0,
-      when: ({ getValues: gv }) => {
+      when: ({ getValues: gv, getFieldState, formState }) => {
         const depValue = Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0;
         const current = Number(gv(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
+        const { isDirty } = getFieldState(appraisalPriceIncludeBuildingCostRoundedPath(), formState);
 
         if (prevValueIncludeCostRef.current === null) {
           prevValueIncludeCostRef.current = depValue;
@@ -155,6 +170,11 @@ export function DirectComparisonAdjustAppraisalPriceSection({
 
         if (prevValueIncludeCostRef.current !== depValue) {
           prevValueIncludeCostRef.current = depValue;
+          return true;
+        }
+
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (current === 0 && depValue !== 0 && !isDirty) {
           return true;
         }
 
@@ -232,7 +252,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
           >
             <Icon name={icon} style="solid" className="size-3" />
-            {Math.abs(num).toLocaleString()}
+            {fmt(Math.abs(num))}
           </span>
         );
       }}
@@ -246,7 +266,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
         inputType="display"
         accessor={({ value }) => (
           <span className="font-semibold text-gray-800 tabular-nums">
-            {value ? Number(value).toLocaleString() : '0'}
+            {fmt(Number(value) || 0)}
           </span>
         )}
       />

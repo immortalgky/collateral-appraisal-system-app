@@ -4,6 +4,7 @@ import {
   calcAdjustedValueFromSellingPrice,
   calcSum,
   calcWeightedScore,
+  detectPriceUnit,
   roundToThousand,
   round2,
   toFiniteNumber,
@@ -338,12 +339,18 @@ export function buildWQSFinalValueDerivedRules(args: {
       },
     },
     {
-      // System-calculated: round-to-nearest 1k. Never overridden by user.
+      // System-calculated. Never overridden by user.
+      // Rounding rule (mirrors BE WqsCalculationService.cs):
+      //   unit 01/02 (per Sq.Wa / per Sq.M) → no rounding (prices are small)
+      //   else (e.g. unit 03 total price)   → round to nearest 1k
       targetPath: finalValueFinalValueRoundedPath(),
-      deps: [finalValueFinalValuePath()],
+      deps: [finalValueFinalValuePath(), 'WQSCalculations' as any],
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValueFinalValuePath()) ?? 0;
-        return roundToThousand(finalValue);
+        const calculations = (getValues('WQSCalculations') as any[]) ?? [];
+        const detectedUnit = detectPriceUnit(calculations);
+        const isUnitPrice = detectedUnit === '01' || detectedUnit === '02';
+        return isUnitPrice ? finalValue : roundToThousand(finalValue);
       },
     },
     // NOTE: the finalValueAdjusted seed rule lives in WQSAdjustFinalValueSection.tsx
