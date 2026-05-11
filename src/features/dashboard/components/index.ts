@@ -1,4 +1,5 @@
 export { default as TaskSummaryWidget } from './TaskSummaryWidget';
+export { default as WidgetDateRangeBadge } from './WidgetDateRangeBadge';
 export { default as RecentTaskWidget } from './RecentTaskWidget';
 export { default as CalendarWidget } from './CalendarWidget';
 export { default as ReminderWidget } from './ReminderWidget';

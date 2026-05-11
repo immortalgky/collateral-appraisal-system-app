@@ -5,10 +5,13 @@ import { useLocaleStore } from '@shared/store';
 
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
+import enWebhookAdmin from './locales/en/webhookAdmin.json';
 import thCommon from './locales/th/common.json';
 import thNav from './locales/th/nav.json';
+import thWebhookAdmin from './locales/th/webhookAdmin.json';
 import zhCommon from './locales/zh/common.json';
 import zhNav from './locales/zh/nav.json';
+import zhWebhookAdmin from './locales/zh/webhookAdmin.json';
 
 export const defaultNS = 'common' as const;
 
@@ -16,14 +19,17 @@ export const resources = {
   en: {
     common: enCommon,
     nav: enNav,
+    webhookAdmin: enWebhookAdmin,
   },
   th: {
     common: thCommon,
     nav: thNav,
+    webhookAdmin: thWebhookAdmin,
   },
   zh: {
     common: zhCommon,
     nav: zhNav,
+    webhookAdmin: zhWebhookAdmin,
   },
 } as const;
 

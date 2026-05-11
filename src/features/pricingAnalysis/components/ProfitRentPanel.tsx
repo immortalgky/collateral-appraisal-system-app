@@ -489,7 +489,7 @@ export function ProfitRentPanel({
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
-        className="flex flex-col h-full gap-4"
+        className="flex flex-col gap-4"
       >
         {/* Header — matches Leasehold */}
         <div className="flex items-center gap-2.5">
@@ -783,7 +783,7 @@ export function ProfitRentPanel({
 
         {/* Calculation Table */}
         {tableResult && tableResult.rows.length > 0 ? (
-          <ScrollableTableContainer maxHeight="500px">
+          <ScrollableTableContainer>
             <table className="w-full text-xs border-collapse">
               <ProfitRentTable
                 tableResult={tableResult}
@@ -1228,7 +1228,7 @@ function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string
 /** Full panel skeleton — shown while initial data loads */
 function PanelSkeleton() {
   return (
-    <div className="flex flex-col h-full gap-4 animate-pulse">
+    <div className="flex flex-col flex-1 min-h-0 gap-4 animate-pulse">
       {/* Header */}
       <div className="flex items-center gap-2.5">
         <div className="size-8 rounded-lg bg-gray-200" />

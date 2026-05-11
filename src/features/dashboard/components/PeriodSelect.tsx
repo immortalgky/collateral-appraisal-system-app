@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Icon from '@shared/components/Icon';
+import DatePickerInput from '@shared/components/inputs/DatePickerInput';
 import {
   PERIOD_LABELS,
   type PeriodPresetKey,
@@ -25,7 +26,12 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (ref.current && !ref.current.contains(target)) {
+        // DatePickerInput's calendar renders as a sibling; ignore clicks inside it.
+        if ((target as HTMLElement)?.closest?.('.react-day-picker')) return;
+        setOpen(false);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -90,29 +96,25 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
 
           {value === 'CUSTOM' && (
             <div className="mt-2 border-t border-gray-100 pt-2 flex flex-col gap-2">
-              <label className="text-xs text-gray-500">
-                From
-                <input
-                  type="date"
-                  value={fromStr}
-                  onChange={e => setFromStr(e.target.value)}
-                  className="mt-0.5 w-full text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+                <DatePickerInput
+                  value={fromStr ? fromIsoDate(fromStr) : null}
+                  onChange={iso => setFromStr(iso ? toIsoDate(new Date(iso)) : '')}
                 />
-              </label>
-              <label className="text-xs text-gray-500">
-                To
-                <input
-                  type="date"
-                  value={toStr}
-                  onChange={e => setToStr(e.target.value)}
-                  className="mt-0.5 w-full text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+                <DatePickerInput
+                  value={toStr ? fromIsoDate(toStr) : null}
+                  onChange={iso => setToStr(iso ? toIsoDate(new Date(iso)) : '')}
                 />
-              </label>
+              </div>
               <button
                 type="button"
                 onClick={applyCustom}
                 disabled={!fromStr || !toStr || fromIsoDate(fromStr) > fromIsoDate(toStr)}
-                className="mt-1 text-sm font-medium rounded bg-blue-600 text-white px-3 py-1.5 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400"
+                className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
               >
                 Apply
               </button>

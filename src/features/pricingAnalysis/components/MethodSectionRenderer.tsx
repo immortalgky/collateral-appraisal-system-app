@@ -76,9 +76,25 @@ export function MethodSectionRenderer({
         />
       );
     case 'SAG_MARKET':
-      return <SaleAdjustmentGridPanel {...panelProps} />;
+      return (
+        <SaleAdjustmentGridPanel
+          {...panelProps}
+          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
+          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
+          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
+          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+        />
+      );
     case 'DC_MARKET':
-      return <DirectComparisonPanel {...panelProps} />;
+      return (
+        <DirectComparisonPanel
+          {...panelProps}
+          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
+          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
+          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
+          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+        />
+      );
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
@@ -94,9 +110,25 @@ export function MethodSectionRenderer({
         />
       );
     case 'SAG_COST':
-      return <SaleAdjustmentGridPanel {...panelProps} />;
+      return (
+        <SaleAdjustmentGridPanel
+          {...panelProps}
+          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
+          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
+          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
+          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+        />
+      );
     case 'DC_COST':
-      return <DirectComparisonPanel {...panelProps} />;
+      return (
+        <DirectComparisonPanel
+          {...panelProps}
+          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
+          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
+          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
+          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+        />
+      );
     case 'LH':
       return (
         <LeaseholdPanel

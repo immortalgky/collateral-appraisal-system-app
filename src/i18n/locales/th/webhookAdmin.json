@@ -1,0 +1,51 @@
+{
+  "page": {
+    "title": "Webhook Deliveries",
+    "subtitle": "Monitor and retry outbound webhook delivery attempts"
+  },
+  "columns": {
+    "id": "ID",
+    "subscriptionId": "Subscription ID",
+    "created": "Created",
+    "eventType": "Event Type",
+    "system": "System",
+    "status": "Status",
+    "attempts": "Attempts",
+    "lastStatusCode": "HTTP Status",
+    "lastError": "Last Error",
+    "deliveredAt": "Delivered At",
+    "actions": "Actions"
+  },
+  "status": {
+    "Pending": "Pending",
+    "Delivered": "Delivered",
+    "Failed": "Failed"
+  },
+  "filters": {
+    "eventTypePlaceholder": "Filter by event type...",
+    "statusLabel": "Status",
+    "from": "From",
+    "to": "To",
+    "clear": "Clear filters"
+  },
+  "actions": {
+    "view": "View details",
+    "retry": "Retry delivery"
+  },
+  "retry": {
+    "confirmTitle": "Resend Webhook Delivery",
+    "confirmMessage": "The same payload will be sent to the current callback URL. Do you want to continue?",
+    "confirmButton": "Resend",
+    "cancelButton": "Cancel",
+    "successToast": "Webhook delivery queued for retry",
+    "errorToast": "Failed to retry webhook delivery"
+  },
+  "drawer": {
+    "title": "Delivery Details",
+    "payload": "Payload",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "noPayload": "No payload"
+  },
+  "emptyState": "No webhook deliveries found"
+}

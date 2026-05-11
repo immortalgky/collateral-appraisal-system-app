@@ -476,7 +476,7 @@ export function LeaseholdPanel({
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
-        className="flex flex-col h-full gap-4"
+        className="flex flex-col gap-4"
       >
         {/* Header */}
         <div className="flex items-center gap-2.5">
@@ -1056,7 +1056,7 @@ export function LeaseholdPanel({
 /** Full panel skeleton — shown while initial data loads */
 function PanelSkeleton() {
   return (
-    <div className="flex flex-col h-full gap-4 animate-pulse">
+    <div className="flex flex-col flex-1 min-h-0 gap-4 animate-pulse">
       {/* Header */}
       <div className="flex items-center gap-2.5">
         <div className="size-8 rounded-lg bg-gray-200" />

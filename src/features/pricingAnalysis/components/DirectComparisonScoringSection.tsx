@@ -897,9 +897,7 @@ export const DirectComparisonScoringSection = ({
                   <RHFInputCell
                     fieldName={finalValuePath()}
                     inputType="display"
-                    accessor={({ value }) => {
-                      return value ? value.toLocaleString() : 0;
-                    }}
+                    accessor={({ value }) => fmt(Number(value) || 0)}
                   />
                 </div>
               </td>

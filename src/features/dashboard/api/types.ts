@@ -4,7 +4,7 @@ export type TaskSummaryResponse = {
   notStarted: number;
   inProgress: number;
   overdue: number;
-  completedThisWeek: number;
+  completed: number;
 };
 
 export type AppraisalCountItem = {
@@ -64,7 +64,7 @@ export type RemindersResponse = {
   items: ReminderItem[];
 };
 
-export type CalendarItemType = 'meeting' | 'task_due' | 'sla_deadline';
+export type CalendarItemType = 'meeting' | 'task_due';
 export type CalendarLinkEntityType = 'meeting' | 'appraisal' | 'request' | 'task';
 
 export type CalendarItem = {
@@ -76,6 +76,9 @@ export type CalendarItem = {
   // When the event is tied to an appraisal task, carries the human-readable
   // appraisal number (e.g. "APP-2026-0123"). Null for standalone meetings.
   appraisalNumber: string | null;
+  // True when the task's SLA is AtRisk or Breached. UI uses this to color the
+  // dot red (urgent) rather than yellow (normal). Always false for meetings.
+  isSlaCritical: boolean;
 };
 
 export type CalendarDay = {

@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
+import { formatDistanceToNow } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
 import PeriodSelect from './PeriodSelect';
 import WidgetError from './WidgetError';
+import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { useAppraisalStatusSummary, type AppraisalStatusSummaryFilters } from '../api';
 import { useDashboardStore } from '../store';
 import {
@@ -121,6 +123,9 @@ function ProgressSummaryWidget() {
 
   const current = useAppraisalStatusSummary(baseFilters);
   const prior = useAppraisalStatusSummary(priorFilters, { enabled: settings.compare === true });
+  const updatedLabel = current.dataUpdatedAt
+    ? formatDistanceToNow(current.dataUpdatedAt, { addSuffix: false })
+    : null;
 
   const hiddenSet = useMemo(
     () => new Set(settings.hiddenStatuses ?? []),
@@ -241,9 +246,12 @@ function ProgressSummaryWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-gray-800">Appraisal Progress Summary</h3>
-            <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <h3 className="font-semibold text-gray-800">Appraisal Progress Summary</h3>
+              <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+            </div>
+            <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div className="flex items-center gap-1">
             <div ref={filtersRef} className="relative">
@@ -317,7 +325,12 @@ function ProgressSummaryWidget() {
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                  {updatedLabel && (
+                    <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                      Updated {updatedLabel} ago
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={handleRefresh}

@@ -4,6 +4,17 @@ import type { NotesResponse } from './types';
 
 const DASHBOARD_STALE_TIME = 30 * 1000; // 30 seconds
 
+export type TaskSummaryFilters = {
+  from?: string;
+  to?: string;
+};
+
+export type CalendarFilters = {
+  from: string;
+  to: string;
+  types?: string[];
+};
+
 export type AppraisalCountsFilters = {
   period?: string;
   from?: string;
@@ -39,15 +50,15 @@ export const dashboardKeys = {
   companyAppraisalSummary: (filters: CompanyAppraisalSummaryFilters = {}) =>
     [...dashboardKeys.all, 'company-appraisal-summary', filters] as const,
   reminders: () => [...dashboardKeys.all, 'reminders'] as const,
-  calendar: (month: string) => [...dashboardKeys.all, 'calendar', month] as const,
+  calendar: (filters: CalendarFilters) => [...dashboardKeys.all, 'calendar', filters] as const,
   notes: () => [...dashboardKeys.all, 'notes'] as const,
   quotationTaskSummary: () => [...dashboardKeys.all, 'quotation-task-summary'] as const,
 };
 
-export const useTaskSummary = () => {
+export const useTaskSummary = (filters: TaskSummaryFilters = {}) => {
   return useQuery({
-    queryKey: dashboardKeys.taskSummary(),
-    queryFn: () => dashboardApi.getTaskSummary(),
+    queryKey: [...dashboardKeys.taskSummary(), filters] as const,
+    queryFn: () => dashboardApi.getTaskSummary(filters.from, filters.to),
     staleTime: DASHBOARD_STALE_TIME,
   });
 };
@@ -96,10 +107,10 @@ export const useReminders = () => {
   });
 };
 
-export const useCalendarEvents = (month: string) => {
+export const useCalendarEvents = (filters: CalendarFilters) => {
   return useQuery({
-    queryKey: dashboardKeys.calendar(month),
-    queryFn: () => dashboardApi.getCalendar(month),
+    queryKey: dashboardKeys.calendar(filters),
+    queryFn: () => dashboardApi.getCalendar(filters.from, filters.to, filters.types),
     staleTime: DASHBOARD_STALE_TIME,
   });
 };

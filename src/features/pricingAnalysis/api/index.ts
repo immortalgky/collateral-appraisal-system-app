@@ -1071,39 +1071,6 @@ export function useDeleteHypothesisUpload() {
   });
 }
 
-/**
- * DELETE /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis
- * Resets (deletes) the entire hypothesis analysis.
- */
-export function useDeleteHypothesisAnalysis() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      pricingAnalysisId,
-      methodId,
-    }: {
-      pricingAnalysisId: string;
-      methodId: string;
-    }): Promise<void> => {
-      await axios.delete(
-        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis`,
-      );
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
-          variables.pricingAnalysisId,
-          variables.methodId,
-        ),
-      });
-      queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
-        refetchType: 'none',
-      });
-    },
-  });
-}
-
 // ==================== Template & Factor Hooks ====================
 
 /**

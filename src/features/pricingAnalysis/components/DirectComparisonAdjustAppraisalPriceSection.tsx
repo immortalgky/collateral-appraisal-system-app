@@ -69,6 +69,49 @@ export function DirectComparisonAdjustAppraisalPriceSection({
     setValue(includeLandAreaPath(), isUnitPrice, { shouldDirty: false });
   }, [isUnitPrice, setValue, includeLandAreaPath]);
 
+  // Sync totalBuildingCost BEFORE useDerivedFields so the rule cascade sees the final
+  // upstream on its first pass (matching WQSAdjustFinalValueSection). Otherwise the
+  // buildingCost-driven upstream changes after `prevRef` was primed, causing the
+  // appraisalPriceIncludeBuildingCostRounded rule to re-seed and clobber the
+  // user-restored override.
+  useEffect(() => {
+    if (!buildingCost?.length) {
+      setValue(totalBuildingCostPath(), 0, { shouldDirty: false });
+      return;
+    }
+
+    const toNum = (v: any): number => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    let grandTotal = 0;
+
+    for (const building of buildingCost) {
+      const rawRows: any[] = (building.depreciationDetails as any[]) ?? [];
+
+      for (let rowIndex = 0; rowIndex < rawRows.length; rowIndex++) {
+        const row = { ...rawRows[rowIndex] };
+
+        // Pass 1: compute priceBeforeDepreciation and priceDepreciation
+        const priceBeforeDepreciation =
+          toNum(row['area']) * toNum(row['pricePerSqMBeforeDepreciation']);
+
+        const periods: any[] = row['depreciationPeriods'] ?? [];
+        const priceDepreciation = periods.reduce(
+          (acc: number, b: any) => acc + toNum(b.priceDepreciation),
+          0,
+        );
+
+        // Pass 2: priceAfterDepreciation = before - depreciation
+        const priceAfterDepreciation = priceBeforeDepreciation - priceDepreciation;
+        grandTotal += priceAfterDepreciation;
+      }
+    }
+
+    setValue(totalBuildingCostPath(), grandTotal, { shouldDirty: false });
+  }, [buildingCost, totalBuildingCostPath, setValue]);
+
   const rules: DerivedFieldRule[] = [
     {
       // Seed rule: re-seed finalValueAdjusted from finalValueRounded when upstream changes,
@@ -157,7 +200,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       targetPath: appraisalPriceIncludeBuildingCostRoundedPath(),
       deps: [appraisalPriceIncludeBuildingCostPath()],
       compute: ({ getValues: gv }) =>
-        Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0,
+        roundToThousand(Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0),
       when: ({ getValues: gv, getFieldState, formState }) => {
         const depValue = Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0;
         const current = Number(gv(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
@@ -198,44 +241,6 @@ export function DirectComparisonAdjustAppraisalPriceSection({
   useDerivedFields({ rules: rules });
 
   const includeBuildingCost = useWatch({ control, name: hasBuildingCostPath() });
-
-  useEffect(() => {
-    if (!buildingCost?.length) {
-      setValue(totalBuildingCostPath(), 0, { shouldDirty: false });
-      return;
-    }
-
-    const toNum = (v: any): number => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : 0;
-    };
-
-    let grandTotal = 0;
-
-    for (const building of buildingCost) {
-      const rawRows: any[] = (building.depreciationDetails as any[]) ?? [];
-
-      for (let rowIndex = 0; rowIndex < rawRows.length; rowIndex++) {
-        const row = { ...rawRows[rowIndex] };
-
-        // Pass 1: compute priceBeforeDepreciation and priceDepreciation
-        const priceBeforeDepreciation =
-          toNum(row['area']) * toNum(row['pricePerSqMBeforeDepreciation']);
-
-        const periods: any[] = row['depreciationPeriods'] ?? [];
-        const priceDepreciation = periods.reduce(
-          (acc: number, b: any) => acc + toNum(b.priceDepreciation),
-          0,
-        );
-
-        // Pass 2: priceAfterDepreciation = before - depreciation
-        const priceAfterDepreciation = priceBeforeDepreciation - priceDepreciation;
-        grandTotal += priceAfterDepreciation;
-      }
-    }
-
-    setValue(totalBuildingCostPath(), grandTotal, { shouldDirty: false });
-  }, [buildingCost, totalBuildingCostPath, setValue]);
 
   const diffBadge = (fieldPath: string) => (
     <RHFInputCell

@@ -10,8 +10,15 @@ import {
   type WidgetPosition,
 } from './types';
 
+export type CalendarViewMode = 'day' | 'week' | 'month';
+
+type DashboardPrefs = {
+  calendarViewMode?: CalendarViewMode;
+};
+
 type DashboardStore = {
   widgets: Widget[];
+  prefs: DashboardPrefs;
   isEditMode: boolean;
   setEditMode: (mode: boolean) => void;
   addWidget: (type: WidgetType, position?: WidgetPosition) => void;
@@ -20,6 +27,7 @@ type DashboardStore = {
   resizeWidget: (id: string, cols: ColumnSpan) => void;
   moveWidget: (id: string, position: WidgetPosition) => void;
   updateWidgetSettings: (id: string, partial: Record<string, unknown>) => void;
+  updatePrefs: (partial: Partial<DashboardPrefs>) => void;
   resetWidgets: () => void;
 };
 
@@ -40,8 +48,10 @@ export const useDashboardStore = create<DashboardStore>()(
   persist(
     set => ({
       widgets: DEFAULT_WIDGETS,
+      prefs: {},
       isEditMode: false,
       setEditMode: mode => set({ isEditMode: mode }),
+      updatePrefs: (partial) => set(state => ({ prefs: { ...state.prefs, ...partial } })),
 
       addWidget: (type, position) =>
         set(state => {
@@ -165,26 +175,25 @@ export const useDashboardStore = create<DashboardStore>()(
           ),
         })),
 
-      resetWidgets: () => set({ widgets: DEFAULT_WIDGETS }),
+      resetWidgets: () => set({ widgets: DEFAULT_WIDGETS, prefs: {} }),
     }),
     {
       name: 'dashboard-widgets',
-      version: 7, // v7: added per-widget settings field
+      version: 8, // v8: added dashboard prefs (calendarViewMode)
       migrate: (persistedState, version) => {
         const state = persistedState as DashboardStore;
         if (version < 6) {
-          // Reset to new default widgets with position
-          return {
-            ...state,
-            widgets: DEFAULT_WIDGETS,
-          };
+          return { ...state, widgets: DEFAULT_WIDGETS, prefs: {} };
         }
         if (version < 7) {
-          // Initialise empty settings on every widget, preserve everything else
           return {
             ...state,
             widgets: (state.widgets ?? []).map(w => ({ ...w, settings: w.settings ?? {} })),
+            prefs: state.prefs ?? {},
           };
+        }
+        if (version < 8) {
+          return { ...state, prefs: state.prefs ?? {} };
         }
         return state;
       },
@@ -194,6 +203,7 @@ export const useDashboardStore = create<DashboardStore>()(
           ...currentState,
           ...persisted,
           widgets: mergeWidgets(persisted.widgets || []),
+          prefs: persisted.prefs ?? {},
         };
       },
     },

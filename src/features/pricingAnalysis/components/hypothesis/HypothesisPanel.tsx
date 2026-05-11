@@ -16,7 +16,7 @@ import {
   useGetHypothesisAnalysis,
   useGenerateHypothesisAnalysis,
   useSaveHypothesisAnalysis,
-  useDeleteHypothesisAnalysis,
+  useResetMethod,
   usePreviewHypothesisAnalysis,
 } from '../../api';
 import { pricingAnalysisKeys } from '../../api/queryKeys';
@@ -108,7 +108,7 @@ export function HypothesisPanel({
 
   const generateMutation = useGenerateHypothesisAnalysis();
   const saveMutation = useSaveHypothesisAnalysis();
-  const deleteMutation = useDeleteHypothesisAnalysis();
+  const resetMutation = useResetMethod();
   const previewMutation = usePreviewHypothesisAnalysis();
 
   const { data: savedData, isPending: isLoading } = useGetHypothesisAnalysis(
@@ -157,7 +157,7 @@ export function HypothesisPanel({
     setIsResetDialogOpen(false);
     if (!pricingAnalysisId || !methodId) return;
     try {
-      await deleteMutation.mutateAsync({ pricingAnalysisId, methodId });
+      await resetMutation.mutateAsync({ pricingAnalysisId, methodId });
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.hypothesisAnalysis(pricingAnalysisId, methodId),
       });

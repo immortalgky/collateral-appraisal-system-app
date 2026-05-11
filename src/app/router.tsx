@@ -81,6 +81,7 @@ import ExtCreateInvoicePage from '@/features/invoice/pages/ExtCreateInvoicePage'
 import ExtInvoiceDetailPage from '@/features/invoice/pages/ExtInvoiceDetailPage';
 import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
+import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -266,6 +267,7 @@ export const router = createBrowserRouter([
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
           { path: 'committees', element: <CommitteeAdminPage /> },
+          { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
           // Menu management — gated by MENU_MANAGE permission
           {
             path: 'menus',
