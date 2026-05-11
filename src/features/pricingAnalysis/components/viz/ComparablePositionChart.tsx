@@ -41,7 +41,7 @@ function ComparableTooltip({ active, payload }: any) {
     <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
       <div className="font-medium text-gray-700 mb-1">{point.name}</div>
       <div style={{ color: point.isSubject ? '#3b82f6' : '#f97316' }}>
-        Price/SqM: {fmtTooltip(point.pricePerSqm)}
+        Price/Sq.M: {fmtTooltip(point.pricePerSqm)}
       </div>
       <div className="text-gray-600">
         Adj. Score: {point.adjustmentScore.toFixed(1)}%
@@ -71,12 +71,12 @@ export function ComparablePositionChart({
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="pricePerSqm"
-            name="Price/SqM"
+            name="Price/Sq.M"
             type="number"
             tick={{ fontSize: 9, fill: '#9ca3af' }}
             tickFormatter={fmtCompact}
             label={{
-              value: 'Price/SqM',
+              value: 'Price/Sq.M',
               position: 'insideBottom',
               offset: -5,
               fontSize: 9,

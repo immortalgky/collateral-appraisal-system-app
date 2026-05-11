@@ -71,8 +71,8 @@ const CheckboxGroup = ({
   };
 
   const sizeStyles = {
-    sm: 'px-2.5 py-1 text-xs',
-    md: 'px-3 py-1.5 text-sm',
+    sm: 'h-7 px-2.5 text-xs',
+    md: 'h-8 px-3 text-sm',
   };
 
   const showClearButton = showClearAll && selectedValues.length >= clearAllThreshold;
@@ -117,12 +117,14 @@ const CheckboxGroup = ({
                 type="button"
                 onClick={() => handleToggle(option.value)}
                 disabled={disabled}
+                aria-pressed={isSelected}
                 className={clsx(
-                  'inline-flex items-center gap-1.5 rounded-full font-medium transition-all duration-200',
+                  'inline-flex items-center gap-1.5 rounded-full border font-medium transition-all duration-200',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1',
                   sizeStyles[size],
                   isSelected
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-primary/10 text-primary hover:bg-primary/20',
+                    ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary',
                   disabled && 'opacity-50 cursor-not-allowed',
                 )}
               >
@@ -193,24 +195,20 @@ const CheckboxGroup = ({
               type="button"
               onClick={() => handleToggle(option.value)}
               disabled={disabled}
+              aria-pressed={isSelected}
               className={clsx(
                 'group inline-flex items-center gap-1.5 rounded-md border font-medium transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1',
                 sizeStyles[size],
                 isSelected
-                  ? 'border-primary/50 bg-primary/10 text-primary shadow-sm'
+                  ? 'border-primary bg-primary/10 text-primary shadow-sm'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:bg-primary/5 hover:text-primary',
                 disabled && 'opacity-50 cursor-not-allowed',
               )}
             >
+              {isSelected && <Icon style="solid" name="check" className="size-3" />}
               {option.icon && <Icon style="solid" name={option.icon} className="size-3.5" />}
               <span>{option.label}</span>
-              {isSelected && (
-                <Icon
-                  style="solid"
-                  name="xmark"
-                  className="size-3 text-primary/60 group-hover:text-primary transition-colors"
-                />
-              )}
             </button>
           );
         })}

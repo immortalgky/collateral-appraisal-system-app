@@ -5,7 +5,6 @@ import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } f
 import { DirectComparisonScoringSection } from './DirectComparisonScoringSection';
 import { SurveySelectionSection } from '@features/pricingAnalysis/components/SurveySelectionSection.tsx';
 import { DirectComparisonAdjustAppraisalPriceSection } from '@features/pricingAnalysis/components/DirectComparisonAdjustAppraisalPriceSection.tsx';
-import { CollapsibleFormSection } from './layout/CollapsibleFormSection';
 import { KpiDashboard } from './viz/KpiDashboard';
 import { ComparablePositionChart } from './viz/ComparablePositionChart';
 import type { KpiItem } from './viz/KpiDashboard';
@@ -57,29 +56,32 @@ export const DirectComparisonForm = ({
                 property={property}
               />
 
-              <CollapsibleFormSection
-                title="Calculation of Appraisal Value"
-                icon="calculator"
-                defaultOpen
-              >
-                <DirectComparisonScoringSection
-                  property={property}
-                  template={template}
-                  comparativeSurveys={comparativeMarketSurveys}
-                />
-              </CollapsibleFormSection>
-
-              <CollapsibleFormSection
-                title="Adjust Final Value"
-                icon="badge-dollar"
-                defaultOpen
-              >
-                <DirectComparisonAdjustAppraisalPriceSection
-                  property={property}
-                  buildingCost={buildingCost}
-                  isCostApproach={isCostApproach}
-                />
-              </CollapsibleFormSection>
+              <div>
+                <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
+                  <h3 className="text-base font-semibold text-gray-800">
+                    Calculation of Appraisal Value
+                  </h3>
+                </div>
+                <div className="px-4">
+                  <DirectComparisonScoringSection
+                    property={property}
+                    template={template}
+                    comparativeSurveys={comparativeMarketSurveys}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
+                  <h3 className="text-base font-semibold text-gray-800">Adjust Final Value</h3>
+                </div>
+                <div className="px-4">
+                  <DirectComparisonAdjustAppraisalPriceSection
+                    property={property}
+                    buildingCost={buildingCost}
+                    isCostApproach={isCostApproach}
+                  />
+                </div>
+              </div>
             </>
           )}
         </div>

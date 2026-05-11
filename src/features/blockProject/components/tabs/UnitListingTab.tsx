@@ -158,7 +158,7 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">House No</th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model Name</th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">No. of Floors</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (sq.wa)</th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (Sq.Wa)</th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m.)</th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price (Baht)</th>
           </tr>

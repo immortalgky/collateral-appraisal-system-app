@@ -71,7 +71,7 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
         {...listeners}
         className="flex items-center justify-center w-8 bg-gray-50 hover:bg-gray-100 cursor-grab active:cursor-grabbing border-r border-gray-200 flex-shrink-0"
         style={{ touchAction: 'none' }}
-        title="Drag to reorder"
+        title="Drag to reorder within group, or drop on another group to move"
       >
         <Icon name="grip-vertical" className="text-gray-400 text-sm" />
       </div>

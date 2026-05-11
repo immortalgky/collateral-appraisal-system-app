@@ -74,6 +74,13 @@ import ExtCompanyInvitationListPage from '@/features/quotation/pages/ExtCompanyI
 import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompanySubmitQuotationPage';
 import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
 import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
+import ServiceQualityEvaluationListPage from '@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage';
+import ServiceQualityEvaluationDetailPage from '@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage';
+import ExtInvoiceListPage from '@/features/invoice/pages/ExtInvoiceListPage';
+import ExtCreateInvoicePage from '@/features/invoice/pages/ExtCreateInvoicePage';
+import ExtInvoiceDetailPage from '@/features/invoice/pages/ExtInvoiceDetailPage';
+import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
+import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -329,6 +336,35 @@ export const router = createBrowserRouter([
           { index: true, element: <ExtCompanyInvitationListPage /> },
           { path: ':id', element: <ExtCompanySubmitQuotationPage /> },
         ],
+      },
+      // ─── Invoice Routes ─────────────────────────────────────────────────────
+      // ExtCompany invoice portal
+      {
+        path: 'ext/invoices',
+        element: <RoleProtectedRoute allowedRoles={['ExtAdmin']} />,
+        children: [
+          { index: true, element: <ExtInvoiceListPage /> },
+          { path: 'new', element: <ExtCreateInvoicePage /> },
+          { path: ':id', element: <ExtInvoiceDetailPage /> },
+        ],
+      },
+      // IntAdmin invoice management
+      {
+        path: 'admin/invoices',
+        element: <RoleProtectedRoute allowedRoles={['IntAdmin', 'Admin']} />,
+        children: [
+          { index: true, element: <IntInvoiceListPage /> },
+          { path: ':id', element: <IntInvoiceDetailPage /> },
+        ],
+      },
+      // ─── Service Quality Evaluation Routes ──────────────────────────────────
+      {
+        path: 'standalone/service-quality-evaluation',
+        element: <ServiceQualityEvaluationListPage />,
+      },
+      {
+        path: 'standalone/service-quality-evaluation/:appraisalId',
+        element: <ServiceQualityEvaluationDetailPage />,
       },
       // Catch-all route for 404 pages
       {

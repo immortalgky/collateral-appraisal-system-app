@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import GroupCard from '@/shared/components/sections/GroupCard';
@@ -14,6 +15,108 @@ import { RaiseFollowupDialog } from '@/features/document-followup/components/Rai
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 
 import ActivityTrackingTimeline, { type ActivityStep } from './ActivityTrackingTimeline';
+
+// ==================== Decision-card visual mapping ====================
+
+type DecisionColor = 'emerald' | 'red' | 'purple' | 'amber' | 'blue' | 'gray';
+
+interface DecisionVisual {
+  icon: string;
+  color: DecisionColor;
+}
+
+/** Maps action value/label keywords → icon + color. Falls back to gray + neutral icon. */
+const resolveDecisionVisual = (value: string, label: string): DecisionVisual => {
+  const k = `${value} ${label}`.toLowerCase();
+  if (/(approve|agree|accept|confirm)/.test(k))
+    return { icon: 'check', color: 'emerald' };
+  if (/(reject|disagree|decline|deny)/.test(k))
+    return { icon: 'xmark', color: 'red' };
+  if (/(route.?back|send.?back|return)/.test(k))
+    return { icon: 'rotate-left', color: 'purple' };
+  if (/(proceed|forward|next|complete)/.test(k))
+    return { icon: 'arrow-right', color: 'blue' };
+  if (/(hold|defer|pause)/.test(k))
+    return { icon: 'pause', color: 'amber' };
+  return { icon: 'circle-dot', color: 'gray' };
+};
+
+const COLOR_CLASSES: Record<DecisionColor, {
+  borderSelected: string;
+  bgSelected: string;
+  textSelected: string;
+  iconBgSelected: string;
+  iconBgIdle: string;
+  iconTextIdle: string;
+  ring: string;
+}> = {
+  emerald: {
+    borderSelected: 'border-emerald-500',
+    bgSelected: 'bg-emerald-50',
+    textSelected: 'text-emerald-900',
+    iconBgSelected: 'bg-emerald-500',
+    iconBgIdle: 'bg-emerald-100',
+    iconTextIdle: 'text-emerald-600',
+    ring: 'focus-within:ring-emerald-200',
+  },
+  red: {
+    borderSelected: 'border-red-500',
+    bgSelected: 'bg-red-50',
+    textSelected: 'text-red-900',
+    iconBgSelected: 'bg-red-500',
+    iconBgIdle: 'bg-red-100',
+    iconTextIdle: 'text-red-600',
+    ring: 'focus-within:ring-red-200',
+  },
+  purple: {
+    borderSelected: 'border-purple-500',
+    bgSelected: 'bg-purple-50',
+    textSelected: 'text-purple-900',
+    iconBgSelected: 'bg-purple-500',
+    iconBgIdle: 'bg-purple-100',
+    iconTextIdle: 'text-purple-600',
+    ring: 'focus-within:ring-purple-200',
+  },
+  amber: {
+    borderSelected: 'border-amber-500',
+    bgSelected: 'bg-amber-50',
+    textSelected: 'text-amber-900',
+    iconBgSelected: 'bg-amber-500',
+    iconBgIdle: 'bg-amber-100',
+    iconTextIdle: 'text-amber-600',
+    ring: 'focus-within:ring-amber-200',
+  },
+  blue: {
+    borderSelected: 'border-blue-500',
+    bgSelected: 'bg-blue-50',
+    textSelected: 'text-blue-900',
+    iconBgSelected: 'bg-blue-500',
+    iconBgIdle: 'bg-blue-100',
+    iconTextIdle: 'text-blue-600',
+    ring: 'focus-within:ring-blue-200',
+  },
+  gray: {
+    borderSelected: 'border-gray-500',
+    bgSelected: 'bg-gray-50',
+    textSelected: 'text-gray-900',
+    iconBgSelected: 'bg-gray-500',
+    iconBgIdle: 'bg-gray-100',
+    iconTextIdle: 'text-gray-600',
+    ring: 'focus-within:ring-gray-200',
+  },
+};
+
+/** Contextual comment placeholder based on the selected decision. */
+const resolveCommentPlaceholder = (value: string | null, label: string | null): string => {
+  if (!value) return 'Enter your comments or reason for this decision...';
+  const k = `${value} ${label ?? ''}`.toLowerCase();
+  if (/(approve|agree|accept|confirm)/.test(k)) return 'Why are you approving?';
+  if (/(reject|disagree|decline|deny)/.test(k)) return 'Why are you rejecting?';
+  if (/(route.?back|send.?back|return)/.test(k)) return 'What needs to be revised?';
+  if (/(proceed|forward|next|complete)/.test(k)) return 'Any final notes before proceeding?';
+  if (/(hold|defer|pause)/.test(k)) return 'Why are you placing this on hold?';
+  return 'Enter your comments or reason for this decision...';
+};
 
 // ==================== Helpers ====================
 
@@ -169,29 +272,17 @@ const DecisionSection = ({
                   </div>
                 ) : (
                   <>
-                    <div>
-                      <Dropdown
-                        label="Decision"
-                        required
-                        options={decisionOptions}
-                        value={selectedDecision ?? undefined}
-                        onChange={value => {
-                          // Clear stale assignee when decision changes — target activity may differ
-                          onAssigneeChange(null);
-                          onDecisionChange(value);
-                        }}
-                        placeholder="Please select a decision..."
-                      />
-                      {selectedDecision && (
-                        <div className="mt-2">
-                          <Badge
-                            type="vote"
-                            value={badgeMap[selectedDecision] ?? selectedDecision}
-                            size="sm"
-                          />
-                        </div>
-                      )}
-                    </div>
+                    {/* Decision dropdown — scales for any number of actions */}
+                    <Dropdown
+                      options={decisionOptions}
+                      value={selectedDecision ?? undefined}
+                      onChange={value => {
+                        // Clear stale assignee when decision changes — target activity may differ
+                        onAssigneeChange(null);
+                        onDecisionChange(value);
+                      }}
+                      placeholder="Select a decision..."
+                    />
 
                     {isManualAssignment &&
                       (isStaffLoading ? (
@@ -210,12 +301,30 @@ const DecisionSection = ({
                         />
                       ))}
 
-                    <Textarea
-                      label="Comments"
-                      value={comments}
-                      onChange={e => onCommentsChange(e.target.value)}
-                      placeholder="Enter your comments or reason for this decision..."
-                    />
+                    {/* Card-aware comment box: focus ring color matches selected decision */}
+                    {(() => {
+                      const visual = selectedDecision
+                        ? resolveDecisionVisual(
+                            selectedDecision,
+                            badgeMap[selectedDecision] ?? selectedDecision,
+                          )
+                        : null;
+                      const ringClass = visual ? COLOR_CLASSES[visual.color].ring : '';
+                      const placeholder = resolveCommentPlaceholder(
+                        selectedDecision,
+                        selectedDecision ? badgeMap[selectedDecision] ?? null : null,
+                      );
+                      return (
+                        <div className={clsx('rounded-xl focus-within:ring-2 transition-shadow', ringClass)}>
+                          <Textarea
+                            label="Comments"
+                            value={comments}
+                            onChange={e => onCommentsChange(e.target.value)}
+                            placeholder={placeholder}
+                          />
+                        </div>
+                      );
+                    })()}
 
                     {/* Request Additional Documents button — only when workflow opts in */}
                     {canRaiseFollowup && (

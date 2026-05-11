@@ -12,6 +12,10 @@ export function floorToTenThousands(num) {
   return Math.floor(num / 10000) * 10000;
 }
 
+export function roundToThousand(num) {
+  return Math.round(num / 1000) * 1000;
+}
+
 /**
  * Adjusted value from offering price:
  * - pct > 0 => offeringPrice - offeringPrice * pct/100
@@ -112,5 +116,5 @@ export function calcFinalValue(values: unknown[], fallback = 0): number {
 
 export function calcFinalValueRoundedValue(finalValue: unknown): number {
   const v = Number(finalValue) || 0;
-  return floorToThousands(v);
+  return roundToThousand(v);
 }

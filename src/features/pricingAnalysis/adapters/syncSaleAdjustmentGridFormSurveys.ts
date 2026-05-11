@@ -68,11 +68,11 @@ export function syncSaleAdjustmentGridFormSurveys({
         return {
           marketId: survey.id,
           offeringPrice: survey.offerPrice ?? 0,
-          offeringPriceMeasurementUnit: surveyMap.get('20') ?? '',
+          offeringPriceMeasurementUnit: (survey as any).offerPriceUnit ?? '',
           offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
           offeringPriceAdjustmentAmt: survey.offerPriceAdjustmentAmount ?? 0,
           sellingPrice: survey.salePrice ?? 0,
-          sellingPriceMeasurementUnit: surveyMap.get('20') ?? '',
+          sellingPriceMeasurementUnit: (survey as any).salePriceUnit ?? '',
           sellingDate: survey.saleDate ?? '',
           sellingPriceAdjustmentYear: toNum(surveyMap.get('23'), 3),
           numberOfYears: yearDiffFromToday(survey.saleDate),

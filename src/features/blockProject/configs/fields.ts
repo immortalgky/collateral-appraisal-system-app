@@ -253,7 +253,7 @@ export const pricingForceSaleFields: FormField[] = [
 export const pricingLandAssumptionFields: FormField[] = [
   {
     type: 'number-input',
-    label: 'Land Increase / Decrease (Baht/sq.wa)',
+    label: 'Land Increase / Decrease (Baht/Sq.Wa)',
     name: 'landIncreaseDecreaseRate',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-6',
@@ -839,21 +839,21 @@ export const lbModelInfoFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Land Area Min (sq.wa)',
+    label: 'Land Area Min (Sq.Wa)',
     name: 'landAreaMin',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
-    label: 'Land Area Max (sq.wa)',
+    label: 'Land Area Max (Sq.Wa)',
     name: 'landAreaMax',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'number-input',
-    label: 'Standard Land Area (sq.wa)',
+    label: 'Standard Land Area (Sq.Wa)',
     name: 'standardLandArea',
     decimalPlaces: 2,
     wrapperClassName: 'col-span-4',

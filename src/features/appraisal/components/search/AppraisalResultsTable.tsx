@@ -15,6 +15,7 @@ interface AppraisalResultsTableProps {
   sortDir: string;
   onSort: (field: string) => void;
   onRowClick: (item: AppraisalDto) => void;
+  loadingRowId?: string;
 }
 
 function AppraisalResultsTable({
@@ -25,6 +26,7 @@ function AppraisalResultsTable({
   sortDir,
   onSort,
   onRowClick,
+  loadingRowId,
 }: AppraisalResultsTableProps) {
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
@@ -114,48 +116,80 @@ function AppraisalResultsTable({
               </td>
             </tr>
           ) : (
-            items.map((item, index) => (
-              <tr
-                key={item.id}
-                onClick={() => onRowClick(item)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') onRowClick(item);
-                }}
-                tabIndex={0}
-                className="hover:bg-gray-50 cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-              >
-                <td className="px-3 py-2.5 text-gray-400 text-sm">{index + 1}</td>
-                {columns.map(col => (
-                  <td key={col.key} className="px-3 py-2.5 text-gray-600 text-sm">
-                    {col.key === 'status' ? (
-                      <Badge type="status" value={item.status} size="sm" />
-                    ) : col.key === 'priority' ? (
-                      <Badge type="priority" value={item.priority} size="sm" />
-                    ) : col.key === 'slaStatus' ? (
-                      <span
-                        className={`text-xs font-medium ${
-                          item.slaStatus === 'Breached'
-                            ? 'text-red-600'
-                            : item.slaStatus === 'AtRisk'
-                              ? 'text-amber-600'
-                              : item.slaStatus === 'OnTrack'
-                                ? 'text-green-600'
-                                : 'text-gray-400'
-                        }`}
-                      >
-                        {formatSlaStatus(item)}
-                      </span>
-                    ) : col.key === 'appraisalNumber' ? (
-                      <span className="font-medium text-primary">
-                        {item.appraisalNumber || '-'}
-                      </span>
-                    ) : (
-                      getCellValue(item, col.key)
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))
+            items.map((item, index) => {
+              const isLoadingRow = loadingRowId === item.id;
+              const isAnyLoading = loadingRowId !== undefined;
+              return (
+                <tr
+                  key={item.id}
+                  onClick={() => !isAnyLoading && onRowClick(item)}
+                  onKeyDown={e => {
+                    if (!isAnyLoading && (e.key === 'Enter' || e.key === ' ')) onRowClick(item);
+                  }}
+                  tabIndex={0}
+                  className={`transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+                    isLoadingRow
+                      ? 'bg-primary-50 cursor-wait'
+                      : isAnyLoading
+                        ? 'cursor-wait opacity-60'
+                        : 'hover:bg-gray-50 cursor-pointer'
+                  }`}
+                >
+                  <td className="px-3 py-2.5 text-gray-400 text-sm">{index + 1}</td>
+                  {columns.map(col => (
+                    <td key={col.key} className="px-3 py-2.5 text-gray-600 text-sm">
+                      {col.render ? (
+                        col.key === 'appraisalNumber' ? (
+                          <span className="font-medium text-primary inline-flex items-center gap-1.5">
+                            {isLoadingRow && (
+                              <Icon
+                                name="spinner"
+                                style="solid"
+                                className="size-3 animate-spin text-primary shrink-0"
+                              />
+                            )}
+                            {col.render(item)}
+                          </span>
+                        ) : (
+                          col.render(item)
+                        )
+                      ) : col.key === 'status' ? (
+                        <Badge type="status" value={item.status} size="sm" />
+                      ) : col.key === 'priority' ? (
+                        <Badge type="priority" value={item.priority} size="sm" />
+                      ) : col.key === 'slaStatus' ? (
+                        <span
+                          className={`text-xs font-medium ${
+                            item.slaStatus === 'Breached'
+                              ? 'text-red-600'
+                              : item.slaStatus === 'AtRisk'
+                                ? 'text-amber-600'
+                                : item.slaStatus === 'OnTrack'
+                                  ? 'text-green-600'
+                                  : 'text-gray-400'
+                          }`}
+                        >
+                          {formatSlaStatus(item)}
+                        </span>
+                      ) : col.key === 'appraisalNumber' ? (
+                        <span className="font-medium text-primary inline-flex items-center gap-1.5">
+                          {isLoadingRow && (
+                            <Icon
+                              name="spinner"
+                              style="solid"
+                              className="size-3 animate-spin text-primary shrink-0"
+                            />
+                          )}
+                          {item.appraisalNumber || '-'}
+                        </span>
+                      ) : (
+                        getCellValue(item, col.key)
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

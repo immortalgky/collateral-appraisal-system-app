@@ -73,13 +73,19 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
               </td>
               {APPROACH_COLUMNS.map(col => {
                 const approach = group.approaches?.find(a => a.approachType === col.key);
+                const isSelected = approach?.isSelected ?? false;
 
                 return (
-                  <td key={col.key} className="px-3 py-2 text-right text-gray-700">
+                  <td
+                    key={col.key}
+                    className={`px-3 py-2 text-right ${
+                      isSelected
+                        ? 'bg-teal-50 text-teal-800 font-semibold'
+                        : 'text-gray-700'
+                    }`}
+                  >
                     {approach?.approachValue != null ? (
-                      <span className={approach.isSelected ? 'font-semibold' : ''}>
-                        {formatNumber(approach.approachValue, 2)}
-                      </span>
+                      formatNumber(approach.approachValue, 2)
                     ) : (
                       <span className="text-gray-300">-</span>
                     )}
@@ -98,11 +104,17 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
           ))}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-50 border-t border-gray-200 font-semibold">
-            <td className="px-3 py-2 text-gray-900" colSpan={APPROACH_COLUMNS.length + 1}>
+          <tr className="bg-gray-100 border-t-2 border-gray-400">
+            <td
+              className="px-3 py-3 text-gray-700 font-bold uppercase tracking-wider text-xs"
+              colSpan={APPROACH_COLUMNS.length + 1}
+            >
               Total
             </td>
-            <td className="px-3 py-2 text-right text-gray-900" colSpan={onGroupClick ? 2 : 1}>
+            <td
+              className="px-3 py-3 text-right text-gray-900 font-bold text-base tabular-nums"
+              colSpan={onGroupClick ? 2 : 1}
+            >
               {formatNumber(totalSummary, 2)}
             </td>
           </tr>

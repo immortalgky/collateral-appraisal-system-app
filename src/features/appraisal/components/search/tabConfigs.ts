@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import type { SearchCategory } from '@shared/types/search';
+import type { AppraisalDto } from '../../api/appraisalSearch';
 
 export interface FilterField {
   key: string;
@@ -153,6 +155,7 @@ export interface AppraisalColumnDef {
   key: string;
   label: string;
   sortable?: boolean;
+  render?: (item: AppraisalDto) => ReactNode;
 }
 
 export const appraisalFilters: FilterField[] = [

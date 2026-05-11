@@ -147,7 +147,7 @@ export interface ProjectModelDepreciationDetail {
  * Superset model DTO for both Condo and LandAndBuilding.
  * Pricing (both): startingPriceMin, startingPriceMax.
  * Condo-specific: roomLayoutType, roomLayoutTypeOther.
- * LB-specific: numberOfHouse, landAreaMin/landAreaMax/standardLandArea (all sq.wa),
+ * LB-specific: numberOfHouse, landAreaMin/landAreaMax/standardLandArea (all Sq.Wa),
  *   buildingType, buildingTypeOther, numberOfFloors, decorationType,
  *   buildingMaterialType, buildingStyleType, isResidential, buildingAge,
  *   constructionYear, constructionStyleType, structureType, roofFrameType,
@@ -194,7 +194,7 @@ export interface ProjectModel {
   roomLayoutTypeOther?: string;
   // LandAndBuilding-only
   numberOfHouse?: number;
-  // LB land area is a min/max range (sq.wa) plus a standard.
+  // LB land area is a min/max range (Sq.Wa) plus a standard.
   landAreaMin?: number;
   landAreaMax?: number;
   standardLandArea?: number;

@@ -51,6 +51,7 @@ export interface AppraisalDto {
   slaStatus: string | null;
   propertyCount: number;
   createdAt: string | null;
+  appraisalValue: number | null;
   assigneeUserId: string | null; // username like "P5229", not GUID
   assigneeCompanyId: string | null;
   assignmentType: string | null;

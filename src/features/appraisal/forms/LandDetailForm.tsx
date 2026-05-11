@@ -33,7 +33,7 @@ interface SectionRowProps {
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
   <>
-    <div className="col-span-1 pt-1">
+    <div className="col-span-full xl:col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -43,15 +43,15 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
         <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
       </div>
     </div>
-    <div className="col-span-4">
+    <div className="col-span-full xl:col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-5 my-2" />}
+    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5 my-2" />}
   </>
 );
 
 const Card = ({ children }: { children: React.ReactNode }) => (
-  <div className="col-span-12 bg-gray-50 rounded-lg p-3">
+  <div className="col-span-12">
     <div className="grid grid-cols-12 gap-3">{children}</div>
   </div>
 );
@@ -60,7 +60,7 @@ const LandDetailForm = () => {
   return (
     <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Land Detail</h2>
-      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
         <SectionRow title="Land Information" icon="info-circle">
           <FormFields fields={landInfoField} />
         </SectionRow>

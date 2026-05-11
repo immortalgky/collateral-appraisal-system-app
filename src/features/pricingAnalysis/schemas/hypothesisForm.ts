@@ -182,11 +182,11 @@ export const CondominiumSummaryFormSchema = z.object({
   areaTitleDeed: z.number().nonnegative().optional().nullable(),
   /** FSD field E03: Floor Area Ratio (FAR). */
   far: z.number().nonnegative().optional().nullable(),
-  /** FSD field E05: Total building area (SqM). */
+  /** FSD field E05: Total building area (Sq.M). */
   totalBuildingArea: z.number().nonnegative().optional().nullable(),
   /** FSD field E14: Estimated project sales duration (months). */
   estSalesDurationMonths: z.number().int().positive().optional().nullable(),
-  /** FSD field E15: Condo building construction cost (Baht/SqM). */
+  /** FSD field E15: Condo building construction cost (Baht/Sq.M). */
   condoBuildingCostPerSqM: z.number().nonnegative().optional().nullable(),
   /** FSD field E18: Set average room size (units) — overrides upload count when set. */
   setAvgRoomSizeUnits: z.number().int().nonnegative().optional().nullable(),

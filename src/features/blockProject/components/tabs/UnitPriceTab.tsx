@@ -89,7 +89,7 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
             </th>
             {projectType === 'LandAndBuilding' && (
               <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                Standard Land (sq.wa)
+                Standard Land (Sq.Wa)
               </th>
             )}
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
@@ -277,7 +277,7 @@ function UnitPriceResultTable({
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">House No</th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model</th>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">No. of Floors</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (sq.wa)</th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (Sq.Wa)</th>
               </>
             )}
             {projectType === 'Condo' && (
@@ -303,7 +303,7 @@ function UnitPriceResultTable({
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Edge</th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Near Garden/Clubhouse</th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Other</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Diff (sq.wa)</th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Diff (Sq.Wa)</th>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land +/- (Baht)</th>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Location Adj.</th>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Standard Price</th>
@@ -653,7 +653,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
         {
           standardPrice: m.finalAppraisedValue,
           coverageAmount: m.coverageAmount,
-          // standardLandPrice holds the standard land AREA (sq.wa) — see DeriveFromModels
+          // standardLandPrice holds the standard land AREA (Sq.Wa) — see DeriveFromModels
           standardLandArea: m.standardLandPrice,
         },
       ]),

@@ -24,13 +24,13 @@ function formatWaToRaiNganWa(totalWa: number): string {
   const rai = Math.floor(totalWa / 400);
   const ngan = Math.floor((totalWa % 400) / 100);
   const wa = (totalWa % 100).toFixed(2);
-  return `${rai}-${ngan}-${wa} (${totalWa} sq.wa)`;
+  return `${rai}-${ngan}-${wa} (${totalWa} Sq.Wa)`;
 }
 
 function formatArea(area: number | null | undefined, propertyType: string | undefined): string {
   if (area == null) return '-';
   if (propertyType && LAND_TYPES.has(propertyType)) return formatWaToRaiNganWa(area);
-  return `${area} sq.m.`;
+  return `${area} Sq.M`;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';

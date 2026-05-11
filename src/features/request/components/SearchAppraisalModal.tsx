@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { useAppraisalSearch } from '@/features/appraisal/api/appraisalSearch';
+import type { AppraisalDto } from '@/features/appraisal/api/appraisalSearch';
 import {
   fetchAppraisalCopyTemplate,
   type AppraisalCopyTemplate,
 } from '@/features/appraisal/api/copyTemplate';
+import AppraisalResultsTable from '@/features/appraisal/components/search/AppraisalResultsTable';
+import SearchFilterBar from '@/features/appraisal/components/search/SearchFilterBar';
+import type { AppraisalColumnDef, FilterField } from '@/features/appraisal/components/search/tabConfigs';
+import { useAddressStore } from '@/shared/store';
 import toast from 'react-hot-toast';
 import { isAxiosError } from 'axios';
 
@@ -17,17 +22,46 @@ interface SearchAppraisalModalProps {
   onSelect: (template: AppraisalCopyTemplate) => void;
 }
 
+const dateFilterFields: FilterField[] = [
+  { key: 'appointmentDateFrom', label: 'Appraisal date from', type: 'date' },
+  { key: 'appointmentDateTo', label: 'Appraisal date to', type: 'date' },
+];
+
 const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModalProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFetchingTemplate, setIsFetchingTemplate] = useState(false);
+  const [sortBy, setSortBy] = useState('appointmentDateTime');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [dateFilters, setDateFilters] = useState<Record<string, string>>({});
 
   const debouncedSearch = useDebounce(searchQuery, 350);
+
+  const titleAddresses = useAddressStore(s => s.titleAddresses);
+  const dopaAddresses = useAddressStore(s => s.dopaAddresses);
+
+  const { provinceCodeToName, districtCodeToName } = useMemo(() => {
+    const provinceMap = new Map<string, string>();
+    const districtMap = new Map<string, string>();
+    for (const addr of [...titleAddresses, ...dopaAddresses]) {
+      if (!provinceMap.has(addr.provinceCode)) {
+        provinceMap.set(addr.provinceCode, addr.provinceName);
+      }
+      if (!districtMap.has(addr.districtCode)) {
+        districtMap.set(addr.districtCode, addr.districtName);
+      }
+    }
+    return { provinceCodeToName: provinceMap, districtCodeToName: districtMap };
+  }, [titleAddresses, dopaAddresses]);
 
   const { data, isLoading } = useAppraisalSearch(
     {
       search: debouncedSearch || undefined,
       status: 'Completed',
+      appointmentDateFrom: dateFilters.appointmentDateFrom || undefined,
+      appointmentDateTo: dateFilters.appointmentDateTo || undefined,
+      sortBy,
+      sortDir,
       pageNumber: 0,
       pageSize: 50,
     },
@@ -35,6 +69,74 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
   );
 
   const appraisals = data?.result?.items ?? [];
+
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value == null) return '-';
+    return new Intl.NumberFormat('th-TH', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const columns = useMemo<AppraisalColumnDef[]>(
+    () => [
+      { key: 'appraisalNumber', label: 'Appraisal No.', sortable: true },
+      { key: 'customerName', label: 'Customer', sortable: true },
+      {
+        key: 'location',
+        label: 'Location',
+        sortable: false,
+        render: (item: AppraisalDto) => {
+          const districtName = item.district
+            ? districtCodeToName.get(item.district) ?? item.district
+            : null;
+          const provinceName = item.province
+            ? provinceCodeToName.get(item.province) ?? item.province
+            : null;
+          return [districtName, provinceName].filter(Boolean).join(', ') || '-';
+        },
+      },
+      {
+        key: 'facilityLimit',
+        label: 'Facility Limit',
+        sortable: false,
+        render: (item: AppraisalDto) => formatCurrency(item.facilityLimit),
+      },
+      {
+        key: 'appraisalValue',
+        label: 'Appraisal Value',
+        sortable: false,
+        render: (item: AppraisalDto) => formatCurrency(item.appraisalValue),
+      },
+      {
+        key: 'appointmentDateTime',
+        label: 'Appraisal Date',
+        sortable: true,
+        render: (item: AppraisalDto) => formatDate(item.appointmentDateTime),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [provinceCodeToName, districtCodeToName],
+  );
+
+  const handleSort = (field: string) => {
+    if (field === sortBy) {
+      setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setSortDir('asc');
+    }
+  };
 
   const handleRowClick = async (appraisalId: string) => {
     setSelectedId(appraisalId);
@@ -61,31 +163,15 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
     setSearchQuery('');
     setSelectedId(null);
     setIsFetchingTemplate(false);
+    setSortBy('appointmentDateTime');
+    setSortDir('desc');
+    setDateFilters({});
     onClose();
-  };
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value == null) return '-';
-    return new Intl.NumberFormat('th-TH', {
-      style: 'decimal',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
-
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Search Previous Appraisal Report" size="xl">
       <div className="flex flex-col gap-4">
-        {/* Search Input */}
         <div className="relative">
           <Icon
             name="magnifying-glass"
@@ -102,90 +188,26 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
           />
         </div>
 
-        {/* Results Table */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="max-h-80 overflow-y-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Appraisal No.</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Customer</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Location</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">Facility Limit</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Completed At</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                      <div className="flex items-center justify-center gap-2">
-                        <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-                        Searching...
-                      </div>
-                    </td>
-                  </tr>
-                ) : appraisals.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                      No completed appraisals found.
-                    </td>
-                  </tr>
-                ) : (
-                  appraisals.map(appraisal => {
-                    const isSelected = selectedId === appraisal.id;
-                    const isLoadingThis = isSelected && isFetchingTemplate;
-                    const location = [appraisal.district, appraisal.province]
-                      .filter(Boolean)
-                      .join(', ');
-                    return (
-                      <tr
-                        key={appraisal.id}
-                        onClick={() => !isFetchingTemplate && handleRowClick(appraisal.id)}
-                        className={`transition-colors ${
-                          isFetchingTemplate
-                            ? 'cursor-wait'
-                            : 'cursor-pointer'
-                        } ${
-                          isSelected
-                            ? 'bg-primary-50 hover:bg-primary-100'
-                            : 'hover:bg-gray-50'
-                        }`}
-                      >
-                        <td className="px-4 py-3 font-medium text-gray-900">
-                          <div className="flex items-center gap-2">
-                            {isLoadingThis && (
-                              <Icon
-                                name="spinner"
-                                style="solid"
-                                className="w-3 h-3 animate-spin text-primary-500 shrink-0"
-                              />
-                            )}
-                            {appraisal.appraisalNumber ?? '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 max-w-40 truncate" title={appraisal.customerName ?? undefined}>
-                          {appraisal.customerName ?? '-'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 max-w-40 truncate" title={location || undefined}>
-                          {location || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-900 font-medium">
-                          {formatCurrency(appraisal.facilityLimit)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">
-                          {formatDate(appraisal.createdAt)}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+        <SearchFilterBar
+          filters={dateFilterFields}
+          values={dateFilters}
+          onChange={(key, value) => setDateFilters(prev => ({ ...prev, [key]: value }))}
+          onClear={() => setDateFilters({})}
+        />
+
+        <div className="border border-gray-200 rounded-lg overflow-hidden max-h-80">
+          <AppraisalResultsTable
+            columns={columns}
+            items={appraisals}
+            isLoading={isLoading}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSort={handleSort}
+            onRowClick={item => handleRowClick(item.id)}
+            loadingRowId={isFetchingTemplate ? (selectedId ?? undefined) : undefined}
+          />
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between pt-2">
           <p className="text-xs text-gray-500">
             Click a row to copy its data into the new request.

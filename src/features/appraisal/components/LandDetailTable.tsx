@@ -17,7 +17,7 @@ const tableHeaders = [
   { key: 'aerialPhotoNo', label: 'Aerial Photo No', width: 'w-28' },
   { key: 'boundaryMarker', label: 'Boundary Marker', width: 'w-28' },
   { key: 'documentValidate', label: 'Document Validate', width: 'w-28' },
-  { key: 'pricePerSqWa', label: 'Price per Sq.wa', width: 'w-28' },
+  { key: 'pricePerSqWa', label: 'Price per Sq.Wa', width: 'w-28' },
   { key: 'governmentPrice', label: 'Government Price', width: 'w-28' },
 ];
 
@@ -151,7 +151,7 @@ export default function LandDetailTable() {
           <tfoot>
             <tr className="bg-primary text-primary-content">
               <td colSpan={tableHeaders.length + 1}>
-                <span className="font-medium">Total Area: {calculateTotalArea()} Sq.wa</span>
+                <span className="font-medium">Total Area: {calculateTotalArea()} Sq.Wa</span>
               </td>
             </tr>
           </tfoot>

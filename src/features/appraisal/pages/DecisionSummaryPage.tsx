@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppraisalId, useWorkflowInstanceId, useActivityId, useIsTaskOwner, useAppraisalIsPma, useAppraisalFacilityLimit, useAppraisalHasAppraisalBook, useAppraisalContext } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useWorkflowInstanceId, useActivityId, useIsTaskOwner, useAppraisalIsPma, useAppraisalFacilityLimit, useAppraisalHasAppraisalBook, useAppraisalContext, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -230,6 +230,7 @@ const DecisionSummaryPage = () => {
   const facilityLimit = useAppraisalFacilityLimit();
   const hasAppraisalBook = useAppraisalHasAppraisalBook();
   const { appraisal } = useAppraisalContext();
+  const isCiAppraisal = useIsCiAppraisal();
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
@@ -476,7 +477,77 @@ const DecisionSummaryPage = () => {
 
               {/* Group A — Valuation */}
               {anyVisible('decisionApproach', 'priceSummary', 'governmentPrice') && (
-                <GroupCard icon="scale-balanced" iconColor="teal" title="Valuation">
+                <GroupCard
+                  icon="scale-balanced"
+                  iconColor="teal"
+                  title="Valuation"
+                  rightSlot={
+                    data?.appraisalDate ? (
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span className="text-sm leading-none">🗓️</span>
+                        <span>Appraisal Date:</span>
+                        <span className="font-semibold text-gray-700">
+                          {new Date(data.appraisalDate).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                    ) : undefined
+                  }
+                >
+                    {showSection('priceSummary') && (
+                      <div className="py-4">
+                        {data?.isBlock ? (
+                          <BlockPriceSummaryTable
+                            rows={data.blockModelPrices ?? []}
+                            projectTotal={data.totalAppraisalPrice ?? 0}
+                            forceSellingPrice={data.forceSellingPrice ?? 0}
+                            buildingInsurance={data.buildingInsurance ?? 0}
+                          />
+                        ) : (
+                          <div className="grid grid-cols-3 gap-6">
+                            <div className="text-left">
+                              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                Total Appraisal Price
+                              </p>
+                              <p className="text-xl font-semibold tabular-nums text-teal-700 mt-1">
+                                {data?.totalAppraisalPrice != null
+                                  ? formatNumber(data.totalAppraisalPrice, 2)
+                                  : '-'}
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                Force Selling Price
+                              </p>
+                              <p className="text-xl font-semibold tabular-nums text-amber-700 mt-1">
+                                {data?.forceSellingPrice != null
+                                  ? formatNumber(data.forceSellingPrice, 2)
+                                  : '-'}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                70% of appraisal price
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                Building Insurance
+                              </p>
+                              <p className="text-xl font-semibold tabular-nums text-gray-700 mt-1">
+                                {data?.buildingInsurance != null
+                                  ? formatNumber(data.buildingInsurance, 2)
+                                  : '-'}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                buildings only — excludes land
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {showSection('decisionApproach') && (
                       <InlineSubSection title="Decision Approach">
                         {data?.isBlock ? (
@@ -488,24 +559,6 @@ const DecisionSummaryPage = () => {
                           <ApproachMatrixTable groups={data.approachMatrix} />
                         ) : (
                           <EmptyLine text="No approach data available." />
-                        )}
-                      </InlineSubSection>
-                    )}
-                    {showSection('priceSummary') && (
-                      <InlineSubSection title="Appraisal Price Summary">
-                        {data?.isBlock ? (
-                          <BlockPriceSummaryTable
-                            rows={data.blockModelPrices ?? []}
-                            projectTotal={data.totalAppraisalPrice ?? 0}
-                            forceSellingPrice={data.forceSellingPrice ?? 0}
-                            buildingInsurance={data.buildingInsurance ?? 0}
-                          />
-                        ) : (
-                          <div className="grid grid-cols-3 gap-6">
-                            <ReadOnlyField label="Total Appraisal Price" value={data?.totalAppraisalPrice} />
-                            <ReadOnlyField label="Force Selling Price" value={data?.forceSellingPrice} />
-                            <ReadOnlyField label="Building Insurance" value={data?.buildingInsurance} />
-                          </div>
                         )}
                       </InlineSubSection>
                     )}
@@ -526,9 +579,9 @@ const DecisionSummaryPage = () => {
                 </GroupCard>
               )}
 
-              {/* Construction Summary — standalone, shown only when CI data exists */}
-              {showSection('constructionSummary') && data?.constructionSummary && (
-                <GroupCard icon="helmet-safety" iconColor="teal" title="Construction Summary">
+              {/* Construction Summary — only on Construction Inspection appraisals */}
+              {isCiAppraisal && showSection('constructionSummary') && data?.constructionSummary && (
+                <GroupCard icon="helmet-safety" iconColor="yellow" title="Construction Summary">
                   <ConstructionSummaryTable rows={data.constructionSummary.rows} />
                 </GroupCard>
               )}
@@ -574,19 +627,36 @@ const DecisionSummaryPage = () => {
                         </InlineSubSection>
                       </SectionReadOnlyWrap>
                     )}
-                    {showSection('appraiserOpinion') && (
-                      <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}>
-                        <InlineSubSection title="Summary of Appraiser Opinions">
-                          <FormFields fields={appraiserOpinionFields} />
-                        </InlineSubSection>
-                      </SectionReadOnlyWrap>
-                    )}
-                    {showSection('committeeOpinion') && (
-                      <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('committeeOpinion')}>
-                        <InlineSubSection title="Summary of Appraisal Price Committee Opinions">
-                          <FormFields fields={committeeOpinionFields} />
-                        </InlineSubSection>
-                      </SectionReadOnlyWrap>
+                    {showSection('appraiserOpinion') && showSection('committeeOpinion') ? (
+                      <div className="grid grid-cols-2 gap-6">
+                        <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}>
+                          <InlineSubSection title="Appraiser Opinions">
+                            <FormFields fields={appraiserOpinionFields} />
+                          </InlineSubSection>
+                        </SectionReadOnlyWrap>
+                        <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('committeeOpinion')}>
+                          <InlineSubSection title="Committee Opinions">
+                            <FormFields fields={committeeOpinionFields} />
+                          </InlineSubSection>
+                        </SectionReadOnlyWrap>
+                      </div>
+                    ) : (
+                      <>
+                        {showSection('appraiserOpinion') && (
+                          <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}>
+                            <InlineSubSection title="Appraiser Opinions">
+                              <FormFields fields={appraiserOpinionFields} />
+                            </InlineSubSection>
+                          </SectionReadOnlyWrap>
+                        )}
+                        {showSection('committeeOpinion') && (
+                          <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('committeeOpinion')}>
+                            <InlineSubSection title="Committee Opinions">
+                              <FormFields fields={committeeOpinionFields} />
+                            </InlineSubSection>
+                          </SectionReadOnlyWrap>
+                        )}
+                      </>
                     )}
                     {showSection('additionalAssumptions') && (
                       <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('additionalAssumptions') || priceVerifiedLock}>

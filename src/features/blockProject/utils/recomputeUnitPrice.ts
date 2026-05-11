@@ -112,7 +112,7 @@ const recomputeCondo = (
 /**
  * LB: ProjectUnitPrice.standardPrice is the model's FinalAppraisedValue directly (total Baht).
  * It is NOT multiplied by usable area — see Project.cs:CalculateLandAndBuildingUnitPrices.
- * Location adjustments scale by LandArea (sq.wa), not UsableArea.
+ * Location adjustments scale by LandArea (Sq.Wa), not UsableArea.
  */
 const recomputeLB = (
   unit: ProjectUnitPrice,
@@ -124,7 +124,7 @@ const recomputeLB = (
 
   // adjustPriceLocation is stored as the raw flag-adjustment total. The
   // configured LocationMethod is only applied when folding it into the appraisal
-  // value (mirrors Project.cs). LB scales by landArea (sq.wa).
+  // value (mirrors Project.cs). LB scales by landArea (Sq.Wa).
   const adjustPriceLocation =
     (unit.isCorner ? num(a.cornerAdjustment) : 0) +
     (unit.isEdge ? num(a.edgeAdjustment) : 0) +

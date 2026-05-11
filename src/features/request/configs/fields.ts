@@ -533,7 +533,7 @@ export const titleLandFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Sq.wa',
+    label: 'Sq.Wa',
     name: 'areaSquareWa',
     wrapperClassName: 'col-span-2',
     requiredWhen: {

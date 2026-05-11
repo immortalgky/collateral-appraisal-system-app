@@ -55,8 +55,8 @@ function formatPriceRangeFull(min?: number | null, max?: number | null): string 
 
 function formatLandAreaRange(min?: number | null, max?: number | null): string {
   if (!min && !max) return '-';
-  if (min && max) return min === max ? `${min} sq.wa` : `${min} - ${max} sq.wa`;
-  return `${min ?? max} sq.wa`;
+  if (min && max) return min === max ? `${min} Sq.Wa` : `${min} - ${max} Sq.Wa`;
+  return `${min ?? max} Sq.Wa`;
 }
 
 function formatStandardPrice(value: number | null | undefined): string | null {
@@ -183,7 +183,7 @@ function ModelCard({
         ) : (
           <>
             <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
-              {model.standardLandArea ? `${model.standardLandArea} sq.wa` : '-'}
+              {model.standardLandArea ? `${model.standardLandArea} Sq.Wa` : '-'}
             </td>
             <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
               {model.numberOfHouse ?? '-'}

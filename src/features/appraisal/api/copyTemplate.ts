@@ -9,7 +9,7 @@ export interface PrevAppraisalSnapshot {
   appraisalId: string;
   appraisalNumber: string | null;
   appraisalValue: number | null;
-  completedDate: string | null;
+  appointmentDate: string | null;
 }
 
 export interface CopyTemplateLoanDetail {

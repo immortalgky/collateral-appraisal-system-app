@@ -70,7 +70,7 @@ export interface ModelContextDto {
   startingPriceMin?: number | null;
   startingPriceMax?: number | null;
   /**
-   * Representative per-model plot land area in sq.wa for pricing (LB only).
+   * Representative per-model plot land area in Sq.Wa for pricing (LB only).
    * Sourced from `ProjectModel.standardLandArea` on the BE — NOT the literal
    * min/max range. Key name preserved for factor-seed compatibility.
    */

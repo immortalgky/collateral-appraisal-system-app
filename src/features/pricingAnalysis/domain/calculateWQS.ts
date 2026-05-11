@@ -14,6 +14,11 @@ export function floorToTenThousands(n: unknown) {
   return Math.floor(x / 10000) * 10000;
 }
 
+export function roundToThousand(n: unknown) {
+  const x = Number(n) || 0;
+  return Math.round(x / 1000) * 1000;
+}
+
 export function calcWeightedScore(weight: unknown, score: unknown) {
   const w = Number(weight) || 0;
   const s = Number(score) || 0;

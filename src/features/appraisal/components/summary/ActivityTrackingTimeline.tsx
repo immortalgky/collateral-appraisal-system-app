@@ -65,31 +65,39 @@ const statusConfig = {
     ringBg: '',
     lineBorder: 'border-emerald-200',
     lineStyle: 'border-solid',
+    icon: 'check',
+    iconColor: 'text-white',
   },
   completed_backward: {
     dotBg: 'bg-rose-500',
     ringBg: '',
     lineBorder: 'border-rose-200',
     lineStyle: 'border-solid',
+    icon: 'rotate-left',
+    iconColor: 'text-white',
   },
   in_progress: {
     dotBg: 'bg-cyan-500',
     ringBg: 'ring-4 ring-cyan-500/20 animate-pulse',
     lineBorder: 'border-cyan-200',
     lineStyle: 'border-solid',
+    icon: 'circle-dot',
+    iconColor: 'text-white',
   },
   pending: {
     dotBg: 'bg-gray-300',
     ringBg: '',
     lineBorder: 'border-gray-200',
     lineStyle: 'border-dashed',
+    icon: '',
+    iconColor: '',
   },
 };
 
-const statusToBadge: Record<ActivityStep['status'], string> = {
-  completed: 'completed',
-  in_progress: 'inprogress',
-  pending: 'pending',
+const statusBadge: Record<ActivityStep['status'], { value: string; label: string }> = {
+  completed: { value: 'completed', label: 'Completed' },
+  in_progress: { value: 'inprogress', label: 'In Progress' },
+  pending: { value: 'pending', label: 'Pending' },
 };
 
 const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps) => {
@@ -160,18 +168,37 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
         }
         const config = statusConfig[configKey];
 
+        const isInstant =
+          step.startedAt != null &&
+          step.completedAt != null &&
+          new Date(step.startedAt).getTime() === new Date(step.completedAt).getTime();
+        const duration =
+          step.startedAt && step.completedAt
+            ? formatDuration(step.startedAt, step.completedAt)
+            : null;
+        const isZeroDuration = duration === '0m';
+        const badge = statusBadge[step.status];
+
         return (
           <div key={`${step.stepName}-${index}`} className="relative flex gap-4">
             {/* Timeline column: dot + line */}
             <div className="flex flex-col items-center">
-              {/* Dot */}
+              {/* Dot (with status icon when applicable) */}
               <div
                 className={clsx(
-                  'w-3 h-3 rounded-full shrink-0 mt-1.5',
+                  'size-5 rounded-full shrink-0 mt-0.5 flex items-center justify-center',
                   config.dotBg,
                   config.ringBg,
                 )}
-              />
+              >
+                {config.icon && (
+                  <Icon
+                    name={config.icon}
+                    style="solid"
+                    className={clsx('size-2.5', config.iconColor)}
+                  />
+                )}
+              </div>
               {/* Connecting line */}
               {!isLast && (
                 <div
@@ -196,7 +223,9 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
                 >
                   {step.taskDescription || step.stepName}
                 </span>
-                <Badge type="status" value={statusToBadge[step.status]} size="xs" dot={false} />
+                <Badge type="status" value={badge.value} size="xs" dot={false}>
+                  {badge.label}
+                </Badge>
               </div>
 
               {/* Assignee */}
@@ -215,16 +244,34 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
 
               {/* Time range + duration */}
               {step.startedAt && (
-                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 flex-wrap">
                   <Icon name="clock" style="regular" className="w-3 h-3 text-gray-400" />
                   <span>{formatDateTime(step.startedAt)}</span>
-                  <span className="text-gray-300">-</span>
-                  <span>
-                    {step.completedAt ? formatDateTime(step.completedAt) : 'In progress...'}
-                  </span>
-                  {step.startedAt && step.completedAt && (
-                    <span className="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px] font-medium">
-                      {formatDuration(step.startedAt, step.completedAt)}
+
+                  {!isInstant && step.completedAt && (
+                    <>
+                      <span className="text-gray-300">→</span>
+                      <span>{formatDateTime(step.completedAt)}</span>
+                    </>
+                  )}
+
+                  {!step.completedAt && (
+                    <span className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 bg-cyan-50 text-cyan-700 rounded-full text-[10px] font-medium">
+                      <span className="size-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                      Active now
+                    </span>
+                  )}
+
+                  {duration && (
+                    <span
+                      className={clsx(
+                        'ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+                        isZeroDuration
+                          ? 'text-gray-300'
+                          : 'bg-gray-100 text-gray-500',
+                      )}
+                    >
+                      {duration}
                     </span>
                   )}
                 </div>

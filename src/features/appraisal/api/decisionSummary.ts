@@ -62,6 +62,7 @@ export type DecisionSummaryData = GetDecisionSummaryResponse & {
   blockApproachMatrix: BlockApproachMatrixRow[] | null;
   blockModelPrices: BlockModelPriceRow[] | null;
   constructionSummary: ConstructionSummary | null;
+  appraisalDate: string | null;
 };
 
 /**
