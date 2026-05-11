@@ -4,12 +4,12 @@ import {
   ListboxOption as HeadlessListboxOption,
   ListboxOptions as HeadlessListboxOptions,
 } from '@headlessui/react';
-import { forwardRef, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { forwardRef, useMemo, type ReactNode, type SelectHTMLAttributes } from 'react';
 import clsx from 'clsx';
 import { useFormReadOnly } from '@/shared/components/form';
 import { Icon } from '@/shared/components';
 import type { AtLeastOne } from '@/shared/types';
-import { useParameters } from './useParameters';
+import { useParameterOptions } from '@/shared/utils/parameterUtils';
 
 type DropdownProps = DropdownBaseProps &
   AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
@@ -65,21 +65,25 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
   ) => {
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
-    const { data: fetchedOptions } = useParameters(queryParameters);
-    let dropdownOptions =
-      options !== undefined
-        ? options
-        : Array.isArray(fetchedOptions)
-          ? fetchedOptions.map(p => {
-              return { value: p.code, label: p.description, id: p.code };
-            })
-          : [];
+
+    const paramOptions = useParameterOptions(queryParameters);
+    let dropdownOptions = useMemo<ListBoxItem[]>(() => {
+      if (options !== undefined) return options;
+      console.log(paramOptions);
+      return paramOptions;
+    }, [options, paramOptions]);
 
     // to allow selecting placeholder
     dropdownOptions = [{ value: null, label: placeholder, id: '' }, ...dropdownOptions];
 
     const isControlled = onChange !== undefined && value !== undefined;
-    const selectedOption = dropdownOptions.find(opt => opt.value === value) ?? null;
+
+    // Derive the display label from current value
+    const selectedOption = useMemo(
+      () => dropdownOptions.find(o => o.value === value) ?? null,
+      [dropdownOptions, value],
+    );
+
     const selectedOnChange = (opt: ListBoxItem) => {
       if (isControlled) {
         onChange(opt.value);

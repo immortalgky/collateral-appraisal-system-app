@@ -48,6 +48,7 @@ interface RHFInputCellProps {
   dropdown?: {
     label?: string;
     showValue?: boolean;
+    group?: string;
   };
   options?: ListBoxItem[];
   onUserChange?: (value: number | null) => number | null;
@@ -85,12 +86,13 @@ export const RHFInputCell = ({
     let rendered: React.ReactNode;
     if (inputType === 'number') {
       const n = toNumber(raw);
-      rendered = n == null
-        ? '—'
-        : n.toLocaleString(undefined, {
-            maximumFractionDigits: number?.decimalPlaces ?? 4,
-            minimumFractionDigits: number?.decimalPlaces ?? 0,
-          });
+      rendered =
+        n == null
+          ? '—'
+          : n.toLocaleString(undefined, {
+              maximumFractionDigits: number?.decimalPlaces ?? 4,
+              minimumFractionDigits: number?.decimalPlaces ?? 0,
+            });
     } else if (inputType === 'select') {
       const match = (options ?? []).find(o => o.value === raw);
       rendered = match?.label ?? (raw ? String(raw) : '—');
@@ -140,7 +142,8 @@ export const RHFInputCell = ({
           onSelectChange?.(value);
         }}
         label={dropdown?.label ?? ''}
-        options={options ?? []}
+        options={options}
+        queryParameters={dropdown?.group}
         showValue={dropdown?.showValue ?? true}
         error={error?.message}
       />

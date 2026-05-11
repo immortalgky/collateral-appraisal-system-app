@@ -369,7 +369,7 @@ export function SaleAdjustmentGridPanel({
             fieldName: 'collateralType',
             onSelectCollateralType: handleOnSelectCollateralType,
             value: collateralType,
-            options: COLLATERAL_TYPE,
+            group: 'PropertyType',
           }}
           template={{
             fieldName: 'pricingTemplateCode',

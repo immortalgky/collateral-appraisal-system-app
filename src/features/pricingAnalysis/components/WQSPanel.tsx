@@ -271,10 +271,14 @@ export function WQSPanel({
       }
       // Restore toggles
       if (savedHasBuildingCost != null) {
-        setValue('WQSFinalValue.hasBuildingCost' as any, savedHasBuildingCost, { shouldDirty: false });
+        setValue('WQSFinalValue.hasBuildingCost' as any, savedHasBuildingCost, {
+          shouldDirty: false,
+        });
       }
       if (savedIncludeLandArea != null) {
-        setValue('WQSFinalValue.includeLandArea' as any, savedIncludeLandArea, { shouldDirty: false });
+        setValue('WQSFinalValue.includeLandArea' as any, savedIncludeLandArea, {
+          shouldDirty: false,
+        });
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
@@ -395,7 +399,7 @@ export function WQSPanel({
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
             value: collateralType,
-            options: COLLATERAL_TYPE,
+            group: 'PropertyType',
           }}
           template={{
             onSelectTemplate: handleOnSelectTemplate,

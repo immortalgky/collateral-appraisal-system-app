@@ -253,11 +253,9 @@ export function DirectComparisonPanel({
       // Restore user-overridden Final Value (Baht/area) so the seed rule doesn't reseed
       // it from the grid's recomputed finalValueRounded.
       if (savedFinalValueAdjusted != null && savedFinalValueAdjusted !== 0) {
-        setValue(
-          'directComparisonFinalValue.finalValueAdjusted' as any,
-          savedFinalValueAdjusted,
-          { shouldDirty: true },
-        );
+        setValue('directComparisonFinalValue.finalValueAdjusted' as any, savedFinalValueAdjusted, {
+          shouldDirty: true,
+        });
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
@@ -371,7 +369,7 @@ export function DirectComparisonPanel({
             fieldName: 'collateralType',
             onSelectCollateralType: handleOnSelectCollateralType,
             value: collateralType,
-            options: COLLATERAL_TYPE,
+            group: 'PropertyType',
           }}
           template={{
             fieldName: 'pricingTemplateCode',
