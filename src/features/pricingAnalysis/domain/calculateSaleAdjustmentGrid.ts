@@ -128,7 +128,36 @@ export function calcWeightedAdjustValue(totalAdjustValue: unknown, weight: unkno
   return round2(v * w);
 }
 
-export function calcFinalValueRoundedValue(finalValue: unknown): number {
+/**
+ * Picks the dominant price unit from the calculations.
+ * Per row, prefer the offering unit when offering price is set & non-zero,
+ * else fall back to the selling unit; the most frequent wins.
+ * Mirrors BE PricingCalculationHelper.DetectPriceUnit.
+ */
+export function detectPriceUnit(calculations: unknown): string | null {
+  const rows = Array.isArray(calculations) ? calculations : [];
+  if (rows.length === 0) return null;
+  const units: string[] = rows
+    .map((c: any) =>
+      c?.offeringPrice && Number(c.offeringPrice) !== 0
+        ? c?.offeringPriceMeasurementUnit
+        : c?.sellingPriceMeasurementUnit,
+    )
+    .filter((u): u is string => typeof u === 'string' && u.length > 0);
+  if (units.length === 0) return null;
+  const freq = new Map<string, number>();
+  for (const u of units) freq.set(u, (freq.get(u) ?? 0) + 1);
+  return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
+
+/**
+ * Final-value rounding rule (mirrors BE PricingCalculationHelper.RoundFinalValue):
+ *   unit 01/02 (per-Sq.Wa / per-Sq.M) → no rounding (prices are small)
+ *   else (e.g. unit 03 total price)   → round to nearest 1,000
+ */
+export function calcFinalValueRoundedValue(finalValue: unknown, calculations: unknown): number {
   const v = Number(finalValue) || 0;
-  return roundToThousand(v);
+  const detectedUnit = detectPriceUnit(calculations);
+  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02';
+  return isUnitPrice ? v : roundToThousand(v);
 }

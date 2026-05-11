@@ -50,6 +50,7 @@ interface SaleAdjustmentGridPanelProps {
   savedCalculations?: CalculationType[];
   savedComparativeAnalysisTemplateId?: string | null;
   savedMethodValue?: number | null;
+  savedFinalValueAdjusted?: number | null;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -71,6 +72,7 @@ export function SaleAdjustmentGridPanel({
   savedCalculations,
   savedComparativeAnalysisTemplateId,
   savedMethodValue,
+  savedFinalValueAdjusted,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -251,6 +253,15 @@ export function SaleAdjustmentGridPanel({
         setValue(
           'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any,
           savedMethodValue,
+          { shouldDirty: true },
+        );
+      }
+      // Restore user-overridden Final Value (Baht/area) so the seed rule doesn't reseed
+      // it from the grid's recomputed finalValueRounded.
+      if (savedFinalValueAdjusted != null && savedFinalValueAdjusted !== 0) {
+        setValue(
+          'saleAdjustmentGridFinalValue.finalValueAdjusted' as any,
+          savedFinalValueAdjusted,
           { shouldDirty: true },
         );
       }

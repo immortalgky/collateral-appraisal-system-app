@@ -4,10 +4,10 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
 import {
-  floorToTenThousands,
   roundToThousand,
   toFiniteNumber,
 } from '@features/pricingAnalysis/domain/calculateWQS.ts';
+import { fmt } from '../domain/formatters';
 import {
   type DerivedFieldRule,
   useDerivedFields,
@@ -32,7 +32,6 @@ export const AdjustFinalValueSection = ({
     finalValueLandArea: landAreaPath,
     finalValueUsableArea: usableAreaPath,
     finalValueFinalValueAdjusted: finalValueAdjustedPath,
-    finalValueFinalValue: finalValueFinalValuePath,
     finalValueFinalValueRounded: finalValueFinalValueRoundedPath,
     finalValueLandValue: landValuePath,
     finalValueBuildingCost: buildingCostPath,
@@ -133,20 +132,27 @@ export const AdjustFinalValueSection = ({
 
   const rules: DerivedFieldRule[] = [
     {
-      // finalValueAdjusted: re-seed from finalValueRounded only when it actually changes.
+      // finalValueAdjusted: re-seed from finalValueRounded when upstream changes,
+      // or on first run when downstream is still empty (fresh Generate, no saved value).
       // Lives here (rather than in buildWQSDerivedRules) so it shares the ref-guard
       // pattern with landValue/appraisalPrice; otherwise reset(value) and rule-array
       // re-creation after save would clobber the user's saved override.
       targetPath: finalValueAdjustedPath(),
       deps: [finalValueFinalValueRoundedPath()],
-      when: ({ getValues }) => {
+      when: ({ getValues, getFieldState, formState }) => {
         const rounded = Number(getValues(finalValueFinalValueRoundedPath())) || 0;
+        const adjusted = Number(getValues(finalValueAdjustedPath())) || 0;
+        const { isDirty } = getFieldState(finalValueAdjustedPath(), formState);
         if (prevFinalValueRoundedRef.current === null) {
           prevFinalValueRoundedRef.current = rounded;
-          return false;
+          return rounded > 0 && adjusted === 0;
         }
         if (prevFinalValueRoundedRef.current !== rounded) {
           prevFinalValueRoundedRef.current = rounded;
+          return true;
+        }
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (rounded > 0 && adjusted === 0 && !isDirty) {
           return true;
         }
         return false;
@@ -155,38 +161,45 @@ export const AdjustFinalValueSection = ({
     },
     {
       // rawLandPrice: computed display value (not stored). Same logic for cost and market.
-      // unit 01/02 (per-unit price): finalValueAdjusted × matchingArea
-      // unit 03 (total price):       finalValue (RSQ result; user's rounded total is
-      //                              bound to appraisalPrice and synced to finalValueAdjusted)
+      // unit 01/02 (per-unit price): finalValueAdjusted × matchingArea (raw, no rounding —
+      //                              the user's rounded sibling field applies roundToThousand)
+      // unit 03 (total price):       finalValueRounded (already rounded by the grid)
       targetPath: 'WQSFinalValue._rawLandPrice',
-      deps: [finalValueAdjustedPath(), finalValueFinalValuePath(), rawLandPriceAreaPath],
+      deps: [finalValueAdjustedPath(), finalValueFinalValueRoundedPath(), rawLandPriceAreaPath],
       compute: ({ getValues }) => {
         const fvAdj = Number(getValues(finalValueAdjustedPath())) || 0;
-        const fv = Number(getValues(finalValueFinalValuePath())) || 0;
+        const fvRounded = Number(getValues(finalValueFinalValueRoundedPath())) || 0;
         const area = Number(getValues(rawLandPriceAreaPath)) || 0;
-        return isUnitPrice && area ? roundToThousand(fvAdj * area) : roundToThousand(fv);
+        return isUnitPrice && area ? fvAdj * area : fvRounded;
       },
     },
     {
-      // landValue: re-seed from rawLandPrice only when rawLandPrice actually changes.
-      // The ref-based guard is required because landValue is a dep of _totalPrice/_landDiff,
-      // so the effect re-runs when the user types here; without the guard the seed
-      // would overwrite the user's edit.
+      // landValue: re-seed (rounded) from rawLandPrice when upstream changes, or on first
+      // run when downstream is still empty. The ref-based guard is required because
+      // landValue is a dep of _totalPrice/_landDiff, so the effect re-runs when the user
+      // types here; without the guard the seed would overwrite the user's edit.
       targetPath: landValuePath(),
       deps: ['WQSFinalValue._rawLandPrice'],
-      when: ({ getValues }) => {
+      when: ({ getValues, getFieldState, formState }) => {
         const rawPrice = Number(getValues('WQSFinalValue._rawLandPrice')) || 0;
+        const current = Number(getValues(landValuePath())) || 0;
+        const { isDirty } = getFieldState(landValuePath(), formState);
         if (prevRawLandPriceRef.current === null) {
           prevRawLandPriceRef.current = rawPrice;
-          return false;
+          return rawPrice > 0 && current === 0;
         }
         if (prevRawLandPriceRef.current !== rawPrice) {
           prevRawLandPriceRef.current = rawPrice;
           return true;
         }
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (rawPrice > 0 && current === 0 && !isDirty) {
+          return true;
+        }
         return false;
       },
-      compute: ({ getValues }) => Number(getValues('WQSFinalValue._rawLandPrice')) || 0,
+      compute: ({ getValues }) =>
+        roundToThousand(Number(getValues('WQSFinalValue._rawLandPrice')) || 0),
     },
     {
       // totalPrice: landValue + buildingCost (hasBuildingCost display).
@@ -215,19 +228,25 @@ export const AdjustFinalValueSection = ({
       // Always rounded — this field IS the "Appraisal Price (rounded)" input.
       targetPath: appraisalPricePath(),
       deps: ['WQSFinalValue._totalPrice', 'WQSFinalValue._rawLandPrice', hasBuildingCostPath()],
-      when: ({ getValues }) => {
+      when: ({ getValues, getFieldState, formState }) => {
         const upstream = getAppraisalUpstream(getValues);
+        const current = Number(getValues(appraisalPricePath())) || 0;
+        const { isDirty } = getFieldState(appraisalPricePath(), formState);
         if (prevTotalPriceRef.current === null) {
           prevTotalPriceRef.current = upstream;
-          return false;
+          return upstream > 0 && current === 0;
         }
         if (prevTotalPriceRef.current !== upstream) {
           prevTotalPriceRef.current = upstream;
           return true;
         }
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (upstream > 0 && current === 0 && !isDirty) {
+          return true;
+        }
         return false;
       },
-      compute: ({ getValues }) => floorToTenThousands(getAppraisalUpstream(getValues)),
+      compute: ({ getValues }) => roundToThousand(getAppraisalUpstream(getValues)),
     },
     {
       // appraisalDiff: appraisalPrice − upstream (negative = user rounded down).
@@ -257,7 +276,7 @@ export const AdjustFinalValueSection = ({
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
           >
             <Icon name={icon} style="solid" className="size-3" />
-            {Math.abs(num).toLocaleString()}
+            {fmt(Math.abs(num))}
           </span>
         );
       }}
@@ -271,7 +290,7 @@ export const AdjustFinalValueSection = ({
         inputType="display"
         accessor={({ value }) => (
           <span className="font-semibold text-gray-800 tabular-nums">
-            {value ? Number(value).toLocaleString() : '0'}
+            {fmt(Number(value) || 0)}
           </span>
         )}
       />
