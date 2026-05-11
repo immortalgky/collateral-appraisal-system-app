@@ -34,6 +34,7 @@ const LandTitleModal = ({ fields, defaultValues, onCancel, onSave }: LandTitleMo
   useEffect(() => {
     const price = Number(pricePerSqWa) || 0;
     const totalWa = (Number(rai) || 0) * 400 + (Number(ngan) || 0) * 100 + (Number(squareWa) || 0);
+    setValue('totalSquareWa', totalWa);
     setValue('governmentPrice', price * totalWa);
   }, [pricePerSqWa, rai, ngan, squareWa, setValue]);
 

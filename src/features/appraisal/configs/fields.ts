@@ -2409,7 +2409,7 @@ export const landtitlesFields: FormField[] = [
     name: 'ngan',
     label: 'Ngan',
     type: 'number-input',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-1',
     decimalPlaces: 0,
     maxIntegerDigits: 1,
     max: 3,
@@ -2418,7 +2418,7 @@ export const landtitlesFields: FormField[] = [
     name: 'squareWa',
     label: 'Sq.Wa',
     type: 'number-input',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-1',
     requiredWhen: {
       conditions: [
         { field: 'rai', operator: 'isEmpty' },
@@ -2428,6 +2428,13 @@ export const landtitlesFields: FormField[] = [
     },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
+  },
+  {
+    name: 'totalSquareWa',
+    label: 'Total Sq.Wa',
+    type: 'number-input',
+    wrapperClassName: 'col-span-2',
+    disabled: true,
   },
   {
     name: 'boundaryMarkerType',
@@ -2448,7 +2455,9 @@ export const landtitlesFields: FormField[] = [
   {
     name: 'documentValidationResultType',
     label: 'Document Validate',
-    type: 'dropdown',
+    type: 'radio-group',
+    orientation: 'horizontal',
+    variant: 'button',
     group: 'DocumentValidation',
     wrapperClassName: 'col-span-12',
     required: true,
