@@ -39,6 +39,7 @@ interface FeeInformationSectionProps {
   constructionInspectionFeeAmount?: number | null;
   onUpdateConstructionInspectionFee?: (amount: number | null) => Promise<void>;
   isConstructionInspectionFeeUpdating?: boolean;
+  totalFeePaid?: number | null;
 }
 
 /**
@@ -59,15 +60,13 @@ export default function FeeInformationSection({
   constructionInspectionFeeAmount = null,
   onUpdateConstructionInspectionFee,
   isConstructionInspectionFeeUpdating,
+  totalFeePaid,
 }: FeeInformationSectionProps) {
   const readOnly = usePageReadOnly();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
   const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
 
-  // Local-buffered editor for the CI fee. Hydrate from server, commit on blur to avoid
-  // a server round-trip per keystroke. Resync whenever the server value changes
-  // (e.g. another tab edits or the fees query refetches).
   const [ciFeeDraft, setCiFeeDraft] = useState<number | null>(constructionInspectionFeeAmount);
   useEffect(() => {
     setCiFeeDraft(constructionInspectionFeeAmount);
@@ -149,6 +148,20 @@ export default function FeeInformationSection({
   const handleDeleteFee = async () => {
     if (deletingFeeIndex === null || !onRemoveFeeItem) return;
     const item = items[deletingFeeIndex];
+    const totalPaid = totalFeePaid;
+
+    if (totalPaid > 0) {
+      const newSubtotal =
+        items.reduce((sum, i) => sum + (i.feeAmount || 0), 0) - (item.feeAmount || 0);
+      const newTotal = newSubtotal * (1 + vatRate / 100);
+      if (totalPaid > newTotal) {
+        toast.error(
+          `Cannot delete this fee item. The new total (${formatCurrency(newTotal)}) would be less than the amount already paid (${formatCurrency(totalPaid)}).`,
+        );
+        return;
+      }
+    }
+
     try {
       await onRemoveFeeItem(item.appraisalFeeId, item.id);
       toast.success('Fee deleted successfully');
@@ -429,8 +442,8 @@ export default function FeeInformationSection({
             placeholder="0.00"
           />
           <p className="mt-2 text-xs text-gray-500">
-            This fee is reused as the appraisal fee on the next Construction Inspection
-            application for this collateral.
+            This fee is reused as the appraisal fee on the next Construction Inspection application
+            for this collateral.
           </p>
         </div>
       )}
