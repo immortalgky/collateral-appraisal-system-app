@@ -33,9 +33,7 @@ export const MarketSurveySelectionModal = ({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedIds(
-        new Set(comparativeSurveys.map(s => s.id).filter((id): id is string => !!id)),
-      );
+      setSelectedIds(new Set(comparativeSurveys.map(s => s.id).filter((id): id is string => !!id)));
       setPage(0);
     }
   }, [isOpen]);
@@ -51,18 +49,17 @@ export const MarketSurveySelectionModal = ({
         }
       }
     }
-    return Array.from(codeMap.values()).sort((a, b) =>
-      a.factorCode.localeCompare(b.factorCode),
-    );
+    return Array.from(codeMap.values()).sort((a, b) => a.factorCode.localeCompare(b.factorCode));
   }, [surveys]);
 
   // Client-side pagination
   const totalCount = (surveys ?? []).length;
   const totalPages = Math.ceil(totalCount / pageSize);
-  const paginatedSurveys = (surveys ?? []).slice(
-    page * pageSize,
-    (page + 1) * pageSize,
-  );
+  const paginatedSurveys = (surveys ?? []).slice(page * pageSize, (page + 1) * pageSize);
+
+  // Validate total number of surveys must at least minimum survey.
+  const minimunSelection = 3;
+  const belowMinimumSelection = selectedIds.size < minimunSelection;
 
   const handleToggle = (id: string) => {
     setSelectedIds(prev => {
@@ -92,6 +89,9 @@ export const MarketSurveySelectionModal = ({
   };
 
   const handleSave = () => {
+    if (belowMinimumSelection) {
+      return;
+    }
     onSelect((surveys ?? []).filter(s => selectedIds.has(s.id ?? '')));
     onCancel();
   };
@@ -146,9 +146,19 @@ export const MarketSurveySelectionModal = ({
             Clear
           </Button>
         </div>
-        <Button variant="primary" type="button" onClick={handleSave}>
-          Add ({selectedIds.size})
-        </Button>
+        <div className="flex gap-2 items-center">
+          {belowMinimumSelection && (
+            <span className="text-danger">Select at least {minimunSelection} surveys</span>
+          )}
+          <Button
+            variant="primary"
+            type="button"
+            onClick={handleSave}
+            disabled={belowMinimumSelection}
+          >
+            Add ({selectedIds.size})
+          </Button>
+        </div>
       </div>
     </Modal>
   );
