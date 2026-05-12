@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
-import type { WebhookDeliveryListResult, GetWebhookDeliveriesParams } from '../types';
+import type { GetWebhookDeliveriesParams, WebhookDeliveryListResult } from '../types';
 
 export const webhookDeliveryKeys = {
   all: ['webhook-deliveries'] as const,
@@ -12,7 +12,7 @@ export const useGetWebhookDeliveries = (params: GetWebhookDeliveriesParams = {})
   return useQuery({
     queryKey: webhookDeliveryKeys.list(params),
     queryFn: async (): Promise<WebhookDeliveryListResult> => {
-      const { data } = await axios.get<WebhookDeliveryListResult>('/v1/webhook-deliveries', {
+      const { data } = await axios.get<WebhookDeliveryListResult>('/webhook-deliveries', {
         params: {
           pageNumber: params.pageNumber ?? 1,
           pageSize: params.pageSize ?? 20,
