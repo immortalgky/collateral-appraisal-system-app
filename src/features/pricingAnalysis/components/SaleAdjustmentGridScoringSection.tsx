@@ -135,15 +135,18 @@ export const SaleAdjustmentGridScoringSection = ({
       })), // TODO: default value
     });
 
-    appendAdjustmentFactor({
-      factorId: '',
-      factorCode: '',
-      surveys: comparativeSurveys.map(survey => ({
-        marketId: survey.id,
-        adjustPercent: 0,
-        adjustAmount: 0,
-      })),
-    });
+    appendAdjustmentFactor(
+      {
+        factorId: '',
+        factorCode: '',
+        surveys: comparativeSurveys.map(survey => ({
+          marketId: survey.id,
+          adjustPercent: 0,
+          adjustAmount: 0,
+        })),
+      },
+      { shouldFocus: false },
+    );
   };
 
   const handleRemoveRow = (rowIndex: number) => {

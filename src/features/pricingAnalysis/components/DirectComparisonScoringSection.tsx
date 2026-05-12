@@ -129,13 +129,16 @@ export const DirectComparisonScoringSection = ({
       })), // TODO: default value
     });
 
-    appendAdjustmentFactor({
-      surveys: comparativeSurveys.map(survey => ({
-        marketId: survey.id,
-        adjustPercent: 0,
-        adjustAmount: 0,
-      })),
-    });
+    appendAdjustmentFactor(
+      {
+        surveys: comparativeSurveys.map(survey => ({
+          marketId: survey.id,
+          adjustPercent: 0,
+          adjustAmount: 0,
+        })),
+      },
+      { shouldFocus: false },
+    );
   };
 
   const handleRemoveRow = (rowIndex: number) => {
