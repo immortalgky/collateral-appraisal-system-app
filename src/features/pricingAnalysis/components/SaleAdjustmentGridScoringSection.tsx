@@ -499,7 +499,9 @@ export const SaleAdjustmentGridScoringSection = ({
                         const unit = survey.offerPriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
                           : '';
-                        return unit ? `${fmt(Number(value) || 0)} ${unit}` : fmt(Number(value) || 0);
+                        return unit
+                          ? `${fmt(Number(value) || 0)} ${unit}`
+                          : fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -597,7 +599,9 @@ export const SaleAdjustmentGridScoringSection = ({
                         const unit = survey.salePriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
                           : '';
-                        return unit ? `${fmt(Number(value) || 0)} ${unit}` : fmt(Number(value) || 0);
+                        return unit
+                          ? `${fmt(Number(value) || 0)} ${unit}`
+                          : fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -643,7 +647,7 @@ export const SaleAdjustmentGridScoringSection = ({
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
                 <div className={'flex flex-rows justify-between items-center'}>
-                  <span>Adjusted Selling Price</span>
+                  <span>Adjusted Period</span>
                   <span>(%)</span>
                 </div>
               </td>
@@ -816,9 +820,7 @@ export const SaleAdjustmentGridScoringSection = ({
                                 ) ? (
                                   <div>{fmt(Number(value) || 0)}</div>
                                 ) : (
-                                  <div className="text-danger">
-                                    {fmt(Number(value) || 0)}
-                                  </div>
+                                  <div className="text-danger">{fmt(Number(value) || 0)}</div>
                                 );
                               }}
                             />

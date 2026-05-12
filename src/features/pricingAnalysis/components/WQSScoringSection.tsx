@@ -820,7 +820,8 @@ export function WQSScoringSection({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                Adjusted Selling Price (%)
+                <span>Adjusted Period</span>
+                <span>(%)</span>
               </td>
               <td
                 className={clsx('bg-white border-b border-gray-300 sticky left-[250px] z-30')}
@@ -999,7 +1000,11 @@ export function WQSScoringSection({
               {comparativeSurveys.map(survey => (
                 <td key={survey.id} className={clsx('bg-gray-100', surveyStyle)}></td>
               ))}
-              <td className={clsx('bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-right font-semibold')}>
+              <td
+                className={clsx(
+                  'bg-gray-100 border-b border-gray-300 px-3 py-1.5 text-right font-semibold',
+                )}
+              >
                 <RHFInputCell
                   fieldName={finalValueFinalValueRoundedPath()}
                   inputType="display"
