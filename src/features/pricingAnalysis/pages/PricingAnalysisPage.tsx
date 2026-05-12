@@ -24,6 +24,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { useCreateProjectModelPricingAnalysis } from '@features/blockProject/api/projectPricingAnalysis';
 import { pricingAnalysisKeys } from '@features/pricingAnalysis/api/queryKeys';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'laws';
 
@@ -270,6 +271,8 @@ function PricingAnalysisContent({
   // Tab label: "Properties" for group subjects; "Model" for projectModel subjects.
   // Tab id stays 'properties' in both cases to avoid breaking reducer/URL state.
   const TABS = isModelSubject ? PROJECT_MODEL_TABS : PROPERTY_GROUP_TABS;
+  const [pendingSystemCalcMode, setPendingSystemCalcMode] = useState<boolean | null>(null);
+
   // (1) Fetch all server data
   const {
     groupDetail,
@@ -420,6 +423,23 @@ function PricingAnalysisContent({
     pricingContext,
   };
 
+  const handleSystemCalculationChangeRequest = (newMode: boolean) => {
+    setPendingSystemCalcMode(newMode);
+  };
+
+  const handleConfirmChangeCalculation = async () => {
+    if (pendingSystemCalcMode === null) return;
+    try {
+      // await onChangechangeSystemCalculation();
+      selectionActions.changeSystemCalculation(pendingSystemCalcMode);
+      toast.success('Changed');
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || 'Failed.');
+    } finally {
+      setPendingSystemCalcMode(null);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'properties': {
@@ -449,7 +469,7 @@ function PricingAnalysisContent({
                         onToggleMethod={selectionActions.toggleMethod}
                         onPricingAnalysisAccordionChange={onPricingAnalysisAccordionChange}
                         isPricingAnalysisAccordionOpen={isPricingAnalysisAccordionOpen}
-                        onSystemCalculationChange={selectionActions.changeSystemCalculation}
+                        onSystemCalculationChange={handleSystemCalculationChangeRequest}
                         systemCalculationMode={state.systemCalculationMode}
                         isConfirmDeselectedMethodOpen={selectionActions.confirm.isOpen}
                         onConfirmDeselectMethod={selectionActions.confirm.confirmDeselect}
@@ -535,6 +555,15 @@ function PricingAnalysisContent({
 
       {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
+      <ConfirmDialog
+        isOpen={pendingSystemCalcMode !== null}
+        onClose={() => setPendingSystemCalcMode(null)}
+        onConfirm={handleConfirmChangeCalculation}
+        title="Change Calculation Mode"
+        message={`Switch to ${pendingSystemCalcMode ? 'System' : 'Manual'} calculation? This will affect existing results.`}
+        confirmText="Confirm"
+        variant="warning"
+      />
     </div>
   );
 }
