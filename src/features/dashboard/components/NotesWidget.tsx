@@ -151,7 +151,7 @@ function NotesWidget() {
                 <Icon name="note-sticky" style="regular" className="size-5 text-gray-400" />
               </div>
               <p className="text-sm text-gray-500 mb-3">
-                No notes yet — add one to get started.
+                No notes — start jotting.
               </p>
               <button
                 type="button"

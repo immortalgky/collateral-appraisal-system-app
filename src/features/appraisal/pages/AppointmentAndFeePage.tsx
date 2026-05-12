@@ -285,14 +285,11 @@ export default function AppointmentAndFeePage() {
               onApproveFeeItem={handleApproveFeeItem}
               onRejectFeeItem={handleRejectFeeItem}
               isFeePaymentTypeUpdating={updateAppraisalFee.isPending}
-              showConstructionInspectionFee={
-                currentFee?.hasBuildingUnderConstruction ?? false
-              }
-              constructionInspectionFeeAmount={
-                currentFee?.constructionInspectionFeeAmount ?? null
-              }
+              showConstructionInspectionFee={currentFee?.hasBuildingUnderConstruction ?? false}
+              constructionInspectionFeeAmount={currentFee?.constructionInspectionFeeAmount ?? null}
               onUpdateConstructionInspectionFee={handleUpdateConstructionInspectionFee}
               isConstructionInspectionFeeUpdating={updateConstructionInspectionFee.isPending}
+              totalFeePaid={currentFee?.totalPaidAmount ?? 0}
             />
 
             {/* Payment Information (Right Column) */}

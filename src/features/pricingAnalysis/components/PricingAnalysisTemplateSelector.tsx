@@ -1,6 +1,7 @@
 import { Icon, type ListBoxItem } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import ParameterSearchInput from '@/shared/components/inputs/ParameterSearchInput';
 
 interface PricingAnalysisTemplateSelectorProps {
   icon: string;
@@ -10,13 +11,15 @@ interface PricingAnalysisTemplateSelectorProps {
     fieldName?: string;
     onSelectCollateralType: (value: string) => void;
     value: any;
-    options: ListBoxItem[];
+    options?: ListBoxItem[];
+    group?: string;
   };
   template: {
     fieldName?: string;
     onSelectTemplate: (value: string) => void;
     value: any;
     options: ListBoxItem[];
+    group?: string;
   };
 }
 export function PricingAnalysisTemplateSelector({
@@ -41,17 +44,9 @@ export function PricingAnalysisTemplateSelector({
           Pricing Analysis Template
         </div>
         <div className="flex-1 min-w-0">
-          {/* <Dropdown
-            label="Collateral Type"
-            options={collateralType.options}
-            value={collateralType.value}
-            onChange={value => {
-              collateralType.onSelectCollateralType(value);
-            }}
-          /> */}
           <div className="flex-1 min-w-0">
             <RHFInputCell
-              dropdown={{ label: 'Collateral Type' }}
+              dropdown={{ label: 'Collateral Type', group: collateralType.group }}
               fieldName={collateralType.fieldName ?? 'collateralType'}
               inputType="select"
               options={collateralType.options}
@@ -64,7 +59,7 @@ export function PricingAnalysisTemplateSelector({
         </div>
         <div className="flex-1 min-w-0">
           <RHFInputCell
-            dropdown={{ label: 'Template' }}
+            dropdown={{ label: 'Template', group: collateralType.group }}
             fieldName={template.fieldName ?? 'pricingTemplateCode'}
             inputType="select"
             options={template.options}

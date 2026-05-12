@@ -26,6 +26,8 @@ import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
 import PeriodSelect from './PeriodSelect';
 import WidgetError from './WidgetError';
+import WidgetDateRangeBadge from './WidgetDateRangeBadge';
+import { formatDistanceToNow } from 'date-fns';
 import { useAppraisalCounts } from '../api';
 import { useDashboardStore } from '../store';
 import {
@@ -150,6 +152,9 @@ function TotalAppraisalsWidget() {
 
   const current = useAppraisalCounts(apiPeriod, toIsoDate(range.from), toIsoDate(range.to));
   const prior = useAppraisalCounts(apiPeriod, toIsoDate(range.prevFrom), toIsoDate(range.prevTo));
+  const updatedLabel = current.dataUpdatedAt
+    ? formatDistanceToNow(current.dataUpdatedAt, { addSuffix: false })
+    : null;
 
   const data: DataPoint[] = useMemo(() => {
     const buckets = buildBuckets(range.from, range.to, range.granularity);
@@ -360,9 +365,12 @@ function TotalAppraisalsWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-gray-800">Total Appraisals</h3>
-            <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <h3 className="font-semibold text-gray-800">Total Appraisals</h3>
+              <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+            </div>
+            <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -383,7 +391,12 @@ function TotalAppraisalsWidget() {
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 z-20 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                  {updatedLabel && (
+                    <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                      Updated {updatedLabel} ago
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={handleRefresh}

@@ -49,7 +49,12 @@ interface SaleAdjustmentGridPanelProps {
   savedFactorScores?: FactorScoreType[];
   savedCalculations?: CalculationType[];
   savedComparativeAnalysisTemplateId?: string | null;
-  savedMethodValue?: number | null;
+  savedFinalValueAdjusted?: number | null;
+  savedLandValue?: number | null;
+  savedBuildingCost?: number | null;
+  savedAppraisalPrice?: number | null;
+  savedHasBuildingCost?: boolean | null;
+  savedIncludeLandArea?: boolean | null;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -70,7 +75,12 @@ export function SaleAdjustmentGridPanel({
   savedFactorScores,
   savedCalculations,
   savedComparativeAnalysisTemplateId,
-  savedMethodValue,
+  savedFinalValueAdjusted,
+  savedLandValue,
+  savedBuildingCost,
+  savedAppraisalPrice,
+  savedHasBuildingCost,
+  savedIncludeLandArea,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -133,13 +143,17 @@ export function SaleAdjustmentGridPanel({
     const value = getValues();
 
     try {
-      const appraisalValue = value.saleAdjustmentGridAppraisalPrice?.appraisalPriceRounded ?? null;
+      // Toggle-aware: with building cost, the user's "Appraisal Price (rounded)" lives in
+      // appraisalPriceIncludeBuildingCostRounded; otherwise in appraisalPriceRounded.
+      const ap = value.saleAdjustmentGridAppraisalPrice as any;
+      const hbc = !!ap?.hasBuildingCost;
+      const appraisalValue =
+        (hbc ? ap?.appraisalPriceIncludeBuildingCostRounded : ap?.appraisalPriceRounded) ?? null;
 
       const request = mapSaleAdjustmentGridFormToSubmitSchema({
         SaleAdjustmentGridForm: value,
         comparativeAnalysisTemplateId: selectedTemplateId,
       });
-      request.appraisalValue = appraisalValue;
 
       await saveMutation.mutateAsync({
         id: activeMethod.pricingAnalysisId,
@@ -245,14 +259,52 @@ export function SaleAdjustmentGridPanel({
         savedCalculations,
         reset,
       });
-      // Set appraisal price from saved method value AFTER reset, with shouldDirty
-      // so derived rules won't overwrite it with the calculated final value
-      if (savedMethodValue != null && savedMethodValue !== 0) {
+      // Restore user-overridden Final Value (Baht/area) so the seed rule doesn't reseed
+      // it from the grid's recomputed finalValueRounded.
+      if (savedFinalValueAdjusted != null && savedFinalValueAdjusted !== 0) {
         setValue(
-          'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any,
-          savedMethodValue,
+          'saleAdjustmentGridFinalValue.finalValueAdjusted' as any,
+          savedFinalValueAdjusted,
           { shouldDirty: true },
         );
+      }
+      // Restore toggles BEFORE the rounded inputs so we pick the right target path.
+      if (savedHasBuildingCost != null) {
+        setValue(
+          'saleAdjustmentGridAppraisalPrice.hasBuildingCost' as any,
+          savedHasBuildingCost,
+          { shouldDirty: false },
+        );
+      }
+      if (savedIncludeLandArea != null) {
+        setValue(
+          'saleAdjustmentGridAppraisalPrice.includeLandArea' as any,
+          savedIncludeLandArea,
+          { shouldDirty: false },
+        );
+      }
+      // Restore the user-rounded Appraisal Price into the visible input.
+      // With building cost: appraisalPriceIncludeBuildingCostRounded.
+      // Without:           appraisalPriceRounded.
+      const hbc = savedHasBuildingCost === true;
+      if (savedAppraisalPrice != null && savedAppraisalPrice !== 0) {
+        const targetPath = hbc
+          ? 'saleAdjustmentGridAppraisalPrice.appraisalPriceIncludeBuildingCostRounded'
+          : 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded';
+        setValue(targetPath as any, savedAppraisalPrice, { shouldDirty: true });
+      }
+      // With building cost, also restore "Land Price (rounded)" which is bound to appraisalPriceRounded.
+      if (hbc && savedLandValue != null && savedLandValue !== 0) {
+        setValue(
+          'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any,
+          savedLandValue,
+          { shouldDirty: true },
+        );
+      }
+      if (savedBuildingCost != null && savedBuildingCost !== 0) {
+        setValue('saleAdjustmentGridAppraisalPrice.buildingCost' as any, savedBuildingCost, {
+          shouldDirty: true,
+        });
       }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
@@ -358,7 +410,7 @@ export function SaleAdjustmentGridPanel({
             fieldName: 'collateralType',
             onSelectCollateralType: handleOnSelectCollateralType,
             value: collateralType,
-            options: COLLATERAL_TYPE,
+            group: 'PropertyType',
           }}
           template={{
             fieldName: 'pricingTemplateCode',

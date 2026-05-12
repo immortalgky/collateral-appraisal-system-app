@@ -13,8 +13,13 @@ import type {
 } from './types';
 
 export const dashboardApi = {
-  getTaskSummary: async () => {
-    const { data } = await axios.get<TaskSummaryResponse>('/dashboard/task-summary');
+  getTaskSummary: async (from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    const url = qs ? `/dashboard/task-summary?${qs}` : '/dashboard/task-summary';
+    const { data } = await axios.get<TaskSummaryResponse>(url);
     return data;
   },
 
@@ -74,8 +79,10 @@ export const dashboardApi = {
     return data;
   },
 
-  getCalendar: async (month: string) => {
-    const { data } = await axios.get<CalendarResponse>(`/dashboard/calendar?month=${month}`);
+  getCalendar: async (from: string, to: string, types?: string[]) => {
+    const params = new URLSearchParams({ from, to });
+    if (types && types.length > 0) params.set('type', types.join(','));
+    const { data } = await axios.get<CalendarResponse>(`/dashboard/calendar?${params}`);
     return data;
   },
 

@@ -7,7 +7,8 @@ import {
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { floorToTenThousands, roundToThousand } from '../domain/calculateSaleAdjustmentGrid';
+import { roundToThousand } from '../domain/calculateSaleAdjustmentGrid';
+import { fmt } from '../domain/formatters';
 import { BuildingCostTable } from './BuildingCostTable';
 
 interface SaleAdjustmentGridAdjustAppraisalPriceSectionProps {
@@ -20,7 +21,6 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
   isCostApproach,
 }: SaleAdjustmentGridAdjustAppraisalPriceSectionProps) {
   const {
-    finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
     finalValueAdjusted: finalValueAdjustedPath,
     includeLandArea: includeLandAreaPath,
@@ -69,116 +69,11 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     setValue(includeLandAreaPath(), isUnitPrice, { shouldDirty: false });
   }, [isUnitPrice, setValue, includeLandAreaPath]);
 
-  const rules: DerivedFieldRule[] = [
-    {
-      // Seed rule: re-seed finalValueAdjusted from finalValueRounded only when upstream changes.
-      targetPath: finalValueAdjustedPath(),
-      deps: [finalValueRoundedPath()],
-      when: ({ getValues: gv }) => {
-        const rounded = Number(gv(finalValueRoundedPath())) || 0;
-        if (prevFinalValueRoundedRef.current === null) {
-          prevFinalValueRoundedRef.current = rounded;
-          return false;
-        }
-        if (prevFinalValueRoundedRef.current !== rounded) {
-          prevFinalValueRoundedRef.current = rounded;
-          return true;
-        }
-        return false;
-      },
-      compute: ({ getValues: gv }) => Number(gv(finalValueRoundedPath())) || 0,
-    },
-    {
-      // Unit-aware: 01/02 → finalValueAdjusted × area; other → finalValue (auto-computed)
-      targetPath: appraisalPricePath(),
-      deps: [finalValueAdjustedPath(), finalValuePath(), unitAreaPath],
-      compute: ({ getValues: gv }) => {
-        const fvAdj = Number(gv(finalValueAdjustedPath())) || 0;
-        const fv = Number(gv(finalValuePath())) || 0;
-        const area = Number(gv(unitAreaPath)) || 0;
-        return isUnitPrice && area ? roundToThousand(fvAdj * area) : roundToThousand(fv);
-      },
-    },
-    {
-      targetPath: priceDifferentiatePath(),
-      deps: [appraisalPriceRoundedPath(), appraisalPricePath()],
-      compute: ({ getValues: gv }) => {
-        const appraisalPriceRounded = gv(appraisalPriceRoundedPath()) ?? 0;
-        const appraisalPrice = gv(appraisalPricePath()) ?? 0;
-        return appraisalPriceRounded - appraisalPrice;
-      },
-    },
-    {
-      targetPath: appraisalPriceRoundedPath(),
-      deps: [appraisalPricePath()],
-      compute: ({ getValues: gv }) =>
-        floorToTenThousands(Number(gv(appraisalPricePath())) || 0),
-      when: ({ getValues: gv }) => {
-        const depValue = Number(gv(appraisalPricePath())) || 0;
-        const current = Number(gv(appraisalPriceRoundedPath())) || 0;
-
-        if (prevAppraisalPriceRef.current === null) {
-          prevAppraisalPriceRef.current = depValue;
-          return current === 0;
-        }
-
-        if (prevAppraisalPriceRef.current !== depValue) {
-          prevAppraisalPriceRef.current = depValue;
-          return true;
-        }
-
-        return false;
-      },
-    },
-    {
-      targetPath: appraisalPriceIncludeBuildingCostPath(),
-      deps: [appraisalPriceRoundedPath(), totalBuildingCostPath()],
-      compute: ({ getValues: gv }) => {
-        const landPrice = Number(gv(appraisalPriceRoundedPath())) || 0;
-        const buildingCostVal = Number(gv(totalBuildingCostPath())) || 0;
-        return landPrice + buildingCostVal;
-      },
-    },
-    {
-      targetPath: appraisalPriceIncludeBuildingCostRoundedPath(),
-      deps: [appraisalPriceIncludeBuildingCostPath()],
-      compute: ({ getValues: gv }) =>
-        Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0,
-      when: ({ getValues: gv }) => {
-        const depValue = Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0;
-        const current = Number(gv(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
-
-        if (prevValueIncludeCostRef.current === null) {
-          prevValueIncludeCostRef.current = depValue;
-          return current === 0;
-        }
-
-        if (prevValueIncludeCostRef.current !== depValue) {
-          prevValueIncludeCostRef.current = depValue;
-          return true;
-        }
-
-        return false;
-      },
-    },
-    {
-      targetPath: priceIncludeBuildingCostDifferentiatePath(),
-      deps: [
-        appraisalPriceIncludeBuildingCostPath(),
-        appraisalPriceIncludeBuildingCostRoundedPath(),
-      ],
-      compute: ({ getValues: gv }) => {
-        const appraisalPriceRounded = gv(appraisalPriceIncludeBuildingCostRoundedPath()) ?? 0;
-        const finalValueRounded = gv(appraisalPriceIncludeBuildingCostPath()) ?? 0;
-        return appraisalPriceRounded - finalValueRounded;
-      },
-    },
-  ];
-
-  useDerivedFields({ rules: rules });
-
-  const includeBuildingCost = useWatch({ control, name: hasBuildingCostPath() });
-
+  // Sync totalBuildingCost BEFORE useDerivedFields so the rule cascade sees the final
+  // upstream on its first pass (matching WQSAdjustFinalValueSection). Otherwise the
+  // buildingCost-driven upstream changes after `prevRef` was primed, causing the
+  // appraisalPriceIncludeBuildingCostRounded rule to re-seed and clobber the
+  // user-restored override.
   useEffect(() => {
     if (!buildingCost?.length) {
       setValue(totalBuildingCostPath(), 0, { shouldDirty: false });
@@ -217,6 +112,136 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     setValue(totalBuildingCostPath(), grandTotal, { shouldDirty: false });
   }, [buildingCost, totalBuildingCostPath, setValue]);
 
+  const rules: DerivedFieldRule[] = [
+    {
+      // Seed rule: re-seed finalValueAdjusted from finalValueRounded when upstream changes,
+      // or on first run when downstream is still empty (fresh Generate, no saved value).
+      targetPath: finalValueAdjustedPath(),
+      deps: [finalValueRoundedPath()],
+      when: ({ getValues: gv, getFieldState, formState }) => {
+        const rounded = Number(gv(finalValueRoundedPath())) || 0;
+        const adjusted = Number(gv(finalValueAdjustedPath())) || 0;
+        const { isDirty } = getFieldState(finalValueAdjustedPath(), formState);
+        if (prevFinalValueRoundedRef.current === null) {
+          prevFinalValueRoundedRef.current = rounded;
+          return rounded > 0 && adjusted === 0;
+        }
+        if (prevFinalValueRoundedRef.current !== rounded) {
+          prevFinalValueRoundedRef.current = rounded;
+          return true;
+        }
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (rounded > 0 && adjusted === 0 && !isDirty) {
+          return true;
+        }
+        return false;
+      },
+      compute: ({ getValues: gv }) => Number(gv(finalValueRoundedPath())) || 0,
+    },
+    {
+      // Unit-aware: 01/02 → finalValueAdjusted × area (raw, no rounding);
+      // other (e.g. unit 03) → finalValueRounded (already rounded by the grid).
+      targetPath: appraisalPricePath(),
+      deps: [finalValueAdjustedPath(), finalValueRoundedPath(), unitAreaPath],
+      compute: ({ getValues: gv }) => {
+        const fvAdj = Number(gv(finalValueAdjustedPath())) || 0;
+        const fvRounded = Number(gv(finalValueRoundedPath())) || 0;
+        const area = Number(gv(unitAreaPath)) || 0;
+        return isUnitPrice && area ? fvAdj * area : fvRounded;
+      },
+    },
+    {
+      targetPath: priceDifferentiatePath(),
+      deps: [appraisalPriceRoundedPath(), appraisalPricePath()],
+      compute: ({ getValues: gv }) => {
+        const appraisalPriceRounded = gv(appraisalPriceRoundedPath()) ?? 0;
+        const appraisalPrice = gv(appraisalPricePath()) ?? 0;
+        return appraisalPriceRounded - appraisalPrice;
+      },
+    },
+    {
+      targetPath: appraisalPriceRoundedPath(),
+      deps: [appraisalPricePath()],
+      compute: ({ getValues: gv }) =>
+        roundToThousand(Number(gv(appraisalPricePath())) || 0),
+      when: ({ getValues: gv, getFieldState, formState }) => {
+        const depValue = Number(gv(appraisalPricePath())) || 0;
+        const current = Number(gv(appraisalPriceRoundedPath())) || 0;
+        const { isDirty } = getFieldState(appraisalPriceRoundedPath(), formState);
+
+        if (prevAppraisalPriceRef.current === null) {
+          prevAppraisalPriceRef.current = depValue;
+          return current === 0;
+        }
+
+        if (prevAppraisalPriceRef.current !== depValue) {
+          prevAppraisalPriceRef.current = depValue;
+          return true;
+        }
+
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (current === 0 && depValue !== 0 && !isDirty) {
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      targetPath: appraisalPriceIncludeBuildingCostPath(),
+      deps: [appraisalPriceRoundedPath(), totalBuildingCostPath()],
+      compute: ({ getValues: gv }) => {
+        const landPrice = Number(gv(appraisalPriceRoundedPath())) || 0;
+        const buildingCostVal = Number(gv(totalBuildingCostPath())) || 0;
+        return landPrice + buildingCostVal;
+      },
+    },
+    {
+      targetPath: appraisalPriceIncludeBuildingCostRoundedPath(),
+      deps: [appraisalPriceIncludeBuildingCostPath()],
+      compute: ({ getValues: gv }) =>
+        roundToThousand(Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0),
+      when: ({ getValues: gv, getFieldState, formState }) => {
+        const depValue = Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0;
+        const current = Number(gv(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
+        const { isDirty } = getFieldState(appraisalPriceIncludeBuildingCostRoundedPath(), formState);
+
+        if (prevValueIncludeCostRef.current === null) {
+          prevValueIncludeCostRef.current = depValue;
+          return current === 0;
+        }
+
+        if (prevValueIncludeCostRef.current !== depValue) {
+          prevValueIncludeCostRef.current = depValue;
+          return true;
+        }
+
+        // Downstream was cleared (e.g., by Generate reset) while upstream is unchanged — re-seed.
+        if (current === 0 && depValue !== 0 && !isDirty) {
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      targetPath: priceIncludeBuildingCostDifferentiatePath(),
+      deps: [
+        appraisalPriceIncludeBuildingCostPath(),
+        appraisalPriceIncludeBuildingCostRoundedPath(),
+      ],
+      compute: ({ getValues: gv }) => {
+        const appraisalPriceRounded = gv(appraisalPriceIncludeBuildingCostRoundedPath()) ?? 0;
+        const finalValueRounded = gv(appraisalPriceIncludeBuildingCostPath()) ?? 0;
+        return appraisalPriceRounded - finalValueRounded;
+      },
+    },
+  ];
+
+  useDerivedFields({ rules: rules });
+
+  const includeBuildingCost = useWatch({ control, name: hasBuildingCostPath() });
+
   const diffBadge = (fieldPath: string) => (
     <RHFInputCell
       fieldName={fieldPath}
@@ -232,7 +257,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color} ${bgColor}`}
           >
             <Icon name={icon} style="solid" className="size-3" />
-            {Math.abs(num).toLocaleString()}
+            {fmt(Math.abs(num))}
           </span>
         );
       }}
@@ -246,7 +271,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
         inputType="display"
         accessor={({ value }) => (
           <span className="font-semibold text-gray-800 tabular-nums">
-            {value ? Number(value).toLocaleString() : '0'}
+            {fmt(Number(value) || 0)}
           </span>
         )}
       />

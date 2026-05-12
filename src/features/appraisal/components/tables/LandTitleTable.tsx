@@ -259,9 +259,15 @@ const TableCell = ({ name, index, value, field, row, allFields, control }: Table
     fieldState: { error },
   } = useController({ name: cellName, control });
 
+  // Derive totalSquareWa from rai/ngan/squareWa instead of reading stored value
+  const resolvedValue =
+    field.name === 'totalSquareWa'
+      ? (Number(row.rai) || 0) * 400 + (Number(row.ngan) || 0) * 100 + (Number(row.squareWa) || 0)
+      : value;
+
   // Format number values
-  if (field.type === 'number-input' && value != null && value !== '') {
-    const numValue = typeof value === 'number' ? value : Number(value);
+  if (field.type === 'number-input' && resolvedValue != null && resolvedValue !== '') {
+    const numValue = typeof resolvedValue === 'number' ? resolvedValue : Number(resolvedValue);
     if (!isNaN(numValue)) {
       const formatted = formatNumber(numValue, field.decimalPlaces ?? 0);
       return (

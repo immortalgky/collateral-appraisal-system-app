@@ -334,6 +334,7 @@ export function buildSaleGridFinalValueRules(arg: {
     finalValue: finalValuePath,
     finalValueRounded: finalValueRoundedPath,
     calculationWeightAdjustValue: calculationWeightAdjustValuePath,
+    calculations: calculationsPath,
   } = saleGridFieldPath;
   const { surveys = [] } = arg;
 
@@ -359,7 +360,7 @@ export function buildSaleGridFinalValueRules(arg: {
     },
     {
       targetPath: finalValueRoundedPath(),
-      deps: [finalValuePath()],
+      deps: [finalValuePath(), calculationsPath()],
       when: ({ getValues, getFieldState, formState }) => {
         const target = finalValueRoundedPath();
         const curr = getValues(target) ?? 0;
@@ -368,7 +369,8 @@ export function buildSaleGridFinalValueRules(arg: {
       },
       compute: ({ getValues }) => {
         const finalValue = getValues(finalValuePath()) ?? 0;
-        const finalValueRounded = calcFinalValueRoundedValue(finalValue);
+        const calculations = getValues(calculationsPath()) ?? [];
+        const finalValueRounded = calcFinalValueRoundedValue(finalValue, calculations);
         return finalValueRounded;
       },
     },

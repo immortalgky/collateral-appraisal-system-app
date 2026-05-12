@@ -348,7 +348,7 @@ export function DiscountedCashFlowPanel({
           collateralType={{
             onSelectCollateralType: () => null,
             value: '',
-            options: COLLATERAL_TYPE,
+            group: 'PropertyType',
           }}
           template={{
             fieldName: 'templateCode',

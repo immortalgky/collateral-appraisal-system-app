@@ -107,6 +107,7 @@ export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
                       <td className="py-1 text-right font-medium truncate">
                         {typeof row.value === 'number'
                           ? row.value.toLocaleString(undefined, {
+                              minimumFractionDigits: row.decimals ?? 2,
                               maximumFractionDigits: row.decimals ?? 2,
                             })
                           : row.value}

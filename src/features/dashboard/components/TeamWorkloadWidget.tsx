@@ -12,11 +12,13 @@ import {
   Cell,
 } from 'recharts';
 
+import { formatDistanceToNow } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
 import PeriodSelect from './PeriodSelect';
 import WidgetError from './WidgetError';
+import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { useTeamWorkload } from '../api';
 import { useDashboardStore } from '../store';
 import {
@@ -93,10 +95,13 @@ function TeamWorkloadWidget() {
     [presetKey, today, customRange],
   );
 
-  const { data, isLoading, isError, refetch } = useTeamWorkload({
+  const { data, isLoading, isError, refetch, dataUpdatedAt } = useTeamWorkload({
     from: toIsoDate(range.from),
     to: toIsoDate(range.to),
   });
+  const updatedLabel = dataUpdatedAt
+    ? formatDistanceToNow(dataUpdatedAt, { addSuffix: false })
+    : null;
 
   const rows: Row[] = useMemo(() => {
     return (data?.items ?? [])
@@ -155,9 +160,12 @@ function TeamWorkloadWidget() {
     <WidgetWrapper id={WIDGET_ID}>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-gray-800">Team Workload</h3>
-            <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <h3 className="font-semibold text-gray-800">Team Workload</h3>
+              <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+            </div>
+            <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div ref={menuRef} className="relative">
             <button
@@ -169,7 +177,12 @@ function TeamWorkloadWidget() {
               <Icon name="ellipsis-vertical" style="solid" className="size-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 z-20 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+              <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                {updatedLabel && (
+                  <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                    Updated {updatedLabel} ago
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={handleRefresh}

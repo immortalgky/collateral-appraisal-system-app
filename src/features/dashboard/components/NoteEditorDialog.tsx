@@ -3,7 +3,7 @@ import Modal from '@shared/components/Modal';
 import { useCreateNote, useUpdateNote } from '../api/hooks';
 import type { NoteItem } from '../api/types';
 
-const MAX_CHARS = 10_000;
+const MAX_CHARS = 4_000;
 
 interface NoteEditorDialogProps {
   open: boolean;
@@ -38,7 +38,8 @@ function NoteEditorDialog({ open, note, onClose }: NoteEditorDialogProps) {
   }, [open]);
 
   const trimmed = content.trim();
-  const isInvalid = trimmed.length === 0 || content.length > MAX_CHARS;
+  const overCap = content.length > MAX_CHARS;
+  const isInvalid = trimmed.length === 0 || overCap;
 
   const handleSave = () => {
     if (isInvalid || isPending) return;
@@ -50,7 +51,7 @@ function NoteEditorDialog({ open, note, onClose }: NoteEditorDialogProps) {
         {
           onSuccess: onClose,
           onError: () => setError('Failed to save — try again.'),
-        }
+        },
       );
     } else {
       createNote.mutate(trimmed, {
@@ -78,7 +79,8 @@ function NoteEditorDialog({ open, note, onClose }: NoteEditorDialogProps) {
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            maxLength={MAX_CHARS}
+            onChange={e => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Write your note..."
             rows={6}
@@ -86,14 +88,20 @@ function NoteEditorDialog({ open, note, onClose }: NoteEditorDialogProps) {
           />
           <span
             className={`absolute bottom-2 right-2 text-xs ${
-              content.length > MAX_CHARS ? 'text-red-500 font-medium' : 'text-gray-400'
+              overCap ? 'text-red-500 font-medium' : 'text-gray-400'
             }`}
           >
             {content.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
           </span>
         </div>
 
-        {error && (
+        {overCap && (
+          <p className="text-sm text-red-500">
+            Trim to 4,000 characters or fewer to save.
+          </p>
+        )}
+
+        {error && !overCap && (
           <p className="text-sm text-red-500">{error}</p>
         )}
 

@@ -20,16 +20,21 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
   const fv = (SaleAdjustmentGridForm as any).saleAdjustmentGridFinalValue;
   const ap = (SaleAdjustmentGridForm as any).saleAdjustmentGridAppraisalPrice;
   const hasBuildingCost = !!ap?.hasBuildingCost;
-  const userRoundedAppraisalPrice = ap?.appraisalPriceRounded ?? null;
-  const landValueToSend = hasBuildingCost ? (ap?.landValue ?? null) : null;
+  // With building cost: visible "Appraisal Price (rounded)" total lives in
+  // appraisalPriceIncludeBuildingCostRounded, and "Land Price (rounded)" in appraisalPriceRounded.
+  // Without: a single "Appraisal Price (rounded)" lives in appraisalPriceRounded.
+  const userAppraisalPrice = hasBuildingCost
+    ? (ap?.appraisalPriceIncludeBuildingCostRounded ?? null)
+    : (ap?.appraisalPriceRounded ?? null);
+  const landValueToSend = hasBuildingCost ? (ap?.appraisalPriceRounded ?? null) : null;
 
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
-    appraisalValue: userRoundedAppraisalPrice,
+    appraisalValue: userAppraisalPrice,
     finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
     hasBuildingCost: ap?.hasBuildingCost ?? null,
     buildingCost: ap?.totalBuildingCost ?? null,
-    appraisalPrice: userRoundedAppraisalPrice,
+    appraisalPrice: userAppraisalPrice,
     includeLandArea: ap?.includeLandArea ?? null,
     landArea: ap?.landArea ?? null,
     landValue: landValueToSend,

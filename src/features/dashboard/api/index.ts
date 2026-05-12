@@ -19,5 +19,7 @@ export type {
   AppraisalStatusSummaryFilters,
   TeamWorkloadFilters,
   CompanyAppraisalSummaryFilters,
+  TaskSummaryFilters,
+  CalendarFilters,
 } from './hooks';
 export type * from './types';

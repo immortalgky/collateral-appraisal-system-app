@@ -216,11 +216,11 @@ export function useSaveComparativeAnalysis() {
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.comparativeFactors(variables.id, variables.methodId),
       });
-      // Mark detail as stale without refetching immediately
-      // (immediate refetch triggers INIT which resets activeMethod and hides the form)
+      // Refetch detail so method cards reflect the new MethodValue.
+      // Safe: the INIT reducer case now preserves activeMethod, so the open
+      // calculation panel stays mounted across the refetch.
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.detail(variables.id),
-        refetchType: 'none',
       });
     },
   });
@@ -1066,39 +1066,6 @@ export function useDeleteHypothesisUpload() {
           variables.pricingAnalysisId,
           variables.methodId,
         ),
-      });
-    },
-  });
-}
-
-/**
- * DELETE /pricing-analysis/{paId}/methods/{mid}/hypothesis-analysis
- * Resets (deletes) the entire hypothesis analysis.
- */
-export function useDeleteHypothesisAnalysis() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      pricingAnalysisId,
-      methodId,
-    }: {
-      pricingAnalysisId: string;
-      methodId: string;
-    }): Promise<void> => {
-      await axios.delete(
-        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis`,
-      );
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.hypothesisAnalysis(
-          variables.pricingAnalysisId,
-          variables.methodId,
-        ),
-      });
-      queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
-        refetchType: 'none',
       });
     },
   });
