@@ -741,7 +741,7 @@ export const titleVehicleFields: FormField[] = [
 export const titleMachineFields: FormField[] = [
   {
     type: 'dropdown',
-    label: 'Installation Status',
+    label: 'Machine Status',
     name: 'installationStatus',
     group: 'MachineStatus',
     wrapperClassName: 'col-span-3',
