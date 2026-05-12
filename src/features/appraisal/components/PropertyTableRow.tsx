@@ -68,12 +68,9 @@ export const PropertyTableRow = ({
       </td>
 
       {/* Address */}
-      <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
-        <div className="min-w-0">
-          <p
-            className="text-sm font-medium text-gray-900 w-11/12 truncate"
-            title={property.address}
-          >
+      <td className="px-3 py-2 cursor-pointer max-w-0 w-2/5" onClick={handleClick}>
+        <div>
+          <p className="text-sm font-medium text-gray-900 truncate" title={property.address}>
             {property.address}
           </p>
           <p className="text-xs text-gray-500 truncate">
