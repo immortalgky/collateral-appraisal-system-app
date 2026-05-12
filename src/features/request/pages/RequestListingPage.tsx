@@ -107,6 +107,7 @@ function RequestListingPage() {
     if (deleteConfirm.id) {
       deleteRequest.mutate(deleteConfirm.id, {
         onSuccess: () => {
+          setDeleteConfirm({ isOpen: false, id: null });
           toast.success('Request deleted successfully');
         },
         onError: (error: any) => {
