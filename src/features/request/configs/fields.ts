@@ -554,7 +554,7 @@ export const titleLandFields: FormField[] = [
       match: 'all',
     },
     decimalPlaces: 2,
-    maxIntegerDigits: 3,
+    maxIntegerDigits: 2,
   },
   {
     type: 'text-input',
