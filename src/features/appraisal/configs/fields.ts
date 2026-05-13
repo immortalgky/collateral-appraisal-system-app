@@ -863,10 +863,10 @@ export const buildingInfoField: FormField[] = [
   },
   {
     type: 'boolean-toggle',
-    label: 'Is Appraise',
+    label: 'Appraisal',
     name: 'isAppraisable',
     required: true,
-    options: ['Not Appraise', 'Appraise'],
+    options: ['Not Appraised', 'Appraised'],
     wrapperClassName: 'col-span-12',
   },
   {

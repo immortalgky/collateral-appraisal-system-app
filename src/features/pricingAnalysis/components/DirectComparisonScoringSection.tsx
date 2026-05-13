@@ -129,13 +129,16 @@ export const DirectComparisonScoringSection = ({
       })), // TODO: default value
     });
 
-    appendAdjustmentFactor({
-      surveys: comparativeSurveys.map(survey => ({
-        marketId: survey.id,
-        adjustPercent: 0,
-        adjustAmount: 0,
-      })),
-    });
+    appendAdjustmentFactor(
+      {
+        surveys: comparativeSurveys.map(survey => ({
+          marketId: survey.id,
+          adjustPercent: 0,
+          adjustAmount: 0,
+        })),
+      },
+      { shouldFocus: false },
+    );
   };
 
   const handleRemoveRow = (rowIndex: number) => {
@@ -480,7 +483,9 @@ export const DirectComparisonScoringSection = ({
                         const unit = survey.offerPriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.offerPriceUnit)
                           : '';
-                        return unit ? `${fmt(Number(value) || 0)} ${unit}` : fmt(Number(value) || 0);
+                        return unit
+                          ? `${fmt(Number(value) || 0)} ${unit}`
+                          : fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -578,7 +583,9 @@ export const DirectComparisonScoringSection = ({
                         const unit = survey.salePriceUnit
                           ? getParameterDescription('MeasurementUnits', survey.salePriceUnit)
                           : '';
-                        return unit ? `${fmt(Number(value) || 0)} ${unit}` : fmt(Number(value) || 0);
+                        return unit
+                          ? `${fmt(Number(value) || 0)} ${unit}`
+                          : fmt(Number(value) || 0);
                       }}
                     />
                   </td>
@@ -623,7 +630,8 @@ export const DirectComparisonScoringSection = ({
             </tr>
             <tr>
               <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
-                Adjusted Selling Price (%)
+                <span>Adjusted Period</span>
+                <span>(%)</span>
               </td>
               {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
                 const hasSalePrice = !!survey.salePrice;
@@ -802,9 +810,7 @@ export const DirectComparisonScoringSection = ({
                                 ) ? (
                                   <div>{fmt(Number(value) || 0)}</div>
                                 ) : (
-                                  <div className="text-danger">
-                                    {fmt(Number(value) || 0)}
-                                  </div>
+                                  <div className="text-danger">{fmt(Number(value) || 0)}</div>
                                 );
                               }}
                             />

@@ -554,7 +554,7 @@ export const titleLandFields: FormField[] = [
       match: 'all',
     },
     decimalPlaces: 2,
-    maxIntegerDigits: 3,
+    maxIntegerDigits: 2,
   },
   {
     type: 'text-input',
@@ -741,7 +741,7 @@ export const titleVehicleFields: FormField[] = [
 export const titleMachineFields: FormField[] = [
   {
     type: 'dropdown',
-    label: 'Installation Status',
+    label: 'Machine Status',
     name: 'installationStatus',
     group: 'MachineStatus',
     wrapperClassName: 'col-span-3',
