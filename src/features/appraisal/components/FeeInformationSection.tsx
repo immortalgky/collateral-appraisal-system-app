@@ -10,6 +10,7 @@ import type { AppraisalFeeItemDtoType } from '@shared/schemas/v1';
 import AddFeeModal from './AddFeeModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
+export const BANK_ABSORB_FEE_TYPES = ['05', '06', '07'];
 interface FeeInformationSectionProps {
   items: AppraisalFeeItemDtoType[];
   vatRate?: number;

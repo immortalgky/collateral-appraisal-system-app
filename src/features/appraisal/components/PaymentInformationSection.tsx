@@ -24,6 +24,7 @@ interface PaymentInformationSectionProps {
   onRemovePayment?: (paymentId: string) => void;
   isPaymentPending?: boolean;
   requestedAt?: string | null;
+  isBankAbsorb?: boolean;
 }
 
 /**
@@ -37,6 +38,7 @@ export default function PaymentInformationSection({
   onRemovePayment,
   isPaymentPending,
   requestedAt,
+  isBankAbsorb = false,
 }: PaymentInformationSectionProps) {
   const readOnly = usePageReadOnly();
   const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(true);
@@ -54,8 +56,10 @@ export default function PaymentInformationSection({
   const totalPaid = fee?.totalPaidAmount ?? 0;
   const remaining = fee?.outstandingAmount ?? totalFee - totalPaid - bankAbsorbAmount;
 
-  // Calculate payment percentage for progress bar
+  const effectiveBankAbsorbAmount = isBankAbsorb ? totalFee : bankAbsorbAmount;
+  const effectiveRemaining = isBankAbsorb ? 0 : remaining;
   const paymentPercentage = totalFee > 0 ? Math.min((totalPaid / totalFee) * 100, 100) : 0;
+  const effectivePaymentPercentage = isBankAbsorb ? 100 : paymentPercentage;
 
   // Determine payment status
   const getPaymentStatus = () => {
@@ -79,7 +83,7 @@ export default function PaymentInformationSection({
     return { label: 'Not Paid', color: 'danger' };
   };
 
-  const paymentStatus = getPaymentStatus();
+  const paymentStatus = isBankAbsorb ? { label: 'Paid', color: 'success' } : getPaymentStatus();
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -134,8 +138,8 @@ export default function PaymentInformationSection({
 
   // Get progress bar color based on percentage
   const getProgressBarColor = () => {
-    if (paymentPercentage >= 100) return 'bg-success';
-    if (paymentPercentage >= 50) return 'bg-warning';
+    if (effectivePaymentPercentage >= 100) return 'bg-success';
+    if (effectivePaymentPercentage >= 50) return 'bg-warning';
     return 'bg-gray-300';
   };
 
@@ -183,15 +187,16 @@ export default function PaymentInformationSection({
         {totalFee > 0 && (
           <div className="mt-2">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>{Math.round(paymentPercentage)}% paid</span>
+              <span>{Math.round(effectivePaymentPercentage)}% paid</span>
               <span>
-                {formatCurrency(totalPaid)} / {formatCurrency(totalFee)}
+                {isBankAbsorb ? formatCurrency(totalFee) : formatCurrency(totalPaid)} /
+                {formatCurrency(totalFee)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${getProgressBarColor()}`}
-                style={{ width: `${paymentPercentage}%` }}
+                style={{ width: `${effectivePaymentPercentage}%` }}
               />
             </div>
           </div>
@@ -309,7 +314,7 @@ export default function PaymentInformationSection({
               )}
 
               {/* Add Payment Button */}
-              {!readOnly && (
+              {!readOnly && !isBankAbsorb && (
                 <button
                   type="button"
                   onClick={() => setIsAddPaymentModalOpen(true)}
@@ -334,7 +339,9 @@ export default function PaymentInformationSection({
                 <Icon name="circle-info" style="regular" className="w-3.5 h-3.5" />
               </span>
             </span>
-            <span className="text-sm text-gray-800">{formatCurrency(bankAbsorbAmount)}</span>
+            <span className="text-sm text-gray-800">
+              {formatCurrency(effectiveBankAbsorbAmount)}
+            </span>
           </div>
 
           {/* Customer Payable (only shown when API data is available) */}
@@ -351,9 +358,9 @@ export default function PaymentInformationSection({
           <div className="flex justify-between items-center">
             <span className="text-xs font-medium text-gray-500">Remaining</span>
             <span
-              className={`text-sm font-medium ${remaining > 0 ? 'text-danger' : 'text-success'}`}
+              className={`text-sm font-medium ${effectiveRemaining > 0 ? 'text-danger' : 'text-success'}`}
             >
-              {formatCurrency(Math.max(0, remaining))}
+              {formatCurrency(Math.max(0, effectiveRemaining))}
             </span>
           </div>
         </div>
@@ -373,7 +380,9 @@ export default function PaymentInformationSection({
             : null
         }
         isEditing={editingPaymentId !== null}
-        maxAmount={editingPayment ? remaining + editingPayment.paymentAmount : remaining}
+        maxAmount={
+          editingPayment ? effectiveRemaining + editingPayment.paymentAmount : effectiveRemaining
+        }
         requestedAt={requestedAt}
       />
 
