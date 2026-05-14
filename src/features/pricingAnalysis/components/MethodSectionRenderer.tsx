@@ -11,6 +11,7 @@ import { CostMachinePanel } from './CostMachinePanel';
 import { LeaseholdPanel } from './LeaseholdPanel';
 import { ProfitRentPanel } from './ProfitRentPanel';
 import { HypothesisPanel } from './hypothesis/HypothesisPanel';
+import { CostBuildingPanel } from './CostBuildingPanel';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -59,6 +60,7 @@ export function MethodSectionRenderer({
       calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
     savedFinalValueAdjusted: (calculationMethodData.comparativeFactors as any)?.finalValue?.finalValueAdjusted ?? null,
     savedLandValue: (calculationMethodData.comparativeFactors as any)?.finalValue?.landValue ?? null,
+    savedMethodValue: (calculationMethodData.comparativeFactors as any)?.methodValue ?? null,
     onCalculationSave,
     onCalculationMethodDirty,
     onCancelCalculationMethod,
@@ -119,6 +121,8 @@ export function MethodSectionRenderer({
           savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
         />
       );
+    case 'BC':
+      return <CostBuildingPanel {...panelProps} />;
     case 'DC_COST':
       return (
         <DirectComparisonPanel
