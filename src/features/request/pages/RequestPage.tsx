@@ -55,7 +55,7 @@ import FormCard from '@/shared/components/sections/FormCard';
 import SearchUserModal from '../components/SearchUserModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { useActivityId } from '@features/appraisal/context/AppraisalContext.tsx';
+import { useActivityId, useBasePath } from '@features/appraisal/context/AppraisalContext.tsx';
 
 /**
  * Component that initializes request-level required documents.
@@ -74,6 +74,7 @@ const RequiredDocumentsInitializer = () => {
 function RequestPage() {
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const basePath = useBasePath();
   const location = useLocation();
   const currentUser = useAuthStore(state => state.user);
   // Activity detection
@@ -635,7 +636,7 @@ function RequestPage() {
                 <ActionBar.Left>
                   {!isRouteBackFollowup && (
                     <>
-                      <CancelButton />
+                      <CancelButton fallbackPath={`${basePath}/requests`} />
                       <ActionBar.Divider />
                       <DeleteButton
                         onClick={() => setIsDeleteDialogOpen(true)}
