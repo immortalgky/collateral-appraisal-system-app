@@ -1782,6 +1782,7 @@ export const condoFacilityFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'facilityType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'facilityType', is: '99', operator: 'contains' },
+    maxLength: 100,
   },
 ];
 
